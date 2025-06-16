@@ -1,0 +1,40 @@
+[tool.poetry]
+name = "your_package_name"
+version = "0.0.1"
+description = "A short description of your package."
+authors = ["C. Thomas Brittain <cthomasbrittain@hotmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.urls]
+homepage = "https://github.com/Ladvien/your_package_name"
+repository = "https://github.com/Ladvien/your_package_name"
+documentation = "https://your_package_name.readthedocs.io/en/latest/"
+
+
+[tool.poetry.dependencies]
+python = ">=3.10"
+pyyaml = "^6.0.2"
+rich = "^13.9.4"
+
+[tool.poetry.group.dev.dependencies]
+black = "^25.1.0"
+sphinx = "^8.1.3"
+myst-parser = "^4.0.1"
+sphinx-autobuild = "^2024.10.3"
+furo = "^2024.8.6"
+sphinx-autoapi = "^3.5.0"
+sphinx-autodoc2 = "^0.5.0"
+doc-utils = "^0.0.2"
+poethepoet = "^0.32.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poe.tasks]
+docs         = "sphinx-build docs/source docs/build/html" # a simple command task
+docs_view    = "sphinx-autobuild docs/source docs/build/html" # a simple command task
+patch        = "poetry version patch" # a simple command task
+_publish      = "poetry publish --build" # a simple command task
+release = ["docs", "patch", "_publish"] # a task that depends on other tasks
