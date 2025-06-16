@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "your_package_name"
+name = "entity"
 version = "0.0.1"
 description = "A short description of your package."
 authors = ["C. Thomas Brittain <cthomasbrittain@hotmail.com>"]
@@ -7,15 +7,19 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.urls]
-homepage = "https://github.com/Ladvien/your_package_name"
-repository = "https://github.com/Ladvien/your_package_name"
-documentation = "https://your_package_name.readthedocs.io/en/latest/"
+homepage = "https://github.com/Ladvien/entity"
+repository = "https://github.com/Ladvien/entity"
+documentation = "https://entity.readthedocs.io/en/latest/"
 
 
 [tool.poetry.dependencies]
-python = ">=3.10"
+python = ">=3.11"
 pyyaml = "^6.0.2"
 rich = "^13.9.4"
+requests = "^2.32.4"
+pyaudio = "^0.2.14"
+numpy = "^2.3.0"
+scipy = "^1.15.3"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
