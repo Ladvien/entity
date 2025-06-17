@@ -17,7 +17,6 @@ entity:
   ollama:
     base_url: "http://192.168.1.110:11434"
     model: "neural-chat:7b"
-    timeout: 60
     temperature: 0.7
     top_p: 0.9
     top_k: 40
@@ -42,6 +41,7 @@ entity:
     fade_out_samples: 2000
 
   memory:
+    collection_name: "entity_memory"
     embedding_model: "all-MiniLM-L6-v2"
     embedding_dimension: 384
     max_context_length: 1000
@@ -51,6 +51,15 @@ entity:
     pruning_days: 90
     keep_important_threshold: 0.7
     min_access_count: 2
+
+    database:
+      host: "192.168.1.104"
+      port: 5432
+      name: "memory"
+      username: "${DB_USERNAME}" # Will be loaded from secrets.ini
+      password: "${DB_PASSWORD}" # Will be loaded from secrets.ini
+      min_pool_size: 2
+      max_pool_size: 10
 
   entity:
     entity_id: "jade"

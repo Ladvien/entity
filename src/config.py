@@ -46,6 +46,8 @@ class AudioConfig(BaseModel):
 
 
 class MemoryConfig(BaseModel):
+    database: DatabaseConfig
+    collection_name: str = "entity_memory"
     embedding_model: str = "all-MiniLM-L6-v2"
     embedding_dimension: int = 384
     max_context_length: int = 1000

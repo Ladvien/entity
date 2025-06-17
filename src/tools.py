@@ -1,6 +1,4 @@
 # entity/tools.py - Fixed version
-
-from entity.tools.memory_tools import register_memory_tools
 from langchain_core.tools import tool
 import httpx
 import json
@@ -9,6 +7,7 @@ import operator
 import asyncio
 from typing import List, Dict, Any, Optional
 
+from src.tool_registry import register_memory_tools
 from src.config import MemoryConfig
 from src.memory import VectorMemorySystem
 

@@ -73,12 +73,12 @@ async def lifespan(app: FastAPI):
         f"🧠 Ollama: {entity_config.ollama.base_url} ({entity_config.ollama.model})"
     )
 
-    try:
-        entity_agent = EntityAgent(config=entity_config)
-        await entity_agent.initialize()
-        logger.info("✅ Entity agent initialized successfully")
-    except Exception as e:
-        logger.error(f"❌ Failed to initialize entity agent: {e}")
+# try:
+    entity_agent = EntityAgent(config=entity_config)
+    await entity_agent.initialize()
+    logger.info("✅ Entity agent initialized successfully")
+    # except Exception as e:
+    #     logger.error(f"❌ Failed to initialize entity agent: {e}")
 
     yield
 
