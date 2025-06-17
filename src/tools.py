@@ -1,5 +1,6 @@
 # entity/tools.py - Fixed version
 
+from entity.tools.memory_tools import register_memory_tools
 from langchain_core.tools import tool
 import httpx
 import json
@@ -7,6 +8,9 @@ import ast
 import operator
 import asyncio
 from typing import List, Dict, Any, Optional
+
+from src.config import MemoryConfig
+from src.memory import VectorMemorySystem
 
 
 @tool
@@ -301,3 +305,49 @@ def get_tools():
     ]
 
     return base_tools
+
+
+from typing import Callable, Dict, List, Any
+from langchain_core.tools import Tool
+
+
+class ToolRegistry:
+    def __init__(self):
+        self.tools: Dict[str, Tool] = {}
+        self.factories: List[Callable[[Dict[str, Any]], List[Tool]]] = []
+        self.ctx: Dict[str, Any] = {}
+
+    def register(self, tool: Tool):
+        self.tools[tool.name] = tool
+        return tool
+
+    def register_factory(self, factory: Callable[[Dict[str, Any]], List[Tool]]):
+        self.factories.append(factory)
+        return factory
+
+    def set_context(self, ctx: Dict[str, Any]):
+        self.ctx = ctx
+
+    def get_tools(self) -> List[Tool]:
+        tools = list(self.tools.values())
+        for factory in self.factories:
+            new_tools = factory(self.ctx)
+            for tool in new_tools:
+                if tool.name not in self.tools:
+                    tools.append(tool)
+        return tools
+
+
+tool_registry = ToolRegistry()
+register = tool_registry.register
+register_factory = tool_registry.register_factory
+
+
+async def setup_tools(vector_memory_config: MemoryConfig) -> List[Tool]:
+    memory_system = VectorMemorySystem(config=vector_memory_config)
+    await memory_system.initialize()
+
+    registry = ToolRegistry()
+    registry.set_context({"memory_system": memory_system})
+    registry.register_factory(register_memory_tools)  # <- correct now
+    return registry.get_tools()

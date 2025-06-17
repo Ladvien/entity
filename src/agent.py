@@ -3,24 +3,27 @@ import asyncio
 import logging
 import traceback
 from typing import Dict, Any, List, Optional
+from entity.tool_registry import ToolRegistry
+from entity.tools.memory_tools import register_memory_tools
 from langchain.agents import AgentExecutor, create_react_agent
 from langchain.prompts import PromptTemplate
 from langchain_ollama import OllamaLLM
 from langchain.schema import BaseMessage, HumanMessage, AIMessage
 from langgraph.graph import StateGraph, MessagesState
 from langgraph.checkpoint.postgres import PostgresSaver
+from src.config import EntitySystemConfig
 from src.tools import get_tools
 from src.memory import VectorMemorySystem
-from src.config import Settings, get_settings
 
 # Set up logging
 logger = logging.getLogger(__name__)
 
 
 class EntityAgent:
-    def __init__(self, settings: Settings = None):
-        self.settings = settings or get_settings()
+    def __init__(self, config: EntitySystemConfig = None):
         logger.info("Initializing EntityAgent with configuration...")
+
+        self.config = config
 
         # Ollama configuration
         self.model = self.settings.ollama.model
@@ -44,25 +47,21 @@ class EntityAgent:
             raise
 
         try:
-            self.tools = get_tools()
-            logger.info(f"Tools loaded: {[tool.name for tool in self.tools]}")
-        except Exception as e:
-            logger.error(f"Failed to load tools: {e}")
-            raise
-
-        # Initialize memory system
-        try:
-            self.memory_system = VectorMemorySystem(settings=self.settings)
+            self.memory_system = VectorMemorySystem(config=self.settings)
             logger.info("Memory system initialized")
         except Exception as e:
             logger.error(f"Failed to initialize memory system: {e}")
             raise
 
-        # PostgreSQL connection for LangGraph checkpointing
-        self.db_uri = self.settings.database.connection_string
-        logger.info(
-            f"DB connection will use: {self.db_uri.replace(self.settings.database.password, '***')}"
-        )
+        try:
+            self.tool_registry = ToolRegistry()
+            self.tool_registry.set_context({"memory_system": self.memory_system})
+            self.tool_registry.register_factory(register_memory_tools)
+            self.tools = self.tool_registry.get_tools()
+            logger.info(f"Tools loaded: {[tool.name for tool in self.tools]}")
+        except Exception as e:
+            logger.error(f"Failed to load tools: {e}")
+            raise
 
         # Initialize components
         self.checkpointer = None

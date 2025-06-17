@@ -7,7 +7,7 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from sentence_transformers import SentenceTransformer
 import logging
 
-from src.config import VectorMemorySystemConfig, get_settings
+from src.config import MemoryConfig
 
 logger = logging.getLogger(__name__)
 
@@ -18,8 +18,8 @@ class VectorMemorySystem:
     Enriched metadata supported for emotional tone, importance, topics, etc.
     """
 
-    def __init__(self, config: VectorMemorySystemConfig):
-        self.config = get_settings()
+    def __init__(self, config: MemoryConfig):
+        self.config = config
         self.collection_name = self.config.memory.collection_name
         self.vector_store = None
         self.model_name = self.config.memory.embedding_model
