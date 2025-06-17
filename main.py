@@ -73,7 +73,7 @@ async def lifespan(app: FastAPI):
         f"🧠 Ollama: {entity_config.ollama.base_url} ({entity_config.ollama.model})"
     )
 
-# try:
+    # try:
     entity_agent = EntityAgent(config=entity_config)
     await entity_agent.initialize()
     logger.info("✅ Entity agent initialized successfully")
@@ -339,14 +339,9 @@ async def chat_loop():
                     )
                     if conversations:
                         print(f"📚 History for thread '{current_thread}':")
-                        for conv in conversations[-10:]:  # Show last 10
-                            role_icon = "🧑" if conv["role"] == "user" else "😈"
-                            content = (
-                                conv["content"][:80] + "..."
-                                if len(conv["content"]) > 80
-                                else conv["content"]
-                            )
-                            print(f"   {role_icon} {content}")
+                        for line in conversations[-10:]:
+                            content = line[:80] + "..." if len(line) > 80 else line
+                            print(f"   💬 {content}")
                     else:
                         print("📚 No conversation history found")
                     continue

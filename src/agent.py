@@ -4,6 +4,7 @@ import asyncio
 import logging
 import traceback
 from typing import Dict, Any, List, Optional
+from langchain_core.documents import Document
 from langchain.agents import AgentExecutor, create_react_agent
 from langchain.prompts import PromptTemplate
 from langchain_ollama import OllamaLLM
@@ -275,7 +276,20 @@ Question: {{input}}
             results = await self.memory_system.search_memory(
                 query="", thread_id=thread, k=limit
             )
-            return [doc.page_content for doc in results]
+
+            history = []
+            for doc in results:
+                if isinstance(doc, Document):
+                    history.append(doc.page_content)
+                elif isinstance(doc, dict) and isinstance(doc.get("page_content"), str):
+                    history.append(doc["page_content"])
+                elif isinstance(doc, str):
+                    history.append(doc)
+                else:
+                    history.append(str(doc))  # catch-all fallback
+
+            return history
+
         except Exception as e:
             logger.error(f"❌ Failed to fetch conversation history: {e}")
             return []
