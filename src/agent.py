@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import time
 import traceback
 from typing import Dict, Any, List, Optional
 from langchain_core.documents import Document
@@ -60,11 +61,9 @@ class EntityAgent:
         except Exception as e:
             logger.warning("PostgreSQL checkpointing unavailable, continuing without.")
 
-        try:
-            self.agent_executor = self._create_agent()
-        except Exception as e:
-            logger.error(f"Agent creation failed: {e}")
-            raise
+        self.agent_executor = self._create_agent()
+        if self.agent_executor is None:
+            raise RuntimeError("AgentExecutor could not be initialized")
 
         try:
             self._create_graph()
@@ -123,7 +122,8 @@ Question: {{input}}
             tools=self.tools,
             verbose=self.settings.debug,
             handle_parsing_errors=True,
-            max_iterations=3,
+            max_iterations=20,  # Increase iteration count
+            max_execution_time=120,  # Allow up to 2 minutes
         )
 
     def _create_graph(self):
@@ -137,16 +137,45 @@ Question: {{input}}
             user_input = last_message.content
             memory_context = await self.memory_system.get_memory_context(user_input)
 
-            if await self._is_simple_greeting(user_input):
-                response = await self._get_simple_response(user_input)
+            enhanced_input = (
+                f"{memory_context}\n\nCurrent input: {user_input}"
+                if memory_context
+                else user_input
+            )
+
+            start_time = time.monotonic()
+            max_time = 120  # seconds
+            max_iterations = 20
+            result = None
+
+            for iteration in range(max_iterations):
+                elapsed = time.monotonic() - start_time
+                if elapsed > max_time:
+                    logger.warning("⏳ Execution timed out")
+                    response = "Agent stopped due to time limit. *sarcastically* How delightful for you, Thomas."
+                    break
+
+                try:
+                    result = await asyncio.wait_for(
+                        self.agent_executor.ainvoke({"input": enhanced_input}),
+                        timeout=30,
+                    )
+                    response = result["output"]
+                    steps = result.get("intermediate_steps", [])
+                    logger.info(
+                        f"✅ Agent completed in {iteration+1} iterations, {len(steps)} steps."
+                    )
+                    break
+                except asyncio.TimeoutError:
+                    logger.warning(
+                        f"⏱️ agent_executor timed out on iteration {iteration+1}"
+                    )
+                except Exception as e:
+                    logger.warning(f"Agent iteration {iteration+1} failed: {e}")
+                    await asyncio.sleep(0.5)
+
             else:
-                enhanced_input = (
-                    f"{memory_context}\n\nCurrent input: {user_input}"
-                    if memory_context
-                    else user_input
-                )
-                result = await self.agent_executor.ainvoke({"input": enhanced_input})
-                response = result["output"]
+                response = "Agent stopped due to iteration limit. *sarcastically* How delightful for you, Thomas."
 
             try:
                 await self.memory_system.store_conversation(
@@ -202,6 +231,9 @@ Question: {{input}}
         return "What do you want now, Thomas? Speak quickly."
 
     async def process(self, message: str, thread_id: str = "default") -> str:
+        if self.agent_executor is None:
+            raise RuntimeError("AgentExecutor not initialized")
+
         if not self.initialized:
             await self.initialize()
 
