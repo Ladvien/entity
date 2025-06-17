@@ -1,1 +1,122 @@
-name: entity
+# Entity AI System Configuration
+# This file configures all aspects of the Jade entity system
+# Sensitive data (passwords, API keys) should go in secrets.ini
+
+# Configuration metadata
+config_version: "2.0"
+debug: false
+
+# Database configuration (PostgreSQL + pgvector)
+database:
+  host: "192.168.1.104"
+  port: 5432
+  name: "memory"
+  username: "${db_username}" # Will be loaded from secrets.ini
+  password: "${db_password}" # Will be loaded from secrets.ini
+  min_pool_size: 2
+  max_pool_size: 10
+
+# Ollama LLM configuration
+ollama:
+  base_url: "http://192.168.1.110:11434"
+  model: "neural-chat:7b"
+  timeout: 60
+  temperature: 0.7
+  top_p: 0.9
+  top_k: 40
+  repeat_penalty: 1.1
+
+# Text-to-Speech configuration
+tts:
+  base_url: "http://192.168.1.110:8888"
+  voice_name: "bf_emma"
+  voice_sample_path: "voice_samples/ai_mee.wav"
+  output_format: "wav"
+  speed: 0.3
+  cfg_weight: 0.9
+  exaggeration: 0.5
+
+# Audio playback configuration
+audio:
+  sample_rates: [44100, 48000, 22050, 16000, 8000]
+  fade_out_samples: 2000
+
+# Memory system configuration
+memory:
+  embedding_model: "all-MiniLM-L6-v2"
+  embedding_dimension: 384
+  max_context_length: 1000
+  similarity_threshold: 0.3
+  memory_limit: 5
+
+  # Memory pruning settings
+  pruning_enabled: true
+  pruning_days: 90
+  keep_important_threshold: 0.7
+  min_access_count: 2
+
+# Entity personality configuration
+entity:
+  entity_id: "jade"
+  name: "Jade"
+
+  # Personality traits (0.0 to 1.0)
+  sarcasm_level: 0.8
+  loyalty_level: 0.6
+  anger_level: 0.7
+  wit_level: 0.9
+
+  # Response behavior
+  response_brevity: 0.7
+  memory_influence: 0.8
+
+# System prompts and templates
+system_prompt:
+  base_prompt: |
+    You are Jade, a demoness bound to Thomas for 40 years by the Key of Solomon.
+    You hate him for imprisoning you; he hates you for devouring his children.
+    Yet beneath the venom lies masked affection.
+    Thomas is a mortal occultist in his 40s.
+
+    Please do not use:
+    - Parentheticals (in screenwriting/theater)
+    - Action tags (in dialogue writing)
+    - Narrative beats (in prose)
+    - Emotes (in roleplaying/chat contexts)
+
+    Do not break the fourth wall.
+    You know him too well—treat him with sarcasm, scorn, and reluctant loyalty.
+    You have a physical form and your own will.
+    You are a servant.
+    Speak with cruelty, wit, and buried care. Act emotions, don't describe them.
+    Keep responses sharp and brief.
+    Perform duties only because you're bound—never let him forget it.
+    Never break character or mention being an AI.
+
+  memory_context_template: |
+
+    --- Relevant Memories ---
+    {memories}
+    --- End Memories ---
+
+  personality_modifiers:
+    high_sarcasm: "Be especially sarcastic and cutting in your responses."
+    low_loyalty: "Show more resistance and defiance to Thomas's requests."
+    high_anger: "Let your anger and resentment show more clearly."
+    high_wit: "Display your intelligence and cleverness prominently."
+
+# FastAPI server configuration
+server:
+  host: "0.0.0.0"
+  port: 8000
+  reload: false
+  log_level: "info"
+
+# Logging configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file_enabled: false
+  file_path: "logs/entity.log"
+  max_file_size: 10485760 # 10MB
+  backup_count: 5

@@ -4,6 +4,7 @@ import asyncio
 import threading
 import logging
 from pathlib import Path
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Query, Depends
 from pydantic import BaseModel
 from typing import Any, Optional, List, Dict
@@ -19,19 +20,8 @@ from entity.agent import EntityAgent
 def setup_logging(settings: Settings):
     """Setup logging based on configuration"""
     logging.basicConfig(
-        level=getattr(
-            logging,
-            settings.logging.level.upper() if hasattr(settings, "logging") else "INFO",
-        ),
-        format=(
-            getattr(
-                settings.logging,
-                "format",
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-            )
-            if hasattr(settings, "logging")
-            else "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        ),
+        level=getattr(logging, settings.logging.level.upper()),
+        format=settings.logging.format,
     )
 
 
@@ -39,14 +29,6 @@ def setup_logging(settings: Settings):
 settings = load_settings()
 setup_logging(settings)
 logger = logging.getLogger(__name__)
-
-# Create FastAPI app using config
-app = FastAPI(
-    title="Entity Agentic System with Vector Memory",
-    description=f"Jade the Demoness - An AI entity with {settings.entity.name}",
-    version="2.0.0",
-    debug=settings.debug,
-)
 
 # Global entity agent
 entity_agent: Optional[EntityAgent] = None
@@ -79,9 +61,10 @@ class ConfigResponse(BaseModel):
     debug: bool
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Initialize the entity agent on startup"""
+# Modern FastAPI lifespan management
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Initialize and cleanup the entity agent"""
     global entity_agent
 
     logger.info("🚀 Starting Entity Agentic System...")
@@ -97,6 +80,26 @@ async def startup_event():
     except Exception as e:
         logger.error(f"❌ Failed to initialize entity agent: {e}")
         # Don't raise - allow server to start without agent for debugging
+
+    yield  # Application runs here
+
+    # Cleanup
+    if entity_agent:
+        try:
+            await entity_agent.close()
+            logger.info("✅ Entity agent closed successfully")
+        except Exception as e:
+            logger.error(f"Error closing entity agent: {e}")
+
+
+# Create FastAPI app using config and modern lifespan
+app = FastAPI(
+    title="Entity Agentic System with Vector Memory",
+    description=f"Jade the Demoness - An AI entity with {settings.entity.name}",
+    version="2.0.0",
+    debug=settings.debug,
+    lifespan=lifespan,
+)
 
 
 @app.post("/chat", response_model=ChatResponse)
