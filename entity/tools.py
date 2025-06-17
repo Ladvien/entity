@@ -1,8 +1,35 @@
+# entity/tools.py (updated with memory tool)
+
 from langchain_core.tools import tool
 import httpx
 import json
 import ast
 import operator
+import asyncio
+from typing import List, Dict, Any, Optional
+
+
+# Import your memory system
+try:
+    from entity.memory import VectorMemorySystem
+    from entity.config import get_settings
+
+    # Global memory instance
+    _memory_system = None
+
+    async def get_memory_system():
+        """Get or create global memory system instance"""
+        global _memory_system
+        if _memory_system is None:
+            settings = get_settings()
+            _memory_system = VectorMemorySystem(settings=settings)
+            await _memory_system.initialize()
+        return _memory_system
+
+except ImportError:
+    # Fallback if memory system not available
+    async def get_memory_system():
+        return None
 
 
 @tool
@@ -101,6 +128,130 @@ def calculator(expression: str) -> str:
 
 
 @tool
+def recall_memory(query: str, thread_id: str = "default", limit: int = 3) -> str:
+    """Search and recall relevant memories from previous conversations"""
+    try:
+        # Run async function in sync context
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        try:
+            memory_system = loop.run_until_complete(get_memory_system())
+
+            if memory_system is None:
+                return "Memory system not available."
+
+            # Get relevant memories
+            memories = loop.run_until_complete(
+                memory_system.get_relevant_memories(query, thread_id, limit)
+            )
+
+            if not memories:
+                return f"No relevant memories found for '{query}'."
+
+            # Format memories for the agent
+            memory_text = []
+            for i, memory in enumerate(memories, 1):
+                content = memory.get("content", "")
+                emotion = memory.get("emotion", "neutral")
+                similarity = memory.get("similarity", 0.0)
+
+                # Truncate long memories
+                if len(content) > 150:
+                    content = content[:150] + "..."
+
+                memory_text.append(
+                    f"{i}. [{emotion}] {content} (relevance: {similarity:.2f})"
+                )
+
+            return f"Found {len(memories)} relevant memories:\n" + "\n".join(
+                memory_text
+            )
+
+        finally:
+            loop.close()
+
+    except Exception as e:
+        return f"Memory recall failed: {str(e)}"
+
+
+@tool
+def store_memory(
+    content: str, memory_type: str = "important", thread_id: str = "default"
+) -> str:
+    """Store important information in memory for later recall"""
+    try:
+        # Run async function in sync context
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        try:
+            memory_system = loop.run_until_complete(get_memory_system())
+
+            if memory_system is None:
+                return "Memory system not available."
+
+            # Store as a special memory entry
+            loop.run_until_complete(
+                memory_system.store_conversation(
+                    f"IMPORTANT: {content}",
+                    f"Jade noted: This information has been stored for future reference.",
+                    thread_id,
+                )
+            )
+
+            return f"Information stored in memory: '{content[:100]}...'"
+
+        finally:
+            loop.close()
+
+    except Exception as e:
+        return f"Memory storage failed: {str(e)}"
+
+
+@tool
+def get_conversation_summary(thread_id: str = "default", limit: int = 10) -> str:
+    """Get a summary of recent conversation history"""
+    try:
+        # Run async function in sync context
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        try:
+            memory_system = loop.run_until_complete(get_memory_system())
+
+            if memory_system is None:
+                return "Memory system not available."
+
+            # Get recent conversations
+            conversations = loop.run_until_complete(
+                memory_system.get_conversation_history(thread_id, limit)
+            )
+
+            if not conversations:
+                return f"No conversation history found for thread '{thread_id}'."
+
+            # Format summary
+            summary_parts = []
+            for conv in conversations[-5:]:  # Last 5 conversations
+                user_input = conv.get("user_input", "")[:50]
+                ai_response = conv.get("ai_response", "")[:50]
+
+                if user_input and ai_response:
+                    summary_parts.append(
+                        f"Thomas: {user_input}... → Jade: {ai_response}..."
+                    )
+
+            return f"Recent conversation summary:\n" + "\n".join(summary_parts)
+
+        finally:
+            loop.close()
+
+    except Exception as e:
+        return f"Conversation summary failed: {str(e)}"
+
+
+@tool
 def simple_response(input_text: str) -> str:
     """Provide simple responses for basic greetings and casual conversation"""
     text = input_text.lower().strip()
@@ -119,5 +270,12 @@ def simple_response(input_text: str) -> str:
 
 
 def get_tools():
-    """Return list of available tools"""
-    return [web_search, calculator, simple_response]
+    """Return list of available tools including memory tools"""
+    return [
+        web_search,
+        calculator,
+        recall_memory,
+        store_memory,
+        get_conversation_summary,
+        simple_response,
+    ]

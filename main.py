@@ -6,70 +6,44 @@ import logging
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, Query, Depends
 from pydantic import BaseModel
-from typing import Optional, List, Dict
+from typing import Any, Optional, List, Dict
 from datetime import datetime
 import uvicorn
 
-# Import our configuration system - using your current structure
-try:
-    from entity.config import Settings, load_settings, get_settings_dependency
-except ImportError:
-    # Fallback to simple configuration if config module doesn't exist
-    print("⚠️  Configuration module not found. Creating minimal setup...")
-
-    # Create a minimal configuration class
-    class Settings:
-        def __init__(self):
-            self.entity = type(
-                "Entity",
-                (),
-                {
-                    "entity_id": "jade_demon",
-                    "name": "Jade",
-                    "sarcasm_level": 0.8,
-                    "loyalty_level": 0.6,
-                    "anger_level": 0.7,
-                    "wit_level": 0.9,
-                },
-            )()
-            self.database = type(
-                "Database",
-                (),
-                {
-                    "host": "192.168.1.104",
-                    "port": 5432,
-                    "name": "entity_memory",
-                    "username": "entity_user",
-                    "password": "your_secure_password",
-                },
-            )()
-            self.server = type(
-                "Server",
-                (),
-                {"host": "0.0.0.0", "port": 8000, "reload": False, "log_level": "info"},
-            )()
-            self.debug = False
-
-    def load_settings(config_path="config.yaml"):
-        return Settings()
-
-    def get_settings_dependency():
-        return Settings()
-
-
+# Import configuration system
+from entity.config import Settings, load_settings, get_settings_dependency
 from entity.agent import EntityAgent
 
-# Configure logging early
-logging.basicConfig(level=logging.INFO)
+
+# Configure logging
+def setup_logging(settings: Settings):
+    """Setup logging based on configuration"""
+    logging.basicConfig(
+        level=getattr(
+            logging,
+            settings.logging.level.upper() if hasattr(settings, "logging") else "INFO",
+        ),
+        format=(
+            getattr(
+                settings.logging,
+                "format",
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            )
+            if hasattr(settings, "logging")
+            else "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        ),
+    )
+
+
+# Load settings
+settings = load_settings()
+setup_logging(settings)
 logger = logging.getLogger(__name__)
 
-# Initialize settings
-settings = load_settings()
-
-# Create FastAPI app
+# Create FastAPI app using config
 app = FastAPI(
     title="Entity Agentic System with Vector Memory",
-    description="Jade the Demoness - An AI entity with PostgreSQL + pgvector memory",
+    description=f"Jade the Demoness - An AI entity with {settings.entity.name}",
     version="2.0.0",
     debug=settings.debug,
 )
@@ -97,6 +71,14 @@ class HistoryResponse(BaseModel):
     has_memory: bool
 
 
+class ConfigResponse(BaseModel):
+    entity: Dict[str, Any]
+    database: Dict[str, Any]
+    ollama: Dict[str, Any]
+    server: Dict[str, Any]
+    debug: bool
+
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize the entity agent on startup"""
@@ -104,10 +86,12 @@ async def startup_event():
 
     logger.info("🚀 Starting Entity Agentic System...")
     logger.info(f"🤖 Entity: {settings.entity.name} ({settings.entity.entity_id})")
+    logger.info(f"🔧 Database: {settings.database.host}:{settings.database.port}")
+    logger.info(f"🧠 Ollama: {settings.ollama.base_url} ({settings.ollama.model})")
 
     try:
-        entity_agent = EntityAgent()  # Use original agent for now
-        # If your agent supports settings, use: EntityAgent(settings=settings)
+        # Initialize agent with settings
+        entity_agent = EntityAgent(settings=settings)
         await entity_agent.initialize()
         logger.info("✅ Entity agent initialized successfully")
     except Exception as e:
@@ -116,7 +100,9 @@ async def startup_event():
 
 
 @app.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest):
+async def chat(
+    request: ChatRequest, current_settings: Settings = Depends(get_settings_dependency)
+):
     """Chat with the entity"""
     try:
         if not entity_agent:
@@ -136,7 +122,11 @@ async def chat(request: ChatRequest):
 
 
 @app.get("/history/{thread_id}", response_model=HistoryResponse)
-async def get_history(thread_id: str, limit: int = Query(default=10, ge=1, le=100)):
+async def get_history(
+    thread_id: str,
+    limit: int = Query(default=10, ge=1, le=100),
+    current_settings: Settings = Depends(get_settings_dependency),
+):
     """Get conversation history for a thread"""
     try:
         if not entity_agent:
@@ -155,7 +145,9 @@ async def get_history(thread_id: str, limit: int = Query(default=10, ge=1, le=10
 
 
 @app.delete("/history/{thread_id}")
-async def delete_history(thread_id: str):
+async def delete_history(
+    thread_id: str, current_settings: Settings = Depends(get_settings_dependency)
+):
     """Delete conversation history for a thread"""
     try:
         if not entity_agent:
@@ -174,30 +166,77 @@ async def delete_history(thread_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/config", response_model=ConfigResponse)
+async def get_config(current_settings: Settings = Depends(get_settings_dependency)):
+    """Get current configuration"""
+    return ConfigResponse(
+        entity={
+            "entity_id": current_settings.entity.entity_id,
+            "name": current_settings.entity.name,
+            "sarcasm_level": current_settings.entity.sarcasm_level,
+            "loyalty_level": current_settings.entity.loyalty_level,
+            "anger_level": current_settings.entity.anger_level,
+            "wit_level": current_settings.entity.wit_level,
+            "response_brevity": current_settings.entity.response_brevity,
+            "memory_influence": current_settings.entity.memory_influence,
+        },
+        database={
+            "host": current_settings.database.host,
+            "port": current_settings.database.port,
+            "name": current_settings.database.name,
+            "username": current_settings.database.username,
+        },
+        ollama={
+            "base_url": current_settings.ollama.base_url,
+            "model": current_settings.ollama.model,
+            "temperature": current_settings.ollama.temperature,
+            "top_p": current_settings.ollama.top_p,
+            "top_k": current_settings.ollama.top_k,
+        },
+        server={
+            "host": current_settings.server.host,
+            "port": current_settings.server.port,
+            "reload": current_settings.server.reload,
+            "log_level": current_settings.server.log_level,
+        },
+        debug=current_settings.debug,
+    )
+
+
 @app.get("/")
-async def root():
+async def root(current_settings: Settings = Depends(get_settings_dependency)):
     """Root endpoint with system information"""
     memory_status = entity_agent.has_memory() if entity_agent else False
     return {
         "message": "Entity Agentic System v2.0",
-        "entity_id": settings.entity.entity_id,
-        "entity_name": settings.entity.name,
+        "entity_id": current_settings.entity.entity_id,
+        "entity_name": current_settings.entity.name,
         "memory_enabled": memory_status,
-        "memory_type": "PostgreSQL + pgvector" if memory_status else "None",
+        "memory_type": "Vector Memory + PostgreSQL" if memory_status else "None",
         "status": "ready" if entity_agent else "initializing",
+        "config": {
+            "ollama_model": current_settings.ollama.model,
+            "database_host": current_settings.database.host,
+            "debug_mode": current_settings.debug,
+        },
     }
 
 
 @app.get("/health")
-async def health_check():
+async def health_check(current_settings: Settings = Depends(get_settings_dependency)):
     """Health check endpoint"""
     memory_status = entity_agent.has_memory() if entity_agent else False
     return {
         "status": "healthy" if entity_agent else "starting",
-        "entity": settings.entity.name,
-        "entity_id": settings.entity.entity_id,
+        "entity": current_settings.entity.name,
+        "entity_id": current_settings.entity.entity_id,
         "memory_enabled": memory_status,
         "timestamp": datetime.now().isoformat(),
+        "config_loaded": True,
+        "services": {
+            "ollama": current_settings.ollama.base_url,
+            "database": f"{current_settings.database.host}:{current_settings.database.port}",
+        },
     }
 
 
@@ -215,13 +254,18 @@ async def chat_loop():
     logger.info(f"💾 Running {memory_status}")
 
     print(f"\n🎭 Welcome! You are now talking to {settings.entity.name}")
+    print(
+        f"📊 Personality: Sarcasm {settings.entity.sarcasm_level:.1f}, Loyalty {settings.entity.loyalty_level:.1f}"
+    )
     print("💡 Commands:")
     print("   'exit' or 'quit' - Exit chat")
     if entity_agent.has_memory():
         print("   'history' - Show conversation history")
         print("   'clear' - Clear current conversation")
         print("   'switch <thread_id>' - Switch to different conversation thread")
+        print("   'memory' - Show memory statistics")
     print("   'status' - Show agent status")
+    print("   'config' - Show current configuration")
     print()
 
     current_thread = "default"
@@ -238,16 +282,58 @@ async def chat_loop():
 
             if user_input.lower() == "status":
                 print(f"🤖 Entity Agent Status:")
-                print(f"   Entity: {settings.entity.name}")
+                print(
+                    f"   Entity: {settings.entity.name} ({settings.entity.entity_id})"
+                )
+                print(
+                    f"   Ollama: {settings.ollama.model} @ {settings.ollama.base_url}"
+                )
+                print(f"   Database: {settings.database.host}:{settings.database.port}")
                 print(
                     f"   Memory: {'Available' if entity_agent.has_memory() else 'None'}"
                 )
                 print(
                     f"   Thread: {current_thread if entity_agent.has_memory() else 'N/A'}"
                 )
+                print(f"   Debug: {settings.debug}")
+                continue
+
+            if user_input.lower() == "config":
+                print(f"🔧 Current Configuration:")
+                print(f"   Entity ID: {settings.entity.entity_id}")
+                print(f"   Entity Name: {settings.entity.name}")
+                print(f"   Sarcasm Level: {settings.entity.sarcasm_level}")
+                print(f"   Loyalty Level: {settings.entity.loyalty_level}")
+                print(f"   Anger Level: {settings.entity.anger_level}")
+                print(f"   Wit Level: {settings.entity.wit_level}")
+                print(f"   Response Brevity: {settings.entity.response_brevity}")
+                print(f"   Memory Influence: {settings.entity.memory_influence}")
+                print(f"   Ollama Model: {settings.ollama.model}")
+                print(f"   Ollama URL: {settings.ollama.base_url}")
+                print(
+                    f"   Database: {settings.database.host}:{settings.database.port}/{settings.database.name}"
+                )
                 continue
 
             if entity_agent.has_memory():
+                if user_input.lower() == "memory":
+                    try:
+                        stats = await entity_agent.get_memory_stats()
+                        print(f"🧠 Memory Statistics:")
+                        print(f"   Total memories: {stats.get('total_memories', 0)}")
+                        print(
+                            f"   Total conversations: {stats.get('total_conversations', 0)}"
+                        )
+                        print(f"   Memory types: {stats.get('memory_types', {})}")
+                        print(f"   Emotions: {stats.get('emotions', {})}")
+                        print(
+                            f"   Top topics: {dict(list(stats.get('top_topics', {}).items())[:5])}"
+                        )
+                        print(f"   Backend: {stats.get('backend', 'unknown')}")
+                    except Exception as e:
+                        print(f"❌ Error getting memory stats: {e}")
+                    continue
+
                 if user_input.lower() == "history":
                     conversations = await entity_agent.get_conversation_history(
                         current_thread, limit=10
@@ -324,7 +410,7 @@ if __name__ == "__main__":
     if mode == "chat":
         # Run only the chat loop
         logger.info("🚀 Starting chat-only mode...")
-        entity_agent = EntityAgent()
+        entity_agent = EntityAgent(settings=settings)
         asyncio.run(chat_loop())
 
     elif mode == "both":
@@ -334,7 +420,7 @@ if __name__ == "__main__":
         # Start chat loop in background
         start_chat_thread()
 
-        # Start FastAPI server
+        # Start FastAPI server using config
         uvicorn.run(
             app,
             host=settings.server.host,
@@ -352,14 +438,64 @@ if __name__ == "__main__":
 
             print("✅ EntityAgent import successful")
 
-            agent = EntityAgent()
+            agent = EntityAgent(settings=settings)
             print("✅ EntityAgent creation successful")
+            print(f"   Entity: {settings.entity.name}")
+            print(f"   Model: {settings.ollama.model}")
+            print(f"   Debug: {settings.debug}")
 
         except Exception as e:
             print(f"❌ Error: {e}")
             import traceback
 
             traceback.print_exc()
+
+    elif mode == "config":
+        # Show configuration
+        logger.info("🔧 Configuration Details:")
+        print("\n" + "=" * 50)
+        print("ENTITY CONFIGURATION")
+        print("=" * 50)
+        print(f"Entity ID: {settings.entity.entity_id}")
+        print(f"Entity Name: {settings.entity.name}")
+        print(f"Sarcasm Level: {settings.entity.sarcasm_level}")
+        print(f"Loyalty Level: {settings.entity.loyalty_level}")
+        print(f"Anger Level: {settings.entity.anger_level}")
+        print(f"Wit Level: {settings.entity.wit_level}")
+        print(f"Response Brevity: {settings.entity.response_brevity}")
+        print(f"Memory Influence: {settings.entity.memory_influence}")
+
+        print("\n" + "=" * 50)
+        print("OLLAMA CONFIGURATION")
+        print("=" * 50)
+        print(f"Base URL: {settings.ollama.base_url}")
+        print(f"Model: {settings.ollama.model}")
+        print(f"Temperature: {settings.ollama.temperature}")
+        print(f"Top P: {settings.ollama.top_p}")
+        print(f"Top K: {settings.ollama.top_k}")
+        print(f"Repeat Penalty: {settings.ollama.repeat_penalty}")
+
+        print("\n" + "=" * 50)
+        print("DATABASE CONFIGURATION")
+        print("=" * 50)
+        print(f"Host: {settings.database.host}")
+        print(f"Port: {settings.database.port}")
+        print(f"Database: {settings.database.name}")
+        print(f"Username: {settings.database.username}")
+        print(
+            f"Connection String: {settings.database.connection_string.replace(settings.database.password, '***')}"
+        )
+
+        print("\n" + "=" * 50)
+        print("SERVER CONFIGURATION")
+        print("=" * 50)
+        print(f"Host: {settings.server.host}")
+        print(f"Port: {settings.server.port}")
+        print(f"Reload: {settings.server.reload}")
+        print(f"Log Level: {settings.server.log_level}")
+
+        print("\n" + "=" * 50)
+        print(f"Debug Mode: {settings.debug}")
 
     else:
         # Default: run only FastAPI server
@@ -368,6 +504,7 @@ if __name__ == "__main__":
         logger.info("   python main.py chat    - Chat-only mode")
         logger.info("   python main.py both    - Server + chat")
         logger.info("   python main.py simple  - Simple test mode")
+        logger.info("   python main.py config  - Show configuration")
         logger.info("   python main.py server  - Server only (default)")
 
         uvicorn.run(
