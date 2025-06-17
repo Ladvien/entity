@@ -1,32 +1,38 @@
-from rich import print
-import logging
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from entity.entity_agenty import EntityAgent
+import os
+from dotenv import load_dotenv
 
-from listening_neuron import Config, RecordingDevice, ListeningNeuron
-from listening_neuron.transcription import TranscriptionResult
+load_dotenv()
+
+app = FastAPI(title="Simple Agentic System")
+entity_agent = EntityAgent()
 
 
-def transcription_callback(text: str, result: TranscriptionResult) -> None:
-    print(result)
+class ChatRequest(BaseModel):
+    message: str
 
 
-def main():
-    config = Config.load("config.yaml")
-    logging.info("Using config: ")
-    logging.info(config)
+class ChatResponse(BaseModel):
+    response: str
 
-    # Important for linux users.
-    # Prevents permanent application hang and crash by using the wrong Microphone
-    print(config)
-    recording_device = RecordingDevice(config.mic_config)
-    listening_neuron = ListeningNeuron(
-        config.listening_neuron,
-        recording_device,
-    )
 
-    # Cue the user that we're ready to go.
-    print("Model loaded.\n")
-    listening_neuron.listen(transcription_callback)
+@app.post("/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest):
+    try:
+        response = await entity_agent.process(request.message)
+        return ChatResponse(response=response)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/")
+async def root():
+    return {"message": "Simple Agentic System"}
 
 
 if __name__ == "__main__":
-    main()
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)

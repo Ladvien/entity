@@ -12,37 +12,24 @@ repository = "https://github.com/Ladvien/entity"
 documentation = "https://entity.readthedocs.io/en/latest/"
 
 [tool.poetry.dependencies]
-python = ">=3.11,<=3.13"
-pyyaml = "^6.0.2"
-rich = "^13.9.4"
-requests = "^2.32.4"
-pyaudio = "^0.2.14"
-numpy = ">=1.26.4,<=2.1"
-scipy = "^1.15.3"
-cognee = {extras = ["postgres"], version = "^0.1.43"}
-psycopg2-binary = "^2.9.10"
+python = "^3.11"
+fastapi = "0.115.7"
+uvicorn = "^0.34.3"
+langchain = "^0.3.25"
+langchain-community = "^0.3.25"
+ollama = "^0.5.1"
+pydantic = "^2.11.7"
+httpx = "^0.28.1"
 python-dotenv = "^1.1.0"
-transformers = "^4.52.4"
-asyncpg = "^0.30.0"
+langchain-ollama = "^0.3.3"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
-sphinx = "^8.1.3"
-myst-parser = "^4.0.1"
-sphinx-autobuild = "^2024.10.3"
-furo = "^2024.8.6"
-sphinx-autoapi = "^3.5.0"
-sphinx-autodoc2 = "^0.5.0"
-doc-utils = "^0.0.2"
-poethepoet = "^0.32.2"
+pytest = "^8.0.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.poe.tasks]
-docs = "sphinx-build docs/source docs/build/html"  # a simple command task
-docs_view = "sphinx-autobuild docs/source docs/build/html"  # a simple command task
-patch = "poetry version patch"  # a simple command task
-_publish = "poetry publish --build"  # a simple command task
-release = ["docs", "patch", "_publish"]  # a task that depends on other tasks
+[tool.poetry.scripts]
+start = "main:main"

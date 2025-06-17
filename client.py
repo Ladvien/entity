@@ -1,8 +1,4 @@
 import os
-import cognee.infrastructure
-import cognee.infrastructure.databases
-import cognee.infrastructure.databases.vector
-import cognee.infrastructure.databases.vector.pgvector
 import requests
 import pyaudio
 import wave
@@ -21,7 +17,6 @@ from dotenv import load_dotenv
 
 load_dotenv()  # This loads .env file
 
-
 # Suppress ALSA warnings
 os.environ["ALSA_VERBOSITY"] = "0"
 
@@ -34,7 +29,7 @@ BASE_TTS_URL = "http://192.168.1.110:8888"
 BASE_OLLAMA_URL = "http://192.168.1.110:11434"
 VOICE_NAME = "bf_emma"
 VOICE_SAMPLE_PATH = "voice_samples/ai_mee.wav"
-MODEL = "neural-chat:7b"  # Better chat model that should return proper text
+MODEL = "neural-chat:7b"
 
 # Entity configuration
 ENTITY_ID = "jade_demon"
@@ -69,7 +64,7 @@ is_chatterbox = True
 
 
 class CogneeEntityMemory:
-    """Enhanced entity using cognee with proper configuration"""
+    """Enhanced entity using cognee with modern environment-based configuration"""
 
     def __init__(
         self, entity_id: str = ENTITY_ID, enable_memory: bool = MEMORY_ENABLED
@@ -83,17 +78,31 @@ class CogneeEntityMemory:
             self.verify_configuration()
 
     def verify_configuration(self):
-        """Verify cognee configuration is loaded properly"""
+        """Verify cognee configuration is loaded properly from environment variables"""
         print("🔍 Verifying cognee configuration:")
 
-        required_vars = ["LLM_API_KEY", "LLM_PROVIDER", "LLM_MODEL", "LLM_ENDPOINT"]
+        # Updated required variables for current Cognee setup
+        required_vars = [
+            "LLM_API_KEY",
+            "LLM_PROVIDER",
+            "LLM_MODEL",
+            "LLM_ENDPOINT",
+            "DB_PROVIDER",
+            "DB_HOST",
+            "DB_NAME",
+            "DB_USERNAME",
+            "DB_PASSWORD",
+            "VECTOR_DB_PROVIDER",
+            "VECTOR_DB_HOST",
+            "VECTOR_DB_NAME",
+        ]
         missing_vars = []
 
         for var in required_vars:
             value = os.environ.get(var)
             if value:
-                if var == "LLM_API_KEY":
-                    print(f"   ✅ {var}: {value}")
+                if "PASSWORD" in var or "API_KEY" in var:
+                    print(f"   ✅ {var}: ***")
                 else:
                     print(f"   ✅ {var}: {value}")
             else:
@@ -105,6 +114,7 @@ class CogneeEntityMemory:
             print(
                 "   Make sure .env file exists and contains proper cognee configuration"
             )
+            print("   See .env.example for the required variables")
             self.enable_memory = False
         else:
             print("✅ All required environment variables are set")
@@ -136,13 +146,14 @@ class CogneeEntityMemory:
                 ]
                 if embedding_models:
                     print(f"✅ Embedding models found: {embedding_models}")
-                    # Update .env to use available embedding model
-                    os.environ["EMBEDDING_MODEL"] = embedding_models[0]
+                    # Set embedding model if not already configured
+                    if not os.environ.get("EMBEDDING_MODEL"):
+                        os.environ["EMBEDDING_MODEL"] = embedding_models[0]
+                        print(f"   Set EMBEDDING_MODEL to: {embedding_models[0]}")
                 else:
-                    print("⚠️  No embedding models found - will use text-only memory")
+                    print("⚠️  No embedding models found")
                     print("   Consider running: ollama pull nomic-embed-text")
-                    # Disable embeddings for now
-                    os.environ["EMBEDDING_PROVIDER"] = ""
+                    print("   Memory will work but without semantic search")
 
                 return True
             else:
@@ -153,90 +164,117 @@ class CogneeEntityMemory:
             return False
 
     async def initialize_memory(self):
-        """Initialize cognee memory system with simpler processing"""
+        """Initialize cognee memory system using environment variables"""
+        print("🧠 Initializing Cognee with environment-based configuration...")
 
-        cognee.config.set_vector_db_config({"vector_db_provider": "pgvector"})
+        try:
+            # Cognee will automatically load configuration from environment variables
+            # No need for programmatic configuration calls
 
-        cognee.config.set_relational_db_config(
-            {
-                "db_provider": "postgres",
-                "db_host": os.environ.get("COGNEE_DB_HOST", "192.168.1.104"),
-                "db_port": os.environ.get("COGNEE_DB_PORT", "5432"),
-                "db_name": os.environ.get("COGNEE_DB_NAME", "memory"),
-                "db_username": os.environ.get("COGNEE_DB_USER", "memory"),
-                "db_password": os.environ.get("COGNEE_DB_PASSWORD", "REPLACE_ME"),
-            }
-        )
+            # Test basic cognee functionality
+            await self.test_cognee_setup()
 
-        cognee.config.set_llm_config(
-            {
-                "llm_provider": os.environ.get("LLM_PROVIDER", "ollama"),
-                "llm_model": os.environ.get("LLM_MODEL", "neural-chat:7b"),
-                "llm_api_key": os.environ.get("LLM_API_KEY", "dummy_key"),
-                "llm_endpoint": os.environ.get(
-                    "LLM_ENDPOINT", "http://192.168.1.110:11434/v1"
-                ),
-            }
-        )
+            print("✅ Cognee memory system initialized successfully")
+            self.memory_initialized = True
 
-        # cognee.config.set_embedding_config(
-        #     {
-        #         "embedding_provider": os.environ.get("EMBEDDING_PROVIDER", "ollama"),
-        #         "embedding_model": os.environ.get(
-        #             "EMBEDDING_MODEL", "nomic-embed-text"
-        #         ),
-        #     }
-        # )
+        except Exception as e:
+            logger.error(f"Failed to initialize cognee memory system: {e}")
+            print(f"❌ Memory initialization failed: {e}")
+            self.enable_memory = False
+
+    async def test_cognee_setup(self):
+        """Test basic cognee functionality"""
+        try:
+            # Test with a simple piece of data
+            test_data = (
+                f"Entity {self.entity_id} memory system test at {datetime.now()}"
+            )
+            await cognee.add(test_data)
+            await cognee.cognify()
+
+            # Test search functionality
+            results = await cognee.search("memory system test")
+            if results:
+                print(f"✅ Cognee test successful - found {len(results)} results")
+            else:
+                print("⚠️  Cognee test: no results found, but system appears functional")
+
+        except Exception as e:
+            logger.error(f"Cognee test failed: {e}")
+            raise
 
     async def add_conversation_memory(self, user_input: str, ai_response: str):
         """Store conversation in cognee memory - optimized"""
-        if not self.enable_memory:
+        if not self.enable_memory or not self.memory_initialized:
             return
 
         try:
             self.conversation_count += 1
 
-            # Simple conversation format to reduce processing
-            conversation_memory = f"Conversation {self.conversation_count}: Thomas said '{user_input}' - Jade replied '{ai_response}'"
+            # Enhanced conversation format with entity context
+            conversation_memory = (
+                f"Entity: {self.entity_id} | "
+                f"Conversation #{self.conversation_count} | "
+                f"Thomas: {user_input} | "
+                f"Jade: {ai_response} | "
+                f"Timestamp: {datetime.now().isoformat()}"
+            )
 
             await cognee.add(conversation_memory)
-            # Only cognify every few conversations to reduce load
+
+            # Cognify every few conversations to reduce processing load
             if self.conversation_count % 3 == 0:
                 await cognee.cognify()
+                print(f"🧠 Memory updated (conversation #{self.conversation_count})")
 
         except Exception as e:
             logger.error(f"Failed to add conversation to cognee: {e}")
 
     async def get_memory_context(self, current_input: str) -> str:
-        """Get relevant memory context using cognee search - lightweight with fallback"""
-        if not self.enable_memory:
+        """Get relevant memory context using cognee search"""
+        if not self.enable_memory or not self.memory_initialized:
             return ""
 
         try:
-            # Simple search query
-            search_query = f"{self.entity_id} {current_input}"
-            memories = await cognee.search(search_query)
+            # Enhanced search query with entity context
+            search_queries = [
+                f"{self.entity_id} {current_input}",
+                f"Thomas {current_input}",
+                f"Jade {current_input}",
+                current_input,
+            ]
 
-            if memories:
-                # Just use the first relevant memory to reduce processing
-                relevant_memory = memories[0]
+            all_memories = []
+            for query in search_queries:
+                try:
+                    memories = await cognee.search(query)
+                    if memories:
+                        all_memories.extend(memories[:2])  # Limit per query
+                except Exception:
+                    continue  # Try next query if this one fails
+
+            if all_memories:
+                # Remove duplicates and select most relevant
+                unique_memories = list(dict.fromkeys(all_memories))
+                relevant_memory = unique_memories[0]
+
+                # Truncate for context window
                 truncated = (
-                    relevant_memory[:200] + "..."
-                    if len(relevant_memory) > 200
+                    relevant_memory[:300] + "..."
+                    if len(relevant_memory) > 300
                     else relevant_memory
                 )
 
-                return f"\n--- Recent Context ---\n{truncated}\n--- End Context ---\n"
+                return f"\n--- Memory Context ---\n{truncated}\n--- End Context ---\n"
 
         except Exception as e:
             logger.error(f"Failed to get memory context from cognee: {e}")
-            # Don't provide context if search fails, but conversation still works
 
         return ""
 
     async def search_memories(self, query: str) -> List[str]:
         """Search memories using cognee"""
-        if not self.enable_memory:
+        if not self.enable_memory or not self.memory_initialized:
             return []
 
         try:
@@ -253,7 +291,11 @@ class CogneeEntityMemory:
         if not self.enable_memory:
             return {"error": "Memory disabled"}
 
+        if not self.memory_initialized:
+            return {"error": "Memory not initialized"}
+
         try:
+            # Search for entity-specific memories
             all_memories = await cognee.search(f"Entity {self.entity_id}")
 
             return {
@@ -264,11 +306,28 @@ class CogneeEntityMemory:
                 "backend": "local_ollama",
                 "model": MODEL,
                 "endpoint": BASE_OLLAMA_URL,
+                "initialized": self.memory_initialized,
+                "config_source": "environment_variables",
             }
 
         except Exception as e:
             logger.error(f"Failed to get memory stats: {e}")
             return {"error": str(e)}
+
+    async def prune_memories(self, confirm: bool = False):
+        """Clean up old memories - use with caution"""
+        if not self.enable_memory or not confirm:
+            return False
+
+        try:
+            await cognee.prune.prune_data()
+            await cognee.prune.prune_system(metadata=True)
+            self.conversation_count = 0
+            print("🧠 Memory system pruned successfully")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to prune memories: {e}")
+            return False
 
 
 # Initialize global memory entity
@@ -443,7 +502,7 @@ async def setup_memory_system():
 
 
 def interactive_chat():
-    print("🧠 Starting Cognee memory system with .env configuration...")
+    print("🧠 Starting Cognee memory system with environment variable configuration...")
 
     # Initialize cognee memory system
     loop = asyncio.new_event_loop()
@@ -457,8 +516,8 @@ def interactive_chat():
     print(f"🧠 Detected TTS backend: {'Chatterbox' if is_chatterbox else 'Kokoro'}")
     print(f"🎙️ Available voices: {voices}")
 
-    if memory_entity.enable_memory:
-        print("🧠 Memory system: ENABLED (Cognee + Local Ollama)")
+    if memory_entity.enable_memory and memory_entity.memory_initialized:
+        print("🧠 Memory system: ENABLED (Cognee + Environment Config)")
     else:
         print("⚠️  Memory system: DISABLED")
 
@@ -485,6 +544,7 @@ def interactive_chat():
     print("💡 Special commands:")
     print("   'memory' - Show memory stats")
     print("   'recall <query>' - Search cognee memories")
+    print("   'prune confirm' - Clear all memories (use with caution)")
     print()
 
     while True:
@@ -510,7 +570,7 @@ def interactive_chat():
             continue
 
         if user_input.lower().startswith("recall "):
-            if memory_entity.enable_memory:
+            if memory_entity.enable_memory and memory_entity.memory_initialized:
                 query = user_input[7:].strip()
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
@@ -528,16 +588,29 @@ def interactive_chat():
                     else:
                         print("🧠 No relevant memories found")
                 except Exception as e:
-                    print(
-                        f"🧠 Memory search temporarily unavailable (cognee processing)"
-                    )
-                    print(
-                        f"   Try searching for something more specific or try again later"
-                    )
+                    print(f"🧠 Memory search error: {e}")
                 finally:
                     loop.close()
             else:
-                print("⚠️  Memory system is disabled")
+                print("⚠️  Memory system is disabled or not initialized")
+            continue
+
+        if user_input.lower() == "prune confirm":
+            if memory_entity.enable_memory and memory_entity.memory_initialized:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    success = loop.run_until_complete(
+                        memory_entity.prune_memories(confirm=True)
+                    )
+                    if success:
+                        print("🧠 All memories cleared successfully")
+                    else:
+                        print("❌ Failed to clear memories")
+                finally:
+                    loop.close()
+            else:
+                print("⚠️  Memory system is disabled or not initialized")
             continue
 
         history.append({"role": "user", "content": user_input})
@@ -552,7 +625,7 @@ def interactive_chat():
         faded = fade_out_stereo(frames, channels)
         play_audio(faded, sample_width, channels, rate)
 
-        if memory_entity.enable_memory:
+        if memory_entity.enable_memory and memory_entity.memory_initialized:
             print(
                 f"✅ Response played. (Conversation #{memory_entity.conversation_count})\n"
             )
