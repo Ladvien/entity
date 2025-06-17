@@ -6,12 +6,13 @@ import time
 import traceback
 from typing import Dict, Any, List, Optional
 from langchain_core.documents import Document
-from langchain.agents import AgentExecutor, create_react_agent
+from langchain.agents import create_openai_functions_agent
 from langchain.prompts import PromptTemplate
 from langchain_ollama import OllamaLLM
 from langchain.schema import HumanMessage, AIMessage
 from langgraph.graph import StateGraph, MessagesState
 from langgraph.checkpoint.postgres import PostgresSaver
+from langchain.agents import AgentExecutor, create_react_agent
 
 from src.tool_registry import ToolRegistry, register_memory_tools
 from src.config import EntitySystemConfig
@@ -91,28 +92,29 @@ class EntityAgent:
         logger.info("PostgreSQL checkpointing enabled")
 
     def _create_agent(self):
-        prompt_template = PromptTemplate.from_template(
-            f"""{self.settings.prompts.base_prompt}
+        prompt_template = PromptTemplate(
+            input_variables=["input", "agent_scratchpad", "tools", "tool_names"],
+            template=f"""{self.settings.prompts.base_prompt}
 
-You have access to these tools:
-{{tools}}
+    You have access to these tools:
+    {{tools}}
 
-Tool names: {{tool_names}}
+    Tool names: {{tool_names}}
 
-Use this exact format when you need tools:
+    Use this exact format when you need tools:
 
-Question: {{input}}
-Thought: I suppose I must help Thomas with this
-Action: [one of: {{tool_names}}]
-Action Input: [input_for_tool]
-Observation: [tool_result]
-Thought: I now know what to tell Thomas
-Final Answer: [Your response as Jade]
+    Question: {{input}}
+    Thought: I suppose I must help Thomas with this
+    Action: [one of: {{tool_names}}]
+    Action Input: [input_for_tool]
+    Observation: [tool_result]
+    Thought: I now know what to tell Thomas
+    Final Answer: [Your response as Jade]
 
-If you don't need tools, just respond directly as Jade.
+    If you don't need tools, just respond directly as Jade.
 
-Question: {{input}}
-{{agent_scratchpad}}"""
+    Question: {{input}}
+    {{agent_scratchpad}}""",
         )
 
         agent = create_react_agent(self.llm, self.tools, prompt_template)
@@ -122,8 +124,8 @@ Question: {{input}}
             tools=self.tools,
             verbose=self.settings.debug,
             handle_parsing_errors=True,
-            max_iterations=20,  # Increase iteration count
-            max_execution_time=120,  # Allow up to 2 minutes
+            max_iterations=20,
+            max_execution_time=120,
         )
 
     def _create_graph(self):
