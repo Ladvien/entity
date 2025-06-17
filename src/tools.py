@@ -8,16 +8,6 @@ import operator
 import asyncio
 from typing import List, Dict, Any, Optional
 
-# Try to import PostgreSQL memory tools
-POSTGRES_MEMORY_AVAILABLE = False
-try:
-    from entity.tools.memory_tool import get_memory_tools
-
-    POSTGRES_MEMORY_AVAILABLE = True
-    print("✅ PostgreSQL memory tools loaded")
-except ImportError as e:
-    print(f"⚠️  PostgreSQL memory tools not available: {e}")
-
 
 @tool
 def web_search(query: str) -> str:
@@ -195,135 +185,110 @@ def fallback_store_memory(
     return f"I'll try to remember that '{content[:50]}...' though my memory capabilities are limited without the full system."
 
 
-# Import VectorMemorySystem-compatible tools if no PostgreSQL
-try:
-    from entity.memory import VectorMemorySystem
-    from entity.config import get_settings
+@tool
+def recall_memory(query: str, thread_id: str = "default", limit: int = 3) -> str:
+    """Search and recall relevant memories from previous conversations"""
+    try:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
 
-    # Global memory instance
-    _vector_memory = None
-
-    async def get_vector_memory():
-        """Get or create global vector memory system instance"""
-        global _vector_memory
-        if _vector_memory is None:
-            settings = get_settings()
-            _vector_memory = VectorMemorySystem(settings=settings)
-            await _vector_memory.initialize()
-        return _vector_memory
-
-    @tool
-    def recall_memory(query: str, thread_id: str = "default", limit: int = 3) -> str:
-        """Search and recall relevant memories from previous conversations"""
         try:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+            memory_system = loop.run_until_complete(get_vector_memory())
+            memories = loop.run_until_complete(
+                memory_system.get_relevant_memories(query, thread_id, limit)
+            )
 
-            try:
-                memory_system = loop.run_until_complete(get_vector_memory())
-                memories = loop.run_until_complete(
-                    memory_system.get_relevant_memories(query, thread_id, limit)
+            if not memories:
+                return f"No relevant memories found for '{query}'."
+
+            memory_text = []
+            for i, memory in enumerate(memories, 1):
+                content = memory.get("content", "")
+                emotion = memory.get("emotional_tone", "neutral")
+                similarity = memory.get("similarity", 0.0)
+
+                if len(content) > 150:
+                    content = content[:150] + "..."
+
+                memory_text.append(
+                    f"{i}. [{emotion}] {content} (relevance: {similarity:.2f})"
                 )
 
-                if not memories:
-                    return f"No relevant memories found for '{query}'."
+            return f"Found {len(memories)} relevant memories:\n" + "\n".join(
+                memory_text
+            )
 
-                memory_text = []
-                for i, memory in enumerate(memories, 1):
-                    content = memory.get("content", "")
-                    emotion = memory.get("emotional_tone", "neutral")
-                    similarity = memory.get("similarity", 0.0)
+        finally:
+            loop.close()
 
-                    if len(content) > 150:
-                        content = content[:150] + "..."
+    except Exception as e:
+        return f"Memory recall failed: {str(e)}"
 
-                    memory_text.append(
-                        f"{i}. [{emotion}] {content} (relevance: {similarity:.2f})"
+
+@tool
+def store_memory(
+    content: str, memory_type: str = "important", thread_id: str = "default"
+) -> str:
+    """Store important information in memory for later recall"""
+    try:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        try:
+            memory_system = loop.run_until_complete(get_vector_memory())
+            loop.run_until_complete(
+                memory_system.store_conversation(
+                    f"IMPORTANT: {content}",
+                    f"Jade has stored this important information: {content}",
+                    thread_id,
+                )
+            )
+
+            return f"Information stored in memory: '{content[:100]}...'"
+
+        finally:
+            loop.close()
+
+    except Exception as e:
+        return f"Memory storage failed: {str(e)}"
+
+
+@tool
+def get_conversation_summary(thread_id: str = "default", limit: int = 10) -> str:
+    """Get a summary of recent conversation history"""
+    try:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        try:
+            memory_system = loop.run_until_complete(get_vector_memory())
+            conversations = loop.run_until_complete(
+                memory_system.get_conversation_history(thread_id, limit)
+            )
+
+            if not conversations:
+                return f"No conversation history found for thread '{thread_id}'."
+
+            summary_parts = []
+            for conv in conversations[-5:]:
+                user_input = conv.get("user_input", "")[:50]
+                ai_response = conv.get("ai_response", "")[:50]
+
+                if user_input and ai_response:
+                    summary_parts.append(
+                        f"Thomas: {user_input}... → Jade: {ai_response}..."
                     )
 
-                return f"Found {len(memories)} relevant memories:\n" + "\n".join(
-                    memory_text
-                )
+            return f"Recent conversation summary:\n" + "\n".join(summary_parts)
 
-            finally:
-                loop.close()
+        finally:
+            loop.close()
 
-        except Exception as e:
-            return f"Memory recall failed: {str(e)}"
+    except Exception as e:
+        return f"Conversation summary failed: {str(e)}"
 
-    @tool
-    def store_memory(
-        content: str, memory_type: str = "important", thread_id: str = "default"
-    ) -> str:
-        """Store important information in memory for later recall"""
-        try:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
 
-            try:
-                memory_system = loop.run_until_complete(get_vector_memory())
-                loop.run_until_complete(
-                    memory_system.store_conversation(
-                        f"IMPORTANT: {content}",
-                        f"Jade has stored this important information: {content}",
-                        thread_id,
-                    )
-                )
-
-                return f"Information stored in memory: '{content[:100]}...'"
-
-            finally:
-                loop.close()
-
-        except Exception as e:
-            return f"Memory storage failed: {str(e)}"
-
-    @tool
-    def get_conversation_summary(thread_id: str = "default", limit: int = 10) -> str:
-        """Get a summary of recent conversation history"""
-        try:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-
-            try:
-                memory_system = loop.run_until_complete(get_vector_memory())
-                conversations = loop.run_until_complete(
-                    memory_system.get_conversation_history(thread_id, limit)
-                )
-
-                if not conversations:
-                    return f"No conversation history found for thread '{thread_id}'."
-
-                summary_parts = []
-                for conv in conversations[-5:]:
-                    user_input = conv.get("user_input", "")[:50]
-                    ai_response = conv.get("ai_response", "")[:50]
-
-                    if user_input and ai_response:
-                        summary_parts.append(
-                            f"Thomas: {user_input}... → Jade: {ai_response}..."
-                        )
-
-                return f"Recent conversation summary:\n" + "\n".join(summary_parts)
-
-            finally:
-                loop.close()
-
-        except Exception as e:
-            return f"Conversation summary failed: {str(e)}"
-
-    VECTOR_MEMORY_AVAILABLE = True
-
-except ImportError as e:
-    print(f"⚠️  Vector memory tools not available: {e}")
-    VECTOR_MEMORY_AVAILABLE = False
-
-    # Use fallback functions
-    recall_memory = fallback_recall_memory
-    store_memory = fallback_store_memory
-    get_conversation_summary = (
-        lambda thread_id="default", limit=10: "Conversation summary not available without memory system."
-    )
+VECTOR_MEMORY_AVAILABLE = True
 
 
 def get_tools():
@@ -334,31 +299,5 @@ def get_tools():
         simple_response,
         character_context,
     ]
-
-    # Add PostgreSQL memory tools if available
-    if POSTGRES_MEMORY_AVAILABLE:
-        try:
-            memory_tools = get_memory_tools()
-            base_tools.extend(memory_tools)
-            print(f"✅ Added {len(memory_tools)} PostgreSQL memory tools")
-        except Exception as e:
-            print(f"⚠️  Failed to load PostgreSQL memory tools: {e}")
-            # Add vector memory tools if available
-            if VECTOR_MEMORY_AVAILABLE:
-                base_tools.extend(
-                    [recall_memory, store_memory, get_conversation_summary]
-                )
-                print("✅ Using vector memory tools")
-            else:
-                base_tools.extend([fallback_recall_memory, fallback_store_memory])
-                print("⚠️  Using fallback memory tools")
-    elif VECTOR_MEMORY_AVAILABLE:
-        # Use vector memory tools
-        base_tools.extend([recall_memory, store_memory, get_conversation_summary])
-        print("✅ Using vector memory tools")
-    else:
-        # Use fallback memory tools
-        base_tools.extend([fallback_recall_memory, fallback_store_memory])
-        print("⚠️  Using fallback memory tools")
 
     return base_tools

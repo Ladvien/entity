@@ -48,8 +48,6 @@ memory:
   max_context_length: 1000
   similarity_threshold: 0.3
   memory_limit: 5
-
-  # Memory pruning settings
   pruning_enabled: true
   pruning_days: 90
   keep_important_threshold: 0.7

@@ -12,8 +12,8 @@ from datetime import datetime
 import uvicorn
 
 # Import configuration system
-from entity.config import Settings, load_settings, get_settings_dependency
-from entity.agent import EntityAgent
+from src.config import Settings, load_settings, get_settings_dependency
+from src.agent import EntityAgent
 
 
 # Configure logging
@@ -437,7 +437,7 @@ if __name__ == "__main__":
         logger.info("🧪 Simple test mode...")
         print("Testing basic imports...")
         try:
-            from entity.agent import EntityAgent
+            from src.agent import EntityAgent
 
             print("✅ EntityAgent import successful")
 

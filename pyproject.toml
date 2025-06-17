@@ -5,26 +5,27 @@ description = "Entity agentic system with PostgreSQL memory"
 authors = ["C. Thomas Brittain <cthomasbrittain@hotmail.com>"]
 license = "MIT"
 readme = "README.md"
+package-mode = true
+
+packages = [{ include = "src", from = "." }]
+
 
 [tool.poetry.urls]
 homepage = "https://github.com/Ladvien/entity"
 repository = "https://github.com/Ladvien/entity"
 documentation = "https://entity.readthedocs.io/en/latest/"
 
+
 [tool.poetry.dependencies]
-python = ">=3.11,<=3.13"
+python = "^3.13"
 pyyaml = "^6.0.2"
 rich = "^13.9.4"
 requests = "^2.32.4"
 pyaudio = "^0.2.14"
-numpy = ">=1.26.4,<=2.1"
 scipy = "^1.15.3"
-cognee = { extras = ["postgres"], version = "^0.1.43" }
-psycopg2-binary = "^2.9.10"
 python-dotenv = "^1.1.0"
 transformers = "^4.52.4"
 asyncpg = "^0.30.0"
-# FastAPI and LangChain dependencies
 fastapi = "0.115.7"
 pydantic = "2.10.5"
 uvicorn = "^0.34.3"
@@ -33,10 +34,13 @@ langchain-community = "^0.3.25"
 langchain-ollama = "^0.2.0"
 ollama = "^0.5.1"
 httpx = "^0.28.1"
-# LangGraph and PostgreSQL memory
 langgraph = "^0.2.0"
-langgraph-checkpoint-postgres = "^2.0.0"
+langgraph-checkpoint-postgres = "^2.0.21"
 sentence-transformers = "^4.1.0"
+psycopg = "^3.2.9"
+langchain_postgres = { git = "https://github.com/langchain-ai/langchain-postgres.git", branch = "main" }
+greenlet = "^3.2.3"
+
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"

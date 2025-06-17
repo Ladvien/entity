@@ -6,6 +6,7 @@ import configparser
 from typing import Optional, Dict, Any
 from pathlib import Path
 import logging
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
@@ -190,6 +191,22 @@ class Settings:
             )
 
         return base_prompt
+
+
+class VectorMemorySystemConfig(BaseModel):
+    collection_name: str = Field(
+        default="memory", description="Name of the vector DB collection"
+    )
+    embedding_model: str = "all-MiniLM-L6-v2"
+    embedding_dimension: int = 384
+    max_context_length: int = 1000
+    similarity_threshold: float = 0.3
+    memory_limit: int = 5
+
+    pruning_enabled: bool = True
+    pruning_days: int = 90
+    keep_important_threshold: float = 0.7
+    min_access_count: int = 2
 
 
 class ConfigLoader:

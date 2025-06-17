@@ -9,9 +9,9 @@ from langchain_ollama import OllamaLLM
 from langchain.schema import BaseMessage, HumanMessage, AIMessage
 from langgraph.graph import StateGraph, MessagesState
 from langgraph.checkpoint.postgres import PostgresSaver
-from entity.tools import get_tools
-from entity.memory import VectorMemorySystem
-from entity.config import Settings, get_settings
+from src.tools import get_tools
+from src.memory import VectorMemorySystem
+from src.config import Settings, get_settings
 
 # Set up logging
 logger = logging.getLogger(__name__)
