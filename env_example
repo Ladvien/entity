@@ -1,0 +1,28 @@
+# Database Configuration
+DATABASE_URL=postgresql://username:password@192.168.1.104:5432/memory
+DB_HOST=192.168.1.104
+DB_PORT=5432
+DB_NAME=memory
+DB_USER=username
+DB_PASSWORD=password
+
+# LLM Configuration (you'll need to fill these in with your AI service details)
+LLM_API_KEY=your_api_key_here
+LLM_PROVIDER=openai  # or anthropic, ollama, etc.
+LLM_MODEL=gpt-3.5-turbo  # or your preferred model
+LLM_ENDPOINT=https://api.openai.com/v1  # or your provider's endpoint
+
+# Cognee Configuration
+COGNEE_DB_HOST=192.168.1.104
+COGNEE_DB_PORT=5432
+COGNEE_DB_NAME=memory
+COGNEE_DB_USER=username
+COGNEE_DB_PASSWORD=password
+
+# Optional: Additional database settings
+DB_POOL_SIZE=10
+DB_MAX_OVERFLOW=20
+DB_ECHO=false
+
+EMBEDDING_PROVIDER=openai
+EMBEDDING_MODEL=text-embedding-ada-002

@@ -1,4 +1,8 @@
 import os
+import cognee.infrastructure
+import cognee.infrastructure.databases
+import cognee.infrastructure.databases.vector
+import cognee.infrastructure.databases.vector.pgvector
 import requests
 import pyaudio
 import wave
@@ -10,14 +14,13 @@ from typing import List, Dict, Any
 from rich import print
 from scipy.signal import resample_poly
 from datetime import datetime
+import cognee
 
 # Load environment variables BEFORE importing cognee
 from dotenv import load_dotenv
 
 load_dotenv()  # This loads .env file
 
-# Now we can import cognee
-import cognee
 
 # Suppress ALSA warnings
 os.environ["ALSA_VERBOSITY"] = "0"
@@ -151,26 +154,39 @@ class CogneeEntityMemory:
 
     async def initialize_memory(self):
         """Initialize cognee memory system with simpler processing"""
-        if not self.enable_memory or self.memory_initialized:
-            return
 
-        try:
-            print("🧠 Initializing cognee memory system...")
+        cognee.config.set_vector_db_config({"vector_db_provider": "pgvector"})
 
-            # Add a simple entity context (no complex formatting)
-            entity_context = f"Entity {self.entity_id} is Jade, a demoness bound to Thomas by Solomon's Key. Sarcastic and reluctantly loyal."
+        cognee.config.set_relational_db_config(
+            {
+                "db_provider": "postgres",
+                "db_host": os.environ.get("COGNEE_DB_HOST", "192.168.1.104"),
+                "db_port": os.environ.get("COGNEE_DB_PORT", "5432"),
+                "db_name": os.environ.get("COGNEE_DB_NAME", "memory"),
+                "db_username": os.environ.get("COGNEE_DB_USER", "memory"),
+                "db_password": os.environ.get("COGNEE_DB_PASSWORD", "REPLACE_ME"),
+            }
+        )
 
-            await cognee.add(entity_context)
-            # Use lightweight cognify
-            await cognee.cognify()
+        cognee.config.set_llm_config(
+            {
+                "llm_provider": os.environ.get("LLM_PROVIDER", "ollama"),
+                "llm_model": os.environ.get("LLM_MODEL", "neural-chat:7b"),
+                "llm_api_key": os.environ.get("LLM_API_KEY", "dummy_key"),
+                "llm_endpoint": os.environ.get(
+                    "LLM_ENDPOINT", "http://192.168.1.110:11434/v1"
+                ),
+            }
+        )
 
-            self.memory_initialized = True
-            print("✅ Cognee memory system initialized for Jade")
-
-        except Exception as e:
-            logger.error(f"Failed to initialize cognee memory: {e}")
-            print(f"❌ Cognee memory initialization failed: {e}")
-            self.enable_memory = False
+        # cognee.config.set_embedding_config(
+        #     {
+        #         "embedding_provider": os.environ.get("EMBEDDING_PROVIDER", "ollama"),
+        #         "embedding_model": os.environ.get(
+        #             "EMBEDDING_MODEL", "nomic-embed-text"
+        #         ),
+        #     }
+        # )
 
     async def add_conversation_memory(self, user_input: str, ai_response: str):
         """Store conversation in cognee memory - optimized"""

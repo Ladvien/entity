@@ -19,11 +19,11 @@ requests = "^2.32.4"
 pyaudio = "^0.2.14"
 numpy = ">=1.26.4,<=2.1"
 scipy = "^1.15.3"
-cognee = "^0.1.43"
+cognee = {extras = ["postgres"], version = "^0.1.43"}
 psycopg2-binary = "^2.9.10"
-pgvector = "^0.4.1"
 python-dotenv = "^1.1.0"
 transformers = "^4.52.4"
+asyncpg = "^0.30.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
