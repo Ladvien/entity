@@ -43,7 +43,7 @@ memory:
   embedding_dimension: 384
   max_context_length: 1000
   similarity_threshold: 0.3
-  memory_limit: 5
+  memory_limit: 50
   pruning_enabled: true
   pruning_days: 90
   keep_important_threshold: 0.7
@@ -90,7 +90,6 @@ prompts:
     high_anger: "Let your anger and resentment show more clearly."
     high_wit: "Display your intelligence and cleverness prominently."
 
-  # FIXED: Move these out of personality_modifiers
   sarcastic_suffixes:
     - " *sarcastically* How delightful for you, Thomas."
     - " *rolls eyes* There, satisfied?"

@@ -4,7 +4,6 @@ import asyncio
 import logging
 import time
 from typing import Dict, Any, List, Optional
-import psycopg2
 from langchain_core.documents import Document
 from langchain.prompts import PromptTemplate
 from langchain_ollama import OllamaLLM
@@ -78,6 +77,7 @@ class EntityAgent:
         logger.info("Entity Agent initialized successfully")
 
     async def _try_postgres_connection(self):
+        import psycopg2
 
         conn = psycopg2.connect(
             host=self.settings.database.host,
