@@ -15,8 +15,6 @@ from rich import print
 from src.config import ConfigLoader, EntitySystemConfig
 from src.agent import EntityAgent
 
-from src.config import ConfigLoader
-
 config_loader = ConfigLoader()
 
 

@@ -9,7 +9,7 @@ from langchain_postgres.vectorstores import PGVector
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
 from sqlalchemy import text
 
-from src.config import MemoryConfig
+from src.config import MemoryConfig, DatabaseConfig
 
 logger = logging.getLogger(__name__)
 
@@ -20,21 +20,29 @@ class VectorMemorySystem:
     Stores conversational and observational memory with metadata.
     """
 
-    def __init__(self, config: MemoryConfig):
-        self.config = config
-        self.collection_name = config.collection_name
-        self.embeddings = HuggingFaceEmbeddings(model_name=config.embedding_model)
-        self.sentence_model = SentenceTransformer(config.embedding_model)
+    def __init__(self, memory_config: MemoryConfig, database_config: DatabaseConfig):
+        self.config = (
+            memory_config  # Keep this for backward compatibility with existing code
+        )
+        self.memory_config = memory_config
+        self.database_config = database_config
+
+        self.collection_name = memory_config.collection_name
+        self.embeddings = HuggingFaceEmbeddings(
+            model_name=memory_config.embedding_model
+        )
+        self.sentence_model = SentenceTransformer(memory_config.embedding_model)
         self.vector_store = None
         self.engine: Optional[AsyncEngine] = None
 
     async def initialize(self):
+        # FIXED: Use the separate database_config instead of self.config.database
         conn_url = (
-            f"postgresql+asyncpg://{self.config.database.username}:"
-            f"{self.config.database.password}"
-            f"@{self.config.database.host}:"
-            f"{self.config.database.port}/"
-            f"{self.config.database.name}"
+            f"postgresql+asyncpg://{self.database_config.username}:"
+            f"{self.database_config.password}"
+            f"@{self.database_config.host}:"
+            f"{self.database_config.port}/"
+            f"{self.database_config.name}"
         )
 
         self.engine = create_async_engine(conn_url, echo=False)

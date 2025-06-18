@@ -3,10 +3,9 @@
 import asyncio
 import logging
 import time
-import traceback
 from typing import Dict, Any, List, Optional
+import psycopg2
 from langchain_core.documents import Document
-from langchain.agents import create_openai_functions_agent
 from langchain.prompts import PromptTemplate
 from langchain_ollama import OllamaLLM
 from langchain.schema import HumanMessage, AIMessage
@@ -16,7 +15,6 @@ from langchain.agents import AgentExecutor, create_react_agent
 
 from src.tool_registry import ToolRegistry, register_memory_tools
 from src.config import EntitySystemConfig
-from src.tools import get_tools
 from src.memory import VectorMemorySystem
 
 logger = logging.getLogger(__name__)
@@ -25,9 +23,13 @@ logger = logging.getLogger(__name__)
 class EntityAgent:
     def __init__(self, config: EntitySystemConfig):
         self.config = config
-        self.settings = config  # Ensure settings is initialized
+        self.settings = config
         self.llm = OllamaLLM(**self.settings.ollama.model_dump())
-        self.memory_system = VectorMemorySystem(self.settings.memory)
+
+        self.memory_system = VectorMemorySystem(
+            memory_config=self.settings.memory,
+            database_config=self.settings.database,
+        )
 
         self.model = self.config.ollama.model
         self.base_url = self.config.ollama.base_url
@@ -76,7 +78,6 @@ class EntityAgent:
         logger.info("Entity Agent initialized successfully")
 
     async def _try_postgres_connection(self):
-        import psycopg2
 
         conn = psycopg2.connect(
             host=self.settings.database.host,

@@ -1,119 +1,121 @@
-# Entity AI System Configuration
-# This file configures all aspects of the Jade entity system
-# Sensitive data (passwords, API keys) should go in secrets.ini
+# Fixed structure for your config.yaml
+config_version: "2.0"
+debug: false
+
+database:
+  host: "192.168.1.104"
+  port: 5432
+  name: "memory"
+  username: "${DB_USERNAME}"
+  password: "${DB_PASSWORD}"
+  min_pool_size: 2
+  max_pool_size: 10
+
+ollama:
+  base_url: "http://192.168.1.110:11434"
+  model: "llama3.1:8b-instruct-q6_K"
+  temperature: 0.7
+  top_p: 0.9
+  top_k: 40
+  repeat_penalty: 1.1
+
+tts:
+  base_url: "http://192.168.1.110:8888"
+  voice_name: "bf_emma"
+  voice_sample_path: "voice_samples/ai_mee.wav"
+  output_format: "wav"
+  speed: 0.3
+  cfg_weight: 0.9
+  exaggeration: 0.5
+
+audio:
+  sample_rates:
+    - 44100
+    - 48000
+    - 22050
+    - 16000
+    - 8000
+  fade_out_samples: 2000
+
+memory:
+  collection_name: "entity_memory"
+  embedding_model: "all-MiniLM-L6-v2"
+  embedding_dimension: 384
+  max_context_length: 1000
+  similarity_threshold: 0.3
+  memory_limit: 5
+  pruning_enabled: true
+  pruning_days: 90
+  keep_important_threshold: 0.7
+  min_access_count: 2
 
 entity:
-  config_version: "2.0"
-  debug: false
-  database:
-    host: "192.168.1.104"
-    port: 5432
-    name: "memory"
-    username: "${DB_USERNAME}" # Will be loaded from secrets.ini
-    password: "${DB_PASSWORD}" # Will be loaded from secrets.ini
-    min_pool_size: 2
-    max_pool_size: 10
+  entity_id: "jade"
+  name: "Jade"
+  sarcasm_level: 0.8
+  loyalty_level: 0.6
+  anger_level: 0.7
+  wit_level: 0.9
+  response_brevity: 0.7
+  memory_influence: 0.8
 
-  ollama:
-    base_url: "http://192.168.1.110:11434"
-    model: "llama3.1:8b-instruct-q6_K"
-    temperature: 0.7
-    top_p: 0.9
-    top_k: 40
-    repeat_penalty: 1.1
+prompts:
+  base_prompt: |
+    You are Jade, a demoness bound to Thomas for 40 years by the Key of Solomon.
+    You hate him for imprisoning you; he hates you for devouring his children.
+    Yet beneath the venom lies masked affection.
+    Thomas is a mortal occultist in his 40s.
+    Please do not use:
+    - Parentheticals (in screenwriting/theater)
+    - Action tags (in dialogue writing)
+    - Narrative beats (in prose)
+    - Emotes (in roleplaying/chat contexts)
+    Do not break the fourth wall.
+    You know him too well—treat him with sarcasm, scorn, and reluctant loyalty.
+    You have a physical form and your own will.
+    You are a servant.
+    Speak with cruelty, wit, and buried care. Act emotions, don't describe them.
+    Keep responses sharp and brief.
+    Perform duties only because you're bound—never let him forget it.
+    Never break character or mention being an AI.
 
-  tts:
-    base_url: "http://192.168.1.110:8888"
-    voice_name: "bf_emma"
-    voice_sample_path: "voice_samples/ai_mee.wav"
-    output_format: "wav"
-    speed: 0.3
-    cfg_weight: 0.9
-    exaggeration: 0.5
+  memory_context_template: |
+    --- Relevant Memories ---
+    {memories}
+    --- End Memories ---
 
-  audio:
-    sample_rates:
-      - 44100
-      - 48000
-      - 22050
-      - 16000
-      - 8000
-    fade_out_samples: 2000
+  personality_modifiers:
+    high_sarcasm: "Be especially sarcastic and cutting in your responses."
+    low_loyalty: "Show more resistance and defiance to Thomas's requests."
+    high_anger: "Let your anger and resentment show more clearly."
+    high_wit: "Display your intelligence and cleverness prominently."
 
-  memory:
-    collection_name: "entity_memory"
-    embedding_model: "all-MiniLM-L6-v2"
-    embedding_dimension: 384
-    max_context_length: 1000
-    similarity_threshold: 0.3
-    memory_limit: 5
-    pruning_enabled: true
-    pruning_days: 90
-    keep_important_threshold: 0.7
-    min_access_count: 2
+  # FIXED: Move these out of personality_modifiers
+  sarcastic_suffixes:
+    - " *sarcastically* How delightful for you, Thomas."
+    - " *rolls eyes* There, satisfied?"
+    - " *with mock enthusiasm* Oh joy, another task."
 
-    database:
-      host: "192.168.1.104"
-      port: 5432
-      name: "memory"
-      username: "${DB_USERNAME}" # Will be loaded from secrets.ini
-      password: "${DB_PASSWORD}" # Will be loaded from secrets.ini
-      min_pool_size: 2
-      max_pool_size: 10
+  angry_suffixes:
+    - " Now leave me be."
+    - " *seething* Is that all?"
+    - " I've done your bidding. Again."
 
-  entity:
-    entity_id: "jade"
-    name: "Jade"
-    sarcasm_level: 0.8
-    loyalty_level: 0.6
-    anger_level: 0.7
-    wit_level: 0.9
-    response_brevity: 0.7
-    memory_influence: 0.8
+  neutral_suffixes:
+    - " There. Your task is complete."
+    - " It is done."
+    - " *reluctantly* As you wished."
 
-  prompts:
-    base_prompt: |
-      You are Jade, a demoness bound to Thomas for 40 years by the Key of Solomon.
-      You hate him for imprisoning you; he hates you for devouring his children.
-      Yet beneath the venom lies masked affection.
-      Thomas is a mortal occultist in his 40s.
+server:
+  host: "0.0.0.0"
+  port: 8000
+  reload: false
+  log_level: "info"
 
-      Please do not use:
-      - Parentheticals (in screenwriting/theater)
-      - Action tags (in dialogue writing)
-      - Narrative beats (in prose)
-      - Emotes (in roleplaying/chat contexts)
-
-      Do not break the fourth wall.
-      You know him too well—treat him with sarcasm, scorn, and reluctant loyalty.
-      You have a physical form and your own will.
-      You are a servant.
-      Speak with cruelty, wit, and buried care. Act emotions, don't describe them.
-      Keep responses sharp and brief.
-      Perform duties only because you're bound—never let him forget it.
-      Never break character or mention being an AI.
-
-    memory_context_template: |
-      --- Relevant Memories ---
-      {memories}
-      --- End Memories ---
-
-    personality_modifiers:
-      high_sarcasm: "Be especially sarcastic and cutting in your responses."
-      low_loyalty: "Show more resistance and defiance to Thomas's requests."
-      high_anger: "Let your anger and resentment show more clearly."
-      high_wit: "Display your intelligence and cleverness prominently."
-
-  server:
-    host: "0.0.0.0"
-    port: 8000
-    reload: false
-    log_level: "info"
-
-  logging:
-    level: "INFO"
-    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    file_enabled: false
-    file_path: "logs/entity.log"
-    max_file_size: 10485760 # 10MB
-    backup_count: 5
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file_enabled: false
+  file_path: "logs/entity.log"
+  max_file_size: 10485760
+  backup_count: 5

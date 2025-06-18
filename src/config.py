@@ -1,4 +1,4 @@
-# entity/config_models.py
+# entity/config_models.py (Updated sections)
 
 from typing import List, Dict, Optional, Any, Union
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -199,6 +199,18 @@ class OllamaConfig(BaseModel):
     top_k: int = 40
     repeat_penalty: float = 1.1
 
+    def model_dump(self) -> Dict[str, Any]:
+        """Convert to dict format expected by LangChain."""
+        return {
+            "base_url": self.base_url,
+            "model": self.model,
+            "temperature": self.temperature,
+            "top_p": self.top_p,
+            "top_k": self.top_k,
+            "repeat_penalty": self.repeat_penalty,
+            "timeout": self.timeout,
+        }
+
 
 class TTSConfig(BaseModel):
     base_url: str = "http://localhost:8888"
@@ -216,7 +228,7 @@ class AudioConfig(BaseModel):
 
 
 class MemoryConfig(BaseModel):
-    database: DatabaseConfig
+    # Remove the nested database config since it's already at the top level
     collection_name: str = "entity_memory"
     embedding_model: str = "all-MiniLM-L6-v2"
     embedding_dimension: int = 384
@@ -310,14 +322,61 @@ class ConfigLoader:
         with open(self.yaml_path, "r") as f:
             config_raw = yaml.safe_load(f)
 
-        # Focus on top-level `entity:` section
+        print(f"🔍 Raw YAML structure: {list(config_raw.keys())}")
+
+        # Check if we have a nested entity structure
         if "entity" in config_raw:
-            config_raw = config_raw["entity"]
+            print(
+                f"🔍 Found 'entity' key with content: {list(config_raw['entity'].keys())}"
+            )
+
+            # Check if entity contains the full config or just entity behavior
+            entity_content = config_raw["entity"]
+            if "database" in entity_content and "ollama" in entity_content:
+                # This is the full config nested under 'entity'
+                print("✅ Using full config from 'entity' section")
+                resolved_config = entity_content
+            else:
+                # The 'entity' key only contains entity behavior, use the whole config
+                print("✅ Using root level config, 'entity' is just behavior config")
+                resolved_config = config_raw
+        else:
+            print("✅ Using root level config (no 'entity' wrapper)")
+            resolved_config = config_raw
+
+        print(f"📋 Final config keys: {list(resolved_config.keys())}")
 
         # Recursively replace ${VAR_NAME} with values from environment
-        resolved_config = walk_and_replace(config_raw)
+        resolved_config = walk_and_replace(resolved_config)
 
         # Parse into typed config
-        config = EntitySystemConfig(**resolved_config)
-        print(config)
-        return config
+        try:
+            config = EntitySystemConfig(**resolved_config)
+            print("✅ Configuration loaded successfully")
+            return config
+        except Exception as e:
+            print(f"❌ Configuration validation failed: {e}")
+
+            # Debug information
+            expected_keys = set(EntitySystemConfig.model_fields.keys())
+            actual_keys = (
+                set(resolved_config.keys())
+                if isinstance(resolved_config, dict)
+                else set()
+            )
+            missing_keys = expected_keys - actual_keys
+            extra_keys = actual_keys - expected_keys
+
+            if missing_keys:
+                print(f"🔴 Missing required keys: {missing_keys}")
+            if extra_keys:
+                print(f"🟡 Extra keys found: {extra_keys}")
+
+            # Show the structure we're trying to parse
+            print("🔍 Config structure being parsed:")
+            for key, value in resolved_config.items():
+                if isinstance(value, dict):
+                    print(f"  {key}: {list(value.keys())}")
+                else:
+                    print(f"  {key}: {type(value).__name__}")
+            raise
