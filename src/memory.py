@@ -169,6 +169,6 @@ class VectorMemorySystem:
         return stats
 
     async def close(self):
-        if self.pg_engine and hasattr(self.pg_engine, "engine"):
-            await self.pg_engine.engine.dispose()
-            logger.info("🔒 PGEngine connection closed")
+        if self.engine:
+            await self.engine.dispose()
+            logger.info("✅ PGVectorStore memory engine closed")

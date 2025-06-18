@@ -21,14 +21,11 @@ class ToolRegistry:
         return fn
 
     def register_factory(self, factory: Callable):
-        tool_fn = factory(self._context)
-
-        if isinstance(tool_fn, BaseTool):
-            self._tools.append(tool_fn)  # already a valid tool
+        tools = factory(self._context)
+        if isinstance(tools, list):
+            self._tools.extend(tools)
         else:
-            self._tools.append(tool(tool_fn))  # raw function, decorate it
-
-        return tool_fn
+            self._tools.append(tools)
 
     def get_tools(self) -> List[Callable]:
         return self._tools

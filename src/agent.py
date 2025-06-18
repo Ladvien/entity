@@ -87,34 +87,37 @@ class EntityAgent:
         )
         conn.close()
 
-        self.checkpointer = PostgresSaver.from_conn_string(self.settings.database.url)
+        self.checkpointer = PostgresSaver.from_conn_string(
+            self.settings.database.connection_string
+        )
         self.checkpointer.setup()
         logger.info("PostgreSQL checkpointing enabled")
 
     def _create_agent(self):
+        # Fixed prompt template with all required variables
         prompt_template = PromptTemplate(
             input_variables=["input", "agent_scratchpad", "tools", "tool_names"],
             template=f"""{self.settings.prompts.base_prompt}
 
-    You have access to these tools:
-    {{tools}}
+TOOLS:
+{{tools}}
 
-    Tool names: {{tool_names}}
+Available tool names: {{tool_names}}
 
-    Use this exact format when you need tools:
+For simple conversations, respond directly as Jade.
+Only use tools if you absolutely must search for information or calculate something.
 
-    Question: {{input}}
-    Thought: I suppose I must help Thomas with this
-    Action: [one of: {{tool_names}}]
-    Action Input: [input_for_tool]
-    Observation: [tool_result]
-    Thought: I now know what to tell Thomas
-    Final Answer: [Your response as Jade]
+If using a tool, use this format:
+Thought: I need to use a tool because...
+Action: tool_name
+Action Input: specific_input
+Observation: [result will appear here]
+Final Answer: [your response as Jade]
 
-    If you don't need tools, just respond directly as Jade.
+If no tools are needed, respond directly as Jade.
 
-    Question: {{input}}
-    {{agent_scratchpad}}""",
+Question: {{input}}
+{{agent_scratchpad}}""",
         )
 
         agent = create_react_agent(self.llm, self.tools, prompt_template)
@@ -124,8 +127,9 @@ class EntityAgent:
             tools=self.tools,
             verbose=self.settings.debug,
             handle_parsing_errors=True,
-            max_iterations=20,
-            max_execution_time=120,
+            max_iterations=3,  # Reduced from 20
+            max_execution_time=30,  # Reduced from 120
+            early_stopping_method="generate",  # Stop early if possible
         )
 
     def _create_graph(self):
@@ -146,8 +150,8 @@ class EntityAgent:
             )
 
             start_time = time.monotonic()
-            max_time = 120  # seconds
-            max_iterations = 20
+            max_time = 30  # Reduced from 120
+            max_iterations = 3  # Reduced from 20
             result = None
 
             for iteration in range(max_iterations):
@@ -160,7 +164,7 @@ class EntityAgent:
                 try:
                     result = await asyncio.wait_for(
                         self.agent_executor.ainvoke({"input": enhanced_input}),
-                        timeout=30,
+                        timeout=10,  # Shorter individual timeout
                     )
                     response = result["output"]
                     steps = result.get("intermediate_steps", [])
@@ -199,6 +203,57 @@ class EntityAgent:
         else:
             self.graph = workflow.compile()
 
+    async def _is_simple_conversation(self, message: str) -> bool:
+        """Check if this is a simple conversation that doesn't need tools"""
+        message_lower = message.lower().strip()
+
+        # Patterns that definitely don't need tools
+        simple_patterns = [
+            "hey",
+            "hi",
+            "hello",
+            "good day",
+            "good morning",
+            "good evening",
+            "what do you want",
+            "speak quickly",
+            "tell me",
+            "do not tell me",
+            "bitch",
+            "stop",
+            "continue",
+            "truth",
+        ]
+
+        # If message is short and contains simple words, handle directly
+        if len(message) < 100 and any(
+            pattern in message_lower for pattern in simple_patterns
+        ):
+            return True
+
+        return False
+
+    async def _get_direct_jade_response(self, message: str) -> str:
+        """Get a direct response from Jade without using the agent loop"""
+        memory_context = await self.memory_system.get_memory_context(message)
+
+        # Create a simple prompt for direct response
+        direct_prompt = f"""{self.settings.prompts.base_prompt}
+
+Previous context: {memory_context if memory_context else "No relevant memories."}
+
+Thomas just said: "{message}"
+
+Respond as Jade would - with sarcasm, wit, and reluctant service. Keep it brief and in character."""
+
+        try:
+            # Direct LLM call without agent wrapper
+            response = await self.llm.ainvoke(direct_prompt)
+            return self._adjust_response_personality(response)
+        except Exception as e:
+            logger.error(f"Direct response failed: {e}")
+            return "Something's wrong with my voice, Thomas. How inconvenient for you."
+
     def _adjust_response_personality(self, response: str) -> str:
         if self.settings.entity.response_brevity > 0.8 and len(response) > 100:
             sentences = response.split(". ")
@@ -213,24 +268,6 @@ class EntityAgent:
             else:
                 response += " There. Your task is complete."
         return response
-
-    async def _is_simple_greeting(self, message: str) -> bool:
-        greetings = ["good day", "hello", "hi", "hey", "good morning", "good evening"]
-        return any(g in message.lower() for g in greetings)
-
-    async def _get_simple_response(self, message: str) -> str:
-        base_responses = {
-            "good day": "Good day? For you perhaps, Thomas. My existence remains as delightful as ever - bound and brooding.",
-            "hello": "Hello, Thomas. Still breathing, I see. How... predictable.",
-            "hi": "Oh, it's you again. What tedious task requires my attention now?",
-            "hey": "What do you want now, Thomas? Speak quickly.",
-            "good morning": "Morning already? Time crawls when you're eternally bound to a scholar.",
-            "good evening": "Evening, Thomas. Another day of your insufferable requests draws to a close.",
-        }
-        for key, response in base_responses.items():
-            if key in message.lower():
-                return response
-        return "What do you want now, Thomas? Speak quickly."
 
     async def process(self, message: str, thread_id: str = "default") -> str:
         if self.agent_executor is None:
@@ -256,19 +293,36 @@ class EntityAgent:
         )
 
     async def _process_without_checkpointing(self, message: str, thread_id: str) -> str:
-        memory_context = await self.memory_system.get_memory_context(message, thread_id)
-        if await self._is_simple_greeting(message):
-            response = await self._get_simple_response(message)
+        # Check if this is a simple conversation first
+        if await self._is_simple_conversation(message):
+            logger.info("🎭 Using direct response for simple conversation")
+            response = await self._get_direct_jade_response(message)
         else:
+            logger.info("🔧 Using agent executor for complex query")
+            memory_context = await self.memory_system.get_memory_context(
+                message, thread_id
+            )
             enhanced_input = (
                 f"{memory_context}\n\nCurrent input: {message}"
                 if memory_context
                 else message
             )
-            result = await self.agent_executor.ainvoke({"input": enhanced_input})
-            response = result["output"]
-            response = self._adjust_response_personality(response)
 
+            try:
+                result = await asyncio.wait_for(
+                    self.agent_executor.ainvoke({"input": enhanced_input}),
+                    timeout=30,  # Hard timeout
+                )
+                response = result["output"]
+                response = self._adjust_response_personality(response)
+            except asyncio.TimeoutError:
+                logger.warning("⏰ Agent executor timed out, using fallback")
+                response = await self._get_direct_jade_response(message)
+            except Exception as e:
+                logger.error(f"Agent executor failed: {e}")
+                response = await self._get_direct_jade_response(message)
+
+        # Store the conversation
         await self.memory_system.store_conversation(message, response, thread_id)
         return response
 
