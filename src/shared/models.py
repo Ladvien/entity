@@ -26,6 +26,10 @@ class ChatResponse(BaseModel):
     raw_input: str
     raw_output: str
     memory_context_used: bool = False
+    entity_name: Optional[str] = None  # ← Add this
+
+    class Config:
+        extra = "allow"
 
 
 class MemoryStatsResponse(BaseModel):

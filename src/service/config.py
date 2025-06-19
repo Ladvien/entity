@@ -10,6 +10,10 @@ import re
 from pathlib import Path
 
 
+class ToolConfig(BaseModel):
+    enabled: List[str] = []
+
+
 # Database Configuration
 class DatabaseConfig(BaseModel):
     host: str = "localhost"
@@ -62,9 +66,7 @@ class MemoryConfig(BaseModel):
     min_access_count: int = 2
 
 
-# Entity Configuration
-class EntityConfig(BaseModel):
-    entity_id: str = "jade"
+class PersonalityConfig(BaseModel):
     name: str = "Jade"
     sarcasm_level: float = 0.8
     loyalty_level: float = 0.6
@@ -72,11 +74,18 @@ class EntityConfig(BaseModel):
     wit_level: float = 0.9
     response_brevity: float = 0.7
     memory_influence: float = 0.8
+    base_prompt: Optional[str] = None
+    traits: Optional[str] = "sarcastic and impatient"
+
+
+class EntityConfig(BaseModel):
+    entity_id: str = "jade"
+    max_iterations: int = 50
+    personality: PersonalityConfig = PersonalityConfig()
 
 
 # Prompts Configuration
 class PromptsConfig(BaseModel):
-    base_prompt: str
     memory_context_template: str = """
 --- Relevant Memories ---
 {memories}
@@ -120,11 +129,19 @@ class UnifiedConfig(BaseModel):
     entity: EntityConfig
     prompts: PromptsConfig
     server: ServerConfig
+    storage: "StorageConfig"
     logging: LoggingConfig
+    tools: ToolConfig
 
     class Config:
         # Allow use of both attribute and dictionary access
         extra = "forbid"  # Fail if unknown fields are present
+
+
+class StorageConfig(BaseModel):
+    backend: str = "postgres"
+    history_table: str = "chat_history"
+    init_on_startup: bool = True
 
 
 # Environment variable interpolation

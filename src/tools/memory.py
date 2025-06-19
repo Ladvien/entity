@@ -14,7 +14,7 @@ from langchain_postgres.vectorstores import PGVector
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
 from sqlalchemy import text
 
-from entity_service.config import MemoryConfig, DatabaseConfig
+from src.service.config import DatabaseConfig, MemoryConfig
 
 logger = logging.getLogger(__name__)
 
@@ -167,22 +167,36 @@ class VectorMemorySystem:
                 # Get total count
                 result = await conn.execute(
                     text(
-                        f"SELECT COUNT(*) FROM langchain_pg_embedding WHERE collection_id = (SELECT id FROM langchain_pg_collection WHERE name = '{self.collection_name}')"
-                    )
+                        """
+                        SELECT COUNT(*) 
+                        FROM langchain_pg_embedding 
+                        WHERE collection_id = CAST(
+                            (SELECT id FROM langchain_pg_collection WHERE name = :name) 
+                            AS UUID
+                        )
+                        """
+                    ),
+                    {"name": self.collection_name},
                 )
+
                 stats["total_memories"] = result.scalar_one()
 
                 # Get metadata stats
                 result = await conn.execute(
                     text(
-                        f"""
+                        """
                         SELECT cmetadata 
                         FROM langchain_pg_embedding 
-                        WHERE collection_id = (SELECT id FROM langchain_pg_collection WHERE name = '{self.collection_name}')
+                        WHERE collection_id = CAST(
+                            (SELECT id FROM langchain_pg_collection WHERE name = :name)
+                            AS UUID
+                        )
                         LIMIT 1000
-                    """
-                    )
+                        """
+                    ),
+                    {"name": self.collection_name},
                 )
+
                 rows = result.fetchall()
 
                 thread_ids = set()

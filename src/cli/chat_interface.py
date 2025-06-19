@@ -8,11 +8,12 @@ from datetime import datetime
 import json
 from pathlib import Path
 
-from entity_client.client import EntityAPIClient
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich import print as rprint
+
+from src.cli.client import EntityAPIClient
 
 logger = logging.getLogger(__name__)
 
@@ -375,3 +376,7 @@ class ChatInterface:
 
         except Exception as e:
             self.console.print(f"❌ Failed to save conversation: {e}", style="red")
+
+    async def run(self):
+        """Entry point for `main.py chat` or `main.py both` mode"""
+        await self.start()

@@ -4,11 +4,11 @@ Tool system with memory integration
 """
 import logging
 from typing import Dict, Any, List, Optional, Callable
-import asyncio
-
+from langchain_core.tools import BaseTool
 from langchain_core.tools import tool
 
-from memory import VectorMemorySystem
+from src.tools.memory import VectorMemorySystem
+
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +26,14 @@ class ToolRegistry:
         self.memory_system = memory_system
 
     def register(self, tool_func: Callable, name: Optional[str] = None):
-        """Register a tool function"""
-        lc_tool = tool(tool_func)
-        tool_name = name or lc_tool.name
+        """Register a tool function or existing LangChain tool"""
 
+        if isinstance(tool_func, BaseTool):
+            lc_tool = tool_func
+        else:
+            lc_tool = tool(tool_func)
+
+        tool_name = name or lc_tool.name
         self._tools[tool_name] = lc_tool
         self._langchain_tools.append(lc_tool)
 
@@ -56,13 +60,13 @@ async def setup_tools(
     registry.set_memory_system(memory_system)
 
     # Register built-in tools
-    if "web_search" in config.get("enabled", []):
+    if "web_search" in config.enabled:
         registry.register(web_search_tool)
 
-    if "calculator" in config.get("enabled", []):
+    if "calculator" in config.enabled:
         registry.register(calculator_tool)
 
-    if "memory_search" in config.get("enabled", []):
+    if "memory_search" in config.enabled:
         # Create memory-aware tools
         @tool
         async def search_memories(query: str, thread_id: str = "default") -> str:
@@ -80,7 +84,7 @@ async def setup_tools(
 
         registry.register(search_memories)
 
-    if "store_memory" in config.get("enabled", []):
+    if "store_memory" in config.enabled:
 
         @tool
         async def store_important_memory(content: str, importance: float = 0.8) -> str:

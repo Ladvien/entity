@@ -7,7 +7,7 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 import httpx
 
-from shared.models import ChatRequest, ChatResponse, MemoryStatsResponse
+from src.shared.models import ChatRequest, ChatResponse, MemoryStatsResponse
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +19,10 @@ class EntityAPIClient:
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
         self.session = httpx.AsyncClient(timeout=timeout)
+
+    async def send_message(self, message: str) -> ChatResponse:
+        """Alias for chat(), used by CLI"""
+        return await self.chat(message)
 
     async def chat(
         self,
@@ -51,7 +55,6 @@ class EntityAPIClient:
     async def get_history(
         self, thread_id: str, limit: Optional[int] = None
     ) -> List[Dict[str, Any]]:
-        """Get chat history for a thread"""
         try:
             params = {}
             if limit:
@@ -71,7 +74,6 @@ class EntityAPIClient:
     async def search_memory(
         self, query: str, thread_id: Optional[str] = None, limit: int = 5
     ) -> Dict[str, Any]:
-        """Search vector memory"""
         try:
             params = {"query": query, "limit": limit}
             if thread_id:
@@ -88,7 +90,6 @@ class EntityAPIClient:
             return {"memories": []}
 
     async def get_memory_stats(self) -> Dict[str, Any]:
-        """Get memory system statistics"""
         try:
             response = await self.session.get(f"{self.base_url}/api/v1/memory/stats")
             response.raise_for_status()
@@ -99,7 +100,6 @@ class EntityAPIClient:
             return {}
 
     async def list_tools(self) -> List[str]:
-        """List available tools"""
         try:
             response = await self.session.get(f"{self.base_url}/api/v1/tools")
             response.raise_for_status()
@@ -113,7 +113,6 @@ class EntityAPIClient:
     async def execute_tool(
         self, tool_name: str, parameters: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Execute a specific tool"""
         try:
             response = await self.session.post(
                 f"{self.base_url}/api/v1/tools/{tool_name}/execute",
@@ -127,7 +126,6 @@ class EntityAPIClient:
             raise
 
     async def health_check(self) -> Dict[str, Any]:
-        """Check service health"""
         try:
             response = await self.session.get(f"{self.base_url}/api/v1/health")
             response.raise_for_status()
@@ -137,5 +135,4 @@ class EntityAPIClient:
             return {"status": "unhealthy", "error": "Connection failed"}
 
     async def close(self):
-        """Close the client session"""
         await self.session.aclose()
