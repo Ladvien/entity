@@ -8,12 +8,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from entity_service.config import load_config
-from entity_service.agent import EntityAgent
-from src.tools import setup_tools
-from src.storage import create_storage
-from entity_service.memory import VectorMemorySystem
-from entity_service.api.routes import create_routes
+from src.old.memory import VectorMemorySystem
+from src.service.config import load_config
+from src.service.agent import EntityAgent
+
 
 logger = logging.getLogger(__name__)
 

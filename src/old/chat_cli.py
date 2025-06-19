@@ -7,10 +7,6 @@ import asyncio
 import logging
 from typing import Optional
 
-
-from src.application_layer import ApplicationService
-from src.config import EntitySystemConfig
-
 logger = logging.getLogger(__name__)
 
 
