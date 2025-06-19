@@ -12,8 +12,8 @@ from langgraph.graph import StateGraph, MessagesState
 from langgraph.checkpoint.postgres import PostgresSaver
 from langchain.agents import AgentExecutor, create_react_agent
 
-from src.tool_registry import ToolRegistry, register_memory_tools
 from src.config import EntitySystemConfig
+from src.tool_registry import ToolRegistry, register_memory_tools
 from src.memory import VectorMemorySystem
 
 logger = logging.getLogger(__name__)

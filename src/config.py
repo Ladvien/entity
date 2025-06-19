@@ -1,5 +1,4 @@
-# entity/config_models.py (Updated sections)
-
+# src/config.py - Restored with EntitySystemConfig
 from typing import List, Dict, Optional, Any, Union
 from pydantic import BaseModel, Field, field_validator, model_validator
 import os
@@ -275,6 +274,8 @@ class LoggingConfig(BaseModel):
 
 
 class EntitySystemConfig(BaseModel):
+    """Main system configuration class - THIS IS THE ONE YOUR CODE EXPECTS"""
+
     config_version: str = "2.0"
     debug: bool = False
     database: DatabaseConfig
@@ -315,6 +316,7 @@ class ConfigLoader:
         self.secrets_path = secrets_path
 
     def load(self) -> EntitySystemConfig:
+        """Load configuration and return EntitySystemConfig instance."""
         # Load environment variables
         load_dotenv(self.secrets_path)
 
@@ -380,3 +382,14 @@ class ConfigLoader:
                 else:
                     print(f"  {key}: {type(value).__name__}")
             raise
+
+
+# Make sure EntitySystemConfig is exported
+__all__ = [
+    "EntitySystemConfig",
+    "ConfigLoader",
+    "DatabaseConfig",
+    "OllamaConfig",
+    "MemoryConfig",
+    "EntityBehaviorConfig",
+]
