@@ -7,7 +7,7 @@ import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from langchain_ollama import OllamaLLM
 
 from src.service.agent import EntityAgent
 from src.service.config import load_config
@@ -34,18 +34,26 @@ async def lifespan(app: FastAPI):
     await memory_system.initialize()
     logger.info("✅ Vector memory system initialized")
 
-    # Create raw chat history storage (e.g., JSONL)
-    storage = create_storage(config.storage)
+    storage = await create_storage(config.storage, config.database)
 
     # Setup tool registry
     tool_registry = await setup_tools(config.tools, memory_system)
 
-    # Create the agent
+    llm = OllamaLLM(
+        base_url=config.ollama.base_url,
+        model=config.ollama.model,
+        temperature=config.ollama.temperature,
+        top_p=config.ollama.top_p,
+        top_k=config.ollama.top_k,
+        repeat_penalty=config.ollama.repeat_penalty,
+    )
+
     agent = EntityAgent(
-        config=config.agent,
+        config=config.entity,
         tool_registry=tool_registry,
         storage=storage,
         memory_system=memory_system,
+        llm=llm,
     )
     await agent.initialize()
 

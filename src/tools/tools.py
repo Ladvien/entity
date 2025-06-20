@@ -60,7 +60,7 @@ def safe_tool_wrapper(tool_func: Callable) -> Callable:
                 elif isinstance(input_arg, str):
                     fields = param_type.__fields__
                     if "query" in fields:
-                        model_input = param_type(query=input_arg)
+                        model_input = param_type(query=input_arg, thread_id="default")
                     elif "content" in fields:
                         model_input = param_type(content=input_arg)
                     else:
@@ -92,12 +92,18 @@ def ensure_event_loop():
 
 
 def sync_adapter(async_func: Callable) -> Callable:
-    """Adapter to run async tool functions from sync contexts (e.g., LangChain tools)"""
+    """Fixed adapter to prevent event loop conflicts"""
 
     @wraps(async_func)
     def wrapper(*args, **kwargs):
-        loop = ensure_event_loop()
-        return loop.run_until_complete(async_func(*args, **kwargs))
+        # Don't use event loops in tool execution - let LangChain handle it
+        import asyncio
+        import concurrent.futures
+
+        # Run in a thread pool to avoid event loop conflicts
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(asyncio.run, async_func(*args, **kwargs))
+            return future.result()
 
     return wrapper
 

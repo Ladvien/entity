@@ -46,23 +46,22 @@ async def create_app_service():
     # Register tools
     tools = await setup_tools(config.tools, memory)
 
-    # Inject LLM
+    # Inject LLM (remove duplicate, keep this one)
+    # Add LLM creation first
+    from langchain_ollama import OllamaLLM
+
     llm = OllamaLLM(
         base_url=config.ollama.base_url,
         model=config.ollama.model,
         temperature=config.ollama.temperature,
-        top_p=config.ollama.top_p,
-        top_k=config.ollama.top_k,
-        repeat_penalty=config.ollama.repeat_penalty,
     )
 
-    # Build agent with injected LLM
     agent = EntityAgent(
         config=config.entity,
         tool_registry=tools,
         storage=storage,
         memory_system=memory,
-        llm=llm,
+        llm=llm,  # Add this
     )
     await agent.initialize()
 

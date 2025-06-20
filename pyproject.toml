@@ -40,6 +40,7 @@ sentence-transformers = "^4.1.0"
 psycopg = "^3.2.9"
 langchain_postgres = { git = "https://github.com/langchain-ai/langchain-postgres.git", branch = "main" }
 greenlet = "^3.2.3"
+click = "^8.2.1"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -63,3 +64,7 @@ docs_view = "sphinx-autobuild docs/source docs/build/html"
 patch = "poetry version patch"
 _publish = "poetry publish --build"
 release = ["docs", "patch", "_publish"]
+
+
+[tool.poetry.scripts]
+entity = "cli:cli"

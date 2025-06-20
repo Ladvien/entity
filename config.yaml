@@ -117,7 +117,7 @@ storage:
   init_on_startup: true
 
 logging:
-  level: "INFO"
+  level: "DEBUG"
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
   file_enabled: false
   file_path: "logs/entity.log"
@@ -128,5 +128,5 @@ tools:
   enabled:
     - web_search
     - calculator
-    - memory_search
-    - store_memory
+    # - memory_search
+    # - store_memory

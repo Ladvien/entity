@@ -41,14 +41,25 @@ class EntityAPIClient:
                     "use_tools": use_tools,
                     "use_memory": use_memory,
                 },
+                timeout=60.0,  # Add explicit timeout
             )
             response.raise_for_status()
+
+            # Debug: print raw response
+            print(f"DEBUG: Raw response: {response.text}")
+
             return ChatResponse(**response.json())
 
         except httpx.HTTPStatusError as e:
+            print(f"DEBUG: HTTP error: {e}, Response: {e.response.text}")
             logger.error(f"HTTP error: {e}")
             raise
+        except httpx.TimeoutException as e:
+            print(f"DEBUG: Timeout error: {e}")
+            logger.error(f"Timeout error: {e}")
+            raise
         except Exception as e:
+            print(f"DEBUG: Other error: {e}")
             logger.error(f"Chat request failed: {e}")
             raise
 
