@@ -27,7 +27,7 @@ class EntityRouterFactory:
         @router.post("/chat", response_model=ChatResponse)
         async def chat(request: ChatRequest):
             try:
-                # Get ChatInteraction from agent
+                # Get ChatInteraction from agent (using new method)
                 interaction = await self.agent.chat(
                     message=request.message,
                     thread_id=request.thread_id,
@@ -35,7 +35,7 @@ class EntityRouterFactory:
                     use_memory=request.use_memory,
                 )
 
-                # Convert to ChatResponse for API response
+                # Convert ChatInteraction to ChatResponse for API response
                 response = ChatResponse.from_interaction(interaction)
                 return response
 
@@ -47,6 +47,7 @@ class EntityRouterFactory:
             thread_id: str, limit: Optional[int] = Query(default=100, ge=1, le=1000)
         ):
             try:
+                # Get ChatInteraction objects from storage
                 interactions = await self.storage.get_history(thread_id, limit)
 
                 # Convert ChatInteraction objects to dict format for API response
@@ -63,6 +64,9 @@ class EntityRouterFactory:
                                 "use_tools": interaction.use_tools,
                                 "use_memory": interaction.use_memory,
                                 "error": interaction.error,
+                                "response_time_ms": interaction.response_time_ms,
+                                "personality_applied": interaction.agent_personality_applied,
+                                "conversation_turn": interaction.conversation_turn,
                             },
                         }
                     )
@@ -140,7 +144,107 @@ class EntityRouterFactory:
                     "vector_memory": True,
                     "postgresql": True,
                     "tools": True,
+                    "chat_interactions": True,  # New feature flag
                 },
             }
+
+        # New endpoint to get detailed interaction by ID
+        @router.get("/interaction/{interaction_id}")
+        async def get_interaction(interaction_id: str):
+            """Get detailed information about a specific interaction"""
+            try:
+                # You'd need to implement this in your storage layer
+                # interaction = await self.storage.get_interaction_by_id(interaction_id)
+                # return interaction.to_api_response() if interaction else None
+
+                # For now, return a placeholder
+                return {"error": "Not implemented yet"}
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        # New endpoint for conversation analytics
+        @router.get("/analytics/{thread_id}")
+        async def get_conversation_analytics(thread_id: str):
+            """Get analytics for a conversation thread"""
+            try:
+                interactions = await self.storage.get_history(thread_id, limit=1000)
+
+                if not interactions:
+                    return {"error": "No interactions found for this thread"}
+
+                # Calculate analytics
+                total_interactions = len(interactions)
+                total_tools_used = sum(len(i.tools_used) for i in interactions)
+                memory_usage_count = sum(
+                    1 for i in interactions if i.memory_context_used
+                )
+                error_count = sum(1 for i in interactions if i.error)
+
+                # Calculate average response time
+                response_times = [
+                    i.response_time_ms for i in interactions if i.response_time_ms
+                ]
+                avg_response_time = (
+                    sum(response_times) / len(response_times)
+                    if response_times
+                    else None
+                )
+
+                # Get personality application stats
+                personality_applications = sum(
+                    1 for i in interactions if i.agent_personality_applied
+                )
+
+                return {
+                    "thread_id": thread_id,
+                    "total_interactions": total_interactions,
+                    "tools_usage": {
+                        "total_tools_used": total_tools_used,
+                        "average_per_interaction": (
+                            total_tools_used / total_interactions
+                            if total_interactions > 0
+                            else 0
+                        ),
+                    },
+                    "memory_usage": {
+                        "usage_count": memory_usage_count,
+                        "usage_percentage": (
+                            (memory_usage_count / total_interactions * 100)
+                            if total_interactions > 0
+                            else 0
+                        ),
+                    },
+                    "performance": {
+                        "average_response_time_ms": avg_response_time,
+                        "error_count": error_count,
+                        "error_rate": (
+                            (error_count / total_interactions * 100)
+                            if total_interactions > 0
+                            else 0
+                        ),
+                    },
+                    "personality": {
+                        "applications": personality_applications,
+                        "application_rate": (
+                            (personality_applications / total_interactions * 100)
+                            if total_interactions > 0
+                            else 0
+                        ),
+                    },
+                    "timeline": {
+                        "first_interaction": (
+                            interactions[-1].timestamp.isoformat()
+                            if interactions
+                            else None
+                        ),
+                        "last_interaction": (
+                            interactions[0].timestamp.isoformat()
+                            if interactions
+                            else None
+                        ),
+                    },
+                }
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
 
         return router
