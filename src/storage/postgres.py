@@ -1,4 +1,4 @@
-# src/storage/postgres.py - Final fix for all issues
+# Quick fix for your existing src/storage/postgres.py
 
 import json
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -20,8 +20,6 @@ class PostgresChatStorage(BaseChatStorage):
         self.db_config = db_config
         self.storage_config = storage_config
 
-        # Fix: Properly access schema from db_config
-        # The config has db_schema field, not schema
         schema = getattr(db_config, "db_schema", None) or "public"
 
         logger.info(f"🔧 Database schema: {schema}")
@@ -63,9 +61,7 @@ class PostgresChatStorage(BaseChatStorage):
                 if schema != "public":
                     await conn.execute(text(f"SET search_path TO {schema}"))
 
-                # Fix: Execute SQL commands separately to avoid "multiple commands" error
-
-                # 1. Create the table
+                # Create the table first
                 await conn.execute(
                     text(
                         f"""
@@ -117,7 +113,7 @@ class PostgresChatStorage(BaseChatStorage):
                     )
                 )
 
-                # 2. Create indexes separately
+                # Create indexes separately
                 index_commands = [
                     f"CREATE INDEX IF NOT EXISTS idx_{self.storage_config.history_table}_interaction_id ON {self.storage_config.history_table}(interaction_id)",
                     f"CREATE INDEX IF NOT EXISTS idx_{self.storage_config.history_table}_thread_id ON {self.storage_config.history_table}(thread_id)",

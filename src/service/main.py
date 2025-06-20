@@ -1,7 +1,4 @@
-# entity_service/main.py
-"""
-Entity Agent FastAPI Service with PostgreSQL Memory - Main entry point
-"""
+# src/service/main.py - Quick fix to use existing approach
 
 import logging
 from contextlib import asynccontextmanager
@@ -13,7 +10,6 @@ from src.service.agent import EntityAgent
 from src.service.config import load_config
 from src.service.routes import EntityRouterFactory
 from src.storage import create_storage
-from src.storage.base import BaseChatStorage
 from src.tools.memory import VectorMemorySystem
 from src.tools.tools import setup_tools
 
@@ -35,11 +31,14 @@ async def lifespan(app: FastAPI):
     await memory_system.initialize()
     logger.info("✅ Vector memory system initialized")
 
+    # Initialize chat history storage
     storage = await create_storage(config.storage, config.database)
+    logger.info("✅ Chat storage initialized")
 
     # Setup tool registry
     tool_registry = await setup_tools(config.tools, memory_system)
 
+    # Initialize LLM
     llm = OllamaLLM(
         base_url=config.ollama.base_url,
         model=config.ollama.model,
@@ -49,6 +48,7 @@ async def lifespan(app: FastAPI):
         repeat_penalty=config.ollama.repeat_penalty,
     )
 
+    # Initialize agent
     agent = EntityAgent(
         config=config.entity,
         tool_registry=tool_registry,
@@ -58,7 +58,7 @@ async def lifespan(app: FastAPI):
     )
     await agent.initialize()
 
-    # Attach everything to app.state (optional but useful)
+    # Attach everything to app.state
     app.state.config = config
     app.state.agent = agent
     app.state.storage = storage
