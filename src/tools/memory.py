@@ -14,9 +14,16 @@ from langchain_postgres.vectorstores import PGVector
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
 from sqlalchemy import text
 
+from pydantic import BaseModel
+
 from src.service.config import DatabaseConfig, MemoryConfig
 
 logger = logging.getLogger(__name__)
+
+
+class MemorySearchInput(BaseModel):
+    query: str
+    thread_id: str
 
 
 class VectorMemorySystem:
