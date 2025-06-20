@@ -11,7 +11,7 @@ from src.service.config import load_config
 from src.service.routes import EntityRouterFactory
 from src.storage import create_storage
 from src.tools.memory import VectorMemorySystem
-from src.tools.tools import setup_tools
+from src.tools.tools import ToolManager
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ async def lifespan(app: FastAPI):
     logger.info("✅ Chat storage initialized")
 
     # Setup tool registry
-    tool_registry = await setup_tools(config.tools, memory_system)
+    tool_registry = ToolManager.setup(config.tools.plugin_path)
 
     # Initialize LLM
     llm = OllamaLLM(
@@ -51,7 +51,7 @@ async def lifespan(app: FastAPI):
     # Initialize agent
     agent = EntityAgent(
         config=config.entity,
-        tool_registry=tool_registry,
+        tool_manager=tool_registry,
         chat_storage=storage,
         memory_system=memory_system,
         llm=llm,

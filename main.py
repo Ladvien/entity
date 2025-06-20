@@ -9,7 +9,7 @@ from src.service.config import load_config
 from src.service.routes import EntityRouterFactory
 from src.storage import create_storage
 from src.tools.memory import VectorMemorySystem
-from src.tools.tools import setup_tools
+from src.tools.tools import ToolManager
 from src.cli.client import EntityAPIClient
 from src.cli.chat_interface import ChatInterface
 
@@ -41,7 +41,7 @@ async def create_app_service():
     storage = await create_storage(config.storage, config.database)
 
     # Register tools
-    tools = await setup_tools(config.tools, memory)
+    tools = await ToolManager.
 
     # Inject LLM (remove duplicate, keep this one)
     # Add LLM creation first
@@ -55,7 +55,7 @@ async def create_app_service():
 
     agent = EntityAgent(
         config=config.entity,
-        tool_registry=tools,
+        tool_manager=tools,
         chat_storage=storage,
         memory_system=memory,
         llm=llm,  # Add this

@@ -51,7 +51,7 @@ memory:
 
 entity:
   entity_id: "jade"
-  max_iterations: 3
+  max_iterations: 10
   personality:
     name: "Jade"
     sarcasm_level: 0.8
@@ -126,7 +126,8 @@ logging:
   backup_count: 5
 
 tools:
-  enabled: [] # Disable all tools temporarily
+  plugin_path: ./plugins
+
   # enabled:
   #   - web_search
   #   - calculator

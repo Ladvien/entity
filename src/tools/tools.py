@@ -1,152 +1,172 @@
 import asyncio
 import logging
-import ast
-import operator
+import importlib.util
+import os
 from functools import wraps
-from inspect import signature, Signature
-from typing import Dict, Any, List, Optional, Callable
+from inspect import isclass, signature
+from typing import Dict, Any, List, Optional, Callable, Type
 
-from langchain_core.tools import StructuredTool, BaseTool
-from pydantic import BaseModel, Field
-
-from src.tools.memory import MemorySearchInput, VectorMemorySystem
+from langchain_core.tools import StructuredTool
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
 
-class QueryInput(BaseModel):
-    query: str = Field(..., description="The search query")
-    thread_id: str = Field(default="default", description="Conversation thread ID")
+class BaseToolPlugin:
+    name: str
+    description: str
+    args_schema: Type[BaseModel]
+
+    async def run(self, input_data: BaseModel) -> Any:
+        raise NotImplementedError
 
 
-class MemoryInput(BaseModel):
-    content: str = Field(..., description="The content to store")
-    importance: float = Field(default=0.8, description="Importance score")
+class FunctionTool:
+    def __init__(self, func: Callable, args_schema: Type[BaseModel]):
+        self.func = func
+        self.args_schema = args_schema
+        self.name = func.__name__
+        self.description = func.__doc__ or "No description provided."
+
+    def to_langchain_tool(self) -> StructuredTool:
+        @wraps(self.func)
+        async def safe_func(input_data: BaseModel):
+            try:
+                return await self.func(input_data)
+            except Exception as e:
+                logger.exception(f"❌ Tool '{self.name}' failed")
+                return f"[Tool Error: {self.name}] {str(e)}"
+
+        return StructuredTool.from_function(
+            ToolManager.sync_adapter(safe_func),
+            name=self.name,
+            description=self.description,
+            args_schema=self.args_schema,
+        )
 
 
-# --- Helpers ---
-
-
-def safe_tool_wrapper(tool_func: Callable) -> Callable:
-    """Wrap a tool function to catch and log exceptions cleanly"""
-    try:
-        sig: Optional[Signature] = signature(tool_func)
-    except ValueError:
-        sig = None
-
-    param = next(iter(sig.parameters.values()), None) if sig else None
-    param_type = param.annotation if param else None
-    expects_model = (
-        param_type
-        and isinstance(param_type, type)
-        and issubclass(param_type, BaseModel)
-    )
-
-    @wraps(tool_func)
-    async def wrapped(*args, **kwargs):
-        try:
-            if len(args) > 1:
-                raise ValueError(
-                    f"Too many positional arguments for tool '{tool_func.__name__}'"
-                )
-
-            input_arg = args[0] if args else kwargs
-
-            if expects_model:
-                if isinstance(input_arg, param_type):
-                    model_input = input_arg
-                elif isinstance(input_arg, dict):
-                    model_input = param_type(**input_arg)
-                elif isinstance(input_arg, str):
-                    fields = param_type.__fields__
-                    if "query" in fields:
-                        model_input = param_type(query=input_arg, thread_id="default")
-                    elif "content" in fields:
-                        model_input = param_type(content=input_arg)
-                    else:
-                        raise ValueError(
-                            f"Cannot coerce string to {param_type.__name__}: no suitable fields"
-                        )
-                else:
-                    raise ValueError(f"Unsupported input type: {type(input_arg)}")
-                result = await tool_func(model_input)
-            else:
-                result = await tool_func(*args, **kwargs)
-
-            logger.debug(f"✅ Tool '{tool_func.__name__}' result: {result}")
-            return result
-        except Exception as e:
-            logger.exception(f"❌ Tool '{tool_func.__name__}' failed")
-            return f"[Tool Error: {tool_func.__name__}] {str(e)}"
-
-    return wrapped
-
-
-def ensure_event_loop():
-    try:
-        return asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        return loop
-
-
-def sync_adapter(async_func: Callable) -> Callable:
-    """Fixed adapter to prevent event loop conflicts"""
-
-    @wraps(async_func)
-    def wrapper(*args, **kwargs):
-        # Don't use event loops in tool execution - let LangChain handle it
-        import asyncio
-        import concurrent.futures
-
-        # Run in a thread pool to avoid event loop conflicts
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(asyncio.run, async_func(*args, **kwargs))
-            return future.result()
-
-    return wrapper
-
-
-# --- Registry ---
-
-
-class ToolRegistry:
-    """Tool registry with memory context"""
+class ToolManager:
+    """
+    Manages tool registration and dynamic plugin discovery.
+    Supports both class-based and function-based tools.
+    """
 
     def __init__(self):
         self._tools: Dict[str, Any] = {}
         self._langchain_tools: List[Any] = []
-        self.memory_system: Optional[VectorMemorySystem] = None
 
-    def set_memory_system(self, memory_system: VectorMemorySystem):
-        self.memory_system = memory_system
+    @classmethod
+    def setup(cls, plugin_directory: str) -> "ToolManager":
+        """
+        Create and initialize a ToolManager from a plugin directory path.
+        """
+        instance = cls()
+        instance.load_plugins_from_config(plugin_directory)
+        return instance
 
-    def register(
-        self,
-        tool_func: Callable,
-        name: Optional[str] = None,
-        args_schema: Optional[BaseModel] = None,
-    ):
-        if isinstance(tool_func, BaseTool):
-            lc_tool = tool_func
-        else:
-            wrapped_func = safe_tool_wrapper(tool_func)
-            lc_tool = StructuredTool.from_function(
-                sync_adapter(wrapped_func),
-                name=name or tool_func.__name__,
-                description=tool_func.__doc__ or "No description provided.",
-                args_schema=args_schema,
+    @staticmethod
+    def sync_adapter(async_func: Callable) -> Callable:
+        @wraps(async_func)
+        def wrapper(input_data: BaseModel):
+            import concurrent.futures
+            import asyncio
+
+            coro = async_func(input_data)
+
+            if not asyncio.iscoroutine(coro):
+                raise TypeError("Expected coroutine from async_func")
+
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                loop = asyncio.new_event_loop()
+                return executor.submit(loop.run_until_complete, coro).result()
+
+        return wrapper
+
+    def register_function(self, tool_func: Callable, args_schema: Type[BaseModel]):
+        tool = FunctionTool(tool_func, args_schema).to_langchain_tool()
+        self._tools[tool.name] = tool
+        self._langchain_tools.append(tool)
+        logger.info(f"✅ Registered function tool: {tool.name}")
+
+    def register_class(self, cls: Type[BaseToolPlugin]):
+        if not issubclass(cls, BaseToolPlugin):
+            raise TypeError(
+                f"Tool class {cls.__name__} must inherit from BaseToolPlugin"
             )
 
-        tool_name = name or lc_tool.name
-        self._tools[tool_name] = lc_tool
-        self._langchain_tools.append(lc_tool)
+        instance = cls()
 
-        logger.info(f"✅ Registered tool: {tool_name}")
-        logger.debug(
-            f"🔧 StructuredTool created: name={lc_tool.name}, description={lc_tool.description}"
+        # Check that the run() method takes the declared args_schema
+        run_sig = signature(cls.run)  # Unbound method
+        params = list(run_sig.parameters.values())
+        if len(params) != 2 or params[1].annotation != cls.args_schema:
+            raise TypeError(
+                f"run() method of {cls.__name__} must take a single argument of type {cls.args_schema.__name__}"
+            )
+
+        async def wrapped(input_data: BaseModel):
+            return await instance.run(input_data)
+
+        lc_tool = StructuredTool.from_function(
+            self.sync_adapter(wrapped),
+            name=instance.name,
+            description=instance.description,
+            args_schema=instance.args_schema,
         )
+
+        self._tools[instance.name] = lc_tool
+        self._langchain_tools.append(lc_tool)
+        logger.info(f"✅ Registered plugin tool: {instance.name}")
+
+    def load_plugins_from_config(self, directory: str):
+        """
+        Load plugin classes from all Python files in the given directory.
+        """
+        if not os.path.isdir(directory):
+            logger.error(f"❌ Plugin directory does not exist: {directory}")
+            return
+
+        for filename in os.listdir(directory):
+            if filename.endswith(".py"):
+                file_path = os.path.join(directory, filename)
+                self.load_plugin_file(file_path)
+
+    def load_plugin_file(self, file_path: str):
+        """
+        Load plugin classes from a single Python file.
+        """
+        try:
+            module_name = os.path.splitext(os.path.basename(file_path))[0]
+            spec = importlib.util.spec_from_file_location(module_name, file_path)
+            if spec and spec.loader:
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+            else:
+                raise ImportError(f"Invalid spec or loader for {file_path}")
+        except Exception as e:
+            logger.exception(f"❌ Failed to load plugin module: {file_path}")
+            return
+
+        registered = 0
+        for obj_name in dir(module):
+            obj = getattr(module, obj_name)
+            if (
+                isclass(obj)
+                and issubclass(obj, BaseToolPlugin)
+                and obj is not BaseToolPlugin
+            ):
+                try:
+                    self.register_class(obj)
+                    registered += 1
+                except Exception as e:
+                    logger.exception(
+                        f"❌ Failed to register tool class: {obj.__name__}"
+                    )
+
+        if registered == 0:
+            logger.warning(f"⚠️ No tools registered from plugin file: {file_path}")
+        else:
+            logger.info(f"🔌 Registered {registered} tool(s) from: {file_path}")
 
     def get_tool(self, name: str) -> Optional[Any]:
         return self._tools.get(name)
@@ -156,119 +176,3 @@ class ToolRegistry:
 
     def list_tool_names(self) -> List[str]:
         return list(self._tools.keys())
-
-
-# --- Tool Implementations ---
-
-
-async def web_search_tool(query: str) -> str:
-    """
-    Search the web for information (mock).
-    """
-    return f"Web search results for '{query}': No results found (mock implementation)"
-
-
-async def calculator_tool(expression: str) -> str:
-    """Calculate the result of a basic math expression."""
-    try:
-        # Clean up the expression - remove common additions
-        expression = expression.strip()
-        expression = expression.replace("= ?", "").replace("=", "").strip()
-
-        # Remove question marks and other common artifacts
-        expression = expression.replace("?", "").strip()
-        allowed_ops = {
-            ast.Add: operator.add,
-            ast.Sub: operator.sub,
-            ast.Mult: operator.mul,
-            ast.Div: operator.truediv,
-            ast.Pow: operator.pow,
-            ast.USub: operator.neg,
-        }
-
-        def eval_expr(node):
-            if isinstance(node, ast.Constant):
-                return node.value
-            elif isinstance(node, ast.BinOp):
-                return allowed_ops[type(node.op)](
-                    eval_expr(node.left), eval_expr(node.right)
-                )
-            elif isinstance(node, ast.UnaryOp):
-                return allowed_ops[type(node.op)](eval_expr(node.operand))
-            raise TypeError(f"Unsupported node: {node}")
-
-        tree = ast.parse(expression, mode="eval")
-        return f"{expression} = {eval_expr(tree.body)}"
-
-    except Exception as e:
-        logger.exception("Calculator tool failed")
-        return f"Cannot calculate '{expression}': {e}"
-
-
-# --- Memory Tool Creators ---
-
-
-def create_memory_tools(registry: ToolRegistry):
-
-    @safe_tool_wrapper
-    async def search_memories(input: MemorySearchInput):
-        """
-        Search vector memory for relevant past content.
-        """
-        if registry.memory_system:
-            results = await registry.memory_system.search_memory(
-                input.query, input.thread_id, k=5
-            )
-            if results:
-                return "\n\n".join([f"Memory: {doc.page_content}" for doc in results])
-            return "No relevant memories found."
-        return "Memory system not available."
-
-    async def store_important_memory(input: MemoryInput) -> str:
-        """
-        Store an important memory in the vector database.
-        """
-        if registry.memory_system:
-            await registry.memory_system.add_memory(
-                thread_id="default",
-                content=input.content,
-                memory_type="important",
-                importance_score=input.importance,
-                emotional_tone="neutral",
-            )
-            return f"Stored in memory: {input.content[:100]}..."
-        return "Memory system not available."
-
-    return search_memories, store_important_memory
-
-
-# --- Setup ---
-
-
-async def setup_tools(
-    config: Dict[str, Any], memory_system: VectorMemorySystem
-) -> ToolRegistry:
-    registry = ToolRegistry()
-    registry.set_memory_system(memory_system)
-
-    if "web_search" in config.enabled:
-        registry.register(web_search_tool, args_schema=QueryInput)
-
-    if "calculator" in config.enabled:
-        registry.register(calculator_tool)
-
-    if "memory_search" in config.enabled or "store_memory" in config.enabled:
-        search_tool, store_tool = create_memory_tools(registry)
-
-        if "memory_search" in config.enabled:
-            registry.register(
-                search_tool, name="search_memories", args_schema=QueryInput
-            )
-
-        if "store_memory" in config.enabled:
-            registry.register(
-                store_tool, name="store_important_memory", args_schema=MemoryInput
-            )
-
-    logger.info(f"🔧 Tool setup complete with tools: {registry.list_tool_names()}")
-    return registry

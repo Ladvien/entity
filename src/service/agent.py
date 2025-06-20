@@ -10,7 +10,7 @@ from src.service.config import EntityConfig
 from src.storage.base import BaseChatStorage
 from src.storage.postgres import PostgresChatStorage
 from src.tools.memory import VectorMemorySystem
-from src.tools.tools import ToolRegistry
+from src.tools.tools import ToolManager
 from src.shared.models import ChatInteraction
 
 logger = logging.getLogger(__name__)
@@ -22,13 +22,13 @@ class EntityAgent:
     def __init__(
         self,
         config: EntityConfig,
-        tool_registry: ToolRegistry,
+        tool_manager: ToolManager,
         chat_storage: BaseChatStorage,
         memory_system: VectorMemorySystem,
         llm: BaseLanguageModel,
     ):
         self.config = config
-        self.tool_registry = tool_registry
+        self.tool_registry = tool_manager
         self.chat_storage = chat_storage
         self.memory_system = memory_system
         self.llm = llm

@@ -12,6 +12,7 @@ from pathlib import Path
 
 class ToolConfig(BaseModel):
     enabled: List[str] = []
+    plugin_path: str
 
 
 # Database Configuration
