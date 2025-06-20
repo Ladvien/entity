@@ -1,6 +1,11 @@
+# plugins/fun_fact_tool.py
+
 from typing import Optional
 from pydantic import BaseModel
 from src.tools.tools import BaseToolPlugin
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class FunFactInput(BaseModel):
@@ -9,8 +14,13 @@ class FunFactInput(BaseModel):
 
 class FunFactTool(BaseToolPlugin):
     name = "fun_fact"
-    description = "Tell a fun fact about a topic"
+    description = "Returns a fun fact about a given topic."
     args_schema = FunFactInput
 
     async def run(self, input_data: FunFactInput) -> str:
-        return f"Did you know? {input_data.topic.capitalize()} is surprisingly cool."
+        try:
+            topic = input_data.topic or "space"
+            return f"Did you know that {topic.capitalize()} is fascinating?"
+        except Exception as e:
+            logger.exception("FunFactTool failed")
+            return f"[Error] {str(e)}"

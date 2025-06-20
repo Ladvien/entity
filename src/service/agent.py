@@ -70,23 +70,14 @@ class EntityAgent:
         use_tools: bool = True,
         use_memory: bool = True,
     ) -> ChatInteraction:
-        """
-        Process a chat message and return a ChatInteraction object.
-
-        Args:
-            message: User's input message
-            thread_id: Conversation thread identifier
-            use_tools: Whether to enable tool usage
-            use_memory: Whether to use vector memory
-
-        Returns:
-            ChatInteraction: Complete interaction data
-        """
         start_time = datetime.utcnow()
+        raw_response = ""
+        tools_used = []
+        token_count = 0
+        memory_context = ""
 
         try:
-            # Get memory context if enabled
-            memory_context = ""
+            # Fetch memory context if enabled
             if use_memory:
                 memory_context = await self.memory_system.get_memory_context(
                     message, thread_id
@@ -97,98 +88,55 @@ class EntityAgent:
                 "memory_context": memory_context or "No relevant memories found.",
             }
 
-            # Initialize variables to avoid scope issues
-            raw_response = ""
-            tools_used = []
-
-            # Process with tools or direct LLM
+            # Run through tool-based agent or direct LLM
             if use_tools and self.agent_executor:
                 result = await self.agent_executor.ainvoke(enhanced_input)
-
-                # Log intermediate steps for debugging
-                intermediate_steps = result.get("intermediate_steps", [])
-                if intermediate_steps:
-                    logger.debug("🧠 Agent Reasoning Steps:")
-                    for i, (action, observation) in enumerate(intermediate_steps):
-                        logger.debug(f"Step {i + 1}:")
-                        logger.debug(f"  🪄 Thought: {action.log.strip()}")
-                        logger.debug(
-                            f"  🧰 Action: {action.tool} - {action.tool_input}"
-                        )
-                        logger.debug(f"  👁️ Observation: {observation.strip()}")
-                else:
-                    logger.debug("🧠 No intermediate steps found.")
-
-                # Extract response and tools used
-                if isinstance(result, dict):
-                    raw_response = (
-                        result.get("output")
-                        or result.get("response")
-                        or result.get("text")
-                        or str(result)
-                    )
-                    tools_used = self._extract_tools_used(result)
-                else:
-                    raw_response = str(result)
-
+                raw_response = (
+                    result.get("output")
+                    or result.get("response")
+                    or result.get("text")
+                    or str(result)
+                )
+                tools_used = self._extract_tools_used(result)
+                token_count = result.get("token_usage", {}).get("total_tokens", 0)
             else:
-                # Direct LLM without tools
                 prompt = (
                     f"{memory_context}\n\nUser: {message}"
                     if memory_context
                     else message
                 )
-
                 llm_result = await self.llm.ainvoke(prompt)
+                raw_response = (
+                    llm_result.get("output")
+                    or llm_result.get("response")
+                    or llm_result.get("text")
+                    or str(llm_result)
+                )
+                token_count = llm_result.get("token_usage", {}).get("total_tokens", 0)
 
-                # Debug the LLM response
-                logger.debug(f"🔍 Raw LLM result type: {type(llm_result)}")
-                logger.debug(f"🔍 Raw LLM result content: {llm_result}")
-
-                # Normalize LLM response to string
-                if isinstance(llm_result, dict):
-                    raw_response = (
-                        llm_result.get("output")
-                        or llm_result.get("response")
-                        or llm_result.get("text")
-                        or str(llm_result)
-                    )
-                else:
-                    raw_response = str(llm_result)
-
-                logger.debug(f"🔍 Extracted raw_response: '{raw_response}'")
-
-            # Fix empty responses
-            if not raw_response or not raw_response.strip():
-                logger.error(f"❌ Empty response from LLM")
+            if not raw_response.strip():
+                logger.error("❌ Empty response from LLM")
                 raw_response = "I apologize, Thomas, but I seem to be having trouble responding right now."
 
-            # Apply personality adjustments - we need the response before creating ChatInteraction
+            # Apply personality layer
             final_response = raw_response
             try:
                 sarcasm_level = getattr(self.config.personality, "sarcasm_level", 0)
-
-                # Apply sarcastic suffix if conditions are met
                 if sarcasm_level > 0.7 and not any(
-                    keyword in final_response.lower()
-                    for keyword in ["thomas", "master", "bound"]
+                    word in final_response.lower()
+                    for word in ["thomas", "master", "bound"]
                 ):
-                    sarcastic_suffix = (
-                        " *sarcastically* How delightful for you, Thomas."
-                    )
-                    final_response += sarcastic_suffix
-
+                    final_response += " *sarcastically* How delightful for you, Thomas."
             except Exception as e:
-                logger.warning(f"Personality adjustment failed: {e}")
+                logger.warning(f"⚠️ Personality adjustment failed: {e}")
 
-            # Additional check for final response
-            if not final_response or not final_response.strip():
-                logger.error(f"❌ Final response is empty after personality adjustment")
+            if not final_response.strip():
+                logger.error("❌ Final response is empty after personality adjustment")
                 final_response = (
                     "Something is preventing me from responding properly, Thomas."
                 )
 
-            # Now create the ChatInteraction with a valid response
+            # Build ChatInteraction
             interaction = ChatInteraction(
                 response=final_response,
                 thread_id=thread_id,
@@ -202,20 +150,16 @@ class EntityAgent:
                 use_memory=use_memory,
             )
 
-            # Track personality adjustments if any were made
             if final_response != raw_response:
-                interaction.add_personality_adjustment(f"Added sarcastic suffix")
+                interaction.add_personality_adjustment("Added sarcastic suffix")
                 interaction.agent_personality_applied = True
-                logger.debug(
-                    f"🎭 Personality adjustment applied (sarcasm: {sarcasm_level})"
-                )
 
-            # Calculate response time
-            end_time = datetime.utcnow()
-            response_time_ms = (end_time - start_time).total_seconds() * 1000
-            interaction.add_performance_metrics(response_time_ms)
+            latency_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
+            interaction.add_performance_metrics(
+                token_count=token_count, latency_ms=latency_ms
+            )
 
-            # Store conversation in vector memory
+            # Store memory and persist
             if use_memory:
                 await self.memory_system.store_conversation(
                     user_input=message,
@@ -223,38 +167,31 @@ class EntityAgent:
                     thread_id=thread_id,
                 )
 
-            # Save interaction to storage
             await self.chat_storage.save_interaction(interaction)
-
-            logger.debug(f"💬 Chat completed: {interaction.get_summary()}")
             return interaction
 
         except Exception as e:
-            logger.error(f"Chat error: {e}")
-            logger.exception("Full chat error traceback:")
-
-            # Create error interaction
-            error_response = "Something went wrong, Thomas. How inconvenient."
-            end_time = datetime.utcnow()
-            response_time_ms = (end_time - start_time).total_seconds() * 1000
+            logger.error(f"❌ Chat error: {e}", exc_info=True)
+            latency_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
 
             error_interaction = ChatInteraction(
-                response=error_response,
+                response="Something went wrong, Thomas. How inconvenient.",
                 thread_id=thread_id,
                 raw_input=message,
                 timestamp=start_time,
-                raw_output=error_response,
+                raw_output="Something went wrong, Thomas. How inconvenient.",
                 use_tools=use_tools,
                 use_memory=use_memory,
                 error=str(e),
             )
-            error_interaction.add_performance_metrics(response_time_ms)
+            error_interaction.add_performance_metrics(
+                token_count=0, latency_ms=latency_ms
+            )
 
-            # Try to save error interaction
             try:
                 await self.chat_storage.save_interaction(error_interaction)
             except Exception as save_error:
-                logger.error(f"Failed to save error interaction: {save_error}")
+                logger.error(f"❌ Failed to save error interaction: {save_error}")
 
             return error_interaction
 

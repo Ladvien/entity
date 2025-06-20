@@ -1,8 +1,7 @@
-# src/storage/__init__.py - Updated factory using DatabaseConnection
+# src/storage/__init__.py - FIXED VERSION
 
-from abc import ABC, abstractmethod
-from typing import Dict, Any, TYPE_CHECKING
-from src.service.config import StorageConfig
+from typing import TYPE_CHECKING
+from src.service.config import StorageConfig, DatabaseConfig
 from src.storage.base import BaseChatStorage
 from src.storage.postgres import PostgresChatStorage
 from src.db.connection import DatabaseConnection
@@ -12,14 +11,14 @@ if TYPE_CHECKING:
 
 
 async def create_storage(
-    storage_config: StorageConfig, db_connection: DatabaseConnection
+    storage_config: StorageConfig, database_config: DatabaseConfig
 ) -> BaseChatStorage:
     """
     Factory function to create storage instances using centralized DB connection
 
     Args:
         storage_config: Storage configuration (backend type, table names, etc.)
-        db_connection: Centralized database connection instance
+        database_config: Database configuration
 
     Returns:
         BaseChatStorage: Configured storage instance
@@ -27,6 +26,18 @@ async def create_storage(
     backend = storage_config.backend.lower()
 
     if backend == "postgres" or backend == "postgresql":
+        # Create centralized database connection
+        db_connection = DatabaseConnection.from_config(database_config)
+
+        # Test the connection
+        if not await db_connection.test_connection():
+            raise ConnectionError("Failed to connect to database")
+
+        # Ensure schema exists
+        if not await db_connection.ensure_schema():
+            raise RuntimeError(f"Failed to ensure schema '{db_connection.schema}'")
+
+        # Create storage with centralized connection
         storage = PostgresChatStorage(db_connection, storage_config)
         await storage.initialize()
         return storage
@@ -43,45 +54,31 @@ async def create_storage(
         raise ValueError(f"Unsupported storage backend: {backend}")
 
 
-# Keep the old factory for backward compatibility
+# Legacy factory for backward compatibility (DEPRECATED)
 async def create_storage_legacy(storage_config: StorageConfig, db_config):
     """
-    Legacy factory that creates its own connection - for backward compatibility
+    Legacy factory - DEPRECATED
+    Use create_storage() instead
     """
-    from src.service.config import DatabaseConfig
+    import warnings
+
+    warnings.warn(
+        "create_storage_legacy is deprecated. Use create_storage() instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     if isinstance(db_config, dict):
         db_config = DatabaseConfig(**db_config)
 
-    # Create a temporary connection for this storage
-    db_connection = DatabaseConnection.from_config(db_config)
-    return await create_storage(storage_config, db_connection)
-
-
-class ChatStorage(ABC):
-    """Legacy alias for BaseChatStorage - for backward compatibility"""
-
-    @abstractmethod
-    async def save_interaction(
-        self,
-        thread_id: str,
-        user_input: str,
-        agent_output: str,
-        metadata: Dict[str, Any],
-    ):
-        pass
-
-    @abstractmethod
-    async def get_history(self, thread_id: str, limit: int = 100):
-        pass
+    return await create_storage(storage_config, db_config)
 
 
 # Make imports available at package level
 __all__ = [
     "create_storage",
-    "create_storage_legacy",
+    "create_storage_legacy",  # Deprecated
     "BaseChatStorage",
-    "ChatStorage",
     "PostgresChatStorage",
     "DatabaseConnection",
 ]

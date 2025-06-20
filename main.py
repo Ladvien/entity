@@ -41,7 +41,9 @@ async def create_app_service():
     storage = await create_storage(config.storage, config.database)
 
     # Register tools
-    tools = await ToolManager.
+    tools = await ToolManager.setup(
+        config.tools.plugin_path,
+    )
 
     # Inject LLM (remove duplicate, keep this one)
     # Add LLM creation first

@@ -1,142 +1,114 @@
-# Quick fix for your existing src/storage/postgres.py
+# src/storage/postgres.py - FIXED VERSION
 
 import json
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import text
 from typing import List, Dict, Any, Optional
 import logging
 from datetime import datetime
 
-from src.service.config import DatabaseConfig, StorageConfig
+from sqlalchemy import text
+
+from src.service.config import StorageConfig
 from src.storage.base import BaseChatStorage
 from src.shared.models import ChatInteraction
+from src.db.connection import DatabaseConnection
 
 logger = logging.getLogger(__name__)
 
 
 class PostgresChatStorage(BaseChatStorage):
-    def __init__(self, db_config: DatabaseConfig, storage_config: StorageConfig):
-        self.db_config = db_config
+    """PostgreSQL storage using centralized DatabaseConnection"""
+
+    def __init__(
+        self, db_connection: DatabaseConnection, storage_config: StorageConfig
+    ):
+        self.db_connection = db_connection
         self.storage_config = storage_config
-
-        schema = getattr(db_config, "db_schema", None) or "public"
-
-        logger.info(f"🔧 Database schema: {schema}")
-
-        # Basic connection URL without options
-        self.conn_url = (
-            f"postgresql+asyncpg://{db_config.username}:{db_config.password}"
-            f"@{db_config.host}:{db_config.port}/{db_config.name}"
-        )
-
-        # Create engine with schema in connect_args ONLY if not public
-        connect_args = {}
-        if schema and schema != "public":
-            connect_args["server_settings"] = {"search_path": schema}
-
-        self.engine = create_async_engine(
-            self.conn_url, echo=False, connect_args=connect_args
-        )
-
-        self.session_factory = sessionmaker(
-            self.engine, expire_on_commit=False, class_=AsyncSession
-        )
+        logger.info(f"🔧 PostgresChatStorage initialized with centralized connection")
 
     async def initialize(self):
+        """Initialize the storage tables"""
         if not self.storage_config.init_on_startup:
+            logger.info("⏭️ Skipping storage initialization (init_on_startup=False)")
             return
 
-        # Fix: Use db_schema field from config
-        schema = getattr(self.db_config, "db_schema", None) or "public"
-
         try:
-            async with self.engine.begin() as conn:
-                # Create schema if it doesn't exist (skip for public schema)
-                if schema != "public":
-                    await conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {schema}"))
-                    logger.info(f"✅ Schema '{schema}' ready")
+            # Use the centralized connection's schema management
+            await self.db_connection.ensure_schema()
 
-                # Set search path for this session
-                if schema != "public":
-                    await conn.execute(text(f"SET search_path TO {schema}"))
-
-                # Create the table first
-                await conn.execute(
-                    text(
-                        f"""
-                        CREATE TABLE IF NOT EXISTS {self.storage_config.history_table} (
-                            id SERIAL PRIMARY KEY,
-                            
-                            -- Core interaction fields
-                            interaction_id TEXT UNIQUE NOT NULL,
-                            thread_id TEXT NOT NULL,
-                            timestamp TIMESTAMP NOT NULL,
-                            
-                            -- Content fields
-                            response TEXT NOT NULL,
-                            raw_input TEXT NOT NULL,
-                            raw_output TEXT NOT NULL,
-                            
-                            -- Tool and memory usage
-                            tools_used JSONB DEFAULT '[]'::jsonb,
-                            memory_context_used BOOLEAN DEFAULT FALSE,
-                            memory_context TEXT DEFAULT '',
-                            
-                            -- Configuration
-                            use_tools BOOLEAN DEFAULT TRUE,
-                            use_memory BOOLEAN DEFAULT TRUE,
-                            
-                            -- Error handling
-                            error_message TEXT,
-                            
-                            -- Performance metrics
-                            response_time_ms FLOAT,
-                            token_count INTEGER,
-                            
-                            -- Conversation metadata
-                            conversation_turn INTEGER,
-                            user_id TEXT,
-                            
-                            -- Agent personality tracking
-                            agent_personality_applied BOOLEAN DEFAULT FALSE,
-                            personality_adjustments JSONB DEFAULT '[]'::jsonb,
-                            
-                            -- Extended metadata
-                            metadata JSONB DEFAULT '{{}}'::jsonb,
-                            
-                            -- Constraints
-                            CONSTRAINT valid_thread_id CHECK (length(thread_id) > 0),
-                            CONSTRAINT valid_interaction_id CHECK (length(interaction_id) > 0)
-                        )
-                        """
-                    )
+            # Create the table using the centralized connection
+            create_table_sql = f"""
+                CREATE TABLE IF NOT EXISTS {self.storage_config.history_table} (
+                    id SERIAL PRIMARY KEY,
+                    
+                    -- Core interaction fields
+                    interaction_id TEXT UNIQUE NOT NULL,
+                    thread_id TEXT NOT NULL,
+                    timestamp TIMESTAMP NOT NULL,
+                    
+                    -- Content fields
+                    response TEXT NOT NULL,
+                    raw_input TEXT NOT NULL,
+                    raw_output TEXT NOT NULL,
+                    
+                    -- Tool and memory usage
+                    tools_used JSONB DEFAULT '[]'::jsonb,
+                    memory_context_used BOOLEAN DEFAULT FALSE,
+                    memory_context TEXT DEFAULT '',
+                    
+                    -- Configuration
+                    use_tools BOOLEAN DEFAULT TRUE,
+                    use_memory BOOLEAN DEFAULT TRUE,
+                    
+                    -- Error handling
+                    error_message TEXT,
+                    
+                    -- Performance metrics
+                    response_time_ms FLOAT,
+                    token_count INTEGER,
+                    
+                    -- Conversation metadata
+                    conversation_turn INTEGER,
+                    user_id TEXT,
+                    
+                    -- Agent personality tracking
+                    agent_personality_applied BOOLEAN DEFAULT FALSE,
+                    personality_adjustments JSONB DEFAULT '[]'::jsonb,
+                    
+                    -- Extended metadata
+                    metadata JSONB DEFAULT '{{}}'::jsonb,
+                    
+                    -- Constraints
+                    CONSTRAINT valid_thread_id CHECK (length(thread_id) > 0),
+                    CONSTRAINT valid_interaction_id CHECK (length(interaction_id) > 0)
                 )
+            """
 
-                # Create indexes separately
-                index_commands = [
-                    f"CREATE INDEX IF NOT EXISTS idx_{self.storage_config.history_table}_interaction_id ON {self.storage_config.history_table}(interaction_id)",
-                    f"CREATE INDEX IF NOT EXISTS idx_{self.storage_config.history_table}_thread_id ON {self.storage_config.history_table}(thread_id)",
-                    f"CREATE INDEX IF NOT EXISTS idx_{self.storage_config.history_table}_timestamp ON {self.storage_config.history_table}(timestamp DESC)",
-                    f"CREATE INDEX IF NOT EXISTS idx_{self.storage_config.history_table}_thread_timestamp ON {self.storage_config.history_table}(thread_id, timestamp DESC)",
-                    f"CREATE INDEX IF NOT EXISTS idx_{self.storage_config.history_table}_user_id ON {self.storage_config.history_table}(user_id) WHERE user_id IS NOT NULL",
-                ]
+            # Create indexes
+            index_commands = [
+                f"CREATE INDEX IF NOT EXISTS idx_{self.storage_config.history_table}_interaction_id ON {self.storage_config.history_table}(interaction_id)",
+                f"CREATE INDEX IF NOT EXISTS idx_{self.storage_config.history_table}_thread_id ON {self.storage_config.history_table}(thread_id)",
+                f"CREATE INDEX IF NOT EXISTS idx_{self.storage_config.history_table}_timestamp ON {self.storage_config.history_table}(timestamp DESC)",
+                f"CREATE INDEX IF NOT EXISTS idx_{self.storage_config.history_table}_thread_timestamp ON {self.storage_config.history_table}(thread_id, timestamp DESC)",
+                f"CREATE INDEX IF NOT EXISTS idx_{self.storage_config.history_table}_user_id ON {self.storage_config.history_table}(user_id) WHERE user_id IS NOT NULL",
+            ]
 
-                for index_cmd in index_commands:
-                    await conn.execute(text(index_cmd))
+            # Execute all commands using centralized connection
+            all_commands = [create_table_sql] + index_commands
+            await self.db_connection.execute_schema_commands(all_commands)
 
-                logger.info(
-                    f"✅ Table '{schema}.{self.storage_config.history_table}' ready with ChatInteraction support"
-                )
+            logger.info(
+                f"✅ Table '{self.db_connection.schema}.{self.storage_config.history_table}' ready with ChatInteraction support"
+            )
 
         except Exception as e:
             logger.error(f"❌ Failed to initialize database: {e}")
             raise
 
     async def save_interaction(self, interaction: ChatInteraction):
-        """Save a ChatInteraction to the database"""
+        """Save a ChatInteraction to the database using centralized connection"""
         try:
-            async with self.session_factory() as session:
+            session = await self.db_connection.get_session()
+            async with session:
                 await session.execute(
                     text(
                         f"""
@@ -198,9 +170,10 @@ class PostgresChatStorage(BaseChatStorage):
     async def get_history(
         self, thread_id: str, limit: int = 100
     ) -> List[ChatInteraction]:
-        """Get chat history as list of ChatInteraction objects"""
+        """Get chat history as list of ChatInteraction objects using centralized connection"""
         try:
-            async with self.session_factory() as session:
+            session = await self.db_connection.get_session()
+            async with session:
                 result = await session.execute(
                     text(
                         f"""
@@ -278,9 +251,10 @@ class PostgresChatStorage(BaseChatStorage):
     async def get_interaction_by_id(
         self, interaction_id: str
     ) -> Optional[ChatInteraction]:
-        """Get a specific interaction by its ID"""
+        """Get a specific interaction by its ID using centralized connection"""
         try:
-            async with self.session_factory() as session:
+            session = await self.db_connection.get_session()
+            async with session:
                 result = await session.execute(
                     text(
                         f"""
@@ -334,4 +308,6 @@ class PostgresChatStorage(BaseChatStorage):
             return None
 
     async def close(self):
-        await self.engine.dispose()
+        """Close the database connection"""
+        await self.db_connection.close()
+        logger.info("✅ PostgresChatStorage closed")

@@ -113,7 +113,7 @@ def run_server_mode(config_path: str, reload: bool = False):
 
         # Fix the import - use the correct path
         import uvicorn
-        from src.service.main import create_app
+        from src.service.app import create_app
 
         app = create_app()
         uvicorn.run(
