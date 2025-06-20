@@ -13,6 +13,7 @@ from src.service.agent import EntityAgent
 from src.service.config import load_config
 from src.service.routes import EntityRouterFactory
 from src.storage import create_storage
+from src.storage.base import BaseChatStorage
 from src.tools.memory import VectorMemorySystem
 from src.tools.tools import setup_tools
 
@@ -51,7 +52,7 @@ async def lifespan(app: FastAPI):
     agent = EntityAgent(
         config=config.entity,
         tool_registry=tool_registry,
-        storage=storage,
+        chat_storage=storage,
         memory_system=memory_system,
         llm=llm,
     )

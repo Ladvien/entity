@@ -7,7 +7,9 @@ from langchain.agents import AgentExecutor, create_react_agent
 from langchain_core.language_models.base import BaseLanguageModel
 
 from src.service.config import EntityConfig
-from src.storage import ChatStorage
+
+from src.storage.base import BaseChatStorage
+from src.storage.postgres import PostgresChatStorage
 from src.tools.memory import VectorMemorySystem
 from src.tools.tools import ToolRegistry
 
@@ -21,13 +23,13 @@ class EntityAgent:
         self,
         config: EntityConfig,
         tool_registry: ToolRegistry,
-        storage: ChatStorage,
+        chat_storage: BaseChatStorage,
         memory_system: VectorMemorySystem,
-        llm: BaseLanguageModel,  # Injected dependency
+        llm: BaseLanguageModel,
     ):
         self.config = config
         self.tool_registry = tool_registry
-        self.storage = storage
+        self.chat_storage = chat_storage
         self.memory_system = memory_system
         self.llm = llm
         self.agent_executor: Optional[AgentExecutor] = None
@@ -143,7 +145,7 @@ class EntityAgent:
                     thread_id=thread_id,
                 )
 
-            await self.storage.save_interaction(
+            await self.chat_storage.save_interaction(
                 thread_id=thread_id,
                 user_input=message,
                 agent_output=response,

@@ -169,10 +169,14 @@ async def web_search_tool(query: str) -> str:
 
 
 async def calculator_tool(expression: str) -> str:
-    """
-    Calculate the result of a basic math expression.
-    """
+    """Calculate the result of a basic math expression."""
     try:
+        # Clean up the expression - remove common additions
+        expression = expression.strip()
+        expression = expression.replace("= ?", "").replace("=", "").strip()
+
+        # Remove question marks and other common artifacts
+        expression = expression.replace("?", "").strip()
         allowed_ops = {
             ast.Add: operator.add,
             ast.Sub: operator.sub,

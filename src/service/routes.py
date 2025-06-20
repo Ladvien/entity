@@ -1,4 +1,4 @@
-# entity_service/api/router_factory.py
+# src/service/routes.py
 
 from fastapi import APIRouter, HTTPException, Query
 from typing import Optional
@@ -7,6 +7,7 @@ from datetime import datetime
 from src.shared.models import (
     ChatRequest,
     ChatResponse,
+    ChatInteraction,
     ToolExecutionRequest,
     ToolExecutionResponse,
     MemoryStatsResponse,
@@ -26,13 +27,18 @@ class EntityRouterFactory:
         @router.post("/chat", response_model=ChatResponse)
         async def chat(request: ChatRequest):
             try:
-                result = await self.agent.chat(
+                # Get ChatInteraction from agent
+                interaction = await self.agent.chat(
                     message=request.message,
                     thread_id=request.thread_id,
                     use_tools=request.use_tools,
                     use_memory=request.use_memory,
                 )
-                return ChatResponse(**result)
+
+                # Convert to ChatResponse for API response
+                response = ChatResponse.from_interaction(interaction)
+                return response
+
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 
@@ -41,7 +47,26 @@ class EntityRouterFactory:
             thread_id: str, limit: Optional[int] = Query(default=100, ge=1, le=1000)
         ):
             try:
-                history = await self.storage.get_history(thread_id, limit)
+                interactions = await self.storage.get_history(thread_id, limit)
+
+                # Convert ChatInteraction objects to dict format for API response
+                history = []
+                for interaction in interactions:
+                    history.append(
+                        {
+                            "user_input": interaction.raw_input,
+                            "agent_output": interaction.response,
+                            "timestamp": interaction.timestamp.isoformat(),
+                            "metadata": {
+                                "tools_used": interaction.tools_used,
+                                "memory_context_used": interaction.memory_context_used,
+                                "use_tools": interaction.use_tools,
+                                "use_memory": interaction.use_memory,
+                                "error": interaction.error,
+                            },
+                        }
+                    )
+
                 return {"thread_id": thread_id, "history": history}
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))

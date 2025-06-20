@@ -4,15 +4,12 @@ import logging
 from fastapi import FastAPI
 import uvicorn
 
-from langchain_ollama import OllamaLLM
-
 from src.service.agent import EntityAgent
 from src.service.config import load_config
 from src.service.routes import EntityRouterFactory
 from src.storage import create_storage
 from src.tools.memory import VectorMemorySystem
 from src.tools.tools import setup_tools
-
 from src.cli.client import EntityAPIClient
 from src.cli.chat_interface import ChatInterface
 
@@ -59,7 +56,7 @@ async def create_app_service():
     agent = EntityAgent(
         config=config.entity,
         tool_registry=tools,
-        storage=storage,
+        chat_storage=storage,
         memory_system=memory,
         llm=llm,  # Add this
     )

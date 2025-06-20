@@ -9,6 +9,7 @@ database:
   password: "${DB_PASSWORD}"
   min_pool_size: 2
   max_pool_size: 10
+  db_schema: "entity"
 
 ollama:
   base_url: "http://192.168.1.110:11434"
@@ -50,7 +51,7 @@ memory:
 
 entity:
   entity_id: "jade"
-  max_iterations: 50
+  max_iterations: 3
   personality:
     name: "Jade"
     sarcasm_level: 0.8
@@ -125,8 +126,9 @@ logging:
   backup_count: 5
 
 tools:
-  enabled:
-    - web_search
-    - calculator
-    # - memory_search
-    # - store_memory
+  enabled: [] # Disable all tools temporarily
+  # enabled:
+  #   - web_search
+  #   - calculator
+  # - memory_search
+  # - store_memory

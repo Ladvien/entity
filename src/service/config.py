@@ -24,6 +24,8 @@ class DatabaseConfig(BaseModel):
     min_pool_size: int = 2
     max_pool_size: int = 10
 
+    db_schema: Optional[str] = None
+
 
 # Ollama Configuration
 class OllamaConfig(BaseModel):
