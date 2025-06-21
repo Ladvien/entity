@@ -22,6 +22,41 @@ class MemorySearchInput(BaseModel):
     limit: Optional[int] = Field(default=5, description="Number of results to return")
 
 
+class DeepMemorySearchTool(BaseToolPlugin):
+    name = "deep_memory_search"
+    description = (
+        "Searches both stored vector memories and raw chat history for deep context"
+    )
+    args_schema = MemorySearchInput
+
+    def get_context_injection(
+        self, user_input: str, thread_id: str = "default"
+    ) -> Dict[str, str]:
+        return {
+            "deep_memory_search_query": user_input,
+            "deep_memory_search_thread_id": thread_id,
+        }
+
+    async def run(self, input_data: MemorySearchInput) -> str:
+        memory_system = ServiceRegistry.try_get("memory_system")
+        if not memory_system:
+            return "❌ Memory system not available"
+
+        results = await memory_system.deep_search(
+            query=input_data.query,
+            thread_id=input_data.thread_id,
+            k=input_data.limit,
+        )
+
+        if not results:
+            return f"No relevant results found for: {input_data.query}"
+
+        return "\n".join(
+            f"{i+1}. [{doc.metadata.get('source', 'unknown')}] {doc.page_content[:80]}..."
+            for i, doc in enumerate(results)
+        )
+
+
 class StoreMemoryInput(BaseModel):
     content: str = Field(..., description="Memory content to store")
     thread_id: Optional[str] = Field(

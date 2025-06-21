@@ -68,8 +68,32 @@ class EntityAgent:
         )
 
         try:
+            memory_context = ""
+            try:
+                # 🧠 Attempt vector-based memory search
+                memories = await self.memory_system.search_memory(
+                    message, thread_id=thread_id, k=5
+                )
+                memory_context = "\n".join(doc.page_content for doc in memories)
+
+                # 🔁 Fallback to deep text search
+                if not memory_context.strip():
+                    logger.info(
+                        "🔍 No vector memory found, falling back to deep search."
+                    )
+                    deep_hits = await self.memory_system.deep_search_memory(
+                        message, thread_id=thread_id, k=5
+                    )
+                    memory_context = "\n".join(i.response for i in deep_hits)
+
+            except Exception as e:
+                logger.warning(f"⚠️ Memory search failed: {e}")
+
             enhanced_input = {"input": message}
-            logger.debug(f"🔧 Enhanced input prepared")
+            if memory_context:
+                enhanced_input["input"] = f"{memory_context}\n\n{message}"
+
+            logger.debug("🔧 Enhanced input prepared")
 
             if use_tools and self.agent_executor:
                 logger.info("🤖 Running through agent executor with tools...")
@@ -81,7 +105,6 @@ class EntityAgent:
                     or str(result)
                 )
                 intermediate_steps = result.get("intermediate_steps", [])
-
                 for i, (action, observation) in enumerate(intermediate_steps, 1):
                     logger.info(
                         f"  Step {i}: {action.tool} -> {observation[:200]}{'...' if len(str(observation)) > 200 else ''}"
@@ -91,7 +114,7 @@ class EntityAgent:
                 token_count = result.get("token_usage", {}).get("total_tokens", 0)
             else:
                 logger.info("🤖 Running direct LLM (no tools)...")
-                llm_result = await self.llm.ainvoke(message)
+                llm_result = await self.llm.ainvoke(enhanced_input["input"])
                 raw_response = (
                     llm_result.get("output")
                     or llm_result.get("response")
@@ -105,6 +128,7 @@ class EntityAgent:
                 raw_response = "I apologize, Thomas, but I seem to be having trouble responding right now."
 
             final_response = self._apply_personality(raw_response)
+
             interaction = ChatInteraction(
                 response=final_response,
                 thread_id=thread_id,
@@ -113,6 +137,8 @@ class EntityAgent:
                 raw_output=raw_response,
                 tools_used=tools_used,
                 use_tools=use_tools,
+                memory_context_used=bool(memory_context),
+                memory_context=memory_context,
             )
 
             if final_response != raw_response:

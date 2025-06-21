@@ -121,8 +121,10 @@ async def lifespan(app: FastAPI):
         app.state.registry = ServiceRegistry
         app.state.agent = agent
 
+        memory_system = ServiceRegistry.get("memory_system")
+
         # Attach routes
-        router = EntityRouterFactory(agent, tool_manager).get_router()
+        router = EntityRouterFactory(agent, tool_manager, memory_system).get_router()
         app.include_router(router, prefix="/api/v1")
 
         # Log success
