@@ -8,7 +8,7 @@ from typing import Any, Callable, Dict, List, Optional, Type
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel
 
-from src.tools.base_tools import BaseToolPlugin
+from src.tools.base_tool_plugin import BaseToolPlugin
 from plugins import PLUGIN_TOOLS
 
 logger = logging.getLogger(__name__)
@@ -74,6 +74,11 @@ class ToolManager:
         if len(positional_params) != 2:
             raise TypeError(
                 f"run() of {cls.__name__} must take one argument besides self"
+            )
+
+        if not hasattr(cls, "args_schema") or cls.args_schema is None:
+            raise TypeError(
+                f"{cls.__name__} is missing required `args_schema` class attribute"
             )
 
         input_param_type = positional_params[1].annotation

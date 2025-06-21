@@ -1,123 +1,105 @@
-# src/service/app.py - UPDATED WITH SERVICEREGISTRY
-
 import logging
-import os
-from contextlib import asynccontextmanager
 from pathlib import Path
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langchain_ollama import OllamaLLM
 
-from src.service.agent import EntityAgent
+from src.memory.vector_memory_system import VectorMemorySystem
 from src.service.config import load_config
+from src.service.agent import EntityAgent
 from src.service.routes import EntityRouterFactory
 from src.chat_storage import create_storage
 from src.tools.tools import ToolManager
-from src.db.connection import DatabaseConnection, initialize_global_db_connection
 from src.adapters import create_output_adapters
+from src.db.connection import initialize_global_db_connection
 from src.core.registry import ServiceRegistry
+
 
 logger = logging.getLogger(__name__)
 
 
 def setup_logging(config):
-    """Setup comprehensive logging configuration"""
-    # Create logs directory if needed
-    if config.logging.file_enabled:
-        log_path = Path(config.logging.file_path)
-        log_path.parent.mkdir(parents=True, exist_ok=True)
-
-    # Configure root logger
+    """Configure global logging with rotation and console output"""
     log_level = getattr(logging, config.logging.level.upper())
-
-    # Create formatters
     formatter = logging.Formatter(config.logging.format)
+    handlers = [logging.StreamHandler()]
 
-    # Setup console handler
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(log_level)
-    console_handler.setFormatter(formatter)
-
-    # Setup file handler if enabled
-    handlers = [console_handler]
     if config.logging.file_enabled:
+        Path(config.logging.file_path).parent.mkdir(parents=True, exist_ok=True)
         from logging.handlers import RotatingFileHandler
 
-        file_handler = RotatingFileHandler(
-            config.logging.file_path,
-            maxBytes=config.logging.max_file_size,
-            backupCount=config.logging.backup_count,
+        handlers.append(
+            RotatingFileHandler(
+                filename=config.logging.file_path,
+                maxBytes=config.logging.max_file_size,
+                backupCount=config.logging.backup_count,
+            )
         )
-        file_handler.setLevel(log_level)
-        file_handler.setFormatter(formatter)
-        handlers.append(file_handler)
 
-    # Configure root logger
+    for handler in handlers:
+        handler.setLevel(log_level)
+        handler.setFormatter(formatter)
+
     logging.basicConfig(
-        level=log_level, format=config.logging.format, handlers=handlers, force=True
+        level=log_level,
+        format=config.logging.format,
+        handlers=handlers,
+        force=True,
     )
 
-    # Set specific logger levels for noisy libraries
+    # Suppress noisy libraries
     logging.getLogger("httpx").setLevel(logging.WARNING)
-    logging.getLogger("asyncio").setLevel(logging.WARNING)
     logging.getLogger("sentence_transformers").setLevel(logging.WARNING)
+    logging.getLogger("asyncio").setLevel(logging.WARNING)
 
-    logger.info(
-        f"✅ Logging configured - Level: {config.logging.level}, File: {config.logging.file_enabled}"
-    )
+    logger.info(f"✅ Logging configured - Level: {config.logging.level}")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Simplified application lifecycle with ServiceRegistry - NO MORE INJECTION HACKS!"""
-    logger.info("🚀 Starting Entity Agent Service with ServiceRegistry")
+    logger.info("🚀 Starting Entity Agent Service")
 
     try:
-        # 1. Load and register configuration
+        # Load config
         config = load_config("config.yaml")
         setup_logging(config)
         ServiceRegistry.register("config", config)
-        logger.info("✅ Configuration loaded and registered")
 
-        # 2. Initialize and register database connection
-        logger.info("🔗 Setting up database connection...")
+        # Init DB
         db_connection = await initialize_global_db_connection(config.database)
         ServiceRegistry.register("db_connection", db_connection)
-        logger.info(f"✅ Database connection registered: {db_connection}")
 
-        # 4. Initialize and register storage
-        logger.info("💾 Setting up storage...")
+        # Init chat storage
         storage = await create_storage(config.storage, config.database)
         ServiceRegistry.register("storage", storage)
-        logger.info("✅ Storage registered")
 
-        # 5. Setup and register tool manager
-        logger.info("🔧 Loading tools...")
-        tool_registry = ToolManager.setup(
+        # Init vector memory 🧠
+        try:
+            memory_system = VectorMemorySystem(
+                config.memory, config.database
+            )  # noqa: F821
+            await memory_system.initialize()
+            ServiceRegistry.register("memory_system", memory_system)
+            logger.info("✅ Vector memory system registered")
+        except Exception as e:
+            logger.warning(f"⚠️ Skipping vector memory init: {e}")
+
+        # Init tool manager 🔧
+        tool_manager = ToolManager.setup(
             plugin_directory=config.tools.plugin_path,
-            enabled_tools=getattr(config.tools, "enabled", None),
+            enabled_tools=config.tools.enabled,
         )
-        ServiceRegistry.register("tool_manager", tool_registry)
-        logger.info(
-            f"✅ Tool manager registered with {len(tool_registry.list_tool_names())} tools"
-        )
+        ServiceRegistry.register("tool_manager", tool_manager)
 
-        # 7. Initialize and register output adapters
-        logger.info("🔄 Initializing output adapters...")
-        output_adapter_manager = create_output_adapters(config)
-        ServiceRegistry.register("output_adapter_manager", output_adapter_manager)
+        # Init output adapters
+        output_adapters = create_output_adapters(config)
+        ServiceRegistry.register("output_adapter_manager", output_adapters)
 
-        if output_adapter_manager.adapters:
-            logger.info(
-                f"✅ Output adapters registered: {[adapter.__class__.__name__ for adapter in output_adapter_manager.adapters]}"
-            )
-            # Simple adapter testing
-            await test_output_adapters_simple(output_adapter_manager)
-        else:
-            logger.info("ℹ️ No output adapters configured")
+        if output_adapters.adapters:
+            await test_output_adapters_simple(output_adapters)
 
-        # 8. Initialize and register LLM
-        logger.info("🤖 Setting up LLM...")
+        # Init LLM
         llm = OllamaLLM(
             base_url=config.ollama.base_url,
             model=config.ollama.model,
@@ -127,78 +109,64 @@ async def lifespan(app: FastAPI):
             repeat_penalty=config.ollama.repeat_penalty,
         )
         ServiceRegistry.register("llm", llm)
-        logger.info(f"✅ LLM registered: {config.ollama.model}")
 
-        # 9. Initialize and register agent
-        logger.info("🎭 Creating entity agent...")
+        # Init Agent
         agent = EntityAgent(
             config=config.entity,
-            tool_manager=tool_registry,
+            tool_manager=tool_manager,
             chat_storage=storage,
             llm=llm,
-            output_adapter_manager=output_adapter_manager,
+            output_adapter_manager=output_adapters,
         )
         await agent.initialize()
         ServiceRegistry.register("agent", agent)
-        logger.info("✅ Entity agent registered")
 
-        # 10. Mark registry as fully initialized
-        ServiceRegistry.mark_initialized()
-
-        # 11. Setup FastAPI app state (much simpler now)
+        # Attach to app
         app.state.registry = ServiceRegistry
-        app.state.agent = agent  # Keep for backward compatibility if needed
+        app.state.agent = agent
 
-        # 12. Attach dynamic router
-        router_factory = EntityRouterFactory(agent, tool_registry, storage)
-        app.include_router(router_factory.get_router(), prefix="/api/v1")
+        # Attach routes
+        router = EntityRouterFactory(agent, tool_manager, storage).get_router()
+        app.include_router(router, prefix="/api/v1")
 
-        # 13. Log success with service summary
-        services = ServiceRegistry.list_services()
-        logger.info("✅ Entity Agent Service started successfully with ServiceRegistry")
-        logger.info(f"🛠️ Registered services: {list(services.keys())}")
-        logger.info(f"🔧 Service types: {services}")
+        # Log success
+        ServiceRegistry.mark_initialized()
+        logger.info("✅ Entity Agent ready with services:")
+        for name, svc in ServiceRegistry.list_services().items():
+            logger.info(f"  - {name}: {svc.__class__.__name__}")
 
         yield
 
     except Exception as e:
-        logger.error(f"❌ Failed to start application: {e}")
+        logger.error(f"❌ Application failed to start: {e}", exc_info=True)
         raise
+
     finally:
-        # Cleanup phase - ServiceRegistry handles everything!
         logger.info("👋 Shutting down Entity Agent Service")
         await ServiceRegistry.shutdown()
 
 
-async def test_output_adapters_simple(output_adapter_manager):
-    """Simplified output adapter testing"""
-    if not output_adapter_manager or not output_adapter_manager.adapters:
-        return
-
-    logger.info("🧪 Testing output adapters...")
-
-    for adapter in output_adapter_manager.adapters:
+async def test_output_adapters_simple(manager):
+    """Test all output adapters with `test_connection()` support."""
+    for adapter in getattr(manager, "adapters", []):
         if hasattr(adapter, "test_connection"):
-            adapter_name = adapter.__class__.__name__
+            name = adapter.__class__.__name__
             try:
-                if await adapter.test_connection():
-                    logger.info(f"✅ {adapter_name} connection test passed")
-                else:
-                    logger.warning(f"⚠️ {adapter_name} connection test failed")
+                result = await adapter.test_connection()
+                status = "✅" if result else "⚠️"
+                logger.info(f"{status} {name} connection test")
             except Exception as e:
-                logger.error(f"❌ {adapter_name} test failed: {e}")
+                logger.warning(f"❌ {name} test failed: {e}")
 
 
 def create_app() -> FastAPI:
-    """Create and configure FastAPI application"""
     app = FastAPI(
         title="Entity Agent Service",
         version="2.0.0",
-        description="Entity Agent with ServiceRegistry Architecture",
+        description="LLM-powered character agent framework",
         lifespan=lifespan,
     )
 
-    # Add CORS
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],

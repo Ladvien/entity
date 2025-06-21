@@ -112,11 +112,9 @@ entity:
       {agent_scratchpad}
 
     variables:
-      - memory_context
-      - tools
-      - tool_names
-      - agent_scratchpad
       - input
+      - agent_scratchpad
+      - tools
 
     personality_modifiers:
       high_sarcasm: "Be especially sarcastic and cutting in your responses."
@@ -162,7 +160,7 @@ tools:
   plugin_path: "./plugins"
   enabled:
     - fun_fact
-    # - memory_search
-    # - store_memory
+    - memory_search
+    - store_memory
     # - search_memories
     # - memory_store
