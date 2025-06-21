@@ -51,9 +51,11 @@ class ToolManager:
         self._langchain_tools: List[Any] = []
 
     @classmethod
-    def setup(cls, plugin_directory: str) -> "ToolManager":
+    def setup(
+        cls, plugin_directory: str, enabled_tools: Optional[List[str]] = None
+    ) -> "ToolManager":
         manager = cls()
-        manager.load_plugins_from_config(plugin_directory)
+        manager.load_plugins_from_config(plugin_directory, enabled_tools)
         return manager
 
     @staticmethod
@@ -87,7 +89,7 @@ class ToolManager:
 
         instance = cls()
 
-        # Validate run() signature: one argument after self, matching args_schema
+        # Validate run() signature: must have one positional arg beyond self
         run_sig = signature(cls.run)
         params = list(run_sig.parameters.values())
         positional_params = [
@@ -98,13 +100,13 @@ class ToolManager:
 
         if len(positional_params) != 2:
             raise TypeError(
-                f"run() method of {cls.__name__} must take exactly one argument besides self"
+                f"run() of {cls.__name__} must take one argument besides self"
             )
 
         input_param_type = positional_params[1].annotation
         if input_param_type is Parameter.empty or input_param_type != cls.args_schema:
             raise TypeError(
-                f"run() method of {cls.__name__} must take a single argument of type {cls.args_schema.__name__}, got {input_param_type}"
+                f"run() method of {cls.__name__} must take argument of type {cls.args_schema.__name__}, got {input_param_type}"
             )
 
         async def wrapped(input_data: Any):
@@ -115,14 +117,16 @@ class ToolManager:
 
                 if not isinstance(input_data, instance.args_schema):
                     input_data = instance.args_schema(**input_data)
-                    result = await instance.run(input_data)
-                    if result is None:
-                        raise ValueError(f"Tool '{instance.name}' returned None")
-                    if not isinstance(result, str):
-                        raise TypeError(
-                            f"Tool '{instance.name}' must return a string, got: {type(result)}"
-                        )
-                    return result
+
+                result = await instance.run(input_data)
+
+                if result is None:
+                    raise ValueError(f"Tool '{instance.name}' returned None")
+                if not isinstance(result, str):
+                    raise TypeError(
+                        f"Tool '{instance.name}' must return a string, got: {type(result)}"
+                    )
+                return result
 
             except Exception as e:
                 logger.exception(f"❌ Error in tool '{instance.name}'")
@@ -139,16 +143,23 @@ class ToolManager:
         self._langchain_tools.append(tool)
         logger.info(f"✅ Registered plugin tool: {instance.name}")
 
-    def load_plugins_from_config(self, directory: str):
+    def load_plugins_from_config(
+        self, directory: str, enabled_tools: Optional[List[str]] = None
+    ):
         if not os.path.isdir(directory):
             logger.error(f"❌ Plugin directory does not exist: {directory}")
             return
 
         for filename in os.listdir(directory):
             if filename.endswith(".py"):
-                self.load_plugin_file(os.path.join(directory, filename))
+                self.load_plugin_file(
+                    os.path.join(directory, filename),
+                    enabled_tools=enabled_tools,
+                )
 
-    def load_plugin_file(self, file_path: str):
+    def load_plugin_file(
+        self, file_path: str, enabled_tools: Optional[List[str]] = None
+    ):
         try:
             module_name = os.path.splitext(os.path.basename(file_path))[0]
             spec = importlib.util.spec_from_file_location(module_name, file_path)
@@ -169,6 +180,12 @@ class ToolManager:
                 and issubclass(obj, BaseToolPlugin)
                 and obj is not BaseToolPlugin
             ):
+                plugin_name = getattr(obj, "name", None)
+
+                if enabled_tools is not None and plugin_name not in enabled_tools:
+                    logger.info(f"🔒 Skipping disabled tool: {plugin_name}")
+                    continue
+
                 try:
                     self.register_class(obj)
                     registered += 1

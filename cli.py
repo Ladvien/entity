@@ -26,7 +26,11 @@ def cli(ctx, config, debug):
     """Entity AI Agent - Your personal AI assistant with memory"""
 
     if debug:
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format="%(asctime)s - %(levelname)s - %(message)s",
+            force=True,
+        )
 
     ctx.ensure_object(dict)
     ctx.obj["config_path"] = config
@@ -121,7 +125,8 @@ def run_server_mode(config_path: str, reload: bool = False):
             host=config.server.host,
             port=config.server.port,
             reload=config.server.reload,
-            log_level=config.server.log_level.lower(),
+            log_level=config.server.log_level.lower(),  # from config.yaml
+            access_log=True,
         )
 
     except Exception as e:

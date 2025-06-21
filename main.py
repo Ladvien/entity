@@ -23,7 +23,10 @@ def setup_logging():
             format=config.logging.format,
         )
     except Exception as e:
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format="%(asctime)s - %(levelname)s - %(message)s",
+        )
         logging.error(f"Failed to load logging config: {e}")
 
 
