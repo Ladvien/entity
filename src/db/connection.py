@@ -1,7 +1,3 @@
-"""
-Centralized database connection management using dataclass
-"""
-
 from dataclasses import dataclass, field
 from typing import Optional, Dict, Any, List
 from sqlalchemy.ext.asyncio import (
@@ -10,7 +6,6 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
     async_sessionmaker,
 )
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy import text
 import logging
 
@@ -27,16 +22,11 @@ class DatabaseConnection:
     username: str
     password: str
     schema: str = "public"
-
     min_pool_size: int = 2
     max_pool_size: int = 10
     echo: bool = False
 
     _engine: Optional[AsyncEngine] = field(default=None, init=False)
-    _session_factory: Optional[sessionmaker] = field(default=None, init=False)
-    _async_session_maker: Optional[async_sessionmaker[AsyncSession]] = field(
-        default=None, init=False
-    )
 
     @classmethod
     def from_config(cls, config: DatabaseConfig) -> "DatabaseConnection":
@@ -61,9 +51,11 @@ class DatabaseConnection:
 
     @property
     def connect_args(self) -> Dict[str, Any]:
-        if self.schema and self.schema != "public":
-            return {"server_settings": {"search_path": self.schema}}
-        return {}
+        return (
+            {"server_settings": {"search_path": self.schema}}
+            if self.schema != "public"
+            else {}
+        )
 
     async def get_engine(self) -> AsyncEngine:
         if not self._engine:
@@ -79,18 +71,19 @@ class DatabaseConnection:
             logger.info(f"✅ Created engine for {self}")
         return self._engine
 
-    async def get_session_factory(self) -> sessionmaker:
-        if not self._session_factory:
-            engine = await self.get_engine()
-            self._session_factory = sessionmaker(
-                engine, expire_on_commit=False, class_=AsyncSession
+    def async_session(self) -> async_sessionmaker[AsyncSession]:
+        if not self._engine:
+            raise RuntimeError(
+                "Engine not initialized. Call `await get_engine()` first."
             )
-            logger.debug("🏭 Session factory initialized")
-        return self._session_factory
+        return async_sessionmaker(
+            self._engine,
+            expire_on_commit=False,
+            class_=AsyncSession,
+        )
 
     async def get_session(self) -> AsyncSession:
-        factory = await self.get_session_factory()
-        return factory()
+        return self.async_session()()
 
     async def test_connection(self) -> bool:
         try:
@@ -128,22 +121,18 @@ class DatabaseConnection:
     def get_pgvector_config(self) -> Dict[str, Any]:
         return {
             "connection": self.async_connection_url,
-            "create_extension": False,
             "async_mode": True,
+            "create_extension": False,
             "use_jsonb": True,
+            "pre_delete_collection": False,
+            "collection_name": f"{self.schema}.langchain_pg_collection",
         }
 
     async def close(self):
         if self._engine:
             await self._engine.dispose()
             self._engine = None
-            self._session_factory = None
             logger.info("✅ Engine closed and reset")
-
-    def async_session(self) -> async_sessionmaker[AsyncSession]:
-        if not self._async_session_maker:
-            self._initialize_session_factory()  # <- ensures it's ready
-        return self._async_session_maker
 
     def __str__(self):
         return f"{self.username}@{self.host}:{self.port}/{self.name} (schema={self.schema})"
@@ -154,18 +143,8 @@ class DatabaseConnection:
             f"schema='{self.schema}', pool={self.min_pool_size}-{self.max_pool_size})"
         )
 
-    def _initialize_session_factory(self):
-        if not self._engine:
-            raise RuntimeError("Database engine is not initialized")
-        self._async_session_maker = async_sessionmaker(
-            self._engine, expire_on_commit=False, class_=AsyncSession
-        )
-        logger.debug(
-            "🏭 async_sessionmaker initialized via _initialize_session_factory()"
-        )
 
-
-# Global connection instance
+# --- Global DB connection registry ---
 _global_db_connection: Optional[DatabaseConnection] = None
 
 

@@ -38,7 +38,6 @@ class MemorySystem:
         await self.db_connection.ensure_schema()
         self.vector_store = PGVector(
             embeddings=self.embeddings,
-            collection_name=self.collection_name,
             **self.db_connection.get_pgvector_config(),
         )
         await self._ensure_history_table()
