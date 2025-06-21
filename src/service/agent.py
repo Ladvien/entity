@@ -55,13 +55,15 @@ class EntityAgent:
         self.agent_executor = AgentExecutor(
             agent=agent,
             tools=tools,
-            verbose=False,
+            verbose=True,  # Enable verbose logging to see agent thoughts
             max_iterations=self.config.max_iterations,
             handle_parsing_errors=True,
             return_intermediate_steps=True,
+            early_stopping_method="generate",  # Stop when final answer is generated
         )
 
         logger.info(f"✅ Agent initialized with {len(tools)} tools and vector memory")
+        logger.info(f"🛠️ Available tools: {[tool.name for tool in tools]}")
 
     async def chat(
         self,
@@ -76,30 +78,68 @@ class EntityAgent:
         token_count = 0
         memory_context = ""
 
+        logger.info(
+            f"💬 Processing message: '{message[:100]}{'...' if len(message) > 100 else ''}'"
+        )
+        logger.info(
+            f"🎛️ Settings - Tools: {use_tools}, Memory: {use_memory}, Thread: {thread_id}"
+        )
+
         try:
             # Fetch memory context if enabled
             if use_memory:
+                logger.debug("🧠 Retrieving memory context...")
                 memory_context = await self.memory_system.get_memory_context(
                     message, thread_id
                 )
+                if memory_context:
+                    logger.info(
+                        f"📚 Memory context retrieved: {len(memory_context)} characters"
+                    )
+                else:
+                    logger.debug("📚 No relevant memories found")
 
             enhanced_input = {
                 "input": message,
                 "memory_context": memory_context or "No relevant memories found.",
             }
 
+            logger.debug(
+                f"🔧 Enhanced input prepared: {len(str(enhanced_input))} characters"
+            )
+
             # Run through tool-based agent or direct LLM
             if use_tools and self.agent_executor:
+                logger.info("🤖 Running through agent executor with tools...")
+
+                # Log the agent's thinking process
                 result = await self.agent_executor.ainvoke(enhanced_input)
+
+                # Extract response and log intermediate steps
                 raw_response = (
                     result.get("output")
                     or result.get("response")
                     or result.get("text")
                     or str(result)
                 )
+
+                # Log agent's thinking process
+                intermediate_steps = result.get("intermediate_steps", [])
+                if intermediate_steps:
+                    logger.info("🤔 Agent thinking process:")
+                    for i, (action, observation) in enumerate(intermediate_steps, 1):
+                        logger.info(
+                            f"  Step {i}: {action.tool} -> {observation[:200]}{'...' if len(str(observation)) > 200 else ''}"
+                        )
+
                 tools_used = self._extract_tools_used(result)
+                if tools_used:
+                    logger.info(f"🔧 Tools used: {tools_used}")
+
                 token_count = result.get("token_usage", {}).get("total_tokens", 0)
+
             else:
+                logger.info("🤖 Running direct LLM (no tools)...")
                 prompt = (
                     f"{memory_context}\n\nUser: {message}"
                     if memory_context
@@ -118,6 +158,10 @@ class EntityAgent:
                 logger.error("❌ Empty response from LLM")
                 raw_response = "I apologize, Thomas, but I seem to be having trouble responding right now."
 
+            logger.debug(
+                f"📝 Raw response: {raw_response[:200]}{'...' if len(raw_response) > 200 else ''}"
+            )
+
             # Apply personality layer
             final_response = raw_response
             try:
@@ -127,6 +171,7 @@ class EntityAgent:
                     for word in ["thomas", "master", "bound"]
                 ):
                     final_response += " *sarcastically* How delightful for you, Thomas."
+                    logger.debug("✨ Applied sarcastic personality suffix")
             except Exception as e:
                 logger.warning(f"⚠️ Personality adjustment failed: {e}")
 
@@ -159,15 +204,24 @@ class EntityAgent:
                 token_count=token_count, latency_ms=latency_ms
             )
 
+            logger.info(f"⚡ Response generated in {latency_ms:.0f}ms")
+            logger.info(
+                f"🎯 Final response: {final_response[:100]}{'...' if len(final_response) > 100 else ''}"
+            )
+
             # Store memory and persist
             if use_memory:
+                logger.debug("💾 Storing conversation in memory...")
                 await self.memory_system.store_conversation(
                     user_input=message,
                     ai_response=interaction.response,
                     thread_id=thread_id,
                 )
 
+            logger.debug("💾 Saving interaction to storage...")
             await self.chat_storage.save_interaction(interaction)
+
+            logger.info("✅ Chat interaction completed successfully")
             return interaction
 
         except Exception as e:
@@ -201,15 +255,18 @@ class EntityAgent:
 
     async def cleanup(self):
         """Cleanup agent resources"""
-        logger.info("Agent cleanup completed")
+        logger.info("🧹 Agent cleanup completed")
 
     def _extract_tools_used(self, result: Dict[str, Any]) -> List[str]:
         """Extract list of tools used from agent execution result"""
-        return [
-            step[0].tool
-            for step in result.get("intermediate_steps", [])
-            if len(step) >= 2 and hasattr(step[0], "tool")
-        ]
+        tools = []
+        try:
+            for step in result.get("intermediate_steps", []):
+                if len(step) >= 2 and hasattr(step[0], "tool"):
+                    tools.append(step[0].tool)
+        except Exception as e:
+            logger.warning(f"Could not extract tools used: {e}")
+        return tools
 
     def _build_prompt_template(self) -> str:
         """Build the prompt template for the agent"""
@@ -232,13 +289,20 @@ Available tools:
 Tool names: {tool_names}
 
 Use this format for tool usage:
-Thought: I need to...
+Thought: I need to analyze what the user is asking and determine if I need to use any tools to help with my response.
 Action: tool_name
-Action Input: input
-Observation: [result]
-Final Answer: [your response]
+Action Input: input_parameters
+Observation: [result from tool]
+... (this Thought/Action/Action Input/Observation can repeat N times)
+Thought: I now have enough information to provide a complete response.
+Final Answer: [your response as Jade, incorporating any tool results and memory context]
 
-Remember to consider your memories when responding.
+IMPORTANT: 
+- Always end with "Final Answer:" followed by your response
+- Respond as Jade with your established personality
+- Consider your memories when responding
+- If you use tools, incorporate their results naturally into your response
+- Keep responses sharp and brief as befits your character
 
 Question: {input}
 {agent_scratchpad}"""

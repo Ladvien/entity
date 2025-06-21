@@ -120,16 +120,16 @@ storage:
 logging:
   level: "DEBUG"
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-  file_enabled: false
+  file_enabled: true
   file_path: "logs/entity.log"
   max_file_size: 10485760
   backup_count: 5
 
-tools:
-  plugin_path: ./plugins
+# Replace the tools section in your config.yaml with this:
 
-  # enabled:
-  #   - web_search
-  #   - calculator
-  # - memory_search
-  # - store_memory
+tools:
+  plugin_path: "./plugins"
+  enabled:
+    - fun_fact
+    - memory_search
+    - store_memory
