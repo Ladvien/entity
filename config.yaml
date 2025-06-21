@@ -51,7 +51,7 @@ memory:
 
 entity:
   entity_id: "jade"
-  max_iterations: 100
+  max_iterations: 4
   personality:
     name: "Jade"
     sarcasm_level: 0.8
