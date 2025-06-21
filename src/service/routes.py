@@ -1,4 +1,4 @@
-# src/service/routes.py
+# src/service/routes.py - Add ServiceRegistry support to health check
 
 from fastapi import APIRouter, HTTPException, Query
 from typing import Optional
@@ -12,6 +12,7 @@ from src.shared.models import (
     ToolExecutionResponse,
     MemoryStatsResponse,
 )
+from src.core.registry import ServiceRegistry  # NEW IMPORT
 
 
 class EntityRouterFactory:
@@ -136,16 +137,41 @@ class EntityRouterFactory:
 
         @router.get("/health")
         async def health_check():
+            """Enhanced health check using ServiceRegistry"""
+            services = ServiceRegistry.list_services()
+
             return {
                 "status": "healthy",
                 "timestamp": datetime.utcnow().isoformat(),
                 "version": "2.0.0",
+                "architecture": "ServiceRegistry",
+                "services": services,
+                "registry_initialized": ServiceRegistry.is_initialized(),
+                "service_count": len(services),
                 "features": {
-                    "vector_memory": True,
-                    "postgresql": True,
-                    "tools": True,
-                    "chat_interactions": True,  # New feature flag
+                    "vector_memory": ServiceRegistry.has("memory_system"),
+                    "postgresql": ServiceRegistry.has("db_connection"),
+                    "tools": ServiceRegistry.has("tool_manager"),
+                    "output_adapters": ServiceRegistry.has("output_adapter_manager"),
+                    "chat_interactions": True,
+                    "service_registry": True,  # New feature!
                 },
+            }
+
+        @router.get("/debug/services")
+        async def list_services():
+            """Debug endpoint to see all registered services"""
+            if not ServiceRegistry.is_initialized():
+                raise HTTPException(
+                    status_code=503, detail="ServiceRegistry not initialized"
+                )
+
+            services = ServiceRegistry.list_services()
+            return {
+                "services": services,
+                "initialized": ServiceRegistry.is_initialized(),
+                "service_count": len(services),
+                "available_services": list(services.keys()),
             }
 
         # New endpoint to get detailed interaction by ID
@@ -243,6 +269,7 @@ class EntityRouterFactory:
                             else None
                         ),
                     },
+                    "architecture": "ServiceRegistry",  # Show we're using new architecture
                 }
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))

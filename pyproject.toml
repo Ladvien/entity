@@ -9,12 +9,10 @@ package-mode = true
 
 packages = [{ include = "src", from = "." }]
 
-
 [tool.poetry.urls]
 homepage = "https://github.com/Ladvien/entity"
 repository = "https://github.com/Ladvien/entity"
 documentation = "https://entity.readthedocs.io/en/latest/"
-
 
 [tool.poetry.dependencies]
 python = "^3.13"
@@ -41,7 +39,7 @@ psycopg = "^3.2.9"
 langchain_postgres = { git = "https://github.com/langchain-ai/langchain-postgres.git", branch = "main" }
 greenlet = "^3.2.3"
 click = "^8.2.1"
-
+pytest-mock = "^3.14.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
@@ -53,6 +51,9 @@ sphinx-autoapi = "^3.5.0"
 sphinx-autodoc2 = "^0.5.0"
 doc-utils = "^0.0.2"
 poethepoet = "^0.32.2"
+pytest = "^8.4.1"
+pytest-asyncio = "^0.25.0"
+pytest-cov = "^6.1.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -64,7 +65,80 @@ docs_view = "sphinx-autobuild docs/source docs/build/html"
 patch = "poetry version patch"
 _publish = "poetry publish --build"
 release = ["docs", "patch", "_publish"]
-
+test = "pytest"
+test-verbose = "pytest -v"
+test-coverage = "pytest --cov=src --cov-report=html --cov-report=term-missing"
 
 [tool.poetry.scripts]
 entity = "cli:cli"
+
+# Pytest configuration in pyproject.toml format
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+    "--strict-config",
+    "--color=yes",
+    "--durations=10",
+]
+asyncio_mode = "auto"
+markers = [
+    "unit: Unit tests (fast, isolated)",
+    "integration: Integration tests (slower, use real components)",
+    "slow: Slow tests (may take several seconds)",
+    "memory: Tests related to memory system",
+    "tools: Tests related to tool system",
+    "api: Tests related to API endpoints",
+    "cli: Tests related to CLI interface",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+    "ignore::UserWarning:sentence_transformers.*",
+]
+minversion = "6.0"
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+
+# Coverage configuration
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*", "*/test_*", "*/__pycache__/*", "*/venv/*", "*/.venv/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+]
+
+# Black formatting configuration
+[tool.black]
+line-length = 88
+target-version = ['py313']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''

@@ -1,4 +1,4 @@
-# src/service/app.py - ENHANCED WITH OUTPUT ADAPTERS
+# src/service/app.py - UPDATED WITH SERVICEREGISTRY
 
 import logging
 import os
@@ -15,7 +15,8 @@ from src.storage import create_storage
 from src.tools.memory import VectorMemorySystem
 from src.tools.tools import ToolManager
 from src.db.connection import DatabaseConnection, initialize_global_db_connection
-from src.adapters import create_output_adapters  # NEW IMPORT
+from src.adapters import create_output_adapters
+from src.core.registry import ServiceRegistry  # NEW IMPORT
 
 logger = logging.getLogger(__name__)
 
@@ -67,267 +68,155 @@ def setup_logging(config):
     )
 
 
-def inject_memory_into_tools_comprehensive(
-    tool_manager: ToolManager, memory_system: VectorMemorySystem
-):
-    """Comprehensive memory injection with multiple strategies"""
-    try:
-        injection_count = 0
-
-        # Strategy 1: Store globally in tools module for easy access
-        import src.tools.tools as tools_module
-
-        tools_module._global_memory_system = memory_system
-        logger.info("✅ Memory system stored globally in tools module")
-
-        # Strategy 2: Direct injection into tool instances
-        all_tools = tool_manager.get_all_tools()
-        logger.info(f"🔧 Injecting memory system into {len(all_tools)} tools...")
-
-        for tool in all_tools:
-            tool_name = getattr(tool, "name", "unknown")
-
-            # Check if this is a memory-related tool
-            if any(
-                keyword in tool_name.lower()
-                for keyword in ["memory", "search", "store"]
-            ):
-                try:
-                    # Multiple injection strategies for maximum compatibility
-
-                    # Method 1: Direct attribute setting
-                    setattr(tool, "_memory_system", memory_system)
-
-                    # Method 2: Try to set on the underlying function if it exists
-                    if hasattr(tool, "func"):
-                        setattr(tool.func, "_memory_system", memory_system)
-
-                    # Method 3: Try to set on args if they exist
-                    if hasattr(tool, "args_schema"):
-                        setattr(tool.args_schema, "_memory_system", memory_system)
-
-                    # Method 4: If this is a StructuredTool, try to reach the original instance
-                    if hasattr(tool, "_run") and hasattr(tool._run, "__self__"):
-                        setattr(tool._run.__self__, "_memory_system", memory_system)
-
-                    injection_count += 1
-                    logger.info(f"✅ Memory system injected into {tool_name} tool")
-
-                except Exception as e:
-                    logger.warning(f"⚠️ Could not inject memory into {tool_name}: {e}")
-
-        # Strategy 3: Store in tool manager itself
-        setattr(tool_manager, "_memory_system", memory_system)
-
-        # Strategy 4: Create a registry of memory tools for easier access
-        memory_tools = {}
-        for tool in all_tools:
-            tool_name = getattr(tool, "name", "unknown")
-            if any(
-                keyword in tool_name.lower()
-                for keyword in ["memory", "search", "store"]
-            ):
-                memory_tools[tool_name] = tool
-
-        tools_module._memory_tools_registry = memory_tools
-
-        logger.info(
-            f"✅ Memory injection completed successfully - {injection_count} tools enhanced"
-        )
-        logger.info(f"🧠 Memory-related tools: {list(memory_tools.keys())}")
-
-        # Verify injection worked
-        verify_memory_injection(tool_manager, memory_system)
-
-    except Exception as e:
-        logger.error(f"❌ Memory injection failed: {e}", exc_info=True)
-
-
-def verify_memory_injection(
-    tool_manager: ToolManager, memory_system: VectorMemorySystem
-):
-    """Verify that memory injection worked properly"""
-    try:
-        # Check global storage
-        import src.tools.tools as tools_module
-
-        if hasattr(tools_module, "_global_memory_system"):
-            logger.info("✅ Global memory system verification: SUCCESS")
-        else:
-            logger.warning("⚠️ Global memory system verification: FAILED")
-
-        # Check tool-specific injection
-        memory_tools_found = 0
-        all_tools = tool_manager.get_all_tools()
-
-        for tool in all_tools:
-            tool_name = getattr(tool, "name", "unknown")
-            if any(
-                keyword in tool_name.lower()
-                for keyword in ["memory", "search", "store"]
-            ):
-                if hasattr(tool, "_memory_system"):
-                    memory_tools_found += 1
-                    logger.debug(f"✅ {tool_name} has direct memory system access")
-                else:
-                    logger.warning(f"⚠️ {tool_name} missing direct memory system access")
-
-        logger.info(
-            f"✅ Memory injection verification: {memory_tools_found} tools have memory access"
-        )
-
-    except Exception as e:
-        logger.error(f"❌ Memory injection verification failed: {e}")
-
-
-async def test_output_adapters(output_adapter_manager, config):
-    """Test output adapters during startup"""
-    if not output_adapter_manager or not output_adapter_manager.adapters:
-        logger.info("🔄 No output adapters to test")
-        return
-
-    logger.info("🧪 Testing output adapters...")
-
-    try:
-        # Test TTS adapter if present
-        for adapter in output_adapter_manager.adapters:
-            if hasattr(adapter, "test_connection"):
-                adapter_name = adapter.__class__.__name__
-                logger.info(f"🔍 Testing {adapter_name}...")
-
-                if await adapter.test_connection():
-                    logger.info(f"✅ {adapter_name} connection test passed")
-
-                    # Test voice listing for TTS
-                    if hasattr(adapter, "list_available_voices"):
-                        voices = await adapter.list_available_voices()
-                        logger.info(f"🎙️ Available voices: {len(voices)}")
-                else:
-                    logger.warning(f"⚠️ {adapter_name} connection test failed")
-
-    except Exception as e:
-        logger.error(f"❌ Output adapter testing failed: {e}")
+# NO MORE COMPLEX INJECTION FUNCTIONS!
+# The entire inject_memory_into_tools_comprehensive function is DELETED!
+# The entire verify_memory_injection function is DELETED!
+# The entire test_output_adapters function is simplified!
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Manage application lifecycle with enhanced memory injection and output adapters"""
-    logger.info("🚀 Starting Entity Agent Service with Enhanced Features")
+    """Simplified application lifecycle with ServiceRegistry - NO MORE INJECTION HACKS!"""
+    logger.info("🚀 Starting Entity Agent Service with ServiceRegistry")
 
-    # Load YAML configuration
-    config = load_config("config.yaml")
+    try:
+        # 1. Load and register configuration
+        config = load_config("config.yaml")
+        setup_logging(config)
+        ServiceRegistry.register("config", config)
+        logger.info("✅ Configuration loaded and registered")
 
-    # Setup logging
-    setup_logging(config)
+        # 2. Initialize and register database connection
+        logger.info("🔗 Setting up database connection...")
+        db_connection = await initialize_global_db_connection(config.database)
+        ServiceRegistry.register("db_connection", db_connection)
+        logger.info(f"✅ Database connection registered: {db_connection}")
 
-    # Initialize centralized database connection
-    logger.info("🔗 Setting up centralized database connection...")
-    db_connection = await initialize_global_db_connection(config.database)
-    logger.info(f"✅ Global database connection established: {db_connection}")
-
-    # Initialize memory system with centralized connection
-    memory_system = VectorMemorySystem(
-        memory_config=config.memory, database_config=config.database
-    )
-    await memory_system.initialize()
-    logger.info("✅ Vector memory system initialized with centralized connection")
-
-    # Initialize chat history storage with centralized connection
-    storage = await create_storage(config.storage, config.database)
-    logger.info("✅ Chat storage initialized with centralized connection")
-
-    # Setup tool registry
-    logger.info(f"🔧 Loading tools from: {config.tools.plugin_path}")
-    tool_registry = ToolManager.setup(
-        plugin_directory=config.tools.plugin_path,
-        enabled_tools=getattr(config.tools, "enabled", None),
-    )
-    logger.info(
-        f"✅ Tool registry initialized with {len(tool_registry.list_tool_names())} tools: {tool_registry.list_tool_names()}"
-    )
-
-    # Enhanced memory injection
-    logger.info("🧠 Starting comprehensive memory injection...")
-    inject_memory_into_tools_comprehensive(tool_registry, memory_system)
-
-    # NEW: Initialize output adapters
-    logger.info("🔄 Initializing output adapters...")
-    output_adapter_manager = create_output_adapters(config)
-
-    if output_adapter_manager.adapters:
-        logger.info(
-            f"✅ Output adapters initialized: {[adapter.__class__.__name__ for adapter in output_adapter_manager.adapters]}"
+        # 3. Initialize and register memory system
+        logger.info("🧠 Initializing memory system...")
+        memory_system = VectorMemorySystem(
+            memory_config=config.memory, database_config=config.database
         )
-        await test_output_adapters(output_adapter_manager, config)
-    else:
-        logger.info("ℹ️ No output adapters configured")
+        await memory_system.initialize()
+        ServiceRegistry.register("memory_system", memory_system)
+        logger.info("✅ Memory system registered")
 
-    # Initialize LLM
-    llm = OllamaLLM(
-        base_url=config.ollama.base_url,
-        model=config.ollama.model,
-        temperature=config.ollama.temperature,
-        top_p=config.ollama.top_p,
-        top_k=config.ollama.top_k,
-        repeat_penalty=config.ollama.repeat_penalty,
-    )
-    logger.info(f"✅ LLM initialized: {config.ollama.model}")
+        # 4. Initialize and register storage
+        logger.info("💾 Setting up storage...")
+        storage = await create_storage(config.storage, config.database)
+        ServiceRegistry.register("storage", storage)
+        logger.info("✅ Storage registered")
 
-    # Initialize agent with output adapters
-    agent = EntityAgent(
-        config=config.entity,
-        tool_manager=tool_registry,
-        chat_storage=storage,
-        memory_system=memory_system,
-        llm=llm,
-        output_adapter_manager=output_adapter_manager,  # NEW PARAMETER
-    )
-    await agent.initialize()
-    logger.info("✅ Entity agent initialized with output adapters")
+        # 5. Setup and register tool manager
+        logger.info("🔧 Loading tools...")
+        tool_registry = ToolManager.setup(
+            plugin_directory=config.tools.plugin_path,
+            enabled_tools=getattr(config.tools, "enabled", None),
+        )
+        ServiceRegistry.register("tool_manager", tool_registry)
+        logger.info(
+            f"✅ Tool manager registered with {len(tool_registry.list_tool_names())} tools"
+        )
 
-    # Attach everything to app.state
-    app.state.config = config
-    app.state.agent = agent
-    app.state.storage = storage
-    app.state.memory_system = memory_system
-    app.state.tool_registry = tool_registry
-    app.state.db_connection = db_connection
-    app.state.output_adapter_manager = output_adapter_manager  # NEW STATE
+        # 6. NO MORE MEMORY INJECTION HACK!
+        # Tools automatically get memory system via ServiceRegistry!
+        logger.info("🎉 No memory injection needed - tools use ServiceRegistry!")
 
-    # Attach dynamic router
-    router_factory = EntityRouterFactory(agent, memory_system, tool_registry, storage)
-    app.include_router(router_factory.get_router(), prefix="/api/v1")
+        # 7. Initialize and register output adapters
+        logger.info("🔄 Initializing output adapters...")
+        output_adapter_manager = create_output_adapters(config)
+        ServiceRegistry.register("output_adapter_manager", output_adapter_manager)
 
-    logger.info("✅ Entity Agent Service started successfully")
-    logger.info(f"🛠️ Available tools: {tool_registry.list_tool_names()}")
+        if output_adapter_manager.adapters:
+            logger.info(
+                f"✅ Output adapters registered: {[adapter.__class__.__name__ for adapter in output_adapter_manager.adapters]}"
+            )
+            # Simple adapter testing
+            await test_output_adapters_simple(output_adapter_manager)
+        else:
+            logger.info("ℹ️ No output adapters configured")
 
-    # Enhanced output adapter info
-    if output_adapter_manager.adapters:
-        adapter_names = [
-            adapter.__class__.__name__ for adapter in output_adapter_manager.adapters
-        ]
-        logger.info(f"🔄 Active output adapters: {adapter_names}")
+        # 8. Initialize and register LLM
+        logger.info("🤖 Setting up LLM...")
+        llm = OllamaLLM(
+            base_url=config.ollama.base_url,
+            model=config.ollama.model,
+            temperature=config.ollama.temperature,
+            top_p=config.ollama.top_p,
+            top_k=config.ollama.top_k,
+            repeat_penalty=config.ollama.repeat_penalty,
+        )
+        ServiceRegistry.register("llm", llm)
+        logger.info(f"✅ LLM registered: {config.ollama.model}")
 
-    # Test memory system quickly
-    try:
-        stats = await memory_system.get_memory_stats()
-        logger.info(f"🧠 Memory system status: {stats.get('status', 'unknown')}")
+        # 9. Initialize and register agent
+        logger.info("🎭 Creating entity agent...")
+        agent = EntityAgent(
+            config=config.entity,
+            tool_manager=tool_registry,
+            chat_storage=storage,
+            memory_system=memory_system,
+            llm=llm,
+            output_adapter_manager=output_adapter_manager,
+        )
+        await agent.initialize()
+        ServiceRegistry.register("agent", agent)
+        logger.info("✅ Entity agent registered")
+
+        # 10. Mark registry as fully initialized
+        ServiceRegistry.mark_initialized()
+
+        # 11. Setup FastAPI app state (much simpler now)
+        app.state.registry = ServiceRegistry
+        app.state.agent = agent  # Keep for backward compatibility if needed
+
+        # 12. Attach dynamic router
+        router_factory = EntityRouterFactory(
+            agent, memory_system, tool_registry, storage
+        )
+        app.include_router(router_factory.get_router(), prefix="/api/v1")
+
+        # 13. Log success with service summary
+        services = ServiceRegistry.list_services()
+        logger.info("✅ Entity Agent Service started successfully with ServiceRegistry")
+        logger.info(f"🛠️ Registered services: {list(services.keys())}")
+        logger.info(f"🔧 Service types: {services}")
+
+        # Test memory system quickly
+        try:
+            stats = await memory_system.get_memory_stats()
+            logger.info(f"🧠 Memory system status: {stats.get('status', 'unknown')}")
+        except Exception as e:
+            logger.warning(f"⚠️ Memory system test failed: {e}")
+
+        yield
+
     except Exception as e:
-        logger.warning(f"⚠️ Memory system test failed: {e}")
+        logger.error(f"❌ Failed to start application: {e}")
+        raise
+    finally:
+        # Cleanup phase - ServiceRegistry handles everything!
+        logger.info("👋 Shutting down Entity Agent Service")
+        await ServiceRegistry.shutdown()
 
-    yield
 
-    # Cleanup phase
-    logger.info("👋 Shutting down Entity Agent Service")
+async def test_output_adapters_simple(output_adapter_manager):
+    """Simplified output adapter testing"""
+    if not output_adapter_manager or not output_adapter_manager.adapters:
+        return
 
-    try:
-        await agent.cleanup()  # This will also close output adapters
-        await memory_system.close()
-        await storage.close()
-        await db_connection.close()
-        logger.info("✅ All services shut down cleanly")
-    except Exception as e:
-        logger.error(f"❌ Error during shutdown: {e}")
+    logger.info("🧪 Testing output adapters...")
+
+    for adapter in output_adapter_manager.adapters:
+        if hasattr(adapter, "test_connection"):
+            adapter_name = adapter.__class__.__name__
+            try:
+                if await adapter.test_connection():
+                    logger.info(f"✅ {adapter_name} connection test passed")
+                else:
+                    logger.warning(f"⚠️ {adapter_name} connection test failed")
+            except Exception as e:
+                logger.error(f"❌ {adapter_name} test failed: {e}")
 
 
 def create_app() -> FastAPI:
@@ -335,7 +224,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="Entity Agent Service",
         version="2.0.0",
-        description="Entity Agent with PostgreSQL Vector Memory and Output Adapters",
+        description="Entity Agent with ServiceRegistry Architecture",
         lifespan=lifespan,
     )
 
