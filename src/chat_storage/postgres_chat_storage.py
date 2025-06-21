@@ -8,7 +8,7 @@ from datetime import datetime
 from sqlalchemy import text
 
 from src.service.config import StorageConfig
-from src.storage.base import BaseChatStorage
+from src.chat_storage.base_chat_storage import BaseChatStorage
 from src.shared.models import ChatInteraction
 from src.db.connection import DatabaseConnection
 

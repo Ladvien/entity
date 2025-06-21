@@ -81,23 +81,21 @@ class PersonalityConfig(BaseModel):
     traits: Optional[str] = "sarcastic and impatient"
 
 
+class PromptConfig(BaseModel):
+    base_prompt: str
+    variables: List[str]
+    personality_modifiers: Dict[str, str]
+    sarcastic_suffixes: List[str]
+    angry_suffixes: List[str]
+    neutral_suffixes: List[str]
+
+
 class EntityConfig(BaseModel):
     entity_id: str = "jade"
     max_iterations: int = 50
+    prompts: PromptConfig
+
     personality: PersonalityConfig = PersonalityConfig()
-
-
-# Prompts Configuration
-class PromptsConfig(BaseModel):
-    memory_context_template: str = """
---- Relevant Memories ---
-{memories}
---- End Memories ---
-"""
-    personality_modifiers: Dict[str, str] = Field(default_factory=dict)
-    sarcastic_suffixes: List[str] = Field(default_factory=list)
-    angry_suffixes: List[str] = Field(default_factory=list)
-    neutral_suffixes: List[str] = Field(default_factory=list)
 
 
 # Server Configuration
@@ -130,7 +128,6 @@ class UnifiedConfig(BaseModel):
     audio: AudioConfig
     memory: MemoryConfig
     entity: EntityConfig
-    prompts: PromptsConfig
     server: ServerConfig
     storage: "StorageConfig"
     logging: LoggingConfig

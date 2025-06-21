@@ -11,12 +11,11 @@ from langchain_ollama import OllamaLLM
 from src.service.agent import EntityAgent
 from src.service.config import load_config
 from src.service.routes import EntityRouterFactory
-from src.storage import create_storage
-from src.tools.memory import VectorMemorySystem
+from src.chat_storage import create_storage
 from src.tools.tools import ToolManager
 from src.db.connection import DatabaseConnection, initialize_global_db_connection
 from src.adapters import create_output_adapters
-from src.core.registry import ServiceRegistry  # NEW IMPORT
+from src.core.registry import ServiceRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -68,12 +67,6 @@ def setup_logging(config):
     )
 
 
-# NO MORE COMPLEX INJECTION FUNCTIONS!
-# The entire inject_memory_into_tools_comprehensive function is DELETED!
-# The entire verify_memory_injection function is DELETED!
-# The entire test_output_adapters function is simplified!
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Simplified application lifecycle with ServiceRegistry - NO MORE INJECTION HACKS!"""
@@ -92,15 +85,6 @@ async def lifespan(app: FastAPI):
         ServiceRegistry.register("db_connection", db_connection)
         logger.info(f"✅ Database connection registered: {db_connection}")
 
-        # 3. Initialize and register memory system
-        logger.info("🧠 Initializing memory system...")
-        memory_system = VectorMemorySystem(
-            memory_config=config.memory, database_config=config.database
-        )
-        await memory_system.initialize()
-        ServiceRegistry.register("memory_system", memory_system)
-        logger.info("✅ Memory system registered")
-
         # 4. Initialize and register storage
         logger.info("💾 Setting up storage...")
         storage = await create_storage(config.storage, config.database)
@@ -117,10 +101,6 @@ async def lifespan(app: FastAPI):
         logger.info(
             f"✅ Tool manager registered with {len(tool_registry.list_tool_names())} tools"
         )
-
-        # 6. NO MORE MEMORY INJECTION HACK!
-        # Tools automatically get memory system via ServiceRegistry!
-        logger.info("🎉 No memory injection needed - tools use ServiceRegistry!")
 
         # 7. Initialize and register output adapters
         logger.info("🔄 Initializing output adapters...")
@@ -155,7 +135,6 @@ async def lifespan(app: FastAPI):
             config=config.entity,
             tool_manager=tool_registry,
             chat_storage=storage,
-            memory_system=memory_system,
             llm=llm,
             output_adapter_manager=output_adapter_manager,
         )
@@ -171,9 +150,7 @@ async def lifespan(app: FastAPI):
         app.state.agent = agent  # Keep for backward compatibility if needed
 
         # 12. Attach dynamic router
-        router_factory = EntityRouterFactory(
-            agent, memory_system, tool_registry, storage
-        )
+        router_factory = EntityRouterFactory(agent, tool_registry, storage)
         app.include_router(router_factory.get_router(), prefix="/api/v1")
 
         # 13. Log success with service summary
@@ -181,13 +158,6 @@ async def lifespan(app: FastAPI):
         logger.info("✅ Entity Agent Service started successfully with ServiceRegistry")
         logger.info(f"🛠️ Registered services: {list(services.keys())}")
         logger.info(f"🔧 Service types: {services}")
-
-        # Test memory system quickly
-        try:
-            stats = await memory_system.get_memory_stats()
-            logger.info(f"🧠 Memory system status: {stats.get('status', 'unknown')}")
-        except Exception as e:
-            logger.warning(f"⚠️ Memory system test failed: {e}")
 
         yield
 

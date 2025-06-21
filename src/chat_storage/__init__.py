@@ -2,8 +2,8 @@
 
 from typing import TYPE_CHECKING
 from src.service.config import StorageConfig, DatabaseConfig
-from src.storage.base import BaseChatStorage
-from src.storage.postgres import PostgresChatStorage
+from src.chat_storage.base_chat_storage import BaseChatStorage
+from src.chat_storage.postgres_chat_storage import PostgresChatStorage
 from src.db.connection import DatabaseConnection
 
 if TYPE_CHECKING:

@@ -5,44 +5,13 @@ import os
 from functools import wraps
 from inspect import isclass, signature, Parameter
 from typing import Any, Callable, Dict, List, Optional, Type
-
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel
 
+from src.tools.base_tools import BaseToolPlugin
+from plugins import PLUGIN_TOOLS
+
 logger = logging.getLogger(__name__)
-
-
-class BaseToolPlugin:
-    name: str
-    description: str
-    args_schema: Type[BaseModel]
-
-    async def run(self, input_data: BaseModel) -> Any:
-        raise NotImplementedError
-
-
-class FunctionTool:
-    def __init__(self, func: Callable, args_schema: Type[BaseModel]):
-        self.func = func
-        self.args_schema = args_schema
-        self.name = func.__name__
-        self.description = func.__doc__ or "No description provided."
-
-    def to_langchain_tool(self) -> StructuredTool:
-        @wraps(self.func)
-        async def safe_func(input_data: BaseModel):
-            try:
-                return await self.func(input_data)
-            except Exception as e:
-                logger.exception(f"❌ Tool '{self.name}' failed")
-                return f"[Tool Error: {self.name}] {str(e)}"
-
-        return StructuredTool.from_function(
-            ToolManager.sync_adapter(safe_func),
-            name=self.name,
-            description=self.description,
-            args_schema=self.args_schema,
-        )
 
 
 class ToolManager:
@@ -50,12 +19,16 @@ class ToolManager:
         self._tools: Dict[str, Any] = {}
         self._langchain_tools: List[Any] = []
 
+    def register(self, tool: BaseToolPlugin):
+        """Alias for register_class to support `setup()` usage"""
+        self.register_class(tool.__class__)
+
     @classmethod
-    def setup(
-        cls, plugin_directory: str, enabled_tools: Optional[List[str]] = None
-    ) -> "ToolManager":
+    def setup(cls, plugin_directory: str, enabled_tools: List[str] = None):
         manager = cls()
-        manager.load_plugins_from_config(plugin_directory, enabled_tools)
+        for tool_cls in PLUGIN_TOOLS:
+            if enabled_tools is None or tool_cls.name in enabled_tools:
+                manager.register(tool_cls())
         return manager
 
     @staticmethod
@@ -89,7 +62,7 @@ class ToolManager:
 
         instance = cls()
 
-        # Validate run() signature: must have one positional arg beyond self
+        # Validate run() method
         run_sig = signature(cls.run)
         params = list(run_sig.parameters.values())
         positional_params = [
@@ -126,8 +99,8 @@ class ToolManager:
                     raise TypeError(
                         f"Tool '{instance.name}' must return a string, got: {type(result)}"
                     )
-                return result
 
+                return result
             except Exception as e:
                 logger.exception(f"❌ Error in tool '{instance.name}'")
                 return f"[Tool Error: {instance.name}] {str(e)}"

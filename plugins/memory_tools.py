@@ -1,134 +1,227 @@
-# plugins/memory_tools.py - FIXED VERSION
-from typing import Optional
-from pydantic import BaseModel, Field
-from src.tools.tools import BaseToolPlugin
-from src.core.registry import (
-    ServiceRegistry,
-)  # Use ServiceRegistry directly for better error handling
+# plugins/memory_tools.py
+
 import logging
+from typing import List, Optional, Dict, Any
+from pydantic import BaseModel, Field
+
+from langchain_core.documents import Document
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from sentence_transformers import SentenceTransformer
+from langchain_postgres.vectorstores import PGVector
+
+from sqlalchemy import text
+
+from src.core.registry import ServiceRegistry
+from src.service.config import MemoryConfig, DatabaseConfig
+from src.db.connection import DatabaseConnection
+from src.tools.base_tools import BaseToolPlugin
 
 logger = logging.getLogger(__name__)
 
 
+# --- Vector Memory System --- #
+
+
+class VectorMemorySystem:
+    def __init__(self, memory_config: MemoryConfig, database_config: DatabaseConfig):
+        self.memory_config = memory_config
+        self.database_config = database_config
+        self.db_connection = DatabaseConnection.from_config(database_config)
+
+        self.collection_name = memory_config.collection_name
+        self.embeddings = HuggingFaceEmbeddings(
+            model_name=memory_config.embedding_model
+        )
+        self.sentence_model = SentenceTransformer(memory_config.embedding_model)
+        self.vector_store = None
+
+    async def initialize(self):
+        if not await self.db_connection.test_connection():
+            raise ConnectionError("Failed to connect to database")
+
+        await self.db_connection.ensure_schema()
+
+        conn_url = self.db_connection.get_async_connection_url()
+        self.vector_store = PGVector(
+            embeddings=self.embeddings,
+            connection=conn_url,
+            collection_name=self.collection_name,
+            create_extension=False,
+            async_mode=True,
+            use_jsonb=True,
+        )
+
+        try:
+            await self._ensure_vector_tables_exist()
+            logger.info("✅ Vector tables ensured")
+        except Exception as e:
+            logger.warning(f"⚠️ Vector table init skipped: {e}")
+
+    async def _ensure_vector_tables_exist(self):
+        dummy_doc = Document(
+            page_content="__INIT_DUMMY__",
+            metadata={"__init": True, "thread_id": "__init__"},
+        )
+        await self.vector_store.aadd_documents([dummy_doc])
+
+        session = await self.db_connection.get_session()
+        async with session:
+            await session.execute(
+                text(
+                    """
+                    DELETE FROM langchain_pg_embedding 
+                    WHERE collection_id = CAST(
+                        (SELECT id FROM langchain_pg_collection WHERE name = :name) 
+                        AS UUID
+                    ) AND cmetadata->>'__init' = 'true'
+                """
+                ),
+                {"name": self.collection_name},
+            )
+            await session.commit()
+
+    async def add_memory(
+        self,
+        thread_id: str,
+        content: str,
+        memory_type="observation",
+        importance_score=0.5,
+        emotional_tone="neutral",
+        topics=None,
+        metadata=None,
+    ):
+        doc = Document(
+            page_content=content,
+            metadata={
+                "thread_id": thread_id,
+                "memory_type": memory_type,
+                "importance_score": importance_score,
+                "emotional_tone": emotional_tone,
+                "topics": topics or [],
+                **(metadata or {}),
+            },
+        )
+        await self.vector_store.aadd_documents([doc])
+
+    async def search_memory(
+        self, query: str, thread_id: Optional[str] = None, k: int = 5
+    ) -> List[Document]:
+        results = await self.vector_store.asimilarity_search(query, k=k)
+        if thread_id:
+            results = [
+                doc for doc in results if doc.metadata.get("thread_id") == thread_id
+            ]
+        return results[:k]
+
+    async def get_memory_stats(self) -> Dict[str, Any]:
+        stats = {
+            "total_memories": 0,
+            "total_conversations": 0,
+            "backend": "pgvector",
+            "status": "not_initialized",
+            "embedding_model": self.memory_config.embedding_model,
+            "vector_dimensions": self.memory_config.embedding_dimension,
+        }
+
+        session = await self.db_connection.get_session()
+        async with session:
+            try:
+                result = await session.execute(
+                    text(
+                        """
+                        SELECT COUNT(*) FROM langchain_pg_embedding 
+                        WHERE collection_id = CAST(
+                            (SELECT id FROM langchain_pg_collection WHERE name = :name)
+                            AS UUID
+                        )
+                    """
+                    ),
+                    {"name": self.collection_name},
+                )
+                stats["total_memories"] = result.scalar_one()
+                stats["status"] = "active"
+            except Exception as e:
+                stats["status"] = "error"
+                stats["error"] = str(e)
+
+        return stats
+
+    async def close(self):
+        await self.db_connection.close()
+
+
+# --- Tool Interfaces --- #
+
+
 class MemorySearchInput(BaseModel):
-    query: str = Field(..., description="Search query for memories")
-    thread_id: Optional[str] = Field(
-        default="default", description="Thread ID to search within"
-    )
-    limit: Optional[int] = Field(
-        default=5, description="Maximum number of memories to return"
-    )
+    query: str = Field(..., description="Search query")
+    thread_id: Optional[str] = Field(default="default")
+    limit: Optional[int] = Field(default=5)
 
 
 class StoreMemoryInput(BaseModel):
-    content: str = Field(..., description="Memory content to store")
-    thread_id: Optional[str] = Field(
-        default="default", description="Thread ID to associate with"
-    )
-    memory_type: Optional[str] = Field(
-        default="observation", description="Type of memory"
-    )
-    importance_score: Optional[float] = Field(
-        default=0.5, description="Importance score (0-1)"
-    )
+    content: str = Field(..., description="Memory content")
+    thread_id: Optional[str] = Field(default="default")
+    memory_type: Optional[str] = Field(default="observation")
+    importance_score: Optional[float] = Field(default=0.5)
+
+
+# --- Tools --- #
 
 
 class MemorySearchTool(BaseToolPlugin):
     name = "memory_search"
-    description = "Search through stored memories for relevant information. Use this to find past conversations, user preferences, or relevant context."
+    description = "Search stored memories"
     args_schema = MemorySearchInput
 
     async def run(self, input_data: MemorySearchInput) -> str:
-        try:
-            # Use ServiceRegistry directly with default parameter for graceful handling
-            memory_system = ServiceRegistry.try_get("memory_system")
-            if not memory_system:
-                return "Memory system not available. Please ensure the agent is properly initialized."
+        memory = ServiceRegistry.try_get("memory_system")
+        if not memory:
+            return "❌ Memory system not available"
 
-            logger.info(
-                f"🔍 Searching memories for: '{input_data.query}' in thread '{input_data.thread_id}'"
-            )
+        results = await memory.search_memory(
+            query=input_data.query,
+            thread_id=input_data.thread_id,
+            k=input_data.limit,
+        )
 
-            # Search memories using the clean interface
-            memories = await memory_system.search_memory(
-                query=input_data.query,
-                thread_id=input_data.thread_id,
-                k=input_data.limit,
-            )
+        if not results:
+            return f"No memories found for: {input_data.query}"
 
-            if not memories:
-                return f"No memories found for query: '{input_data.query}'"
-
-            # Format results
-            results = []
-            for i, memory in enumerate(memories, 1):
-                content = memory.page_content
-                metadata = memory.metadata
-                memory_type = metadata.get("memory_type", "unknown")
-                importance = metadata.get("importance_score", 0.0)
-
-                results.append(
-                    f"{i}. [{memory_type}] {content} (importance: {importance:.1f})"
-                )
-
-            result_text = f"Found {len(memories)} memories:\n" + "\n".join(results)
-            logger.info(f"✅ Memory search completed: {len(memories)} results")
-            return result_text
-
-        except Exception as e:
-            logger.exception("MemorySearchTool failed")
-            return f"[Error] Memory search failed: {str(e)}"
+        return "\n".join(
+            f"{i+1}. [{doc.metadata.get('memory_type', 'unknown')}] {doc.page_content[:80]}..."
+            for i, doc in enumerate(results)
+        )
 
 
 class StoreMemoryTool(BaseToolPlugin):
     name = "store_memory"
-    description = "Store new information in memory for future reference. Use this to remember important user information, preferences, or context."
+    description = "Store a memory entry"
     args_schema = StoreMemoryInput
 
     async def run(self, input_data: StoreMemoryInput) -> str:
-        try:
-            # Use ServiceRegistry directly with default parameter for graceful handling
-            memory_system = ServiceRegistry.try_get("memory_system")
-            if not memory_system:
-                return "Memory system not available. Please ensure the agent is properly initialized."
+        memory = ServiceRegistry.try_get("memory_system")
+        if not memory:
+            return "❌ Memory system not available"
 
-            if not memory_system:
-                return "Memory system not available. Please ensure the agent is properly initialized."
+        await memory.add_memory(
+            thread_id=input_data.thread_id,
+            content=input_data.content,
+            memory_type=input_data.memory_type,
+            importance_score=input_data.importance_score,
+        )
 
-            logger.info(
-                f"💾 Storing memory: '{input_data.content[:50]}...' in thread '{input_data.thread_id}'"
-            )
-
-            # Store the memory using the clean interface
-            await memory_system.add_memory(
-                thread_id=input_data.thread_id or "default",
-                content=input_data.content,
-                memory_type=input_data.memory_type or "observation",
-                importance_score=input_data.importance_score or 0.5,
-            )
-
-            result = f"✅ Memory stored successfully: '{input_data.content[:100]}{'...' if len(input_data.content) > 100 else ''}'"
-            logger.info(result)
-            return result
-
-        except Exception as e:
-            error_msg = f"Failed to store memory: {str(e)}"
-            logger.exception(f"❌ StoreMemoryTool error: {error_msg}")
-            return f"[Error] {error_msg}"
+        return "✅ Memory stored successfully"
 
 
-# Keep the alias tools for backward compatibility
+# --- Aliases --- #
+
+
 class SearchMemoriesTool(MemorySearchTool):
-    """Alias for memory_search to handle LLM naming inconsistencies"""
-
     name = "search_memories"
-    description = "Search through stored memories for relevant information (alias for memory_search)"
+    description = "Alias for memory_search"
 
 
 class MemoryStoreTool(StoreMemoryTool):
-    """Alternative name for store_memory"""
-
     name = "memory_store"
-    description = (
-        "Store new information in memory for future reference (alias for store_memory)"
-    )
+    description = "Alias for store_memory"

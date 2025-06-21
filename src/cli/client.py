@@ -1,19 +1,15 @@
-# entity_client/client.py
-"""
-Enhanced REST API client with memory endpoints
-"""
 import logging
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 import httpx
 
-from src.shared.models import ChatRequest, ChatResponse, MemoryStatsResponse
+from src.shared.models import ChatRequest, ChatResponse
 
 logger = logging.getLogger(__name__)
 
 
 class EntityAPIClient:
-    """REST API client for Entity Agent Service with memory support"""
+    """REST API client for Entity Agent Service (memory removed)"""
 
     def __init__(self, base_url: str, timeout: int = 30):
         self.base_url = base_url.rstrip("/")
@@ -29,7 +25,6 @@ class EntityAPIClient:
         message: str,
         thread_id: str = "default",
         use_tools: bool = True,
-        use_memory: bool = True,
     ) -> ChatResponse:
         """Send a chat message to the entity agent"""
         try:
@@ -39,15 +34,12 @@ class EntityAPIClient:
                     "message": message,
                     "thread_id": thread_id,
                     "use_tools": use_tools,
-                    "use_memory": use_memory,
                 },
-                timeout=60.0,  # Add explicit timeout
+                timeout=60.0,
             )
             response.raise_for_status()
 
-            # Debug: print raw response
             print(f"DEBUG: Raw response: {response.text}")
-
             return ChatResponse(**response.json())
 
         except httpx.HTTPStatusError as e:
@@ -81,34 +73,6 @@ class EntityAPIClient:
         except Exception as e:
             logger.error(f"Failed to get history: {e}")
             return []
-
-    async def search_memory(
-        self, query: str, thread_id: Optional[str] = None, limit: int = 5
-    ) -> Dict[str, Any]:
-        try:
-            params = {"query": query, "limit": limit}
-            if thread_id:
-                params["thread_id"] = thread_id
-
-            response = await self.session.get(
-                f"{self.base_url}/api/v1/memory/search", params=params
-            )
-            response.raise_for_status()
-            return response.json()
-
-        except Exception as e:
-            logger.error(f"Memory search failed: {e}")
-            return {"memories": []}
-
-    async def get_memory_stats(self) -> Dict[str, Any]:
-        try:
-            response = await self.session.get(f"{self.base_url}/api/v1/memory/stats")
-            response.raise_for_status()
-            return response.json()
-
-        except Exception as e:
-            logger.error(f"Failed to get memory stats: {e}")
-            return {}
 
     async def list_tools(self) -> List[str]:
         try:
