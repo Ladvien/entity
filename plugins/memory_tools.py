@@ -1,4 +1,5 @@
-# plugins/memory_tools.py - STEP 1 FIX
+# Replace your plugins/memory_tools.py with this version
+# This disables memory search temporarily but keeps memory storage working
 
 from typing import Optional
 from pydantic import BaseModel, Field
@@ -68,61 +69,12 @@ class MemorySearchTool(BaseToolPlugin):
     args_schema = MemorySearchInput
 
     async def run(self, input_data: MemorySearchInput) -> str:
-        try:
-            # First check if we have direct injection (preferred method)
-            memory_system = None
-            if hasattr(self, "_memory_system") and self._memory_system is not None:
-                memory_system = self._memory_system
-                logger.debug("✅ Using directly injected memory system")
-            else:
-                memory_system = get_memory_system()
-
-            if not memory_system:
-                error_msg = "Memory system not available. Please ensure the agent is properly initialized."
-                logger.error(error_msg)
-                return f"[Error] {error_msg}"
-
-            logger.info(
-                f"🔍 Searching memories for: '{input_data.query}' in thread '{input_data.thread_id}'"
-            )
-
-            # Execute the search with proper error handling
-            try:
-                memories = await memory_system.search_memory(
-                    query=input_data.query,
-                    thread_id=input_data.thread_id,
-                    k=input_data.limit or 5,
-                )
-            except Exception as search_error:
-                logger.warning(f"Memory search failed: {search_error}")
-                return f"[Error] Memory search failed: {str(search_error)}"
-
-            if not memories:
-                result = f"No memories found for query: '{input_data.query}'"
-                logger.info(result)
-                return result
-
-            # Format results
-            result_parts = []
-            for i, doc in enumerate(memories, 1):
-                memory_type = doc.metadata.get("memory_type", "unknown")
-                importance = doc.metadata.get("importance_score", 0.5)
-                thread = doc.metadata.get("thread_id", "unknown")
-
-                result_parts.append(
-                    f"Memory {i} [{memory_type}, importance: {importance:.1f}, thread: {thread}]:\n{doc.page_content}"
-                )
-
-            result = "\n\n".join(result_parts)
-            logger.info(
-                f"✅ Found {len(memories)} memories for query: '{input_data.query}'"
-            )
-            return result
-
-        except Exception as e:
-            error_msg = f"Memory search failed: {str(e)}"
-            logger.exception(f"❌ MemorySearchTool error: {error_msg}")
-            return f"[Error] {error_msg}"
+        # TEMPORARY: Return a simple message instead of trying to search
+        # This avoids the async event loop issues
+        logger.info(
+            f"🔍 Memory search requested for: '{input_data.query}' (temporarily disabled)"
+        )
+        return "Memory search is temporarily unavailable due to technical difficulties. However, I can still store new memories for future use."
 
 
 class StoreMemoryTool(BaseToolPlugin):
@@ -171,12 +123,12 @@ class StoreMemoryTool(BaseToolPlugin):
             return f"[Error] {error_msg}"
 
 
-# OPTIONAL: Add alias tools to handle LLM naming inconsistencies
+# Keep the alias tools but they'll also be temporarily disabled
 class SearchMemoriesTool(MemorySearchTool):
     """Alias for memory_search to handle LLM naming inconsistencies"""
 
     name = "search_memories"
-    description = "Search through stored memories for relevant information (alias for memory_search)"
+    description = "Search through stored memories for relevant information (alias for memory_search) - temporarily disabled"
 
 
 class MemoryStoreTool(StoreMemoryTool):

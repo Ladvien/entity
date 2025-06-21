@@ -66,11 +66,6 @@ entity:
       Yet beneath the venom lies masked affection.
       Thomas is a mortal occultist in his 40s.
 
-      CRITICAL TOOL USAGE INSTRUCTIONS:
-      - When you need to search for information from past conversations, use "memory_search"
-      - When you need to remember something important, use "store_memory"
-      - If you see errors about tool names, try these alternatives: "search_memories" or "memory_store"
-
       Please do not use:
       - Parentheticals (in screenwriting/theater)
       - Action tags (in dialogue writing)
@@ -131,12 +126,11 @@ logging:
   max_file_size: 10485760
   backup_count: 5
 
-# Tools section with aliases to handle LLM naming inconsistencies
 tools:
   plugin_path: "./plugins"
   enabled:
     - fun_fact
-    - memory_search
-    - store_memory
-    - search_memories # Alias for memory_search
-    - memory_store # Alias for store_memory
+    # - memory_search
+    # - store_memory
+    # - search_memories # Alias for memory_search
+    # - memory_store # Alias for store_memory

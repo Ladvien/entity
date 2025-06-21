@@ -170,19 +170,30 @@ class VectorMemorySystem:
             logger.exception("❌ Failed to add memory")
             raise
 
+    # Replace the search_memory method in src/tools/memory.py
+
     async def search_memory(
         self, query: str, thread_id: Optional[str] = None, k: int = 5
     ) -> List[Document]:
         """Search memories"""
         try:
-            filter_ = {"thread_id": {"$eq": thread_id}} if thread_id else None
-            results = await self.vector_store.asimilarity_search(
-                query, k=k, filter=filter_
-            )
+            # Simple approach - don't use thread filtering for now since it's causing issues
+            # Just search all memories and filter afterwards if needed
+            results = await self.vector_store.asimilarity_search(query, k=k)
+
+            # If thread_id specified, filter results manually
+            if thread_id:
+                filtered_results = []
+                for doc in results:
+                    if doc.metadata.get("thread_id") == thread_id:
+                        filtered_results.append(doc)
+                results = filtered_results[:k]  # Limit to k results
+
             logger.info(f"🔍 Retrieved {len(results)} memory entries")
             return results
         except Exception as e:
             logger.exception("❌ Memory search failed")
+            logger.error(f"Memory search error: {e}")
             return []
 
     async def get_memory_context(
