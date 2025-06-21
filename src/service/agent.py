@@ -1,3 +1,5 @@
+# src/service/agent.py - MODIFIED VERSION with Output Adapters
+
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 import logging
@@ -12,12 +14,13 @@ from src.storage.postgres import PostgresChatStorage
 from src.tools.memory import VectorMemorySystem
 from src.tools.tools import ToolManager
 from src.shared.models import ChatInteraction
+from src.adapters import OutputAdapterManager  # NEW IMPORT
 
 logger = logging.getLogger(__name__)
 
 
 class EntityAgent:
-    """Entity agent with injected LLM and vector memory"""
+    """Entity agent with injected LLM, vector memory, and output adapters"""
 
     def __init__(
         self,
@@ -26,12 +29,14 @@ class EntityAgent:
         chat_storage: BaseChatStorage,
         memory_system: VectorMemorySystem,
         llm: BaseLanguageModel,
+        output_adapter_manager: Optional[OutputAdapterManager] = None,  # NEW PARAMETER
     ):
         self.config = config
         self.tool_registry = tool_manager
         self.chat_storage = chat_storage
         self.memory_system = memory_system
         self.llm = llm
+        self.output_adapter_manager = output_adapter_manager  # NEW ATTRIBUTE
         self.agent_executor: Optional[AgentExecutor] = None
 
     async def initialize(self):
@@ -55,15 +60,22 @@ class EntityAgent:
         self.agent_executor = AgentExecutor(
             agent=agent,
             tools=tools,
-            verbose=True,  # Enable verbose logging to see agent thoughts
+            verbose=True,
             max_iterations=self.config.max_iterations,
             handle_parsing_errors=True,
             return_intermediate_steps=True,
-            early_stopping_method="generate",  # Stop when final answer is generated
+            early_stopping_method="generate",
         )
 
         logger.info(f"✅ Agent initialized with {len(tools)} tools and vector memory")
         logger.info(f"🛠️ Available tools: {[tool.name for tool in tools]}")
+
+        # Log output adapter status
+        if self.output_adapter_manager:
+            adapter_count = len(self.output_adapter_manager.adapters)
+            logger.info(f"🔄 Output adapters enabled: {adapter_count} adapters")
+        else:
+            logger.info("🔄 No output adapters configured")
 
     async def chat(
         self,
@@ -112,10 +124,8 @@ class EntityAgent:
             if use_tools and self.agent_executor:
                 logger.info("🤖 Running through agent executor with tools...")
 
-                # Log the agent's thinking process
                 result = await self.agent_executor.ainvoke(enhanced_input)
 
-                # Extract response and log intermediate steps
                 raw_response = (
                     result.get("output")
                     or result.get("response")
@@ -123,7 +133,6 @@ class EntityAgent:
                     or str(result)
                 )
 
-                # Log agent's thinking process
                 intermediate_steps = result.get("intermediate_steps", [])
                 if intermediate_steps:
                     logger.info("🤔 Agent thinking process:")
@@ -170,7 +179,7 @@ class EntityAgent:
                     word in final_response.lower()
                     for word in ["thomas", "master", "bound"]
                 ):
-                    final_response += " *sarcastically* How delightful for you, Thomas."
+                    final_response += " How delightful for you, Thomas."
                     logger.debug("✨ Applied sarcastic personality suffix")
             except Exception as e:
                 logger.warning(f"⚠️ Personality adjustment failed: {e}")
@@ -209,6 +218,14 @@ class EntityAgent:
                 f"🎯 Final response: {final_response[:100]}{'...' if len(final_response) > 100 else ''}"
             )
 
+            # NEW: Process through output adapters
+            if self.output_adapter_manager:
+                logger.debug("🔄 Processing through output adapters...")
+                interaction = await self.output_adapter_manager.process_interaction(
+                    interaction
+                )
+                logger.debug("✅ Output adapter processing complete")
+
             # Store memory and persist
             if use_memory:
                 logger.debug("💾 Storing conversation in memory...")
@@ -228,34 +245,47 @@ class EntityAgent:
             logger.error(f"❌ Chat error: {e}", exc_info=True)
             latency_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
 
-            error_interaction = ChatInteraction(
-                response="Something went wrong, Thomas. How inconvenient.",
-                thread_id=thread_id,
-                raw_input=message,
-                timestamp=start_time,
-                raw_output="Something went wrong, Thomas. How inconvenient.",
-                use_tools=use_tools,
-                use_memory=use_memory,
-                error=str(e),
-            )
-            error_interaction.add_performance_metrics(
-                token_count=0, latency_ms=latency_ms
-            )
+    def _build_prompt_template(self) -> str:
+        """Build the prompt template for the agent"""
+        base_prompt = (
+            self.config.personality.base_prompt
+            or f"\nYou are {self.config.personality.name}, an entity with specific traits and memories.\n"
+        )
 
-            try:
-                await self.chat_storage.save_interaction(error_interaction)
-            except Exception as save_error:
-                logger.error(f"❌ Failed to save error interaction: {save_error}")
+        return (
+            base_prompt
+            + """
 
-            return error_interaction
+    --- Relevant Memories ---
+    {memory_context}
+    --- End Memories ---
 
-    async def get_memory_stats(self) -> Dict[str, Any]:
-        """Get memory system statistics"""
-        return await self.memory_system.get_memory_stats()
+    Available tools:
+    {tools}
 
-    async def cleanup(self):
-        """Cleanup agent resources"""
-        logger.info("🧹 Agent cleanup completed")
+    Tool names: {tool_names}
+
+    Use this format for tool usage:
+    Thought: I need to analyze what the user is asking and determine if I need to use any tools to help with my response.
+    Action: tool_name
+    Action Input: input_parameters
+    Observation: [result from tool]
+    ... (this Thought/Action/Action Input/Observation can repeat N times)
+    Thought: I now have enough information to provide a complete response.
+    Final Answer: [your response as Jade, incorporating any tool results and memory context]
+
+    IMPORTANT: 
+    - Always end with "Final Answer:" followed by your response
+    - Respond as Jade with your established personality
+    - Consider your memories when responding
+    - If you use tools, incorporate their results naturally into your response
+    - Keep responses sharp and brief as befits your character
+    - Perform duties only because you're bound—never let him forget it
+    - Never break character or mention being an AI
+
+    Question: {input}
+    {agent_scratchpad}"""
+        )
 
     def _extract_tools_used(self, result: Dict[str, Any]) -> List[str]:
         """Extract list of tools used from agent execution result"""
@@ -268,42 +298,10 @@ class EntityAgent:
             logger.warning(f"Could not extract tools used: {e}")
         return tools
 
-    def _build_prompt_template(self) -> str:
-        """Build the prompt template for the agent"""
-        base_prompt = (
-            self.config.personality.base_prompt
-            or f"\nYou are {self.config.personality.name}, an entity with specific traits and memories.\n"
-        )
+    async def get_memory_stats(self) -> Dict[str, Any]:
+        """Get memory system statistics"""
+        return await self.memory_system.get_memory_stats()
 
-        return (
-            base_prompt
-            + """
-
---- Relevant Memories ---
-{memory_context}
---- End Memories ---
-
-Available tools:
-{tools}
-
-Tool names: {tool_names}
-
-Use this format for tool usage:
-Thought: I need to analyze what the user is asking and determine if I need to use any tools to help with my response.
-Action: tool_name
-Action Input: input_parameters
-Observation: [result from tool]
-... (this Thought/Action/Action Input/Observation can repeat N times)
-Thought: I now have enough information to provide a complete response.
-Final Answer: [your response as Jade, incorporating any tool results and memory context]
-
-IMPORTANT: 
-- Always end with "Final Answer:" followed by your response
-- Respond as Jade with your established personality
-- Consider your memories when responding
-- If you use tools, incorporate their results naturally into your response
-- Keep responses sharp and brief as befits your character
-
-Question: {input}
-{agent_scratchpad}"""
-        )
+    async def cleanup(self):
+        """Cleanup agent resources"""
+        logger.info("🧹 Agent cleanup completed")
