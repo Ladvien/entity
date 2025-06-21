@@ -4,7 +4,12 @@ Centralized database connection management using dataclass
 
 from dataclasses import dataclass, field
 from typing import Optional, Dict, Any, List
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    create_async_engine,
+    async_sessionmaker,
+)
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import text
 import logging
@@ -29,6 +34,9 @@ class DatabaseConnection:
 
     _engine: Optional[AsyncEngine] = field(default=None, init=False)
     _session_factory: Optional[sessionmaker] = field(default=None, init=False)
+    _async_session_maker: Optional[async_sessionmaker[AsyncSession]] = field(
+        default=None, init=False
+    )
 
     @classmethod
     def from_config(cls, config: DatabaseConfig) -> "DatabaseConnection":
@@ -132,6 +140,11 @@ class DatabaseConnection:
             self._session_factory = None
             logger.info("✅ Engine closed and reset")
 
+    def async_session(self) -> async_sessionmaker[AsyncSession]:
+        if not self._async_session_maker:
+            self._initialize_session_factory()  # <- ensures it's ready
+        return self._async_session_maker
+
     def __str__(self):
         return f"{self.username}@{self.host}:{self.port}/{self.name} (schema={self.schema})"
 
@@ -139,6 +152,16 @@ class DatabaseConnection:
         return (
             f"DatabaseConnection(host='{self.host}', port={self.port}, name='{self.name}', "
             f"schema='{self.schema}', pool={self.min_pool_size}-{self.max_pool_size})"
+        )
+
+    def _initialize_session_factory(self):
+        if not self._engine:
+            raise RuntimeError("Database engine is not initialized")
+        self._async_session_maker = async_sessionmaker(
+            self._engine, expire_on_commit=False, class_=AsyncSession
+        )
+        logger.debug(
+            "🏭 async_sessionmaker initialized via _initialize_session_factory()"
         )
 
 

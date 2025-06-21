@@ -150,10 +150,12 @@ class MemorySystem:
         self, query: str, thread_id: Optional[str] = None, k: int = 5
     ) -> List[Document]:
         results = await self.vector_store.asimilarity_search(query, k=k)
+
         if thread_id:
             results = [
                 doc for doc in results if doc.metadata.get("thread_id") == thread_id
             ]
+
         return results[:k]
 
     async def deep_search_memory(
