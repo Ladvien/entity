@@ -1,3 +1,5 @@
+# src/memory/memory_system.py - Fixed implementation using SchemaAwarePGVector correctly
+
 import json
 import logging
 from datetime import datetime
@@ -5,12 +7,14 @@ from typing import List, Optional, Dict, Any
 
 from langchain_core.documents import Document
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_postgres.vectorstores import PGVector
 from sqlalchemy import text
 
 from src.shared.models import ChatInteraction
 from src.service.config import MemoryConfig, DatabaseConfig, StorageConfig
 from src.db.connection import DatabaseConnection
+
+# Import our custom schema-aware PGVector
+from src.memory.custom_pgvector import SchemaAwarePGVector
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +31,11 @@ class MemorySystem:
         self.storage_config = storage_config
         self.history_table = storage_config.history_table
 
+        if not database_config.db_schema:
+            raise ValueError("MemoryConfig must specify a schema name for PGVector")
+        else:
+            self.schema = database_config.db_schema
+
         self.db_connection = DatabaseConnection.from_config(database_config)
         self.collection_name = memory_config.collection_name
         self.embeddings = HuggingFaceEmbeddings(
@@ -36,12 +45,83 @@ class MemorySystem:
 
     async def initialize(self):
         await self.db_connection.ensure_schema()
-        self.vector_store = PGVector(
-            embeddings=self.embeddings,
-            **self.db_connection.get_pgvector_config(),
-        )
+        await self._ensure_pgvector_extension()
+        await self._initialize_vector_store()  # This now properly creates tables
         await self._ensure_history_table()
-        await self._ensure_vector_collection()
+        # Remove _ensure_vector_collection - it's handled in _initialize_vector_store now
+
+    async def _ensure_pgvector_extension(self):
+        """Ensure pgvector extension is enabled"""
+        try:
+            session = await self.db_connection.get_session()
+            async with session:
+                await session.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+                logger.info("✅ pgvector extension enabled")
+                await session.commit()
+
+        except Exception as e:
+            logger.error(f"❌ Failed to ensure pgvector extension: {e}")
+            raise
+
+    async def _initialize_vector_store(self):
+        """Initialize vector store using our custom schema-aware PGVector - FIXED VERSION"""
+        try:
+            # Get the pgvector config
+            pgvector_config = self.db_connection.get_pgvector_config()
+
+            logger.info(
+                f"🎯 Initializing SchemaAwarePGVector for schema: {self.schema}"
+            )
+            for key, value in pgvector_config.items():
+                if "password" not in key.lower():
+                    logger.info(f"     {key}: {value}")
+
+            # Map config values to the correct PGVector parameter names
+            self.vector_store = await SchemaAwarePGVector.afrom_texts(
+                texts=[],  # Start with empty texts
+                embedding=self.embeddings,
+                collection_name=self.collection_name,
+                schema_name=self.schema,
+                connection=pgvector_config.get(
+                    "connection"
+                ),  # Note: 'connection' not 'connection_string'
+                async_mode=pgvector_config.get("async_mode", True),
+                create_extension=pgvector_config.get("create_extension", False),
+                use_jsonb=pgvector_config.get("use_jsonb", True),
+                pre_delete_collection=pgvector_config.get(
+                    "pre_delete_collection", False
+                ),
+            )
+
+            logger.info(f"✅ SchemaAwarePGVector created for schema: {self.schema}")
+
+            # Verify the setup worked
+            await self._verify_vector_setup()
+
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize vector store: {e}")
+            raise
+
+    async def _verify_vector_setup(self):
+        """Verify that vector store is properly set up in correct schema"""
+        try:
+            # Use the verification method from our custom PGVector
+            if hasattr(self.vector_store, "_verify_schema_setup"):
+                success = await self.vector_store._verify_schema_setup()
+                if success:
+                    logger.info(
+                        f"🎉 Vector store successfully verified in {self.schema} schema"
+                    )
+                else:
+                    logger.error(
+                        f"💥 Vector store verification failed for {self.schema} schema"
+                    )
+
+            # Also log final table locations
+            await self._log_final_table_locations()
+
+        except Exception as e:
+            logger.warning(f"⚠️ Vector setup verification failed: {e}")
 
     async def _ensure_history_table(self):
         create_sql = f"""
@@ -72,15 +152,65 @@ class MemorySystem:
             f"CREATE INDEX IF NOT EXISTS idx_{self.history_table}_thread_timestamp ON {self.history_table}(thread_id, timestamp DESC)"
         ]
         await self.db_connection.execute_schema_commands([create_sql] + indexes)
+        logger.info(
+            f"✅ History table {self.history_table} ensured in {self.schema} schema"
+        )
 
-    async def _ensure_vector_collection(self):
+    # REMOVED: _ensure_vector_collection method - no longer needed
+    # The afrom_texts method handles all initialization
+
+    async def _log_final_table_locations(self):
+        """Log where all tables ended up"""
         try:
-            await self.vector_store.aadd_texts(
-                ["init"], ids=["__init__"], metadata=[{"init": True}]
-            )
-            await self.vector_store.adelete(["__init__"])
+            session = await self.db_connection.get_session()
+            async with session:
+                result = await session.execute(
+                    text(
+                        """
+                    SELECT schemaname, tablename 
+                    FROM pg_tables 
+                    WHERE tablename LIKE 'langchain_pg_%' OR tablename = :history_table
+                    ORDER BY schemaname, tablename
+                """
+                    ),
+                    {"history_table": self.history_table},
+                )
+
+                tables = result.fetchall()
+                logger.info("📍 FINAL table locations with custom PGVector:")
+                for schema, table in tables:
+                    if schema == self.schema:
+                        logger.info(f"  ✅ {schema}.{table} (CORRECT SCHEMA)")
+                    else:
+                        logger.warning(f"  ❌ {schema}.{table} (WRONG SCHEMA)")
+
+                # Count tables in target schema
+                target_count = sum(
+                    1
+                    for schema, table in tables
+                    if schema == self.schema and "langchain_pg" in table
+                )
+                public_count = sum(
+                    1
+                    for schema, table in tables
+                    if schema == "public" and "langchain_pg" in table
+                )
+
+                if target_count >= 2 and public_count == 0:
+                    logger.info(
+                        f"🎉 SUCCESS: All vector tables in {self.schema} schema!"
+                    )
+                elif target_count >= 2:
+                    logger.warning(
+                        f"⚠️ Vector tables in {self.schema} schema, but duplicates in public"
+                    )
+                else:
+                    logger.error(
+                        f"💥 FAILURE: Vector tables not in {self.schema} schema"
+                    )
+
         except Exception as e:
-            logger.warning(f"⚠️ Vector collection init skipped: {e}")
+            logger.warning(f"Could not log table locations: {e}")
 
     async def save_interaction(self, interaction: ChatInteraction):
         session = await self.db_connection.get_session()
@@ -127,7 +257,7 @@ class MemorySystem:
                 },
             )
 
-            if interaction.use_memory:
+            if interaction.use_memory and self.vector_store:
                 doc = Document(
                     page_content=interaction.response,
                     metadata={
@@ -139,7 +269,11 @@ class MemorySystem:
                     },
                 )
                 try:
+                    logger.debug(
+                        f"📝 Adding vector embedding for interaction {interaction.interaction_id}"
+                    )
                     await self.vector_store.aadd_documents([doc])
+                    logger.debug(f"✅ Added vector embedding to {self.schema} schema")
                 except Exception as e:
                     logger.warning(f"⚠️ Could not store embedding for interaction: {e}")
 
@@ -148,25 +282,36 @@ class MemorySystem:
     async def search_memory(
         self, query: str, thread_id: Optional[str] = None, k: int = 5
     ) -> List[Document]:
-        results = await self.vector_store.asimilarity_search(query, k=k)
+        if not self.vector_store:
+            logger.warning("Vector store not initialized")
+            return []
 
-        if thread_id:
-            results = [
-                doc for doc in results if doc.metadata.get("thread_id") == thread_id
-            ]
+        try:
+            logger.debug(
+                f"🔍 Searching vector memory for: '{query}' (thread: {thread_id})"
+            )
+            results = await self.vector_store.asimilarity_search(query, k=k)
 
-        return results[:k]
+            if thread_id:
+                results = [
+                    doc for doc in results if doc.metadata.get("thread_id") == thread_id
+                ]
+
+            logger.debug(f"🔍 Found {len(results)} vector results")
+            return results[:k]
+        except Exception as e:
+            logger.warning(f"⚠️ Vector search failed: {e}")
+            return []
 
     async def deep_search_memory(
         self, query: str, thread_id: Optional[str] = None, k: int = 5
     ) -> List[ChatInteraction]:
         session = await self.db_connection.get_session()
         async with session:
-            result = await session.execute(
-                text(
-                    f"""
+            if thread_id:
+                sql_query = f"""
                     SELECT * FROM {self.history_table}
-                    WHERE (:thread_id IS NULL OR thread_id = :thread_id)
+                    WHERE thread_id = :thread_id
                     AND (
                         raw_input ILIKE :query OR
                         raw_output ILIKE :query OR
@@ -175,13 +320,28 @@ class MemorySystem:
                     ORDER BY timestamp DESC
                     LIMIT :limit
                 """
-                ),
-                {
-                    "query": f"%{query}%",
+                params = {
                     "thread_id": thread_id,
+                    "query": f"%{query}%",
                     "limit": k,
-                },
-            )
+                }
+            else:
+                sql_query = f"""
+                    SELECT * FROM {self.history_table}
+                    WHERE (
+                        raw_input ILIKE :query OR
+                        raw_output ILIKE :query OR
+                        response ILIKE :query
+                    )
+                    ORDER BY timestamp DESC
+                    LIMIT :limit
+                """
+                params = {
+                    "query": f"%{query}%",
+                    "limit": k,
+                }
+
+            result = await session.execute(text(sql_query), params)
             rows = result.fetchall()
 
         return [
@@ -259,15 +419,20 @@ class MemorySystem:
             "embedding_model": self.memory_config.embedding_model,
             "vector_dimensions": self.memory_config.embedding_dimension,
             "backend": "pgvector",
+            "schema": self.schema,
         }
         session = await self.db_connection.get_session()
         async with session:
             try:
+                # Check vector embeddings in our target schema
                 result = await session.execute(
                     text(
-                        """
-                        SELECT COUNT(*) FROM langchain_pg_embedding 
-                        WHERE collection_id = CAST((SELECT id FROM langchain_pg_collection WHERE name = :name) AS UUID)
+                        f"""
+                        SELECT COUNT(*) FROM "{self.schema}".langchain_pg_embedding 
+                        WHERE collection_id = CAST((
+                            SELECT uuid FROM "{self.schema}".langchain_pg_collection 
+                            WHERE name = :name
+                        ) AS UUID)
                     """
                     ),
                     {"name": self.collection_name},
@@ -280,6 +445,7 @@ class MemorySystem:
                 stats["total_conversations"] = result.scalar_one()
 
             except Exception as e:
+                logger.warning(f"Error getting memory stats: {e}")
                 stats["status"] = "error"
                 stats["error"] = str(e)
 

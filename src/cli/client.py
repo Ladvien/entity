@@ -39,7 +39,6 @@ class EntityAPIClient:
             )
             response.raise_for_status()
 
-            print(f"DEBUG: Raw response: {response.text}")
             return ChatResponse(**response.json())
 
         except httpx.HTTPStatusError as e:

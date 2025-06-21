@@ -1,3 +1,5 @@
+# src/db/connection.py - Final fix after understanding the issue
+
 from dataclasses import dataclass, field
 from typing import Optional, Dict, Any, List
 from sqlalchemy.ext.asyncio import (
@@ -43,6 +45,7 @@ class DatabaseConnection:
 
     @property
     def async_connection_url(self) -> str:
+        # Simple connection string - we'll handle schema in connect_args and sessions
         return f"postgresql+asyncpg://{self.username}:{self.password}@{self.host}:{self.port}/{self.name}"
 
     @property
@@ -52,7 +55,7 @@ class DatabaseConnection:
     @property
     def connect_args(self) -> Dict[str, Any]:
         return (
-            {"server_settings": {"search_path": self.schema}}
+            {"server_settings": {"search_path": f"{self.schema},public"}}
             if self.schema != "public"
             else {}
         )
@@ -83,12 +86,26 @@ class DatabaseConnection:
         )
 
     async def get_session(self) -> AsyncSession:
-        return self.async_session()()
+        session = self.async_session()()
+
+        # Always force search path on every session to ensure schema priority
+        if self.schema != "public":
+            try:
+                await session.execute(text(f"SET search_path TO {self.schema}, public"))
+                logger.debug(f"🔧 Set search_path to: {self.schema}, public")
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to set search_path: {e}")
+
+        return session
 
     async def test_connection(self) -> bool:
         try:
             engine = await self.get_engine()
             async with engine.begin() as conn:
+                if self.schema != "public":
+                    await conn.execute(
+                        text(f"SET search_path TO {self.schema}, public")
+                    )
                 await conn.execute(text("SELECT 1"))
             logger.info("✅ Database connection test passed")
             return True
@@ -103,7 +120,7 @@ class DatabaseConnection:
             engine = await self.get_engine()
             async with engine.begin() as conn:
                 await conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {self.schema}"))
-                await conn.execute(text(f"SET search_path TO {self.schema}"))
+                await conn.execute(text(f"SET search_path TO {self.schema}, public"))
             logger.info(f"✅ Schema '{self.schema}' ready")
             return True
         except Exception as e:
@@ -114,7 +131,7 @@ class DatabaseConnection:
         engine = await self.get_engine()
         async with engine.begin() as conn:
             if self.schema != "public":
-                await conn.execute(text(f"SET search_path TO {self.schema}"))
+                await conn.execute(text(f"SET search_path TO {self.schema}, public"))
             for command in commands:
                 await conn.execute(text(command))
 
@@ -125,7 +142,8 @@ class DatabaseConnection:
             "create_extension": False,
             "use_jsonb": True,
             "pre_delete_collection": False,
-            "collection_name": f"{self.schema}.langchain_pg_collection",
+            # ✅ FIXED: Just use the collection name, not schema prefix
+            "collection_name": "entity_memory",  # This is the actual collection name
         }
 
     async def close(self):

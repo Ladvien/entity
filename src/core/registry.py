@@ -1,4 +1,5 @@
-# src/core/registry.py
+# src/core/registry.py - Fixed service type display
+
 import logging
 from typing import Dict, Any, Optional, TypeVar, Type
 
@@ -58,7 +59,10 @@ class ServiceRegistry:
     @classmethod
     def list_services(cls) -> Dict[str, str]:
         """List all registered services with their types"""
-        return {name: type(service).__name__ for name, service in cls._services.items()}
+        # ✅ FIXED: Properly get the class name
+        return {
+            name: service.__class__.__name__ for name, service in cls._services.items()
+        }
 
     @classmethod
     def clear(cls) -> None:
