@@ -6,8 +6,8 @@ from langchain.prompts import PromptTemplate
 from langchain.agents import AgentExecutor, create_react_agent
 from langchain_core.language_models.base import BaseLanguageModel
 
+from src.memory.memory_system import MemorySystem
 from src.service.config import EntityConfig
-from src.chat_storage.base_chat_storage import BaseChatStorage
 from src.tools.tools import ToolManager
 from src.shared.models import ChatInteraction
 from src.adapters import OutputAdapterManager
@@ -22,14 +22,14 @@ class EntityAgent:
         self,
         config: EntityConfig,
         tool_manager: ToolManager,
-        chat_storage: BaseChatStorage,
         llm: BaseLanguageModel,
+        memory_system: MemorySystem,
         output_adapter_manager: Optional[OutputAdapterManager] = None,
     ):
         self.config = config
         self.tool_registry = tool_manager
-        self.chat_storage = chat_storage
         self.llm = llm
+        self.memory_system = memory_system
         self.output_adapter_manager = output_adapter_manager
         self.agent_executor: Optional[AgentExecutor] = None
 
@@ -131,7 +131,7 @@ class EntityAgent:
                     interaction
                 )
 
-            await self.chat_storage.save_interaction(interaction)
+            await self.memory_system.save_interaction(interaction)
             return interaction
 
         except Exception as e:

@@ -5,11 +5,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langchain_ollama import OllamaLLM
 
-from src.memory.vector_memory_system import VectorMemorySystem
+from src.memory.memory_system import MemorySystem
 from src.service.config import load_config
 from src.service.agent import EntityAgent
 from src.service.routes import EntityRouterFactory
-from src.chat_storage import create_storage
 from src.tools.tools import ToolManager
 from src.adapters import create_output_adapters
 from src.db.connection import initialize_global_db_connection
@@ -70,24 +69,16 @@ async def lifespan(app: FastAPI):
         db_connection = await initialize_global_db_connection(config.database)
         ServiceRegistry.register("db_connection", db_connection)
 
-        # Init chat storage
-        storage = await create_storage(config.storage, config.database)
-        ServiceRegistry.register("storage", storage)
-
         # Init vector memory 🧠
-        try:
-            memory_system = VectorMemorySystem(
-                memory_config=config.memory,
-                database_config=config.database,
-            )
+        # try:
+        # Init memory system (unified)
+        memory_system = MemorySystem(config.memory, config.database, config.storage)
 
-            ServiceRegistry.register("memory_system", memory_system)
-
-            await memory_system.initialize()
-            ServiceRegistry.register("memory_system", memory_system)
-            logger.info("✅ Vector memory system registered")
-        except Exception as e:
-            logger.warning(f"⚠️ Skipping vector memory init: {e}")
+        await memory_system.initialize()
+        ServiceRegistry.register("memory_system", memory_system)
+        logger.info("✅ Memory system initialized and registered")
+        # except Exception as e:
+        #     logger.warning(f"⚠️ Skipping memory system initialization: {e}")
 
         # Init tool manager 🔧
         tool_manager = ToolManager.setup(
@@ -118,10 +109,11 @@ async def lifespan(app: FastAPI):
         agent = EntityAgent(
             config=config.entity,
             tool_manager=tool_manager,
-            chat_storage=storage,
             llm=llm,
+            memory_system=memory_system,
             output_adapter_manager=output_adapters,
         )
+
         await agent.initialize()
         ServiceRegistry.register("agent", agent)
 
@@ -130,7 +122,7 @@ async def lifespan(app: FastAPI):
         app.state.agent = agent
 
         # Attach routes
-        router = EntityRouterFactory(agent, tool_manager, storage).get_router()
+        router = EntityRouterFactory(agent, tool_manager).get_router()
         app.include_router(router, prefix="/api/v1")
 
         # Log success

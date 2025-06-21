@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Query
 from typing import Optional
 from datetime import datetime
 
-from src.chat_storage.base_chat_storage import BaseChatStorage
+
 from src.service.agent import EntityAgent
 from src.shared.models import (
     ChatRequest,
@@ -19,11 +19,9 @@ class EntityRouterFactory:
         self,
         agent: EntityAgent,
         tool_registry: ToolManager,
-        storage: BaseChatStorage,
     ):
         self.agent = agent
         self.tool_registry = tool_registry
-        self.storage = storage
 
     def get_router(self) -> APIRouter:
         router = APIRouter()
