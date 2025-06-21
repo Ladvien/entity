@@ -33,17 +33,10 @@ class VectorMemorySystem:
 
         await self.db_connection.ensure_schema()
 
-        conn_url = self.db_connection.config.get_connection_url(
-            async_fallback=True
-        )  # ✅
-
         self.vector_store = PGVector(
             embeddings=self.embeddings,
-            connection=conn_url,
             collection_name=self.collection_name,
-            create_extension=False,
-            async_mode=True,
-            use_jsonb=True,
+            **self.db_connection.get_pgvector_config(),
         )
 
         try:
@@ -53,27 +46,14 @@ class VectorMemorySystem:
             logger.warning(f"⚠️ Vector table init skipped: {e}")
 
     async def _ensure_vector_tables_exist(self):
-        dummy_doc = Document(
-            page_content="__INIT_DUMMY__",
-            metadata={"__init": True, "thread_id": "__init__"},
-        )
-        await self.vector_store.aadd_documents([dummy_doc])
-
-        session = await self.db_connection.get_session()
-        async with session:
-            await session.execute(
-                text(
-                    """
-                    DELETE FROM langchain_pg_embedding 
-                    WHERE collection_id = CAST(
-                        (SELECT id FROM langchain_pg_collection WHERE name = :name) 
-                        AS UUID
-                    ) AND cmetadata->>'__init' = 'true'
-                """
-                ),
-                {"name": self.collection_name},
+        try:
+            await self.vector_store.aadd_texts(
+                ["hello world"], ids=["init"], metadata=[{"__init": "true"}]
             )
-            await session.commit()
+            await self.vector_store.adelete(["init"])
+            logger.debug("✅ Vector tables created and verified")
+        except Exception as e:
+            logger.warning(f"⚠️ Vector table init skipped: {e}")
 
     async def add_memory(
         self,

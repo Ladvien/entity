@@ -77,8 +77,12 @@ async def lifespan(app: FastAPI):
         # Init vector memory 🧠
         try:
             memory_system = VectorMemorySystem(
-                config.memory, config.database
-            )  # noqa: F821
+                memory_config=config.memory,
+                database_config=config.database,
+            )
+
+            ServiceRegistry.register("memory_system", memory_system)
+
             await memory_system.initialize()
             ServiceRegistry.register("memory_system", memory_system)
             logger.info("✅ Vector memory system registered")

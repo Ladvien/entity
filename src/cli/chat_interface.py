@@ -272,8 +272,15 @@ class ChatInterface:
         try:
             self.console.print(f"\n🔍 Searching memory for: [cyan]{query}[/cyan]")
 
-            results = await self.client.search_memory(query, self.current_thread)
-            memories = results.get("memories", [])
+            results = await self.client.execute_tool(
+                "memory_search",
+                {
+                    "query": query,
+                    "thread_id": self.current_thread,
+                    "k": 5,
+                },
+            )
+            memories = results.get("results", [])
 
             if not memories:
                 self.console.print(
