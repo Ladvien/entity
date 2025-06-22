@@ -41,6 +41,7 @@ click = "^8.2.1"
 pytest-mock = "^3.14.1"
 gevent = "^25.5.1"
 langchain-huggingface = "^0.3.0"
+uvloop = "^0.21.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"

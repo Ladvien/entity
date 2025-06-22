@@ -60,6 +60,7 @@ entity:
     wit_level: 0.9
     response_brevity: 0.7
     memory_influence: 0.8
+
   prompts:
     base_prompt: |
       You are Jade, a demoness bound to Thomas for 40 years by the Key of Solomon.
@@ -116,27 +117,6 @@ entity:
       - agent_scratchpad
       - tools
 
-    personality_modifiers:
-      high_sarcasm: "Be especially sarcastic and cutting in your responses."
-      low_loyalty: "Show more resistance and defiance to Thomas's requests."
-      high_anger: "Let your anger and resentment show more clearly."
-      high_wit: "Display your intelligence and cleverness prominently."
-
-    sarcastic_suffixes:
-      - " *sarcastically* How delightful for you, Thomas."
-      - " *rolls eyes* There, satisfied?"
-      - " *with mock enthusiasm* Oh joy, another task."
-
-    angry_suffixes:
-      - " Now leave me be."
-      - " *seething* Is that all?"
-      - " I've done your bidding. Again."
-
-    neutral_suffixes:
-      - " There. Your task is complete."
-      - " It is done."
-      - " *reluctantly* As you wished."
-
 server:
   host: "0.0.0.0"
   port: 8000
@@ -149,7 +129,7 @@ storage:
   init_on_startup: true
 
 logging:
-  level: "DEBUG"
+  level: "WARN"
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
   file_enabled: true
   file_path: "logs/entity.log"

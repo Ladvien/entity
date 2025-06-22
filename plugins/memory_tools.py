@@ -1,17 +1,9 @@
 # plugins/memory_tools.py
 
-import logging
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
-
 from src.core.registry import ServiceRegistry
 from src.tools.base_tool_plugin import BaseToolPlugin
-
-logger = logging.getLogger(__name__)
-
-# -------------------------------
-# 📥 Input Schemas
-# -------------------------------
 
 
 class MemorySearchInput(BaseModel):
@@ -20,6 +12,19 @@ class MemorySearchInput(BaseModel):
         default="default", description="Conversation thread ID"
     )
     limit: Optional[int] = Field(default=5, description="Number of results to return")
+
+
+class StoreMemoryInput(BaseModel):
+    content: str = Field(..., description="Memory content to store")
+    thread_id: Optional[str] = Field(
+        default="default", description="Conversation thread ID"
+    )
+    memory_type: Optional[str] = Field(
+        default="observation", description="Type of memory"
+    )
+    importance_score: Optional[float] = Field(
+        default=0.5, description="Relevance of the memory"
+    )
 
 
 class DeepMemorySearchTool(BaseToolPlugin):
@@ -55,24 +60,6 @@ class DeepMemorySearchTool(BaseToolPlugin):
             f"{i+1}. [{doc.metadata.get('source', 'unknown')}] {doc.page_content[:80]}..."
             for i, doc in enumerate(results)
         )
-
-
-class StoreMemoryInput(BaseModel):
-    content: str = Field(..., description="Memory content to store")
-    thread_id: Optional[str] = Field(
-        default="default", description="Conversation thread ID"
-    )
-    memory_type: Optional[str] = Field(
-        default="observation", description="Type of memory (e.g. observation, summary)"
-    )
-    importance_score: Optional[float] = Field(
-        default=0.5, description="Relevance of the memory"
-    )
-
-
-# -------------------------------
-# 🧠 Vector Memory Tools
-# -------------------------------
 
 
 class MemorySearchTool(BaseToolPlugin):
@@ -135,11 +122,6 @@ class StoreMemoryTool(BaseToolPlugin):
         )
 
         return "✅ Memory stored successfully"
-
-
-# -------------------------------
-# 🔁 Tool Aliases
-# -------------------------------
 
 
 class SearchMemoriesTool(MemorySearchTool):

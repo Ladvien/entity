@@ -84,10 +84,6 @@ class PersonalityConfig(BaseModel):
 class PromptConfig(BaseModel):
     base_prompt: str
     variables: List[str]
-    personality_modifiers: Dict[str, str]
-    sarcastic_suffixes: List[str]
-    angry_suffixes: List[str]
-    neutral_suffixes: List[str]
 
 
 class EntityConfig(BaseModel):

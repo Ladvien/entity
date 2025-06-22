@@ -16,8 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 class EntityAgent:
-    """Entity agent with injected LLM, tools, and chat storage."""
-
     def __init__(
         self,
         config: EntityConfig,
@@ -70,13 +68,11 @@ class EntityAgent:
         try:
             memory_context = ""
             try:
-                # 🧠 Attempt vector-based memory search
                 memories = await self.memory_system.search_memory(
                     message, thread_id=thread_id, k=5
                 )
                 memory_context = "\n".join(doc.page_content for doc in memories)
 
-                # 🔁 Fallback to deep text search
                 if not memory_context.strip():
                     logger.info(
                         "🔍 No vector memory found, falling back to deep search."
@@ -125,12 +121,12 @@ class EntityAgent:
 
             if not raw_response.strip():
                 logger.error("❌ Empty response from LLM")
-                raw_response = "I apologize, Thomas, but I seem to be having trouble responding right now."
-
-            final_response = self._apply_personality(raw_response)
+                raw_response = (
+                    "I apologize, but I seem to be having trouble responding right now."
+                )
 
             interaction = ChatInteraction(
-                response=final_response,
+                response=raw_response,
                 thread_id=thread_id,
                 raw_input=message,
                 timestamp=start_time,
@@ -140,10 +136,6 @@ class EntityAgent:
                 memory_context_used=bool(memory_context),
                 memory_context=memory_context,
             )
-
-            if final_response != raw_response:
-                interaction.add_personality_adjustment("Added sarcastic suffix")
-                interaction.agent_personality_applied = True
 
             latency_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
             interaction.add_performance_metrics(
@@ -163,28 +155,14 @@ class EntityAgent:
         except Exception as e:
             logger.error(f"❌ Chat error: {e}", exc_info=True)
             return ChatInteraction(
-                response="Something went wrong, Thomas. How inconvenient.",
+                response="Something went wrong. How inconvenient.",
                 thread_id=thread_id,
                 raw_input=message,
                 timestamp=start_time,
-                raw_output="Something went wrong, Thomas. How inconvenient.",
+                raw_output="Something went wrong. How inconvenient.",
                 use_tools=use_tools,
                 error=str(e),
             )
-
-    def _apply_personality(self, raw_response: str) -> str:
-        try:
-            sarcasm_level = getattr(self.config.personality, "sarcasm_level", 0)
-            if sarcasm_level > 0.7 and not any(
-                word in raw_response.lower() for word in ["thomas", "master", "bound"]
-            ):
-                return raw_response + " How delightful for you, Thomas."
-        except Exception as e:
-            logger.warning(f"⚠ Personality adjustment failed: {e}")
-        return (
-            raw_response
-            or "Something is preventing me from responding properly, Thomas."
-        )
 
     def _extract_tools_used(self, result: Dict[str, Any]) -> List[str]:
         tools = []
