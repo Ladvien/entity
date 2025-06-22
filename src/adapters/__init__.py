@@ -82,10 +82,10 @@ class OutputAdapterManager:
 
 
 # In src/adapters/__init__.py
-def create_output_adapters(config: EntityServerConfig) -> OutputAdapterManager:
+def create_adapters(config: EntityServerConfig) -> OutputAdapterManager:
     manager = OutputAdapterManager()
 
-    for adapter_cfg in config.output_adapters:
+    for adapter_cfg in config.adapters:
         if adapter_cfg.type == "tts" and adapter_cfg.enabled:
             # Create TTSConfig from the main config, not adapter settings
             tts_adapter = TTSOutputAdapter(

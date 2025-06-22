@@ -1,9 +1,13 @@
-# plugins/memory_tools.py - WORKING VERSION
+# plugins/memory_tools.py
 
-from typing import List, Optional, Dict, Any
+from typing import Optional, Dict, Any
 from pydantic import BaseModel, Field
+from datetime import datetime
+from math import tanh
+
 from src.core.registry import ServiceRegistry
 from src.tools.base_tool_plugin import BaseToolPlugin
+from src.shared.models import ChatInteraction
 
 
 class MemorySearchInput(BaseModel):
@@ -118,9 +122,13 @@ class StoreMemoryTool(BaseToolPlugin):
         if not memory_system:
             return "❌ Vector memory system not available"
 
-        # ✅ FIXED: Use existing save_interaction method instead of non-existent add_memory
-        from src.shared.models import ChatInteraction
-        from datetime import datetime
+        # Normalize importance score to [0.0, 1.0]
+        raw_score = input_data.importance_score
+        normalized_score = (
+            raw_score
+            if 0.0 <= raw_score <= 1.0
+            else max(0.0, min(1.0, tanh(raw_score)))
+        )
 
         interaction = ChatInteraction(
             thread_id=input_data.thread_id,
@@ -131,13 +139,13 @@ class StoreMemoryTool(BaseToolPlugin):
             use_memory=True,
             metadata={
                 "memory_type": input_data.memory_type,
-                "importance_score": input_data.importance_score,
+                "importance_score": normalized_score,
                 "source": "manual_storage",
             },
         )
 
         await memory_system.save_interaction(interaction)
-        return "✅ Memory stored successfully"
+        return f"✅ Memory stored successfully with importance: {normalized_score:.2f}"
 
 
 class SearchMemoriesTool(MemorySearchTool):

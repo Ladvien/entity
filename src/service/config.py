@@ -1,56 +1,62 @@
-# entity_service/config.py
 """
-Unified configuration system matching your exact YAML structure
+Simplified configuration system - Phase 1 Implementation
+Reduces from 10+ config classes to 4 main classes
 """
-from typing import Annotated, Dict, Any, Optional, List, Literal, Union
-from pydantic import BaseModel, Field, model_validator, root_validator
+
+from typing import Dict, Any, List, Literal
+from pydantic import BaseModel, Field, model_validator
 import yaml
 import os
 import re
 from pathlib import Path
 
 
-# Python code - much simpler!
-class AdapterConfig(BaseModel):
-    type: str
-    enabled: bool = True
-    settings: Dict[str, Any] = {}
-
-
-class ToolConfig(BaseModel):
-    enabled: List[str] = []
-    plugin_path: str
-
-
-# Database Configuration
-class DatabaseConfig(BaseModel):
-    backend: str = "postgres"
-    history_table: str = "chat_history"
-    init_on_startup: bool = True
+class DataConfig(BaseModel):
+    """Unified data storage configuration"""
 
     host: str = "localhost"
     port: int = 5432
     name: str = "memory"
     username: str = "postgres"
     password: str = "password"
+
+    db_schema: str = "entity"
+    history_table: str = "chat_history"
+
     min_pool_size: int = 2
     max_pool_size: int = 10
 
-    db_schema: Optional[str] = None
+    init_on_startup: bool = True
 
 
-# Ollama Configuration
-class OllamaConfig(BaseModel):
-    base_url: str = "http://localhost:11434"
-    model: str = "neural-chat:7b"
-    temperature: float = 0.7
-    top_p: float = 0.9
-    top_k: int = 40
-    repeat_penalty: float = 1.1
+class AdapterConfig(BaseModel):
+    """Unified adapter configuration with type discrimination"""
+
+    type: Literal["tts", "webhook", "translation", "audio"]
+    enabled: bool = True
+    settings: Dict[str, Any] = Field(default_factory=dict)
 
 
-# TTS Configuration
+class EntityConfig(BaseModel):
+    """Agent configuration with integrated personality"""
+
+    entity_id: str = "jade"
+    max_iterations: int = 6
+
+    name: str = "Jade"
+    sarcasm_level: float = 0.8
+    loyalty_level: float = 0.6
+    anger_level: float = 0.7
+    wit_level: float = 0.9
+    response_brevity: float = 0.7
+    memory_influence: float = 0.8
+
+    prompts: "PromptConfig"
+
+
 class TTSConfig(BaseModel):
+    """TTS configuration with audio settings included"""
+
     base_url: str = "http://localhost:8888"
     voice_name: str = "bf_emma"
     voice_sample_path: str = "voice_samples/ai_mee.wav"
@@ -59,14 +65,21 @@ class TTSConfig(BaseModel):
     cfg_weight: float = 0.9
     exaggeration: float = 0.5
 
-
-# Audio Configuration
-class AudioConfig(BaseModel):
-    sample_rates: List[int] = [44100, 48000, 22050, 16000, 8000]
+    sample_rates: List[int] = Field(
+        default_factory=lambda: [44100, 48000, 22050, 16000, 8000]
+    )
     fade_out_samples: int = 2000
 
 
-# Memory Configuration
+class OllamaConfig(BaseModel):
+    base_url: str = "http://localhost:11434"
+    model: str = "llama3.1:8b-instruct"
+    temperature: float = 0.7
+    top_p: float = 0.9
+    top_k: int = 40
+    repeat_penalty: float = 1.1
+
+
 class MemoryConfig(BaseModel):
     collection_name: str = "entity_memory"
     embedding_model: str = "all-MiniLM-L6-v2"
@@ -85,13 +98,6 @@ class PromptConfig(BaseModel):
     variables: List[str]
 
 
-class EntityConfig(BaseModel):
-    entity_id: str = "jade"
-    max_iterations: int = 50
-    prompts: PromptConfig
-
-
-# Server Configuration
 class ServerConfig(BaseModel):
     host: str = "0.0.0.0"
     port: int = 8000
@@ -99,9 +105,8 @@ class ServerConfig(BaseModel):
     log_level: str = "info"
 
 
-# Logging Configuration
 class LoggingConfig(BaseModel):
-    level: str
+    level: str = "INFO"
     format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     file_enabled: bool = False
     file_path: str = "logs/entity.log"
@@ -109,35 +114,61 @@ class LoggingConfig(BaseModel):
     backup_count: int = 5
 
 
-# Main Unified Configuration
+class ToolConfig(BaseModel):
+    plugin_path: str = "./plugins"
+    enabled: List[str] = Field(default_factory=list)
+
+
 class EntityServerConfig(BaseModel):
-    """Main configuration class matching your exact YAML structure"""
+    """Main configuration class - simplified structure"""
 
     config_version: str = "2.0"
     debug: bool = False
-    database: DatabaseConfig
+
+    data: DataConfig
     ollama: OllamaConfig
     tts: TTSConfig
-    audio: AudioConfig
     memory: MemoryConfig
     entity: EntityConfig
     server: ServerConfig
     logging: LoggingConfig
     tools: ToolConfig
-    output_adapters: List[AdapterConfig] = []
+
+    adapters: List[AdapterConfig] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def check_enabled_adapters(self) -> "EntityServerConfig":
-        if not any(adapter.enabled for adapter in self.output_adapters):
-            raise ValueError("At least one output adapter must be enabled")
+    def validate_adapters(self) -> "EntityServerConfig":
+        """Ensure at least one adapter is enabled if any are defined"""
+        if self.adapters and not any(adapter.enabled for adapter in self.adapters):
+            raise ValueError("At least one adapter must be enabled")
         return self
 
-    class Config:
-        # Allow use of both attribute and dictionary access
-        extra = "forbid"  # Fail if unknown fields are present
+    @property
+    def database(self) -> DataConfig:
+        """Backward compatibility - access data config as 'database'"""
+        return self.data
+
+    @property
+    def personality(self) -> Dict[str, float]:
+        """Easy access to personality settings"""
+        return {
+            "sarcasm_level": self.entity.sarcasm_level,
+            "loyalty_level": self.entity.loyalty_level,
+            "anger_level": self.entity.anger_level,
+            "wit_level": self.entity.wit_level,
+            "response_brevity": self.entity.response_brevity,
+            "memory_influence": self.entity.memory_influence,
+        }
+
+    @property
+    def audio_settings(self) -> Dict[str, Any]:
+        """Easy access to audio settings from TTS config"""
+        return {
+            "sample_rates": self.tts.sample_rates,
+            "fade_out_samples": self.tts.fade_out_samples,
+        }
 
 
-# Environment variable interpolation
 VAR_PATTERN = re.compile(r"\$\{([^}]+)\}")
 
 
@@ -165,28 +196,26 @@ def walk_and_replace(obj: Any) -> Any:
 
 def load_config(config_path: str = "config.yml") -> EntityServerConfig:
     """Load configuration from YAML file with environment variable substitution"""
-    # Expand path
     config_path = os.path.expanduser(config_path)
     config_path = Path(config_path)
 
     if not config_path.exists():
         raise FileNotFoundError(f"Configuration file not found: {config_path}")
 
-    # Load environment variables from .env if it exists
     env_file = config_path.parent / ".env"
     if env_file.exists():
-        from dotenv import load_dotenv
+        try:
+            from dotenv import load_dotenv
 
-        load_dotenv(env_file)
+            load_dotenv(env_file)
+        except ImportError:
+            pass
 
-    # Load YAML
     with open(config_path, "r") as f:
         raw_config = yaml.safe_load(f)
 
-    # Replace environment variables
     config_data = walk_and_replace(raw_config)
 
-    # Parse and validate
     try:
         config = EntityServerConfig(**config_data)
         return config

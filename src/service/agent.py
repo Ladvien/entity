@@ -78,21 +78,49 @@ class EntityAgent:
         logger.debug(f"🛠️ Initializing ReAct agent with {len(tools)} tools")
         logger.info(f"🎯 Using ReAct agent (Ollama compatible)")
 
-        # ✅ Use create_react_agent for Ollama compatibility
         agent = create_react_agent(self.llm, tools, prompt)
 
-        # ✅ FIXED: Use supported early_stopping_method
         self.agent_executor = AgentExecutor(
             agent=agent,
             tools=tools,
             verbose=True,
             max_iterations=self.config.max_iterations,
             handle_parsing_errors=True,
-            return_intermediate_steps=True,  # ✅ This is the key!
-            early_stopping_method="force",  # ✅ CHANGED from "generate" to "force"
+            return_intermediate_steps=True,
+            early_stopping_method="force",
+            callback_manager=self._create_callback_manager(),
         )
+
         logger.info(f"🪠 Available tools: {[tool.name for tool in tools]}")
         logger.info(f"✅ ReAct agent executor initialized")
+
+    def _create_callback_manager(self):
+        """Create callback manager to handle tool usage limits"""
+        from langchain.callbacks.base import BaseCallbackHandler
+
+        class ToolLimitCallback(BaseCallbackHandler):
+            def __init__(self):
+                self.tool_usage = {}
+                self.max_per_tool = 2
+
+            def on_tool_start(self, serialized: dict, input_str: str, **kwargs):
+                tool_name = serialized.get("name", "unknown")
+                self.tool_usage[tool_name] = self.tool_usage.get(tool_name, 0) + 1
+
+                if self.tool_usage[tool_name] > self.max_per_tool:
+                    logger.warning(
+                        f"🛑 Tool '{tool_name}' used {self.tool_usage[tool_name]} times, encouraging final answer"
+                    )
+
+            def on_tool_end(self, output: str, **kwargs):
+                # Check if we should force a conclusion
+                total_calls = sum(self.tool_usage.values())
+                if total_calls >= 8:  # After 8 total tool calls, force conclusion
+                    logger.warning("🛑 Too many tool calls, should conclude soon")
+
+        from langchain.callbacks.manager import CallbackManager
+
+        return CallbackManager([ToolLimitCallback()])
 
     async def chat(
         self, message: str, thread_id: str = "default", use_tools: bool = True

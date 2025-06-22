@@ -190,7 +190,7 @@ MIT — see `LICENSE` for details.
 # Entity AI Agent - Code Consolidation Checklist
 
 ## 🔧 Configuration System Overhaul
-- [X] **Merge database configs** - Combine `DatabaseConfig` and `StorageConfig` into single `DataConfig`
+- [X] **Merge database configs** - Combine `DataConfig` and `StorageConfig` into single `DataConfig`
 - [X] **Eliminate PersonalityConfig** - Move personality fields directly into `EntityConfig`
 - [X] **Simplify adapter configs** - Replace separate adapter classes with single `AdapterConfig` + type field
 - [ ] **Merge audio configs** - Combine `AudioConfig` into `TTSConfig`

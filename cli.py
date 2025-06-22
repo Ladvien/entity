@@ -19,7 +19,6 @@ from src.shared.agent_result import AgentResult
 from src.service.config import load_config
 from src.cli.client import EntityAPIClient
 from src.cli.chat_interface import ChatInterface
-from src.cli.render import render_agent_result
 
 console = Console()
 
@@ -237,7 +236,7 @@ async def run_chat_mode(config_path: str):
             )
 
         interface = ChatInterface(client, config={"save_locally": True})
-        await interface.run()
+        await interface.start()
 
     except Exception as e:
         console.print(f"❌ Chat failed: {e}", style="red")

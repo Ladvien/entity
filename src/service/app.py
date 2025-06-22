@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from logging.handlers import RotatingFileHandler
 from langchain_ollama import OllamaLLM
+from plugins.memory_tools import DeepMemorySearchTool, MemorySearchTool
 from src.service.config import load_config
 from src.db.connection import (
     close_global_db_connection,
@@ -15,7 +16,7 @@ from src.db.connection import (
 from src.memory.memory_system import MemorySystem
 from src.service.agent import EntityAgent
 from src.service.routes import EntityRouterFactory
-from src.adapters import create_output_adapters
+from src.adapters import create_adapters
 from src.tools.tools import ToolManager
 from src.core.registry import ServiceRegistry
 from src.service.react_validator import ReActPromptValidator  # NEW IMPORT
@@ -86,6 +87,12 @@ async def lifespan(app: FastAPI):
 
     tool_manager = ToolManager()
     tool_manager.load_plugins_from_config("plugins")
+    tool_manager.register_class(MemorySearchTool)
+    tool_manager.register_class(DeepMemorySearchTool)
+
+    for tool in tool_manager.get_all_tools():
+        logger.info(f"✅ Registered tool: {tool.name}")
+
     ServiceRegistry.register("tools", tool_manager)
 
     llm = OllamaLLM(
@@ -103,7 +110,7 @@ async def lifespan(app: FastAPI):
         tool_manager=tool_manager,
         llm=llm,
         memory_system=memory_system,
-        output_adapter_manager=create_output_adapters(config),
+        output_adapter_manager=create_adapters(config),
     )
 
     # Initialize the agent

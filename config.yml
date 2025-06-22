@@ -1,27 +1,29 @@
+# config.yml - CONSOLIDATED VERSION (Phase 1)
+
 config_version: "2.0"
 debug: true
 
-database:
+data:
   host: "192.168.1.104"
   port: 5432
   name: "memory"
   username: "${DB_USERNAME}"
   password: "${DB_PASSWORD}"
+  db_schema: "entity"
+  history_table: "chat_history"
   min_pool_size: 2
   max_pool_size: 10
-  db_schema: "entity"
-
-  # Names of the tables used by the entity to store chat history.
-  history_table: "chat_history"
+  init_on_startup: true
 
 ollama:
   base_url: "http://192.168.1.110:11434"
-  model: llama3.1:8b-instruct # ✅ CHANGED: Better model for strict formatting
+  model: "llama3:8b-instruct-q6_K"
   temperature: 0.7
   top_p: 0.9
   top_k: 40
   repeat_penalty: 1.1
 
+# 🔥 CONSOLIDATED: tts + audio settings combined
 tts:
   base_url: "http://192.168.1.110:8888"
   voice_name: "bf_emma"
@@ -30,14 +32,8 @@ tts:
   speed: 0.3
   cfg_weight: 0.9
   exaggeration: 0.5
-
-audio:
-  sample_rates:
-    - 44100
-    - 48000
-    - 22050
-    - 16000
-    - 8000
+  # ✅ Audio settings moved here from separate section
+  sample_rates: [44100, 48000, 22050, 16000, 8000]
   fade_out_samples: 2000
 
 memory:
@@ -54,15 +50,16 @@ memory:
 
 entity:
   entity_id: "jade"
-  max_iterations: 6 # ✅ INCREASED: Give more chances to get format right
-  personality:
-    name: "Jade"
-    sarcasm_level: 0.8
-    loyalty_level: 0.6
-    anger_level: 0.7
-    wit_level: 0.9
-    response_brevity: 0.7
-    memory_influence: 0.8
+  max_iterations: 20
+
+  # ✅ Personality settings moved here (no separate personality section)
+  name: "Jade"
+  sarcasm_level: 0.8
+  loyalty_level: 0.6
+  anger_level: 0.7
+  wit_level: 0.9
+  response_brevity: 0.7
+  memory_influence: 0.8
 
   prompts:
     base_prompt: |
@@ -137,17 +134,19 @@ tools:
     - memory_search
     - store_memory
 
-output_adapters:
+adapters:
   - type: tts
     enabled: true
     settings:
       voice_name: "bf_emma"
       speed: 0.3
-  - type: translation
-    enabled: false
-    settings:
-      target_language: "spanish"
-  - type: webhook # Easy to add new types!
-    enabled: true
-    settings:
-      url: "https://my-webhook.com"
+
+  # - type: translation
+  #   enabled: false
+  #   settings:
+  #     target_language: "spanish"
+
+  # - type: webhook
+  #   enabled: true
+  #   settings:
+  #     url: "https://my-webhook.com"

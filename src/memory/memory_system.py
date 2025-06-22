@@ -8,7 +8,7 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from sqlalchemy import text
 
 from src.shared.models import ChatInteraction
-from src.service.config import MemoryConfig, DatabaseConfig
+from src.service.config import MemoryConfig, DataConfig
 from src.db.connection import DatabaseConnection
 from src.memory.custom_pgvector import SchemaAwarePGVector, SchemaAwarePGVectorNoDDL
 
@@ -19,7 +19,7 @@ class MemorySystem:
     def __init__(
         self,
         memory_config: MemoryConfig,
-        database_config: DatabaseConfig,
+        database_config: DataConfig,
     ):
         self.memory_config = memory_config
         self.database_config = database_config

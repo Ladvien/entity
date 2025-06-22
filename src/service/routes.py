@@ -148,7 +148,7 @@ class EntityRouterFactory:
                 "features": {
                     "postgresql": ServiceRegistry.has("db_connection"),
                     "tools": ServiceRegistry.has("tool_manager"),
-                    "output_adapters": ServiceRegistry.has("output_adapter_manager"),
+                    "adapters": ServiceRegistry.has("output_adapter_manager"),
                     "chat_interactions": True,
                     "service_registry": True,
                 },
