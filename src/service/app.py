@@ -55,6 +55,9 @@ def setup_logging(config):
     logger.info(f"✅ Logging configured - Level: {config.logging.level}")
 
 
+# src/service/app.py - FIXED LIFESPAN
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     config = load_config()
@@ -93,6 +96,10 @@ async def lifespan(app: FastAPI):
         memory_system=memory_system,
         output_adapter_manager=create_output_adapters(config),
     )
+
+    # ✅ CRITICAL: Initialize the agent!
+    await agent.initialize()
+
     ServiceRegistry.register("agent", agent)
 
     # ✅ Register routes here via the app instance

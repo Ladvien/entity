@@ -142,6 +142,9 @@ class ChatRequest(BaseModel):
     use_memory: bool = True
 
 
+# Update src/shared/models.py - ChatResponse class
+
+
 class ChatResponse(BaseModel):
     thread_id: str
     timestamp: datetime
@@ -151,12 +154,46 @@ class ChatResponse(BaseModel):
     tools_used: Optional[List[str]] = []
     token_count: Optional[int] = 0
     memory_context: Optional[str] = ""
-    intermediate_steps: Optional[List[dict]] = []
-    react_steps: Optional[List[dict]] = []
+    intermediate_steps: Optional[List[dict]] = []  # ✅ Keep as list of dicts
+    react_steps: Optional[List[dict]] = []  # ✅ Add react_steps
 
     @classmethod
     def from_result(cls, interaction: "AgentResult") -> "ChatResponse":
-        from src.shared.agent_result import AgentResult  # 🧠 Delayed import
+        from src.shared.agent_result import AgentResult
+
+        # ✅ Convert intermediate steps to serializable format
+        serializable_steps = []
+        if interaction.intermediate_steps:
+            for step in interaction.intermediate_steps:
+                if isinstance(step, (list, tuple)) and len(step) == 2:
+                    action, observation = step
+                    # Convert to dict format
+                    step_dict = {
+                        "action": {
+                            "tool": getattr(action, "tool", ""),
+                            "tool_input": str(getattr(action, "tool_input", "")),
+                            "log": getattr(action, "log", ""),
+                        },
+                        "observation": str(observation),
+                    }
+                    serializable_steps.append(step_dict)
+                else:
+                    # Handle other formats
+                    serializable_steps.append({"raw": str(step)})
+
+        # ✅ Convert react steps to serializable format
+        serializable_react_steps = []
+        if interaction.react_steps:
+            for step in interaction.react_steps:
+                serializable_react_steps.append(
+                    {
+                        "thought": step.thought,
+                        "action": step.action,
+                        "action_input": step.action_input,
+                        "observation": step.observation,
+                        "final_answer": step.final_answer,
+                    }
+                )
 
         return cls(
             thread_id=interaction.thread_id,
@@ -167,7 +204,8 @@ class ChatResponse(BaseModel):
             tools_used=interaction.tools_used,
             token_count=interaction.token_count,
             memory_context=interaction.memory_context,
-            intermediate_steps=interaction.intermediate_steps,
+            intermediate_steps=serializable_steps,
+            react_steps=serializable_react_steps,
         )
 
     class Config:

@@ -27,7 +27,7 @@ class EntityAPIClient:
         message: str,
         thread_id: str = "default",
         use_tools: bool = True,
-    ) -> AgentResult:  # ✅ Return type changed
+    ) -> AgentResult:
         """Send a chat message to the entity agent"""
         try:
             response = await self.session.post(
@@ -42,8 +42,25 @@ class EntityAPIClient:
             response.raise_for_status()
             data = response.json()
 
-            # ✅ Convert ChatResponse to AgentResult
+            # ✅ Convert ChatResponse to AgentResult with proper ReAct steps
             chat_response = ChatResponse(**data)
+
+            # Convert serialized react_steps back to ReActStep objects
+            react_steps = []
+            if chat_response.react_steps:
+                from src.shared.react_step import ReActStep
+
+                for step_data in chat_response.react_steps:
+                    react_steps.append(
+                        ReActStep(
+                            thought=step_data.get("thought", ""),
+                            action=step_data.get("action", ""),
+                            action_input=step_data.get("action_input", ""),
+                            observation=step_data.get("observation", ""),
+                            final_answer=step_data.get("final_answer", ""),
+                        )
+                    )
+
             return AgentResult(
                 thread_id=chat_response.thread_id,
                 timestamp=chat_response.timestamp,
@@ -54,7 +71,7 @@ class EntityAPIClient:
                 token_count=chat_response.token_count or 0,
                 memory_context=chat_response.memory_context or "",
                 intermediate_steps=chat_response.intermediate_steps or [],
-                react_steps=chat_response.react_steps or [],
+                react_steps=react_steps,
             )
 
         except httpx.HTTPStatusError as e:

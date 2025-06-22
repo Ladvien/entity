@@ -177,6 +177,38 @@ class ChatInterface:
             await self._save_conversation()
             return True
 
+        # ReAct step display commands
+        if command == "toggle steps":
+            current = self.config.get("show_react_steps", True)
+            self.config["show_react_steps"] = not current
+            status = "enabled" if not current else "disabled"
+            self.console.print(f"🔄 ReAct step display {status}")
+            return True
+
+        if command == "steps on":
+            self.config["show_react_steps"] = True
+            self.console.print("✅ ReAct step display enabled")
+            return True
+
+        if command == "steps off":
+            self.config["show_react_steps"] = False
+            self.console.print("⏸️ ReAct step display disabled")
+            return True
+
+        if command == "help":
+            await self._show_help()
+            return True
+
+        if command == "debug on":
+            self.config["debug_mode"] = True
+            self.console.print("🐛 Debug mode enabled")
+            return True
+
+        if command == "debug off":
+            self.config["debug_mode"] = False
+            self.console.print("✅ Debug mode disabled")
+            return True
+
         return False
 
     async def _process_message(self, message: str):
@@ -194,30 +226,44 @@ class ChatInterface:
                 message=message, thread_id=self.current_thread
             )
 
-            # Show context if memory was used
-            if (
-                self.config.get("highlight_memory_responses", True)
-                and agent_result.memory_context.strip()
-            ):
+            # ✅ DEBUG: Log what we got back
+            self.console.print(
+                f"[dim]🔍 Debug - React steps count: {len(agent_result.react_steps) if agent_result.react_steps else 0}[/dim]"
+            )
+            self.console.print(
+                f"[dim]🔍 Debug - Tools used: {agent_result.tools_used}[/dim]"
+            )
+            self.console.print(
+                f"[dim]🔍 Debug - Memory context length: {len(agent_result.memory_context)}[/dim]"
+            )
+
+            # Import the updated render function
+            from src.cli.render import (
+                render_agent_result,
+                render_agent_result_simple,
+                render_raw_debug,
+            )
+
+            # Check debug mode
+            debug_mode = self.config.get("debug_mode", False)
+
+            if debug_mode:
+                self.console.print("[bold red]🐛 DEBUG MODE ACTIVE[/bold red]")
+                render_raw_debug(agent_result)
+                return
+
+            # Check if user wants to see detailed steps
+            show_detailed_steps = self.config.get("show_react_steps", True)
+
+            # ✅ ALWAYS show detailed if we have react_steps, for debugging
+            if agent_result.react_steps and len(agent_result.react_steps) > 0:
                 self.console.print(
-                    f"[italic cyan]🤖 Using memory context...[/italic cyan]"
+                    "[dim]🎯 Using detailed render (react_steps found)[/dim]"
                 )
-
-            # Show agent response
-            self.console.print(f"[bold green]🤖 {agent_result.response}[/bold green]")
-
-            # Add metadata panel (tools, memory)
-            metadata_parts = []
-            if agent_result.tools_used:
-                metadata_parts.append(f"Tools: {', '.join(agent_result.tools_used)}")
-            if (
-                self.config.get("show_memory_usage", True)
-                and agent_result.memory_context.strip()
-            ):
-                metadata_parts.append("Memory: Used")
-
-            if metadata_parts:
-                self.console.print(f"[dim]   ({' | '.join(metadata_parts)})[/dim]")
+                render_agent_result(agent_result)
+            else:
+                self.console.print("[dim]⚠️ Using simple render (no react_steps)[/dim]")
+                render_agent_result_simple(agent_result)
 
             # Save to local history if enabled
             if self.config.get("save_locally", True):
@@ -225,9 +271,14 @@ class ChatInterface:
                     {
                         "timestamp": datetime.now().isoformat(),
                         "user_input": message,
-                        "agent_output": agent_result.response,
+                        "agent_output": agent_result.final_response,
                         "tools_used": agent_result.tools_used,
                         "memory_used": bool(agent_result.memory_context.strip()),
+                        "react_steps_count": (
+                            len(agent_result.react_steps)
+                            if agent_result.react_steps
+                            else 0
+                        ),
                     }
                 )
 
@@ -235,6 +286,15 @@ class ChatInterface:
 
         except Exception as e:
             self.console.print(f"❌ Failed to get response: {e}", style="red")
+            import traceback
+
+            self.console.print(f"[dim]{traceback.format_exc()}[/dim]")
+
+        except Exception as e:
+            self.console.print(f"❌ Failed to get response: {e}", style="red")
+            import traceback
+
+            self.console.print(f"[dim]{traceback.format_exc()}[/dim]")
 
     async def _show_history(self):
         """Display conversation history"""
@@ -408,3 +468,52 @@ class ChatInterface:
                 render_agent_result(result)
             except Exception as e:
                 self.console.print(f"[red]❌ Error: {e}[/red]")
+
+    async def _show_help(self):
+        """Display help information with all available commands"""
+        from rich.table import Table
+
+        commands_table = Table(title="Available Commands", show_header=True)
+        commands_table.add_column("Command", style="bold yellow", width=25)
+        commands_table.add_column("Description", style="white")
+
+        # Basic commands
+        commands_table.add_row("exit, quit", "Exit the chat interface")
+        commands_table.add_row("clear", "Clear the terminal screen")
+        commands_table.add_row("help", "Show this help message")
+        commands_table.add_row("save", "Save current conversation to file")
+
+        # History and memory commands
+        commands_table.add_row("history", "Show conversation history")
+        commands_table.add_row("memory search <query>", "Search vector memory")
+        commands_table.add_row("memory stats", "Show memory statistics")
+
+        # Thread management
+        commands_table.add_row("thread <id>", "Switch conversation thread")
+
+        # Tool commands
+        commands_table.add_row("tools", "List available tools")
+
+        # ReAct step display commands
+        commands_table.add_row("steps on", "Enable detailed ReAct step display")
+        commands_table.add_row("steps off", "Disable detailed ReAct step display")
+        commands_table.add_row("toggle steps", "Toggle ReAct step display on/off")
+
+        # Debug commands
+        commands_table.add_row("debug on", "Enable debug mode")
+        commands_table.add_row("debug off", "Disable debug mode")
+
+        self.console.print("\n", commands_table)
+
+        # Show current settings
+        current_thread = f"[cyan]{self.current_thread}[/cyan]"
+        steps_status = (
+            "enabled" if self.config.get("show_react_steps", True) else "disabled"
+        )
+        steps_color = "green" if self.config.get("show_react_steps", True) else "red"
+
+        self.console.print(f"\n📝 Current thread: {current_thread}")
+        self.console.print(
+            f"🔄 ReAct steps: [{steps_color}]{steps_status}[/{steps_color}]"
+        )
+        self.console.print("─" * 60 + "\n")

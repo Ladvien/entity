@@ -1,15 +1,16 @@
+# src/service/agent.py - CLEAN VERSION WITHOUT PROMPT BUILDER
+
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 import logging
 import re
-from dataclasses import dataclass
-from rich.text import Text
 from langchain.prompts import PromptTemplate
 from langchain.agents import AgentExecutor, create_react_agent
 from langchain_core.language_models.base import BaseLanguageModel
 
 from src.memory.memory_system import MemorySystem
 from src.service.config import EntityConfig
+from src.service.react_validator import ReActPromptValidator
 from src.shared.agent_result import AgentResult
 from src.tools.tools import ToolManager
 from src.adapters import OutputAdapterManager
@@ -37,38 +38,6 @@ class MemoryContextBuilder:
             return ""
 
 
-class PromptBuilder:
-    def __init__(self, config: EntityConfig, tool_manager: ToolManager):
-        self.config = config
-        self.tool_manager = tool_manager
-
-    def build_prompt_vars(self, message: str, memory_context: str) -> Dict[str, str]:
-        tools = self.tool_manager.get_all_tools()
-        prompt_vars = {
-            "input": message.strip(),
-            "agent_scratchpad": "",
-            "tools": "\n".join(f"{tool.name}: {tool.description}" for tool in tools),
-            "tool_names": ", ".join(tool.name for tool in tools),
-        }
-        if memory_context:
-            prompt_vars["memory_context"] = memory_context.strip()
-        return prompt_vars
-
-    def format_prompt(self, prompt_vars: Dict[str, str]) -> str:
-        missing_vars = set(self.config.prompts.variables) - set(prompt_vars)
-        if missing_vars:
-            logger.warning(f"⚠️ Missing prompt variables: {missing_vars}")
-        try:
-            return self.config.prompts.base_prompt.strip().format(**prompt_vars)
-        except KeyError as e:
-            logger.error(f"❌ Failed to render base prompt. Missing key: {e}")
-            return (
-                prompt_vars.get("memory_context", "")
-                + "\n\n"
-                + prompt_vars.get("input", "")
-            )
-
-
 class EntityAgent:
     def __init__(
         self,
@@ -85,28 +54,45 @@ class EntityAgent:
         self.output_adapter_manager = output_adapter_manager
         self.agent_executor: Optional[AgentExecutor] = None
         self.memory_builder = MemoryContextBuilder(memory_system)
-        self.prompt_builder = PromptBuilder(config, tool_manager)
 
     async def initialize(self):
         tools = self.tool_registry.get_all_tools()
+
+        # ✅ Validate the prompt from config
+        logger.info("🔍 Validating ReAct prompt from config...")
+        if not ReActPromptValidator.validate_prompt(self.config):
+            logger.error("❌ Prompt validation failed!")
+            suggestions = ReActPromptValidator.suggest_fixes(self.config)
+            for suggestion in suggestions:
+                logger.error(f"💡 Suggestion: {suggestion}")
+            raise ValueError(
+                "Invalid ReAct prompt configuration. Check logs for details."
+            )
+
+        # ✅ Use prompt directly from config
         prompt = PromptTemplate(
             input_variables=self.config.prompts.variables,
             template=self.config.prompts.base_prompt.strip(),
         )
-        logger.debug(
-            f"🛠️ Initializing agent with {len(tools)} tools and prompt: {prompt.template}"
-        )
+
+        logger.debug(f"🛠️ Initializing ReAct agent with {len(tools)} tools")
+        logger.info(f"🎯 Using ReAct agent (Ollama compatible)")
+
+        # ✅ Use create_react_agent for Ollama compatibility
         agent = create_react_agent(self.llm, tools, prompt)
+
+        # ✅ FIXED: Use supported early_stopping_method
         self.agent_executor = AgentExecutor(
             agent=agent,
             tools=tools,
             verbose=True,
             max_iterations=self.config.max_iterations,
             handle_parsing_errors=True,
-            return_intermediate_steps=True,
-            early_stopping_method="generate",
+            return_intermediate_steps=True,  # ✅ This is the key!
+            early_stopping_method="force",  # ✅ CHANGED from "generate" to "force"
         )
         logger.info(f"🪠 Available tools: {[tool.name for tool in tools]}")
+        logger.info(f"✅ ReAct agent executor initialized")
 
     async def chat(
         self, message: str, thread_id: str = "default", use_tools: bool = True
@@ -117,9 +103,26 @@ class EntityAgent:
         )
 
         memory_context = await self.memory_builder.build_context(message, thread_id)
-        enhanced_input = {
-            "input": f"{memory_context}\n\n{message}" if memory_context else message
+
+        # ✅ Build input variables based on what the config prompt expects
+        input_vars = {
+            "input": message,
+            "agent_scratchpad": "",  # This gets filled by the agent
         }
+
+        # Add tools information if expected by prompt
+        tools = self.tool_registry.get_all_tools()
+        if "tools" in self.config.prompts.variables:
+            input_vars["tools"] = "\n".join(
+                f"{tool.name}: {tool.description}" for tool in tools
+            )
+
+        if "tool_names" in self.config.prompts.variables:
+            input_vars["tool_names"] = ", ".join(tool.name for tool in tools)
+
+        # Add memory context if expected by prompt
+        if "memory_context" in self.config.prompts.variables:
+            input_vars["memory_context"] = memory_context if memory_context else ""
 
         raw_output, final_response, tools_used, token_count, intermediate_steps = (
             "",
@@ -130,29 +133,114 @@ class EntityAgent:
         )
 
         if use_tools and self.agent_executor:
-            logger.info("🤖 Running through agent executor with tools...")
-            result = await self.agent_executor.ainvoke(enhanced_input)
-            raw_output = (
-                result.get("output")
-                or result.get("response")
-                or result.get("text")
-                or str(result)
-            )
-            final_response = self.extract_final_answer(raw_output)
-            tools_used = self._extract_tools_used(result)
-            token_count = result.get("token_usage", {}).get("total_tokens", 0)
-            intermediate_steps = result.get("intermediate_steps", [])
+            logger.info("🤖 Running through ReAct agent executor with tools...")
+
+            try:
+                # ✅ CRITICAL: Make sure we're getting intermediate steps
+                result = await self.agent_executor.ainvoke(input_vars)
+
+                # Debug: Log what we actually get back
+                logger.debug(f"🔍 Agent result keys: {list(result.keys())}")
+                logger.debug(
+                    f"🔍 Intermediate steps type: {type(result.get('intermediate_steps', []))}"
+                )
+                logger.debug(
+                    f"🔍 Intermediate steps count: {len(result.get('intermediate_steps', []))}"
+                )
+
+                raw_output = (
+                    result.get("output")
+                    or result.get("response")
+                    or result.get("text")
+                    or str(result)
+                )
+                final_response = self.extract_final_answer(raw_output)
+                tools_used = self._extract_tools_used(result)
+                token_count = result.get("token_usage", {}).get("total_tokens", 0)
+                intermediate_steps = result.get("intermediate_steps", [])
+
+                # ✅ Debug log intermediate steps
+                if intermediate_steps:
+                    logger.info(f"🎯 Got {len(intermediate_steps)} intermediate steps")
+                    for i, step in enumerate(intermediate_steps):
+                        logger.debug(f"  Step {i}: {type(step)} - {step}")
+                else:
+                    logger.warning("⚠️ No intermediate steps found in agent result")
+
+            except ValueError as e:
+                if "early_stopping_method" in str(e):
+                    logger.error(f"❌ Agent configuration error: {e}")
+                    raw_output = f"Configuration Error: {str(e)}"
+                    final_response = "There's a configuration issue with my reasoning system. Let me respond directly."
+                    # Try direct response without agent
+                    try:
+                        formatted_prompt = self.config.prompts.base_prompt.format(
+                            **input_vars
+                        )
+                        direct_response = await self.llm.ainvoke(formatted_prompt)
+                        final_response = self.extract_final_answer(str(direct_response))
+                    except Exception as direct_e:
+                        logger.error(f"❌ Direct LLM also failed: {direct_e}")
+                        final_response = "Hey yourself. What do you want?"
+                else:
+                    logger.error(f"❌ Agent execution failed: {e}", exc_info=True)
+                    raw_output = f"Error: {str(e)}"
+                    final_response = (
+                        "I encountered an error while processing your request."
+                    )
+
+            except Exception as e:
+                logger.error(f"❌ Agent execution failed: {e}", exc_info=True)
+                raw_output = f"Error: {str(e)}"
+                final_response = "I encountered an error while processing your request."
+
         else:
-            prompt_vars = self.prompt_builder.build_prompt_vars(message, memory_context)
-            formatted_prompt = self.prompt_builder.format_prompt(prompt_vars)
-            raw_output = self.llm.invoke(formatted_prompt)
-            final_response = raw_output
+            logger.info("🤖 Running without tools (direct LLM)")
+            try:
+                # For direct LLM, just format the base prompt with available variables
+                formatted_prompt = self.config.prompts.base_prompt.format(**input_vars)
+                raw_output = await self.llm.ainvoke(formatted_prompt)
+                final_response = self.extract_final_answer(str(raw_output))
+            except Exception as e:
+                logger.error(f"❌ LLM invocation failed: {e}")
+                raw_output = f"Error: {str(e)}"
+                final_response = "I encountered an error while processing your request."
 
         if not final_response.strip():
             logger.error("❌ Empty response from LLM")
-            final_response = (
-                "I apologize, but I seem to be having trouble responding right now."
+            final_response = "Hey yourself. What do you want from me?"
+
+        # ✅ Extract ReAct steps - try multiple approaches
+        from src.shared.react_step import ReActStep
+
+        react_steps = []
+
+        # Method 1: Try to extract from proper intermediate steps
+        if intermediate_steps:
+            logger.info(
+                f"🔄 Extracting ReAct steps from {len(intermediate_steps)} intermediate steps"
             )
+            react_steps = ReActStep.extract_react_steps(intermediate_steps)
+
+        # Method 2: Fallback to parsing raw output if no proper steps
+        if not react_steps and raw_output:
+            logger.info("🔄 Fallback: Extracting ReAct steps from raw output")
+            react_steps = ReActStep.extract_from_raw_output(raw_output)
+
+        # Method 3: Emergency fallback - create a single step from the whole response
+        if not react_steps:
+            logger.warning("⚠️ Creating emergency fallback step")
+            react_steps = [
+                ReActStep(
+                    thought="Processing user request...",
+                    action="",
+                    action_input="",
+                    observation="",
+                    final_answer=final_response,
+                )
+            ]
+
+        logger.info(f"✅ Final ReAct steps count: {len(react_steps)}")
 
         return AgentResult(
             raw_input=message,
@@ -162,6 +250,7 @@ class EntityAgent:
             token_count=token_count,
             memory_context=memory_context,
             intermediate_steps=intermediate_steps,
+            react_steps=react_steps,
             thread_id=thread_id,
             timestamp=start_time,
         )
@@ -177,6 +266,10 @@ class EntityAgent:
         return tools
 
     def extract_final_answer(self, output: str) -> str:
+        # Handle both string and other types
+        if not isinstance(output, str):
+            output = str(output)
+
         match = re.search(
             r"Final Answer:\s*(.*)", output, flags=re.IGNORECASE | re.DOTALL
         )
