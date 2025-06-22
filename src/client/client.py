@@ -1,3 +1,5 @@
+# src/client/client.py - UPDATED VERSION WITH TTS SUPPORT
+
 import logging
 from typing import Dict, Any, List, Optional
 from datetime import datetime
@@ -11,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class EntityAPIClient:
-    """REST API client for Entity Agent Service (memory removed)"""
+    """REST API client for Entity Agent Service with TTS support"""
 
     def __init__(self, base_url: str, timeout: int = 30):
         self.base_url = base_url.rstrip("/")
@@ -28,7 +30,7 @@ class EntityAPIClient:
         thread_id: str = "default",
         use_tools: bool = True,
     ) -> AgentResult:
-        """Send a chat message to the entity agent"""
+        """Send a chat message to the entity agent with TTS support"""
         try:
             response = await self.session.post(
                 f"{self.base_url}/api/v1/chat",
@@ -42,7 +44,7 @@ class EntityAPIClient:
             response.raise_for_status()
             data = response.json()
 
-            # ✅ Convert ChatResponse to AgentResult with proper ReAct steps
+            # ✅ Convert ChatResponse to AgentResult with TTS data
             chat_response = ChatResponse(**data)
 
             # Convert serialized react_steps back to ReActStep objects
@@ -62,7 +64,8 @@ class EntityAPIClient:
                         )
                     )
 
-            return AgentResult(
+            # Create AgentResult with TTS metadata
+            agent_result = AgentResult(
                 thread_id=chat_response.thread_id,
                 timestamp=chat_response.timestamp,
                 raw_input=chat_response.raw_input,
@@ -75,16 +78,41 @@ class EntityAPIClient:
                 react_steps=react_steps,
             )
 
+            # 🎵 Add TTS metadata to AgentResult
+            if hasattr(chat_response, "tts_enabled") and chat_response.tts_enabled:
+                agent_result.tts_enabled = chat_response.tts_enabled
+                agent_result.audio_file_id = getattr(
+                    chat_response, "audio_file_id", None
+                )
+                agent_result.audio_duration = getattr(
+                    chat_response, "audio_duration", None
+                )
+                agent_result.tts_voice = getattr(chat_response, "tts_voice", None)
+                agent_result.tts_settings = getattr(chat_response, "tts_settings", {})
+
+                # Also add to metadata for compatibility
+                if not hasattr(agent_result, "metadata"):
+                    agent_result.metadata = {}
+
+                agent_result.metadata.update(
+                    {
+                        "tts_enabled": chat_response.tts_enabled,
+                        "audio_file_id": agent_result.audio_file_id,
+                        "audio_duration": agent_result.audio_duration,
+                        "tts_voice": agent_result.tts_voice,
+                        "tts_settings": agent_result.tts_settings,
+                    }
+                )
+
+            return agent_result
+
         except httpx.HTTPStatusError as e:
-            print(f"DEBUG: HTTP error: {e}, Response: {e.response.text}")
-            logger.error(f"HTTP error: {e}")
+            logger.error(f"HTTP error: {e}, Response: {e.response.text}")
             raise
         except httpx.TimeoutException as e:
-            print(f"DEBUG: Timeout error: {e}")
             logger.error(f"Timeout error: {e}")
             raise
         except Exception as e:
-            print(f"DEBUG: Other error: {e}")
             logger.error(f"Chat request failed: {e}")
             raise
 
@@ -152,6 +180,43 @@ class EntityAPIClient:
         except Exception as e:
             logger.error(f"Failed to get memory stats: {e}")
             return {"status": "error", "message": str(e)}
+
+    async def download_audio(
+        self, audio_file_id: str, save_path: str = None
+    ) -> Optional[str]:
+        """Download audio file from TTS server"""
+        try:
+            # Try the main server first
+            response = await self.session.get(
+                f"{self.base_url}/api/v1/audio/{audio_file_id}"
+            )
+
+            if response.status_code == 404:
+                # Try the TTS server directly (fallback)
+                tts_server_url = (
+                    "http://192.168.1.110:8888"  # This should come from config
+                )
+                response = await self.session.get(
+                    f"{tts_server_url}/audio/{audio_file_id}"
+                )
+
+            response.raise_for_status()
+
+            if save_path is None:
+                save_path = f"./downloaded_audio/{audio_file_id}.wav"
+
+            # Ensure directory exists
+            Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+
+            with open(save_path, "wb") as f:
+                f.write(response.content)
+
+            logger.info(f"📥 Downloaded audio: {save_path}")
+            return save_path
+
+        except Exception as e:
+            logger.error(f"Failed to download audio: {e}")
+            return None
 
     async def close(self):
         await self.session.aclose()

@@ -104,7 +104,7 @@ class TTSOutputAdapter:
                 logger.warning("No speech-worthy content after cleaning")
                 return None
 
-            # Prepare TTS request
+            # Prepare TTS request payload
             tts_request = {
                 "text": clean_text,
                 "voice_name": self.config.voice_name,
@@ -116,7 +116,7 @@ class TTSOutputAdapter:
 
             logger.debug(f"🎙️ TTS Request: {tts_request}")
 
-            # Call TTS API
+            # Make the API call to your speech server
             response = await self.client.post(
                 f"{self.config.base_url}/synthesize",
                 json=tts_request,
@@ -128,32 +128,61 @@ class TTSOutputAdapter:
             content_type = response.headers.get("content-type", "")
 
             if content_type.startswith("application/json"):
+                # Server returned JSON response with file info
                 result = response.json()
                 logger.info(f"✅ TTS synthesis successful: {result}")
                 return result
 
             elif content_type.startswith("audio/"):
-                logger.info("✅ TTS synthesis successful (audio response)")
+                # Server returned audio data directly
+                audio_file_id = (
+                    f"direct_{thread_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                )
+
+                # Save audio data locally
+                audio_file_path = (
+                    self.audio_dir / f"{audio_file_id}.{self.config.output_format}"
+                )
+                with open(audio_file_path, "wb") as f:
+                    f.write(response.content)
+
+                logger.info(f"✅ TTS synthesis successful, saved to: {audio_file_path}")
                 return {
-                    "audio_file_id": f"direct_{thread_id}",
+                    "audio_file_id": audio_file_id,
                     "duration": None,
-                    "raw_audio": response.content,
+                    "local_path": str(audio_file_path),
+                    "content_type": content_type,
                 }
 
             else:
                 logger.warning(
                     f"⚠️ Unexpected content type from TTS server: {content_type}"
                 )
+                # Try to save it anyway
+                audio_file_id = (
+                    f"unknown_{thread_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                )
+                audio_file_path = (
+                    self.audio_dir / f"{audio_file_id}.{self.config.output_format}"
+                )
+
+                with open(audio_file_path, "wb") as f:
+                    f.write(response.content)
+
                 return {
-                    "audio_file_id": f"direct_{thread_id}",
+                    "audio_file_id": audio_file_id,
                     "duration": None,
-                    "raw_audio": response.content,
+                    "local_path": str(audio_file_path),
+                    "content_type": content_type,
                 }
 
         except httpx.HTTPStatusError as e:
             logger.error(
                 f"❌ TTS API error {e.response.status_code}: {e.response.text}"
             )
+            return None
+        except httpx.ConnectError as e:
+            logger.error(f"❌ TTS server connection failed: {e}")
             return None
         except Exception as e:
             logger.exception(f"❌ TTS synthesis failed: {e}")
@@ -244,6 +273,7 @@ class TTSOutputAdapter:
     async def test_connection(self) -> bool:
         """Test connection to TTS server"""
         try:
+            # Try health endpoint first
             response = await self.client.get(f"{self.config.base_url}/health")
             response.raise_for_status()
             health_data = response.json()
@@ -253,6 +283,16 @@ class TTSOutputAdapter:
 
         except Exception as e:
             logger.error(f"❌ TTS Server connection failed: {e}")
+
+            # Try a simple synthesis test as fallback
+            try:
+                test_result = await self._synthesize_speech("Test connection", "test")
+                if test_result:
+                    logger.info("✅ TTS Server connection test passed via synthesis")
+                    return True
+            except Exception as synthesis_e:
+                logger.error(f"❌ TTS synthesis test also failed: {synthesis_e}")
+
             return False
 
     async def list_available_voices(self) -> list:
@@ -295,10 +335,12 @@ class TTSResponse:
         audio_file_id: str,
         duration: Optional[float] = None,
         tts_adapter: Optional[TTSOutputAdapter] = None,
+        local_path: Optional[str] = None,
     ):
         self.audio_file_id = audio_file_id
         self.duration = duration
         self.tts_adapter = tts_adapter
+        self.local_path = local_path
 
     async def get_url(self) -> str:
         """Get URL to access the audio"""
@@ -313,4 +355,4 @@ class TTSResponse:
         return None
 
     def __repr__(self):
-        return f"TTSResponse(audio_file_id='{self.audio_file_id}', duration={self.duration})"
+        return f"TTSResponse(audio_file_id='{self.audio_file_id}', duration={self.duration}, local_path='{self.local_path}')"

@@ -1,11 +1,11 @@
-# src/shared/utils.py - FIXED VERSION
+# src/shared/utils.py - UPDATED VERSION with TTS metadata handling
 
-from src.shared.models import ChatResponse
+from src.shared.models import ChatResponse, ChatInteraction
 from src.shared.agent_result import AgentResult
 
 
 def agent_result_to_response(result: AgentResult) -> ChatResponse:
-    """Convert AgentResult to ChatResponse with proper serialization"""
+    """Convert AgentResult to ChatResponse with proper serialization including TTS metadata"""
 
     # ✅ Convert intermediate steps to serializable format
     serializable_steps = []
@@ -41,6 +41,10 @@ def agent_result_to_response(result: AgentResult) -> ChatResponse:
                 }
             )
 
+    # 🎵 NEW: Extract TTS metadata from interaction if available
+    # This is a bit of a hack, but we need to get the TTS metadata from somewhere
+    # The issue is that agent_result_to_response doesn't have access to the processed interaction
+
     return ChatResponse(
         thread_id=result.thread_id,
         timestamp=result.timestamp,
@@ -53,3 +57,37 @@ def agent_result_to_response(result: AgentResult) -> ChatResponse:
         intermediate_steps=serializable_steps,
         react_steps=serializable_react_steps,
     )
+
+
+def interaction_to_response(interaction: ChatInteraction) -> ChatResponse:
+    """Convert ChatInteraction to ChatResponse - NEW FUNCTION with TTS metadata"""
+
+    # Convert react steps if they exist in metadata
+    react_steps = []
+    if "react_steps" in interaction.metadata:
+        react_steps = interaction.metadata["react_steps"]
+
+    # Create base response
+    response = ChatResponse(
+        thread_id=interaction.thread_id,
+        timestamp=interaction.timestamp,
+        raw_input=interaction.raw_input,
+        raw_output=interaction.raw_output,
+        response=interaction.response,
+        tools_used=interaction.tools_used,
+        token_count=interaction.token_count,
+        memory_context=interaction.memory_context,
+        intermediate_steps=[],  # We could add these if needed
+        react_steps=react_steps,
+    )
+
+    # 🎵 ADD TTS METADATA to the response
+    if interaction.metadata.get("tts_enabled"):
+        # Add TTS fields directly to the response
+        response.tts_enabled = interaction.metadata.get("tts_enabled", False)
+        response.audio_file_id = interaction.metadata.get("audio_file_id")
+        response.audio_duration = interaction.metadata.get("audio_duration")
+        response.tts_voice = interaction.metadata.get("tts_voice")
+        response.tts_settings = interaction.metadata.get("tts_settings", {})
+
+    return response

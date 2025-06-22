@@ -1,4 +1,4 @@
-# config.yml - CONSOLIDATED VERSION (Phase 1)
+# config/config.yml - Updated with proper TTS adapter configuration
 
 config_version: "2.0"
 debug: true
@@ -23,16 +23,16 @@ ollama:
   top_k: 40
   repeat_penalty: 1.1
 
-# 🔥 CONSOLIDATED: tts + audio settings combined
+# 🔥 TTS Configuration for speech server integration
 tts:
-  base_url: "http://192.168.1.110:8888"
+  base_url: "http://192.168.1.110:8888" # Your speech server URL
   voice_name: "bf_emma"
   voice_sample_path: "voice_samples/ai_mee.wav"
   output_format: "wav"
   speed: 0.3
   cfg_weight: 0.9
   exaggeration: 0.5
-  # ✅ Audio settings moved here from separate section
+  # Audio settings
   sample_rates: [44100, 48000, 22050, 16000, 8000]
   fade_out_samples: 2000
 
@@ -52,7 +52,7 @@ entity:
   entity_id: "jade"
   max_iterations: 20
 
-  # ✅ Personality settings moved here (no separate personality section)
+  # Personality settings
   name: "Jade"
   sarcasm_level: 0.8
   loyalty_level: 0.6
@@ -60,9 +60,6 @@ entity:
   wit_level: 0.9
   response_brevity: 0.7
   memory_influence: 0.8
-
-  # You have the following variables automatically injected:
-  # - step_count: the current step count in the conversation
 
   prompts:
     base_prompt: |
@@ -101,7 +98,9 @@ entity:
       - Action Input goes on the next line with your description
       - Never add descriptions or parentheses to the Action line
       - Use exactly these tool names: memory_search, deep_memory_search, store_memory, fun_fact
-      - If you each 15 steps, summarize the conversation so far and give final answer
+      - If you reach 15 steps, summarize the thoughts so far and give final answer
+
+      Step count #: {step_count}
 
       If you don't need a tool, skip directly to Final Answer.
 
@@ -116,6 +115,7 @@ entity:
       - tools
       - tool_names
       - memory_context
+      - step_count
 
 server:
   host: "0.0.0.0"
@@ -131,19 +131,9 @@ logging:
   max_file_size: 10485760
   backup_count: 5
 
-# Tool Usage Limits:
-# - max_total_tool_uses: Total tool calls allowed across ALL tools in one conversation
-# - max_uses: Individual limit per tool type in one conversation
-#
-# Example: With max_total_tool_uses=5 and memory_search max_uses=2:
-#   - memory_search can be used at most 2 times
-#   - All tools combined can be used at most 5 times total
-#   - Agent stops when EITHER limit is reached first
-#
-# Limits reset at the start of each new conversation
 tools:
   plugin_path: "./plugins_user/plugins"
-  max_total_tool_uses: 5 # Global budget for all tools combined per conversation
+  max_total_tool_uses: 5
   enabled:
     - name: memory_search
       max_uses: 2
@@ -152,9 +142,10 @@ tools:
     - name: fun_fact
       max_uses: 1
 
+# 🎙️ ADAPTERS CONFIGURATION - This is where TTS gets enabled
 adapters:
   - type: tts
     enabled: true
     settings:
-      voice_name: "bf_emma"
-      speed: 0.3
+      voice_name: "bf_emma" # Override if needed
+      speed: 0.3 # Override if needed

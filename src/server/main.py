@@ -1,4 +1,4 @@
-# Updated src/service/app.py - Add ReAct validation on startup
+# src/server/main.py
 
 import logging
 from pathlib import Path
@@ -19,7 +19,7 @@ from src.db.connection import (
 from src.memory.memory_system import MemorySystem
 from src.adapters import create_adapters
 from src.core.registry import ServiceRegistry
-from src.service.react_validator import ReActPromptValidator  # NEW IMPORT
+from src.service.react_validator import ReActPromptValidator
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ async def lifespan(app: FastAPI):
     setup_logging(config)
     ServiceRegistry.register("config", config)
 
-    # 🔍 NEW: Validate ReAct prompt on startup
+    # Validate ReAct prompt on startup
     logger.info("🔍 Validating ReAct prompt configuration...")
     validation_passed = ReActPromptValidator.validate_on_startup(config.entity)
 
@@ -75,11 +75,13 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("✅ ReAct prompt validation passed!")
 
+    # Initialize database
     logger.info("🔗 Initializing global database connection...")
     logger.debug(f"Database config: {config.database}")
     db = await initialize_global_db_connection(config.database)
     ServiceRegistry.register("db", db)
 
+    # Initialize memory system
     memory_system = MemorySystem(
         memory_config=config.memory,
         database_config=config.database,
@@ -87,6 +89,7 @@ async def lifespan(app: FastAPI):
     await memory_system.initialize()
     ServiceRegistry.register("memory", memory_system)
 
+    # Initialize tool manager
     tool_manager = ToolManager(config.tools)
     tool_manager.load_plugins_from_config(config.tools.plugin_path)
 
@@ -95,6 +98,7 @@ async def lifespan(app: FastAPI):
 
     ServiceRegistry.register("tools", tool_manager)
 
+    # Initialize LLM
     llm = OllamaLLM(
         base_url=config.ollama.base_url,
         model=config.ollama.model,
@@ -105,12 +109,40 @@ async def lifespan(app: FastAPI):
         base_template=config.entity.prompts.base_prompt.strip(),
     )
 
+    # Initialize output adapters BEFORE creating the agent
+    logger.info("🔌 Initializing output adapters...")
+    output_adapter_manager = create_adapters(config)
+    ServiceRegistry.register("output_adapters", output_adapter_manager)
+
+    # Test TTS adapter connection if enabled
+    if output_adapter_manager.adapters:
+        for adapter in output_adapter_manager.adapters:
+            if hasattr(adapter, "test_connection"):
+                try:
+                    logger.info(
+                        f"🔍 Testing {adapter.__class__.__name__} connection..."
+                    )
+                    connection_ok = await adapter.test_connection()
+                    if connection_ok:
+                        logger.info(
+                            f"✅ {adapter.__class__.__name__} connection successful"
+                        )
+                    else:
+                        logger.warning(
+                            f"⚠️ {adapter.__class__.__name__} connection failed"
+                        )
+                except Exception as e:
+                    logger.warning(
+                        f"⚠️ {adapter.__class__.__name__} connection test error: {e}"
+                    )
+
+    # Initialize agent with adapters
     agent = EntityAgent(
         config=config.entity,
         tool_manager=tool_manager,
         llm=llm,
         memory_system=memory_system,
-        output_adapter_manager=create_adapters(config),
+        output_adapter_manager=output_adapter_manager,
     )
 
     # Initialize the agent
@@ -122,16 +154,34 @@ async def lifespan(app: FastAPI):
     router = EntityRouterFactory(agent, tool_manager, memory_system).get_router()
     app.include_router(router, prefix="/api/v1")
 
+    # Mark registry as fully initialized
+    ServiceRegistry.mark_initialized()
+
+    logger.info("🚀 Entity Agent Service fully initialized and ready!")
+
     yield  # App is now live
 
+    # Cleanup on shutdown
+    logger.info("🛑 Shutting down Entity Agent Service...")
+
+    # Close output adapters first
+    if output_adapter_manager:
+        await output_adapter_manager.close_all()
+
+    # Close database connection
     await close_global_db_connection()
+
+    # Shutdown service registry
+    await ServiceRegistry.shutdown()
+
+    logger.info("✅ Entity Agent Service shutdown complete")
 
 
 def create_app() -> FastAPI:
     app = FastAPI(
         title="Entity Agent Service",
         version="2.0.0",
-        description="LLM-powered character agent framework",
+        description="LLM-powered character agent framework with TTS support",
         lifespan=lifespan,
     )
 

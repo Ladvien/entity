@@ -1,3 +1,5 @@
+# src/server/routes/routes.py - UPDATED with proper TTS metadata handling
+
 from fastapi import APIRouter, HTTPException, Query
 from typing import Optional
 from datetime import datetime
@@ -10,9 +12,9 @@ from src.shared.models import (
     ChatResponse,
     ToolExecutionRequest,
     ToolExecutionResponse,
+    ChatInteraction,
 )
 from src.core.registry import ServiceRegistry
-from src.shared.utils import agent_result_to_response
 
 
 class EntityRouterFactory:
@@ -32,12 +34,76 @@ class EntityRouterFactory:
         @router.post("/chat", response_model=ChatResponse, tags=["chat"])
         async def chat(request: ChatRequest):
             try:
-                interaction = await self.agent.chat(
+                # Get the agent result
+                agent_result = await self.agent.chat(
                     message=request.message,
                     thread_id=request.thread_id,
                     use_tools=request.use_tools,
                 )
-                return agent_result_to_response(interaction)
+
+                # 🎵 NEW: Create ChatInteraction and process through adapters
+                interaction = ChatInteraction(
+                    thread_id=request.thread_id,
+                    timestamp=agent_result.timestamp,
+                    raw_input=request.message,
+                    raw_output=agent_result.raw_output,
+                    response=agent_result.final_response,
+                    tools_used=agent_result.tools_used,
+                    memory_context_used=bool(agent_result.memory_context.strip()),
+                    memory_context=agent_result.memory_context,
+                    use_tools=request.use_tools,
+                    use_memory=request.use_memory,
+                    token_count=agent_result.token_count,
+                    response_time_ms=0,  # Will be calculated
+                )
+
+                # Add react steps to metadata for the response
+                if agent_result.react_steps:
+                    interaction.metadata["react_steps"] = [
+                        {
+                            "thought": step.thought,
+                            "action": step.action,
+                            "action_input": step.action_input,
+                            "observation": step.observation,
+                            "final_answer": step.final_answer,
+                        }
+                        for step in agent_result.react_steps
+                    ]
+
+                # 🎵 Process through output adapters (including TTS)
+                if self.agent.output_adapter_manager:
+                    try:
+                        interaction = (
+                            await self.agent.output_adapter_manager.process_interaction(
+                                interaction
+                            )
+                        )
+                    except Exception as e:
+                        print(f"❌ Adapter processing failed: {e}")
+                        # Continue anyway - adapters are not critical
+
+                # 🎵 Create response with TTS metadata
+                response = ChatResponse(
+                    thread_id=interaction.thread_id,
+                    timestamp=interaction.timestamp,
+                    raw_input=interaction.raw_input,
+                    raw_output=interaction.raw_output,
+                    response=interaction.response,
+                    tools_used=interaction.tools_used,
+                    token_count=interaction.token_count,
+                    memory_context=interaction.memory_context,
+                    intermediate_steps=[],  # Could add from agent_result if needed
+                    react_steps=interaction.metadata.get("react_steps", []),
+                    # 🎵 Include TTS metadata
+                    tts_enabled=interaction.metadata.get("tts_enabled", False),
+                    audio_file_id=interaction.metadata.get("audio_file_id"),
+                    audio_duration=interaction.metadata.get("audio_duration"),
+                    tts_voice=interaction.metadata.get("tts_voice"),
+                    tts_settings=interaction.metadata.get("tts_settings"),
+                )
+
+                return response
+
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 
@@ -61,6 +127,9 @@ class EntityRouterFactory:
                                 "response_time_ms": i.response_time_ms,
                                 "personality_applied": i.agent_personality_applied,
                                 "conversation_turn": i.conversation_turn,
+                                # Include TTS metadata if available
+                                "tts_enabled": i.metadata.get("tts_enabled", False),
+                                "audio_file_id": i.metadata.get("audio_file_id"),
                             },
                         }
                         for i in interactions
@@ -148,9 +217,11 @@ class EntityRouterFactory:
                 "features": {
                     "postgresql": ServiceRegistry.has("db_connection"),
                     "tools": ServiceRegistry.has("tool_manager"),
-                    "adapters": ServiceRegistry.has("output_adapter_manager"),
+                    "adapters": ServiceRegistry.has("output_adapter_manager")
+                    or ServiceRegistry.has("output_adapters"),
                     "chat_interactions": True,
                     "service_registry": True,
+                    "tts_enabled": bool(ServiceRegistry.try_get("output_adapters")),
                 },
             }
 

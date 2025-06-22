@@ -1,4 +1,4 @@
-# src/service/agent.py - CLEAN VERSION WITHOUT PROMPT BUILDER
+# src/server/routes/agent.py - UPDATED WITH OUTPUT ADAPTER INTEGRATION
 
 from typing import Optional, Dict, Any, List
 from datetime import datetime
@@ -13,6 +13,7 @@ from src.plugins.registry import ToolManager
 from src.core.config import EntityConfig
 from src.service.react_validator import ReActPromptValidator
 from src.shared.agent_result import AgentResult
+from src.shared.models import ChatInteraction
 from src.adapters import OutputAdapterManager
 
 logger = logging.getLogger(__name__)
@@ -58,7 +59,7 @@ class EntityAgent:
     async def initialize(self):
         tools = self.tool_registry.get_all_tools()
 
-        # ✅ Validate the prompt from config
+        # Validate the prompt from config
         logger.info("🔍 Validating ReAct prompt from config...")
         if not ReActPromptValidator.validate_prompt(self.config):
             logger.error("❌ Prompt validation failed!")
@@ -69,7 +70,7 @@ class EntityAgent:
                 "Invalid ReAct prompt configuration. Check logs for details."
             )
 
-        # ✅ Use prompt directly from config
+        # Use prompt directly from config
         prompt = PromptTemplate(
             input_variables=self.config.prompts.variables,
             template=self.config.prompts.base_prompt.strip(),
@@ -93,6 +94,16 @@ class EntityAgent:
 
         logger.info(f"🪠 Available tools: {[tool.name for tool in tools]}")
         logger.info(f"✅ ReAct agent executor initialized")
+
+        # Log output adapter status
+        if self.output_adapter_manager and self.output_adapter_manager.adapters:
+            adapter_names = [
+                adapter.__class__.__name__
+                for adapter in self.output_adapter_manager.adapters
+            ]
+            logger.info(f"🔌 Output adapters enabled: {', '.join(adapter_names)}")
+        else:
+            logger.info("🔌 No output adapters configured")
 
     def _create_callback_manager(self):
         """Create callback manager to handle tool usage limits"""
@@ -132,7 +143,7 @@ class EntityAgent:
 
         memory_context = await self.memory_builder.build_context(message, thread_id)
 
-        # ✅ Build input variables based on what the config prompt expects
+        # Build input variables based on what the config prompt expects
         input_vars = {
             "input": message,
             "agent_scratchpad": "",  # This gets filled by the agent
@@ -187,11 +198,8 @@ class EntityAgent:
                 token_count = result.get("token_usage", {}).get("total_tokens", 0)
                 intermediate_steps = result.get("intermediate_steps", [])
 
-                # ✅ Debug log intermediate steps
                 if intermediate_steps:
                     logger.info(f"🎯 Got {len(intermediate_steps)} intermediate steps")
-                    for i, step in enumerate(intermediate_steps):
-                        logger.debug(f"  Step {i}: {type(step)} - {step}")
                 else:
                     logger.warning("⚠️ No intermediate steps found in agent result")
 
@@ -238,7 +246,7 @@ class EntityAgent:
             logger.error("❌ Empty response from LLM")
             final_response = "Hey yourself. What do you want from me?"
 
-        # ✅ Extract ReAct steps - try multiple approaches
+        # Extract ReAct steps
         from src.shared.react_step import ReActStep
 
         react_steps = []
@@ -270,7 +278,8 @@ class EntityAgent:
 
         logger.info(f"✅ Final ReAct steps count: {len(react_steps)}")
 
-        return AgentResult(
+        # Create the AgentResult
+        agent_result = AgentResult(
             raw_input=message,
             raw_output=raw_output,
             final_response=final_response,
@@ -282,6 +291,54 @@ class EntityAgent:
             thread_id=thread_id,
             timestamp=start_time,
         )
+
+        # Create ChatInteraction for storage and adapter processing
+        interaction = ChatInteraction(
+            thread_id=thread_id,
+            timestamp=start_time,
+            raw_input=message,
+            raw_output=raw_output,
+            response=final_response,
+            tools_used=tools_used,
+            memory_context_used=bool(memory_context.strip()),
+            memory_context=memory_context,
+            use_tools=use_tools,
+            use_memory=True,
+            token_count=token_count,
+            response_time_ms=(datetime.utcnow() - start_time).total_seconds() * 1000,
+        )
+
+        # Process through output adapters (including TTS)
+        if self.output_adapter_manager:
+            try:
+                logger.info("🔌 Processing through output adapters...")
+                processed_interaction = (
+                    await self.output_adapter_manager.process_interaction(interaction)
+                )
+
+                # Update agent result with any adapter-added metadata
+                if processed_interaction.metadata:
+                    logger.info(
+                        f"🔌 Adapter metadata: {list(processed_interaction.metadata.keys())}"
+                    )
+
+                    # Add TTS metadata to agent result if present
+                    if processed_interaction.metadata.get("tts_enabled"):
+                        logger.info("🎵 TTS audio generated successfully")
+                        # You could add audio metadata to the agent result here if needed
+
+            except Exception as e:
+                logger.error(f"❌ Output adapter processing failed: {e}")
+                # Continue anyway - adapters are not critical for basic functionality
+
+        # Save to memory system
+        try:
+            await self.memory_system.save_interaction(interaction)
+            logger.debug("💾 Interaction saved to memory")
+        except Exception as e:
+            logger.error(f"❌ Failed to save interaction to memory: {e}")
+
+        return agent_result
 
     def _extract_tools_used(self, result: Dict[str, Any]) -> List[str]:
         tools = []
@@ -304,4 +361,7 @@ class EntityAgent:
         return match.group(1).strip() if match else output.strip()
 
     async def cleanup(self):
+        # Close output adapters if we own them
+        if self.output_adapter_manager:
+            await self.output_adapter_manager.close_all()
         logger.info("🧹 Agent cleanup completed")

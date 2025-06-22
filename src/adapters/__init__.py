@@ -81,15 +81,53 @@ class OutputAdapterManager:
         logger.info("⏸️ Output adapters disabled")
 
 
-# In src/adapters/__init__.py
 def create_adapters(config: EntityServerConfig) -> OutputAdapterManager:
+    """Create and configure output adapters based on config"""
     manager = OutputAdapterManager()
 
+    # Process each adapter configuration
     for adapter_cfg in config.adapters:
-        if adapter_cfg.type == "tts" and adapter_cfg.enabled:
-            # Create TTSConfig from the main config, not adapter settings
-            tts_adapter = TTSOutputAdapter(
-                tts_config=config.tts,  # Use the main TTS config
-                enabled=adapter_cfg.enabled,
-            )
-            manager.add_adapter(tts_adapter)
+        try:
+            if adapter_cfg.type == "tts" and adapter_cfg.enabled:
+                logger.info("🎙️ Creating TTS output adapter...")
+
+                # Test TTS server connection first
+                tts_adapter = TTSOutputAdapter(
+                    tts_config=config.tts,
+                    enabled=adapter_cfg.enabled,
+                )
+
+                # Add async connection test
+                import asyncio
+
+                try:
+                    # Test connection during initialization
+                    connection_test = asyncio.create_task(tts_adapter.test_connection())
+                    # Don't await here to avoid blocking startup, but log intent
+                    logger.info("🔍 TTS connection test scheduled")
+                except Exception as e:
+                    logger.warning(f"⚠️ Could not schedule TTS connection test: {e}")
+
+                manager.add_adapter(tts_adapter)
+
+            elif adapter_cfg.type == "webhook" and adapter_cfg.enabled:
+                logger.info("🔗 Webhook adapter not implemented yet")
+                # TODO: Implement webhook adapter
+
+            elif adapter_cfg.type == "translation" and adapter_cfg.enabled:
+                logger.info("🌍 Translation adapter not implemented yet")
+                # TODO: Implement translation adapter
+
+            elif adapter_cfg.type == "audio" and adapter_cfg.enabled:
+                logger.info("🔊 Audio adapter not implemented yet")
+                # TODO: Implement audio processing adapter
+
+            else:
+                logger.warning(f"⚠️ Unknown adapter type: {adapter_cfg.type}")
+
+        except Exception as e:
+            logger.error(f"❌ Failed to create {adapter_cfg.type} adapter: {e}")
+            continue
+
+    logger.info(f"✅ Created {len(manager.adapters)} output adapters")
+    return manager

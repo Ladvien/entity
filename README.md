@@ -13,6 +13,12 @@ The Entity Framework is a developer-friendly platform for building multimodal, i
 - ✅ Unified memory (chat + vector embeddings)
 - ✅ Input/output adapter support (e.g., TTS, SST)
 
+## Features
+- [x] React Template
+- [x] React template validation
+- [X] Plugin system for custom tools
+- [X] MemoryTool for unified memory access
+
 ---
 
 ## 🗂️ Project Structure
