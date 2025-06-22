@@ -10,7 +10,6 @@ from sqlalchemy import text
 import logging
 import asyncio
 from sqlalchemy import create_engine
-
 from src.service.config import DatabaseConfig
 
 logger = logging.getLogger(__name__)
@@ -175,16 +174,6 @@ class DatabaseConnection:
             for command in commands:
                 await conn.execute(text(command))
 
-    def get_pgvector_config(self) -> Dict[str, Any]:
-        return {
-            "connection": self.async_connection_url,
-            "async_mode": True,
-            "create_extension": False,
-            "use_jsonb": True,
-            "pre_delete_collection": False,
-            "collection_name": "entity_memory",  # This is the actual collection name
-        }
-
     async def close(self):
         if self._engine:
             await self._engine.dispose()
@@ -226,3 +215,21 @@ async def initialize_global_db_connection(config: DatabaseConfig) -> DatabaseCon
 
     set_global_db_connection(db_connection)
     return db_connection
+
+
+_global_async_engine: AsyncEngine = None
+
+
+def get_global_async_engine() -> AsyncEngine:
+    return _global_async_engine
+
+
+def set_global_async_engine(engine: AsyncEngine):
+    global _global_async_engine
+    _global_async_engine = engine
+
+
+async def close_global_db_connection():
+    db = get_global_db_connection()
+    if db is not None:
+        await db.close()

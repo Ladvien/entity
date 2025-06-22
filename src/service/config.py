@@ -2,12 +2,27 @@
 """
 Unified configuration system matching your exact YAML structure
 """
-from typing import Dict, Any, Optional, List
-from pydantic import BaseModel, Field
+from typing import Annotated, Dict, Any, Optional, List, Literal, Union
+from pydantic import BaseModel, Field, model_validator, root_validator
 import yaml
 import os
 import re
 from pathlib import Path
+
+
+class TTSAdapterConfig(BaseModel):
+    type: Literal["tts"]
+    enabled: bool
+
+
+class TranslationAdapterConfig(BaseModel):
+    type: Literal["translation"]
+    enabled: bool
+
+
+AdapterConfig = Annotated[
+    Union[TTSAdapterConfig, TranslationAdapterConfig], Field(discriminator="type")
+]
 
 
 class ToolConfig(BaseModel):
@@ -128,6 +143,13 @@ class UnifiedConfig(BaseModel):
     storage: "StorageConfig"
     logging: LoggingConfig
     tools: ToolConfig
+    output_adapters: List[AdapterConfig] = []
+
+    @model_validator(mode="after")
+    def check_enabled_adapters(self) -> "UnifiedConfig":
+        if not any(adapter.enabled for adapter in self.output_adapters):
+            raise ValueError("At least one output adapter must be enabled")
+        return self
 
     class Config:
         # Allow use of both attribute and dictionary access

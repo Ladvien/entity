@@ -13,7 +13,7 @@ database:
 
 ollama:
   base_url: "http://192.168.1.110:11434"
-  model: "llama3.1:8b-instruct-q6_K"
+  model: llama3.1:8b-instruct-q6_K
   temperature: 0.7
   top_p: 0.9
   top_k: 40
@@ -129,7 +129,7 @@ storage:
   init_on_startup: true
 
 logging:
-  level: "WARN"
+  level: "DEBUG"
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
   file_enabled: true
   file_path: "logs/entity.log"
@@ -144,3 +144,9 @@ tools:
     - store_memory
     # - search_memories
     # - memory_store
+
+output_adapters:
+  - type: tts
+    enabled: true
+  - type: translation
+    enabled: false

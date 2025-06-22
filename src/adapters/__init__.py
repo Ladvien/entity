@@ -4,6 +4,7 @@ from typing import List, Dict, Any, Optional
 from abc import ABC, abstractmethod
 import logging
 
+from src.service.config import UnifiedConfig
 from src.shared.models import ChatInteraction
 
 logger = logging.getLogger(__name__)
@@ -79,35 +80,26 @@ class OutputAdapterManager:
         logger.info("⏸️ Output adapters disabled")
 
 
-# Factory function to create adapters from config
-def create_output_adapters(config) -> OutputAdapterManager:
-    """Create and configure output adapters from config"""
+def create_output_adapters(config: UnifiedConfig) -> OutputAdapterManager:
     manager = OutputAdapterManager()
 
-    if not hasattr(config, "output_adapters"):
-        logger.info("No output adapters configured")
-        return manager
+    for adapter_cfg in config.output_adapters:
+        if adapter_cfg.type == "tts" and adapter_cfg.enabled:
+            try:
+                from src.adapters.tts_adapter import TTSOutputAdapter
 
-    # TTS Adapter
-    if hasattr(config.output_adapters, "tts") and config.output_adapters.tts.enabled:
-        try:
-            from src.adapters.tts_adapter import TTSOutputAdapter
+                tts_adapter = TTSOutputAdapter(
+                    tts_config=config.tts,
+                    enabled=adapter_cfg.enabled,
+                )
+                manager.add_adapter(tts_adapter)
+            except Exception as e:
+                logger.exception(f"❌ Failed to initialize TTSOutputAdapter: {e}")
 
-            tts_adapter = TTSOutputAdapter(
-                tts_config=config.tts, enabled=config.output_adapters.tts.enabled
-            )
-            manager.add_adapter(tts_adapter)
+        elif adapter_cfg.type == "translation":
+            logger.warning("🔧 Translation adapter is not yet implemented.")
 
-        except Exception as e:
-            logger.error(f"❌ Failed to create TTS adapter: {e}")
-
-    # Future adapters can be added here
-    # Audio Effects Adapter
-    # if hasattr(config.output_adapters, 'audio_effects') and config.output_adapters.audio_effects.enabled:
-    #     ...
-
-    # Translation Adapter
-    # if hasattr(config.output_adapters, 'translation') and config.output_adapters.translation.enabled:
-    #     ...
+        else:
+            logger.warning(f"⚠️ Unknown adapter type: {adapter_cfg.type}")
 
     return manager

@@ -6,25 +6,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from logging.handlers import RotatingFileHandler
 from langchain_ollama import OllamaLLM
 from src.service.config import load_config
-from src.db.connection import initialize_global_db_connection
+from src.db.connection import (
+    close_global_db_connection,
+    initialize_global_db_connection,
+)
 from src.memory.memory_system import MemorySystem
 from src.service.agent import EntityAgent
 from src.service.routes import EntityRouterFactory
 from src.adapters import create_output_adapters
 from src.tools.tools import ToolManager
 from src.core.registry import ServiceRegistry
-from contextlib import asynccontextmanager
-from fastapi import FastAPI
-import logging
-from src.service.config import load_config
-from src.memory.memory_system import MemorySystem
-from src.db.connection import initialize_global_db_connection
-from src.service.agent import EntityAgent
-from src.tools.tools import ToolManager
-from src.adapters import create_output_adapters
-from src.core.registry import ServiceRegistry
-from src.service.routes import EntityRouterFactory
-from langchain_ollama import OllamaLLM
 
 
 logger = logging.getLogger(__name__)
@@ -66,82 +57,49 @@ def setup_logging(config):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("🚀 Starting Entity Agent Service")
+    config = load_config()
+    ServiceRegistry.register("config", config)
 
-    try:
-        # 1. Load config
-        config = load_config("config.yaml")
-        ServiceRegistry.register("config", config)
+    db = await initialize_global_db_connection(config.database)
+    ServiceRegistry.register("db", db)
 
-        setup_logging(config)
+    memory_system = MemorySystem(
+        memory_config=config.memory,
+        database_config=config.database,
+        storage_config=config.storage,
+    )
+    await memory_system.initialize()
+    ServiceRegistry.register("memory", memory_system)
 
-        # 3. Init DB
-        db_connection = await initialize_global_db_connection(config.database)
-        ServiceRegistry.register("db_connection", db_connection)
+    tool_manager = ToolManager()
+    tool_manager.load_plugins_from_config("plugins")
+    ServiceRegistry.register("tools", tool_manager)
 
-        # 4. Init memory system fully inside loop
-        memory_system = MemorySystem(config.memory, config.database, config.storage)
-        await memory_system.initialize()
-        ServiceRegistry.register("memory_system", memory_system)
+    llm = OllamaLLM(
+        base_url=config.ollama.base_url,
+        model=config.ollama.model,
+        temperature=config.ollama.temperature,
+        top_p=config.ollama.top_p,
+        top_k=config.ollama.top_k,
+        repeat_penalty=config.ollama.repeat_penalty,
+    )
 
-        # 5. Init tool manager (sync, no `asyncio.run`)
-        tool_manager = ToolManager.setup(
-            plugin_directory=config.tools.plugin_path,
-            enabled_tools=config.tools.enabled,
-        )
-        ServiceRegistry.register("tool_manager", tool_manager)
+    agent = EntityAgent(
+        config=config.entity,
+        tool_manager=tool_manager,
+        llm=llm,
+        memory_system=memory_system,
+        output_adapter_manager=create_output_adapters(config),
+    )
+    ServiceRegistry.register("agent", agent)
 
-        # 6. Init output adapters (optional async test call stays inside loop)
-        output_adapters = create_output_adapters(config)
-        ServiceRegistry.register("output_adapter_manager", output_adapters)
+    # ✅ Register routes here via the app instance
+    router = EntityRouterFactory(agent, tool_manager, memory_system).get_router()
+    app.include_router(router, prefix="/api/v1")
 
-        if output_adapters.adapters:
-            for adapter in output_adapters.adapters:
-                if hasattr(adapter, "test_connection"):
-                    await adapter.test_connection()
+    yield  # App is now live
 
-        # 7. Init LLM
-        llm = OllamaLLM(
-            base_url=config.ollama.base_url,
-            model=config.ollama.model,
-            temperature=config.ollama.temperature,
-            top_p=config.ollama.top_p,
-            top_k=config.ollama.top_k,
-            repeat_penalty=config.ollama.repeat_penalty,
-        )
-        ServiceRegistry.register("llm", llm)
-
-        # 8. Init agent
-        agent = EntityAgent(
-            config=config.entity,
-            tool_manager=tool_manager,
-            llm=llm,
-            memory_system=memory_system,
-            output_adapter_manager=output_adapters,
-        )
-        await agent.initialize()
-        ServiceRegistry.register("agent", agent)
-
-        # 9. Add to app
-        app.state.registry = ServiceRegistry
-        app.state.agent = agent
-
-        # 10. Attach routes
-        router = EntityRouterFactory(agent, tool_manager, memory_system).get_router()
-        app.include_router(router, prefix="/api/v1")
-
-        ServiceRegistry.mark_initialized()
-        logger.info("✅ Entity Agent ready")
-
-        yield
-
-    except Exception as e:
-        logger.error(f"❌ Application failed: {e}", exc_info=True)
-        raise
-
-    finally:
-        await ServiceRegistry.shutdown()
-        logger.info("👋 Shutdown complete")
+    await close_global_db_connection()
 
 
 def create_app() -> FastAPI:
@@ -158,6 +116,15 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    @app.on_event("startup")
+    async def register_routes():
+        agent = ServiceRegistry.get("agent")
+        tools = ServiceRegistry.get("tools")
+        memory = ServiceRegistry.get("memory")
+
+        router = EntityRouterFactory(agent, tools, memory).get_router()
+        app.include_router(router, prefix="/api/v1")  # 🔥 this is what’s missing
 
     return app
 

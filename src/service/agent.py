@@ -110,14 +110,22 @@ class EntityAgent:
                 token_count = result.get("token_usage", {}).get("total_tokens", 0)
             else:
                 logger.info("🤖 Running direct LLM (no tools)...")
+
                 llm_result = await self.llm.ainvoke(enhanced_input["input"])
-                raw_response = (
-                    llm_result.get("output")
-                    or llm_result.get("response")
-                    or llm_result.get("text")
-                    or str(llm_result)
-                )
-                token_count = llm_result.get("token_usage", {}).get("total_tokens", 0)
+
+                if isinstance(llm_result, dict):
+                    raw_response = (
+                        llm_result.get("output")
+                        or llm_result.get("response")
+                        or llm_result.get("text")
+                        or str(llm_result)
+                    )
+                    token_count = llm_result.get("token_usage", {}).get(
+                        "total_tokens", 0
+                    )
+                else:
+                    raw_response = str(llm_result)
+                    token_count = 0
 
             if not raw_response.strip():
                 logger.error("❌ Empty response from LLM")
