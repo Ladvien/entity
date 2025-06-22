@@ -8,7 +8,7 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from sqlalchemy import text
 
 from src.shared.models import ChatInteraction
-from src.service.config import MemoryConfig, DatabaseConfig, StorageConfig
+from src.service.config import MemoryConfig, DatabaseConfig
 from src.db.connection import DatabaseConnection
 from src.memory.custom_pgvector import SchemaAwarePGVector, SchemaAwarePGVectorNoDDL
 
@@ -20,12 +20,9 @@ class MemorySystem:
         self,
         memory_config: MemoryConfig,
         database_config: DatabaseConfig,
-        storage_config: StorageConfig,
     ):
         self.memory_config = memory_config
         self.database_config = database_config
-        self.storage_config = storage_config
-        self.history_table = storage_config.history_table
 
         if not database_config.db_schema:
             raise ValueError("MemoryConfig must specify a schema name for PGVector")
@@ -126,7 +123,7 @@ class MemorySystem:
 
     async def _ensure_history_table(self):
         create_sql = f"""
-            CREATE TABLE IF NOT EXISTS {self.history_table} (
+            CREATE TABLE IF NOT EXISTS {self.database_config.history_table} (
                 id SERIAL PRIMARY KEY,
                 interaction_id TEXT UNIQUE NOT NULL,
                 thread_id TEXT NOT NULL,
@@ -150,11 +147,11 @@ class MemorySystem:
             )
         """
         indexes = [
-            f"CREATE INDEX IF NOT EXISTS idx_{self.history_table}_thread_timestamp ON {self.history_table}(thread_id, timestamp DESC)"
+            f"CREATE INDEX IF NOT EXISTS idx_{self.database_config.history_table}_thread_timestamp ON {self.database_config.history_table}(thread_id, timestamp DESC)"
         ]
         await self.db_connection.execute_schema_commands([create_sql] + indexes)
         logger.info(
-            f"✅ History table {self.history_table} ensured in {self.schema} schema"
+            f"✅ History table {self.database_config.history_table} ensured in {self.schema} schema"
         )
 
     async def _log_final_table_locations(self):
@@ -171,7 +168,7 @@ class MemorySystem:
                     ORDER BY schemaname, tablename
                 """
                     ),
-                    {"history_table": self.history_table},
+                    {"history_table": self.database_config.history_table},
                 )
 
                 tables = result.fetchall()
@@ -217,7 +214,7 @@ class MemorySystem:
             await session.execute(
                 text(
                     f"""
-                    INSERT INTO {self.history_table} (
+                    INSERT INTO {self.database_config.history_table} (
                         interaction_id, thread_id, timestamp, raw_input, raw_output, response,
                         tools_used, memory_context_used, memory_context, use_tools, use_memory,
                         error_message, response_time_ms, token_count, conversation_turn, user_id,
@@ -309,7 +306,7 @@ class MemorySystem:
         async with session:
             if thread_id:
                 sql_query = f"""
-                    SELECT * FROM {self.history_table}
+                    SELECT * FROM {self.database_config.history_table}
                     WHERE thread_id = :thread_id
                     AND (
                         raw_input ILIKE :query OR
@@ -326,7 +323,7 @@ class MemorySystem:
                 }
             else:
                 sql_query = f"""
-                    SELECT * FROM {self.history_table}
+                    SELECT * FROM {self.database_config.history_table}
                     WHERE (
                         raw_input ILIKE :query OR
                         raw_output ILIKE :query OR
@@ -376,7 +373,7 @@ class MemorySystem:
             result = await session.execute(
                 text(
                     f"""
-                    SELECT * FROM {self.history_table}
+                    SELECT * FROM {self.database_config.history_table}
                     WHERE thread_id = :thread_id
                     ORDER BY timestamp DESC
                     LIMIT :limit
@@ -438,7 +435,9 @@ class MemorySystem:
                 stats["total_memories"] = result.scalar_one()
 
                 result = await session.execute(
-                    text(f"SELECT COUNT(DISTINCT thread_id) FROM {self.history_table}")
+                    text(
+                        f"SELECT COUNT(DISTINCT thread_id) FROM {self.database_config.history_table}"
+                    )
                 )
                 stats["total_conversations"] = result.scalar_one()
 

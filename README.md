@@ -185,3 +185,96 @@ poetry run python cli.py both
 ## 📜 License
 
 MIT — see `LICENSE` for details.
+
+
+# Entity AI Agent - Code Consolidation Checklist
+
+## 🔧 Configuration System Overhaul
+- [ ] **Merge database configs** - Combine `DatabaseConfig` and `StorageConfig` into single `DataConfig`
+
+- [ ] **Eliminate PersonalityConfig** - Move personality fields directly into `EntityConfig`
+- [ ] **Simplify adapter configs** - Replace separate adapter classes with single `AdapterConfig` + type field
+- [ ] **Merge audio configs** - Combine `AudioConfig` into `TTSConfig`
+- [ ] **Reduce config classes** - Target 3-4 config classes instead of 10+
+- [ ] **Update config.yml** - Adjust YAML structure to match simplified config classes
+- [ ] **Test config loading** - Ensure all existing functionality still works
+
+## 📊 Data Models Consolidation
+- [ ] **Merge ChatInteraction and ChatResponse** - Create single model with different serialization methods
+- [ ] **Combine AgentResult and ChatResponse** - Unify into one model with `.to_api_response()` method
+- [ ] **Remove ConversationSummary** - Replace with on-demand generation methods
+- [ ] **Simplify tool execution models** - Streamline `ToolExecutionRequest`/`ToolExecutionResponse`
+- [ ] **Update all imports** - Fix references to consolidated models throughout codebase
+- [ ] **Verify serialization** - Ensure API responses still work correctly
+
+## 🗂️ Service Registry Elimination
+- [ ] **Remove ServiceRegistry class** - Delete `src/core/registry.py`
+- [ ] **Delete src/core/ directory** - Remove entire core module
+- [ ] **Implement direct dependency injection** - Pass dependencies directly in FastAPI app
+- [ ] **Update app.py lifespan** - Remove registry usage, use direct initialization
+- [ ] **Fix all registry imports** - Replace `ServiceRegistry.get()` calls with direct dependencies
+- [ ] **Update routes.py** - Pass dependencies directly to router factory
+
+## 🧠 Memory System Simplification
+- [ ] **Merge MemorySystem and MemoryRetriever** - Combine into single `MemoryManager` class
+- [ ] **Remove SchemaAwarePGVector wrapper** - Use standard PGVector with proper schema setup
+- [ ] **Eliminate MemoryContextBuilder** - Make it a method of `EntityAgent`
+- [ ] **Simplify memory initialization** - Reduce custom PGVector setup complexity
+- [ ] **Update agent.py** - Integrate simplified memory management
+- [ ] **Test memory functionality** - Ensure vector search and storage still work
+
+## 💻 CLI Interface Cleanup
+- [ ] **Merge ChatInterface and EntityAPIClient** - Interface should handle its own HTTP calls
+- [ ] **Simplify render.py** - Combine three render functions into one with options parameter
+- [ ] **Remove duplicate config loading** - Load config once in CLI entry point
+- [ ] **Streamline command handling** - Reduce command processing complexity
+- [ ] **Update cli.py** - Integrate consolidated chat interface
+- [ ] **Test all CLI commands** - Verify chat, history, memory search, etc. still work
+
+## 🛠️ Tool System Streamlining
+- [ ] **Remove BaseToolPlugin abstraction** - Use LangChain tools directly
+- [ ] **Simplify ToolManager** - Remove complex registration system
+- [ ] **Delete base_tool_plugin.py** - No longer needed with LangChain approach
+- [ ] **Update plugin system** - Use standard LangChain tool patterns
+- [ ] **Migrate existing tools** - Convert current plugins to simplified format
+- [ ] **Test tool execution** - Ensure all tools still function correctly
+
+## 🗃️ Database Layer Reduction
+- [ ] **Remove src/db/models.py** - Use Pydantic models directly with SQLAlchemy
+- [ ] **Simplify DatabaseConnection class** - Use standard SQLAlchemy async patterns
+- [ ] **Remove global connection management** - Pass connections as dependencies
+- [ ] **Update memory system** - Use simplified database access
+- [ ] **Clean up connection.py** - Remove unnecessary abstraction layers
+- [ ] **Test database operations** - Verify all CRUD operations still work
+
+## 📁 File Structure Reorganization
+- [ ] **Create new simplified structure** - Implement target file organization
+- [ ] **Move consolidated code** - Relocate code to new simplified files
+- [ ] **Update all imports** - Fix import statements throughout project
+- [ ] **Remove empty directories** - Clean up unused folders
+- [ ] **Update setup/requirements** - Ensure project still installs correctly
+
+## ✅ Testing & Validation
+- [ ] **Run full test suite** - Ensure no functionality is broken
+- [ ] **Test API endpoints** - Verify all routes still work
+- [ ] **Test CLI functionality** - Check chat, server, status commands
+- [ ] **Test memory operations** - Verify vector search and storage
+- [ ] **Test tool execution** - Ensure all plugins still function
+- [ ] **Performance validation** - Check that simplification doesn't hurt performance
+- [ ] **Documentation update** - Update README and docs to reflect changes
+
+## 🎯 Success Metrics
+- [ ] **~40% code reduction** - Measure lines of code before/after
+- [ ] **Reduced complexity** - Fewer classes and abstractions
+- [ ] **Maintained functionality** - All features still work
+- [ ] **Improved maintainability** - Easier to understand and modify
+- [ ] **Cleaner dependencies** - Simpler import structure
+
+---
+
+**Priority Order:**
+1. Configuration System (highest impact)
+2. Service Registry Elimination (removes complexity)
+3. Data Models Consolidation (reduces duplication)
+4. Memory System Simplification (architectural improvement)
+5. CLI and Tool Systems (polish and cleanup)

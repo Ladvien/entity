@@ -32,6 +32,10 @@ class ToolConfig(BaseModel):
 
 # Database Configuration
 class DatabaseConfig(BaseModel):
+    backend: str = "postgres"
+    history_table: str = "chat_history"
+    init_on_startup: bool = True
+
     host: str = "localhost"
     port: int = 5432
     name: str = "memory"
@@ -140,7 +144,6 @@ class UnifiedConfig(BaseModel):
     memory: MemoryConfig
     entity: EntityConfig
     server: ServerConfig
-    storage: "StorageConfig"
     logging: LoggingConfig
     tools: ToolConfig
     output_adapters: List[AdapterConfig] = []
@@ -154,12 +157,6 @@ class UnifiedConfig(BaseModel):
     class Config:
         # Allow use of both attribute and dictionary access
         extra = "forbid"  # Fail if unknown fields are present
-
-
-class StorageConfig(BaseModel):
-    backend: str = "postgres"
-    history_table: str = "chat_history"
-    init_on_startup: bool = True
 
 
 # Environment variable interpolation

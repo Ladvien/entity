@@ -70,7 +70,6 @@ async def lifespan(app: FastAPI):
     memory_system = MemorySystem(
         memory_config=config.memory,
         database_config=config.database,
-        storage_config=config.storage,
     )
     await memory_system.initialize()
     ServiceRegistry.register("memory", memory_system)

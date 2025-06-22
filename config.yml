@@ -10,6 +10,7 @@ database:
   min_pool_size: 2
   max_pool_size: 10
   db_schema: "entity"
+  history_table: "chat_history"
 
 ollama:
   base_url: "http://192.168.1.110:11434"
@@ -122,11 +123,6 @@ server:
   port: 8000
   reload: false
   log_level: "info"
-
-storage:
-  backend: "postgres"
-  history_table: "chat_history"
-  init_on_startup: true
 
 logging:
   level: "DEBUG"
