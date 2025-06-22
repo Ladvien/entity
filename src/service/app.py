@@ -70,15 +70,12 @@ async def lifespan(app: FastAPI):
         ServiceRegistry.register("db_connection", db_connection)
 
         # Init vector memory 🧠
-        # try:
-        # Init memory system (unified)
+        # Initialize memory system (unified)
         memory_system = MemorySystem(config.memory, config.database, config.storage)
 
         await memory_system.initialize()
         ServiceRegistry.register("memory_system", memory_system)
         logger.info("✅ Memory system initialized and registered")
-        # except Exception as e:
-        #     logger.warning(f"⚠️ Skipping memory system initialization: {e}")
 
         # Init tool manager 🔧
         tool_manager = ToolManager.setup(

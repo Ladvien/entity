@@ -1,5 +1,3 @@
-# src/db/connection.py - Final fix after understanding the issue
-
 from dataclasses import dataclass, field
 from typing import Optional, Dict, Any, List
 from sqlalchemy.ext.asyncio import (
@@ -10,6 +8,8 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy import text
 import logging
+import asyncio
+from sqlalchemy import create_engine
 
 from src.service.config import DatabaseConfig
 
@@ -28,7 +28,32 @@ class DatabaseConnection:
     max_pool_size: int = 10
     echo: bool = False
 
-    _engine: Optional[AsyncEngine] = field(default=None, init=False)
+    _engine: Optional[AsyncEngine] = None
+
+    @property
+    def async_engine(self) -> AsyncEngine:
+        if self._engine is None:
+            self._engine = create_async_engine(
+                self.async_connection_url,
+                echo=self.echo,
+                connect_args=self.connect_args,
+                pool_size=self.min_pool_size,
+                max_overflow=max(0, self.max_pool_size - self.min_pool_size),
+                pool_pre_ping=True,
+                pool_recycle=3600,
+            )
+            logger.info(f"✅ Created async engine for {self}")
+        return self._engine
+
+    def get_pgvector_config(self) -> Dict[str, Any]:
+        return {
+            "connection": self.async_engine,
+            "async_mode": True,
+            "create_extension": False,
+            "use_jsonb": True,
+            "pre_delete_collection": False,
+            "collection_name": self.schema,  # Use schema as collection name
+        }
 
     @classmethod
     def from_config(cls, config: DatabaseConfig) -> "DatabaseConnection":
@@ -45,12 +70,7 @@ class DatabaseConnection:
 
     @property
     def async_connection_url(self) -> str:
-        # Simple connection string - we'll handle schema in connect_args and sessions
         return f"postgresql+asyncpg://{self.username}:{self.password}@{self.host}:{self.port}/{self.name}"
-
-    @property
-    def sync_connection_url(self) -> str:
-        return f"postgresql://{self.username}:{self.password}@{self.host}:{self.port}/{self.name}"
 
     @property
     def connect_args(self) -> Dict[str, Any]:
@@ -59,6 +79,26 @@ class DatabaseConnection:
             if self.schema != "public"
             else {}
         )
+
+    def create_sync_engine(self):
+        """
+        Create a synchronous SQLAlchemy engine for DDL operations.
+        """
+        # Construct sync DB URL by replacing async driver with sync driver
+        # Example: postgresql+asyncpg://user:pass@host:port/db -> postgresql+psycopg://user:pass@host:port/db
+
+        # Assuming you have something like this stored in your config:
+        user = self.username
+        password = self.password
+        host = self.host
+        port = self.port
+        dbname = self.name
+
+        # Use psycopg (v3) sync driver recommended:
+        sync_url = f"postgresql+psycopg://{user}:{password}@{host}:{port}/{dbname}"
+
+        # Create and return sync engine
+        return create_engine(sync_url)
 
     async def get_engine(self) -> AsyncEngine:
         if not self._engine:
@@ -142,7 +182,6 @@ class DatabaseConnection:
             "create_extension": False,
             "use_jsonb": True,
             "pre_delete_collection": False,
-            # ✅ FIXED: Just use the collection name, not schema prefix
             "collection_name": "entity_memory",  # This is the actual collection name
         }
 

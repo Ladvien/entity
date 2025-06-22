@@ -5,6 +5,7 @@ import httpx
 
 from src.shared.models import ChatRequest, ChatResponse
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -107,6 +108,17 @@ class EntityAPIClient:
 
         except Exception:
             return {"status": "unhealthy", "error": "Connection failed"}
+
+    async def get_memory_stats(self) -> Dict[str, Any]:
+        """Get memory stats from the entity agent"""
+        try:
+            response = await self.session.get(f"{self.base_url}/api/v1/memory/stats")
+            response.raise_for_status()
+            return response.json()
+
+        except Exception as e:
+            logger.error(f"Failed to get memory stats: {e}")
+            return {"status": "error", "message": str(e)}
 
     async def close(self):
         await self.session.aclose()

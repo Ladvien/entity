@@ -1,8 +1,6 @@
-# src/memory/memory_system.py - Fixed implementation using SchemaAwarePGVector correctly
-
+# src/memory/memory_system.py
 import json
 import logging
-from datetime import datetime
 from typing import List, Optional, Dict, Any
 
 from langchain_core.documents import Document
@@ -12,9 +10,7 @@ from sqlalchemy import text
 from src.shared.models import ChatInteraction
 from src.service.config import MemoryConfig, DatabaseConfig, StorageConfig
 from src.db.connection import DatabaseConnection
-
-# Import our custom schema-aware PGVector
-from src.memory.custom_pgvector import SchemaAwarePGVector
+from src.memory.custom_pgvector import SchemaAwarePGVector, SchemaAwarePGVectorNoDDL
 
 logger = logging.getLogger(__name__)
 
@@ -43,12 +39,15 @@ class MemorySystem:
         )
         self.vector_store = None
 
+    def create_tables_if_not_exists(self):
+        # Override to skip DDL at runtime to avoid greenlet errors
+        pass
+
     async def initialize(self):
         await self.db_connection.ensure_schema()
         await self._ensure_pgvector_extension()
-        await self._initialize_vector_store()  # This now properly creates tables
+        await self._initialize_vector_store()
         await self._ensure_history_table()
-        # Remove _ensure_vector_collection - it's handled in _initialize_vector_store now
 
     async def _ensure_pgvector_extension(self):
         """Ensure pgvector extension is enabled"""
@@ -76,15 +75,17 @@ class MemorySystem:
                 if "password" not in key.lower():
                     logger.info(f"     {key}: {value}")
 
-            # Map config values to the correct PGVector parameter names
-            self.vector_store = await SchemaAwarePGVector.afrom_texts(
-                texts=[],  # Start with empty texts
+            # Get the async engine once
+            engine = await self.db_connection.get_engine()
+
+            logger.info(f"Engine type before passing: {type(engine)}")
+
+            self.vector_store = await SchemaAwarePGVectorNoDDL.afrom_texts(
+                texts=[],
                 embedding=self.embeddings,
                 collection_name=self.collection_name,
                 schema_name=self.schema,
-                connection=pgvector_config.get(
-                    "connection"
-                ),  # Note: 'connection' not 'connection_string'
+                connection=engine,
                 async_mode=pgvector_config.get("async_mode", True),
                 create_extension=pgvector_config.get("create_extension", False),
                 use_jsonb=pgvector_config.get("use_jsonb", True),
@@ -156,9 +157,6 @@ class MemorySystem:
             f"✅ History table {self.history_table} ensured in {self.schema} schema"
         )
 
-    # REMOVED: _ensure_vector_collection method - no longer needed
-    # The afrom_texts method handles all initialization
-
     async def _log_final_table_locations(self):
         """Log where all tables ended up"""
         try:
@@ -213,6 +211,7 @@ class MemorySystem:
             logger.warning(f"Could not log table locations: {e}")
 
     async def save_interaction(self, interaction: ChatInteraction):
+        logger.info(f"Saving interaction: {interaction.interaction_id}")
         session = await self.db_connection.get_session()
         async with session:
             await session.execute(
