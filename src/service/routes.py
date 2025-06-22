@@ -36,7 +36,7 @@ class EntityRouterFactory:
                     thread_id=request.thread_id,
                     use_tools=request.use_tools,
                 )
-                return ChatResponse.from_interaction(interaction)
+                return ChatResponse.from_result(interaction)
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 

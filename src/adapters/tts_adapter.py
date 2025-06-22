@@ -124,10 +124,31 @@ class TTSOutputAdapter:
             )
 
             response.raise_for_status()
-            result = response.json()
 
-            logger.info(f"✅ TTS synthesis successful: {result}")
-            return result
+            content_type = response.headers.get("content-type", "")
+
+            if content_type.startswith("application/json"):
+                result = response.json()
+                logger.info(f"✅ TTS synthesis successful: {result}")
+                return result
+
+            elif content_type.startswith("audio/"):
+                logger.info("✅ TTS synthesis successful (audio response)")
+                return {
+                    "audio_file_id": f"direct_{thread_id}",
+                    "duration": None,
+                    "raw_audio": response.content,
+                }
+
+            else:
+                logger.warning(
+                    f"⚠️ Unexpected content type from TTS server: {content_type}"
+                )
+                return {
+                    "audio_file_id": f"direct_{thread_id}",
+                    "duration": None,
+                    "raw_audio": response.content,
+                }
 
         except httpx.HTTPStatusError as e:
             logger.error(

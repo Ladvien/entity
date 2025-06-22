@@ -1,9 +1,11 @@
 # src/shared/models.py (update the existing file)
 
+from dataclasses import dataclass
 import uuid
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
+from src.shared.agent_result import AgentResult
 
 
 class ChatInteraction(BaseModel):
@@ -140,28 +142,28 @@ class ChatRequest(BaseModel):
 
 
 class ChatResponse(BaseModel):
-    """Chat response model - now based on ChatInteraction"""
-
-    response: str
     thread_id: str
     timestamp: datetime
-    tools_used: Optional[List[str]] = None
     raw_input: str
     raw_output: str
-    memory_context_used: bool = False
-    entity_name: Optional[str] = None
+    response: str
+    tools_used: Optional[List[str]] = []
+    token_count: Optional[int] = 0
+    memory_context: Optional[str] = ""
+    intermediate_steps: Optional[List[dict]] = []
 
     @classmethod
-    def from_interaction(cls, interaction: ChatInteraction) -> "ChatResponse":
-        """Create ChatResponse from ChatInteraction"""
+    def from_result(cls, interaction: AgentResult) -> "ChatResponse":
         return cls(
-            response=interaction.response,
             thread_id=interaction.thread_id,
             timestamp=interaction.timestamp,
-            tools_used=interaction.tools_used,
             raw_input=interaction.raw_input,
             raw_output=interaction.raw_output,
-            memory_context_used=interaction.memory_context_used,
+            response=interaction.final_response,
+            tools_used=interaction.tools_used,
+            token_count=interaction.token_count,
+            memory_context=interaction.memory_context,
+            intermediate_steps=interaction.intermediate_steps,
         )
 
     class Config:

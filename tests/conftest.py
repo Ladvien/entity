@@ -34,7 +34,7 @@ def mock_config():
     config.entity.personality.sarcasm_level = 0.8
     config.database.host = "localhost"
     config.database.port = 5432
-    config.ollama.model = "llama3.1:8b-instruct-q6_K"
+    config.ollama.model = "neural-chat:7b"
 
     ServiceRegistry.register("config", config)
     return config

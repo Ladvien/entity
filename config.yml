@@ -13,7 +13,7 @@ database:
 
 ollama:
   base_url: "http://192.168.1.110:11434"
-  model: llama3.1:8b-instruct-q6_K
+  model: neural-chat:7b
   temperature: 0.7
   top_p: 0.9
   top_k: 40
@@ -142,8 +142,6 @@ tools:
     - fun_fact
     - memory_search
     - store_memory
-    # - search_memories
-    # - memory_store
 
 output_adapters:
   - type: tts

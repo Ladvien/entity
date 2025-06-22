@@ -19,7 +19,7 @@ console = Console()
 
 
 @click.group(invoke_without_command=True)
-@click.option("--config", "-c", default="config.yaml", help="Configuration file path")
+@click.option("--config", "-c", default="config.yml", help="Configuration file path")
 @click.option("--debug", "-d", is_flag=True, help="Enable debug logging")
 @click.pass_context
 def cli(ctx, config, debug):
@@ -125,7 +125,7 @@ def run_server_mode(config_path: str, reload: bool = False):
             host=config.server.host,
             port=config.server.port,
             reload=config.server.reload,
-            log_level=config.server.log_level.lower(),  # from config.yaml
+            log_level=config.server.log_level.lower(),  # from config.yml
             access_log=True,
         )
 

@@ -46,7 +46,7 @@ class DatabaseConfig(BaseModel):
 # Ollama Configuration
 class OllamaConfig(BaseModel):
     base_url: str = "http://localhost:11434"
-    model: str = "llama3.1:8b-instruct-q6_K"
+    model: str = "neural-chat:7b"
     temperature: float = 0.7
     top_p: float = 0.9
     top_k: int = 40
@@ -119,7 +119,7 @@ class ServerConfig(BaseModel):
 
 # Logging Configuration
 class LoggingConfig(BaseModel):
-    level: str = "INFO"
+    level: str
     format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     file_enabled: bool = False
     file_path: str = "logs/entity.log"
@@ -188,7 +188,7 @@ def walk_and_replace(obj: Any) -> Any:
         return interpolate_env(obj)
 
 
-def load_config(config_path: str = "config.yaml") -> UnifiedConfig:
+def load_config(config_path: str = "config.yml") -> UnifiedConfig:
     """Load configuration from YAML file with environment variable substitution"""
     # Expand path
     config_path = os.path.expanduser(config_path)

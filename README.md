@@ -20,7 +20,7 @@ The Entity Framework is a developer-friendly platform for building multimodal, i
 ```
 .
 ├── cli.py                  # CLI entrypoint
-├── config.yaml             # Central config file
+├── config.yml             # Central config file
 ├── src/
 │   ├── core/               # Service registry and lifecycle
 │   ├── tools/              # Plugin tool system
@@ -35,7 +35,7 @@ The Entity Framework is a developer-friendly platform for building multimodal, i
 
 ## ⚙️ Configuration-Driven Setup
 
-The system is driven entirely by a single `config.yaml`. It defines:
+The system is driven entirely by a single `config.yml`. It defines:
 
 - **Database**: PostgreSQL + PGVector setup
 - **LLM**: Base model and tuning parameters (via Ollama or similar)
@@ -73,7 +73,7 @@ All memory operations (chat history + embeddings) are routed through a unified m
 - Backed by PostgreSQL + PGVector
 - Thread-aware
 - Accessible by the agent and all tools
-- Configured via `config.yaml`
+- Configured via `config.yml`
 
 Memory operations support:
 - Top-N similarity queries

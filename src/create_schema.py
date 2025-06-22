@@ -4,7 +4,7 @@ from src.service.config import load_config
 
 
 def create_schema_sync():
-    config = load_config("config.yaml")
+    config = load_config("config.yml")
 
     db = config.database
 

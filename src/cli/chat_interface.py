@@ -178,7 +178,7 @@ class ChatInterface:
         return False
 
     async def _process_message(self, message: str):
-        """Process a chat message"""
+        """Process a chat message and display agent response"""
         try:
             # Show thinking indicator
             if self.config.get("show_timestamps", True):
@@ -187,46 +187,49 @@ class ChatInterface:
             else:
                 self.console.print("🤔 Thinking...")
 
-            # Send message
-            response = await self.client.chat(
+            # Get structured agent result
+            agent_result = await self.client.chat(
                 message=message, thread_id=self.current_thread
             )
 
-            # Display response with formatting
+            # Show context if memory was used
             if (
                 self.config.get("highlight_memory_responses", True)
-                and response.memory_context_used
+                and agent_result.memory_context.strip()
             ):
-                self.console.print(f"\n🤖 [italic]Using memory context...[/italic]")
+                self.console.print(
+                    f"[italic cyan]🤖 Using memory context...[/italic cyan]"
+                )
 
-            self.console.print(f"\n🤖 {response.response}")
+            # Show agent response
+            self.console.print(f"[bold green]🤖 {agent_result.response}[/bold green]")
 
-            # Show metadata
+            # Add metadata panel (tools, memory)
             metadata_parts = []
-            if response.tools_used:
-                metadata_parts.append(f"Tools: {', '.join(response.tools_used)}")
+            if agent_result.tools_used:
+                metadata_parts.append(f"Tools: {', '.join(agent_result.tools_used)}")
             if (
                 self.config.get("show_memory_usage", True)
-                and response.memory_context_used
+                and agent_result.memory_context.strip()
             ):
                 metadata_parts.append("Memory: Used")
 
             if metadata_parts:
-                self.console.print(f"   [dim]({' | '.join(metadata_parts)})[/dim]")
+                self.console.print(f"[dim]   ({' | '.join(metadata_parts)})[/dim]")
 
-            # Save to local history
+            # Save to local history if enabled
             if self.config.get("save_locally", True):
                 self.local_history.append(
                     {
-                        "timestamp": response.timestamp.isoformat(),
+                        "timestamp": datetime.now().isoformat(),
                         "user_input": message,
-                        "agent_output": response.response,
-                        "tools_used": response.tools_used,
-                        "memory_used": response.memory_context_used,
+                        "agent_output": agent_result.response,
+                        "tools_used": agent_result.tools_used,
+                        "memory_used": bool(agent_result.memory_context.strip()),
                     }
                 )
 
-            print()  # Add spacing
+            print()  # spacing
 
         except Exception as e:
             self.console.print(f"❌ Failed to get response: {e}", style="red")

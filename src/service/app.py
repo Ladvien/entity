@@ -58,6 +58,7 @@ def setup_logging(config):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     config = load_config()
+    setup_logging(config)
     ServiceRegistry.register("config", config)
 
     db = await initialize_global_db_connection(config.database)
@@ -82,6 +83,7 @@ async def lifespan(app: FastAPI):
         top_p=config.ollama.top_p,
         top_k=config.ollama.top_k,
         repeat_penalty=config.ollama.repeat_penalty,
+        base_template=config.entity.prompts.base_prompt.strip(),
     )
 
     agent = EntityAgent(
