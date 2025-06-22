@@ -137,13 +137,11 @@ tools:
     - name: fun_fact
       max_uses: 3
       max_total: 10
-
     - name: memory_search
       max_uses: 2
-
     - name: store_memory
       max_uses: 1
-      max_total: 4
+      max_total: 3
 
 adapters:
   - type: tts
