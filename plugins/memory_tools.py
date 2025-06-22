@@ -1,4 +1,4 @@
-# plugins/memory_tools.py
+# plugins/memory_tools.py - WORKING VERSION
 
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
@@ -47,7 +47,8 @@ class DeepMemorySearchTool(BaseToolPlugin):
         if not memory_system:
             return "❌ Memory system not available"
 
-        results = await memory_system.deep_search(
+        # ✅ FIXED: Use correct method name and handle ChatInteraction objects
+        results = await memory_system.deep_search_memory(
             query=input_data.query,
             thread_id=input_data.thread_id,
             k=input_data.limit,
@@ -56,9 +57,10 @@ class DeepMemorySearchTool(BaseToolPlugin):
         if not results:
             return f"No relevant results found for: {input_data.query}"
 
+        # ✅ FIXED: Handle ChatInteraction objects properly
         return "\n".join(
-            f"{i+1}. [{doc.metadata.get('source', 'unknown')}] {doc.page_content[:80]}..."
-            for i, doc in enumerate(results)
+            f"{i+1}. [{result.thread_id}] {result.response[:80]}..."
+            for i, result in enumerate(results)
         )
 
 
@@ -80,6 +82,7 @@ class MemorySearchTool(BaseToolPlugin):
         if not memory_system:
             return "❌ Vector memory system not available"
 
+        # ✅ This method name is correct
         results = await memory_system.search_memory(
             query=input_data.query,
             thread_id=input_data.thread_id,
@@ -89,6 +92,7 @@ class MemorySearchTool(BaseToolPlugin):
         if not results:
             return f"No relevant memories found for: {input_data.query}"
 
+        # ✅ This handles Document objects correctly
         return "\n".join(
             f"{i+1}. [{doc.metadata.get('memory_type', 'unknown')}] {doc.page_content[:80]}..."
             for i, doc in enumerate(results)
@@ -114,13 +118,25 @@ class StoreMemoryTool(BaseToolPlugin):
         if not memory_system:
             return "❌ Vector memory system not available"
 
-        await memory_system.add_memory(
+        # ✅ FIXED: Use existing save_interaction method instead of non-existent add_memory
+        from src.shared.models import ChatInteraction
+        from datetime import datetime
+
+        interaction = ChatInteraction(
             thread_id=input_data.thread_id,
-            content=input_data.content,
-            memory_type=input_data.memory_type,
-            importance_score=input_data.importance_score,
+            timestamp=datetime.utcnow(),
+            raw_input="[STORED MEMORY]",
+            raw_output=input_data.content,
+            response=input_data.content,
+            use_memory=True,
+            metadata={
+                "memory_type": input_data.memory_type,
+                "importance_score": input_data.importance_score,
+                "source": "manual_storage",
+            },
         )
 
+        await memory_system.save_interaction(interaction)
         return "✅ Memory stored successfully"
 
 

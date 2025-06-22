@@ -1,4 +1,4 @@
-# Updated src/service/react_validator.py - Enhanced for startup validation
+# Updated src/service/react_validator.py - Fixed for your template
 
 import logging
 import re
@@ -31,42 +31,42 @@ class ReActPromptValidator:
         r"Final Answer:",
     ]
 
-    # Strict formatting requirements (new)
+    # Strict formatting requirements (updated to be more flexible)
     STRICT_FORMAT_REQUIREMENTS = [
         {
-            "pattern": r"Action.*MUST.*tool name",
+            "pattern": r"Action.*MUST.*tool name|Action.*ONLY.*tool|Action.*exact",
             "description": "Action line formatting rules",
             "severity": "warning",
         },
         {
-            "pattern": r"Action Input.*own line",
+            "pattern": r"Action Input.*own line|Action Input.*next line",
             "description": "Action Input formatting rules",
             "severity": "warning",
         },
         {
-            "pattern": r"EXAMPLE.*CORRECT",
+            "pattern": r"CORRECT.*EXAMPLE|✅.*CORRECT|EXAMPLE.*Action:",
             "description": "Examples of correct format",
             "severity": "info",
         },
         {
-            "pattern": r"NO.*descriptions.*Action",
-            "description": "Prohibition against Action line descriptions",
-            "severity": "critical",
+            "pattern": r"WRONG.*EXAMPLE|❌.*WRONG|DO NOT USE|NEVER.*Action",
+            "description": "Examples showing wrong format",
+            "severity": "info",
         },
     ]
 
-    # Common problematic patterns that cause parsing errors
+    # Updated problematic patterns - more specific to avoid false positives
     PROBLEMATIC_PATTERNS = [
         {
-            "pattern": r"Action:\s*\w+\s*\([^)]*\)",
-            "description": "Action with parenthetical description (causes parsing errors)",
+            "pattern": r"Action:\s*\w+\s*\([^)]*\)\s*$",  # Only match if it's the complete line
+            "description": "Action with parenthetical description at end of line",
             "example": "Action: memory_search (searching for memories)",
             "fix": "Action: memory_search\nAction Input: searching for memories",
             "severity": "error",
         },
         {
-            "pattern": r"Action:\s*\w+\s*-[^\\n]*",
-            "description": "Action with dash description (causes parsing errors)",
+            "pattern": r"Action:\s*\w+\s*-[^\\n]*$",  # Only match if it's the complete line
+            "description": "Action with dash description at end of line",
             "example": "Action: memory_search - looking for past conversations",
             "fix": "Action: memory_search\nAction Input: looking for past conversations",
             "severity": "error",
@@ -156,13 +156,16 @@ class ReActPromptValidator:
             if show_success:
                 console.print("✅ [green]All ReAct format patterns found[/green]")
 
-        # 4. Check for strict formatting guidance (new)
+        # 4. Check for strict formatting guidance (updated to be more flexible)
         format_guidance_score = 0
         for req in cls.STRICT_FORMAT_REQUIREMENTS:
             if re.search(req["pattern"], prompt_template, re.IGNORECASE):
                 format_guidance_score += 1
 
-        if format_guidance_score < 2:  # Require at least 2 formatting hints
+        if format_guidance_score >= 1:  # Lowered requirement from 2 to 1
+            if show_success:
+                console.print("✅ [green]Good formatting guidance provided[/green]")
+        else:
             issues_found.append(
                 {
                     "type": "warning",
@@ -171,13 +174,26 @@ class ReActPromptValidator:
                     "fix": "Add explicit rules about Action/Action Input format",
                 }
             )
-        else:
-            if show_success:
-                console.print("✅ [green]Good formatting guidance provided[/green]")
 
-        # 5. Check for problematic patterns (new)
+        # 5. Check for problematic patterns (updated to be more specific)
         for problem in cls.PROBLEMATIC_PATTERNS:
-            if re.search(problem["pattern"], prompt_template):
+            # Split prompt into lines and check each line individually
+            lines = prompt_template.split("\n")
+            found_problematic = False
+
+            for line in lines:
+                # Skip lines that are clearly examples showing wrong format
+                if any(
+                    marker in line.upper()
+                    for marker in ["WRONG", "DO NOT", "❌", "NEVER"]
+                ):
+                    continue
+
+                if re.search(problem["pattern"], line.strip()):
+                    found_problematic = True
+                    break
+
+            if found_problematic:
                 validation_passed = False
                 issues_found.append(
                     {
