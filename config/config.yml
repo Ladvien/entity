@@ -131,10 +131,19 @@ logging:
   max_file_size: 10485760
   backup_count: 5
 
+# Tool Usage Limits:
+# - max_total_tool_uses: Total tool calls allowed across ALL tools in one conversation
+# - max_uses: Individual limit per tool type in one conversation
+#
+# Example: With max_total_tool_uses=5 and memory_search max_uses=2:
+#   - memory_search can be used at most 2 times
+#   - All tools combined can be used at most 5 times total
+#   - Agent stops when EITHER limit is reached first
+#
+# Limits reset at the start of each new conversation
 tools:
   plugin_path: "./plugins_user/plugins"
-  max_total_tool_uses: 5 # Global budget for all tools
-
+  max_total_tool_uses: 5 # Global budget for all tools combined per conversation
   enabled:
     - name: memory_search
       max_uses: 2
