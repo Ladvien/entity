@@ -4,7 +4,8 @@ from typing import List, Dict, Any, Optional
 from abc import ABC, abstractmethod
 import logging
 
-from src.service.config import UnifiedConfig
+from src.adapters.tts_adapter import TTSOutputAdapter
+from src.service.config import EntityServerConfig
 from src.shared.models import ChatInteraction
 
 logger = logging.getLogger(__name__)
@@ -80,26 +81,15 @@ class OutputAdapterManager:
         logger.info("⏸️ Output adapters disabled")
 
 
-def create_output_adapters(config: UnifiedConfig) -> OutputAdapterManager:
+# In src/adapters/__init__.py
+def create_output_adapters(config: EntityServerConfig) -> OutputAdapterManager:
     manager = OutputAdapterManager()
 
     for adapter_cfg in config.output_adapters:
         if adapter_cfg.type == "tts" and adapter_cfg.enabled:
-            try:
-                from src.adapters.tts_adapter import TTSOutputAdapter
-
-                tts_adapter = TTSOutputAdapter(
-                    tts_config=config.tts,
-                    enabled=adapter_cfg.enabled,
-                )
-                manager.add_adapter(tts_adapter)
-            except Exception as e:
-                logger.exception(f"❌ Failed to initialize TTSOutputAdapter: {e}")
-
-        elif adapter_cfg.type == "translation":
-            logger.warning("🔧 Translation adapter is not yet implemented.")
-
-        else:
-            logger.warning(f"⚠️ Unknown adapter type: {adapter_cfg.type}")
-
-    return manager
+            # Create TTSConfig from the main config, not adapter settings
+            tts_adapter = TTSOutputAdapter(
+                tts_config=config.tts,  # Use the main TTS config
+                enabled=adapter_cfg.enabled,
+            )
+            manager.add_adapter(tts_adapter)

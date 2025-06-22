@@ -10,19 +10,11 @@ import re
 from pathlib import Path
 
 
-class TTSAdapterConfig(BaseModel):
-    type: Literal["tts"]
-    enabled: bool
-
-
-class TranslationAdapterConfig(BaseModel):
-    type: Literal["translation"]
-    enabled: bool
-
-
-AdapterConfig = Annotated[
-    Union[TTSAdapterConfig, TranslationAdapterConfig], Field(discriminator="type")
-]
+# Python code - much simpler!
+class AdapterConfig(BaseModel):
+    type: str
+    enabled: bool = True
+    settings: Dict[str, Any] = {}
 
 
 class ToolConfig(BaseModel):
@@ -88,18 +80,6 @@ class MemoryConfig(BaseModel):
     min_access_count: int = 2
 
 
-class PersonalityConfig(BaseModel):
-    name: str = "Jade"
-    sarcasm_level: float = 0.8
-    loyalty_level: float = 0.6
-    anger_level: float = 0.7
-    wit_level: float = 0.9
-    response_brevity: float = 0.7
-    memory_influence: float = 0.8
-    base_prompt: Optional[str] = None
-    traits: Optional[str] = "sarcastic and impatient"
-
-
 class PromptConfig(BaseModel):
     base_prompt: str
     variables: List[str]
@@ -109,8 +89,6 @@ class EntityConfig(BaseModel):
     entity_id: str = "jade"
     max_iterations: int = 50
     prompts: PromptConfig
-
-    personality: PersonalityConfig = PersonalityConfig()
 
 
 # Server Configuration
@@ -132,7 +110,7 @@ class LoggingConfig(BaseModel):
 
 
 # Main Unified Configuration
-class UnifiedConfig(BaseModel):
+class EntityServerConfig(BaseModel):
     """Main configuration class matching your exact YAML structure"""
 
     config_version: str = "2.0"
@@ -149,7 +127,7 @@ class UnifiedConfig(BaseModel):
     output_adapters: List[AdapterConfig] = []
 
     @model_validator(mode="after")
-    def check_enabled_adapters(self) -> "UnifiedConfig":
+    def check_enabled_adapters(self) -> "EntityServerConfig":
         if not any(adapter.enabled for adapter in self.output_adapters):
             raise ValueError("At least one output adapter must be enabled")
         return self
@@ -185,7 +163,7 @@ def walk_and_replace(obj: Any) -> Any:
         return interpolate_env(obj)
 
 
-def load_config(config_path: str = "config.yml") -> UnifiedConfig:
+def load_config(config_path: str = "config.yml") -> EntityServerConfig:
     """Load configuration from YAML file with environment variable substitution"""
     # Expand path
     config_path = os.path.expanduser(config_path)
@@ -210,7 +188,7 @@ def load_config(config_path: str = "config.yml") -> UnifiedConfig:
 
     # Parse and validate
     try:
-        config = UnifiedConfig(**config_data)
+        config = EntityServerConfig(**config_data)
         return config
     except Exception as e:
         print(f"Configuration validation error: {e}")

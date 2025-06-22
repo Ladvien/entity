@@ -10,6 +10,8 @@ database:
   min_pool_size: 2
   max_pool_size: 10
   db_schema: "entity"
+
+  # Names of the tables used by the entity to store chat history.
   history_table: "chat_history"
 
 ollama:
@@ -142,5 +144,14 @@ tools:
 output_adapters:
   - type: tts
     enabled: true
+    settings:
+      voice_name: "bf_emma"
+      speed: 0.3
   - type: translation
     enabled: false
+    settings:
+      target_language: "spanish"
+  - type: webhook # Easy to add new types!
+    enabled: true
+    settings:
+      url: "https://my-webhook.com"
