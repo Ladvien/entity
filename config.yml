@@ -140,8 +140,8 @@ tools:
   plugin_path: "./plugins"
   enabled:
     - fun_fact
-    # - memory_search
-    # - store_memory
+    - memory_search
+    - store_memory
 
 output_adapters:
   - type: tts
