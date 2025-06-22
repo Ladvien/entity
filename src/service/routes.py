@@ -11,6 +11,7 @@ from src.shared.models import (
     ToolExecutionResponse,
 )
 from src.core.registry import ServiceRegistry
+from src.shared.utils import agent_result_to_response
 from src.tools.tools import ToolManager
 
 
@@ -36,7 +37,7 @@ class EntityRouterFactory:
                     thread_id=request.thread_id,
                     use_tools=request.use_tools,
                 )
-                return ChatResponse.from_result(interaction)
+                return agent_result_to_response(interaction)
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 

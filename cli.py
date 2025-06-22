@@ -8,14 +8,40 @@ import logging
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+from rich.text import Text
 import click
 
 # Import your existing modules
+from src.shared.agent_result import AgentResult
 from src.service.config import load_config
 from src.cli.client import EntityAPIClient
 from src.cli.chat_interface import ChatInterface
 
 console = Console()
+
+
+def render_agent_result(result: AgentResult):
+    if result.memory_context:
+        console.print("[bold magenta]🤖 Using memory context...[/bold magenta]")
+
+    if result.react_steps:
+        for step in result.react_steps:
+            if step.thought:
+                console.print(f"[cyan]🤖 Thought:[/cyan] {step.thought}")
+            if step.action:
+                console.print(f"[yellow]⚙️ Action:[/yellow] {step.action}")
+            if step.observation:
+                console.print(f"[green]👁️ Observation:[/green] {step.observation}")
+
+    console.print(
+        Panel.fit(result.final_response, title="💬 Final Answer", style="bold")
+    )
+
+    if result.tools_used:
+        console.print(f"[dim]Tools used: {', '.join(result.tools_used)}[/dim]")
+
+    if result.memory_context:
+        console.print("[dim](Memory: Used)[/dim]")
 
 
 @click.group(invoke_without_command=True)

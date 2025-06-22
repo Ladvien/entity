@@ -17,24 +17,6 @@ from src.adapters import OutputAdapterManager
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class ReActStep:
-    thought: str
-    action: str
-    action_input: str
-    observation: str
-    final_answer: str
-
-    def format_rich(self) -> Text:
-        text = Text()
-        text.append("Thought: ", style="cyan").append(f"{self.thought}\n")
-        text.append("Action: ", style="blue").append(f"{self.action}\n")
-        text.append("Action Input: ", style="magenta").append(f"{self.action_input}\n")
-        text.append("Observation: ", style="yellow").append(f"{self.observation}\n")
-        text.append("Final Answer: ", style="green").append(f"{self.final_answer}")
-        return text
-
-
 class MemoryContextBuilder:
     def __init__(self, memory_system: MemorySystem):
         self.memory_system = memory_system

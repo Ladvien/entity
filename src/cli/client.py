@@ -3,6 +3,7 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 import httpx
 
+from src.shared.agent_result import AgentResult
 from src.shared.models import ChatRequest, ChatResponse
 
 
@@ -26,7 +27,7 @@ class EntityAPIClient:
         message: str,
         thread_id: str = "default",
         use_tools: bool = True,
-    ) -> ChatResponse:
+    ) -> AgentResult:  # ✅ Return type changed
         """Send a chat message to the entity agent"""
         try:
             response = await self.session.post(
@@ -39,8 +40,22 @@ class EntityAPIClient:
                 timeout=60.0,
             )
             response.raise_for_status()
+            data = response.json()
 
-            return ChatResponse(**response.json())
+            # ✅ Convert ChatResponse to AgentResult
+            chat_response = ChatResponse(**data)
+            return AgentResult(
+                thread_id=chat_response.thread_id,
+                timestamp=chat_response.timestamp,
+                raw_input=chat_response.raw_input,
+                raw_output=chat_response.raw_output,
+                final_response=chat_response.response,
+                tools_used=chat_response.tools_used or [],
+                token_count=chat_response.token_count or 0,
+                memory_context=chat_response.memory_context or "",
+                intermediate_steps=chat_response.intermediate_steps or [],
+                react_steps=chat_response.react_steps or [],
+            )
 
         except httpx.HTTPStatusError as e:
             print(f"DEBUG: HTTP error: {e}, Response: {e.response.text}")

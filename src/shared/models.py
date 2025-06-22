@@ -5,6 +5,7 @@ import uuid
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
+
 from src.shared.agent_result import AgentResult
 
 
@@ -151,9 +152,12 @@ class ChatResponse(BaseModel):
     token_count: Optional[int] = 0
     memory_context: Optional[str] = ""
     intermediate_steps: Optional[List[dict]] = []
+    react_steps: Optional[List[dict]] = []
 
     @classmethod
-    def from_result(cls, interaction: AgentResult) -> "ChatResponse":
+    def from_result(cls, interaction: "AgentResult") -> "ChatResponse":
+        from src.shared.agent_result import AgentResult  # 🧠 Delayed import
+
         return cls(
             thread_id=interaction.thread_id,
             timestamp=interaction.timestamp,

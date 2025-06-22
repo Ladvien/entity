@@ -13,6 +13,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich import print as rprint
 
+from src.cli.render import render_agent_result
 from src.cli.client import EntityAPIClient
 
 logger = logging.getLogger(__name__)
@@ -27,6 +28,7 @@ class ChatInterface:
         self.current_thread = "default"
         self.local_history = []
         self.console = Console()
+        self.prompt = "[bold cyan]You:[/bold cyan] "  # ✅ Add this line
 
         # Setup local history storage if enabled
         if config.get("save_locally", True):
@@ -393,5 +395,16 @@ class ChatInterface:
             self.console.print(f"❌ Failed to save conversation: {e}", style="red")
 
     async def run(self):
-        """Entry point for `main.py chat` or `main.py both` mode"""
-        await self.start()
+        self.console.print("🔮 Chat started. Type 'exit' to quit.\n")
+
+        while True:
+            user_input = self.console.input(self.prompt)
+            if user_input.strip().lower() in {"exit", "quit"}:
+                self.console.print("👋 Goodbye.")
+                break
+
+            try:
+                result = await self.client.chat(user_input)
+                render_agent_result(result)
+            except Exception as e:
+                self.console.print(f"[red]❌ Error: {e}[/red]")
