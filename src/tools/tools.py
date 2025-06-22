@@ -20,27 +20,45 @@ logger = logging.getLogger(__name__)
 
 class ToolUsageTracker:
     _instance = None
-    _usage_count = {}
 
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._usage_count = {}
+            cls._limits = {}  # tool_name → {"max_uses": int, "max_total": int}
         return cls._instance
+
+    def set_limit(
+        self, tool_name: str, max_uses: Optional[int], max_total: Optional[int]
+    ):
+        self._limits[tool_name] = {
+            "max_uses": max_uses,
+            "max_total": max_total,
+        }
 
     def increment(self, tool_name: str) -> int:
         self._usage_count[tool_name] = self._usage_count.get(tool_name, 0) + 1
         return self._usage_count[tool_name]
 
+    def check_limit(self, tool_name: str) -> bool:
+        usage = self._usage_count.get(tool_name, 0)
+        limits = self._limits.get(tool_name, {})
+        max_uses = limits.get("max_uses")
+        max_total = limits.get("max_total")
+
+        if max_uses is not None and usage >= max_uses:
+            return False
+
+        if max_total is not None and self.get_total_usage() >= max_total:
+            return False
+
+        return True
+
     def reset(self):
         self._usage_count.clear()
-        logger.debug("🔄 Tool usage tracker reset")
 
     def get_total_usage(self) -> int:
         return sum(self._usage_count.values())
-
-    def get_usage(self, tool_name: str) -> int:
-        return self._usage_count.get(tool_name, 0)
 
 
 class ToolManager:
@@ -91,6 +109,8 @@ class ToolManager:
             raise TypeError(f"{cls.__name__} must inherit from BaseToolPlugin")
 
         instance = cls()
+
+        # Ensure the tool implements necessary methods for limiting
         required_methods = ["check_limit", "increment_use"]
         for method in required_methods:
             if not callable(getattr(instance, method, None)):
@@ -117,22 +137,59 @@ class ToolManager:
                 f"{cls.__name__}.run() must take {cls.args_schema.__name__}, got {positional[1].annotation}"
             )
 
+        # Now use the helper function to handle tool wrapping
+        wrapped_tool_function = self._create_wrapped_tool_function(instance)
+
+        # Register the tool and apply limits
+        tool = StructuredTool(
+            name=instance.name,
+            description=instance.description,
+            args_schema=instance.args_schema,
+            coroutine=wrapped_tool_function,
+        )
+        self._tools[instance.name] = tool
+        self._langchain_tools.append(tool)
+        logger.info(f"✅ Registered plugin tool: {instance.name}")
+
+    def _create_wrapped_tool_function(self, instance: BaseToolPlugin):
+        """Helper function to wrap tool execution with limit checks"""
+
         async def wrapped(input_data: Any):
             try:
+                # Check tool usage limit
+                if not self.tracker.check_limit(instance.name):
+                    return f"Tool '{instance.name}' has reached its usage limit."
+
+                self.tracker.increment(instance.name)
+
+                # Ensure input data is correctly structured
                 if isinstance(input_data, str):
                     key = list(instance.args_schema.model_fields.keys())[0]
                     input_data = {key: input_data}
                 if not isinstance(input_data, instance.args_schema):
                     input_data = instance.args_schema(**input_data)
+
+                # Run the tool's actual logic
                 result = await instance.run(input_data)
+
+                # Ensure the result is a string
                 if not isinstance(result, str):
                     raise TypeError(
                         f"{instance.name} must return str, got {type(result)}"
                     )
+
                 return result
+
             except Exception as e:
-                logger.exception(f"❌ Error in tool '{instance.name}'")
+                # Catch all exceptions and log them
+                logger.exception(f"❌ Error in tool '{instance.name}': {e}")
                 return f"[Tool Error: {instance.name}] {e}"
+
+            # Optionally, you can add a finally block if necessary (for cleanup)
+            finally:
+                logger.debug(f"Finished executing tool: {instance.name}")
+
+        return wrapped
 
     def load_plugins_from_config(
         self, directory: str, enabled_tools: Optional[List[str]] = None
@@ -171,11 +228,27 @@ class ToolManager:
                 if enabled_tools and plugin_name not in enabled_tools:
                     logger.info(f"🔒 Skipping disabled tool: {plugin_name}")
                     continue
+
+                # ✅ Set per-tool limits from config
+                if self.config and self.config.enabled:
+                    tool_cfg = next(
+                        (t for t in self.config.enabled if t.name == plugin_name), None
+                    )
+                    if tool_cfg:
+                        self.tracker.set_limit(
+                            plugin_name,
+                            getattr(tool_cfg, "max_uses", None),
+                            getattr(tool_cfg, "max_total", None),
+                        )
+
                 try:
+                    # Register the tool
                     self.register_class(obj)
                     registered += 1
-                except Exception:
-                    logger.exception(f"❌ Failed to register: {obj.__name__}")
+                except Exception as e:
+                    logger.exception(
+                        f"❌ Failed to register tool: {obj.__name__} with error: {e}"
+                    )
 
         if registered == 0:
             logger.warning(f"⚠️ No tools registered from: {file_path}")
