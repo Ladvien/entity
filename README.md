@@ -192,7 +192,7 @@ MIT — see `LICENSE` for details.
 ## 🔧 Configuration System Overhaul
 - [X] **Merge database configs** - Combine `DatabaseConfig` and `StorageConfig` into single `DataConfig`
 - [X] **Eliminate PersonalityConfig** - Move personality fields directly into `EntityConfig`
-- [ ] **Simplify adapter configs** - Replace separate adapter classes with single `AdapterConfig` + type field
+- [X] **Simplify adapter configs** - Replace separate adapter classes with single `AdapterConfig` + type field
 - [ ] **Merge audio configs** - Combine `AudioConfig` into `TTSConfig`
 - [ ] **Reduce config classes** - Target 3-4 config classes instead of 10+
 - [ ] **Update config.yml** - Adjust YAML structure to match simplified config classes

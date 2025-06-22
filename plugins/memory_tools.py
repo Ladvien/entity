@@ -43,7 +43,7 @@ class DeepMemorySearchTool(BaseToolPlugin):
         }
 
     async def run(self, input_data: MemorySearchInput) -> str:
-        memory_system = ServiceRegistry.try_get("memory_system")
+        memory_system = ServiceRegistry.try_get("memory")
         if not memory_system:
             return "❌ Memory system not available"
 
@@ -76,7 +76,7 @@ class MemorySearchTool(BaseToolPlugin):
         }
 
     async def run(self, input_data: MemorySearchInput) -> str:
-        memory_system = ServiceRegistry.try_get("memory_system")
+        memory_system = ServiceRegistry.try_get("memory")
         if not memory_system:
             return "❌ Vector memory system not available"
 
@@ -110,7 +110,7 @@ class StoreMemoryTool(BaseToolPlugin):
         }
 
     async def run(self, input_data: StoreMemoryInput) -> str:
-        memory_system = ServiceRegistry.try_get("memory_system")
+        memory_system = ServiceRegistry.try_get("memory")
         if not memory_system:
             return "❌ Vector memory system not available"
 

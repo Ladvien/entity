@@ -97,16 +97,24 @@ entity:
       Question: the input question you must answer
       Thought: you should always think about what to do
       Action: the action to take, should be one of [{tool_names}]
-      Action Input: the input to the action (REQUIRED - cannot be empty)
+      Action Input: the input to the action
       Observation: the result of the action
       ... (this Thought/Action/Action Input/Observation can repeat N times)
       Thought: I now know the final answer
       Final Answer: the final answer to the original input question
 
-      IMPORTANT:
-      - ALWAYS include "Action Input:" after "Action:" - even if empty, use "Action Input: none"
-      - Use exact tool names from the list: [{tool_names}]
-      - Keep responses sharp and in character as Jade
+      CRITICAL FORMATTING RULES:
+      - Action MUST be ONLY the tool name
+      - Action Input MUST be on the next line (NOT "Memory Input" or anything else)
+      - Use exactly "Action Input:" - no variations
+
+      CORRECT EXAMPLE:
+      Action: memory_search
+      Action Input: search for past conversations
+
+      WRONG EXAMPLES (DO NOT USE):
+      Action: memory_search
+      Memory Input: search for past conversations
 
       Begin!
 

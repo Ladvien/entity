@@ -1,3 +1,5 @@
+# Updated src/service/app.py - Add ReAct validation on startup
+
 import logging
 from pathlib import Path
 from contextlib import asynccontextmanager
@@ -16,7 +18,7 @@ from src.service.routes import EntityRouterFactory
 from src.adapters import create_output_adapters
 from src.tools.tools import ToolManager
 from src.core.registry import ServiceRegistry
-
+from src.service.react_validator import ReActPromptValidator  # NEW IMPORT
 
 logger = logging.getLogger(__name__)
 
@@ -55,14 +57,22 @@ def setup_logging(config):
     logger.info(f"✅ Logging configured - Level: {config.logging.level}")
 
 
-# src/service/app.py - FIXED LIFESPAN
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     config = load_config()
     setup_logging(config)
     ServiceRegistry.register("config", config)
+
+    # 🔍 NEW: Validate ReAct prompt on startup
+    logger.info("🔍 Validating ReAct prompt configuration...")
+    validation_passed = ReActPromptValidator.validate_on_startup(config.entity)
+
+    if not validation_passed:
+        logger.error("❌ ReAct prompt validation failed! Check the output above.")
+        logger.error("💡 Server will continue but may experience parsing errors.")
+        logger.error("🔧 Run 'entity validate_prompt' for detailed validation report.")
+    else:
+        logger.info("✅ ReAct prompt validation passed!")
 
     db = await initialize_global_db_connection(config.database)
     ServiceRegistry.register("db", db)
@@ -96,12 +106,12 @@ async def lifespan(app: FastAPI):
         output_adapter_manager=create_output_adapters(config),
     )
 
-    # ✅ CRITICAL: Initialize the agent!
+    # Initialize the agent
     await agent.initialize()
 
     ServiceRegistry.register("agent", agent)
 
-    # ✅ Register routes here via the app instance
+    # Register routes here via the app instance
     router = EntityRouterFactory(agent, tool_manager, memory_system).get_router()
     app.include_router(router, prefix="/api/v1")
 
@@ -124,15 +134,6 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
-    @app.on_event("startup")
-    async def register_routes():
-        agent = ServiceRegistry.get("agent")
-        tools = ServiceRegistry.get("tools")
-        memory = ServiceRegistry.get("memory")
-
-        router = EntityRouterFactory(agent, tools, memory).get_router()
-        app.include_router(router, prefix="/api/v1")  # 🔥 this is what’s missing
 
     return app
 
