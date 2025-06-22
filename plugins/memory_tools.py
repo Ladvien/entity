@@ -1,13 +1,14 @@
-# plugins/memory_tools.py
-
 from typing import Optional, Dict, Any
 from pydantic import BaseModel, Field
 from datetime import datetime
 from math import tanh
+import logging
 
 from src.core.registry import ServiceRegistry
 from src.tools.base_tool_plugin import BaseToolPlugin
 from src.shared.models import ChatInteraction
+
+logger = logging.getLogger(__name__)
 
 
 class MemorySearchInput(BaseModel):
@@ -32,11 +33,16 @@ class StoreMemoryInput(BaseModel):
 
 
 class DeepMemorySearchTool(BaseToolPlugin):
+    """Search stored vector memories and chat history for deep context."""
+
     name = "deep_memory_search"
     description = (
         "Searches both stored vector memories and raw chat history for deep context"
     )
     args_schema = MemorySearchInput
+
+    def __init__(self):
+        super().__init__()
 
     def get_context_injection(
         self, user_input: str, thread_id: str = "default"
@@ -51,7 +57,6 @@ class DeepMemorySearchTool(BaseToolPlugin):
         if not memory_system:
             return "❌ Memory system not available"
 
-        # ✅ FIXED: Use correct method name and handle ChatInteraction objects
         results = await memory_system.deep_search_memory(
             query=input_data.query,
             thread_id=input_data.thread_id,
@@ -61,17 +66,21 @@ class DeepMemorySearchTool(BaseToolPlugin):
         if not results:
             return f"No relevant results found for: {input_data.query}"
 
-        # ✅ FIXED: Handle ChatInteraction objects properly
         return "\n".join(
-            f"{i+1}. [{result.thread_id}] {result.response[:80]}..."
+            f"{i+1}. [{result.metadata.get('memory_type', 'unspecified')}] {result.response[:80]}..."
             for i, result in enumerate(results)
         )
 
 
 class MemorySearchTool(BaseToolPlugin):
+    """Search stored vector memories using semantic similarity."""
+
     name = "memory_search"
     description = "Search stored memories using semantic similarity"
     args_schema = MemorySearchInput
+
+    def __init__(self):
+        super().__init__()
 
     def get_context_injection(
         self, user_input: str, thread_id: str = "default"
@@ -86,7 +95,6 @@ class MemorySearchTool(BaseToolPlugin):
         if not memory_system:
             return "❌ Vector memory system not available"
 
-        # ✅ This method name is correct
         results = await memory_system.search_memory(
             query=input_data.query,
             thread_id=input_data.thread_id,
@@ -96,17 +104,27 @@ class MemorySearchTool(BaseToolPlugin):
         if not results:
             return f"No relevant memories found for: {input_data.query}"
 
-        # ✅ This handles Document objects correctly
-        return "\n".join(
-            f"{i+1}. [{doc.metadata.get('memory_type', 'unknown')}] {doc.page_content[:80]}..."
-            for i, doc in enumerate(results)
-        )
+        formatted = []
+        for i, doc in enumerate(results):
+            mem_type = doc.metadata.get("memory_type")
+            if not mem_type:
+                logger.warning(f"⚠️ Missing memory_type in metadata: {doc.metadata}")
+                mem_type = "unspecified"
+
+            formatted.append(f"{i+1}. [{mem_type}] {doc.page_content[:80]}...")
+
+        return "\n".join(formatted)
 
 
 class StoreMemoryTool(BaseToolPlugin):
+    """Store a memory entry in vector database for future reference."""
+
     name = "store_memory"
     description = "Store a memory entry for future reference"
     args_schema = StoreMemoryInput
+
+    def __init__(self):
+        super().__init__()
 
     def get_context_injection(
         self, content: str, thread_id: str = "default", memory_type: str = "observation"
@@ -122,7 +140,6 @@ class StoreMemoryTool(BaseToolPlugin):
         if not memory_system:
             return "❌ Vector memory system not available"
 
-        # Normalize importance score to [0.0, 1.0]
         raw_score = input_data.importance_score
         normalized_score = (
             raw_score
@@ -149,12 +166,22 @@ class StoreMemoryTool(BaseToolPlugin):
 
 
 class SearchMemoriesTool(MemorySearchTool):
+    """Alias for memory_search."""
+
     name = "search_memories"
     description = "Alias for memory_search"
     args_schema = MemorySearchInput
 
+    def __init__(self):
+        super().__init__()
+
 
 class MemoryStoreTool(StoreMemoryTool):
+    """Alias for store_memory."""
+
     name = "memory_store"
     description = "Alias for store_memory"
     args_schema = StoreMemoryInput
+
+    def __init__(self):
+        super().__init__()

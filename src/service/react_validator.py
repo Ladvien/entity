@@ -307,16 +307,7 @@ class ReActPromptValidator:
     @classmethod
     def _display_prompt_snippet(cls, prompt: str):
         """Display a snippet of the current prompt"""
-        snippet_length = 300
-        if len(prompt) > snippet_length:
-            snippet = prompt[:snippet_length] + "..."
-        else:
-            snippet = prompt
-
-        snippet_panel = Panel(
-            snippet, title="📝 Current Prompt Template (snippet)", border_style="dim"
-        )
-        console.print(snippet_panel)
+        console.print(prompt.strip(), style="dim")
 
     @classmethod
     def validate_prompt(cls, config: EntityConfig) -> bool:

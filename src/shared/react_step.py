@@ -1,5 +1,3 @@
-# Updated src/shared/react_step.py with better extraction
-
 from dataclasses import dataclass
 from rich.text import Text
 from rich.console import Console
@@ -17,6 +15,7 @@ class ReActStep:
     action_input: str
     observation: str
     final_answer: str = ""
+    memory_type: str = "agent_step"
 
     def format_rich(self) -> Text:
         """Format this step for rich console output"""
@@ -34,7 +33,10 @@ class ReActStep:
             text.append("📝 Action Input: ", style="magenta bold")
             text.append(f"{self.action_input}\n", style="magenta")
 
-        if self.observation:
+        if self.observation and self.observation.strip().lower() not in {
+            "[unknown]",
+            "unknown",
+        }:
             text.append("👁️ Observation: ", style="green bold")
             text.append(f"{self.observation}\n", style="green")
 
@@ -61,12 +63,10 @@ class ReActStep:
             if isinstance(step, (list, tuple)) and len(step) == 2:
                 action, observation = step
 
-                # Extract data from action object
                 thought = ""
                 action_name = ""
                 action_input = ""
 
-                # Log what we found in the action object
                 logger.debug(f"🔍 Action type: {type(action)}")
                 logger.debug(f"🔍 Action attributes: {dir(action)}")
 
@@ -74,14 +74,12 @@ class ReActStep:
                     log = action.log
                     logger.debug(f"🔍 Action log: {log[:200]}...")
 
-                    # Parse the thought from the log using more flexible regex
                     thought_patterns = [
                         r"Thought:\s*(.*?)(?=\nAction:|$)",
                         r"I need to (.*?)(?=\nAction:|$)",
                         r"I should (.*?)(?=\nAction:|$)",
-                        r"^(.*?)(?=\nAction:|$)",  # Everything before Action
+                        r"^(.*?)(?=\nAction:|$)",
                     ]
-
                     for pattern in thought_patterns:
                         thought_match = re.search(
                             pattern, log, re.DOTALL | re.IGNORECASE
@@ -90,12 +88,10 @@ class ReActStep:
                             thought = thought_match.group(1).strip()
                             break
 
-                    # Parse action name
                     action_patterns = [
                         r"Action:\s*(.*?)(?=\nAction Input:|$)",
                         r"Action:\s*(\w+)",
                     ]
-
                     for pattern in action_patterns:
                         action_match = re.search(
                             pattern, log, re.DOTALL | re.IGNORECASE
@@ -104,40 +100,39 @@ class ReActStep:
                             action_name = action_match.group(1).strip()
                             break
 
-                    # Parse action input
                     input_patterns = [
                         r"Action Input:\s*(.*?)(?=\nObservation:|$)",
                         r"Action Input:\s*(.*)",
                     ]
-
                     for pattern in input_patterns:
                         input_match = re.search(pattern, log, re.DOTALL | re.IGNORECASE)
                         if input_match:
                             action_input = input_match.group(1).strip()
                             break
 
-                # Fallback to direct attributes
                 if not action_name and hasattr(action, "tool"):
                     action_name = action.tool
-
                 if not action_input and hasattr(action, "tool_input"):
                     action_input = str(action.tool_input)
 
-                # Create the step
+                observation_str = str(observation).strip()
+                if observation_str.lower() == "[unknown]":
+                    observation_str = ""
+
                 react_step = ReActStep(
                     thought=thought,
                     action=action_name,
                     action_input=action_input,
-                    observation=str(observation),
+                    observation=observation_str,
                     final_answer="",
+                    memory_type="agent_step",
                 )
 
                 logger.debug(
-                    f"✅ Created step: thought='{thought[:50]}...', action='{action_name}', input='{action_input[:50]}...', obs='{str(observation)[:50]}...'"
+                    f"✅ Created step: thought='{thought[:50]}...', action='{action_name}', input='{action_input[:50]}...', obs='{observation_str[:50]}...'"
                 )
                 steps.append(react_step)
 
-        # Extract final answer from the last step's thought if available
         if steps:
             last_step = steps[-1]
             if "Final Answer:" in last_step.thought:
@@ -152,20 +147,16 @@ class ReActStep:
 
     @staticmethod
     def extract_from_raw_output(raw_output: str) -> List["ReActStep"]:
-        """Extract ReAct steps from raw LLM output text"""
         logger.debug(f"🔍 Extracting from raw output: {raw_output[:200]}...")
         steps = []
 
-        # Try to find clear ReAct pattern in the output
         if "Thought:" in raw_output and "Action:" in raw_output:
-            # Split on pattern boundaries
             sections = re.split(r"(?=Thought:)", raw_output)
 
             for section in sections:
                 if not section.strip():
                     continue
 
-                # Extract components using regex
                 thought_match = re.search(
                     r"Thought:\s*(.*?)(?=\nAction:|$)", section, re.DOTALL
                 )
@@ -180,7 +171,12 @@ class ReActStep:
                 )
                 final_match = re.search(r"Final Answer:\s*(.*)", section, re.DOTALL)
 
-                # Only create step if we have meaningful content
+                observation_str = (
+                    observation_match.group(1).strip() if observation_match else ""
+                )
+                if observation_str.lower() == "[unknown]":
+                    observation_str = ""
+
                 if thought_match or action_match:
                     step = ReActStep(
                         thought=thought_match.group(1).strip() if thought_match else "",
@@ -188,18 +184,14 @@ class ReActStep:
                         action_input=(
                             input_match.group(1).strip() if input_match else ""
                         ),
-                        observation=(
-                            observation_match.group(1).strip()
-                            if observation_match
-                            else ""
-                        ),
+                        observation=observation_str,
                         final_answer=(
                             final_match.group(1).strip() if final_match else ""
                         ),
+                        memory_type="agent_step",
                     )
                     steps.append(step)
 
-        # If no clear ReAct pattern, create a single step with the whole output
         if not steps and raw_output.strip():
             logger.debug("🔍 No clear ReAct pattern found, creating single step")
             steps = [
@@ -209,6 +201,7 @@ class ReActStep:
                     action_input="",
                     observation="",
                     final_answer=raw_output.strip(),
+                    memory_type="agent_step",
                 )
             ]
 

@@ -178,15 +178,9 @@ def validate_prompt(ctx, detailed):
                         console.print(f"  {i}. {suggestion}")
                     console.print()
 
-            # Show current prompt snippet
-            prompt_snippet = (
-                config.entity.prompts.base_prompt[:300] + "..."
-                if len(config.entity.prompts.base_prompt) > 300
-                else config.entity.prompts.base_prompt
-            )
             console.print(
                 Panel(
-                    prompt_snippet,
+                    config.entity.prompts.base_prompt,
                     title="Current Prompt Template (snippet)",
                     border_style="dim",
                 )

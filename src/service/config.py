@@ -116,7 +116,13 @@ class LoggingConfig(BaseModel):
 
 class ToolConfig(BaseModel):
     plugin_path: str = "./plugins"
-    enabled: List[str] = Field(default_factory=list)
+
+    class EnabledToolEntry(BaseModel):
+        name: str
+        max_uses: int = 2
+        max_total: int = 4
+
+    enabled: List[EnabledToolEntry] = Field(default_factory=list)
 
 
 class EntityServerConfig(BaseModel):

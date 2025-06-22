@@ -164,7 +164,7 @@ class EntityAgent:
             logger.info("🤖 Running through ReAct agent executor with tools...")
 
             try:
-                # ✅ CRITICAL: Make sure we're getting intermediate steps
+                input_vars["step_count"] = len(intermediate_steps)
                 result = await self.agent_executor.ainvoke(input_vars)
 
                 # Debug: Log what we actually get back

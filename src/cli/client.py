@@ -58,6 +58,7 @@ class EntityAPIClient:
                             action_input=step_data.get("action_input", ""),
                             observation=step_data.get("observation", ""),
                             final_answer=step_data.get("final_answer", ""),
+                            memory_type=step_data.get("memory_type", "agent_step"),
                         )
                     )
 

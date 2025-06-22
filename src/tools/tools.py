@@ -11,6 +11,9 @@ from pydantic import BaseModel
 
 from src.tools.base_tool_plugin import BaseToolPlugin
 from plugins import PLUGIN_TOOLS
+from src.service.config import (
+    ToolConfig,
+)  # Ensure this import references the loaded config
 
 logger = logging.getLogger(__name__)
 
@@ -40,68 +43,23 @@ class ToolUsageTracker:
         return self._usage_count.get(tool_name, 0)
 
 
-class SelfLimitingTool:
-    def __init__(self, tool, max_uses_per_tool=2, max_total_tools=4):
-        self.tool = tool
-        self.max_uses_per_tool = max_uses_per_tool
-        self.max_total_tools = max_total_tools
-        self.tracker = ToolUsageTracker()
-
-        self.name = tool.name
-        self.description = f"{tool.description} (Max {max_uses_per_tool} uses)"
-        self.args_schema = getattr(tool, "args_schema", None)
-
-    def __getattr__(self, name):
-        return getattr(self.tool, name)
-
-    def run(self, *args, **kwargs):
-        return self._execute(self.tool.run, *args, **kwargs)
-
-    async def arun(self, *args, **kwargs):
-        if hasattr(self.tool, "arun"):
-            return await self._execute(self.tool.arun, *args, **kwargs)
-        return await self._execute(self.tool.run, *args, **kwargs)
-
-    def _execute(self, tool_func, *args, **kwargs):
-        total_usage = self.tracker.get_total_usage()
-        if total_usage >= self.max_total_tools:
-            logger.warning(f"🛑 Max total tool usage reached ({self.max_total_tools})")
-            return f"Maximum tool usage reached. Limit: {self.max_total_tools}."
-
-        current_usage = self.tracker.get_usage(self.name)
-        if current_usage >= self.max_uses_per_tool:
-            logger.warning(
-                f"🛑 Tool '{self.name}' usage limit reached ({self.max_uses_per_tool})"
-            )
-            return f"Tool '{self.name}' usage limit reached."
-
-        self.tracker.increment(self.name)
-
-        try:
-            if asyncio.iscoroutinefunction(tool_func):
-                return asyncio.create_task(tool_func(*args, **kwargs))
-            result = tool_func(*args, **kwargs)
-            return result
-        except Exception as e:
-            logger.error(f"❌ Tool '{self.name}' execution failed: {e}")
-            return f"Tool '{self.name}' error: {e}"
-
-
 class ToolManager:
-    def __init__(self):
+    def __init__(self, config: Optional[ToolConfig] = None):
         self._tools: Dict[str, Any] = {}
         self._langchain_tools: List[Any] = []
         self.tracker = ToolUsageTracker()
+        self.config = config
 
     def register(self, tool: BaseToolPlugin):
         self.register_class(tool.__class__)
 
     @classmethod
-    def setup(cls, plugin_directory: str, enabled_tools: List[str] = None):
-        manager = cls()
-        for tool_cls in PLUGIN_TOOLS:
-            if enabled_tools is None or tool_cls.name in enabled_tools:
-                manager.register(tool_cls())
+    def setup(cls, plugin_directory: str, config: ToolConfig):
+        manager = cls(config)
+        manager.load_plugins_from_config(
+            plugin_directory,
+            [t.name for t in config.enabled] if config.enabled else None,
+        )
         return manager
 
     @staticmethod
@@ -109,22 +67,20 @@ class ToolManager:
         @wraps(async_func)
         def wrapper(input_data: BaseModel):
             try:
-                # Already in event loop? Schedule it
                 loop = asyncio.get_running_loop()
                 future = loop.create_task(async_func(input_data))
                 return loop.run_until_complete(future)
             except RuntimeError:
-                # Not in async context — safe to run fresh loop
                 return asyncio.run(async_func(input_data))
 
         return wrapper
 
     def register_function(self, tool_func: Callable, args_schema: Type[BaseModel]):
-        tool = StructuredTool.from_function(
-            self.sync_adapter(tool_func),
+        tool = StructuredTool(
             name=tool_func.__name__,
             description=tool_func.__doc__ or "",
             args_schema=args_schema,
+            func=self.sync_adapter(tool_func),
         )
         self._tools[tool.name] = tool
         self._langchain_tools.append(tool)
@@ -135,6 +91,13 @@ class ToolManager:
             raise TypeError(f"{cls.__name__} must inherit from BaseToolPlugin")
 
         instance = cls()
+        required_methods = ["check_limit", "increment_use"]
+        for method in required_methods:
+            if not callable(getattr(instance, method, None)):
+                raise TypeError(
+                    f"{cls.__name__} must implement method '{method}()' to support usage limiting."
+                )
+
         run_sig = signature(cls.run)
         params = list(run_sig.parameters.values())
         positional = [
@@ -170,17 +133,6 @@ class ToolManager:
             except Exception as e:
                 logger.exception(f"❌ Error in tool '{instance.name}'")
                 return f"[Tool Error: {instance.name}] {e}"
-
-        tool = StructuredTool(
-            name=instance.name,
-            description=instance.description,
-            args_schema=instance.args_schema,
-            coroutine=wrapped,  # ✅ async coroutine explicitly set
-        )
-
-        self._tools[instance.name] = tool
-        self._langchain_tools.append(tool)
-        logger.info(f"✅ Registered plugin tool: {instance.name}")
 
     def load_plugins_from_config(
         self, directory: str, enabled_tools: Optional[List[str]] = None
