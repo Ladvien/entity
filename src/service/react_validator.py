@@ -7,7 +7,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
-from src.service.config import EntityConfig
+from src.core.config import EntityConfig
 
 logger = logging.getLogger(__name__)
 console = Console()

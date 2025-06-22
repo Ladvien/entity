@@ -10,21 +10,23 @@ import logging
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from rich.text import Text
 import click
+import uvicorn
 
 # Import your existing modules
+from src.client.chat_interface import ChatInterface
+from src.client.client import EntityAPIClient
+from src.server.main import create_app
 from src.service.react_validator import ReActPromptValidator
-from src.shared.agent_result import AgentResult
-from src.service.config import load_config
-from src.cli.client import EntityAPIClient
-from src.cli.chat_interface import ChatInterface
+from src.core.config import load_config
 
 console = Console()
 
 
 @click.group(invoke_without_command=True)
-@click.option("--config", "-c", default="config.yml", help="Configuration file path")
+@click.option(
+    "--config", "-c", default="config/config.yml", help="Configuration file path"
+)
 @click.option("--debug", "-d", is_flag=True, help="Enable debug logging")
 @click.option("--skip-validation", is_flag=True, help="Skip ReAct prompt validation")
 @click.pass_context
@@ -248,10 +250,6 @@ def run_server_mode(config_path: str, reload: bool = False):
         console.print(
             f"🚀 Starting Entity server on [cyan]{config.server.host}:{config.server.port}[/cyan]"
         )
-
-        # Fix the import - use the correct path
-        import uvicorn
-        from src.service.app import create_app
 
         app = create_app()
         uvicorn.run(

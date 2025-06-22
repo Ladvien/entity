@@ -7,17 +7,17 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from logging.handlers import RotatingFileHandler
 from langchain_ollama import OllamaLLM
-from plugins.memory_tools import DeepMemorySearchTool, MemorySearchTool
-from src.service.config import load_config
+
+from src.plugins.registry import ToolManager
+from src.server.routes.agent import EntityAgent
+from src.server.routes.routes import EntityRouterFactory
+from src.core.config import load_config
 from src.db.connection import (
     close_global_db_connection,
     initialize_global_db_connection,
 )
 from src.memory.memory_system import MemorySystem
-from src.service.agent import EntityAgent
-from src.service.routes import EntityRouterFactory
 from src.adapters import create_adapters
-from src.tools.tools import ToolManager
 from src.core.registry import ServiceRegistry
 from src.service.react_validator import ReActPromptValidator  # NEW IMPORT
 
@@ -75,6 +75,8 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("✅ ReAct prompt validation passed!")
 
+    logger.info("🔗 Initializing global database connection...")
+    logger.debug(f"Database config: {config.database}")
     db = await initialize_global_db_connection(config.database)
     ServiceRegistry.register("db", db)
 
@@ -85,10 +87,8 @@ async def lifespan(app: FastAPI):
     await memory_system.initialize()
     ServiceRegistry.register("memory", memory_system)
 
-    tool_manager = ToolManager()
-    tool_manager.load_plugins_from_config("plugins")
-    tool_manager.register_class(MemorySearchTool)
-    tool_manager.register_class(DeepMemorySearchTool)
+    tool_manager = ToolManager(config.tools)
+    tool_manager.load_plugins_from_config(config.tools.plugin_path)
 
     for tool in tool_manager.get_all_tools():
         logger.info(f"✅ Registered tool: {tool.name}")

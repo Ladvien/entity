@@ -149,7 +149,7 @@ class SchemaAwarePGVector(PGVector):
         conn = await self._get_connection()
         await conn.execute(
             text(
-                f"""
+                """
                 SELECT 1
                 FROM pg_tables
                 WHERE schemaname = :schema

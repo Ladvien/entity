@@ -13,8 +13,9 @@ from rich.panel import Panel
 from rich.table import Table
 from rich import print as rprint
 
-from src.cli.render import AgentResultRenderer
-from src.cli.client import EntityAPIClient
+from src.client.client import EntityAPIClient
+from src.client.render import AgentResultRenderer
+
 
 logger = logging.getLogger(__name__)
 

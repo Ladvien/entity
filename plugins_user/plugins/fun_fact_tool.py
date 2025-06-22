@@ -4,7 +4,8 @@ import logging
 from typing import Dict
 from pydantic import BaseModel, Field
 
-from src.tools.base_tool_plugin import BaseToolPlugin
+from src.plugins.base import BaseToolPlugin
+
 
 logger = logging.getLogger(__name__)
 

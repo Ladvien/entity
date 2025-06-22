@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine, text
 from src.db.models import Base
-from src.service.config import load_config
+from src.core.config import load_config
 
 
 def create_schema_sync():

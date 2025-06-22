@@ -9,10 +9,10 @@ from langchain.agents import AgentExecutor, create_react_agent
 from langchain_core.language_models.base import BaseLanguageModel
 
 from src.memory.memory_system import MemorySystem
-from src.service.config import EntityConfig
+from src.plugins.registry import ToolManager
+from src.core.config import EntityConfig
 from src.service.react_validator import ReActPromptValidator
 from src.shared.agent_result import AgentResult
-from src.tools.tools import ToolManager
 from src.adapters import OutputAdapterManager
 
 logger = logging.getLogger(__name__)

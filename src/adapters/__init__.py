@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 import logging
 
 from src.adapters.tts_adapter import TTSOutputAdapter
-from src.service.config import EntityServerConfig
+from src.core.config import EntityServerConfig
 from src.shared.models import ChatInteraction
 
 logger = logging.getLogger(__name__)

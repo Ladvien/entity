@@ -3,7 +3,8 @@ from typing import Optional
 from datetime import datetime
 
 from src.memory.memory_system import MemorySystem
-from src.service.agent import EntityAgent
+from src.plugins.registry import ToolManager
+from src.server.routes.agent import EntityAgent
 from src.shared.models import (
     ChatRequest,
     ChatResponse,
@@ -12,7 +13,6 @@ from src.shared.models import (
 )
 from src.core.registry import ServiceRegistry
 from src.shared.utils import agent_result_to_response
-from src.tools.tools import ToolManager
 
 
 class EntityRouterFactory:

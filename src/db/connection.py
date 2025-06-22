@@ -10,7 +10,7 @@ from sqlalchemy import text
 import logging
 import asyncio
 from sqlalchemy import create_engine
-from src.service.config import DataConfig
+from src.core.config import DataConfig
 
 logger = logging.getLogger(__name__)
 

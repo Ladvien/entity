@@ -4,6 +4,7 @@ Reduces from 10+ config classes to 4 main classes
 """
 
 from typing import Dict, Any, List, Literal
+from dotenv import load_dotenv
 from pydantic import BaseModel, Field, model_validator
 import yaml
 import os
@@ -115,14 +116,14 @@ class LoggingConfig(BaseModel):
 
 
 class ToolConfig(BaseModel):
-    plugin_path: str = "./plugins"
+    plugin_path: str = "./plugins_user/plugins"
+    max_total_tool_uses: int = 10
 
-    class EnabledToolEntry(BaseModel):
+    class EnabledTool(BaseModel):
         name: str
-        max_uses: int = 2
-        max_total: int = 4
+        max_uses: int
 
-    enabled: List[EnabledToolEntry] = Field(default_factory=list)
+    enabled: List
 
 
 class EntityServerConfig(BaseModel):
@@ -200,7 +201,7 @@ def walk_and_replace(obj: Any) -> Any:
         return interpolate_env(obj)
 
 
-def load_config(config_path: str = "config.yml") -> EntityServerConfig:
+def load_config(config_path: str = "config/config.yml") -> EntityServerConfig:
     """Load configuration from YAML file with environment variable substitution"""
     config_path = os.path.expanduser(config_path)
     config_path = Path(config_path)
@@ -208,14 +209,12 @@ def load_config(config_path: str = "config.yml") -> EntityServerConfig:
     if not config_path.exists():
         raise FileNotFoundError(f"Configuration file not found: {config_path}")
 
+    # Look for .env in config dir first, then project root
     env_file = config_path.parent / ".env"
+    if not env_file.exists():
+        env_file = Path(".env")
     if env_file.exists():
-        try:
-            from dotenv import load_dotenv
-
-            load_dotenv(env_file)
-        except ImportError:
-            pass
+        load_dotenv(env_file)
 
     with open(config_path, "r") as f:
         raw_config = yaml.safe_load(f)

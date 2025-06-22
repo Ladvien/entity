@@ -9,11 +9,11 @@ from typing import Any, Callable, Dict, List, Optional, Type
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel
 
-from src.tools.base_tool_plugin import BaseToolPlugin
-from plugins import PLUGIN_TOOLS
-from src.service.config import (
+
+from src.plugins.base import BaseToolPlugin
+from src.core.config import (
     ToolConfig,
-)  # Ensure this import references the loaded config
+)
 
 logger = logging.getLogger(__name__)
 
@@ -25,34 +25,59 @@ class ToolUsageTracker:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._usage_count = {}
-            cls._limits = {}  # tool_name → {"max_uses": int, "max_total": int}
+            cls._limits = {}  # tool_name → max_uses (simplified)
+            cls._global_limit = None  # NEW: Global limit
         return cls._instance
 
-    def set_limit(
-        self, tool_name: str, max_uses: Optional[int], max_total: Optional[int]
-    ):
-        self._limits[tool_name] = {
-            "max_uses": max_uses,
-            "max_total": max_total,
-        }
+    def set_global_limit(self, max_total: int):
+        """Set the global tool usage limit"""
+        self._global_limit = max_total
+        print(f"🔧 DEBUG: Setting global tool limit: {max_total}")
+
+    def set_limit(self, tool_name: str, max_uses: int):
+        """Set per-tool usage limit (simplified signature)"""
+        print(f"🔧 DEBUG: Setting limit for '{tool_name}': max_uses={max_uses}")
+        self._limits[tool_name] = max_uses
 
     def increment(self, tool_name: str) -> int:
         self._usage_count[tool_name] = self._usage_count.get(tool_name, 0) + 1
         return self._usage_count[tool_name]
 
     def check_limit(self, tool_name: str) -> bool:
-        usage = self._usage_count.get(tool_name, 0)
-        limits = self._limits.get(tool_name, {})
-        max_uses = limits.get("max_uses")
-        max_total = limits.get("max_total")
-
-        if max_uses is not None and usage >= max_uses:
+        """Check if a specific tool can still be used"""
+        # Check global limit first (account for the pending increment)
+        if (
+            self._global_limit is not None
+            and self.get_total_usage() + 1
+            > self._global_limit  # +1 for this pending call
+        ):
+            print(
+                f"🚫 DEBUG: Global limit would be exceeded! Current: {self.get_total_usage()}, Limit: {self._global_limit}"
+            )
             return False
 
-        if max_total is not None and self.get_total_usage() >= max_total:
+        # Check per-tool limit
+        usage = self._usage_count.get(tool_name, 0)
+        max_uses = self._limits.get(tool_name)
+        if max_uses is not None and usage >= max_uses:
+            print(
+                f"🚫 DEBUG: Tool '{tool_name}' individual limit hit! Usage: {usage}, Limit: {max_uses}"
+            )
             return False
 
         return True
+
+    def any_tools_available(self) -> bool:
+        """Check if any tools are still available"""
+        # If global limit is hit, no tools available
+        if (
+            self._global_limit is not None
+            and self.get_total_usage() >= self._global_limit
+        ):
+            return False
+
+        # Check if any individual tool has uses left
+        return any(self.check_limit(tool_name) for tool_name in self._limits.keys())
 
     def reset(self):
         self._usage_count.clear()
@@ -111,12 +136,6 @@ class ToolManager:
         instance = cls()
 
         # Ensure the tool implements necessary methods for limiting
-        required_methods = ["check_limit", "increment_use"]
-        for method in required_methods:
-            if not callable(getattr(instance, method, None)):
-                raise TypeError(
-                    f"{cls.__name__} must implement method '{method}()' to support usage limiting."
-                )
 
         run_sig = signature(cls.run)
         params = list(run_sig.parameters.values())
@@ -151,16 +170,34 @@ class ToolManager:
         self._langchain_tools.append(tool)
         logger.info(f"✅ Registered plugin tool: {instance.name}")
 
+    def any_tools_available(self) -> bool:
+        """Check if any tools are still available"""
+        return any(self.check_limit(tool_name) for tool_name in self._limits.keys())
+
     def _create_wrapped_tool_function(self, instance: BaseToolPlugin):
         """Helper function to wrap tool execution with limit checks"""
 
         async def wrapped(input_data: Any):
             try:
+                print(
+                    f"🔍 DEBUG: Tool '{instance.name}' called. Current usage: {self.tracker._usage_count.get(instance.name, 0)}"
+                )
+
                 # Check tool usage limit
                 if not self.tracker.check_limit(instance.name):
+                    print(f"❌ DEBUG: Tool '{instance.name}' hit limit!")
+
+                    # NEW: Check if ALL tools are exhausted
+                    if not self.tracker.any_tools_available():
+                        return "All available tools have reached their usage limits. Please provide a final answer without using any tools."
+
                     return f"Tool '{instance.name}' has reached its usage limit."
 
+                print(f"✅ DEBUG: Tool '{instance.name}' allowed, incrementing")
                 self.tracker.increment(instance.name)
+                print(
+                    f"📊 DEBUG: New usage count: {self.tracker._usage_count.get(instance.name, 0)}"
+                )
 
                 # Ensure input data is correctly structured
                 if isinstance(input_data, str):
@@ -174,20 +211,13 @@ class ToolManager:
 
                 # Ensure the result is a string
                 if not isinstance(result, str):
-                    raise TypeError(
-                        f"{instance.name} must return str, got {type(result)}"
-                    )
+                    result = str(result)
 
                 return result
 
             except Exception as e:
-                # Catch all exceptions and log them
-                logger.exception(f"❌ Error in tool '{instance.name}': {e}")
-                return f"[Tool Error: {instance.name}] {e}"
-
-            # Optionally, you can add a finally block if necessary (for cleanup)
-            finally:
-                logger.debug(f"Finished executing tool: {instance.name}")
+                logger.exception(f"❌ Tool '{instance.name}' execution failed: {e}")
+                return f"Tool '{instance.name}' failed: {str(e)}"
 
         return wrapped
 
@@ -216,6 +246,15 @@ class ToolManager:
             logger.exception(f"❌ Failed to load plugin module: {file_path}")
             return
 
+        # ✅ Set global limit once per file loading (only if config exists)
+        if (
+            self.config
+            and hasattr(self.config, "max_total_tool_uses")
+            and not hasattr(self.tracker, "_global_limit_set")
+        ):
+            self.tracker.set_global_limit(self.config.max_total_tool_uses)
+            self.tracker._global_limit_set = True  # Prevent setting it multiple times
+
         registered = 0
         for name in dir(module):
             obj = getattr(module, name)
@@ -232,14 +271,20 @@ class ToolManager:
                 # ✅ Set per-tool limits from config
                 if self.config and self.config.enabled:
                     tool_cfg = next(
-                        (t for t in self.config.enabled if t.name == plugin_name), None
+                        (
+                            t
+                            for t in self.config.enabled
+                            if getattr(t, "name", t.get("name")) == plugin_name
+                        ),
+                        None,
                     )
                     if tool_cfg:
-                        self.tracker.set_limit(
-                            plugin_name,
-                            getattr(tool_cfg, "max_uses", None),
-                            getattr(tool_cfg, "max_total", None),
+                        max_uses = getattr(
+                            tool_cfg, "max_uses", tool_cfg.get("max_uses")
                         )
+                        self.tracker.set_limit(
+                            plugin_name, max_uses
+                        )  # Only pass max_uses
 
                 try:
                     # Register the tool
@@ -259,7 +304,6 @@ class ToolManager:
         return self._tools.get(name)
 
     def get_all_tools(self) -> List[Any]:
-        self.tracker.reset()
         return self._langchain_tools
 
     def list_tool_names(self) -> List[str]:
