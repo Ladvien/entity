@@ -10,8 +10,6 @@ logger = logging.getLogger(__name__)
 
 
 class SchemaAwarePGVector(PGVector):
-    """PGVector subclass that enforces the use of a single custom schema"""
-
     def __init__(
         self,
         embeddings: Embeddings,
@@ -29,10 +27,8 @@ class SchemaAwarePGVector(PGVector):
                 "connection must be provided as connection string or AsyncEngine"
             )
 
-        # If connection is string, create async engine
         if isinstance(connection, str):
             self._async_engine = create_async_engine(connection, future=True)
-            # Pass engine to super
             connection_arg = self._async_engine
         elif isinstance(connection, AsyncEngine):
             self._async_engine = connection
@@ -47,12 +43,11 @@ class SchemaAwarePGVector(PGVector):
             f"SchemaAwarePGVector.__init__: connection value: {connection_arg}"
         )
 
-        # Disable auto table creation in parent
         kwargs["pre_delete_collection"] = False
+        kwargs["create_extension"] = False
 
         super().__init__(embeddings=embeddings, connection=connection_arg, **kwargs)
 
-        # Store original collection name for use in table creation
         self._original_collection_name = getattr(self, "collection_name", "langchain")
 
     async def _get_connection(self) -> AsyncConnection:
@@ -61,7 +56,6 @@ class SchemaAwarePGVector(PGVector):
         else:
             raise RuntimeError("No async engine available; cannot get async connection")
 
-        # Set search_path on every connection
         await conn.execute(text(f'SET search_path TO "{self.schema_name}", public'))
         return conn
 
@@ -88,8 +82,7 @@ class SchemaAwarePGVector(PGVector):
 
             embedding_table_sql = f"""
             CREATE TABLE IF NOT EXISTS "{self.schema_name}".langchain_pg_embedding (
-                id SERIAL PRIMARY KEY,
-                uuid UUID DEFAULT gen_random_uuid(),
+                id VARCHAR PRIMARY KEY,
                 collection_id UUID REFERENCES "{self.schema_name}".langchain_pg_collection(uuid),
                 embedding VECTOR,
                 document TEXT,
@@ -153,16 +146,10 @@ class SchemaAwarePGVector(PGVector):
         return instance
 
     async def _verify_schema_setup(self) -> None:
-        """
-        Replicates PGVector’s internal verification so that external callers
-        (your MemorySystem) can safely invoke it.
-        For now we just open a connection and run a lightweight check.
-        """
         conn = await self._get_connection()
         await conn.execute(
             text(
                 f"""
-                -- check that the two tables exist in the expected schema
                 SELECT 1
                 FROM pg_tables
                 WHERE schemaname = :schema
@@ -178,9 +165,10 @@ class SchemaAwarePGVector(PGVector):
 
 class SchemaAwarePGVectorNoDDL(SchemaAwarePGVector):
     def create_tables_if_not_exists(self):
-        # no-op
         pass
 
     def create_collection(self):
-        # no-op
         pass
+
+    async def _verify_schema_setup(self):
+        logger.info("🧪 Skipping schema verification (NoDDL mode)")

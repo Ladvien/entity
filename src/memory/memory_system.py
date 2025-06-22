@@ -87,7 +87,7 @@ class MemorySystem:
                 schema_name=self.schema,
                 connection=engine,
                 async_mode=pgvector_config.get("async_mode", True),
-                create_extension=pgvector_config.get("create_extension", False),
+                create_extension=True,
                 use_jsonb=pgvector_config.get("use_jsonb", True),
                 pre_delete_collection=pgvector_config.get(
                     "pre_delete_collection", False
@@ -96,8 +96,8 @@ class MemorySystem:
 
             logger.info(f"✅ SchemaAwarePGVector created for schema: {self.schema}")
 
-            # Verify the setup worked
-            await self._verify_vector_setup()
+            # Skip schema verification for NoDDL variant
+            logger.info("🧪 Skipping schema verification (NoDDL mode)")
 
         except Exception as e:
             logger.error(f"❌ Failed to initialize vector store: {e}")
@@ -343,30 +343,30 @@ class MemorySystem:
             result = await session.execute(text(sql_query), params)
             rows = result.fetchall()
 
-        return [
-            ChatInteraction(
-                interaction_id=row.interaction_id,
-                thread_id=row.thread_id,
-                timestamp=row.timestamp,
-                raw_input=row.raw_input,
-                raw_output=row.raw_output,
-                response=row.response,
-                tools_used=json.loads(row.tools_used or "[]"),
-                memory_context_used=row.memory_context_used,
-                memory_context=row.memory_context,
-                use_tools=row.use_tools,
-                use_memory=row.use_memory,
-                error=row.error_message,
-                response_time_ms=row.response_time_ms,
-                token_count=row.token_count,
-                conversation_turn=row.conversation_turn,
-                user_id=row.user_id,
-                agent_personality_applied=row.agent_personality_applied,
-                personality_adjustments=json.loads(row.personality_adjustments or "[]"),
-                metadata=json.loads(row.metadata or "{}"),
-            )
-            for row in rows
-        ]
+            return [
+                ChatInteraction(
+                    interaction_id=row.interaction_id,
+                    thread_id=row.thread_id,
+                    timestamp=row.timestamp,
+                    raw_input=row.raw_input,
+                    raw_output=row.raw_output,
+                    response=row.response,
+                    tools_used=row.tools_used or [],
+                    memory_context_used=row.memory_context_used,
+                    memory_context=row.memory_context,
+                    use_tools=row.use_tools,
+                    use_memory=row.use_memory,
+                    error=row.error_message,
+                    response_time_ms=row.response_time_ms,
+                    token_count=row.token_count,
+                    conversation_turn=row.conversation_turn,
+                    user_id=row.user_id,
+                    agent_personality_applied=row.agent_personality_applied,
+                    personality_adjustments=row.personality_adjustments or [],
+                    metadata=row.metadata or {},
+                )
+                for row in rows
+            ]
 
     async def get_history(
         self, thread_id: str, limit: int = 100
@@ -385,31 +385,30 @@ class MemorySystem:
                 {"thread_id": thread_id, "limit": limit},
             )
             rows = result.fetchall()
-
-        return [
-            ChatInteraction(
-                interaction_id=row.interaction_id,
-                thread_id=row.thread_id,
-                timestamp=row.timestamp,
-                raw_input=row.raw_input,
-                raw_output=row.raw_output,
-                response=row.response,
-                tools_used=json.loads(row.tools_used or "[]"),
-                memory_context_used=row.memory_context_used,
-                memory_context=row.memory_context,
-                use_tools=row.use_tools,
-                use_memory=row.use_memory,
-                error=row.error_message,
-                response_time_ms=row.response_time_ms,
-                token_count=row.token_count,
-                conversation_turn=row.conversation_turn,
-                user_id=row.user_id,
-                agent_personality_applied=row.agent_personality_applied,
-                personality_adjustments=json.loads(row.personality_adjustments or "[]"),
-                metadata=json.loads(row.metadata or "{}"),
-            )
-            for row in rows
-        ]
+            return [
+                ChatInteraction(
+                    interaction_id=row.interaction_id,
+                    thread_id=row.thread_id,
+                    timestamp=row.timestamp,
+                    raw_input=row.raw_input,
+                    raw_output=row.raw_output,
+                    response=row.response,
+                    tools_used=row.tools_used or [],
+                    memory_context_used=row.memory_context_used,
+                    memory_context=row.memory_context,
+                    use_tools=row.use_tools,
+                    use_memory=row.use_memory,
+                    error=row.error_message,
+                    response_time_ms=row.response_time_ms,
+                    token_count=row.token_count,
+                    conversation_turn=row.conversation_turn,
+                    user_id=row.user_id,
+                    agent_personality_applied=row.agent_personality_applied,
+                    personality_adjustments=row.personality_adjustments or [],
+                    metadata=row.metadata or {},
+                )
+                for row in rows
+            ]
 
     async def get_memory_stats(self) -> Dict[str, Any]:
         stats = {

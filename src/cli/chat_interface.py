@@ -234,6 +234,8 @@ class ChatInterface:
     async def _show_history(self):
         """Display conversation history"""
         try:
+            logger.debug(f"Fetching history for thread: {self.current_thread}")
+
             history = await self.client.get_history(self.current_thread, limit=20)
 
             if not history:
@@ -263,6 +265,9 @@ class ChatInterface:
                     )
 
             self.console.print("─" * 60 + "\n")
+
+            history = await self.client.get_history(self.current_thread, limit=20)
+            logger.debug(f"History raw response: {history}")
 
         except Exception as e:
             self.console.print(f"❌ Failed to get history: {e}", style="red")
