@@ -91,3 +91,19 @@ def interaction_to_response(interaction: ChatInteraction) -> ChatResponse:
         response.tts_settings = interaction.metadata.get("tts_settings", {})
 
     return response
+
+
+import re
+
+
+def is_malformed_step(text: str) -> bool:
+    """
+    Checks if a ReAct step is malformed (e.g., Action present without Action Input).
+    """
+    # Match Action without Action Input
+    lines = text.strip().splitlines()
+    for i, line in enumerate(lines):
+        if line.startswith("Action:"):
+            if i + 1 >= len(lines) or not lines[i + 1].startswith("Action Input:"):
+                return True
+    return False

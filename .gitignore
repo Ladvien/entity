@@ -275,5 +275,6 @@ output/
 /models
 talking.log
 *.txt
+*.log*
 
 audio_output/*

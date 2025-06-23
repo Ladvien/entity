@@ -67,8 +67,12 @@ class ReActStep:
                 action_name = ""
                 action_input = ""
 
+                field_names = dir(action)
+                field_names = [
+                    datum for datum in field_names if not datum.startswith("__")
+                ]
                 logger.debug(f"🔍 Action type: {type(action)}")
-                logger.debug(f"🔍 Action attributes: {dir(action)}")
+                logger.debug(f"🔍 Action attributes: {field_names}")
 
                 if hasattr(action, "log"):
                     log = action.log
