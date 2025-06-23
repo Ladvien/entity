@@ -14,7 +14,7 @@ The Entity Framework is a developer-friendly platform for building multimodal, i
 - ✅ Input/output adapter support (e.g., TTS, SST)
 
 
-![event_loop](assets/entity_event_loop.png)
+![event_loop](assets/entity_event_loop_small.png)
 
 ## Features
 - [x] React Template
