@@ -13,6 +13,14 @@ from pathlib import Path
 import logging
 import time
 
+from src.prompts.models import (
+    ExecutionContext,
+    ExecutionResult,
+    PromptConfiguration,
+    PromptExample,
+    PromptTechnique,
+)
+
 
 # ============================================================================
 # Protocols and Interfaces

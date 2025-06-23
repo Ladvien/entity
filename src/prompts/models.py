@@ -1,6 +1,12 @@
+# src/prompts/models.py
+"""
+Data models for prompt engineering - integrates with Entity's existing patterns
+"""
+
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
+from datetime import datetime
 
 
 class PromptTechnique(Enum):
@@ -12,14 +18,8 @@ class PromptTechnique(Enum):
     SELF_CONSISTENCY = "self_consistency"
     PROMPT_CHAINING = "prompt_chaining"
     REACT = "react"
-    META_PROMPTING = "meta_prompting"
     TREE_OF_THOUGHTS = "tree_of_thoughts"
     GENERATE_KNOWLEDGE = "generate_knowledge"
-    REFLEXION = "reflexion"
-    PROGRAM_AIDED = "program_aided"
-    MULTIMODAL_COT = "multimodal_cot"
-    DIRECTIONAL_STIMULUS = "directional_stimulus"
-    ACTIVE_PROMPT = "active_prompt"
 
 
 @dataclass
@@ -33,13 +33,14 @@ class PromptExample:
 
 @dataclass
 class ExecutionContext:
-    """Context passed to prompt execution"""
+    """Context for prompt execution - similar to Entity's ChatInteraction"""
 
     query: str
+    thread_id: str = "default"
     additional_context: Dict[str, Any] = field(default_factory=dict)
     max_tokens: Optional[int] = None
     temperature: Optional[float] = None
-    timeout_seconds: Optional[float] = None
+    use_memory: bool = True
 
 
 @dataclass
@@ -51,32 +52,23 @@ class PromptConfiguration:
     system_message: Optional[str] = None
     examples: List[PromptExample] = field(default_factory=list)
     parameters: Dict[str, Any] = field(default_factory=dict)
-    validation_rules: List[str] = field(default_factory=list)
-    max_retries: int = 3
     temperature: float = 0.7
-    timeout_seconds: float = 30.0
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class ExecutionResult:
-    """Result of prompt execution"""
+    """Result of prompt execution - similar to Entity's AgentResult"""
 
     generated_content: str
     technique_used: PromptTechnique
     execution_successful: bool
     execution_time_seconds: float
+    thread_id: str
+    timestamp: datetime
     token_count: Optional[int] = None
     confidence_score: Optional[float] = None
     intermediate_steps: List[str] = field(default_factory=list)
     error_message: Optional[str] = None
+    memory_context: str = ""
     metadata: Dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass
-class ChainStep:
-    """Single step in prompt chaining"""
-
-    step_name: str
-    step_template: str
-    step_parameters: Dict[str, Any] = field(default_factory=dict)

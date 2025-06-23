@@ -1,0 +1,562 @@
+# config.yml
+# Comprehensive configuration for prompt engineering techniques
+
+techniques:
+  zero_shot:
+    template: |
+      {system_message}
+
+      Question: {query}
+
+      Please provide a clear and accurate answer.
+    system_message: "You are a helpful AI assistant."
+    parameters:
+      max_tokens: 150
+    temperature: 0.7
+    max_retries: 2
+    timeout_seconds: 30.0
+    validation_rules:
+      - "template_contains_query"
+      - "system_message_present"
+    metadata:
+      description: "Basic zero-shot prompting without examples"
+      use_cases: ["simple_questions", "general_knowledge", "quick_responses"]
+      complexity_level: "low"
+
+  few_shot:
+    template: |
+      {system_message}
+
+      Here are some examples to guide your response:
+
+      {examples}
+
+      Now please answer this question using the same format and style:
+      Question: {query}
+      Answer:
+    system_message:
+      "You are a helpful AI assistant. Learn from the examples provided and
+      follow their format."
+    examples:
+      - input: "What is the capital of France?"
+        output: "The capital of France is Paris."
+        explanation: "Direct factual answer"
+      - input: "What is 15 + 27?"
+        output: "15 + 27 equals 42"
+        explanation: "Mathematical calculation"
+      - input: "Who wrote Romeo and Juliet?"
+        output: "Romeo and Juliet was written by William Shakespeare."
+        explanation: "Literary knowledge"
+    parameters:
+      example_separator: "\n---\n"
+      show_reasoning: false
+    temperature: 0.5
+    max_retries: 3
+    timeout_seconds: 45.0
+    validation_rules:
+      - "template_contains_query"
+      - "examples_present"
+      - "minimum_two_examples"
+    metadata:
+      description: "Few-shot learning with examples"
+      use_cases:
+        ["pattern_recognition", "format_consistency", "structured_responses"]
+      complexity_level: "medium"
+
+  chain_of_thought:
+    template: |
+      {system_message}
+
+      {examples}
+
+      Question: {query}
+
+      {reasoning_instruction}
+    system_message:
+      "You are a logical reasoning assistant. Always show your step-by-step
+      thinking process."
+    examples:
+      - input: "A farmer has 17 sheep and all but 9 die. How many are left?"
+        output: |
+          Let me think step by step:
+          1. The farmer starts with 17 sheep
+          2. The phrase "all but 9 die" means that 9 sheep remain alive
+          3. "All but 9" means everything except 9, so 9 survive
+          Therefore, 9 sheep are left.
+        explanation: "Step-by-step logical reasoning"
+      - input:
+          "If it takes 5 machines 5 minutes to make 5 widgets, how long would it
+          take 100 machines to make 100 widgets?"
+        output: |
+          Let me work through this step by step:
+          1. 5 machines make 5 widgets in 5 minutes
+          2. This means each machine makes 1 widget in 5 minutes
+          3. So 100 machines would each make 1 widget in 5 minutes
+          4. Therefore, 100 machines make 100 widgets in 5 minutes
+          The answer is 5 minutes.
+        explanation: "Breaking down the rate calculation"
+    parameters:
+      reasoning_instruction: "Let's work through this step-by-step:"
+      show_work: true
+      encourage_explicit_steps: true
+    temperature: 0.3
+    max_retries: 3
+    timeout_seconds: 60.0
+    validation_rules:
+      - "template_contains_query"
+      - "reasoning_instruction_present"
+    metadata:
+      description: "Step-by-step reasoning prompts"
+      use_cases:
+        [
+          "math_problems",
+          "logical_puzzles",
+          "complex_analysis",
+          "problem_solving",
+        ]
+      complexity_level: "medium"
+
+  self_consistency:
+    template: |
+      {system_message}
+
+      Question: {query}
+
+      Please think through this carefully and provide your reasoning.
+      {additional_instruction}
+    system_message:
+      "You are a careful reasoning assistant. Consider multiple approaches to
+      ensure accuracy."
+    parameters:
+      num_samples: 5
+      voting_method: "majority"
+      confidence_threshold: 0.6
+      additional_instruction: "Take your time and double-check your reasoning."
+    temperature: 0.8
+    max_retries: 2
+    timeout_seconds: 120.0
+    validation_rules:
+      - "template_contains_query"
+      - "num_samples_specified"
+    metadata:
+      description: "Multiple reasoning paths with consistency checking"
+      use_cases:
+        ["high_stakes_decisions", "complex_reasoning", "verification_needed"]
+      complexity_level: "high"
+
+  prompt_chaining:
+    template: |
+      This is part of a multi-step reasoning process.
+      Step: {step_name}
+      Previous context: {previous_output}
+
+      {step_instruction}
+
+      Current input: {input}
+    system_message:
+      "You are processing a multi-step reasoning chain. Focus on the current
+      step while maintaining context."
+    parameters:
+      chain_steps:
+        - name: "analysis"
+          template:
+            "Analyze the following problem and identify key components: {input}"
+          parameters:
+            focus: "problem_decomposition"
+        - name: "planning"
+          template:
+            "Based on this analysis: {input}\n\nCreate a step-by-step solution
+            plan."
+          parameters:
+            focus: "solution_strategy"
+        - name: "execution"
+          template:
+            "Following this plan: {input}\n\nExecute the solution and provide
+            the final answer."
+          parameters:
+            focus: "final_resolution"
+    temperature: 0.4
+    max_retries: 3
+    timeout_seconds: 180.0
+    validation_rules:
+      - "chain_steps_present"
+      - "minimum_two_steps"
+    metadata:
+      description: "Multi-step prompt chaining for complex problems"
+      use_cases:
+        ["complex_problems", "multi_stage_reasoning", "systematic_analysis"]
+      complexity_level: "high"
+
+  react:
+    template: |
+      You are an AI assistant that can reason and take actions to solve problems.
+
+      Use this format for your response:
+      Thought: [your reasoning about what to do next]
+      Action: [the action you want to take]
+      Observation: [the result of the action]
+
+      Continue this Thought/Action/Observation sequence until you can provide a final answer.
+
+      {react_format}
+
+      Question: {query}
+
+      Thought:
+    system_message:
+      "You are a ReAct agent capable of reasoning and acting to solve problems
+      systematically."
+    parameters:
+      react_format: |
+        Available actions:
+        - search(query): Search for information on a topic
+        - calculate(expression): Perform mathematical calculations
+        - analyze(data): Analyze provided data or information
+        - verify(claim): Verify the accuracy of a statement
+      max_iterations: 5
+      require_final_answer: true
+    temperature: 0.6
+    max_retries: 3
+    timeout_seconds: 150.0
+    validation_rules:
+      - "template_contains_query"
+      - "react_format_specified"
+    metadata:
+      description: "Reasoning and Acting framework for tool use"
+      use_cases:
+        [
+          "tool_integration",
+          "multi_step_reasoning",
+          "research_tasks",
+          "problem_solving",
+        ]
+      complexity_level: "high"
+
+  meta_prompting:
+    template: |
+      I need to solve this problem: {query}
+
+      First, let me analyze what kind of prompting strategy would work best.
+
+      Problem analysis:
+      - Type: {problem_type}
+      - Complexity: {complexity_level}
+      - Best approach: {recommended_approach}
+
+      Based on this analysis, I'll use the following strategy:
+      {strategy_description}
+
+      Now applying this strategy to solve the problem:
+    system_message:
+      "You are a meta-reasoning assistant that thinks about the best way to
+      approach problems before solving them."
+    parameters:
+      analyze_problem_first: true
+      suggest_strategy: true
+      problem_types:
+        ["analytical", "creative", "factual", "computational", "strategic"]
+      complexity_levels: ["simple", "moderate", "complex", "highly_complex"]
+      recommended_approach: "Select the most appropriate reasoning method"
+      strategy_description:
+        "Explain why this approach is optimal for this specific problem"
+    temperature: 0.4
+    max_retries: 3
+    timeout_seconds: 120.0
+    validation_rules:
+      - "template_contains_query"
+      - "meta_analysis_included"
+    metadata:
+      description: "Meta-level reasoning about optimal prompting strategies"
+      use_cases:
+        ["prompt_optimization", "adaptive_reasoning", "strategy_selection"]
+      complexity_level: "high"
+
+  tree_of_thoughts:
+    template: |
+      Let's explore multiple reasoning paths for this problem systematically.
+
+      Problem: {query}
+
+      Path 1 - {path1_name}:
+      {path1_instruction}
+
+      Path 2 - {path2_name}:
+      {path2_instruction}
+
+      Path 3 - {path3_name}:
+      {path3_instruction}
+
+      Now I'll evaluate which path leads to the best solution based on: {evaluation_criteria}
+    system_message:
+      "You are a systematic reasoning assistant that explores multiple solution
+      paths before deciding."
+    parameters:
+      num_paths: 3
+      path1_name: "Systematic Analysis"
+      path1_instruction:
+        "Break this down into logical components and solve systematically"
+      path2_name: "Creative Approach"
+      path2_instruction:
+        "Think creatively and consider unconventional solutions"
+      path3_name: "Direct Method"
+      path3_instruction: "Find the most direct and efficient solution path"
+      evaluation_criteria:
+        ["accuracy", "efficiency", "completeness", "elegance"]
+    temperature: 0.7
+    max_retries: 2
+    timeout_seconds: 180.0
+    validation_rules:
+      - "template_contains_query"
+      - "multiple_paths_specified"
+    metadata:
+      description: "Multiple reasoning paths exploration and evaluation"
+      use_cases:
+        ["complex_problem_solving", "creative_tasks", "optimization_problems"]
+      complexity_level: "very_high"
+
+  generate_knowledge:
+    template: |
+      First, let me generate relevant knowledge about this topic.
+
+      Topic: {query}
+
+      Step 1 - Knowledge Generation:
+      {knowledge_generation_prompt}
+
+      Step 2 - Application:
+      Now using this knowledge, I'll answer: {query}
+    system_message:
+      "You are a knowledge-augmented assistant that generates relevant context
+      before answering."
+    parameters:
+      knowledge_generation_prompt:
+        "Generate 3-5 key facts and insights relevant to this topic"
+      combine_knowledge: true
+      verify_knowledge: true
+    temperature: 0.5
+    max_retries: 3
+    timeout_seconds: 90.0
+    validation_rules:
+      - "template_contains_query"
+      - "knowledge_generation_included"
+    metadata:
+      description: "Generate relevant knowledge before answering questions"
+      use_cases:
+        [
+          "knowledge_intensive_tasks",
+          "research_questions",
+          "comprehensive_analysis",
+        ]
+      complexity_level: "medium"
+
+  reflexion:
+    template: |
+      I'll solve this problem and then reflect on my solution to improve it.
+
+      Initial attempt at: {query}
+
+      First solution:
+      {initial_solution_prompt}
+
+      Now let me reflect on this solution:
+      {reflection_prompt}
+
+      Improved solution based on reflection:
+    system_message:
+      "You are a reflective assistant that improves solutions through
+      self-critique."
+    parameters:
+      initial_solution_prompt: "Provide your best initial answer"
+      reflection_prompt:
+        "What could be improved in this solution? What might be missing?"
+      max_reflections: 2
+      improvement_focus: ["accuracy", "completeness", "clarity"]
+    temperature: 0.5
+    max_retries: 3
+    timeout_seconds: 150.0
+    validation_rules:
+      - "template_contains_query"
+      - "reflection_component_present"
+    metadata:
+      description: "Self-reflection and iterative improvement"
+      use_cases: ["quality_improvement", "error_correction", "optimization"]
+      complexity_level: "high"
+
+  directional_stimulus:
+    template: |
+      {stimulus_direction}
+
+      Focus area: {focus_area}
+      Context: {query}
+
+      {specific_instruction}
+
+      Remember to {directional_hint} while addressing: {query}
+    system_message:
+      "You are a focused assistant that pays special attention to directional
+      guidance."
+    parameters:
+      stimulus_direction:
+        "Direct your attention to the most critical aspects of this problem"
+      focus_area: "key relationships and dependencies"
+      specific_instruction: "Prioritize accuracy and thorough analysis"
+      directional_hint: "consider all relevant factors systematically"
+      attention_guidance: true
+    temperature: 0.6
+    max_retries: 3
+    timeout_seconds: 60.0
+    validation_rules:
+      - "template_contains_query"
+      - "directional_elements_present"
+    metadata:
+      description: "Directional stimulus prompting for focused attention"
+      use_cases: ["attention_guidance", "focused_reasoning", "priority_setting"]
+      complexity_level: "medium"
+
+  active_prompt:
+    template: |
+      Let me actively assess my knowledge and uncertainty about this question.
+
+      Question: {query}
+
+      Uncertainty analysis:
+      {uncertainty_analysis_prompt}
+
+      Based on my uncertainty assessment, I'll focus on:
+      {focus_areas}
+
+      Now I'll provide my answer with special attention to these areas:
+    system_message:
+      "You are an uncertainty-aware assistant that adapts based on confidence
+      levels."
+    parameters:
+      uncertainty_analysis_prompt:
+        "What aspects of this question am I most/least certain about?"
+      identify_focus_areas: true
+      adaptive_confidence: true
+      confidence_threshold: 0.7
+    temperature: 0.5
+    max_retries: 3
+    timeout_seconds: 75.0
+    validation_rules:
+      - "template_contains_query"
+      - "uncertainty_analysis_present"
+    metadata:
+      description: "Active uncertainty-aware prompting with adaptive focus"
+      use_cases:
+        ["adaptive_reasoning", "uncertainty_handling", "confidence_calibration"]
+      complexity_level: "medium"
+
+# Global configuration settings
+global_settings:
+  default_temperature: 0.7
+  default_max_retries: 3
+  default_timeout_seconds: 60.0
+  enable_logging: true
+  log_level: "INFO"
+  cache_responses: false
+  validate_configurations: true
+
+# Validation rules definitions
+validation_rules:
+  template_contains_query:
+    description: "Template must contain {query} placeholder"
+    check: "'{query}' in template"
+
+  examples_present:
+    description: "Configuration must include examples"
+    check: "len(examples) > 0"
+
+  minimum_two_examples:
+    description: "Must have at least 2 examples"
+    check: "len(examples) >= 2"
+
+  reasoning_instruction_present:
+    description: "Must include reasoning instruction"
+    check: "'reasoning_instruction' in parameters"
+
+  num_samples_specified:
+    description: "Must specify number of samples"
+    check: "'num_samples' in parameters"
+
+  chain_steps_present:
+    description: "Must define chain steps"
+    check: "'chain_steps' in parameters"
+
+  minimum_two_steps:
+    description: "Must have at least 2 chain steps"
+    check: "len(parameters.get('chain_steps', [])) >= 2"
+
+  react_format_specified:
+    description: "Must specify ReAct format"
+    check: "'react_format' in parameters"
+
+  meta_analysis_included:
+    description: "Must include meta-analysis components"
+    check: "'analyze_problem_first' in parameters"
+
+  multiple_paths_specified:
+    description: "Must specify multiple reasoning paths"
+    check: "'num_paths' in parameters and parameters['num_paths'] >= 2"
+
+  knowledge_generation_included:
+    description: "Must include knowledge generation step"
+    check: "'knowledge_generation_prompt' in parameters"
+
+  reflection_component_present:
+    description: "Must include reflection prompts"
+    check: "'reflection_prompt' in parameters"
+
+  directional_elements_present:
+    description: "Must include directional guidance"
+    check: "'stimulus_direction' in parameters"
+
+  uncertainty_analysis_present:
+    description: "Must include uncertainty analysis"
+    check: "'uncertainty_analysis_prompt' in parameters"
+
+# Integration settings for agent frameworks
+integration:
+  agent_framework:
+    callback_hooks:
+      - "pre_execution"
+      - "post_execution"
+      - "error_handling"
+      - "validation_failed"
+    context_passing: true
+    result_caching: true
+    async_execution: true
+
+  logging:
+    execution_times: true
+    token_usage: true
+    error_tracking: true
+    performance_metrics: true
+
+  monitoring:
+    success_rates: true
+    average_execution_time: true
+    technique_usage_stats: true
+    error_frequency: true
+
+# Performance optimization settings
+optimization:
+  parallel_execution:
+    enabled: true
+    max_concurrent: 5
+
+  caching:
+    enabled: false
+    cache_duration_seconds: 3600
+    cache_size_limit: 1000
+
+  timeouts:
+    connection_timeout: 30.0
+    read_timeout: 60.0
+    total_timeout: 180.0
+
+  retry_policy:
+    exponential_backoff: true
+    base_delay: 1.0
+    max_delay: 30.0
+    jitter: true
