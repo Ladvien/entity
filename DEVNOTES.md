@@ -1,4 +1,21 @@
 
+## Adding Proompting 2025-06-23
+
+```mermaid
+graph LR
+    PC[PromptConfiguration] --> PE[PromptExecutor]
+    EC[ExecutionContext] --> PE
+    PE --> ER[ExecutionResult]
+    
+    classDef input fill:#e3f2fd,stroke:#1976d2
+    classDef process fill:#f3e5f5,stroke:#7b1fa2
+    classDef output fill:#e8f5e8,stroke:#388e3c
+    
+    class PC,EC input
+    class PE process
+    class ER output
+```
+
 
 ## Refactoring 2025-06-22
 🧯 Tool Usage Limits: Added Then Removed
