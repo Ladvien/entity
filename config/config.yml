@@ -50,7 +50,7 @@ memory:
 
 entity:
   entity_id: "jade"
-  max_iterations: 20
+  max_iterations: 5
 
   # Personality settings
   name: "Jade"
@@ -82,6 +82,9 @@ entity:
       You have access to the following tools:
       {tools}
 
+      Tool used status:
+      {tool_used}
+
       Use the following format EXACTLY:
 
       Question: the input question you must answer
@@ -98,7 +101,7 @@ entity:
       - Action Input goes on the next line with your description
       - Never add descriptions or parentheses to the Action line
       - Use exactly these tool names: memory_search, deep_memory_search, store_memory, fun_fact
-      - If you reach 15 steps, summarize the thoughts so far and give final answer
+      - If you reach 3 steps, summarize the thoughts so far and give final answer
 
       Step count #: {step_count}
 
@@ -116,6 +119,7 @@ entity:
       - tool_names
       - memory_context
       - step_count
+      - tool_used
 
 server:
   host: "0.0.0.0"

@@ -33,11 +33,16 @@ class MemorySearchTool(BaseToolPlugin):
     name = "memory_search"
     description = "Searches stored memories"
     args_schema = MemorySearchInput
+    tool_used = False  # Initialize tool_used flag
 
     def get_context_injection(self, user_input, thread_id="default"):
         return {"query": user_input, "thread_id": thread_id}
 
     async def run(self, input_data: MemorySearchInput):
+        # Set tool_used flag to True when tool is invoked
+        self.tool_used = True
+        self.description = f"Searches stored memories. Tool used: {self.tool_used}"
+
         # Simulate memory search logic
         return f"Search results for: {input_data.query}"
 
@@ -46,6 +51,7 @@ class StoreMemoryTool(BaseToolPlugin):
     name = "store_memory"
     description = "Stores a memory entry"
     args_schema = StoreMemoryInput
+    tool_used = False  # Initialize tool_used flag
 
     def get_context_injection(
         self, user_input, thread_id="default", memory_type="observation"
@@ -57,6 +63,10 @@ class StoreMemoryTool(BaseToolPlugin):
         }
 
     async def run(self, input_data: StoreMemoryInput):
+        # Set tool_used flag to True when tool is invoked
+        self.tool_used = True
+        self.description = f"Stores a memory entry. Tool used: {self.tool_used}"
+
         # Simulate storing memory
         raw_score = input_data.importance_score
         normalized_score = (

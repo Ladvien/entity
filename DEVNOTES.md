@@ -1,6 +1,32 @@
 
 
 ## Refactoring 2025-06-22
+🧯 Tool Usage Limits: Added Then Removed
+
+Originally, a tool usage limit (`max_per_tool`, `max_total`) was implemented to:
+- Prevent runaway execution loops
+- Cap costs of expensive tools (e.g., API calls)
+- Force the agent to reach conclusions with minimal dependencies
+
+However, in practice, this led to frequent premature terminations:
+- The agent would hit limits before resolving the task
+- Responses like "Agent stopped due to iteration limit" emerged
+- Final answers were not produced, degrading UX
+
+📌 Root Cause: Prompt engineering failed to sufficiently incentivize the LLM to reach a conclusion.
+Instead of limiting the agent's ability to explore, we needed better instruction in the ReAct prompt.
+
+✅ Resolution:
+Tool usage limits were removed in favor of:
+- Improved prompt structure ("you must answer eventually")
+- Tool usage feedback (`tool_used` flag) in prompt context
+- Agent fallback response if `Final Answer:` is never reached
+
+This shift restored agent reliability while preserving flexibility.
+
+---
+
+
 def check_limit(self, tool_name: str) -> bool:
     """Check if a specific tool can still be used"""
     # Check global limit first (account for the pending increment)

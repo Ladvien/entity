@@ -1,5 +1,3 @@
-# src/server/routes/agent.py - UPDATED WITH OUTPUT ADAPTER INTEGRATION
-
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 import logging
@@ -55,218 +53,154 @@ class EntityAgent:
         self.output_adapter_manager = output_adapter_manager
         self.agent_executor: Optional[AgentExecutor] = None
         self.memory_builder = MemoryContextBuilder(memory_system)
+        self._tool_limit_callback = None
+
+    def _create_callback_manager(self):
+        from langchain.callbacks.base import BaseCallbackHandler
+        from langchain.callbacks.manager import CallbackManager
+
+        class ToolLimitCallback(BaseCallbackHandler):
+            def __init__(self, max_per_tool=2, max_total=5):
+                self.tool_usage = {}
+                self.max_per_tool = max_per_tool
+                self.max_total = max_total
+                self.tool_used = False
+                self.tool_exhausted = False
+
+            def should_stop(self) -> bool:
+                return self.tool_exhausted
+
+            def on_tool_start(self, serialized: dict, input_str: str, **kwargs):
+                tool_name = serialized.get("name", "unknown")
+                self.tool_usage[tool_name] = self.tool_usage.get(tool_name, 0) + 1
+                self.tool_used = True
+
+                if self.tool_usage[tool_name] >= self.max_per_tool:
+                    logger.debug(f"⚠️ Tool '{tool_name}' reached per-tool limit")
+
+                if sum(self.tool_usage.values()) >= self.max_total:
+                    self.tool_exhausted = True
+                    logger.debug("🧯 Total tool use limit reached")
+
+        self._tool_limit_callback = ToolLimitCallback()
+        return CallbackManager([self._tool_limit_callback])
 
     async def initialize(self):
         tools = self.tool_registry.get_all_tools()
-
-        # Validate the prompt from config
         logger.info("🔍 Validating ReAct prompt from config...")
         if not ReActPromptValidator.validate_prompt(self.config):
-            logger.error("❌ Prompt validation failed!")
-            suggestions = ReActPromptValidator.suggest_fixes(self.config)
-            for suggestion in suggestions:
-                logger.error(f"💡 Suggestion: {suggestion}")
-            raise ValueError(
-                "Invalid ReAct prompt configuration. Check logs for details."
-            )
+            for suggestion in ReActPromptValidator.suggest_fixes(self.config):
+                logger.error(f"💡 {suggestion}")
+            raise ValueError("Invalid ReAct prompt configuration.")
 
-        # Use prompt directly from config
         prompt = PromptTemplate(
-            input_variables=self.config.prompts.variables,
+            input_variables=self.config.prompts.variables + ["tool_used"],
             template=self.config.prompts.base_prompt.strip(),
         )
 
-        logger.debug(f"🛠️ Initializing ReAct agent with {len(tools)} tools")
-        logger.info(f"🎯 Using ReAct agent (Ollama compatible)")
+        callback_manager = self._create_callback_manager()
 
         agent = create_react_agent(self.llm, tools, prompt)
-
         self.agent_executor = AgentExecutor(
             agent=agent,
             tools=tools,
+            callback_manager=callback_manager,
             verbose=True,
             max_iterations=self.config.max_iterations,
             handle_parsing_errors=True,
             return_intermediate_steps=True,
             early_stopping_method="force",
-            callback_manager=self._create_callback_manager(),
         )
 
-        logger.info(f"🪠 Available tools: {[tool.name for tool in tools]}")
-        logger.info(f"✅ ReAct agent executor initialized")
+        logger.info(f"🪠 Tools registered: {[tool.name for tool in tools]}")
 
-        # Log output adapter status
-        if self.output_adapter_manager and self.output_adapter_manager.adapters:
-            adapter_names = [
-                adapter.__class__.__name__
-                for adapter in self.output_adapter_manager.adapters
-            ]
-            logger.info(f"🔌 Output adapters enabled: {', '.join(adapter_names)}")
-        else:
-            logger.info("🔌 No output adapters configured")
+    def _extract_tools_used(self, result: Dict[str, Any]) -> List[str]:
+        tools = []
+        try:
+            for step in result.get("intermediate_steps", []):
+                if len(step) >= 2 and hasattr(step[0], "tool"):
+                    tools.append(step[0].tool)
+        except Exception as e:
+            logger.warning(f"❌ Could not extract tools used: {e}")
+        return tools
 
-    def _create_callback_manager(self):
-        """Create callback manager to handle tool usage limits"""
-        from langchain.callbacks.base import BaseCallbackHandler
-
-        class ToolLimitCallback(BaseCallbackHandler):
-            def __init__(self):
-                self.tool_usage = {}
-                self.max_per_tool = 2
-
-            def on_tool_start(self, serialized: dict, input_str: str, **kwargs):
-                tool_name = serialized.get("name", "unknown")
-                self.tool_usage[tool_name] = self.tool_usage.get(tool_name, 0) + 1
-
-                if self.tool_usage[tool_name] > self.max_per_tool:
-                    logger.warning(
-                        f"🛑 Tool '{tool_name}' used {self.tool_usage[tool_name]} times, encouraging final answer"
-                    )
-
-            def on_tool_end(self, output: str, **kwargs):
-                # Check if we should force a conclusion
-                total_calls = sum(self.tool_usage.values())
-                if total_calls >= 8:  # After 8 total tool calls, force conclusion
-                    logger.warning("🛑 Too many tool calls, should conclude soon")
-
-        from langchain.callbacks.manager import CallbackManager
-
-        return CallbackManager([ToolLimitCallback()])
+    def extract_final_answer(self, output: str) -> str:
+        output = str(output)
+        match = re.search(
+            r"Final Answer:\s*(.*)", output, flags=re.IGNORECASE | re.DOTALL
+        )
+        return match.group(1).strip() if match else output.strip()
 
     async def chat(
         self, message: str, thread_id: str = "default", use_tools: bool = True
     ) -> AgentResult:
         start_time = datetime.utcnow()
         logger.info(
-            f"💬 Processing message: '{message[:100]}{'...' if len(message) > 100 else ''}'"
+            f"💬 Processing: '{message[:100]}{'...' if len(message) > 100 else ''}'"
         )
 
         memory_context = await self.memory_builder.build_context(message, thread_id)
+        tools = self.tool_registry.get_all_tools()
 
-        # Build input variables based on what the config prompt expects
         input_vars = {
             "input": message,
-            "agent_scratchpad": "",  # This gets filled by the agent
+            "agent_scratchpad": "",
+            "memory_context": memory_context,
+            "tools": "\n".join(f"{tool.name}: {tool.description}" for tool in tools),
+            "tool_names": ", ".join(tool.name for tool in tools),
+            "step_count": 0,
+            "tool_used": "false",
         }
 
-        # Add tools information if expected by prompt
-        tools = self.tool_registry.get_all_tools()
-        if "tools" in self.config.prompts.variables:
-            input_vars["tools"] = "\n".join(
-                f"{tool.name}: {tool.description}" for tool in tools
-            )
+        raw_output = ""
+        final_response = ""
+        tools_used: List[str] = []
+        token_count = 0
+        intermediate_steps: List[Any] = []
 
-        if "tool_names" in self.config.prompts.variables:
-            input_vars["tool_names"] = ", ".join(tool.name for tool in tools)
-
-        # Add memory context if expected by prompt
-        if "memory_context" in self.config.prompts.variables:
-            input_vars["memory_context"] = memory_context if memory_context else ""
-
-        raw_output, final_response, tools_used, token_count, intermediate_steps = (
-            "",
-            "",
-            [],
-            0,
-            [],
-        )
-
-        if use_tools and self.agent_executor:
-            logger.info("🤖 Running through ReAct agent executor with tools...")
-
-            try:
-                input_vars["step_count"] = len(intermediate_steps)
+        try:
+            if use_tools and self.agent_executor:
+                logger.info("🤖 Invoking agent executor with tools...")
                 result = await self.agent_executor.ainvoke(input_vars)
 
-                # Debug: Log what we actually get back
-                logger.debug(f"🔍 Agent result keys: {list(result.keys())}")
-                logger.debug(
-                    f"🔍 Intermediate steps type: {type(result.get('intermediate_steps', []))}"
-                )
-                logger.debug(
-                    f"🔍 Intermediate steps count: {len(result.get('intermediate_steps', []))}"
-                )
+                if self._tool_limit_callback and self._tool_limit_callback.tool_used:
+                    input_vars["tool_used"] = "true"
 
-                raw_output = (
-                    result.get("output")
-                    or result.get("response")
-                    or result.get("text")
-                    or str(result)
-                )
+                raw_output = result.get("output") or str(result)
                 final_response = self.extract_final_answer(raw_output)
+
+                if (
+                    self._tool_limit_callback
+                    and self._tool_limit_callback.tool_exhausted
+                ):
+                    raise RuntimeError(
+                        "All tools exhausted before agent produced final answer."
+                    )
+
+                if "Agent stopped due to" in final_response:
+                    raise RuntimeError(
+                        f"Agent failed to reach a final answer: {final_response}"
+                    )
+
                 tools_used = self._extract_tools_used(result)
                 token_count = result.get("token_usage", {}).get("total_tokens", 0)
                 intermediate_steps = result.get("intermediate_steps", [])
-
-                if intermediate_steps:
-                    logger.info(f"🎯 Got {len(intermediate_steps)} intermediate steps")
-                else:
-                    logger.warning("⚠️ No intermediate steps found in agent result")
-
-            except ValueError as e:
-                if "early_stopping_method" in str(e):
-                    logger.error(f"❌ Agent configuration error: {e}")
-                    raw_output = f"Configuration Error: {str(e)}"
-                    final_response = "There's a configuration issue with my reasoning system. Let me respond directly."
-                    # Try direct response without agent
-                    try:
-                        formatted_prompt = self.config.prompts.base_prompt.format(
-                            **input_vars
-                        )
-                        direct_response = await self.llm.ainvoke(formatted_prompt)
-                        final_response = self.extract_final_answer(str(direct_response))
-                    except Exception as direct_e:
-                        logger.error(f"❌ Direct LLM also failed: {direct_e}")
-                        final_response = "Hey yourself. What do you want?"
-                else:
-                    logger.error(f"❌ Agent execution failed: {e}", exc_info=True)
-                    raw_output = f"Error: {str(e)}"
-                    final_response = (
-                        "I encountered an error while processing your request."
-                    )
-
-            except Exception as e:
-                logger.error(f"❌ Agent execution failed: {e}", exc_info=True)
-                raw_output = f"Error: {str(e)}"
-                final_response = "I encountered an error while processing your request."
-
-        else:
-            logger.info("🤖 Running without tools (direct LLM)")
-            try:
-                # For direct LLM, just format the base prompt with available variables
-                formatted_prompt = self.config.prompts.base_prompt.format(**input_vars)
-                raw_output = await self.llm.ainvoke(formatted_prompt)
+            else:
+                logger.info("💬 Invoking LLM without tools...")
+                prompt = self.config.prompts.base_prompt.format(**input_vars)
+                raw_output = await self.llm.ainvoke(prompt)
                 final_response = self.extract_final_answer(str(raw_output))
-            except Exception as e:
-                logger.error(f"❌ LLM invocation failed: {e}")
-                raw_output = f"Error: {str(e)}"
-                final_response = "I encountered an error while processing your request."
 
-        if not final_response.strip():
-            logger.error("❌ Empty response from LLM")
-            final_response = "Hey yourself. What do you want from me?"
+        except Exception as e:
+            logger.exception("❌ Agent or LLM invocation failed")
+            raise
 
-        # Extract ReAct steps
         from src.shared.react_step import ReActStep
 
-        react_steps = []
-
-        # Method 1: Try to extract from proper intermediate steps
-        if intermediate_steps:
-            logger.info(
-                f"🔄 Extracting ReAct steps from {len(intermediate_steps)} intermediate steps"
-            )
-            react_steps = ReActStep.extract_react_steps(intermediate_steps)
-
-        # Method 2: Fallback to parsing raw output if no proper steps
-        if not react_steps and raw_output:
-            logger.info("🔄 Fallback: Extracting ReAct steps from raw output")
-            react_steps = ReActStep.extract_from_raw_output(raw_output)
-
-        # Method 3: Emergency fallback - create a single step from the whole response
-        if not react_steps:
-            logger.warning("⚠️ Creating emergency fallback step")
-            react_steps = [
+        react_steps = (
+            ReActStep.extract_react_steps(intermediate_steps)
+            or ReActStep.extract_from_raw_output(raw_output)
+            or [
                 ReActStep(
                     thought="Processing user request...",
                     action="",
@@ -275,10 +209,8 @@ class EntityAgent:
                     final_answer=final_response,
                 )
             ]
+        )
 
-        logger.info(f"✅ Final ReAct steps count: {len(react_steps)}")
-
-        # Create the AgentResult
         agent_result = AgentResult(
             raw_input=message,
             raw_output=raw_output,
@@ -292,7 +224,6 @@ class EntityAgent:
             timestamp=start_time,
         )
 
-        # Create ChatInteraction for storage and adapter processing
         interaction = ChatInteraction(
             thread_id=thread_id,
             timestamp=start_time,
@@ -308,60 +239,19 @@ class EntityAgent:
             response_time_ms=(datetime.utcnow() - start_time).total_seconds() * 1000,
         )
 
-        # Process through output adapters (including TTS)
         if self.output_adapter_manager:
             try:
-                logger.info("🔌 Processing through output adapters...")
-                processed_interaction = (
-                    await self.output_adapter_manager.process_interaction(interaction)
+                processed = await self.output_adapter_manager.process_interaction(
+                    interaction
                 )
-
-                # Update agent result with any adapter-added metadata
-                if processed_interaction.metadata:
-                    logger.info(
-                        f"🔌 Adapter metadata: {list(processed_interaction.metadata.keys())}"
-                    )
-
-                    # Add TTS metadata to agent result if present
-                    if processed_interaction.metadata.get("tts_enabled"):
-                        logger.info("🎵 TTS audio generated successfully")
-                        # You could add audio metadata to the agent result here if needed
-
+                if processed.metadata.get("tts_enabled"):
+                    logger.info("🎵 TTS audio generated")
             except Exception as e:
-                logger.error(f"❌ Output adapter processing failed: {e}")
-                # Continue anyway - adapters are not critical for basic functionality
+                logger.error(f"❌ Output adapter failed: {e}")
 
-        # Save to memory system
         try:
             await self.memory_system.save_interaction(interaction)
-            logger.debug("💾 Interaction saved to memory")
         except Exception as e:
-            logger.error(f"❌ Failed to save interaction to memory: {e}")
+            logger.error(f"❌ Failed to save interaction: {e}")
 
         return agent_result
-
-    def _extract_tools_used(self, result: Dict[str, Any]) -> List[str]:
-        tools = []
-        try:
-            for step in result.get("intermediate_steps", []):
-                if len(step) >= 2 and hasattr(step[0], "tool"):
-                    tools.append(step[0].tool)
-        except Exception as e:
-            logger.warning(f"Could not extract tools used: {e}")
-        return tools
-
-    def extract_final_answer(self, output: str) -> str:
-        # Handle both string and other types
-        if not isinstance(output, str):
-            output = str(output)
-
-        match = re.search(
-            r"Final Answer:\s*(.*)", output, flags=re.IGNORECASE | re.DOTALL
-        )
-        return match.group(1).strip() if match else output.strip()
-
-    async def cleanup(self):
-        # Close output adapters if we own them
-        if self.output_adapter_manager:
-            await self.output_adapter_manager.close_all()
-        logger.info("🧹 Agent cleanup completed")
