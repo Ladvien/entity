@@ -11,7 +11,7 @@ import logging
 from pathlib import Path
 from datetime import datetime
 
-from src.core.config import load_config
+from src.core.config import EntityServerConfig
 from src.adapters.tts_adapter import TTSOutputAdapter
 from src.shared.models import ChatInteraction
 
@@ -32,7 +32,7 @@ async def test_tts_adapter():
 
     # Load configuration
     try:
-        config = load_config("config/config.yml")
+        config = EntityServerConfig.config_from_file("config/config.yml")
         print(f"✅ Configuration loaded successfully")
         print(f"   TTS Server: {config.tts.base_url}")
         print(f"   Voice: {config.tts.voice_name}")
@@ -145,7 +145,7 @@ async def test_direct_speech_synthesis():
     print("\n🎙️ Direct Speech Synthesis Test")
     print("=" * 50)
 
-    config = load_config("config/config.yml")
+    config = EntityServerConfig.config_from_file("config/config.yml")
 
     # Create adapter and test direct synthesis
     tts_adapter = TTSOutputAdapter(config.tts, enabled=True)

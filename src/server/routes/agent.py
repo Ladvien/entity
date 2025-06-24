@@ -1,3 +1,5 @@
+# src/server/routes/agent.py - Updated with Prompt Engineering Integration
+
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 import logging
@@ -14,6 +16,11 @@ from src.shared.agent_result import AgentResult
 from src.shared.models import ChatInteraction
 from src.adapters import OutputAdapterManager
 from src.shared.react_step import ReActStep
+
+
+from src.prompts.orchestrator import PromptOrchestrator
+from src.prompts.models import PromptTechnique, ExecutionContext
+from src.core.registry import ServiceRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +64,12 @@ class EntityAgent:
         self.agent_executor: Optional[AgentExecutor] = None
         self.memory_builder = MemoryContextBuilder(memory_system)
 
+        # NEW: Initialize prompt orchestrator
+        self.prompt_orchestrator: Optional[PromptOrchestrator] = None
+        self.enable_advanced_prompting = getattr(
+            config, "enable_advanced_prompting", False
+        )
+
     def _create_callback_manager(self):
         from langchain.callbacks.manager import CallbackManager
 
@@ -89,7 +102,118 @@ class EntityAgent:
             early_stopping_method="force",
         )
 
+        # NEW: Initialize prompt orchestrator
+        try:
+            self.prompt_orchestrator = ServiceRegistry.get("prompt_orchestrator")
+            logger.info("✅ Prompt orchestrator connected to agent")
+        except Exception as e:
+            logger.warning(f"⚠️ Prompt orchestrator not available: {e}")
+            self.enable_advanced_prompting = False
+
         logger.info(f"🪠 Tools registered: {[tool.name for tool in tools]}")
+
+    # NEW: Method to analyze if advanced prompting is needed
+    def _should_use_advanced_prompting(self, message: str) -> Optional[PromptTechnique]:
+        """Analyze message to determine if advanced prompting would be beneficial"""
+        if not self.enable_advanced_prompting or not self.prompt_orchestrator:
+            return None
+
+        message_lower = message.lower()
+
+        # Detect mathematical/calculation problems
+        math_keywords = [
+            "calculate",
+            "solve",
+            "equation",
+            "math",
+            "arithmetic",
+            "compute",
+            "what is",
+            "how much",
+        ]
+        if any(keyword in message_lower for keyword in math_keywords):
+            # Check for multi-step problems
+            if any(
+                indicator in message_lower
+                for indicator in ["step", "process", "how to", "explain"]
+            ):
+                logger.info("🧠 Detected complex math problem, using chain-of-thought")
+                return PromptTechnique.CHAIN_OF_THOUGHT
+
+        # Detect reasoning/analysis tasks
+        reasoning_keywords = [
+            "analyze",
+            "compare",
+            "evaluate",
+            "assess",
+            "why",
+            "explain",
+            "reason",
+        ]
+        if any(keyword in message_lower for keyword in reasoning_keywords):
+            # For complex analysis, use self-consistency
+            if len(message.split()) > 20:  # Longer queries
+                logger.info("🧠 Detected complex analysis task, using self-consistency")
+                return PromptTechnique.SELF_CONSISTENCY
+
+        # Detect requests for structured responses
+        structure_keywords = ["format", "template", "example", "style", "pattern"]
+        if any(keyword in message_lower for keyword in structure_keywords):
+            logger.info("🧠 Detected request for structured response, using few-shot")
+            return PromptTechnique.FEW_SHOT
+
+        return None
+
+    # NEW: Method to execute advanced prompting
+    async def _execute_advanced_prompting(
+        self,
+        technique: PromptTechnique,
+        message: str,
+        thread_id: str,
+        memory_context: str,
+    ) -> AgentResult:
+        """Execute advanced prompting technique"""
+        start_time = datetime.utcnow()
+
+        try:
+            logger.info(f"🧠 Using advanced prompting: {technique.value}")
+
+            # Execute the prompt technique
+            result = await self.prompt_orchestrator.execute_technique(
+                technique=technique,
+                query=message,
+                thread_id=thread_id,
+                llm=self.llm,
+                memory_system=self.memory_system,
+                use_memory=True,
+            )
+
+            if result.execution_successful:
+                # Convert to AgentResult format
+                agent_result = AgentResult(
+                    raw_input=message,
+                    raw_output=result.generated_content,
+                    final_response=result.generated_content,
+                    tools_used=[],  # Advanced prompting doesn't use tools
+                    token_count=result.token_count or 0,
+                    memory_context=result.memory_context,
+                    intermediate_steps=result.intermediate_steps,
+                    react_steps=[],  # Advanced prompting has different step format
+                    thread_id=thread_id,
+                    timestamp=start_time,
+                )
+
+                logger.info(f"✅ Advanced prompting successful with {technique.value}")
+                return agent_result
+            else:
+                logger.warning(f"⚠️ Advanced prompting failed: {result.error_message}")
+                # Fall back to normal processing
+                return None
+
+        except Exception as e:
+            logger.error(f"❌ Advanced prompting error: {e}")
+            # Fall back to normal processing
+            return None
 
     def _extract_tools_used(self, result: Dict[str, Any]) -> List[str]:
         try:
@@ -142,8 +266,24 @@ class EntityAgent:
         )
 
         memory_context = await self.memory_builder.build_context(message, thread_id)
-        tools = self.tool_registry.get_all_tools()
 
+        # NEW: Check if advanced prompting should be used
+        advanced_technique = self._should_use_advanced_prompting(message)
+        if advanced_technique:
+            advanced_result = await self._execute_advanced_prompting(
+                advanced_technique, message, thread_id, memory_context
+            )
+            if advanced_result:
+                # Save interaction and return advanced result
+                await self._save_interaction_from_result(
+                    advanced_result, use_tools, True
+                )
+                return advanced_result
+            # If advanced prompting fails, continue with normal processing
+            logger.info("🔄 Falling back to normal agent processing")
+
+        # Continue with existing normal processing...
+        tools = self.tool_registry.get_all_tools()
         raw_output = ""
         final_response: Optional[str] = None
         tools_used: List[str] = []
@@ -238,21 +378,40 @@ class EntityAgent:
             timestamp=start_time,
         )
 
+        # Save interaction
+        await self._save_interaction_from_result(agent_result, use_tools, False)
+
+        return agent_result
+
+    # NEW: Helper method to save interactions (reduces code duplication)
+    async def _save_interaction_from_result(
+        self, agent_result: AgentResult, use_tools: bool, used_advanced_prompting: bool
+    ):
+        """Save interaction from AgentResult"""
         interaction = ChatInteraction(
-            thread_id=thread_id,
-            timestamp=start_time,
-            raw_input=message,
-            raw_output=raw_output,
-            response=final_response or "",
-            tools_used=tools_used,
-            memory_context_used=bool(memory_context.strip()),
-            memory_context=memory_context,
+            thread_id=agent_result.thread_id,
+            timestamp=agent_result.timestamp,
+            raw_input=agent_result.raw_input,
+            raw_output=agent_result.raw_output,
+            response=agent_result.final_response,
+            tools_used=agent_result.tools_used,
+            memory_context_used=bool(agent_result.memory_context.strip()),
+            memory_context=agent_result.memory_context,
             use_tools=use_tools,
             use_memory=True,
-            token_count=token_count,
-            response_time_ms=(datetime.utcnow() - start_time).total_seconds() * 1000,
+            token_count=agent_result.token_count,
+            response_time_ms=(
+                datetime.utcnow() - agent_result.timestamp
+            ).total_seconds()
+            * 1000,
         )
 
+        # Add metadata about advanced prompting
+        if used_advanced_prompting:
+            interaction.metadata["advanced_prompting"] = True
+            interaction.metadata["prompting_technique"] = "advanced"
+
+        # Process through output adapters
         if self.output_adapter_manager:
             try:
                 processed = await self.output_adapter_manager.process_interaction(
@@ -263,9 +422,9 @@ class EntityAgent:
             except Exception as e:
                 logger.error(f"❌ Output adapter failed: {e}")
 
+        # Save to memory
         try:
             await self.memory_system.save_interaction(interaction)
         except Exception as e:
             logger.error(f"❌ Failed to save interaction: {e}")
 
-        return agent_result

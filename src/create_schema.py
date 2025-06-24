@@ -1,10 +1,10 @@
 from sqlalchemy import create_engine, text
 from src.db.models import Base
-from src.core.config import load_config
+from src.core.config import EntityServerConfig
 
 
 def create_schema_sync():
-    config = load_config("config.yml")
+    config = EntityServerConfig.config_from_file("config.yml")
 
     db = config.database
 

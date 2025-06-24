@@ -52,7 +52,7 @@ class EntityConfig(BaseModel):
     response_brevity: float = 0.7
     memory_influence: float = 0.8
 
-    prompts: "PromptConfig"
+    # prompts: "PromptConfig"
 
 
 class TTSConfig(BaseModel):
@@ -132,7 +132,7 @@ class EntityServerConfig(BaseModel):
     config_version: str = "2.0"
     debug: bool = False
 
-    data: DataConfig
+    database: DataConfig
     ollama: OllamaConfig
     tts: TTSConfig
     memory: MemoryConfig
@@ -153,7 +153,7 @@ class EntityServerConfig(BaseModel):
     @property
     def database(self) -> DataConfig:
         """Backward compatibility - access data config as 'database'"""
-        return self.data
+        return self.database
 
     @property
     def personality(self) -> Dict[str, float]:
@@ -174,6 +174,39 @@ class EntityServerConfig(BaseModel):
             "sample_rates": self.tts.sample_rates,
             "fade_out_samples": self.tts.fade_out_samples,
         }
+
+    @classmethod
+    def config_from_file(cls, path: str = "config/config.yml") -> "EntityServerConfig":
+        """Load configuration from a YAML file (with .env interpolation)."""
+        config_path = Path(os.path.expanduser(path))
+        if not config_path.exists():
+            raise FileNotFoundError(f"Configuration file not found: {config_path}")
+
+        # Load .env from same dir or root
+        env_file = config_path.parent / ".env"
+        if not env_file.exists():
+            env_file = Path(".env")
+        if env_file.exists():
+            load_dotenv(env_file)
+
+        with config_path.open() as f:
+            raw_config = yaml.safe_load(f)
+
+        return cls._parse_config(raw_config)
+
+    @classmethod
+    def config_from_str(cls, yaml_str: str) -> "EntityServerConfig":
+        """Load configuration from a YAML string."""
+        raw_config = yaml.safe_load(yaml_str)
+        return cls._parse_config(raw_config)
+
+    @classmethod
+    def _parse_config(cls, raw: dict) -> "EntityServerConfig":
+        """Handles optional `data` wrapping and applies env interpolation."""
+        # Handle optional top-level 'data:' key
+        config_data = raw.get("data", raw)
+        config_data = walk_and_replace(config_data)
+        return cls(**config_data)
 
 
 VAR_PATTERN = re.compile(r"\$\{([^}]+)\}")
@@ -199,31 +232,3 @@ def walk_and_replace(obj: Any) -> Any:
         return [walk_and_replace(item) for item in obj]
     else:
         return interpolate_env(obj)
-
-
-def load_config(config_path: str = "config/config.yml") -> EntityServerConfig:
-    """Load configuration from YAML file with environment variable substitution"""
-    config_path = os.path.expanduser(config_path)
-    config_path = Path(config_path)
-
-    if not config_path.exists():
-        raise FileNotFoundError(f"Configuration file not found: {config_path}")
-
-    # Look for .env in config dir first, then project root
-    env_file = config_path.parent / ".env"
-    if not env_file.exists():
-        env_file = Path(".env")
-    if env_file.exists():
-        load_dotenv(env_file)
-
-    with open(config_path, "r") as f:
-        raw_config = yaml.safe_load(f)
-
-    config_data = walk_and_replace(raw_config)
-
-    try:
-        config = EntityServerConfig(**config_data)
-        return config
-    except Exception as e:
-        print(f"Configuration validation error: {e}")
-        raise

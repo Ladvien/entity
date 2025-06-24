@@ -11,7 +11,7 @@ from langchain_ollama import OllamaLLM
 from src.plugins.registry import ToolManager
 from src.server.routes.agent import EntityAgent
 from src.server.routes.routes import EntityRouterFactory
-from src.core.config import load_config
+from src.core.config import EntityServerConfig
 from src.db.connection import (
     close_global_db_connection,
     initialize_global_db_connection,
@@ -60,7 +60,7 @@ def setup_logging(config):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    config = load_config()
+    config = EntityServerConfig.config_from_file()
     setup_logging(config)
     ServiceRegistry.register("config", config)
 

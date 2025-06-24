@@ -7,7 +7,11 @@ license = "MIT"
 readme = "README.md"
 package-mode = true
 
-packages = [{ include = "src", from = "." }]
+packages = [
+    { include = "src", from = "." },
+    { include = "examples", from = "." },
+]
+
 
 [tool.poetry.urls]
 homepage = "https://github.com/Ladvien/entity"

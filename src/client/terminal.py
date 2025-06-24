@@ -18,7 +18,7 @@ from src.client.chat_interface import ChatInterface
 from src.client.client import EntityAPIClient
 from src.server.main import create_app
 from src.service.react_validator import ReActPromptValidator
-from src.core.config import load_config
+from src.core.config import EntityServerConfig
 
 console = Console()
 
@@ -47,7 +47,7 @@ def cli(ctx, config, debug, skip_validation):
     # 🔍 NEW: Run ReAct validation on CLI startup (unless skipped)
     if not skip_validation:
         try:
-            config_obj = load_config(config)
+            config_obj = EntityServerConfig.config_from_file(config)
             console.print("[dim]🔍 Validating ReAct prompt...[/dim]")
             validation_passed = ReActPromptValidator.validate_on_startup(
                 config_obj.entity, show_success=False
@@ -108,7 +108,7 @@ def status(ctx):
 def validate_prompt(ctx, detailed):
     """Validate ReAct prompt configuration"""
     try:
-        config = load_config(ctx.obj["config_path"])
+        config = EntityServerConfig.config_from_file(ctx.obj["config_path"])
 
         if detailed:
             # Show the full detailed validation (existing functionality)
@@ -210,7 +210,7 @@ def validate_prompt(ctx, detailed):
 async def run_chat_mode(config_path: str):
     """Use your existing chat mode logic"""
     try:
-        config = load_config(config_path)
+        config = EntityServerConfig.config_from_file(config_path)
         console.print(
             f"🔗 Connecting to Entity server at [cyan]{config.server.host}:{config.server.port}[/cyan]"
         )
@@ -242,7 +242,7 @@ async def run_chat_mode(config_path: str):
 def run_server_mode(config_path: str, reload: bool = False):
     """Use your existing server mode logic"""
     try:
-        config = load_config(config_path)
+        config = EntityServerConfig.config_from_file(config_path)
 
         if reload:
             config.server.reload = True
@@ -269,7 +269,7 @@ def run_server_mode(config_path: str, reload: bool = False):
 async def show_status(config_path: str):
     """Show system status"""
     try:
-        config = load_config(config_path)
+        config = EntityServerConfig.config_from_file(config_path)
 
         console.print("\n[bold]📊 Entity System Status[/bold]")
 
