@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from logging.handlers import RotatingFileHandler
 from langchain_ollama import OllamaLLM
+from rich import print
 
 from src.plugins.registry import ToolManager
 from src.server.routes.agent import EntityAgent
@@ -61,6 +62,9 @@ def setup_logging(config):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     config = EntityServerConfig.config_from_file()
+
+    print(config)
+
     setup_logging(config)
     ServiceRegistry.register("config", config)
 
@@ -77,14 +81,14 @@ async def lifespan(app: FastAPI):
 
     # Initialize database
     logger.info("🔗 Initializing global database connection...")
-    logger.debug(f"Database config: {config.database}")
-    db = await initialize_global_db_connection(config.database)
+    logger.debug(f"Database config: {config.database_config}")
+    db = await initialize_global_db_connection(config.database_config)
     ServiceRegistry.register("db", db)
 
     # Initialize memory system
     memory_system = MemorySystem(
         memory_config=config.memory,
-        database_config=config.database,
+        database_config=config.database_config,
     )
     await memory_system.initialize()
     ServiceRegistry.register("memory", memory_system)

@@ -88,8 +88,8 @@ class ReActPromptValidator:
         )
         console.print("=" * 60 + "\n")
 
-        prompt_template = config.prompts.base_prompt
-        declared_variables = set(config.prompts.variables)
+        prompt_template = config.prompt.base_prompt
+        declared_variables = set(config.prompt.variables)
 
         validation_passed = True
         issues_found = []
@@ -324,8 +324,8 @@ class ReActPromptValidator:
     @classmethod
     def get_validation_report(cls, config: EntityConfig) -> dict:
         """Get detailed validation report (kept for CLI command)"""
-        prompt_template = config.prompts.base_prompt
-        declared_variables = set(config.prompts.variables)
+        prompt_template = config.prompt.base_prompt
+        declared_variables = set(config.prompt.variables)
         template_variables = cls._extract_template_variables(prompt_template)
 
         report = {
@@ -368,12 +368,12 @@ class ReActPromptValidator:
 
         if report["required_variables"]["missing"]:
             suggestions.append(
-                f"Add missing required variables to config.prompts.variables: {list(report['required_variables']['missing'])}"
+                f"Add missing required variables to config.prompt.variables: {list(report['required_variables']['missing'])}"
             )
 
         if report["template_variables"]["undeclared"]:
             suggestions.append(
-                f"Add undeclared variables to config.prompts.variables: {list(report['template_variables']['undeclared'])}"
+                f"Add undeclared variables to config.prompt.variables: {list(report['template_variables']['undeclared'])}"
             )
 
         if report["react_patterns"]["missing"]:

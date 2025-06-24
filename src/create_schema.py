@@ -6,7 +6,7 @@ from src.core.config import EntityServerConfig
 def create_schema_sync():
     config = EntityServerConfig.config_from_file("config.yml")
 
-    db = config.database
+    db = config.database_config
 
     # Create a sync SQLAlchemy URL by replacing asyncpg with psycopg
     sync_url = f"postgresql+psycopg://{db.username}:{db.password}@{db.host}:{db.port}/{db.name}"

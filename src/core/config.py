@@ -12,7 +12,7 @@ import re
 from pathlib import Path
 
 
-class DataConfig(BaseModel):
+class DatabaseConfig(BaseModel):
     """Unified data storage configuration"""
 
     host: str = "localhost"
@@ -36,23 +36,6 @@ class AdapterConfig(BaseModel):
     type: Literal["tts", "webhook", "translation", "audio"]
     enabled: bool = True
     settings: Dict[str, Any] = Field(default_factory=dict)
-
-
-class EntityConfig(BaseModel):
-    """Agent configuration with integrated personality"""
-
-    entity_id: str = "jade"
-    max_iterations: int = 6
-
-    name: str = "Jade"
-    sarcasm_level: float = 0.8
-    loyalty_level: float = 0.6
-    anger_level: float = 0.7
-    wit_level: float = 0.9
-    response_brevity: float = 0.7
-    memory_influence: float = 0.8
-
-    # prompts: "PromptConfig"
 
 
 class TTSConfig(BaseModel):
@@ -123,7 +106,24 @@ class ToolConfig(BaseModel):
         name: str
         max_uses: int
 
-    enabled: List
+    enabled: List[EnabledTool] = Field(default_factory=list)
+
+
+class EntityConfig(BaseModel):
+    """Agent configuration with integrated personality"""
+
+    entity_id: str = "jade"
+    max_iterations: int = 6
+
+    name: str = "Jade"
+    sarcasm_level: float = 0.8
+    loyalty_level: float = 0.6
+    anger_level: float = 0.7
+    wit_level: float = 0.9
+    response_brevity: float = 0.7
+    memory_influence: float = 0.8
+
+    prompt: PromptConfig = Field(default_factory=PromptConfig)
 
 
 class EntityServerConfig(BaseModel):
@@ -132,15 +132,17 @@ class EntityServerConfig(BaseModel):
     config_version: str = "2.0"
     debug: bool = False
 
-    database: DataConfig
-    ollama: OllamaConfig
-    tts: TTSConfig
-    memory: MemoryConfig
-    entity: EntityConfig
-    server: ServerConfig
-    logging: LoggingConfig
-    tools: ToolConfig
-
+    # Add default_factory for required fields
+    _database_config: DatabaseConfig = Field(
+        default_factory=DatabaseConfig
+    )  # Changed from 'database'
+    ollama: OllamaConfig = Field(default_factory=OllamaConfig)
+    tts: TTSConfig = Field(default_factory=TTSConfig)
+    memory: MemoryConfig = Field(default_factory=MemoryConfig)
+    entity: EntityConfig = Field(default_factory=EntityConfig)
+    server: ServerConfig = Field(default_factory=ServerConfig)
+    logging: LoggingConfig = Field(default_factory=LoggingConfig)
+    tools: ToolConfig = Field(default_factory=ToolConfig)
     adapters: List[AdapterConfig] = Field(default_factory=list)
 
     @model_validator(mode="after")
@@ -151,9 +153,9 @@ class EntityServerConfig(BaseModel):
         return self
 
     @property
-    def database(self) -> DataConfig:
+    def database_config(self) -> DatabaseConfig:
         """Backward compatibility - access data config as 'database'"""
-        return self.database
+        return self._database_config  # Return the 'data' field, not 'database'
 
     @property
     def personality(self) -> Dict[str, float]:
@@ -203,9 +205,8 @@ class EntityServerConfig(BaseModel):
     @classmethod
     def _parse_config(cls, raw: dict) -> "EntityServerConfig":
         """Handles optional `data` wrapping and applies env interpolation."""
-        # Handle optional top-level 'data:' key
-        config_data = raw.get("data", raw)
-        config_data = walk_and_replace(config_data)
+        # Don't assume data wrapping - use the raw config directly
+        config_data = walk_and_replace(raw)
         return cls(**config_data)
 
 

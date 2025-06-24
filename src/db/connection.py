@@ -10,7 +10,7 @@ from sqlalchemy import text
 import logging
 import asyncio
 from sqlalchemy import create_engine
-from src.core.config import DataConfig
+from src.core.config import DatabaseConfig
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ class DatabaseConnection:
         }
 
     @classmethod
-    def from_config(cls, config: DataConfig) -> "DatabaseConnection":
+    def from_config(cls, config: DatabaseConfig) -> "DatabaseConnection":
         return cls(
             host=config.host,
             port=config.port,
@@ -204,7 +204,7 @@ def set_global_db_connection(db_connection: DatabaseConnection):
     logger.info(f"🌍 Global DB connection set: {db_connection}")
 
 
-async def initialize_global_db_connection(config: DataConfig) -> DatabaseConnection:
+async def initialize_global_db_connection(config: DatabaseConfig) -> DatabaseConnection:
     db_connection = DatabaseConnection.from_config(config)
 
     if not await db_connection.test_connection():

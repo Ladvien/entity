@@ -94,7 +94,7 @@ async def main():
         repeat_penalty=config.ollama.repeat_penalty,
     )
 
-    memory = MemorySystem(config.memory, config.database)
+    memory = MemorySystem(config.memory, config.database_config)
     tools = ToolManager(config=config)
 
     agent = EntityAgent(
