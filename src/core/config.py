@@ -3,7 +3,7 @@ Simplified configuration system - Phase 1 Implementation
 Reduces from 10+ config classes to 4 main classes
 """
 
-from typing import Dict, Any, List, Literal
+from typing import Dict, Any, List, Literal, Optional
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field, model_validator
 import yaml
@@ -78,8 +78,14 @@ class MemoryConfig(BaseModel):
 
 
 class PromptConfig(BaseModel):
-    base_prompt: str
-    variables: List[str]
+    plugin: str = None
+    template: Optional[str] = None  # Template name  # noqa: F821
+
+    # Strategy-specific settings
+    strategy_settings: Dict[str, Any] = Field(default_factory=dict)
+
+    variables: List[str] = Field(default_factory=list)
+    base_prompt: str = ""
 
 
 class ServerConfig(BaseModel):
@@ -132,10 +138,7 @@ class EntityServerConfig(BaseModel):
     config_version: str = "2.0"
     debug: bool = False
 
-    # Add default_factory for required fields
-    _database_config: DatabaseConfig = Field(
-        default_factory=DatabaseConfig
-    )  # Changed from 'database'
+    database: DatabaseConfig = Field(default_factory=DatabaseConfig)
     ollama: OllamaConfig = Field(default_factory=OllamaConfig)
     tts: TTSConfig = Field(default_factory=TTSConfig)
     memory: MemoryConfig = Field(default_factory=MemoryConfig)
@@ -147,15 +150,14 @@ class EntityServerConfig(BaseModel):
 
     @model_validator(mode="after")
     def validate_adapters(self) -> "EntityServerConfig":
-        """Ensure at least one adapter is enabled if any are defined"""
         if self.adapters and not any(adapter.enabled for adapter in self.adapters):
             raise ValueError("At least one adapter must be enabled")
         return self
 
     @property
     def database_config(self) -> DatabaseConfig:
-        """Backward compatibility - access data config as 'database'"""
-        return self._database_config  # Return the 'data' field, not 'database'
+        """Backward compatibility"""
+        return self.database
 
     @property
     def personality(self) -> Dict[str, float]:

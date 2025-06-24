@@ -3,15 +3,6 @@ from typing import Any, Dict, Type
 from pydantic import BaseModel
 from langchain_core.tools import StructuredTool
 
-class PromptPlugin(ABC):
-    @abstractmethod
-    def generate_prompt(self, context: PromptContext) -> str
-    
-    @abstractmethod
-    def validate_prompt(self) -> ValidationResult
-    
-    @abstractmethod
-    def get_required_variables(self) -> Set[str]
 
 class BaseToolPlugin(ABC):
     @property

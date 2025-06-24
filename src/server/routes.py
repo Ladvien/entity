@@ -6,7 +6,7 @@ from datetime import datetime
 
 from src.memory.memory_system import MemorySystem
 from src.plugins.registry import ToolManager
-from src.server.routes.agent import EntityAgent
+from src.server.agent import EntityAgent
 from src.shared.models import (
     ChatRequest,
     ChatResponse,

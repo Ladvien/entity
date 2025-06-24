@@ -1,4 +1,4 @@
-# src/server/routes/agent.py - Updated with Prompt Engineering Integration
+# src/server/agent.py - Updated with Prompt Plugin Integration (cleaned)
 
 from typing import Optional, Dict, Any, List
 from datetime import datetime
@@ -9,17 +9,17 @@ from langchain.agents import AgentExecutor, create_react_agent
 from langchain_core.language_models.base import BaseLanguageModel
 
 from src.memory.memory_system import MemorySystem
+from src.plugins.prompts.plugin import PromptPlugin
 from src.plugins.registry import ToolManager
 from src.core.config import EntityConfig
-from src.service.react_validator import ReActPromptValidator
 from src.shared.agent_result import AgentResult
 from src.shared.models import ChatInteraction
 from src.adapters import OutputAdapterManager
 from src.shared.react_step import ReActStep
 
+# Import prompt plugin system
+from src.plugins.prompts.context import PromptContext
 
-from src.prompts.orchestrator import PromptOrchestrator
-from src.prompts.models import PromptTechnique, ExecutionContext
 from src.core.registry import ServiceRegistry
 
 logger = logging.getLogger(__name__)
@@ -55,20 +55,16 @@ class EntityAgent:
         llm: BaseLanguageModel,
         memory_system: MemorySystem,
         output_adapter_manager: Optional[OutputAdapterManager] = None,
+        prompt_plugin: Optional[PromptPlugin] = None,
     ):
         self.config = config
         self.tool_registry = tool_manager
         self.llm = llm
         self.memory_system = memory_system
         self.output_adapter_manager = output_adapter_manager
+        self.prompt_plugin = prompt_plugin
         self.agent_executor: Optional[AgentExecutor] = None
         self.memory_builder = MemoryContextBuilder(memory_system)
-
-        # NEW: Initialize prompt orchestrator
-        self.prompt_orchestrator: Optional[PromptOrchestrator] = None
-        self.enable_advanced_prompting = getattr(
-            config, "enable_advanced_prompting", False
-        )
 
     def _create_callback_manager(self):
         from langchain.callbacks.manager import CallbackManager
@@ -77,16 +73,46 @@ class EntityAgent:
 
     async def initialize(self):
         tools = self.tool_registry.get_all_tools()
-        logger.info("🔍 Validating ReAct prompt from config...")
-        if not ReActPromptValidator.validate_prompt(self.config):
-            for suggestion in ReActPromptValidator.suggest_fixes(self.config):
-                logger.error(f"💡 {suggestion}")
-            raise ValueError("Invalid ReAct prompt configuration.")
 
-        prompt = PromptTemplate(
-            input_variables=self.config.prompts.variables + ["tool_used", "step_count"],
-            template=self.config.prompts.base_prompt.strip(),
-        )
+        # Use prompt plugin for validation instead of hardcoded validator
+        logger.info("🔍 Validating prompt using plugin...")
+        if self.prompt_plugin:
+            validation_result = self.prompt_plugin.validate_prompt()
+            if not validation_result.is_valid:
+                logger.error("❌ Prompt plugin validation failed:")
+                for issue in validation_result.issues:
+                    logger.error(f"  - {issue.category}: {issue.message}")
+                raise ValueError("Invalid prompt configuration from plugin.")
+            else:
+                logger.info("✅ Prompt plugin validation passed")
+        else:
+            logger.warning("⚠️ No prompt plugin available, skipping validation")
+
+        # Generate prompt using plugin
+        if self.prompt_plugin:
+            try:
+                logger.info("🎭 Generating prompt using plugin...")
+                prompt_context = PromptContext(
+                    personality=self.config,
+                    tools=tools,
+                    memory_config=None,
+                    custom_variables={},
+                )
+
+                generated_prompt_text = self.prompt_plugin.generate_prompt(
+                    prompt_context
+                )
+                required_vars = self.prompt_plugin.get_required_variables()
+
+                # Create PromptTemplate with plugin-generated content
+                prompt = PromptTemplate(
+                    input_variables=list(required_vars) + ["tool_used", "step_count"],
+                    template=generated_prompt_text,
+                )
+                logger.info("✅ Prompt generated successfully using plugin")
+
+            except Exception as e:
+                logger.error(f"❌ Plugin prompt generation failed: {e}")
 
         callback_manager = self._create_callback_manager()
         agent = create_react_agent(self.llm, tools, prompt)
@@ -102,118 +128,30 @@ class EntityAgent:
             early_stopping_method="force",
         )
 
-        # NEW: Initialize prompt orchestrator
-        try:
-            self.prompt_orchestrator = ServiceRegistry.get("prompt_orchestrator")
-            logger.info("✅ Prompt orchestrator connected to agent")
-        except Exception as e:
-            logger.warning(f"⚠️ Prompt orchestrator not available: {e}")
-            self.enable_advanced_prompting = False
-
         logger.info(f"🪠 Tools registered: {[tool.name for tool in tools]}")
 
-    # NEW: Method to analyze if advanced prompting is needed
-    def _should_use_advanced_prompting(self, message: str) -> Optional[PromptTechnique]:
-        """Analyze message to determine if advanced prompting would be beneficial"""
-        if not self.enable_advanced_prompting or not self.prompt_orchestrator:
-            return None
-
-        message_lower = message.lower()
-
-        # Detect mathematical/calculation problems
-        math_keywords = [
-            "calculate",
-            "solve",
-            "equation",
-            "math",
-            "arithmetic",
-            "compute",
-            "what is",
-            "how much",
-        ]
-        if any(keyword in message_lower for keyword in math_keywords):
-            # Check for multi-step problems
-            if any(
-                indicator in message_lower
-                for indicator in ["step", "process", "how to", "explain"]
-            ):
-                logger.info("🧠 Detected complex math problem, using chain-of-thought")
-                return PromptTechnique.CHAIN_OF_THOUGHT
-
-        # Detect reasoning/analysis tasks
-        reasoning_keywords = [
-            "analyze",
-            "compare",
-            "evaluate",
-            "assess",
-            "why",
-            "explain",
-            "reason",
-        ]
-        if any(keyword in message_lower for keyword in reasoning_keywords):
-            # For complex analysis, use self-consistency
-            if len(message.split()) > 20:  # Longer queries
-                logger.info("🧠 Detected complex analysis task, using self-consistency")
-                return PromptTechnique.SELF_CONSISTENCY
-
-        # Detect requests for structured responses
-        structure_keywords = ["format", "template", "example", "style", "pattern"]
-        if any(keyword in message_lower for keyword in structure_keywords):
-            logger.info("🧠 Detected request for structured response, using few-shot")
-            return PromptTechnique.FEW_SHOT
-
-        return None
-
-    # NEW: Method to execute advanced prompting
-    async def _execute_advanced_prompting(
-        self,
-        technique: PromptTechnique,
-        message: str,
-        thread_id: str,
-        memory_context: str,
-    ) -> AgentResult:
-        """Execute advanced prompting technique"""
-        start_time = datetime.utcnow()
-
+    def _generate_dynamic_prompt(
+        self, message: str, memory_context: str, tools: List
+    ) -> str:
+        """Generate a fresh prompt for this specific interaction"""
         try:
-            logger.info(f"🧠 Using advanced prompting: {technique.value}")
-
-            # Execute the prompt technique
-            result = await self.prompt_orchestrator.execute_technique(
-                technique=technique,
-                query=message,
-                thread_id=thread_id,
-                llm=self.llm,
-                memory_system=self.memory_system,
-                use_memory=True,
+            # Create context for this specific interaction
+            prompt_context = PromptContext(
+                personality=self.config,
+                tools=tools,
+                memory_config=getattr(self.memory_system, "config", None),
+                custom_variables={
+                    "current_message": message,
+                    "memory_context": memory_context,
+                    "interaction_id": datetime.utcnow().isoformat(),
+                },
             )
 
-            if result.execution_successful:
-                # Convert to AgentResult format
-                agent_result = AgentResult(
-                    raw_input=message,
-                    raw_output=result.generated_content,
-                    final_response=result.generated_content,
-                    tools_used=[],  # Advanced prompting doesn't use tools
-                    token_count=result.token_count or 0,
-                    memory_context=result.memory_context,
-                    intermediate_steps=result.intermediate_steps,
-                    react_steps=[],  # Advanced prompting has different step format
-                    thread_id=thread_id,
-                    timestamp=start_time,
-                )
-
-                logger.info(f"✅ Advanced prompting successful with {technique.value}")
-                return agent_result
-            else:
-                logger.warning(f"⚠️ Advanced prompting failed: {result.error_message}")
-                # Fall back to normal processing
-                return None
+            # Generate fresh prompt
+            return self.prompt_plugin.generate_prompt(prompt_context)
 
         except Exception as e:
-            logger.error(f"❌ Advanced prompting error: {e}")
-            # Fall back to normal processing
-            return None
+            logger.warning(f"⚠️ Dynamic prompt generation failed: {e}")
 
     def _extract_tools_used(self, result: Dict[str, Any]) -> List[str]:
         try:
@@ -225,24 +163,6 @@ class EntityAgent:
         except Exception as e:
             logger.warning(f"❌ Could not extract tools used: {e}")
             return []
-
-    def _format_prompt(
-        self,
-        message: str,
-        memory_context: str,
-        tools: List,
-        tool_used: str,
-        step_count: int,
-    ) -> str:
-        return self.config.prompts.base_prompt.format(
-            input=message,
-            agent_scratchpad="",
-            memory_context=memory_context,
-            tools="\n".join(f"{tool.name}: {tool.description}" for tool in tools),
-            tool_names=", ".join(tool.name for tool in tools),
-            step_count=step_count,
-            tool_used=tool_used,
-        )
 
     def extract_final_answer(self, output: str) -> Optional[str]:
         matches = re.findall(r"Final Answer:\s*(.+)", str(output), flags=re.IGNORECASE)
@@ -267,22 +187,7 @@ class EntityAgent:
 
         memory_context = await self.memory_builder.build_context(message, thread_id)
 
-        # NEW: Check if advanced prompting should be used
-        advanced_technique = self._should_use_advanced_prompting(message)
-        if advanced_technique:
-            advanced_result = await self._execute_advanced_prompting(
-                advanced_technique, message, thread_id, memory_context
-            )
-            if advanced_result:
-                # Save interaction and return advanced result
-                await self._save_interaction_from_result(
-                    advanced_result, use_tools, True
-                )
-                return advanced_result
-            # If advanced prompting fails, continue with normal processing
-            logger.info("🔄 Falling back to normal agent processing")
-
-        # Continue with existing normal processing...
+        # Process with plugin system
         tools = self.tool_registry.get_all_tools()
         raw_output = ""
         final_response: Optional[str] = None
@@ -298,6 +203,8 @@ class EntityAgent:
                     )
 
                 logger.info("🤖 Invoking agent executor with tools...")
+
+                # Use plugin to generate dynamic input
                 agent_input = {
                     "input": message,
                     "agent_scratchpad": "",
@@ -321,29 +228,31 @@ class EntityAgent:
                     logger.warning("⚠️ Reached max steps without final answer.")
                     summarized_thoughts = self._concat_thoughts(intermediate_steps)
                     logger.debug(f"🧠 Thought Summary for Retry: {summarized_thoughts}")
-                    prompt = self._format_prompt(
-                        message,
-                        memory_context
-                        + f"\nSummarized Thoughts: {summarized_thoughts}",
-                        tools,
-                        tool_used="false",
-                        step_count=step_count,
-                    )
-                    raw_output = await self.llm.ainvoke(prompt)
+
+                    # Use plugin for retry prompt if available
+                    if self.prompt_plugin:
+                        retry_prompt = self._generate_dynamic_prompt(
+                            message,
+                            memory_context
+                            + f"\nSummarized Thoughts: {summarized_thoughts}",
+                            tools,
+                        )
+
+
+                    raw_output = await self.llm.ainvoke(retry_prompt)
                     final_response = self.extract_final_answer(str(raw_output))
 
                 token_count = result.get("token_usage", {}).get("total_tokens", 0)
 
             else:
                 logger.info("💬 Invoking LLM without tools...")
-                step_count = 0
-                prompt = self._format_prompt(
-                    message,
-                    memory_context,
-                    tools,
-                    tool_used="false",
-                    step_count=step_count,
-                )
+
+                # Use plugin for no-tools prompt
+                if self.prompt_plugin:
+                    prompt = self._generate_dynamic_prompt(
+                        message, memory_context, tools
+                    )
+                
                 raw_output = await self.llm.ainvoke(prompt)
                 final_response = self.extract_final_answer(str(raw_output))
 
@@ -378,14 +287,11 @@ class EntityAgent:
             timestamp=start_time,
         )
 
-        # Save interaction
-        await self._save_interaction_from_result(agent_result, use_tools, False)
-
+        await self._save_interaction_from_result(agent_result, use_tools)
         return agent_result
 
-    # NEW: Helper method to save interactions (reduces code duplication)
     async def _save_interaction_from_result(
-        self, agent_result: AgentResult, use_tools: bool, used_advanced_prompting: bool
+        self, agent_result: AgentResult, use_tools: bool
     ):
         """Save interaction from AgentResult"""
         interaction = ChatInteraction(
@@ -406,10 +312,12 @@ class EntityAgent:
             * 1000,
         )
 
-        # Add metadata about advanced prompting
-        if used_advanced_prompting:
-            interaction.metadata["advanced_prompting"] = True
-            interaction.metadata["prompting_technique"] = "advanced"
+        # Add metadata about prompt system used
+        if self.prompt_plugin:
+            interaction.metadata["prompt_plugin"] = (
+                self.prompt_plugin.get_strategy_name()
+            )
+            interaction.metadata["prompt_system"] = "plugin"
 
         # Process through output adapters
         if self.output_adapter_manager:
@@ -427,4 +335,3 @@ class EntityAgent:
             await self.memory_system.save_interaction(interaction)
         except Exception as e:
             logger.error(f"❌ Failed to save interaction: {e}")
-
