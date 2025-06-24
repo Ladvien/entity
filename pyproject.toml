@@ -6,11 +6,7 @@ authors = ["C. Thomas Brittain <cthomasbrittain@hotmail.com>"]
 license = "MIT"
 readme = "README.md"
 package-mode = true
-
-packages = [
-    { include = "src", from = "." },
-    { include = "examples", from = "." },
-]
+packages = [{ include = "entity", from = "src" }]
 
 
 [tool.poetry.urls]
