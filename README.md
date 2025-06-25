@@ -6,9 +6,31 @@ A **Bevy-inspired plugin framework** for AI agents that's composable, extensible
 ## 🏗️ Core Architecture
 
 ### Event Loop Pipeline
-```
-Users → API → Input Adapter → Input Processing → Prompt Pre-processing → 
-Prompt Processing → Tool Use → LLM Inference → Output Processing → Output Adapter → Response
+```mermaid
+flowchart TD
+    Users[👤 Users] --> API[🌐 API]
+    API --> IA[📥 Input Adapter]
+    IA --> IP[🔄 Input Processing]
+    IP --> PPP[🛠️ Prompt Pre-processing]
+    PPP --> PP[✨ Prompt Processing]
+    PP --> TU[🔧 Tool Use]
+    TU --> LLM[🧠 LLM Inference]
+    LLM --> OP[📤 Output Processing]
+    OP --> OA[📮 Output Adapter]
+    OA --> Response[📱 Response]
+    
+    %% Styling
+    classDef input fill:#e3f2fd
+    classDef processing fill:#fff3e0
+    classDef llm fill:#f3e5f5
+    classDef output fill:#e8f5e8
+    classDef endpoints fill:#fce4ec
+    
+    class Users,API,Response endpoints
+    class IA,IP input
+    class PPP,PP,TU processing
+    class LLM llm
+    class OP,OA output
 ```
 
 ### Three-Layer Plugin System
