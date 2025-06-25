@@ -6,32 +6,9 @@ A **Bevy-inspired plugin framework** for AI agents that's composable, extensible
 ## 🏗️ Core Architecture
 
 ### Event Loop Pipeline
-```mermaid
-flowchart TD
-    Users[👤 Users] --> API[🌐 API]
-    API --> IA[📥 Input Adapter]
-    IA --> IP[🔄 Input Processing]
-    IP --> PPP[🛠️ Prompt Pre-processing]
-    PPP --> PP[✨ Prompt Processing]
-    PP --> TU[🔧 Tool Use]
-    TU --> LLM[🧠 LLM Inference]
-    LLM --> OP[📤 Output Processing]
-    OP --> OA[📮 Output Adapter]
-    OA --> OT[💬 Output]
-    OT --> Response[📱 Response]
-    
-    %% Styling
-    classDef input fill:#e3f2fd
-    classDef processing fill:#fff3e0
-    classDef llm fill:#f3e5f5
-    classDef output fill:#e8f5e8
-    classDef endpoints fill:#fce4ec
-    
-    class Users,API,Response endpoints
-    class IA,IP input
-    class PPP,PP,TU processing
-    class LLM llm
-    class OP,OA output
+```
+Users → API → Input Adapter → Input Processing → Prompt Pre-processing → 
+Prompt Processing → Tool Use → LLM Inference → Output Processing → Output Adapter → Response
 ```
 
 ### Three-Layer Plugin System
@@ -119,16 +96,18 @@ class ValidationResult:
     warnings: List[str] = []
 
 class BasePlugin:
-    def validate(self, registry: PluginRegistry) -> ValidationResult:
+    @classmethod
+    def validate_static(cls, registry: ClassRegistry, config: Dict) -> ValidationResult:
         """
-        Validate plugin requirements before system initialization.
+        Validate plugin requirements before instantiation (static validation).
         Check for:
-        - Required resources exist and are properly configured
-        - Required plugins are present in correct pipeline stages
-        - Configuration parameters are valid
-        - No circular dependencies exist
+        - Required resource classes exist in registry
+        - Required plugin classes are present for correct pipeline stages
+        - Configuration parameters are valid (API keys, URLs, etc.)
+        - Dependencies can be resolved without circular references
         
         System will fail-fast if any plugin validation fails.
+        No side effects - pure validation of metadata and configuration.
         """
         return ValidationResult(success=True)
 ```
@@ -141,31 +120,42 @@ class BasePlugin:
 
 ## ⚙️ Configuration
 
-### System Initialization & Validation
+### Four-Phase System Initialization
 ```python
-# 1. Load configuration from YAML/ENV/CLI
-# 2. Register all plugins 
-# 3. Run validation on each plugin (FAIL-FAST if any fail)
-# 4. Build dependency graph and detect circular dependencies
-# 5. Initialize resources in dependency order
-# 6. Start event loop pipeline
+# Phase 1: Class Registration (Metadata Only - Order Independent)
+# Phase 2: Static Validation (All Classes Available - Fail Fast)
+# Phase 3: Resource Initialization (Dependency Order with Cleanup)
+# Phase 4: Plugin Instantiation (Everything Ready)
 
 class SystemInitializer:
     def initialize(self, config: Config):
-        # Register plugins
-        registry = self.register_plugins(config)
-        
-        # Validate all plugins - FAIL FAST
-        for plugin in registry.all_plugins():
-            result = plugin.validate(registry)
-            if not result.success:
-                raise SystemError(f"Plugin {plugin.name} validation failed: {result.error_message}")
-        
-        # Check for circular dependencies
-        self.detect_circular_dependencies(registry)
-        
-        # Initialize in proper order
-        return self.initialize_resources(registry)
+        with initialization_cleanup_context():
+            # Phase 1: Register all plugin classes and configurations
+            registry = ClassRegistry()
+            for plugin_config in config.all_plugins():
+                plugin_class = import_plugin_class(plugin_config.type)
+                registry.register_class(plugin_class, plugin_config)
+            
+            # Phase 2: Static validation - FAIL FAST (no instantiation yet)
+            for plugin_class, config in registry.all_plugin_classes():
+                result = plugin_class.validate_static(registry, config)
+                if not result.success:
+                    raise SystemError(f"Static validation failed for {plugin_class.__name__}: {result.error_message}")
+            
+            # Phase 3: Initialize resources in dependency order
+            resource_registry = ResourceRegistry()
+            for resource_class, config in registry.resource_classes():
+                instance = resource_class(config)
+                await instance.initialize()
+                resource_registry.add_resource(instance)
+            
+            # Phase 4: Instantiate tool and prompt plugins
+            plugin_registry = PluginRegistry()
+            for plugin_class, config in registry.non_resource_classes():
+                instance = plugin_class(config, resource_registry)
+                plugin_registry.add_plugin(instance)
+            
+            return plugin_registry, resource_registry
 ```
 
 ### Simple YAML Setup
@@ -218,6 +208,7 @@ entity:
 - **Mix and Match**: Combine multiple prompt strategies
 - **Resource Flexibility**: Works with/without optional resources
 - **Easy Experimentation**: Swap plugins to test approaches
+- **Order Independent**: Plugin configuration order doesn't matter
 
 ### For Developers  
 - **Plugin Ecosystem**: Share and discover community plugins
@@ -237,13 +228,15 @@ entity:
 ```python
 # 1. Create Tool Plugin (performs user tasks)
 class WeatherToolPlugin(ToolPlugin):
-    def validate(self, registry: PluginRegistry) -> ValidationResult:
-        # Check required resources
-        if not registry.has_resource("weather_api"):
-            return ValidationResult.error("Requires 'weather_api' resource")
+    @classmethod
+    def validate_static(cls, registry: ClassRegistry, config: Dict) -> ValidationResult:
+        # Check required resource classes exist
+        if not registry.has_resource_class("weather_api"):
+            available = registry.list_resource_classes()
+            return ValidationResult.error(f"Requires 'weather_api' resource class. Available: {available}")
         
-        # Check configuration
-        if not self.config.get("api_key"):
+        # Check configuration without instantiation
+        if not config.get("api_key"):
             return ValidationResult.error("Missing required config: api_key")
         
         return ValidationResult.success()
@@ -265,25 +258,50 @@ class WeatherToolPlugin(ToolPlugin):
 
 # 2. Create Resource Plugin (provides infrastructure)
 class WeatherAPIResourcePlugin(ResourcePlugin):
-    def validate(self, registry: PluginRegistry) -> ValidationResult:
-        # Check configuration
-        if not self.config.get("api_key"):
+    @classmethod
+    def validate_static(cls, registry: ClassRegistry, config: Dict) -> ValidationResult:
+        # Pure configuration validation
+        if not config.get("api_key"):
             return ValidationResult.error("Weather API key not configured")
         
+        # Validate URL format without making requests
+        base_url = config.get("base_url", "https://api.weather.com")
+        if not cls._is_valid_url(base_url):
+            return ValidationResult.error(f"Invalid base_url: {base_url}")
+        
         return ValidationResult.success()
+    
+    @staticmethod
+    def _is_valid_url(url: str) -> bool:
+        # Simple URL validation without network calls
+        return url.startswith(("http://", "https://"))
     
     def get_resource_name(self) -> str:
         return "weather_api"
     
     async def initialize(self, config) -> WeatherAPI:
-        return WeatherAPI(config["api_key"])
+        return WeatherAPI(config["api_key"], config.get("base_url"))
 
 # 3. Create Logging Resource Plugin (provides observability)
 class StructuredLoggingResourcePlugin(ResourcePlugin):
-    def validate(self, registry: PluginRegistry) -> ValidationResult:
+    @classmethod
+    def validate_static(cls, registry: ClassRegistry, config: Dict) -> ValidationResult:
+        # Validate log level without instantiation
         valid_levels = ["DEBUG", "INFO", "WARN", "ERROR"]
-        if self.config.get("level") not in valid_levels:
-            return ValidationResult.error(f"Invalid log level. Must be one of: {valid_levels}")
+        level = config.get("level", "INFO")
+        if level not in valid_levels:
+            return ValidationResult.error(f"Invalid log level '{level}'. Must be one of: {valid_levels}")
+        
+        # Validate output configuration
+        valid_outputs = ["console", "file", "elasticsearch"]
+        output = config.get("output", "console")
+        if output not in valid_outputs:
+            return ValidationResult.error(f"Invalid output '{output}'. Must be one of: {valid_outputs}")
+        
+        # If file output, check path is writable (without creating file)
+        if output == "file" and not config.get("file_path"):
+            return ValidationResult.error("file_path required when output is 'file'")
+        
         return ValidationResult.success()
     
     def get_resource_name(self) -> str:
@@ -291,10 +309,11 @@ class StructuredLoggingResourcePlugin(ResourcePlugin):
     
     async def initialize(self, config) -> StructuredLogger:
         return StructuredLogger(
-            level=config["level"],
-            output=config["output"],    # console, file, elasticsearch
-            format=config["format"],    # json, text
-            service_name="entity-framework"
+            level=config.get("level", "INFO"),
+            output=config.get("output", "console"),
+            format=config.get("format", "json"),
+            service_name="entity-framework",
+            file_path=config.get("file_path")
         )
 ```
 
@@ -303,10 +322,12 @@ class StructuredLoggingResourcePlugin(ResourcePlugin):
 1. **Configuration Over Code**: Behavior defined in YAML, not hardcoded
 2. **Plugin Composition**: Multiple plugins work together seamlessly  
 3. **Resource Agnostic**: Plugins work with/without optional dependencies
+4. **Fail Gracefully**: Missing resources don't crash the system
 5. **Pipeline Control**: Plugins can short-circuit or trigger reprocessing
 6. **Shared State**: Rich context object for plugin collaboration
-7. **Fail-Fast Validation**: All plugin dependencies validated at startup, not runtime
+7. **Fail-Fast Validation**: All plugin dependencies validated statically before instantiation
 8. **Observable by Design**: Structured logging, metrics, and tracing built into every plugin
+9. **Order Independence**: Plugin configuration order doesn't matter - validation handles dependencies
 
 ## 🌟 Real-World Usage
 
