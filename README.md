@@ -6,9 +6,32 @@ A **Bevy-inspired plugin framework** for AI agents that's composable, extensible
 ## 🏗️ Core Architecture
 
 ### Event Loop Pipeline
-```
-Users → API → Input Adapter → Input Processing → Prompt Pre-processing → 
-Prompt Processing → Tool Use → LLM Inference → Output Processing → Output Adapter → Response
+```mermaid
+flowchart TD
+    Users[👤 Users] --> API[🌐 API]
+    API --> IA[📥 Input Adapter]
+    IA --> IP[🔄 Input Processing]
+    IP --> PPP[🛠️ Prompt Pre-processing]
+    PPP --> PP[✨ Prompt Processing]
+    PP --> TU[🔧 Tool Use]
+    TU --> LLM[🧠 LLM Inference]
+    LLM --> OP[📤 Output Processing]
+    OP --> OA[📮 Output Adapter]
+    OA --> OT[💬 Output]
+    OT --> Response[📱 Response]
+    
+    %% Styling
+    classDef input fill:#e3f2fd
+    classDef processing fill:#fff3e0
+    classDef llm fill:#f3e5f5
+    classDef output fill:#e8f5e8
+    classDef endpoints fill:#fce4ec
+    
+    class Users,API,Response endpoints
+    class IA,IP input
+    class PPP,PP,TU processing
+    class LLM llm
+    class OP,OA output
 ```
 
 ### Three-Layer Plugin System
@@ -19,6 +42,8 @@ Prompt Processing → Tool Use → LLM Inference → Output Processing → Outpu
 - **Memory**: Vector databases, Redis cache
 - **TTS**: Text-to-speech services
 - **Storage**: File systems, cloud storage
+- **Logging**: Structured logging, metrics, tracing
+- **Monitoring**: Health checks, performance metrics
 
 #### **Tool Plugins** (Functionality - Performs Tasks for Users)
 - **Weather**: Get current conditions, forecasts
@@ -45,6 +70,67 @@ class EventContext:
     metadata: Dict            # Plugin data
     recompile: bool           # Trigger LLM reprocessing
     resources: ResourceRegistry  # Access to all resources
+    trace_id: str             # Unique request identifier for logging
+    metrics: MetricsCollector # Performance and usage metrics
+```
+
+### Plugin Observability & Logging
+```python
+class BasePlugin:
+    def __init__(self):
+        self.logger = None  # Injected during initialization
+        
+    async def execute(self, context: EventContext):
+        # Automatic logging with trace ID
+        self.logger.info(
+            "Plugin execution started",
+            plugin=self.__class__.__name__,
+            trace_id=context.trace_id,
+            stage=self.get_stage()
+        )
+        
+        start_time = time.time()
+        try:
+            result = await self._execute_impl(context)
+            
+            # Automatic metrics collection
+            context.metrics.record_plugin_duration(
+                plugin=self.__class__.__name__,
+                duration=time.time() - start_time
+            )
+            
+            return result
+        except Exception as e:
+            self.logger.error(
+                "Plugin execution failed",
+                plugin=self.__class__.__name__,
+                trace_id=context.trace_id,
+                error=str(e),
+                exc_info=True
+            )
+            raise
+```
+
+### Plugin Validation System
+```python
+class ValidationResult:
+    success: bool
+    error_message: str = None
+    warnings: List[str] = []
+
+class BasePlugin:
+    def validate(self, registry: PluginRegistry) -> ValidationResult:
+        """
+        Validate plugin requirements before system initialization.
+        Check for:
+        - Required resources exist and are properly configured
+        - Required plugins are present in correct pipeline stages
+        - Configuration parameters are valid
+        - No circular dependencies exist
+        
+        System will fail-fast if any plugin validation fails.
+        """
+        return ValidationResult(success=True)
 ```
 
 ### Plugin Capabilities
@@ -54,6 +140,33 @@ class EventContext:
 - **Recompile**: Force LLM reprocessing after prompt changes
 
 ## ⚙️ Configuration
+
+### System Initialization & Validation
+```python
+# 1. Load configuration from YAML/ENV/CLI
+# 2. Register all plugins 
+# 3. Run validation on each plugin (FAIL-FAST if any fail)
+# 4. Build dependency graph and detect circular dependencies
+# 5. Initialize resources in dependency order
+# 6. Start event loop pipeline
+
+class SystemInitializer:
+    def initialize(self, config: Config):
+        # Register plugins
+        registry = self.register_plugins(config)
+        
+        # Validate all plugins - FAIL FAST
+        for plugin in registry.all_plugins():
+            result = plugin.validate(registry)
+            if not result.success:
+                raise SystemError(f"Plugin {plugin.name} validation failed: {result.error_message}")
+        
+        # Check for circular dependencies
+        self.detect_circular_dependencies(registry)
+        
+        # Initialize in proper order
+        return self.initialize_resources(registry)
+```
 
 ### Simple YAML Setup
 ```yaml
@@ -69,6 +182,12 @@ entity:
     - plugin: "redis_cache"
       name: "cache"
       config: { host: "localhost", port: 6379 }
+    - plugin: "structured_logging"
+      name: "logger"
+      config: { level: "INFO", output: "console", format: "json" }
+    - plugin: "prometheus_metrics"
+      name: "metrics"
+      config: { port: 9090, endpoint: "/metrics" }
   
   # 2. Register User Functions
   tools:
@@ -118,6 +237,17 @@ entity:
 ```python
 # 1. Create Tool Plugin (performs user tasks)
 class WeatherToolPlugin(ToolPlugin):
+    def validate(self, registry: PluginRegistry) -> ValidationResult:
+        # Check required resources
+        if not registry.has_resource("weather_api"):
+            return ValidationResult.error("Requires 'weather_api' resource")
+        
+        # Check configuration
+        if not self.config.get("api_key"):
+            return ValidationResult.error("Missing required config: api_key")
+        
+        return ValidationResult.success()
+    
     def get_tool_name(self) -> str:
         return "get_weather"
     
@@ -135,11 +265,37 @@ class WeatherToolPlugin(ToolPlugin):
 
 # 2. Create Resource Plugin (provides infrastructure)
 class WeatherAPIResourcePlugin(ResourcePlugin):
+    def validate(self, registry: PluginRegistry) -> ValidationResult:
+        # Check configuration
+        if not self.config.get("api_key"):
+            return ValidationResult.error("Weather API key not configured")
+        
+        return ValidationResult.success()
+    
     def get_resource_name(self) -> str:
         return "weather_api"
     
     async def initialize(self, config) -> WeatherAPI:
         return WeatherAPI(config["api_key"])
+
+# 3. Create Logging Resource Plugin (provides observability)
+class StructuredLoggingResourcePlugin(ResourcePlugin):
+    def validate(self, registry: PluginRegistry) -> ValidationResult:
+        valid_levels = ["DEBUG", "INFO", "WARN", "ERROR"]
+        if self.config.get("level") not in valid_levels:
+            return ValidationResult.error(f"Invalid log level. Must be one of: {valid_levels}")
+        return ValidationResult.success()
+    
+    def get_resource_name(self) -> str:
+        return "logger"
+    
+    async def initialize(self, config) -> StructuredLogger:
+        return StructuredLogger(
+            level=config["level"],
+            output=config["output"],    # console, file, elasticsearch
+            format=config["format"],    # json, text
+            service_name="entity-framework"
+        )
 ```
 
 ## 🎨 Design Principles
@@ -147,9 +303,10 @@ class WeatherAPIResourcePlugin(ResourcePlugin):
 1. **Configuration Over Code**: Behavior defined in YAML, not hardcoded
 2. **Plugin Composition**: Multiple plugins work together seamlessly  
 3. **Resource Agnostic**: Plugins work with/without optional dependencies
-4. **Fail Gracefully**: Missing resources don't crash the system
 5. **Pipeline Control**: Plugins can short-circuit or trigger reprocessing
 6. **Shared State**: Rich context object for plugin collaboration
+7. **Fail-Fast Validation**: All plugin dependencies validated at startup, not runtime
+8. **Observable by Design**: Structured logging, metrics, and tracing built into every plugin
 
 ## 🌟 Real-World Usage
 
@@ -161,7 +318,7 @@ resources:
   - plugin: "local_llm"
     name: "llm"
 
-# Production: Full stack
+# Production: Full stack with observability
 resources:
   - plugin: "postgresql" 
     name: "database"
@@ -171,6 +328,13 @@ resources:
     name: "cache"
   - plugin: "elasticsearch"
     name: "memory"
+  - plugin: "structured_logging"
+    name: "logger"
+    config: { level: "INFO", output: "elasticsearch", format: "json" }
+  - plugin: "prometheus_metrics"
+    name: "metrics"
+  - plugin: "jaeger_tracing"
+    name: "tracing"
 
 # Experimentation: A/B testing
 prompt:
@@ -585,4 +749,3 @@ graph TB
     class SDK,TEMPLATE,DOCS,EXAMPLES dev
     class DEV,PROD,CUSTOM scenarios
 ```
-
