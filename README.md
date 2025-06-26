@@ -118,20 +118,76 @@ class ValidationResult:
     warnings: List[str] = []
 
 class BasePlugin:
+    dependencies = []  # List of registry keys that this plugin depends on
+    
     @classmethod
-    def validate_static(cls, registry: ClassRegistry, config: Dict) -> ValidationResult:
+    def validate_config(cls, config: Dict) -> ValidationResult:
         """
-        Validate plugin requirements before instantiation (static validation).
-        Check for:
-        - Required resource classes exist in registry
-        - Required plugin classes are present for correct pipeline stages
-        - Configuration parameters are valid (API keys, URLs, etc.)
-        - Dependencies can be resolved without circular references
-        
-        System will fail-fast if any plugin validation fails.
-        No side effects - pure validation of metadata and configuration.
+        Pure configuration validation - no external dependencies.
+        Validates:
+        - Required config keys exist
+        - Values are correct types/formats
+        - URLs are well-formed
+        - Numeric ranges are valid
+        - No registry or cross-plugin concerns
         """
         return ValidationResult(success=True)
+    
+    @classmethod
+    def validate_dependencies(cls, registry: ClassRegistry) -> ValidationResult:
+        """
+        Dependency validation - checks that declared dependencies exist in registry.
+        Validates:
+        - All items in cls.dependencies exist in registry
+        - No circular dependency chains (using topological sort)
+        - Plugin execution order can be determined
+        
+        Uses registry keys (YAML config names) for dependencies.
+        """
+        # Check all dependencies exist
+        for dep in cls.dependencies:
+            if not registry.has_plugin(dep):
+                available = registry.list_plugins()
+                return ValidationResult.error(f"{cls.__name__} requires '{dep}' but it's not registered. Available: {available}")
+        
+        return ValidationResult.success()
+    
+    @classmethod
+    def validate_all(cls, config: Dict, registry: ClassRegistry) -> ValidationResult:
+        """Convenience method for complete validation (config + dependencies)"""
+        config_result = cls.validate_config(config)
+        if not config_result.success:
+            return config_result
+        return cls.validate_dependencies(registry)
+    
+    @classmethod
+    def from_dict(cls, config: Dict) -> 'Self':
+        """
+        Create plugin from config with CONFIG VALIDATION ONLY.
+        
+        WARNING: This does NOT validate dependencies. Use only for:
+        - Testing with mocked dependencies
+        - Development/prototyping
+        - When dependencies are guaranteed to exist
+        
+        For production systems, use four-phase initialization.
+        """
+        result = cls.validate_config(config)
+        if not result.success:
+            raise ConfigurationError(f"{cls.__name__} config validation failed: {result.error_message}")
+        return cls(config)
+    
+    @classmethod
+    def from_yaml(cls, yaml_content: str) -> 'Self':
+        """Parse YAML then delegate to from_dict (config validation only)"""
+        config = yaml.safe_load(yaml_content)
+        return cls.from_dict(config)
+    
+    @classmethod
+    def from_json(cls, json_content: str) -> 'Self':
+        """Parse JSON then delegate to from_dict (config validation only)"""
+        config = json.loads(json_content)
+        return cls.from_dict(config)
 ```
 
 ### Plugin Capabilities
@@ -150,77 +206,214 @@ class BasePlugin:
 # Phase 4: Plugin Instantiation (Everything Ready)
 
 class SystemInitializer:
-    def initialize(self, config: Config):
+    @classmethod
+    def from_yaml(cls, yaml_path: str) -> 'SystemInitializer':
+        """
+        Load entire system configuration from single YAML file.
+        Handles environment variable interpolation at system level for security.
+        """
+        # 1. Load YAML content
+        with open(yaml_path, 'r') as file:
+            yaml_content = file.read()
+        
+        # 2. Interpolate ALL environment variables at system level (security)
+        config = cls._interpolate_env_vars(yaml.safe_load(yaml_content))
+        
+        # 3. Return SystemInitializer with fully resolved config
+        return cls(config)
+    
+    def get_resource_config(self, name: str) -> Dict:
+        """Explicitly extract resource configuration"""
+        return self.config["plugins"]["resources"][name]
+    
+    def get_tool_config(self, name: str) -> Dict:
+        """Explicitly extract tool configuration"""
+        return self.config["plugins"]["tools"][name]
+    
+    def get_adapter_config(self, name: str) -> Dict:
+        """Explicitly extract adapter configuration"""
+        return self.config["plugins"]["adapters"][name]
+    
+    def get_prompt_config(self, name: str) -> Dict:
+        """Explicitly extract prompt configuration"""
+        return self.config["plugins"]["prompts"][name]
+
+    def initialize(self):
         with initialization_cleanup_context():
-            # Phase 1: Register all plugin classes and configurations
+            # Phase 1: Register all plugin classes and extract dependency graph
             registry = ClassRegistry()
-            for plugin_config in config.all_plugins():
-                plugin_class = import_plugin_class(plugin_config.type)
-                registry.register_class(plugin_class, plugin_config)
+            dependency_graph = {}
             
-            # Phase 2: Static validation - FAIL FAST (no instantiation yet)
+            # Register resources
+            for resource_name, resource_config in self.config["plugins"]["resources"].items():
+                resource_class = import_plugin_class(resource_config.get("type", resource_name))
+                registry.register_class(resource_class, resource_config, resource_name)
+                dependency_graph[resource_name] = resource_class.dependencies
+            
+            # Register tools, adapters, prompts...
+            for plugin_type in ["tools", "adapters", "prompts"]:
+                for plugin_name, plugin_config in self.config["plugins"].get(plugin_type, {}).items():
+                    plugin_class = import_plugin_class(plugin_config.get("type", plugin_name))
+                    registry.register_class(plugin_class, plugin_config, plugin_name)
+                    dependency_graph[plugin_name] = plugin_class.dependencies
+            
+            # Phase 2: Validate dependencies exist and detect circular dependencies
+            self._validate_dependency_graph(registry, dependency_graph)
+            
+            # Phase 2 continued: Config validation for all plugins
             for plugin_class, config in registry.all_plugin_classes():
-                result = plugin_class.validate_static(registry, config)
-                if not result.success:
-                    raise SystemError(f"Static validation failed for {plugin_class.__name__}: {result.error_message}")
+                config_result = plugin_class.validate_config(config)
+                if not config_result.success:
+                    raise SystemError(f"Config validation failed for {plugin_class.__name__}: {config_result.error_message}")
             
-            # Phase 3: Initialize resources in dependency order
+            # Phase 3: Initialize resources in dependency order (no validation needed - already done!)
             resource_registry = ResourceRegistry()
             for resource_class, config in registry.resource_classes():
-                instance = resource_class(config)
+                instance = resource_class(config)  # Direct instantiation
                 await instance.initialize()
                 resource_registry.add_resource(instance)
             
-            # Phase 4: Instantiate tool and prompt plugins
+            # Phase 4: Instantiate tool and prompt plugins (no validation needed - already done!)
             plugin_registry = PluginRegistry()
             for plugin_class, config in registry.non_resource_classes():
-                instance = plugin_class(config, resource_registry)
+                instance = plugin_class(config)  # Direct instantiation
                 plugin_registry.add_plugin(instance)
             
             return plugin_registry, resource_registry
+    
+    def _validate_dependency_graph(self, registry: ClassRegistry, dep_graph: Dict[str, List[str]]):
+        """
+        Validate dependency graph: check existence and detect circular dependencies.
+        Uses registry keys (YAML config names) for dependency resolution.
+        """
+        # 1. Check all dependencies exist
+        for plugin_name, deps in dep_graph.items():
+            for dep in deps:
+                if not registry.has_plugin(dep):
+                    available = registry.list_plugins()
+                    raise SystemError(f"Plugin '{plugin_name}' requires '{dep}' but it's not registered. Available: {available}")
+        
+        # 2. Detect circular dependencies using topological sort (Kahn's algorithm)
+        in_degree = {node: 0 for node in dep_graph}
+        for node in dep_graph:
+            for neighbor in dep_graph[node]:
+                if neighbor in in_degree:  # Only count registered plugins
+                    in_degree[neighbor] += 1
+        
+        queue = [node for node, degree in in_degree.items() if degree == 0]
+        processed = []
+        
+        while queue:
+            current = queue.pop(0)
+            processed.append(current)
+            
+            for neighbor in dep_graph[current]:
+                if neighbor in in_degree:
+                    in_degree[neighbor] -= 1
+                    if in_degree[neighbor] == 0:
+                        queue.append(neighbor)
+        
+        # If we didn't process all nodes, there's a cycle
+        if len(processed) != len(in_degree):
+            cycle_nodes = [node for node in in_degree if node not in processed]
+            raise SystemError(f"Circular dependency detected involving: {cycle_nodes}")
+        
+    @staticmethod
+    def _interpolate_env_vars(config: Any) -> Any:
+        """Recursively interpolate environment variables in configuration"""
+        if isinstance(config, dict):
+            return {k: SystemInitializer._interpolate_env_vars(v) for k, v in config.items()}
+        elif isinstance(config, list):
+            return [SystemInitializer._interpolate_env_vars(item) for item in config]
+        elif isinstance(config, str) and config.startswith("${") and config.endswith("}"):
+            env_var = config[2:-1]
+            value = os.environ.get(env_var)
+            if value is None:
+                raise EnvironmentError(f"Required environment variable {env_var} not found")
+            return value
+        else:
+            return config
 ```
 
-### Simple YAML Setup
+### Hierarchical YAML Configuration
 ```yaml
 entity:
-  # 1. Initialize Infrastructure
+  entity_id: "jade"
+  max_iterations: 500
+  name: "Jade"
+  server:
+    host: "0.0.0.0"
+    port: 8000
+    reload: false
+    log_level: "info"
+
+plugins:
   resources:
-    - plugin: "postgresql"
-      name: "database"
-      config: { host: "localhost", port: 5432 }
-    - plugin: "ollama_llm" 
-      name: "llm"
-      config: { model: "llama3:8b" }
-    - plugin: "redis_cache"
-      name: "cache"
-      config: { host: "localhost", port: 6379 }
-    - plugin: "structured_logging"
-      name: "logger"
-      config: { level: "INFO", output: "console", format: "json" }
-    - plugin: "prometheus_metrics"
-      name: "metrics"
-      config: { port: 9090, endpoint: "/metrics" }
+    database:
+      type: postgres
+      host: "192.168.1.104"
+      port: 5432
+      name: "memory"
+      username: "${DB_USERNAME}"      # Environment variable interpolation
+      password: "${DB_PASSWORD}"      # Resolved at system level for security
+      db_schema: "entity"
+      history_table: "chat_history"
+      min_pool_size: 2
+      max_pool_size: 10
+      init_on_startup: true
+    
+    ollama:
+      type: ollama_llm
+      base_url: "http://192.168.1.110:11434"
+      model: "llama3:8b-instruct-q6_K"
+      temperature: 0.7
+      top_p: 0.9
+      top_k: 40
+      repeat_penalty: 1.1
+    
+    logging:
+      type: structured_logging
+      level: "DEBUG"
+      format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+      file_enabled: true
+      file_path: "logs/entity.log"
+      max_file_size: 10485760
+      backup_count: 5
   
-  # 2. Register User Functions
   tools:
-    - plugin: "weather_api"
-      name: "get_weather"
-      config: { api_key: "${WEATHER_API_KEY}" }
-    - plugin: "calculator"
-      name: "calculate"
-    - plugin: "web_search"
-      name: "search_web"
-      config: { engine: "google" }
+    weather:
+      type: weather_api
+      api_key: "${WEATHER_API_KEY}"
+      base_url: "https://api.weather.com"
+      timeout: 30
+    
+    calculator:
+      type: calculator
+      precision: 10
   
-  # 3. Define Processing Pipeline (order matters!)
-  prompt:
-    plugin_chain:
-      - plugin: "memory_retrieval"     # Uses database resource
-        stages: ["prompt_preprocessing"]
-      - plugin: "chain_of_thought"     # Adds reasoning structure
-        stages: ["prompt_processing"]
-      - plugin: "tool_selector"        # Exposes tools to LLM
-        stages: ["tool_use"]
+  adapters:
+    tts:
+      type: speech_synthesis
+      base_url: "http://192.168.1.110:8888"
+      voice_name: "bf_emma"
+      voice_sample_path: "voice_samples/ai_mee.wav"
+      output_format: "wav"
+      speed: 0.3
+      cfg_weight: 0.9
+      exaggeration: 0.5
+      sample_rates: [44100, 48000, 22050, 16000, 8000]
+      fade_out_samples: 2000
+  
+  prompts:
+    chain_of_thought:
+      type: chain_of_thought
+      enable_reasoning: true
+      max_steps: 5
+    
+    memory_retrieval:
+      type: memory_retrieval
+      max_context_length: 4000
+      similarity_threshold: 0.7
 ```
 
 ## 🚀 Key Benefits
@@ -237,12 +430,15 @@ entity:
 - **Clean Testing**: Mock resources, test plugins in isolation
 - **Extensible**: Add new resources and strategies without core changes
 - **Composable**: Plugins build on each other's work
+- **Separated Validation**: Test config parsing independently from dependency resolution
 
 ### For Operations
 - **Configuration-Driven**: Different setups for dev/staging/prod
 - **Fail Fast**: Static validation catches issues early
 - **Observable**: Rich metadata from each plugin
 - **Scalable**: Resources shared across all plugins
+- **Environment Security**: Centralized environment variable interpolation
+- **Explicit Configuration**: Clear, transparent config extraction
 
 ## 🔌 Plugin Examples
 
@@ -250,18 +446,30 @@ entity:
 ```python
 # 1. Create Tool Plugin (performs agent tasks)
 class WeatherToolPlugin(ToolPlugin):
+    dependencies = ["weather_api"]  # Depends on weather_api resource (matches YAML key)
+    
     @classmethod
-    def validate_static(cls, registry: ClassRegistry, config: Dict) -> ValidationResult:
-        # Check required resource classes exist
-        if not registry.has_resource_class("weather_api"):
-            available = registry.list_resource_classes()
-            return ValidationResult.error(f"Requires 'weather_api' resource class. Available: {available}")
-        
-        # Check configuration without instantiation
+    def validate_config(cls, config: Dict) -> ValidationResult:
+        # Pure configuration validation - no external dependencies
         if not config.get("api_key"):
             return ValidationResult.error("Missing required config: api_key")
         
+        # Validate URL format without making requests
+        base_url = config.get("base_url", "https://api.weather.com")
+        if not cls._is_valid_url(base_url):
+            return ValidationResult.error(f"Invalid base_url: {base_url}")
+        
+        # Validate timeout is reasonable
+        timeout = config.get("timeout", 30)
+        if not isinstance(timeout, int) or timeout <= 0:
+            return ValidationResult.error("timeout must be a positive integer")
+        
         return ValidationResult.success()
+    
+    @staticmethod
+    def _is_valid_url(url: str) -> bool:
+        # Simple URL validation without network calls
+        return url.startswith(("http://", "https://"))
     
     def get_tool_name(self) -> str:
         return "get_weather"
@@ -280,8 +488,10 @@ class WeatherToolPlugin(ToolPlugin):
 
 # 2. Create Resource Plugin (provides infrastructure)
 class WeatherAPIResourcePlugin(ResourcePlugin):
+    dependencies = []  # No dependencies
+    
     @classmethod
-    def validate_static(cls, registry: ClassRegistry, config: Dict) -> ValidationResult:
+    def validate_config(cls, config: Dict) -> ValidationResult:
         # Pure configuration validation
         if not config.get("api_key"):
             return ValidationResult.error("Weather API key not configured")
@@ -306,8 +516,10 @@ class WeatherAPIResourcePlugin(ResourcePlugin):
 
 # 3. Create Logging Resource Plugin (provides observability)
 class StructuredLoggingResourcePlugin(ResourcePlugin):
+    dependencies = []  # No dependencies
+    
     @classmethod
-    def validate_static(cls, registry: ClassRegistry, config: Dict) -> ValidationResult:
+    def validate_config(cls, config: Dict) -> ValidationResult:
         # Validate log level without instantiation
         valid_levels = ["DEBUG", "INFO", "WARN", "ERROR"]
         level = config.get("level", "INFO")
@@ -320,9 +532,13 @@ class StructuredLoggingResourcePlugin(ResourcePlugin):
         if output not in valid_outputs:
             return ValidationResult.error(f"Invalid output '{output}'. Must be one of: {valid_outputs}")
         
-        # If file output, check path is writable (without creating file)
+        # If file output, check path is provided
         if output == "file" and not config.get("file_path"):
             return ValidationResult.error("file_path required when output is 'file'")
+        
+        # Validate file size limits
+        if config.get("max_file_size") and config["max_file_size"] <= 0:
+            return ValidationResult.error("max_file_size must be positive")
         
         return ValidationResult.success()
     
@@ -335,8 +551,23 @@ class StructuredLoggingResourcePlugin(ResourcePlugin):
             output=config.get("output", "console"),
             format=config.get("format", "json"),
             service_name="entity-framework",
-            file_path=config.get("file_path")
+            file_path=config.get("file_path"),
+            max_file_size=config.get("max_file_size"),
+            backup_count=config.get("backup_count", 5)
         )
+
+# 4. Example of Complex Dependencies
+class ChainOfThoughtPlugin(PromptPlugin):
+    dependencies = ["database", "logging"]  # Needs database for memory, logging for observability
+    
+    @classmethod
+    def validate_config(cls, config: Dict) -> ValidationResult:
+        # Validate reasoning configuration
+        max_steps = config.get("max_steps", 5)
+        if not isinstance(max_steps, int) or max_steps <= 0:
+            return ValidationResult.error("max_steps must be a positive integer")
+        
+        return ValidationResult.success()
 ```
 
 ## 🎨 Design Principles
@@ -350,47 +581,69 @@ class StructuredLoggingResourcePlugin(ResourcePlugin):
 7. **Fail-Fast Validation**: All plugin dependencies validated statically before instantiation
 8. **Observable by Design**: Structured logging, metrics, and tracing built into every plugin
 9. **Order Independence**: Plugin configuration order doesn't matter - validation handles dependencies
+10. **Configuration Flexibility**: Multiple config formats (YAML, JSON, Dict) with secure env interpolation
+11. **Separation of Concerns**: Clear distinction between config validation and dependency validation
+12. **Load-Time Validation**: Validation should be done at load time, reducing runtime errors
+13. **Intuitive Mental Models**: Mental models should be intensely easy to understand
 
 ## 🌟 Real-World Usage
 
 ```yaml
 # Development: Simple setup
-resources:
-  - plugin: "sqlite"
-    name: "database"
-  - plugin: "local_llm"
-    name: "llm"
+entity:
+  entity_id: "dev_agent"
+  name: "Development Agent"
+
+plugins:
+  resources:
+    database:
+      type: sqlite
+      file_path: "dev.db"
+    llm:
+      type: local_llm
+      model: "llama3:8b"
 
 # Production: Full stack with observability
-resources:
-  - plugin: "postgresql" 
-    name: "database"
-  - plugin: "openai_gpt4"
-    name: "llm"
-  - plugin: "redis_cache"
-    name: "cache"
-  - plugin: "elasticsearch"
-    name: "memory"
-  - plugin: "structured_logging"
-    name: "logger"
-    config: { level: "INFO", output: "elasticsearch", format: "json" }
-  - plugin: "prometheus_metrics"
-    name: "metrics"
-  - plugin: "jaeger_tracing"
-    name: "tracing"
+entity:
+  entity_id: "prod_agent"
+  name: "Production Agent"
+
+plugins:
+  resources:
+    database:
+      type: postgresql
+      host: "db.company.com"
+      username: "${DB_USERNAME}"
+      password: "${DB_PASSWORD}"
+    llm:
+      type: openai_gpt4
+      api_key: "${OPENAI_API_KEY}"
+    logging:
+      type: structured_logging
+      level: "INFO"
+      output: "elasticsearch"
+      format: "json"
+    metrics:
+      type: prometheus_metrics
+      port: 9090
+    tracing:
+      type: jaeger_tracing
+      endpoint: "http://jaeger:14268"
 
 # Experimentation: A/B testing
-prompt:
-  plugin_chain:
-    - plugin: "chain_of_thought"    # Strategy A
-    # - plugin: "direct_response"   # Strategy B (commented out)
+plugins:
+  prompts:
+    reasoning:
+      type: "chain_of_thought"    # Strategy A
+      # type: "direct_response"   # Strategy B (commented out)
+      enable_reasoning: true
 ```
 
 ## 🎯 Bottom Line
 
 **Entity Framework = Bevy for AI Agents**
 
-- **Three Plugin Types**: Resources (infrastructure), Tools (agent functions), Prompts (processing)
+- **Three Plugin Types**: Resources (infrastructure), Tools (user functions), Prompts (processing)
 - **Infrastructure**: Clean separation between enabling vs performing
 - **Composable**: Mix and match capabilities via configuration  
 - **Testable**: Clean separation, easy mocking, isolated testing
@@ -400,395 +653,64 @@ prompt:
 **Result**: Build AI agents like assembling LEGO blocks - flexible, reusable, and fun! 🧩
 
 
-
-
-
-
 ```mermaid
 graph TB
-    %% High-Level System Architecture
-    subgraph "Users"
-        U1[👤 User 1]
-        U2[👤 User 2]
-        U3[👤 User N]
-    end
+    %% Simplified System Architecture
+    Users[👤 Users] --> API[🌐 API]
+    API --> EL[🔄 Event Loop]
+    EL --> CTX[📋 Contextgraph TB
+    %% Simplified System Architecture
+    Users[👤 Users] --> API[🌐 API]
+    API --> EL[🔄 Event Loop]
+    EL --> CTX[📋 Context]
+    EL --> RR[🏪 Registry]
     
-    subgraph "Entity Framework Core"
-        API[🌐 FastAPI Server]
-        EL[🔄 Event Loop]
-        CTX[📋 Event Context]
-        RR[🏪 Resource Registry]
-    end
-    
-    subgraph "Three-Layer Plugin System"
-        subgraph "📦 Resource Plugins"
-            DB[(🗄️ Database)]
-            LLM[🧠 LLM Server]
-            CACHE[⚡ Redis Cache]
-            TTS[🔊 TTS Service]
-        end
-        
-        subgraph "🛠️ Tool Plugins"
-            WEATHER[🌤️ Weather API]
-            CALC[🧮 Calculator]
-            SEARCH[🔍 Web Search]
-            FILE[📁 File Ops]
-        end
-        
-        subgraph "✨ Prompt Plugins"
-            COT[🧩 Chain of Thought]
-            REACT[⚛️ ReAct Strategy]
-            PERS[🎭 Personality]
-            MEM[🧠 Memory Retrieval]
-        end
-    end
-    
-    %% Connections
-    U1 --> API
-    U2 --> API
-    U3 --> API
-    API --> EL
-    EL --> CTX
-    CTX --> RR
-    
-    %% Plugin connections
-    RR -.-> DB
-    RR -.-> LLM
-    RR -.-> CACHE
-    RR -.-> TTS
-    
-    EL --> COT
-    EL --> REACT
-    EL --> PERS
-    EL --> MEM
-    
-    COT -.-> WEATHER
-    COT -.-> CALC
-    REACT -.-> SEARCH
-    REACT -.-> FILE
+    %% Three Plugin Layers
+    RR --> Resources[📦 Resources<br/>DB, LLM, Cache]
+    EL --> Tools[🛠️ Tools<br/>Weather, Calc, Search]
+    EL --> Prompts[✨ Prompts<br/>CoT, ReAct, Memory]
     
     %% Styling
-    classDef users fill:#e1f5fe
     classDef core fill:#f3e5f5
-    classDef resources fill:#e8f5e8
-    classDef tools fill:#fff3e0
-    classDef prompts fill:#fce4ec
-    
-    class U1,U2,U3 users
-    class API,EL,CTX,RR core
-    class DB,LLM,CACHE,TTS resources
-    class WEATHER,CALC,SEARCH,FILE tools
-    class COT,REACT,PERS,MEM prompts
-```
-
-```mermaid
-flowchart TD
-    %% User Request Flow
-    START([👤 User Request]) --> IA[📥 Input Adapter]
-    IA --> IP[🔄 Input Processing]
-    
-    %% Prompt Processing Chain
-    IP --> PPP[🛠️ Prompt Pre-processing]
-    PPP --> PP[✨ Prompt Processing]
-    
-    %% Decision Point
-    PP --> RECOMPILE{🔄 Recompile?}
-    RECOMPILE -->|Yes| LLM1[🧠 LLM Inference]
-    RECOMPILE -->|No| TU[🛠️ Tool Use]
-    LLM1 --> TU
-    
-    %% Tool Usage
-    TU --> TOOLS{🔧 Tools Needed?}
-    TOOLS -->|Yes| EXEC[⚡ Execute Tools]
-    TOOLS -->|No| LLM2[🧠 LLM Inference]
-    EXEC --> LLM2
-    
-    %% Output Processing
-    LLM2 --> OP[📤 Output Processing]
-    OP --> OA[📮 Output Adapter]
-    
-    %% Short Circuit Option
-    IP -.->|Short Circuit| OP
-    PPP -.->|Short Circuit| OP
-    PP -.->|Short Circuit| OP
-    TU -.->|Short Circuit| OP
-    
-    %% Final Response
-    OA --> END([📱 API Response])
-    
-    %% Plugin Hook Points
-    subgraph "Plugin Hook Points"
-        HOOKS[🔌 Plugins can hook into any stage]
-        SHARED[📋 Shared EventContext]
-        RESOURCES[🏪 Resource Registry Access]
-    end
-    
-    %% Styling
-    classDef stages fill:#e3f2fd
-    classDef decision fill:#fff3e0
-    classDef llm fill:#f3e5f5
     classDef plugins fill:#e8f5e8
-    classDef shortcut fill:#ffebee,stroke-dasharray: 5 5
     
-    class IA,IP,PPP,PP,TU,OP,OA stages
-    class RECOMPILE,TOOLS decision
-    class LLM1,LLM2 llm
-    class HOOKS,SHARED,RESOURCES plugins
-    class START,END shortcut
-```
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant API as FastAPI
-    participant EL as Event Loop
-    participant CTX as Event Context
-    participant RR as Resource Registry
-    participant PP as Prompt Plugin
-    participant TP as Tool Plugin
-    participant RP as Resource Plugin
-    participant LLM as LLM Server
-    
-    %% Request Flow
-    User->>API: POST /chat
-    API->>EL: Create EventContext
-    EL->>CTX: Initialize with request
-    
-    %% Plugin Processing
-    EL->>PP: Hook: prompt_processing
-    PP->>CTX: Read user input
-    PP->>RR: Get memory resource
-    RR->>RP: Access database
-    RP-->>RR: Return connection
-    RR-->>PP: Database available
-    PP->>CTX: Add memory context
-    PP->>CTX: Set recompile=True
-    PP-->>EL: Continue
-    
-    %% LLM Recompile
-    EL->>CTX: Check recompile flag
-    EL->>RR: Get LLM resource
-    RR-->>EL: LLM server
-    EL->>LLM: Process updated prompt
-    LLM-->>EL: Response with tool calls
-    
-    %% Tool Execution
-    EL->>TP: Execute weather tool
-    TP->>RR: Get weather API resource
-    RR->>RP: Access weather service
-    RP-->>RR: Weather API
-    RR-->>TP: API available
-    TP->>RP: Get forecast("New York")
-    RP-->>TP: "Sunny, 75°F"
-    TP->>CTX: Update with weather data
-    TP-->>EL: Continue
-    
-    %% Final Response
-    EL->>LLM: Generate final response
-    LLM-->>EL: Complete answer
-    EL->>CTX: Set final response
-    EL-->>API: EventContext with response
-    API-->>User: JSON response
-    
-    %% Resource Lifecycle
-    Note over RR,RP: Resources initialized once,<br/>shared across all requests
-    Note over PP,TP: Plugins process each request,<br/>access resources as needed
+    class API,EL,CTX,RR core
+    class Resources,Tools,Prompts plugins
 ```
 
 ```mermaid
 flowchart LR
-    %% Configuration Sources
-    subgraph "Configuration"
-        YAML[📄 config.yaml]
-        ENV[🌍 Environment Variables]
-        CLI[⚙️ CLI Arguments]
-    end
+    %% Simplified Request Flow
+    User[👤 User] --> Input[📥 Input]
+    Input --> Prompts[✨ Prompts]
+    Prompts --> Tools[🛠️ Tools]
+    Tools --> LLM[🧠 LLM]
+    LLM --> Output[📤 Output]
+    Output --> Response[📱 Response]
     
-    %% Initialization Flow
-    YAML --> INIT[🚀 System Initialization]
-    ENV --> INIT
-    CLI --> INIT
-    
-    %% Plugin Registration
-    INIT --> RPI[📦 Register Resource Plugins]
-    INIT --> TPI[🛠️ Register Tool Plugins]
-    INIT --> PPI[✨ Register Prompt Plugins]
-    
-    %% Resource Initialization
-    RPI --> DB[(🗄️ Database<br/>PostgreSQL)]
-    RPI --> LLM[🧠 LLM Server<br/>Ollama]
-    RPI --> CACHE[⚡ Cache<br/>Redis]
-    
-    %% Tool Registration
-    TPI --> WEATHER[🌤️ Weather API]
-    TPI --> CALC[🧮 Calculator]
-    TPI --> SEARCH[🔍 Web Search]
-    
-    %% Prompt Chain Setup
-    PPI --> CHAIN[🔗 Plugin Chain]
-    CHAIN --> P1[1️⃣ Memory Retrieval]
-    CHAIN --> P2[2️⃣ Chain of Thought]
-    CHAIN --> P3[3️⃣ Tool Selector]
-    
-    %% Runtime Access
-    subgraph "Runtime"
-        REQ[📨 Request] --> PIPELINE[🔄 Event Pipeline]
-        PIPELINE --> P1
-        P1 --> P2
-        P2 --> P3
-        P3 --> RESP[📤 Response]
-    end
-    
-    %% Resource Access
-    P1 -.->|uses| DB
-    P2 -.->|uses| LLM
-    P3 -.->|exposes| WEATHER
-    P3 -.->|exposes| CALC
-    
-    %% Config Examples
-    subgraph "YAML Structure"
-        CONF[resources:<br/>- plugin: postgresql<br/>  name: database<br/>tools:<br/>- plugin: weather<br/>  name: get_weather<br/>prompt:<br/>  plugin_chain:<br/>  - plugin: memory<br/>  - plugin: cot]
-    end
-    
-    YAML -.-> CONF
-    
-    %% Styling
-    classDef config fill:#e1f5fe
-    classDef resources fill:#e8f5e8
-    classDef tools fill:#fff3e0
-    classDef prompts fill:#fce4ec
-    classDef runtime fill:#f3e5f5
-    
-    class YAML,ENV,CLI,CONF config
-    class DB,LLM,CACHE resources
-    class WEATHER,CALC,SEARCH tools
-    class P1,P2,P3,CHAIN prompts
-    class REQ,PIPELINE,RESP runtime
+    %% Short circuits
+    Input -.-> Output
+    Prompts -.-> Output
 ```
 
+
 ```mermaid
-graph TB
-    %% Core Framework
-    subgraph "Entity Framework Core"
-        CORE[🏛️ Core Engine]
-        REG[🏪 Plugin Registry]
-        HOOKS[🔌 Hook System]
-    end
+sequenceDiagram
+    participant U as User
+    participant A as API
+    participant E as Event Loop
+    participant P as Plugin
+    participant R as Resource
+    participant L as LLM
     
-    %% Built-in Plugins
-    subgraph "📦 Built-in Resource Plugins"
-        PG[PostgreSQL]
-        SQLITE[SQLite]
-        OLLAMA[Ollama LLM]
-        OPENAI[OpenAI GPT]
-        REDIS[Redis Cache]
-    end
-    
-    subgraph "🛠️ Built-in Tool Plugins"
-        CALC_B[Calculator]
-        FILE_B[File Operations]
-        HTTP_B[HTTP Requests]
-        TIME_B[Date/Time]
-    end
-    
-    subgraph "✨ Built-in Prompt Plugins"
-        REACT_B[ReAct Strategy]
-        COT_B[Chain of Thought]
-        DIRECT_B[Direct Response]
-        MEMORY_B[Memory Retrieval]
-    end
-    
-    %% Community Plugins
-    subgraph "🌍 Community Plugins"
-        MONGO[MongoDB Resource]
-        ELASTIC[Elasticsearch]
-        WEATHER_T[Weather Tool]
-        SLACK_T[Slack Integration]
-        CUSTOM_P[Custom Reasoning]
-        PERSONA_P[Personality Injector]
-    end
-    
-    %% User Plugins
-    subgraph "👤 User Custom Plugins"
-        COMPANY_R[Company Database]
-        API_T[Internal API Tools]
-        DOMAIN_P[Domain-Specific Logic]
-    end
-    
-    %% Plugin Development
-    subgraph "🔨 Plugin Development"
-        SDK[Plugin SDK]
-        TEMPLATE[Plugin Templates]
-        DOCS[Documentation]
-        EXAMPLES[Example Plugins]
-    end
-    
-    %% Connections
-    CORE --> REG
-    REG --> HOOKS
-    
-    %% Built-in registrations
-    REG -.-> PG
-    REG -.-> SQLITE
-    REG -.-> OLLAMA
-    REG -.-> OPENAI
-    REG -.-> REDIS
-    REG -.-> CALC_B
-    REG -.-> FILE_B
-    REG -.-> HTTP_B
-    REG -.-> TIME_B
-    REG -.-> REACT_B
-    REG -.-> COT_B
-    REG -.-> DIRECT_B
-    REG -.-> MEMORY_B
-    
-    %% Community registrations
-    REG -.-> MONGO
-    REG -.-> ELASTIC
-    REG -.-> WEATHER_T
-    REG -.-> SLACK_T
-    REG -.-> CUSTOM_P
-    REG -.-> PERSONA_P
-    
-    %% User registrations
-    REG -.-> COMPANY_R
-    REG -.-> API_T
-    REG -.-> DOMAIN_P
-    
-    %% Development flow
-    SDK --> COMPANY_R
-    SDK --> API_T
-    SDK --> DOMAIN_P
-    TEMPLATE --> SDK
-    DOCS --> SDK
-    EXAMPLES --> SDK
-    
-    %% Usage Examples
-    subgraph "🎯 Usage Scenarios"
-        DEV[Development:<br/>SQLite + Local LLM]
-        PROD[Production:<br/>PostgreSQL + OpenAI]
-        CUSTOM[Enterprise:<br/>Custom DB + Domain Tools]
-    end
-    
-    DEV -.-> SQLITE
-    DEV -.-> OLLAMA
-    PROD -.-> PG
-    PROD -.-> OPENAI
-    CUSTOM -.-> COMPANY_R
-    CUSTOM -.-> API_T
-    
-    %% Styling
-    classDef core fill:#f3e5f5
-    classDef builtin fill:#e8f5e8
-    classDef community fill:#e1f5fe
-    classDef user fill:#fff3e0
-    classDef dev fill:#fce4ec
-    classDef scenarios fill:#f1f8e9
-    
-    class CORE,REG,HOOKS core
-    class PG,SQLITE,OLLAMA,OPENAI,REDIS,CALC_B,FILE_B,HTTP_B,TIME_B,REACT_B,COT_B,DIRECT_B,MEMORY_B builtin
-    class MONGO,ELASTIC,WEATHER_T,SLACK_T,CUSTOM_P,PERSONA_P community
-    class COMPANY_R,API_T,DOMAIN_P user
-    class SDK,TEMPLATE,DOCS,EXAMPLES dev
-    class DEV,PROD,CUSTOM scenarios
+    U->>A: Request
+    A->>E: Process
+    E->>P: Execute
+    P->>R: Get Resource
+    R-->>P: Return Data
+    P->>L: Call LLM
+    L-->>P: Response
+    P-->>E: Result
+    E-->>A: Complete
+    A-->>U: Response
 ```
