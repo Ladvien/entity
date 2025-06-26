@@ -639,6 +639,280 @@ plugins:
       enable_reasoning: true
 ```
 
+## Project Structure
+
+```txt
+entity/
+├── README.md
+├── pyproject.toml
+├── requirements.txt
+├── setup.py
+
+├── .gitignore
+├── .github/
+│   └── workflows/
+│       ├── ci.yml
+│       └── release.yml
+│
+├── entity/
+│   ├── __init__.py
+│   ├── version.py
+│   │
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── context.py              # EventContext class
+│   │   ├── event_loop.py           # Main event processing pipeline
+│   │   ├── registry.py             # ClassRegistry, ResourceRegistry, PluginRegistry
+│   │   ├── system.py               # SystemInitializer, four-phase initialization
+│   │   ├── exceptions.py           # ConfigurationError, SystemError, etc.
+│   │   └── cleanup.py              # initialization_cleanup_context
+│   │
+│   ├── plugins/
+│   │   ├── __init__.py
+│   │   ├── base.py                 # BasePlugin, ValidationResult
+│   │   ├── resource.py             # ResourcePlugin base class
+│   │   ├── tool.py                 # ToolPlugin base class
+│   │   ├── prompt.py               # PromptPlugin base class
+│   │   ├── adapter.py              # AdapterPlugin base class
+│   │   │
+│   │   ├── resources/
+│   │   │   ├── __init__.py
+│   │   │   ├── database/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── postgres.py     # PostgresResourcePlugin
+│   │   │   │   ├── sqlite.py       # SQLiteResourcePlugin
+│   │   │   │   └── models.py       # Database models, schemas
+│   │   │   ├── llm/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── ollama.py       # OllamaLLMResourcePlugin
+│   │   │   │   ├── openai.py       # OpenAIResourcePlugin
+│   │   │   │   ├── claude.py       # ClaudeResourcePlugin
+│   │   │   │   └── base.py         # BaseLLMResource
+│   │   │   ├── memory/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── vector.py       # VectorDatabaseResourcePlugin
+│   │   │   │   ├── redis.py        # RedisResourcePlugin
+│   │   │   │   └── cache.py        # CacheResourcePlugin
+│   │   │   ├── storage/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── filesystem.py   # FileSystemResourcePlugin
+│   │   │   │   ├── s3.py           # S3ResourcePlugin
+│   │   │   │   └── gcs.py          # GoogleCloudStorageResourcePlugin
+│   │   │   ├── logging/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── structured.py   # StructuredLoggingResourcePlugin
+│   │   │   │   ├── elasticsearch.py # ElasticsearchLoggingResourcePlugin
+│   │   │   │   └── formatters.py   # Log formatters
+│   │   │   ├── monitoring/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── prometheus.py   # PrometheusResourcePlugin
+│   │   │   │   ├── jaeger.py       # JaegerTracingResourcePlugin
+│   │   │   │   └── health.py       # HealthCheckResourcePlugin
+│   │   │   └── tts/
+│   │   │       ├── __init__.py
+│   │   │       ├── speech_synthesis.py # SpeechSynthesisResourcePlugin
+│   │   │       └── elevenlabs.py   # ElevenLabsResourcePlugin
+│   │   │
+│   │   ├── tools/
+│   │   │   ├── __init__.py
+│   │   │   ├── weather.py          # WeatherToolPlugin
+│   │   │   ├── calculator.py       # CalculatorToolPlugin
+│   │   │   ├── search/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── web.py          # WebSearchToolPlugin
+│   │   │   │   └── document.py     # DocumentSearchToolPlugin
+│   │   │   ├── file_operations.py  # FileOperationsToolPlugin
+│   │   │   └── integrations/
+│   │   │       ├── __init__.py
+│   │   │       ├── slack.py        # SlackToolPlugin
+│   │   │       ├── email.py        # EmailToolPlugin
+│   │   │       └── api.py          # CustomAPIToolPlugin
+│   │   │
+│   │   ├── prompts/
+│   │   │   ├── __init__.py
+│   │   │   ├── strategies/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── react.py        # ReActPromptPlugin
+│   │   │   │   ├── chain_of_thought.py # ChainOfThoughtPromptPlugin
+│   │   │   │   └── direct.py       # DirectResponsePromptPlugin
+│   │   │   ├── personality/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── sarcasm.py      # SarcasmPromptPlugin
+│   │   │   │   ├── loyalty.py      # LoyaltyPromptPlugin
+│   │   │   │   └── wit.py          # WitPromptPlugin
+│   │   │   ├── memory/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── retrieval.py    # MemoryRetrievalPromptPlugin
+│   │   │   │   └── context.py      # ContextPromptPlugin
+│   │   │   └── output/
+│   │   │       ├── __init__.py
+│   │   │       ├── formatting.py   # FormattingPromptPlugin
+│   │   │       ├── validation.py   # ValidationPromptPlugin
+│   │   │       └── filtering.py    # FilteringPromptPlugin
+│   │   │
+│   │   └── adapters/
+│   │       ├── __init__.py
+│   │       ├── input/
+│   │       │   ├── __init__.py
+│   │       │   ├── http.py         # HTTPInputAdapterPlugin
+│   │       │   ├── websocket.py    # WebSocketInputAdapterPlugin
+│   │       │   └── cli.py          # CLIInputAdapterPlugin
+│   │       └── output/
+│   │           ├── __init__.py
+│   │           ├── http.py         # HTTPOutputAdapterPlugin
+│   │           ├── websocket.py    # WebSocketOutputAdapterPlugin
+│   │           ├── tts.py          # TTSOutputAdapterPlugin
+│   │           └── cli.py          # CLIOutputAdapterPlugin
+│   │
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── server.py               # FastAPI server setup
+│   │   ├── routes/
+│   │   │   ├── __init__.py
+│   │   │   ├── chat.py             # Chat endpoints
+│   │   │   ├── health.py           # Health check endpoints
+│   │   │   └── admin.py            # Admin endpoints
+│   │   ├── middleware/
+│   │   │   ├── __init__.py
+│   │   │   ├── logging.py          # Request logging middleware
+│   │   │   ├── metrics.py          # Metrics collection middleware
+│   │   │   └── cors.py             # CORS middleware
+│   │   └── models/
+│   │       ├── __init__.py
+│   │       ├── request.py          # Request models
+│   │       ├── response.py         # Response models
+│   │       └── config.py           # API configuration models
+│   │
+│   ├── config/
+│   │   ├── __init__.py
+│   │   ├── loader.py               # YAML/JSON config loading
+│   │   ├── validator.py            # Configuration validation
+│   │   ├── interpolation.py        # Environment variable interpolation
+│   │   └── schema.py               # Configuration schema definitions
+│   │
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   ├── logging.py              # Logging utilities
+│   │   ├── metrics.py              # Metrics collection utilities
+│   │   ├── tracing.py              # Distributed tracing utilities
+│   │   ├── dependency_graph.py     # Dependency graph validation
+│   │   ├── import_utils.py         # Dynamic plugin import utilities
+│   │   └── testing.py              # Testing utilities and fixtures
+│   │
+│   └── cli/
+│       ├── __init__.py
+│       ├── main.py                 # Main CLI entry point
+│       ├── commands/
+│       │   ├── __init__.py
+│       │   ├── run.py              # Run server command
+│       │   ├── validate.py         # Validate configuration command
+│       │   ├── init.py             # Initialize project command
+│       │   └── plugin.py           # Plugin management commands
+│       └── templates/
+│           ├── config.yaml         # Default configuration template
+│           ├── dev.yaml            # Development configuration template
+│           └── prod.yaml           # Production configuration template
+│
+├── tests/
+│   ├── __init__.py
+│   ├── conftest.py                 # pytest fixtures and configuration
+│   ├── unit/
+│   │   ├── __init__.py
+│   │   ├── core/
+│   │   │   ├── test_context.py
+│   │   │   ├── test_event_loop.py
+│   │   │   ├── test_registry.py
+│   │   │   └── test_system.py
+│   │   ├── plugins/
+│   │   │   ├── test_base.py
+│   │   │   ├── resources/
+│   │   │   │   ├── test_database.py
+│   │   │   │   ├── test_llm.py
+│   │   │   │   └── test_logging.py
+│   │   │   ├── tools/
+│   │   │   │   ├── test_weather.py
+│   │   │   │   └── test_calculator.py
+│   │   │   └── prompts/
+│   │   │       ├── test_chain_of_thought.py
+│   │   │       └── test_memory_retrieval.py
+│   │   ├── config/
+│   │   │   ├── test_loader.py
+│   │   │   └── test_validator.py
+│   │   └── utils/
+│   │       ├── test_dependency_graph.py
+│   │       └── test_import_utils.py
+│   ├── integration/
+│   │   ├── __init__.py
+│   │   ├── test_full_pipeline.py
+│   │   ├── test_plugin_composition.py
+│   │   └── test_system_initialization.py
+│   ├── fixtures/
+│   │   ├── configs/
+│   │   │   ├── minimal.yaml
+│   │   │   ├── full.yaml
+│   │   │   └── invalid.yaml
+│   │   └── data/
+│   │       ├── sample_requests.json
+│   │       └── expected_responses.json
+│   └── e2e/
+│       ├── __init__.py
+│       ├── test_api_endpoints.py
+│       └── test_cli_commands.py
+│
+├── examples/
+│   ├── README.md
+│   ├── minimal/
+│   │   ├── config.yaml
+│   │   ├── run.py
+│   │   └── README.md
+│   ├── development/
+│   │   ├── config.yaml
+│   │   └── README.md
+│   ├── production/
+│   │   ├── config.yaml
+│   │   └── README.md
+│   ├── custom_plugins/
+│   │   ├── my_custom_tool.py
+│   │   ├── my_custom_resource.py
+│   │   └── README.md
+│   └── advanced/
+│       ├── multi_agent_config.yaml
+│       ├── a_b_testing_config.yaml
+│       └── README.md
+│
+├── docs/
+│   ├── README.md
+│   ├── getting_started.md
+│   ├── configuration.md
+│   ├── plugin_development.md
+│   ├── architecture.md
+│   ├── api_reference.md
+│   ├── deployment_guide.md
+│   ├── troubleshooting.md
+│   └── examples/
+│       ├── creating_custom_plugins.md
+│       ├── configuration_patterns.md
+│       └── testing_strategies.md
+│
+├── scripts/
+│   ├── setup_dev.sh
+│   ├── run_tests.sh
+│   ├── deploy.sh
+│   └── benchmark.py
+│
+└── benchmarks/
+    ├── __init__.py
+    ├── performance/
+    │   ├── test_plugin_overhead.py
+    │   ├── test_system_initialization.py
+    │   └── test_memory_usage.py
+    └── load_testing/
+        ├── locustfile.py
+        └── scenarios/
+            ├── basic_chat.py
+            └── complex_workflow.py
+```
+
 ## 🎯 Bottom Line
 
 **Entity Framework = Bevy for AI Agents**
