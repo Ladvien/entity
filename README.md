@@ -5,7 +5,7 @@ A **Bevy-inspired plugin framework** for AI agents that's composable, extensible
 
 ## 🏗️ Core Architecture
 
-### Event Loop Pipeline
+### Event Loop Pipeline with LLM Inference
 ```mermaid
 flowchart TD
     Users[👤 Users] --> API[🌐 API]
@@ -13,11 +13,21 @@ flowchart TD
     IA --> IP[🔄 Input Processing]
     IP --> PPP[🛠️ Prompt Pre-processing]
     PPP --> PP[✨ Prompt Processing]
-    PP --> TU[🔧 Tool Use]
-    TU --> LLM[🧠 LLM Inference]
-    LLM --> OP[📤 Output Processing]
+    PP --> TR[🔧 Tool Registration]
+    TR --> OP[📤 Output Processing]
     OP --> OA[📮 Output Adapter]
-    OA --> Response[📱 Response]
+    
+    %% LLM Inference Branch
+    TR --> |recompile=True| LLM[🧠 LLM Inference]
+    PP --> |recompile=True| LLM
+    OP --> |recompile=True| LLM
+    
+    LLM --> TC{Tool Calls?}
+    TC --> |Yes| TE[⚡ Tool Execution]
+    TC --> |No| Response[📱 Response]
+    TE --> |Results| IP
+    
+    OA --> |No recompile| Response
     
     %% Styling
     classDef input fill:#e3f2fd
@@ -25,12 +35,66 @@ flowchart TD
     classDef llm fill:#f3e5f5
     classDef output fill:#e8f5e8
     classDef endpoints fill:#fce4ec
+    classDef tools fill:#e8f5f0
     
     class Users,API,Response endpoints
     class IA,IP input
-    class PPP,PP,TU processing
-    class LLM llm
+    class PPP,PP,TR processing
+    class LLM,TC llm
     class OP,OA output
+    class TE tools
+```
+
+### Pipeline Execution Model
+
+The pipeline follows a **conditional loop pattern** with LLM inference:
+
+1. **Linear Pipeline Execution**: All stages run once in order
+2. **Recompile Check**: If any stage sets `context.recompile = True`, trigger LLM inference
+3. **Tool Execution**: LLM tool calls execute immediately outside the pipeline
+4. **Pipeline Restart**: Tool results restart pipeline at Input Processing stage (not Input Adapters)
+5. **Iteration Limit**: `max_iterations` prevents infinite loops
+
+```python
+async def process_request(request):
+    context = EventContext(request=request, input=[str(request)])
+    
+    for iteration in range(max_iterations):
+        # Run pipeline stages in order
+        await run_stage("input_processing", context)
+        await run_stage("prompt_preprocessing", context) 
+        await run_stage("prompt_processing", context)
+        await run_stage("tool_registration", context)  # Tools register availability
+        await run_stage("output_processing", context)
+        
+        # Check if any stage requested LLM inference
+        if context.recompile:
+            context.recompile = False
+            
+            # Call LLM with available tools
+            llm_response = await llm.generate(
+                prompt=context.prompt,
+                tools=context.get_metadata("available_tools")
+            )
+            
+            # Execute all tool calls immediately (Option A)
+            if llm_response.has_tool_calls():
+                for tool_call in llm_response.tool_calls:
+                    tool_plugin = tool_registry.get(tool_call.name)
+                    result = await tool_plugin.execute_function(tool_call.args)
+                    context.add_input(f"Tool {tool_call.name}: {result}")
+                
+                # Restart pipeline at Input Processing with tool results
+                continue
+            else:
+                # LLM provided final response
+                context.response = llm_response.content
+                break
+        else:
+            # No recompile requested, pipeline complete
+            break
+    
+    return context.response
 ```
 
 ### Three-Layer Plugin System
@@ -51,6 +115,8 @@ flowchart TD
 - **File Operations**: Read, write, process files
 - **API Integrations**: Slack, email, custom APIs
 
+**Tool Execution Model**: Tools register their schemas during the pipeline but execute **only when called by the LLM** via function calling. All tool calls from one LLM response execute immediately and in parallel.
+
 #### **Prompt Plugins** (Processing - Controls Request Flow)
 - **Strategies**: ReAct, Chain-of-Thought, Direct Response
 - **Personality**: Sarcasm, loyalty, wit injection
@@ -62,7 +128,7 @@ flowchart TD
 ### Shared Context
 ```python
 class EventContext:
-    request: Any              # User input
+    input: List[str]          # Ordered conversation history ["user msg", "tool result", ...]
     response: Any             # Final output
     prompt: str               # Current prompt
     memory_context: str       # Retrieved context
@@ -71,6 +137,7 @@ class EventContext:
     resources: ResourceRegistry  # Access to all resources
     trace_id: str             # Unique request identifier for logging
     metrics: MetricsCollector # Performance and usage metrics
+    max_iterations: int       # Prevent infinite loops
 ```
 
 ### Plugin Observability & Logging
@@ -195,6 +262,7 @@ class BasePlugin:
 - **Resource Access**: `context.resources.get("llm")` - request what you need
 - **Short Circuit**: Skip remaining pipeline stages (like `continue` in loops)
 - **Recompile**: Force LLM reprocessing after prompt changes
+- **Tool Registration**: Tools register schemas but execute only when LLM calls them
 
 ## ⚙️ Configuration
 
@@ -339,7 +407,7 @@ class SystemInitializer:
 ```yaml
 entity:
   entity_id: "jade"
-  max_iterations: 500
+  max_iterations: 500  # Prevent infinite pipeline loops
   name: "Jade"
   server:
     host: "0.0.0.0"
@@ -431,6 +499,8 @@ plugins:
 - **Extensible**: Add new resources and strategies without core changes
 - **Composable**: Plugins build on each other's work
 - **Separated Validation**: Test config parsing independently from dependency resolution
+- **Optimal Performance**: Parallel tool execution, fewer LLM calls
+- **Simple Mental Model**: "Register tools → LLM uses them → Done"
 
 ### For Operations
 - **Configuration-Driven**: Different setups for dev/staging/prod
@@ -474,10 +544,16 @@ class WeatherToolPlugin(ToolPlugin):
     def get_tool_name(self) -> str:
         return "get_weather"
     
-    async def execute(self, location: str) -> str:
-        # Uses weather API resource for infrastructure
+    async def _execute_impl(self, context: EventContext):
+        # Register tool schema for LLM function calling
+        tools = context.get_metadata("available_tools", [])
+        tools.append(self.get_tool_schema())
+        context.set_metadata("available_tools", tools)
+    
+    async def execute_function(self, args: Dict) -> str:
+        # Called when LLM makes function call
         api = self.resources.get("weather_api")
-        return await api.get_forecast(location)
+        return await api.get_forecast(args["location"])
     
     def get_tool_schema(self):
         return {
@@ -585,6 +661,8 @@ class ChainOfThoughtPlugin(PromptPlugin):
 11. **Separation of Concerns**: Clear distinction between config validation and dependency validation
 12. **Load-Time Validation**: Validation should be done at load time, reducing runtime errors
 13. **Intuitive Mental Models**: Mental models should be intensely easy to understand
+14. **Optimal Tool Execution**: Tools register capabilities but execute only when LLM requests them
+15. **Performance First**: Parallel tool execution and minimal LLM calls for better performance
 
 ## 🌟 Real-World Usage
 
@@ -593,6 +671,7 @@ class ChainOfThoughtPlugin(PromptPlugin):
 entity:
   entity_id: "dev_agent"
   name: "Development Agent"
+  max_iterations: 50
 
 plugins:
   resources:
@@ -607,6 +686,7 @@ plugins:
 entity:
   entity_id: "prod_agent"
   name: "Production Agent"
+  max_iterations: 100
 
 plugins:
   resources:
@@ -923,16 +1003,15 @@ entity/
 - **Testable**: Clean separation, easy mocking, isolated testing
 - **Production-Ready**: Graceful degradation, rich observability
 - **Developer-Friendly**: Clear patterns, shared community plugins
+- **Performance-Optimized**: Parallel tool execution, minimal LLM calls
+- **Conversation-Aware**: Pipeline restarts with conversation history
 
 **Result**: Build AI agents like assembling LEGO blocks - flexible, reusable, and fun! 🧩
 
+### Updated Pipeline Flow
 
 ```mermaid
 graph TB
-    %% Simplified System Architecture
-    Users[👤 Users] --> API[🌐 API]
-    API --> EL[🔄 Event Loop]
-    EL --> CTX[📋 Contextgraph TB
     %% Simplified System Architecture
     Users[👤 Users] --> API[🌐 API]
     API --> EL[🔄 Event Loop]
@@ -952,14 +1031,19 @@ graph TB
     class Resources,Tools,Prompts plugins
 ```
 
+### Tool Execution Flow
+
 ```mermaid
 flowchart LR
-    %% Simplified Request Flow
-    User[👤 User] --> Input[📥 Input]
-    Input --> Prompts[✨ Prompts]
-    Prompts --> Tools[🛠️ Tools]
-    Tools --> LLM[🧠 LLM]
-    LLM --> Output[📤 Output]
+    %% Updated Request Flow with Tool Execution
+    User[👤 User] --> Input[📥 Input Processing]
+    Input --> Prompts[✨ Prompt Processing]
+    Prompts --> ToolReg[🔧 Tool Registration]
+    ToolReg --> |recompile=True| LLM[🧠 LLM Inference]
+    LLM --> ToolCalls{Tool Calls?}
+    ToolCalls --> |Yes| ToolExec[⚡ Tool Execution<br/>All tools in parallel]
+    ToolCalls --> |No| Output[📤 Output Processing]
+    ToolExec --> |Results| Input
     Output --> Response[📱 Response]
     
     %% Short circuits
@@ -967,24 +1051,30 @@ flowchart LR
     Prompts -.-> Output
 ```
 
+### Conversation State Management
 
 ```mermaid
 sequenceDiagram
     participant U as User
     participant A as API
     participant E as Event Loop
-    participant P as Plugin
-    participant R as Resource
+    participant P as Pipeline
     participant L as LLM
+    participant T as Tools
     
-    U->>A: Request
-    A->>E: Process
-    E->>P: Execute
-    P->>R: Get Resource
-    R-->>P: Return Data
-    P->>L: Call LLM
-    L-->>P: Response
-    P-->>E: Result
-    E-->>A: Complete
-    A-->>U: Response
+    U->>A: "Weather in NYC and calculate 25+17"
+    A->>E: Start processing
+    E->>P: Run pipeline stages
+    P->>P: Tools register schemas
+    P->>E: recompile=True
+    E->>L: Call LLM with tools
+    L->>E: "Call get_weather('NYC') and calculate('25+17')"
+    E->>T: Execute both tools in parallel
+    T->>E: ["sunny, 72°F", "42"]
+    E->>P: Restart with tool results
+    P->>E: recompile=True
+    E->>L: Call LLM with conversation + results
+    L->>E: "NYC is sunny 72°F, and 25+17=42"
+    E->>A: Final response
+    A->>U: Complete answer
 ```
