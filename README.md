@@ -240,7 +240,7 @@ entity:
 
 ### For Operations
 - **Configuration-Driven**: Different setups for dev/staging/prod
-- **Graceful Degradation**: Missing resources don't break the system
+- **Fail Fast**: Static validation catches issues early
 - **Observable**: Rich metadata from each plugin
 - **Scalable**: Resources shared across all plugins
 
@@ -248,7 +248,7 @@ entity:
 
 ### Custom Weather Integration
 ```python
-# 1. Create Tool Plugin (performs user tasks)
+# 1. Create Tool Plugin (performs agent tasks)
 class WeatherToolPlugin(ToolPlugin):
     @classmethod
     def validate_static(cls, registry: ClassRegistry, config: Dict) -> ValidationResult:
@@ -390,7 +390,7 @@ prompt:
 
 **Entity Framework = Bevy for AI Agents**
 
-- **Three Plugin Types**: Resources (infrastructure), Tools (user functions), Prompts (processing)
+- **Three Plugin Types**: Resources (infrastructure), Tools (agent functions), Prompts (processing)
 - **Infrastructure**: Clean separation between enabling vs performing
 - **Composable**: Mix and match capabilities via configuration  
 - **Testable**: Clean separation, easy mocking, isolated testing
