@@ -21,12 +21,21 @@ flowchart TD
     Stage5 --> OA[📮 Output Adapter]
     OA --> Response[📱 Response]
     
+    %% Error handling flow
+    Stage1 -.-> FailureStage[❌ Failure]
+    Stage2 -.-> FailureStage
+    Stage3 -.-> FailureStage
+    Stage4 -.-> FailureStage
+    Stage5 -.-> FailureStage
+    FailureStage --> OA
+    
     %% LLM Resource Available Throughout Pipeline
     LLM[🧠 LLM Resource] -.-> Stage1
     LLM -.-> Stage2
     LLM -.-> Stage3
     LLM -.-> Stage4
     LLM -.-> Stage5
+    LLM -.-> FailureStage
     
     %% Styling
     classDef input fill:#e3f2fd
@@ -35,6 +44,7 @@ flowchart TD
     classDef output fill:#e8f5e8
     classDef endpoints fill:#fce4ec
     classDef tools fill:#e8f5f0
+    classDef error fill:#ffebee
     
     class Users,API,Response endpoints
     class IA,Stage1 input
@@ -42,18 +52,20 @@ flowchart TD
     class LLM llm
     class Stage4 tools
     class Stage5,OA output
+    class FailureStage error
 ```
 
 ### Pipeline Execution Model
 
-The pipeline follows a **centralized tool execution pattern** with structured tool calls and standardized results:
+The pipeline follows a **centralized tool execution pattern** with structured tool calls, standardized results, and comprehensive error handling:
 
 1. **Linear Pipeline Execution**: All stages run once in order
 2. **LLM Resource Access**: Any stage can call the LLM when needed
 3. **Structured Tool System**: Stages can queue structured tool calls, executed in tool_execution stage
 4. **Standardized Results**: Explicit result keys with no fallback chains
 5. **Input Reprocessing**: Plugins can signal `reprocess_input` to restart the pipeline with updated context
-6. **Iteration Limit**: `max_iterations` prevents infinite loops (for complex patterns like ReAct)
+6. **Fail-Fast Error Handling**: Plugin failures route to dedicated failure stage for user communication
+7. **Iteration Limit**: `max_iterations` prevents infinite loops (for complex patterns like ReAct)
 
 ```python
 async def execute_pipeline(request):
@@ -113,10 +125,11 @@ async def execute_stage(stage_name: str, context: PipelineContext):
 - **Database**: PostgreSQL, SQLite connections
 - **LLM**: Ollama, OpenAI, Claude servers  
 - **Memory**: Vector databases, Redis cache
-- **TTS**: Text-to-speech services
 - **Storage**: File systems, cloud storage
 - **Logging**: Structured logging, metrics, tracing
 - **Monitoring**: Health checks, performance metrics
+
+**Default Stages**: `["*"]` (can run in any stage when needed)
 
 #### **Tool Plugins** (Functionality - Performs Tasks for Users)
 - **Weather**: Get current conditions, forecasts
@@ -127,6 +140,8 @@ async def execute_stage(stage_name: str, context: PipelineContext):
 
 **Tool Execution Model**: Tools are registered during system initialization as static capabilities. During any stage, plugins can queue structured tool calls to the context. Only the tool_execution stage actually executes tools, with results available to subsequent stages.
 
+**Default Stages**: `["tool_execution"]` (tools only execute in dedicated stage)
+
 #### **Prompt Plugins** (Processing - Controls Request Flow)
 - **Strategies**: ReAct, Chain-of-Thought, Direct Response
 - **Personality**: Sarcasm, loyalty, wit injection
@@ -134,9 +149,185 @@ async def execute_stage(stage_name: str, context: PipelineContext):
 - **Output**: Formatting, validation, filtering
 - **Tool Coordination**: Queue structured tool calls during processing
 
+**Default Stages**: `["prompt_processing"]` (main processing stage)
+
+#### **Adapter Plugins** (Input/Output - Interface Handling)
+- **Input Adapters**: HTTP, WebSocket, CLI interfaces
+- **Output Adapters**: HTTP responses, TTS, formatted output
+  - **TTS**: Text-to-speech services
+
+**Default Stages**: `["input_processing", "output_processing"]` (interface boundary stages)
+
+#### **Failure Plugins** (Error Communication - User-Facing Error Handling)
+- **Error Formatters**: Convert technical errors to user-friendly messages
+- **Error Loggers**: Record failures for debugging and monitoring
+- **Notification Systems**: Alert administrators of critical failures
+
+**Default Stages**: `["failure"]` (dedicated error handling stage)
+
+**Note**: Plugin use is discouraged in the failure stage to maintain reliability. Keep failure stage plugins minimal and ensure static fallback responses are available.
+
+### Plugin Stage Assignment System
+
+The framework uses a **hybrid approach** for assigning plugins to pipeline stages, balancing ease of evolution with flexibility:
+
+#### **Default Stage Assignment via Base Classes**
+```python
+class ResourcePlugin(BasePlugin):
+    default_stages = ["*"]  # Can run in any stage when needed
+
+class ToolPlugin(BasePlugin):
+    default_stages = ["tool_execution"]  # Tools only execute in dedicated stage
+
+class PromptPlugin(BasePlugin):
+    default_stages = ["prompt_processing"]  # Main processing stage
+
+class AdapterPlugin(BasePlugin):
+    default_stages = ["input_processing", "output_processing"]  # Interface boundaries
+
+class FailurePlugin(BasePlugin):
+    default_stages = ["failure"]  # Dedicated error handling stage
+```
+
+#### **Explicit Stage Override for Multi-Stage Plugins**
+```python
+class MemoryRetrievalPlugin(PromptPlugin):
+    # Override default - runs in multiple stages
+    stages = ["input_processing", "prompt_processing"]
+
+class DebugLoggingPlugin(ResourcePlugin):
+    # Explicit override - runs in all stages for debugging
+    stages = ["*"]
+
+class ContextEnhancerPlugin(PromptPlugin):
+    # Override - only runs early in pipeline
+    stages = ["input_processing"]
+```
+
+#### **YAML Configuration Order = Execution Order**
+Plugins execute within each stage in the **exact order** they appear in the YAML configuration:
+
+```yaml
+prompts:
+  # Execution order within prompt_processing stage:
+  # 1. intent_classifier → 2. memory_retrieval → 3. chain_of_thought → 4. smart_coordinator
+  intent_classifier:
+    type: intent_classifier
+    confidence_threshold: 0.8
+  
+  memory_retrieval:
+    type: memory_retrieval
+    max_context_length: 4000
+    # This plugin runs in input_processing AND prompt_processing stages
+  
+  chain_of_thought:
+    type: chain_of_thought
+    enable_reasoning: true
+  
+  smart_tool_coordinator:
+    type: smart_tool_coordinator
+```
+
+#### **Stage Registration Process**
+```python
+def register_plugin_for_stages(plugin_instance, plugin_name):
+    """Register plugin for appropriate stages based on class definition"""
+    # Use explicit stages if defined, otherwise use class default
+    stages = getattr(plugin_instance.__class__, 'stages', plugin_instance.__class__.default_stages)
+    
+    for stage in stages:
+        if stage == "*":
+            # Register for all pipeline stages
+            for pipeline_stage in ["input_processing", "prompt_preprocessing", "prompt_processing", "tool_execution", "output_processing", "failure"]:
+                plugin_registry.register_plugin_for_stage(plugin_instance, pipeline_stage, plugin_name)
+        else:
+            plugin_registry.register_plugin_for_stage(plugin_instance, stage, plugin_name)
+```
+
 ## 🔧 Key Components
 
-### Structured Context
+### Error Handling and Failure Recovery
+
+The framework implements a **fail-fast error handling strategy** with dedicated failure communication:
+
+#### **Failure Information Structure**
+```python
+@dataclass
+class FailureInfo:
+    stage: str                    # Stage where failure occurred
+    plugin_name: str              # Plugin that caused the failure
+    error_type: str               # "plugin_error", "tool_error", "system_error"
+    error_message: str            # Human-readable error description
+    original_exception: Exception # Original exception for debugging
+    context_snapshot: Dict[str, Any] = None  # Context state when failure occurred
+    timestamp: datetime = field(default_factory=datetime.now)
+
+class PipelineContext:
+    # ... existing fields ...
+    failure_info: Optional[FailureInfo] = None
+    
+    def add_failure(self, failure: FailureInfo):
+        """Add failure information and prepare for failure stage routing"""
+        self.failure_info = failure
+        self.logger.error(
+            "Pipeline failure detected",
+            stage=failure.stage,
+            plugin=failure.plugin_name,
+            error_type=failure.error_type,
+            error_message=failure.error_message,
+            pipeline_id=self.pipeline_id
+        )
+```
+
+#### **Error Handling Flow**
+1. **Plugin Failures**: Caught during stage execution, added to context, routed to failure stage
+2. **Tool Failures**: Captured in tool results, detected after tool execution, routed to failure stage  
+3. **System Failures**: Unexpected exceptions caught at pipeline level, routed to failure stage
+4. **Failure Stage**: Processes all failures through dedicated plugins for user communication
+5. **Static Fallback**: If failure stage plugins fail, return static error response
+
+#### **Tool Retry Configuration**
+```python
+class ToolPlugin(BasePlugin):
+    default_stages = ["tool_execution"]
+    
+    def __init__(self, config: Dict):
+        self.max_retries = config.get("max_retries", 1)  # Default sensible retry count
+        self.retry_delay = config.get("retry_delay", 1.0)  # Seconds between retries
+    
+    async def execute_function_with_retry(self, params: Dict) -> str:
+        """Execute tool function with configured retry logic"""
+        for attempt in range(self.max_retries + 1):
+            try:
+                return await self.execute_function(params)
+            except Exception as e:
+                if attempt == self.max_retries:
+                    raise e  # Final attempt failed
+                await asyncio.sleep(self.retry_delay)
+        
+    async def execute_function(self, params: Dict) -> str:
+        """Override this method in tool implementations"""
+        raise NotImplementedError("Tool plugins must implement execute_function")
+```
+
+#### **Static Error Fallback**
+```python
+# Used when failure stage plugins themselves fail
+STATIC_ERROR_RESPONSE = {
+    "error": "System error occurred",
+    "message": "An unexpected error prevented processing your request. Please try again or contact support.",
+    "error_id": None,  # Will be populated with pipeline_id
+    "timestamp": None,  # Will be populated with current time
+    "type": "static_fallback"
+}
+
+def create_static_error_response(pipeline_id: str) -> Dict[str, Any]:
+    """Create fallback error response when failure stage fails"""
+    response = STATIC_ERROR_RESPONSE.copy()
+    response["error_id"] = pipeline_id
+    response["timestamp"] = datetime.now().isoformat()
+    return response
+```
 ```python
 @dataclass
 class ConversationEntry:
@@ -203,6 +394,10 @@ class PipelineContext:
             metadata=metadata or {}
         )
         self.conversation.append(entry)
+    
+    def add_failure(self, failure: FailureInfo):
+        """Add failure information and prepare for failure stage routing"""
+        self.failure_info = failure
 ```
 
 ### Tool Execution (No Templates)
@@ -215,12 +410,61 @@ async def execute_stage_tools(tool_calls: List[ToolCall]) -> Dict[str, Any]:
     for tool_call in tool_calls:
         try:
             tool_plugin = tool_registry.get_tool(tool_call.name)
-            result = await tool_plugin.execute_function(tool_call.params)
+            # Use retry logic if configured
+            if hasattr(tool_plugin, 'execute_function_with_retry'):
+                result = await tool_plugin.execute_function_with_retry(tool_call.params)
+            else:
+                result = await tool_plugin.execute_function(tool_call.params)
             results[tool_call.result_key] = result
         except Exception as e:
             results[tool_call.result_key] = f"Error: {e}"
     
     return results
+```
+
+### Error Communication Plugin Example
+```python
+class ErrorFormatterPlugin(FailurePlugin):
+    """Formats technical errors into user-friendly messages"""
+    dependencies = ["logging"]
+    # Uses default_stages = ["failure"] from base class
+    
+    @classmethod
+    def validate_config(cls, config: Dict) -> ValidationResult:
+        return ValidationResult.success()  # Minimal config validation
+    
+    async def _execute_impl(self, context: PipelineContext):
+        if not context.failure_info:
+            return  # No failure to process
+            
+        failure = context.failure_info
+        
+        # Format error based on type
+        if failure.error_type == "tool_error":
+            user_message = f"I encountered an issue while trying to help you. The {failure.plugin_name} service is currently unavailable. Please try again in a moment."
+        elif failure.error_type == "plugin_error":
+            user_message = f"I'm having trouble processing your request right now. Please try rephrasing your question or try again later."
+        else:  # system_error
+            user_message = "I'm experiencing technical difficulties. Please try again or contact support if the problem persists."
+        
+        # Set formatted response
+        context.response = {
+            "error": True,
+            "message": user_message,
+            "error_id": context.pipeline_id,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        # Log detailed error for debugging
+        logger = context.resources.get("logging")
+        if logger:
+            logger.error(
+                "Formatted error response",
+                pipeline_id=context.pipeline_id,
+                original_error=failure.error_message,
+                formatted_message=user_message,
+                error_type=failure.error_type
+            )
 ```
 
 ### Plugin Observability & Logging
@@ -348,6 +592,8 @@ class BasePlugin:
 - **Structured Tools**: Queue structured tool calls during any stage
 - **LLM Access**: Any plugin can call the LLM resource when needed
 - **Standardized Results**: Set and get standardized results with explicit dependencies
+- **Error Signaling**: Add failure information with `context.add_failure()` to route to failure stage
+- **Tool Retry Logic**: Configure retry behavior for individual tools with `max_retries` and `retry_delay`
 
 ## ⚙️ Configuration
 
@@ -545,10 +791,13 @@ plugins:
       api_key: "${WEATHER_API_KEY}"
       base_url: "https://api.weather.com"
       timeout: 30
+      max_retries: 3          # Tool-specific retry configuration
+      retry_delay: 2.0        # Seconds between retries
     
     calculator:
       type: calculator
       precision: 10
+      max_retries: 1          # Simple tools may need fewer retries
   
   adapters:
     tts:
@@ -601,6 +850,9 @@ plugins:
 - **Predictable Tool Execution**: All tools execute at a single, well-defined stage
 - **Easier Debugging**: Tool failures have clear location and context
 - **Simpler Testing**: Tool execution can be tested in isolation
+- **Fail-Fast Development**: Plugin failures caught early in development cycle
+- **Graceful Error Communication**: Dedicated failure stage for user-friendly error messages
+- **Reliable Fallback**: Static error responses ensure users always receive feedback
 
 ### For Operations
 - **Configuration-Driven**: Different setups for dev/staging/prod
@@ -757,7 +1009,87 @@ class IntentClassifierPlugin(PromptPlugin):
         return intent, confidence
 ```
 
-### Weather Tool Plugin (Structured)
+### Memory Retrieval Plugin (Multi-Stage Example)
+```python
+class MemoryRetrievalPlugin(PromptPlugin):
+    """Retrieves relevant context in multiple stages"""
+    dependencies = ["database", "ollama"]
+    
+    # Override default - runs in multiple stages
+    stages = ["input_processing", "prompt_processing"]
+    
+    @classmethod
+    def validate_config(cls, config: Dict) -> ValidationResult:
+        max_context_length = config.get("max_context_length", 4000)
+        if not isinstance(max_context_length, int) or max_context_length <= 0:
+            return ValidationResult.error("max_context_length must be a positive integer")
+        
+        similarity_threshold = config.get("similarity_threshold", 0.7)
+        if not isinstance(similarity_threshold, (int, float)) or similarity_threshold < 0 or similarity_threshold > 1:
+            return ValidationResult.error("similarity_threshold must be between 0 and 1")
+        
+        return ValidationResult.success()
+    
+    async def _execute_impl(self, context: PipelineContext):
+        # Determine current stage and behave accordingly
+        current_stage = self._get_current_stage(context)
+        
+        if current_stage == "input_processing":
+            # Early stage: Retrieve user profile and preferences
+            await self._retrieve_user_context(context)
+            
+        elif current_stage == "prompt_processing":
+            # Later stage: Retrieve conversation history and relevant memories
+            await self._retrieve_conversation_memory(context)
+    
+    async def _retrieve_user_context(self, context: PipelineContext):
+        """Retrieve user profile and preferences early in pipeline"""
+        db = context.resources.get("database")
+        
+        # Add user context to conversation for LLM
+        user_profile = await db.get_user_profile()
+        if user_profile:
+            context.add_conversation_entry(
+                content=f"User preferences: {user_profile}",
+                role="system",
+                metadata={"memory_type": "user_profile", "stage": "input_processing"}
+            )
+    
+    async def _retrieve_conversation_memory(self, context: PipelineContext):
+        """Retrieve relevant conversation history during processing"""
+        db = context.resources.get("database")
+        llm = context.resources.get("ollama")
+        
+        # Get current conversation context
+        user_messages = [entry.content for entry in context.conversation if entry.role == "user"]
+        if not user_messages:
+            return
+            
+        latest_message = user_messages[-1]
+        
+        # Retrieve similar conversations
+        similar_conversations = await db.search_similar_conversations(
+            latest_message, 
+            limit=3,
+            threshold=self.config.get("similarity_threshold", 0.7)
+        )
+        
+        if similar_conversations:
+            context.add_conversation_entry(
+                content=f"Relevant past conversations: {similar_conversations}",
+                role="system",
+                metadata={"memory_type": "conversation_history", "stage": "prompt_processing"}
+            )
+            
+            # Set result for other plugins
+            context.set_stage_result("memory_retrieved", True)
+            context.set_stage_result("memory_count", len(similar_conversations))
+    
+    def _get_current_stage(self, context: PipelineContext) -> str:
+        """Determine which stage is currently executing (implementation detail)"""
+        # This would be provided by the framework
+        return getattr(context, '_current_stage', 'unknown')
+```
 ```python
 class WeatherToolPlugin(ToolPlugin):
     dependencies = ["weather_api"]
@@ -821,7 +1153,71 @@ class WeatherAPIResourcePlugin(ResourcePlugin):
         return WeatherAPI(config["api_key"], config.get("base_url"))
 ```
 
-### Smart Tool Coordination Plugin
+### Weather Tool Plugin (Structured)
+```python
+class WeatherToolPlugin(ToolPlugin):
+    dependencies = ["weather_api"]
+    # Uses default_stages = ["tool_execution"] from base class
+    
+    @classmethod
+    def validate_config(cls, config: Dict) -> ValidationResult:
+        if not config.get("api_key"):
+            return ValidationResult.error("Missing required config: api_key")
+        
+        base_url = config.get("base_url", "https://api.weather.com")
+        if not cls._is_valid_url(base_url):
+            return ValidationResult.error(f"Invalid base_url: {base_url}")
+        
+        timeout = config.get("timeout", 30)
+        if not isinstance(timeout, int) or timeout <= 0:
+            return ValidationResult.error("timeout must be a positive integer")
+        
+        return ValidationResult.success()
+    
+    @staticmethod
+    def _is_valid_url(url: str) -> bool:
+        return url.startswith(("http://", "https://"))
+    
+    def get_tool_name(self) -> str:
+        return "weather_tool"
+    
+    async def execute_function(self, params: Dict) -> str:
+        """Execute weather lookup - clean and simple"""
+        api = self.resources.get("weather_api")
+        location = params.get("location", "unknown")
+        
+        try:
+            forecast = await api.get_forecast(location)
+            return f"Weather in {location}: {forecast}"
+        except Exception as e:
+            return f"Error getting weather for {location}: {e}"
+
+# Weather API Resource Plugin
+class WeatherAPIResourcePlugin(ResourcePlugin):
+    dependencies = []
+    # Uses default_stages = ["*"] from base class (can run in any stage)
+    
+    @classmethod
+    def validate_config(cls, config: Dict) -> ValidationResult:
+        if not config.get("api_key"):
+            return ValidationResult.error("Weather API key not configured")
+        
+        base_url = config.get("base_url", "https://api.weather.com")
+        if not cls._is_valid_url(base_url):
+            return ValidationResult.error(f"Invalid base_url: {base_url}")
+        
+        return ValidationResult.success()
+    
+    @staticmethod
+    def _is_valid_url(url: str) -> bool:
+        return url.startswith(("http://", "https://"))
+    
+    def get_resource_name(self) -> str:
+        return "weather_api"
+    
+    async def initialize(self, config) -> WeatherAPI:
+        return WeatherAPI(config["api_key"], config.get("base_url"))
+```
 ```python
 class SmartToolCoordinatorPlugin(PromptPlugin):
     """Analyzes intent and queues appropriate tool calls for execution"""
@@ -920,12 +1316,17 @@ class SmartToolCoordinatorPlugin(PromptPlugin):
 17. **Static Tool Registration**: Tools registered once at system initialization, not per-request
 18. **Centralized Tool Execution**: All tools execute at a single, well-defined stage for predictable debugging
 19. **Input Reprocessing Control**: Single, clear mechanism for triggering pipeline iterations
-20. **Standardized Results**: Explicit result keys with no fallback mechanisms
+20. **Hybrid Stage Assignment**: Default stages via base classes with explicit override capability
+21. **YAML Execution Ordering**: Plugin execution order within stages determined by YAML configuration order
+22. **Fail-Fast Error Handling**: Plugin failures are caught early and routed to dedicated failure stage
+23. **Error Communication**: Technical failures are converted to user-friendly messages
+24. **Static Error Fallback**: Reliable fallback responses when error handling itself fails
+25. **Standardized Results**: Explicit result keys with no fallback mechanisms
 
 ## 🌟 Real-World Usage
 
 ```yaml
-# Development: Simple setup
+# Development: Simple setup with execution order control
 entity:
   entity_id: "dev_agent"
   name: "Development Agent"
@@ -942,6 +1343,8 @@ plugins:
       model: "llama3:8b"
 
   prompts:
+    # Execution order within prompt_processing stage:
+    # 1. intent_classifier → 2. smart_tool_coordinator
     intent_classifier:
       type: intent_classifier
       confidence_threshold: 0.7
@@ -949,7 +1352,13 @@ plugins:
     smart_tool_coordinator:
       type: smart_tool_coordinator
 
-# Production: Full stack with observability
+  # Failure handling plugins (minimal, discouraged)
+  failure:
+    error_formatter:
+      type: error_formatter
+      user_friendly_messages: true
+
+# Production: Full stack with observability and multi-stage plugins
 entity:
   entity_id: "prod_agent"
   name: "Production Agent"
@@ -979,6 +1388,14 @@ plugins:
       endpoint: "http://jaeger:14268"
 
   prompts:
+    # Execution order within stages:
+    # input_processing: memory_retrieval
+    # prompt_processing: memory_retrieval → intent_classifier → chain_of_thought → smart_coordinator
+    memory_retrieval:
+      type: memory_retrieval  # Runs in input_processing AND prompt_processing
+      max_context_length: 4000
+      similarity_threshold: 0.7
+    
     intent_classifier:
       type: intent_classifier
       confidence_threshold: 0.9
@@ -991,18 +1408,33 @@ plugins:
     smart_tool_coordinator:
       type: smart_tool_coordinator
 
-# Experimentation: A/B testing different reasoning strategies
+  # Comprehensive error handling for production
+  failure:
+    error_formatter:
+      type: error_formatter
+      user_friendly_messages: true
+    
+    error_logger:
+      type: error_logger
+      log_level: "ERROR"
+      include_context: true
+
+# Experimentation: A/B testing different reasoning strategies with explicit ordering
 plugins:
   prompts:
+    # Order matters - intent classification must come before reasoning
+    intent_classifier:
+      type: intent_classifier
+      confidence_threshold: 0.8
+    
     reasoning:
       type: "chain_of_thought"    # Strategy A
       # type: "react"             # Strategy B (commented out)
       enable_reasoning: true
       max_steps: 5
     
-    intent_classifier:
-      type: intent_classifier
-      confidence_threshold: 0.8
+    tool_coordinator:
+      type: smart_tool_coordinator  # Must come after reasoning
 ```
 
 ## Project Structure
