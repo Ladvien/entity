@@ -63,9 +63,10 @@ The pipeline follows a **centralized tool execution pattern** with structured to
 2. **Structured LLM Access**: Any stage can call the LLM when needed with automatic observability
 3. **Structured Tool System**: Stages can queue structured tool calls, executed in tool_execution stage
 4. **Standardized Results**: Explicit result keys with no fallback chains
-5. **Input Reprocessing**: Plugins can signal `reprocess_input` to restart the pipeline with updated context
-6. **Fail-Fast Error Handling**: Plugin failures route to dedicated failure stage for user communication
-7. **Iteration Limit**: `max_iterations` prevents infinite loops (for complex patterns like ReAct)
+5. **Stateful Plugin Iteration**: Plugins persist state across pipeline iterations until response is generated
+6. **Dynamic Configuration Updates**: Runtime configuration changes without application restart via plugin reconfiguration
+7. **Fail-Fast Error Handling**: Plugin failures route to dedicated failure stage for user communication
+8. **Iteration Limit**: `max_iterations` prevents infinite loops (for complex patterns like ReAct)
 
 ```python
 from enum import Enum, auto
@@ -101,7 +102,6 @@ async def execute_pipeline(request):
         executed_tool_results={},
         resources=resource_registry,
         metadata={},
-        should_continue=False,
         pipeline_id=generate_pipeline_id(),
         max_iterations=config.max_iterations,
         current_stage=None  # Track current stage execution
@@ -115,12 +115,13 @@ async def execute_pipeline(request):
         await execute_stage(PipelineStage.TOOL_EXECUTION, context)      # ONLY stage that executes tools
         await execute_stage(PipelineStage.OUTPUT_PROCESSING, context)
         
-        if context.should_continue and context.response is None:
-            continue  # Run another pipeline iteration
-        else:
-            break
+        # Simple continuation logic
+        if context.response is not None:
+            break  # We have a response, we're done
+            
+        # Otherwise continue to next iteration
     
-    return context.response
+    return context.response or create_timeout_response(context.pipeline_id)
 
 async def execute_stage(stage: PipelineStage, context: PipelineContext):
     # Set current stage for plugin awareness
@@ -403,8 +404,7 @@ class PipelineContext:
     
     # System resources and metadata
     resources: ResourceRegistry
-    metadata: Dict[str, Any]
-    should_continue: bool
+    metadata: Dict[str, Any]  # Used for plugin state persistence across iterations
     pipeline_id: str
     metrics: MetricsCollector
     max_iterations: int
@@ -464,51 +464,6 @@ async def execute_stage_tools(tool_calls: List[ToolCall]) -> Dict[str, Any]:
             results[tool_call.result_key] = f"Error: {e}"
     
     return results
-```
-
-### Error Communication Plugin Example
-```python
-class ErrorFormatterPlugin(FailurePlugin):
-    """Formats technical errors into user-friendly messages"""
-    dependencies = ["logging"]
-    # Uses default_stages = [PipelineStage.FAILURE] from base class
-    
-    @classmethod
-    def validate_config(cls, config: Dict) -> ValidationResult:
-        return ValidationResult.success()  # Minimal config validation
-    
-    async def _execute_impl(self, context: PipelineContext):
-        if not context.failure_info:
-            return  # No failure to process
-            
-        failure = context.failure_info
-        
-        # Format error based on type
-        if failure.error_type == "tool_error":
-            user_message = f"I encountered an issue while trying to help you. The {failure.plugin_name} service is currently unavailable. Please try again in a moment."
-        elif failure.error_type == "plugin_error":
-            user_message = f"I'm having trouble processing your request right now. Please try rephrasing your question or try again later."
-        else:  # system_error
-            user_message = "I'm experiencing technical difficulties. Please try again or contact support if the problem persists."
-        
-        # Set formatted response
-        context.response = {
-            "error": True,
-            "message": user_message,
-            "error_id": context.pipeline_id,
-            "timestamp": datetime.now().isoformat()
-        }
-        
-        # Log detailed error for debugging
-        logger = context.resources.get("logging")
-        if logger:
-            logger.error(
-                "Formatted error response",
-                pipeline_id=context.pipeline_id,
-                original_error=failure.error_message,
-                formatted_message=user_message,
-                error_type=failure.error_type
-            )
 ```
 
 ### Plugin Observability & Logging
@@ -585,6 +540,13 @@ class ValidationResult:
     error_message: str = None
     warnings: List[str] = []
 
+@dataclass
+class ReconfigResult:
+    success: bool
+    error_message: str = None
+    requires_restart: bool = False
+    warnings: List[str] = []
+
 class BasePlugin:
     dependencies = []  # List of registry keys that this plugin depends on
     
@@ -637,6 +599,60 @@ class BasePlugin:
             return config_result
         return cls.validate_dependencies(registry)
     
+    def supports_runtime_reconfiguration(self) -> bool:
+        """Can this plugin be reconfigured without restart?"""
+        return True  # Override in plugins that can't handle runtime reconfiguration
+    
+    async def reconfigure(self, new_config: Dict) -> ReconfigResult:
+        """
+        Update plugin configuration at runtime.
+        Returns success/failure and whether restart is required.
+        """
+        # Validate new configuration first
+        validation_result = self.validate_config(new_config)
+        if not validation_result.success:
+            return ReconfigResult(
+                success=False,
+                error_message=f"Configuration validation failed: {validation_result.error_message}"
+            )
+        
+        # Check if plugin supports runtime reconfiguration
+        if not self.supports_runtime_reconfiguration():
+            return ReconfigResult(
+                success=False,
+                requires_restart=True,
+                error_message="This plugin requires application restart for configuration changes"
+            )
+        
+        # Apply new configuration
+        try:
+            old_config = self.config
+            self.config = new_config
+            await self._handle_reconfiguration(old_config, new_config)
+            return ReconfigResult(success=True)
+        except Exception as e:
+            # Restore old configuration on failure
+            self.config = old_config
+            return ReconfigResult(
+                success=False,
+                error_message=f"Reconfiguration failed: {str(e)}"
+            )
+    
+    async def on_dependency_reconfigured(self, dependency_name: str, old_config: Dict, new_config: Dict) -> bool:
+        """
+        Called when a dependency's configuration changes.
+        Returns True if successfully handled, False if restart required.
+        """
+        # Default implementation: no action needed
+        return True
+    
+    async def _handle_reconfiguration(self, old_config: Dict, new_config: Dict):
+        """
+        Override this method to handle configuration changes.
+        Called after validation passes and config is updated.
+        """
+        pass  # Default: no special handling needed
+    
     @classmethod
     def from_dict(cls, config: Dict) -> 'Self':
         """
@@ -667,11 +683,135 @@ class BasePlugin:
         return cls.from_dict(config)
 ```
 
+### Dynamic Configuration Management
+
+The framework supports runtime configuration updates without application restart through a **fail-fast, cascading reconfiguration system**:
+
+#### **Configuration Update Flow**
+```python
+async def update_plugin_configuration(plugin_name: str, new_config: Dict) -> ConfigUpdateResult:
+    """
+    Update plugin configuration at runtime with cascading dependency updates.
+    Implements fail-fast behavior - any failure aborts the entire update.
+    """
+    # 1. Wait for in-flight pipelines to complete
+    await wait_for_pipeline_completion()
+    
+    # 2. Validate new configuration
+    plugin_instance = plugin_registry.get_plugin(plugin_name)
+    validation_result = plugin_instance.validate_config(new_config)
+    if not validation_result.success:
+        return ConfigUpdateResult.failure(f"Validation failed: {validation_result.error_message}")
+    
+    # 3. Attempt reconfiguration
+    reconfig_result = await plugin_instance.reconfigure(new_config)
+    if not reconfig_result.success:
+        if reconfig_result.requires_restart:
+            return ConfigUpdateResult.restart_required(reconfig_result.error_message)
+        else:
+            return ConfigUpdateResult.failure(reconfig_result.error_message)
+    
+    # 4. Cascade to dependent plugins (automatic)
+    dependent_plugins = plugin_registry.get_dependents(plugin_name)
+    for dependent_plugin in dependent_plugins:
+        cascade_success = await dependent_plugin.on_dependency_reconfigured(
+            plugin_name, old_config, new_config
+        )
+        if not cascade_success:
+            # Fail-fast: abort entire update if any dependent plugin fails
+            return ConfigUpdateResult.failure(
+                f"Dependency cascade failed for plugin: {dependent_plugin.name}"
+            )
+    
+    # 5. Success - all plugins reconfigured
+    return ConfigUpdateResult.success()
+
+async def wait_for_pipeline_completion(timeout_seconds: int = 30):
+    """Wait for all in-flight pipelines to complete before reconfiguration"""
+    start_time = time.time()
+    while pipeline_manager.has_active_pipelines():
+        if time.time() - start_time > timeout_seconds:
+            raise TimeoutError("Timeout waiting for pipelines to complete")
+        await asyncio.sleep(0.1)  # Check every 100ms
+```
+
+#### **Plugin Reconfiguration Examples**
+```python
+class LLMResourcePlugin(ResourcePlugin):
+    def supports_runtime_reconfiguration(self) -> bool:
+        return True  # Can change temperature, model parameters
+    
+    async def _handle_reconfiguration(self, old_config: Dict, new_config: Dict):
+        """Handle LLM configuration changes"""
+        # Update temperature, top_p, etc.
+        if old_config.get("model") != new_config.get("model"):
+            # Model change requires reconnection
+            await self._reconnect_with_new_model(new_config["model"])
+        
+        # Update generation parameters
+        self.llm_client.update_generation_params({
+            "temperature": new_config.get("temperature", 0.7),
+            "top_p": new_config.get("top_p", 0.9),
+            "top_k": new_config.get("top_k", 40)
+        })
+
+class DatabaseResourcePlugin(ResourcePlugin):
+    def supports_runtime_reconfiguration(self) -> bool:
+        return True  # Can change pool sizes, timeouts
+    
+    async def _handle_reconfiguration(self, old_config: Dict, new_config: Dict):
+        """Handle database configuration changes"""
+        # Update connection pool settings
+        if old_config.get("max_pool_size") != new_config.get("max_pool_size"):
+            await self.connection_pool.resize(new_config["max_pool_size"])
+        
+        if old_config.get("host") != new_config.get("host"):
+            # Host change requires restart
+            raise RuntimeError("Database host changes require application restart")
+
+class IntentClassifierPlugin(PromptPlugin):
+    def supports_runtime_reconfiguration(self) -> bool:
+        return True  # Can change thresholds
+    
+    async def on_dependency_reconfigured(self, dependency_name: str, old_config: Dict, new_config: Dict) -> bool:
+        """React to LLM configuration changes"""
+        if dependency_name == "ollama":
+            # LLM model changed - might need to adjust confidence thresholds
+            if old_config.get("model") != new_config.get("model"):
+                self.logger.info(f"LLM model changed from {old_config.get('model')} to {new_config.get('model')}")
+                # Could automatically adjust thresholds based on new model
+                return True
+        return True  # Successfully handled
+```
+
+#### **Configuration Update Results**
+```python
+@dataclass
+class ConfigUpdateResult:
+    success: bool
+    error_message: str = None
+    requires_restart: bool = False
+    updated_plugins: List[str] = field(default_factory=list)
+    
+    @classmethod
+    def success(cls, updated_plugins: List[str] = None) -> 'ConfigUpdateResult':
+        return cls(success=True, updated_plugins=updated_plugins or [])
+    
+    @classmethod
+    def failure(cls, error_message: str) -> 'ConfigUpdateResult':
+        return cls(success=False, error_message=error_message)
+    
+    @classmethod
+    def restart_required(cls, error_message: str) -> 'ConfigUpdateResult':
+        return cls(success=False, requires_restart=True, error_message=error_message)
+```
+
 ### Plugin Capabilities
 - **Read/Write Context**: Plugins can modify any part of the response.
 - **Resource Access**: `context.resources.get("llm")` - request what you need
 - **Short Circuit**: Skip remaining pipeline stages by setting `context.response`
-- **Input Reprocessing**: Signal `context.reprocess_input = True` to restart pipeline with updated context
+- **Stateful Iteration**: Persist state across pipeline iterations via `context.metadata` until response is generated
+- **Dynamic Reconfiguration**: Update configuration at runtime via `reconfigure()` method with cascading dependency notifications
 - **Structured Tools**: Queue structured tool calls during any stage
 - **Structured LLM Access**: Any plugin can call the LLM resource with automatic observability via `self.call_llm()`
 - **Standardized Results**: Set and get standardized results with explicit dependencies
@@ -930,6 +1070,8 @@ plugins:
 - **Separated Validation**: Test config parsing independently from dependency resolution
 - **Performance-Optimized**: Structured execution and parallel tool execution for better performance
 - **Structured Tools**: Clean separation between intent and execution
+- **Dynamic Configuration**: Runtime configuration updates enable rapid experimentation and tuning
+- **Stateful Plugins**: Complex reasoning patterns like ReAct can manage internal state across iterations
 - **Simple Mental Model**: "Linear pipeline with structured data flow"
 - **Flexible LLM Usage**: Any plugin can call LLM when needed with structured observability
 - **Predictable Tool Execution**: All tools execute at a single, well-defined stage
@@ -941,6 +1083,7 @@ plugins:
 - **Stage Awareness**: Explicit stage context for reliable plugin behavior
 
 ### For Operations
+- **Runtime Reconfiguration**: Update plugin configurations without restart for rapid development and tuning
 - **Configuration-Driven**: Different setups for dev/staging/prod
 - **Fail Fast**: Static validation catches issues early
 - **Observable**: Rich metadata from each plugin
@@ -1015,8 +1158,7 @@ class ChainOfThoughtPlugin(PromptPlugin):
                 result_key="analysis_result",
                 source="dynamic"
             ))
-            # Signal that we need to reprocess after tools execute
-            context.reprocess_input = True
+            # Plugin will continue in next iteration when tool results are available
     
     def _needs_tools(self, reasoning_steps: List[str]) -> bool:
         """Determine if reasoning indicates need for tools"""
@@ -1030,286 +1172,152 @@ class ChainOfThoughtPlugin(PromptPlugin):
         return user_entries[-1] if user_entries else ""
 ```
 
-### Intent Classification with Standardized Results
+### ReAct Plugin (Stateful Iteration Example)
 ```python
-class IntentClassifierPlugin(PromptPlugin):
+class ReActPlugin(PromptPlugin):
+    """Demonstrates stateful iteration for complex reasoning patterns"""
     dependencies = ["ollama"]
     
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
-        confidence_threshold = config.get("confidence_threshold", 0.8)
-        if not isinstance(confidence_threshold, (int, float)) or confidence_threshold < 0 or confidence_threshold > 1:
-            return ValidationResult.error("confidence_threshold must be between 0 and 1")
+        max_steps = config.get("max_steps", 5)
+        if not isinstance(max_steps, int) or max_steps <= 0:
+            return ValidationResult.error("max_steps must be a positive integer")
         
         return ValidationResult.success()
     
     async def _execute_impl(self, context: PipelineContext):
-        # Get latest user message
-        user_messages = [entry.content for entry in context.conversation if entry.role == "user"]
-        if not user_messages:
-            return
+        # Get or initialize our state across iterations
+        react_state = context.metadata.get("react_state", {
+            "step": 0, 
+            "thoughts": [], 
+            "actions": [], 
+            "observations": []
+        })
         
-        latest_message = user_messages[-1]
+        max_steps = self.config.get("max_steps", 5)
+        current_step = react_state["step"]
         
-        # Classify intent using structured LLM access
-        classification_prompt = f"""
-        Classify the intent of this message: "{latest_message}"
+        # If we just executed tools, process observations first
+        if react_state.get("waiting_for_tool"):
+            tool_result_key = react_state["waiting_for_tool"]
+            if tool_result_key in context.executed_tool_results:
+                observation = context.executed_tool_results[tool_result_key]
+                react_state["observations"].append(observation)
+                react_state["waiting_for_tool"] = None
+                
+                # Add observation to conversation
+                context.add_conversation_entry(
+                    content=f"Observation: {observation}",
+                    role="assistant",
+                    metadata={"react_step": current_step, "type": "observation"}
+                )
         
-        Possible intents: weather_query, calculation, general_chat, task_planning, information_lookup
-        
-        Respond with just the intent name and confidence (0-1):
-        Intent: <intent>
-        Confidence: <confidence>
-        """
-        
-        response = await self.call_llm(context, classification_prompt, purpose="intent_classification")
-        intent, confidence = self._parse_classification(response.content)
-        
-        # Set standardized results if confidence is high enough
-        threshold = self.config.get("confidence_threshold", 0.8)
-        if confidence >= threshold:
-            context.set_stage_result("intent", intent)
-            context.set_stage_result("intent_confidence", confidence)
+        # Continue ReAct loop
+        for step in range(current_step, max_steps):
+            # Build context for this step
+            step_context = self._build_react_context(context.conversation, react_state)
             
-            # Add to conversation for debugging
-            context.add_conversation_entry(
-                content=f"Intent classified as: {intent} (confidence: {confidence:.2f})",
-                role="system",
-                metadata={"intent": intent, "confidence": confidence}
-            )
-    
-    def _parse_classification(self, response_text: str) -> Tuple[str, float]:
-        """Parse LLM response to extract intent and confidence"""
-        intent = "general_chat"  # default
-        confidence = 0.0
-        
-        for line in response_text.split('\n'):
-            if line.startswith("Intent:"):
-                intent = line.split(":", 1)[1].strip()
-            elif line.startswith("Confidence:"):
-                try:
-                    confidence = float(line.split(":", 1)[1].strip())
-                except ValueError:
-                    confidence = 0.0
-        
-        return intent, confidence
-```
-
-### Memory Retrieval Plugin (Multi-Stage Example)
-```python
-class MemoryRetrievalPlugin(PromptPlugin):
-    """Retrieves relevant context in multiple stages"""
-    dependencies = ["database", "ollama"]
-    
-    # Override default - runs in multiple stages
-    stages = [PipelineStage.INPUT_PROCESSING, PipelineStage.PROMPT_PROCESSING]
-    
-    @classmethod
-    def validate_config(cls, config: Dict) -> ValidationResult:
-        max_context_length = config.get("max_context_length", 4000)
-        if not isinstance(max_context_length, int) or max_context_length <= 0:
-            return ValidationResult.error("max_context_length must be a positive integer")
-        
-        similarity_threshold = config.get("similarity_threshold", 0.7)
-        if not isinstance(similarity_threshold, (int, float)) or similarity_threshold < 0 or similarity_threshold > 1:
-            return ValidationResult.error("similarity_threshold must be between 0 and 1")
-        
-        return ValidationResult.success()
-    
-    async def _execute_impl(self, context: PipelineContext):
-        # Determine current stage and behave accordingly
-        current_stage = context.get_current_stage()
-        
-        if current_stage == PipelineStage.INPUT_PROCESSING:
-            # Early stage: Retrieve user profile and preferences
-            await self._retrieve_user_context(context)
+            # Thought
+            thought_prompt = f"""Think step by step about this problem:
             
-        elif current_stage == PipelineStage.PROMPT_PROCESSING:
-            # Later stage: Retrieve conversation history and relevant memories
-            await self._retrieve_conversation_memory(context)
-    
-    async def _retrieve_user_context(self, context: PipelineContext):
-        """Retrieve user profile and preferences early in pipeline"""
-        db = context.resources.get("database")
-        
-        # Add user context to conversation for LLM
-        user_profile = await db.get_user_profile()
-        if user_profile:
-            context.add_conversation_entry(
-                content=f"User preferences: {user_profile}",
-                role="system",
-                metadata={"memory_type": "user_profile", "stage": "input_processing"}
-            )
-    
-    async def _retrieve_conversation_memory(self, context: PipelineContext):
-        """Retrieve relevant conversation history during processing"""
-        db = context.resources.get("database")
-        
-        # Get current conversation context
-        user_messages = [entry.content for entry in context.conversation if entry.role == "user"]
-        if not user_messages:
-            return
+            Context: {step_context}
             
-        latest_message = user_messages[-1]
-        
-        # Retrieve similar conversations
-        similar_conversations = await db.search_similar_conversations(
-            latest_message, 
-            limit=3,
-            threshold=self.config.get("similarity_threshold", 0.7)
-        )
-        
-        if similar_conversations:
+            What should I think about next?"""
+            
+            thought = await self.call_llm(context, thought_prompt, purpose=f"react_thought_step_{step}")
+            react_state["thoughts"].append(thought.content)
+            
             context.add_conversation_entry(
-                content=f"Relevant past conversations: {similar_conversations}",
-                role="system",
-                metadata={"memory_type": "conversation_history", "stage": "prompt_processing"}
+                content=f"Thought: {thought.content}",
+                role="assistant",
+                metadata={"react_step": step, "type": "thought"}
             )
             
-            # Set result for other plugins
-            context.set_stage_result("memory_retrieved", True)
-            context.set_stage_result("memory_count", len(similar_conversations))
-```
-
-### Weather Tool Plugin (Structured)
-```python
-class WeatherToolPlugin(ToolPlugin):
-    dependencies = ["weather_api"]
-    # Uses default_stages = [PipelineStage.TOOL_EXECUTION] from base class
-    
-    @classmethod
-    def validate_config(cls, config: Dict) -> ValidationResult:
-        if not config.get("api_key"):
-            return ValidationResult.error("Missing required config: api_key")
-        
-        base_url = config.get("base_url", "https://api.weather.com")
-        if not cls._is_valid_url(base_url):
-            return ValidationResult.error(f"Invalid base_url: {base_url}")
-        
-        timeout = config.get("timeout", 30)
-        if not isinstance(timeout, int) or timeout <= 0:
-            return ValidationResult.error("timeout must be a positive integer")
-        
-        return ValidationResult.success()
-    
-    @staticmethod
-    def _is_valid_url(url: str) -> bool:
-        return url.startswith(("http://", "https://"))
-    
-    def get_tool_name(self) -> str:
-        return "weather_tool"
-    
-    async def execute_function(self, params: Dict) -> str:
-        """Execute weather lookup - clean and simple"""
-        api = self.resources.get("weather_api")
-        location = params.get("location", "unknown")
-        
-        try:
-            forecast = await api.get_forecast(location)
-            return f"Weather in {location}: {forecast}"
-        except Exception as e:
-            return f"Error getting weather for {location}: {e}"
-
-# Weather API Resource Plugin
-class WeatherAPIResourcePlugin(ResourcePlugin):
-    dependencies = []
-    # Uses default_stages from base class (can run in any stage)
-    
-    @classmethod
-    def validate_config(cls, config: Dict) -> ValidationResult:
-        if not config.get("api_key"):
-            return ValidationResult.error("Weather API key not configured")
-        
-        base_url = config.get("base_url", "https://api.weather.com")
-        if not cls._is_valid_url(base_url):
-            return ValidationResult.error(f"Invalid base_url: {base_url}")
-        
-        return ValidationResult.success()
-    
-    @staticmethod
-    def _is_valid_url(url: str) -> bool:
-        return url.startswith(("http://", "https://"))
-    
-    def get_resource_name(self) -> str:
-        return "weather_api"
-    
-    async def initialize(self, config) -> WeatherAPI:
-        return WeatherAPI(config["api_key"], config.get("base_url"))
-```
-
-### Smart Tool Coordinator Plugin
-```python
-class SmartToolCoordinatorPlugin(PromptPlugin):
-    """Analyzes intent and queues appropriate tool calls for execution"""
-    dependencies = ["ollama"]
-    
-    @classmethod
-    def validate_config(cls, config: Dict) -> ValidationResult:
-        return ValidationResult.success()  # No specific config needed
-    
-    async def _execute_impl(self, context: PipelineContext):
-        # Only run if we have intent classification
-        if not context.has_stage_result("intent"):
-            return
+            # Action decision
+            action_prompt = f"""Based on my thought: "{thought.content}"
             
-        intent = context.get_stage_result("intent")
+            Should I:
+            1. Take an action (specify: search, calculate, etc.)
+            2. Give a final answer
+            
+            Respond with either "Action: <action_name> <parameters>" or "Final Answer: <answer>"""
+            
+            action_decision = await self.call_llm(context, action_prompt, purpose=f"react_action_step_{step}")
+            
+            if action_decision.content.startswith("Final Answer:"):
+                # We're done!
+                final_answer = action_decision.content.replace("Final Answer:", "").strip()
+                context.response = final_answer
+                
+                # Clean up state
+                context.metadata.pop("react_state", None)
+                return
+            
+            elif action_decision.content.startswith("Action:"):
+                # Parse and queue action
+                action_text = action_decision.content.replace("Action:", "").strip()
+                action_name, params = self._parse_action(action_text)
+                
+                tool_result_key = f"react_step_{step}_result"
+                context.add_tool_call(ToolCall(
+                    name=action_name,
+                    params=params,
+                    result_key=tool_result_key,
+                    source="react_reasoning"
+                ))
+                
+                react_state["actions"].append(action_text)
+                react_state["step"] = step + 1
+                react_state["waiting_for_tool"] = tool_result_key
+                
+                # Save state and exit - we'll continue when tools are done
+                context.metadata["react_state"] = react_state
+                
+                context.add_conversation_entry(
+                    content=f"Action: {action_text}",
+                    role="assistant",
+                    metadata={"react_step": step, "type": "action"}
+                )
+                
+                return  # Tools will execute, then we'll resume next iteration
         
-        # Get latest user message
-        user_messages = [entry.content for entry in context.conversation if entry.role == "user"]
-        if not user_messages:
-            return
-            
-        latest_message = user_messages[-1]
+        # If we've hit max steps without a final answer
+        context.response = "I've reached my reasoning limit without finding a definitive answer."
+        context.metadata.pop("react_state", None)
+    
+    def _build_react_context(self, conversation: List[ConversationEntry], react_state: Dict) -> str:
+        """Build context string for current ReAct step"""
+        user_messages = [entry.content for entry in conversation if entry.role == "user"]
+        latest_question = user_messages[-1] if user_messages else "No question provided"
         
-        # Queue tools based on intent (executed later in tool_execution stage)
-        if intent == "weather_query":
-            location = await self._extract_location(context, latest_message)
-            context.add_tool_call(ToolCall(
-                name="weather_tool",
-                params={"location": location},
-                result_key="weather_info",
-                source="intent_based"
-            ))
-            
-        elif intent == "calculation":
-            expression = await self._extract_expression(context, latest_message)
-            context.add_tool_call(ToolCall(
-                name="calculator_tool",
-                params={"expression": expression},
-                result_key="calculation_result",
-                source="intent_based"
-            ))
-            
-        elif intent == "information_lookup":
-            query = await self._extract_search_query(context, latest_message)
-            context.add_tool_call(ToolCall(
-                name="search_tool",
-                params={"query": query},
-                result_key="search_results",
-                source="intent_based"
-            ))
-            
-        # Signal reprocessing if any tools were queued
-        if context.pending_tool_calls:
-            context.reprocess_input = True
+        context_parts = [f"Question: {latest_question}"]
+        
+        # Add previous thoughts, actions, observations
+        for i, thought in enumerate(react_state["thoughts"]):
+            context_parts.append(f"Thought {i+1}: {thought}")
+            if i < len(react_state["actions"]):
+                context_parts.append(f"Action {i+1}: {react_state['actions'][i]}")
+            if i < len(react_state["observations"]):
+                context_parts.append(f"Observation {i+1}: {react_state['observations'][i]}")
+        
+        return "\n".join(context_parts)
     
-    async def _extract_location(self, context: PipelineContext, message: str) -> str:
-        """Extract location from user message"""
-        prompt = f"Extract the location from this message: '{message}'. Return just the location name."
-        response = await self.call_llm(context, prompt, purpose="location_extraction")
-        return response.content.strip()
-    
-    async def _extract_expression(self, context: PipelineContext, message: str) -> str:
-        """Extract mathematical expression from user message"""
-        prompt = f"Extract the mathematical expression from this message: '{message}'. Return just the expression."
-        response = await self.call_llm(context, prompt, purpose="expression_extraction")
-        return response.content.strip()
-    
-    async def _extract_search_query(self, context: PipelineContext, message: str) -> str:
-        """Extract search query from user message"""
-        prompt = f"Extract the main search query from this message: '{message}'. Return just the search terms."
-        response = await self.call_llm(context, prompt, purpose="query_extraction")
-        return response.content.strip()
+    def _parse_action(self, action_text: str) -> Tuple[str, Dict[str, Any]]:
+        """Parse action text into tool name and parameters"""
+        parts = action_text.split(" ", 1)
+        if len(parts) < 2:
+            return "search", {"query": action_text}
+        
+        action_name = parts[0].lower()
+        params_text = parts[1]
+        
+        if action_name == "search":
+            return "search_tool", {"query": params_text}
+        elif action_name == "calculate":
+            return "calculator_tool", {"expression": params_text}
+        else:
+            return "search_tool", {"query": action_text}  # fallback
 ```
 
 ## 🎨 Design Principles
@@ -1332,7 +1340,7 @@ class SmartToolCoordinatorPlugin(PromptPlugin):
 16. **Structured Tool Calls**: Clean separation between intent and execution
 17. **Static Tool Registration**: Tools registered once at system initialization, not per-request
 18. **Centralized Tool Execution**: All tools execute at a single, well-defined stage for predictable debugging
-19. **Input Reprocessing Control**: Single, clear mechanism for triggering pipeline iterations
+19. **Stateful Plugin Iteration**: Plugins manage internal state across pipeline iterations for complex reasoning patterns
 20. **Hybrid Stage Assignment**: Default stages via base classes with explicit override capability
 21. **YAML Execution Ordering**: Plugin execution order within stages determined by YAML configuration order
 22. **Fail-Fast Error Handling**: Plugin failures are caught early and routed to dedicated failure stage
