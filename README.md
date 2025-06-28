@@ -60,7 +60,7 @@ flowchart TD
 The pipeline follows a **centralized tool execution pattern** with structured tool calls, standardized results, and comprehensive error handling:
 
 1. **Linear Pipeline Execution**: All stages run once in order
-2. **LLM Resource Access**: Any stage can call the LLM when needed
+2. **Structured LLM Access**: Any stage can call the LLM when needed with automatic observability
 3. **Structured Tool System**: Stages can queue structured tool calls, executed in tool_execution stage
 4. **Standardized Results**: Explicit result keys with no fallback chains
 5. **Input Reprocessing**: Plugins can signal `reprocess_input` to restart the pipeline with updated context
@@ -68,6 +68,31 @@ The pipeline follows a **centralized tool execution pattern** with structured to
 7. **Iteration Limit**: `max_iterations` prevents infinite loops (for complex patterns like ReAct)
 
 ```python
+from enum import Enum, auto
+from dataclasses import dataclass, field
+from typing import Dict, List, Any, Optional
+from datetime import datetime
+
+class PipelineStage(Enum):
+    INPUT_PROCESSING = auto()
+    PROMPT_PREPROCESSING = auto() 
+    PROMPT_PROCESSING = auto()
+    TOOL_EXECUTION = auto()
+    OUTPUT_PROCESSING = auto()
+    FAILURE = auto()
+    
+    def __str__(self):
+        return self.name.lower()
+    
+    @classmethod
+    def from_str(cls, stage_name: str) -> 'PipelineStage':
+        """Convert string to enum with validation"""
+        try:
+            return cls[stage_name.upper()]
+        except KeyError:
+            valid_stages = [stage.name.lower() for stage in cls]
+            raise ValueError(f"Invalid stage '{stage_name}'. Valid stages: {valid_stages}")
+
 async def execute_pipeline(request):
     context = PipelineContext(
         conversation=[ConversationEntry(content=str(request), role="user", timestamp=datetime.now())],
@@ -78,16 +103,17 @@ async def execute_pipeline(request):
         metadata={},
         should_continue=False,
         pipeline_id=generate_pipeline_id(),
-        max_iterations=config.max_iterations
+        max_iterations=config.max_iterations,
+        current_stage=None  # Track current stage execution
     )
     
     for iteration in range(context.max_iterations):
         # Execute each pipeline stage in sequence
-        await execute_stage("input_processing", context)
-        await execute_stage("prompt_preprocessing", context) 
-        await execute_stage("prompt_processing", context)
-        await execute_stage("tool_execution", context)      # ONLY stage that executes tools
-        await execute_stage("output_processing", context)
+        await execute_stage(PipelineStage.INPUT_PROCESSING, context)
+        await execute_stage(PipelineStage.PROMPT_PREPROCESSING, context) 
+        await execute_stage(PipelineStage.PROMPT_PROCESSING, context)
+        await execute_stage(PipelineStage.TOOL_EXECUTION, context)      # ONLY stage that executes tools
+        await execute_stage(PipelineStage.OUTPUT_PROCESSING, context)
         
         if context.should_continue and context.response is None:
             continue  # Run another pipeline iteration
@@ -96,15 +122,18 @@ async def execute_pipeline(request):
     
     return context.response
 
-async def execute_stage(stage_name: str, context: PipelineContext):
+async def execute_stage(stage: PipelineStage, context: PipelineContext):
+    # Set current stage for plugin awareness
+    context.current_stage = stage
+    
     # 1. Execute all plugins registered for this stage
-    stage_plugins = plugin_registry.get_plugins_for_stage(stage_name)
+    stage_plugins = plugin_registry.get_plugins_for_stage(stage)
     
     for plugin in stage_plugins:
         await plugin.execute(context)
     
     # 2. Execute tools ONLY in the tool_execution stage
-    if stage_name == "tool_execution" and context.pending_tool_calls:
+    if stage == PipelineStage.TOOL_EXECUTION and context.pending_tool_calls:
         tool_results = await execute_stage_tools(context.pending_tool_calls)
         context.executed_tool_results.update(tool_results)
         
@@ -124,12 +153,12 @@ async def execute_stage(stage_name: str, context: PipelineContext):
 #### **Resource Plugins** (Infrastructure - Enables System Function)
 - **Database**: PostgreSQL, SQLite connections
 - **LLM**: Ollama, OpenAI, Claude servers  
-- **Memory**: Vector databases, Redis cache
+- **Semantic Memory**: Vector databases, Redis cache
 - **Storage**: File systems, cloud storage
 - **Logging**: Structured logging, metrics, tracing
 - **Monitoring**: Health checks, performance metrics
 
-**Default Stages**: `["*"]` (can run in any stage when needed)
+**Default Stages**: `[PipelineStage.INPUT_PROCESSING, PipelineStage.PROMPT_PREPROCESSING, PipelineStage.PROMPT_PROCESSING, PipelineStage.TOOL_EXECUTION, PipelineStage.OUTPUT_PROCESSING, PipelineStage.FAILURE]` (can run in any stage when needed)
 
 #### **Tool Plugins** (Functionality - Performs Tasks for Users)
 - **Weather**: Get current conditions, forecasts
@@ -140,7 +169,7 @@ async def execute_stage(stage_name: str, context: PipelineContext):
 
 **Tool Execution Model**: Tools are registered during system initialization as static capabilities. During any stage, plugins can queue structured tool calls to the context. Only the tool_execution stage actually executes tools, with results available to subsequent stages.
 
-**Default Stages**: `["tool_execution"]` (tools only execute in dedicated stage)
+**Default Stages**: `[PipelineStage.TOOL_EXECUTION]` (tools only execute in dedicated stage)
 
 #### **Prompt Plugins** (Processing - Controls Request Flow)
 - **Strategies**: ReAct, Chain-of-Thought, Direct Response
@@ -149,21 +178,21 @@ async def execute_stage(stage_name: str, context: PipelineContext):
 - **Output**: Formatting, validation, filtering
 - **Tool Coordination**: Queue structured tool calls during processing
 
-**Default Stages**: `["prompt_processing"]` (main processing stage)
+**Default Stages**: `[PipelineStage.PROMPT_PROCESSING]` (main processing stage)
 
 #### **Adapter Plugins** (Input/Output - Interface Handling)
 - **Input Adapters**: HTTP, WebSocket, CLI interfaces
 - **Output Adapters**: HTTP responses, TTS, formatted output
   - **TTS**: Text-to-speech services
 
-**Default Stages**: `["input_processing", "output_processing"]` (interface boundary stages)
+**Default Stages**: `[PipelineStage.INPUT_PROCESSING, PipelineStage.OUTPUT_PROCESSING]` (interface boundary stages)
 
 #### **Failure Plugins** (Error Communication - User-Facing Error Handling)
 - **Error Formatters**: Convert technical errors to user-friendly messages
 - **Error Loggers**: Record failures for debugging and monitoring
 - **Notification Systems**: Alert administrators of critical failures
 
-**Default Stages**: `["failure"]` (dedicated error handling stage)
+**Default Stages**: `[PipelineStage.FAILURE]` (dedicated error handling stage)
 
 **Note**: Plugin use is discouraged in the failure stage to maintain reliability. Keep failure stage plugins minimal and ensure static fallback responses are available.
 
@@ -174,34 +203,38 @@ The framework uses a **hybrid approach** for assigning plugins to pipeline stage
 #### **Default Stage Assignment via Base Classes**
 ```python
 class ResourcePlugin(BasePlugin):
-    default_stages = ["*"]  # Can run in any stage when needed
+    default_stages = [PipelineStage.INPUT_PROCESSING, PipelineStage.PROMPT_PREPROCESSING, 
+                     PipelineStage.PROMPT_PROCESSING, PipelineStage.TOOL_EXECUTION, 
+                     PipelineStage.OUTPUT_PROCESSING, PipelineStage.FAILURE]  # Can run in any stage when needed
 
 class ToolPlugin(BasePlugin):
-    default_stages = ["tool_execution"]  # Tools only execute in dedicated stage
+    default_stages = [PipelineStage.TOOL_EXECUTION]  # Tools only execute in dedicated stage
 
 class PromptPlugin(BasePlugin):
-    default_stages = ["prompt_processing"]  # Main processing stage
+    default_stages = [PipelineStage.PROMPT_PROCESSING]  # Main processing stage
 
 class AdapterPlugin(BasePlugin):
-    default_stages = ["input_processing", "output_processing"]  # Interface boundaries
+    default_stages = [PipelineStage.INPUT_PROCESSING, PipelineStage.OUTPUT_PROCESSING]  # Interface boundaries
 
 class FailurePlugin(BasePlugin):
-    default_stages = ["failure"]  # Dedicated error handling stage
+    default_stages = [PipelineStage.FAILURE]  # Dedicated error handling stage
 ```
 
 #### **Explicit Stage Override for Multi-Stage Plugins**
 ```python
 class MemoryRetrievalPlugin(PromptPlugin):
     # Override default - runs in multiple stages
-    stages = ["input_processing", "prompt_processing"]
+    stages = [PipelineStage.INPUT_PROCESSING, PipelineStage.PROMPT_PROCESSING]
 
 class DebugLoggingPlugin(ResourcePlugin):
     # Explicit override - runs in all stages for debugging
-    stages = ["*"]
+    stages = [PipelineStage.INPUT_PROCESSING, PipelineStage.PROMPT_PREPROCESSING, 
+             PipelineStage.PROMPT_PROCESSING, PipelineStage.TOOL_EXECUTION, 
+             PipelineStage.OUTPUT_PROCESSING, PipelineStage.FAILURE]
 
 class ContextEnhancerPlugin(PromptPlugin):
     # Override - only runs early in pipeline
-    stages = ["input_processing"]
+    stages = [PipelineStage.INPUT_PROCESSING]
 ```
 
 #### **YAML Configuration Order = Execution Order**
@@ -219,6 +252,7 @@ prompts:
     type: memory_retrieval
     max_context_length: 4000
     # This plugin runs in input_processing AND prompt_processing stages
+    stages: ["input_processing", "prompt_processing"]
   
   chain_of_thought:
     type: chain_of_thought
@@ -236,12 +270,7 @@ def register_plugin_for_stages(plugin_instance, plugin_name):
     stages = getattr(plugin_instance.__class__, 'stages', plugin_instance.__class__.default_stages)
     
     for stage in stages:
-        if stage == "*":
-            # Register for all pipeline stages
-            for pipeline_stage in ["input_processing", "prompt_preprocessing", "prompt_processing", "tool_execution", "output_processing", "failure"]:
-                plugin_registry.register_plugin_for_stage(plugin_instance, pipeline_stage, plugin_name)
-        else:
-            plugin_registry.register_plugin_for_stage(plugin_instance, stage, plugin_name)
+        plugin_registry.register_plugin_for_stage(plugin_instance, stage, plugin_name)
 ```
 
 ## 🔧 Key Components
@@ -265,6 +294,15 @@ class FailureInfo:
 class PipelineContext:
     # ... existing fields ...
     failure_info: Optional[FailureInfo] = None
+    current_stage: Optional[PipelineStage] = None  # Track current executing stage
+    
+    def get_current_stage(self) -> Optional[PipelineStage]:
+        """Get currently executing stage"""
+        return self.current_stage
+    
+    def is_stage(self, stage: PipelineStage) -> bool:
+        """Check if currently in specific stage"""
+        return self.current_stage == stage
     
     def add_failure(self, failure: FailureInfo):
         """Add failure information and prepare for failure stage routing"""
@@ -289,7 +327,7 @@ class PipelineContext:
 #### **Tool Retry Configuration**
 ```python
 class ToolPlugin(BasePlugin):
-    default_stages = ["tool_execution"]
+    default_stages = [PipelineStage.TOOL_EXECUTION]
     
     def __init__(self, config: Dict):
         self.max_retries = config.get("max_retries", 1)  # Default sensible retry count
@@ -328,6 +366,9 @@ def create_static_error_response(pipeline_id: str) -> Dict[str, Any]:
     response["timestamp"] = datetime.now().isoformat()
     return response
 ```
+
+### Context and Data Structures
+
 ```python
 @dataclass
 class ConversationEntry:
@@ -367,6 +408,9 @@ class PipelineContext:
     pipeline_id: str
     metrics: MetricsCollector
     max_iterations: int
+    
+    # Stage execution tracking
+    current_stage: Optional[PipelineStage] = None
     
     # Stage result methods (no fallbacks)
     def set_stage_result(self, key: str, value: Any):
@@ -427,7 +471,7 @@ async def execute_stage_tools(tool_calls: List[ToolCall]) -> Dict[str, Any]:
 class ErrorFormatterPlugin(FailurePlugin):
     """Formats technical errors into user-friendly messages"""
     dependencies = ["logging"]
-    # Uses default_stages = ["failure"] from base class
+    # Uses default_stages = [PipelineStage.FAILURE] from base class
     
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
@@ -474,12 +518,12 @@ class BasePlugin:
         self.logger = None  # Injected during initialization
         
     async def execute(self, context: PipelineContext):
-        # Automatic logging with pipeline ID
+        # Automatic logging with pipeline ID and stage
         self.logger.info(
             "Plugin execution started",
             plugin=self.__class__.__name__,
             pipeline_id=context.pipeline_id,
-            stage=self.get_stage()
+            stage=str(context.get_current_stage())
         )
         
         start_time = time.time()
@@ -489,6 +533,7 @@ class BasePlugin:
             # Automatic metrics collection
             context.metrics.record_plugin_duration(
                 plugin=self.__class__.__name__,
+                stage=str(context.get_current_stage()),
                 duration=time.time() - start_time
             )
             
@@ -498,10 +543,39 @@ class BasePlugin:
                 "Plugin execution failed",
                 plugin=self.__class__.__name__,
                 pipeline_id=context.pipeline_id,
+                stage=str(context.get_current_stage()),
                 error=str(e),
                 exc_info=True
             )
             raise
+    
+    async def call_llm(self, context: PipelineContext, prompt: str, purpose: str) -> LLMResponse:
+        """Structured LLM access with automatic logging and metrics"""
+        llm = context.resources.get("ollama")  # or configured LLM resource
+        
+        # Enhanced observability
+        context.metrics.record_llm_call(
+            plugin=self.__class__.__name__,
+            stage=str(context.get_current_stage()),
+            purpose=purpose
+        )
+        
+        start_time = time.time()
+        response = await llm.generate(prompt)
+        
+        # Log with purpose for better debugging
+        self.logger.info(
+            "LLM call completed",
+            plugin=self.__class__.__name__,
+            stage=str(context.get_current_stage()),
+            purpose=purpose,
+            prompt_length=len(prompt),
+            response_length=len(response.content),
+            duration=time.time() - start_time,
+            pipeline_id=context.pipeline_id
+        )
+        
+        return response
 ```
 
 ### Plugin Validation System
@@ -523,8 +597,17 @@ class BasePlugin:
         - Values are correct types/formats
         - URLs are well-formed
         - Numeric ranges are valid
+        - Stage assignments (if provided)
         - No registry or cross-plugin concerns
         """
+        # Validate stages if explicitly provided
+        config_stages = config.get("stages", [])
+        if config_stages:
+            try:
+                [PipelineStage.from_str(stage) for stage in config_stages]
+            except ValueError as e:
+                return ValidationResult.error(f"Invalid stage configuration: {e}")
+        
         return ValidationResult(success=True)
     
     @classmethod
@@ -585,15 +668,16 @@ class BasePlugin:
 ```
 
 ### Plugin Capabilities
-- **Read/Write Context**: Plugins can modify any part of the request/response
+- **Read/Write Context**: Plugins can modify any part of the response.
 - **Resource Access**: `context.resources.get("llm")` - request what you need
 - **Short Circuit**: Skip remaining pipeline stages by setting `context.response`
 - **Input Reprocessing**: Signal `context.reprocess_input = True` to restart pipeline with updated context
 - **Structured Tools**: Queue structured tool calls during any stage
-- **LLM Access**: Any plugin can call the LLM resource when needed
+- **Structured LLM Access**: Any plugin can call the LLM resource with automatic observability via `self.call_llm()`
 - **Standardized Results**: Set and get standardized results with explicit dependencies
 - **Error Signaling**: Add failure information with `context.add_failure()` to route to failure stage
 - **Tool Retry Logic**: Configure retry behavior for individual tools with `max_retries` and `retry_delay`
+- **Stage Awareness**: Access current execution stage with `context.get_current_stage()`
 
 ## ⚙️ Configuration
 
@@ -822,6 +906,7 @@ plugins:
       type: memory_retrieval
       max_context_length: 4000
       similarity_threshold: 0.7
+      stages: ["input_processing", "prompt_processing"]  # Multi-stage plugin
     
     intent_classifier:
       type: intent_classifier
@@ -846,13 +931,14 @@ plugins:
 - **Performance-Optimized**: Structured execution and parallel tool execution for better performance
 - **Structured Tools**: Clean separation between intent and execution
 - **Simple Mental Model**: "Linear pipeline with structured data flow"
-- **Flexible LLM Usage**: Any plugin can call LLM when needed
+- **Flexible LLM Usage**: Any plugin can call LLM when needed with structured observability
 - **Predictable Tool Execution**: All tools execute at a single, well-defined stage
 - **Easier Debugging**: Tool failures have clear location and context
 - **Simpler Testing**: Tool execution can be tested in isolation
 - **Fail-Fast Development**: Plugin failures caught early in development cycle
 - **Graceful Error Communication**: Dedicated failure stage for user-friendly error messages
 - **Reliable Fallback**: Static error responses ensure users always receive feedback
+- **Stage Awareness**: Explicit stage context for reliable plugin behavior
 
 ### For Operations
 - **Configuration-Driven**: Different setups for dev/staging/prod
@@ -881,14 +967,12 @@ class ChainOfThoughtPlugin(PromptPlugin):
         if not self.config.get("enable_reasoning", True):
             return
             
-        llm = context.resources.get("ollama")
-        
         # Get clean conversation history for LLM
         conversation_text = self._get_conversation_text(context.conversation)
         
-        # Step 1: Break down the problem
+        # Step 1: Break down the problem using structured LLM access
         breakdown_prompt = f"Break this problem into logical steps: {conversation_text}"
-        breakdown = await llm.generate(breakdown_prompt)
+        breakdown = await self.call_llm(context, breakdown_prompt, purpose="problem_breakdown")
         
         # Add reasoning to conversation
         context.add_conversation_entry(
@@ -901,7 +985,11 @@ class ChainOfThoughtPlugin(PromptPlugin):
         reasoning_steps = []
         for step_num in range(self.config.get("max_steps", 5)):
             reasoning_prompt = f"Reason through step {step_num + 1} of solving: {conversation_text}"
-            reasoning = await llm.generate(reasoning_prompt, conversation_history=self._get_conversation_text(context.conversation))
+            reasoning = await self.call_llm(
+                context, 
+                reasoning_prompt, 
+                purpose=f"reasoning_step_{step_num + 1}"
+            )
             reasoning_steps.append(reasoning.content)
             
             context.add_conversation_entry(
@@ -956,8 +1044,6 @@ class IntentClassifierPlugin(PromptPlugin):
         return ValidationResult.success()
     
     async def _execute_impl(self, context: PipelineContext):
-        llm = context.resources.get("ollama")
-        
         # Get latest user message
         user_messages = [entry.content for entry in context.conversation if entry.role == "user"]
         if not user_messages:
@@ -965,7 +1051,7 @@ class IntentClassifierPlugin(PromptPlugin):
         
         latest_message = user_messages[-1]
         
-        # Classify intent
+        # Classify intent using structured LLM access
         classification_prompt = f"""
         Classify the intent of this message: "{latest_message}"
         
@@ -976,7 +1062,7 @@ class IntentClassifierPlugin(PromptPlugin):
         Confidence: <confidence>
         """
         
-        response = await llm.generate(classification_prompt)
+        response = await self.call_llm(context, classification_prompt, purpose="intent_classification")
         intent, confidence = self._parse_classification(response.content)
         
         # Set standardized results if confidence is high enough
@@ -1016,7 +1102,7 @@ class MemoryRetrievalPlugin(PromptPlugin):
     dependencies = ["database", "ollama"]
     
     # Override default - runs in multiple stages
-    stages = ["input_processing", "prompt_processing"]
+    stages = [PipelineStage.INPUT_PROCESSING, PipelineStage.PROMPT_PROCESSING]
     
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
@@ -1032,13 +1118,13 @@ class MemoryRetrievalPlugin(PromptPlugin):
     
     async def _execute_impl(self, context: PipelineContext):
         # Determine current stage and behave accordingly
-        current_stage = self._get_current_stage(context)
+        current_stage = context.get_current_stage()
         
-        if current_stage == "input_processing":
+        if current_stage == PipelineStage.INPUT_PROCESSING:
             # Early stage: Retrieve user profile and preferences
             await self._retrieve_user_context(context)
             
-        elif current_stage == "prompt_processing":
+        elif current_stage == PipelineStage.PROMPT_PROCESSING:
             # Later stage: Retrieve conversation history and relevant memories
             await self._retrieve_conversation_memory(context)
     
@@ -1058,7 +1144,6 @@ class MemoryRetrievalPlugin(PromptPlugin):
     async def _retrieve_conversation_memory(self, context: PipelineContext):
         """Retrieve relevant conversation history during processing"""
         db = context.resources.get("database")
-        llm = context.resources.get("ollama")
         
         # Get current conversation context
         user_messages = [entry.content for entry in context.conversation if entry.role == "user"]
@@ -1084,80 +1169,13 @@ class MemoryRetrievalPlugin(PromptPlugin):
             # Set result for other plugins
             context.set_stage_result("memory_retrieved", True)
             context.set_stage_result("memory_count", len(similar_conversations))
-    
-    def _get_current_stage(self, context: PipelineContext) -> str:
-        """Determine which stage is currently executing (implementation detail)"""
-        # This would be provided by the framework
-        return getattr(context, '_current_stage', 'unknown')
-```
-```python
-class WeatherToolPlugin(ToolPlugin):
-    dependencies = ["weather_api"]
-    
-    @classmethod
-    def validate_config(cls, config: Dict) -> ValidationResult:
-        if not config.get("api_key"):
-            return ValidationResult.error("Missing required config: api_key")
-        
-        base_url = config.get("base_url", "https://api.weather.com")
-        if not cls._is_valid_url(base_url):
-            return ValidationResult.error(f"Invalid base_url: {base_url}")
-        
-        timeout = config.get("timeout", 30)
-        if not isinstance(timeout, int) or timeout <= 0:
-            return ValidationResult.error("timeout must be a positive integer")
-        
-        return ValidationResult.success()
-    
-    @staticmethod
-    def _is_valid_url(url: str) -> bool:
-        return url.startswith(("http://", "https://"))
-    
-    def get_tool_name(self) -> str:
-        return "weather_tool"
-    
-    async def execute_function(self, params: Dict) -> str:
-        """Execute weather lookup - clean and simple"""
-        api = self.resources.get("weather_api")
-        location = params.get("location", "unknown")
-        
-        try:
-            forecast = await api.get_forecast(location)
-            return f"Weather in {location}: {forecast}"
-        except Exception as e:
-            return f"Error getting weather for {location}: {e}"
-
-# Weather API Resource Plugin
-class WeatherAPIResourcePlugin(ResourcePlugin):
-    dependencies = []
-    
-    @classmethod
-    def validate_config(cls, config: Dict) -> ValidationResult:
-        if not config.get("api_key"):
-            return ValidationResult.error("Weather API key not configured")
-        
-        base_url = config.get("base_url", "https://api.weather.com")
-        if not cls._is_valid_url(base_url):
-            return ValidationResult.error(f"Invalid base_url: {base_url}")
-        
-        return ValidationResult.success()
-    
-    @staticmethod
-    def _is_valid_url(url: str) -> bool:
-        return url.startswith(("http://", "https://"))
-    
-    def get_resource_name(self) -> str:
-        return "weather_api"
-    
-    async def initialize(self, config) -> WeatherAPI:
-        return WeatherAPI(config["api_key"], config.get("base_url"))
 ```
 
 ### Weather Tool Plugin (Structured)
 ```python
 class WeatherToolPlugin(ToolPlugin):
     dependencies = ["weather_api"]
-    # Uses default_stages = ["tool_execution"] from base class
+    # Uses default_stages = [PipelineStage.TOOL_EXECUTION] from base class
     
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
@@ -1195,7 +1213,7 @@ class WeatherToolPlugin(ToolPlugin):
 # Weather API Resource Plugin
 class WeatherAPIResourcePlugin(ResourcePlugin):
     dependencies = []
-    # Uses default_stages = ["*"] from base class (can run in any stage)
+    # Uses default_stages from base class (can run in any stage)
     
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
@@ -1218,6 +1236,8 @@ class WeatherAPIResourcePlugin(ResourcePlugin):
     async def initialize(self, config) -> WeatherAPI:
         return WeatherAPI(config["api_key"], config.get("base_url"))
 ```
+
+### Smart Tool Coordinator Plugin
 ```python
 class SmartToolCoordinatorPlugin(PromptPlugin):
     """Analyzes intent and queues appropriate tool calls for execution"""
@@ -1275,23 +1295,20 @@ class SmartToolCoordinatorPlugin(PromptPlugin):
     
     async def _extract_location(self, context: PipelineContext, message: str) -> str:
         """Extract location from user message"""
-        llm = context.resources.get("ollama")
         prompt = f"Extract the location from this message: '{message}'. Return just the location name."
-        response = await llm.generate(prompt)
+        response = await self.call_llm(context, prompt, purpose="location_extraction")
         return response.content.strip()
     
     async def _extract_expression(self, context: PipelineContext, message: str) -> str:
         """Extract mathematical expression from user message"""
-        llm = context.resources.get("ollama")
         prompt = f"Extract the mathematical expression from this message: '{message}'. Return just the expression."
-        response = await llm.generate(prompt)
+        response = await self.call_llm(context, prompt, purpose="expression_extraction")
         return response.content.strip()
     
     async def _extract_search_query(self, context: PipelineContext, message: str) -> str:
         """Extract search query from user message"""
-        llm = context.resources.get("ollama")
         prompt = f"Extract the main search query from this message: '{message}'. Return just the search terms."
-        response = await llm.generate(prompt)
+        response = await self.call_llm(context, prompt, purpose="query_extraction")
         return response.content.strip()
 ```
 
@@ -1310,7 +1327,7 @@ class SmartToolCoordinatorPlugin(PromptPlugin):
 11. **Separation of Concerns**: Clear distinction between config validation and dependency validation
 12. **Load-Time Validation**: Validation should be done at load time, reducing runtime errors
 13. **Intuitive Mental Models**: Mental models should be intensely easy to understand
-14. **LLM as Resource**: LLM available throughout pipeline for flexible usage patterns
+14. **Structured LLM Access**: LLM available throughout pipeline with automatic observability
 15. **Linear Pipeline Flow**: Simple, predictable execution order with clear stage responsibilities
 16. **Structured Tool Calls**: Clean separation between intent and execution
 17. **Static Tool Registration**: Tools registered once at system initialization, not per-request
@@ -1322,6 +1339,7 @@ class SmartToolCoordinatorPlugin(PromptPlugin):
 23. **Error Communication**: Technical failures are converted to user-friendly messages
 24. **Static Error Fallback**: Reliable fallback responses when error handling itself fails
 25. **Standardized Results**: Explicit result keys with no fallback mechanisms
+26. **Stage Awareness**: Explicit stage context enables reliable multi-stage plugin behavior
 
 ## 🌟 Real-World Usage
 
@@ -1395,6 +1413,7 @@ plugins:
       type: memory_retrieval  # Runs in input_processing AND prompt_processing
       max_context_length: 4000
       similarity_threshold: 0.7
+      stages: ["input_processing", "prompt_processing"]
     
     intent_classifier:
       type: intent_classifier
@@ -1437,283 +1456,6 @@ plugins:
       type: smart_tool_coordinator  # Must come after reasoning
 ```
 
-## Project Structure
-
-```txt
-entity/
-├── README.md
-├── pyproject.toml
-├── requirements.txt
-├── setup.py
-
-├── .gitignore
-├── .github/
-│   └── workflows/
-│       ├── ci.yml
-│       └── release.yml
-│
-├── entity/
-│   ├── __init__.py
-│   ├── version.py
-│   │
-│   ├── core/
-│   │   ├── __init__.py
-│   │   ├── context.py              # PipelineContext class
-│   │   ├── pipeline.py             # Main pipeline processing engine
-│   │   ├── registry.py             # ClassRegistry, ResourceRegistry, PluginRegistry
-│   │   ├── system.py               # SystemInitializer, four-phase initialization
-│   │   ├── exceptions.py           # ConfigurationError, SystemError, etc.
-│   │   └── cleanup.py              # initialization_cleanup_context
-│   │
-│   ├── plugins/
-│   │   ├── __init__.py
-│   │   ├── base.py                 # BasePlugin, ValidationResult
-│   │   ├── resource.py             # ResourcePlugin base class
-│   │   ├── tool.py                 # ToolPlugin base class
-│   │   ├── prompt.py               # PromptPlugin base class
-│   │   ├── adapter.py              # AdapterPlugin base class
-│   │   │
-│   │   ├── resources/
-│   │   │   ├── __init__.py
-│   │   │   ├── database/
-│   │   │   │   ├── __init__.py
-│   │   │   │   ├── postgres.py     # PostgresResourcePlugin
-│   │   │   │   ├── sqlite.py       # SQLiteResourcePlugin
-│   │   │   │   └── models.py       # Database models, schemas
-│   │   │   ├── llm/
-│   │   │   │   ├── __init__.py
-│   │   │   │   ├── ollama.py       # OllamaLLMResourcePlugin
-│   │   │   │   ├── openai.py       # OpenAIResourcePlugin
-│   │   │   │   ├── claude.py       # ClaudeResourcePlugin
-│   │   │   │   └── base.py         # BaseLLMResource
-│   │   │   ├── memory/
-│   │   │   │   ├── __init__.py
-│   │   │   │   ├── vector.py       # VectorDatabaseResourcePlugin
-│   │   │   │   ├── redis.py        # RedisResourcePlugin
-│   │   │   │   └── cache.py        # CacheResourcePlugin
-│   │   │   ├── storage/
-│   │   │   │   ├── __init__.py
-│   │   │   │   ├── filesystem.py   # FileSystemResourcePlugin
-│   │   │   │   ├── s3.py           # S3ResourcePlugin
-│   │   │   │   └── gcs.py          # GoogleCloudStorageResourcePlugin
-│   │   │   ├── logging/
-│   │   │   │   ├── __init__.py
-│   │   │   │   ├── structured.py   # StructuredLoggingResourcePlugin
-│   │   │   │   ├── elasticsearch.py # ElasticsearchLoggingResourcePlugin
-│   │   │   │   └── formatters.py   # Log formatters
-│   │   │   ├── monitoring/
-│   │   │   │   ├── __init__.py
-│   │   │   │   ├── prometheus.py   # PrometheusResourcePlugin
-│   │   │   │   ├── jaeger.py       # JaegerTracingResourcePlugin
-│   │   │   │   └── health.check.py # HealthCheckResourcePlugin
-│   │   │   └── tts/
-│   │   │       ├── __init__.py
-│   │   │       ├── speech_synthesis.py # SpeechSynthesisResourcePlugin
-│   │   │       └── elevenlabs.py   # ElevenLabsResourcePlugin
-│   │   │
-│   │   ├── tools/
-│   │   │   ├── __init__.py
-│   │   │   ├── weather.py          # WeatherToolPlugin
-│   │   │   ├── calculator.py       # CalculatorToolPlugin
-│   │   │   ├── search/
-│   │   │   │   ├── __init__.py
-│   │   │   │   ├── web.py          # WebSearchToolPlugin
-│   │   │   │   └── document.py     # DocumentSearchToolPlugin
-│   │   │   ├── file_operations.py  # FileOperationsToolPlugin
-│   │   │   └── integrations/
-│   │   │       ├── __init__.py
-│   │   │       ├── slack.py        # SlackToolPlugin
-│   │   │       ├── email.py        # EmailToolPlugin
-│   │   │       └── api.py          # CustomAPIToolPlugin
-│   │   │
-│   │   ├── prompts/
-│   │   │   ├── __init__.py
-│   │   │   ├── strategies/
-│   │   │   │   ├── __init__.py
-│   │   │   │   ├── react.py        # ReActPromptPlugin
-│   │   │   │   ├── chain_of_thought.py # ChainOfThoughtPromptPlugin
-│   │   │   │   ├── direct.py       # DirectResponsePromptPlugin
-│   │   │   │   ├── intent_classifier.py # IntentClassifierPromptPlugin
-│   │   │   │   └── smart_tool_coordinator.py # SmartToolCoordinatorPromptPlugin
-│   │   │   ├── personality/
-│   │   │   │   ├── __init__.py
-│   │   │   │   ├── sarcasm.py      # SarcasmPromptPlugin
-│   │   │   │   ├── loyalty.py      # LoyaltyPromptPlugin
-│   │   │   │   └── wit.py          # WitPromptPlugin
-│   │   │   ├── memory/
-│   │   │   │   ├── __init__.py
-│   │   │   │   ├── retrieval.py    # MemoryRetrievalPromptPlugin
-│   │   │   │   └── context.py      # ContextPromptPlugin
-│   │   │   └── output/
-│   │   │       ├── __init__.py
-│   │   │       ├── formatting.py   # FormattingPromptPlugin
-│   │   │       ├── validation.py   # ValidationPromptPlugin
-│   │   │       └── filtering.py    # FilteringPromptPlugin
-│   │   │
-│   │   └── adapters/
-│   │       ├── __init__.py
-│   │       ├── input/
-│   │       │   ├── __init__.py
-│   │       │   ├── http.py         # HTTPInputAdapterPlugin
-│   │       │   ├── websocket.py    # WebSocketInputAdapterPlugin
-│   │       │   └── cli.py          # CLIInputAdapterPlugin
-│   │       └── output/
-│   │           ├── __init__.py
-│   │           ├── http.py         # HTTPOutputAdapterPlugin
-│   │           ├── websocket.py    # WebSocketOutputAdapterPlugin
-│   │           ├── tts.py          # TTSOutputAdapterPlugin
-│   │           └── cli.py          # CLIOutputAdapterPlugin
-│   │
-│   ├── api/
-│   │   ├── __init__.py
-│   │   ├── server.py               # FastAPI server setup
-│   │   ├── routes/
-│   │   │   ├── __init__.py
-│   │   │   ├── chat.py             # Chat endpoints
-│   │   │   ├── health.py           # Health check endpoints
-│   │   │   └── admin.py            # Admin endpoints
-│   │   ├── middleware/
-│   │   │   ├── __init__.py
-│   │   │   ├── logging.py          # Request logging middleware
-│   │   │   ├── metrics.py          # Metrics collection middleware
-│   │   │   └── cors.py             # CORS middleware
-│   │   └── models/
-│   │       ├── __init__.py
-│   │       ├── request.py          # Request models
-│   │       ├── response.py         # Response models
-│   │       └── config.py           # API configuration models
-│   │
-│   ├── config/
-│   │   ├── __init__.py
-│   │   ├── loader.py               # YAML/JSON config loading
-│   │   ├── validator.py            # Configuration validation
-│   │   ├── interpolation.py        # Environment variable interpolation
-│   │   └── schema.py               # Configuration schema definitions
-│   │
-│   ├── utils/
-│   │   ├── __init__.py
-│   │   ├── logging.py              # Logging utilities
-│   │   ├── metrics.py              # Metrics collection utilities
-│   │   ├── tracing.py              # Distributed tracing utilities
-│   │   ├── dependency_graph.py     # Dependency graph validation
-│   │   ├── import_utils.py         # Dynamic plugin import utilities
-│   │   └── testing.py              # Testing utilities and fixtures
-│   │
-│   └── cli/
-│       ├── __init__.py
-│       ├── main.py                 # Main CLI entry point
-│       ├── commands/
-│       │   ├── __init__.py
-│       │   ├── run.py              # Run server command
-│       │   ├── validate.py         # Validate configuration command
-│       │   ├── init.py             # Initialize project command
-│       │   └── plugin.py           # Plugin management commands
-│       └── templates/
-│           ├── config.yaml         # Default configuration template
-│           ├── dev.yaml            # Development configuration template
-│           └── prod.yaml           # Production configuration template
-│
-├── tests/
-│   ├── __init__.py
-│   ├── conftest.py                 # pytest fixtures and configuration
-│   ├── unit/
-│   │   ├── __init__.py
-│   │   ├── core/
-│   │   │   ├── test_context.py
-│   │   │   ├── test_pipeline.py
-│   │   │   ├── test_registry.py
-│   │   │   └── test_system.py
-│   │   ├── plugins/
-│   │   │   ├── test_base.py
-│   │   │   ├── resources/
-│   │   │   │   ├── test_database.py
-│   │   │   │   ├── test_llm.py
-│   │   │   │   └── test_logging.py
-│   │   │   ├── tools/
-│   │   │   │   ├── test_weather.py
-│   │   │   │   └── test_calculator.py
-│   │   │   └── prompts/
-│   │   │       ├── test_chain_of_thought.py
-│   │   │       ├── test_intent_classifier.py
-│   │   │       └── test_memory_retrieval.py
-│   │   ├── config/
-│   │   │   ├── test_loader.py
-│   │   │   └── test_validator.py
-│   │   └── utils/
-│   │       ├── test_dependency_graph.py
-│   │       └── test_import_utils.py
-│   ├── integration/
-│   │   ├── __init__.py
-│   │   ├── test_full_pipeline.py
-│   │   ├── test_plugin_composition.py
-│   │   └── test_system_initialization.py
-│   ├── fixtures/
-│   │   ├── configs/
-│   │   │   ├── minimal.yaml
-│   │   │   ├── full.yaml
-│   │   │   └── invalid.yaml
-│   │   └── data/
-│   │       ├── sample_requests.json
-│   │       └── expected_responses.json
-│   └── e2e/
-│       ├── __init__.py
-│       ├── test_api_endpoints.py
-│       └── test_cli_commands.py
-│
-├── examples/
-│   ├── README.md
-│   ├── minimal/
-│   │   ├── config.yaml
-│   │   ├── run.py
-│   │   └── README.md
-│   ├── development/
-│   │   ├── config.yaml
-│   │   └── README.md
-│   ├── production/
-│   │   ├── config.yaml
-│   │   └── README.md
-│   ├── custom_plugins/
-│   │   ├── my_custom_tool.py
-│   │   ├── my_custom_resource.py
-│   │   └── README.md
-│   └── advanced/
-│       ├── multi_agent_config.yaml
-│       ├── a_b_testing_config.yaml
-│       └── README.md
-│
-├── docs/
-│   ├── README.md
-│   ├── getting_started.md
-│   ├── configuration.md
-│   ├── plugin_development.md
-│   ├── architecture.md
-│   ├── api_reference.md
-│   ├── deployment_guide.md
-│   ├── troubleshooting.md
-│   └── examples/
-│       ├── creating_custom_plugins.md
-│       ├── configuration_patterns.md
-│       └── testing_strategies.md
-│
-├── scripts/
-│   ├── setup_dev.sh
-│   ├── run_tests.sh
-│   ├── deploy.sh
-│   └── benchmark.py
-│
-└── benchmarks/
-    ├── __init__.py
-    ├── performance/
-    │   ├── test_plugin_overhead.py
-    │   ├── test_system_initialization.py
-    │   └── test_memory_usage.py
-    └── load_testing/
-        ├── locustfile.py
-        └── scenarios/
-            ├── basic_chat.py
-            └── complex_workflow.py
-```
-
 ## 🎯 Bottom Line
 
 **Entity Pipeline Framework = Bevy for AI Agents**
@@ -1726,79 +1468,6 @@ entity/
 - **Developer-Friendly**: Clear patterns, shared community plugins
 - **Performance-Optimized**: Structured execution and parallel tool execution for better performance
 - **Linear Pipeline**: Simple, predictable execution flow with structured data
+- **Stage Awareness**: Explicit stage context for reliable plugin behavior
 
 **Result**: Build AI agents like assembling LEGO blocks - flexible, reusable, and fun! 🧩
-
-### Updated Pipeline Flow
-
-```mermaid
-graph TB
-    %% Simplified System Architecture
-    Users[👤 Users] --> API[🌐 API]
-    API --> PL[🔄 Pipeline]
-    PL --> CTX[📋 Context]
-    PL --> RR[🏪 Registry]
-    
-    %% Three Plugin Layers
-    RR --> Resources[📦 Resources<br/>DB, LLM, Cache]
-    PL --> Tools[🛠️ Tools<br/>Weather, Calc, Search]
-    PL --> Prompts[✨ Prompts<br/>CoT, Intent, Coordination]
-    
-    %% Styling
-    classDef core fill:#f3e5f5
-    classDef plugins fill:#e8f5e8
-    
-    class API,PL,CTX,RR core
-    class Resources,Tools,Prompts plugins
-```
-
-### Structured Execution Flow
-
-```mermaid
-flowchart LR
-    %% Updated Linear Pipeline Flow
-    User[👤 User] --> Input[📥 Input Processing]
-    Input --> PrePrompt[🛠️ Prompt Pre-processing]
-    PrePrompt --> Prompt[✨ Prompt Processing]
-    Prompt --> ToolExec[⚡ Tool Execution]
-    ToolExec --> Output[📤 Output Processing]
-    Output --> Response[📱 Response]
-    
-    %% LLM Resource available to all stages
-    LLM[🧠 LLM Resource] -.-> Input
-    LLM -.-> PrePrompt
-    LLM -.-> Prompt
-    LLM -.-> ToolExec
-    LLM -.-> Output
-    
-    %% Optional continuation for complex patterns
-    ToolExec -.-> |should_continue| Input
-```
-
-### Structured Tool Flow
-
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant A as API
-    participant P as Pipeline
-    participant PP as Prompt Processing
-    participant T as Tool Execution
-    participant Tools as Tool Plugins
-    
-    U->>A: "Weather in NYC and calculate 25+17"
-    A->>P: Start processing
-    P->>PP: Prompt Processing
-    Note over PP: Intent Classifier sets "intent"="weather_query"
-    Note over PP: Smart Coordinator queues structured tool calls
-    PP->>PP: Queue ToolCall(name="weather_tool", params={"location": "NYC"})
-    PP->>PP: Queue ToolCall(name="calculator_tool", params={"expression": "25+17"})
-    P->>T: Tool Execution Stage
-    T->>Tools: Execute weather_tool(location="NYC")
-    Tools->>T: "sunny, 72°F"
-    T->>Tools: Execute calculator_tool(expression="25+17")
-    Tools->>T: "42"
-    Note over T: Results added to context
-    P->>A: Final response with structured data
-    A->>U: "Weather is sunny, 72°F and 42"
-```
