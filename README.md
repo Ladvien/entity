@@ -12,22 +12,22 @@ flowchart TD
     API --> IA[📥 Input Adapter]
     IA --> Pipeline[🔄 Processing Pipeline]
     
-    Pipeline --> Stage1[🔄 Input Processing]
-    Stage1 --> Stage2[🛠️ Prompt Pre-processing] 
-    Stage2 --> Stage3[✨ Prompt Processing]
-    Stage3 --> Stage4[⚡ Tool Execution]
-    Stage4 --> Stage5[📤 Output Processing]
+    Pipeline --> Stage1[🔄 Parse]
+    Stage1 --> Stage2[🧠 Think] 
+    Stage2 --> Stage3[⚡ Do]
+    Stage3 --> Stage4[🔍 Review]
+    Stage4 --> Stage5[📤 Deliver]
     
     Stage5 --> OA[📮 Output Adapter]
     OA --> Response[📱 Response]
     
     %% Error handling flow
-    Stage1 -.-> FailureStage[❌ Failure]
-    Stage2 -.-> FailureStage
-    Stage3 -.-> FailureStage
-    Stage4 -.-> FailureStage
-    Stage5 -.-> FailureStage
-    FailureStage --> OA
+    Stage1 -.-> ErrorStage[❌ Error]
+    Stage2 -.-> ErrorStage
+    Stage3 -.-> ErrorStage
+    Stage4 -.-> ErrorStage
+    Stage5 -.-> ErrorStage
+    ErrorStage --> OA
     
     %% LLM Resource Available Throughout Pipeline
     LLM[🧠 LLM Resource] -.-> Stage1
@@ -35,7 +35,7 @@ flowchart TD
     LLM -.-> Stage3
     LLM -.-> Stage4
     LLM -.-> Stage5
-    LLM -.-> FailureStage
+    LLM -.-> ErrorStage
     
     %% Styling
     classDef input fill:#e3f2fd
@@ -48,11 +48,11 @@ flowchart TD
     
     class Users,API,Response endpoints
     class IA,Stage1 input
-    class Stage2,Stage3 processing
+    class Stage2 processing
     class LLM llm
-    class Stage4 tools
-    class Stage5,OA output
-    class FailureStage error
+    class Stage3 tools
+    class Stage4,Stage5,OA output
+    class ErrorStage error
 ```
 
 ### Pipeline Execution Model
@@ -61,11 +61,11 @@ The pipeline follows a **centralized tool execution pattern** with structured to
 
 1. **Linear Pipeline Execution**: All stages run once in order
 2. **Structured LLM Access**: Any stage can call the LLM when needed with automatic observability
-3. **Structured Tool System**: Stages can queue structured tool calls, executed in tool_execution stage
+3. **Structured Tool System**: Stages can queue structured tool calls, executed in do stage
 4. **Standardized Results**: Explicit result keys with no fallback chains
 5. **Stateful Plugin Iteration**: Plugins persist state across pipeline iterations until response is generated
 6. **Dynamic Configuration Updates**: Runtime configuration changes without application restart via plugin reconfiguration
-7. **Fail-Fast Error Handling**: Plugin failures route to dedicated failure stage for user communication
+7. **Fail-Fast Error Handling**: Plugin failures route to dedicated error stage for user communication
 8. **Iteration Limit**: `max_iterations` prevents infinite loops (for complex patterns like ReAct)
 
 ```python
@@ -75,12 +75,12 @@ from typing import Dict, List, Any, Optional
 from datetime import datetime
 
 class PipelineStage(Enum):
-    INPUT_PROCESSING = auto()
-    PROMPT_PREPROCESSING = auto() 
-    PROMPT_PROCESSING = auto()
-    TOOL_EXECUTION = auto()
-    OUTPUT_PROCESSING = auto()
-    FAILURE = auto()
+    PARSE = auto()
+    THINK = auto() 
+    DO = auto()
+    REVIEW = auto()
+    DELIVER = auto()
+    ERROR = auto()
     
     def __str__(self):
         return self.name.lower()
@@ -109,11 +109,11 @@ async def execute_pipeline(request):
     
     for iteration in range(context.max_iterations):
         # Execute each pipeline stage in sequence
-        await execute_stage(PipelineStage.INPUT_PROCESSING, context)
-        await execute_stage(PipelineStage.PROMPT_PREPROCESSING, context) 
-        await execute_stage(PipelineStage.PROMPT_PROCESSING, context)
-        await execute_stage(PipelineStage.TOOL_EXECUTION, context)      # ONLY stage that executes tools
-        await execute_stage(PipelineStage.OUTPUT_PROCESSING, context)
+        await execute_stage(PipelineStage.PARSE, context)
+        await execute_stage(PipelineStage.THINK, context) 
+        await execute_stage(PipelineStage.DO, context)      # ONLY stage that executes tools
+        await execute_stage(PipelineStage.REVIEW, context)
+        await execute_stage(PipelineStage.DELIVER, context)
         
         # Simple continuation logic
         if context.response is not None:
@@ -133,8 +133,8 @@ async def execute_stage(stage: PipelineStage, context: PipelineContext):
     for plugin in stage_plugins:
         await plugin.execute(context)
     
-    # 2. Execute tools ONLY in the tool_execution stage
-    if stage == PipelineStage.TOOL_EXECUTION and context.pending_tool_calls:
+    # 2. Execute tools ONLY in the do stage
+    if stage == PipelineStage.DO and context.pending_tool_calls:
         tool_results = await execute_stage_tools(context.pending_tool_calls)
         context.executed_tool_results.update(tool_results)
         
@@ -149,7 +149,7 @@ async def execute_stage(stage: PipelineStage, context: PipelineContext):
         context.pending_tool_calls.clear()
 ```
 
-### Three-Layer Plugin System
+### Five-Layer Plugin System
 
 #### **Resource Plugins** (Infrastructure - Enables System Function)
 - **Database**: PostgreSQL, SQLite connections
@@ -159,8 +159,6 @@ async def execute_stage(stage: PipelineStage, context: PipelineContext):
 - **Logging**: Structured logging, metrics, tracing
 - **Monitoring**: Health checks, performance metrics
 
-**Default Stages**: `[PipelineStage.INPUT_PROCESSING, PipelineStage.PROMPT_PREPROCESSING, PipelineStage.PROMPT_PROCESSING, PipelineStage.TOOL_EXECUTION, PipelineStage.OUTPUT_PROCESSING, PipelineStage.FAILURE]` (can run in any stage when needed)
-
 #### **Tool Plugins** (Functionality - Performs Tasks for Users)
 - **Weather**: Get current conditions, forecasts
 - **Calculator**: Mathematical computations
@@ -168,9 +166,7 @@ async def execute_stage(stage: PipelineStage, context: PipelineContext):
 - **File Operations**: Read, write, process files
 - **API Integrations**: Slack, email, custom APIs
 
-**Tool Execution Model**: Tools are registered during system initialization as static capabilities. During any stage, plugins can queue structured tool calls to the context. Only the tool_execution stage actually executes tools, with results available to subsequent stages.
-
-**Default Stages**: `[PipelineStage.TOOL_EXECUTION]` (tools only execute in dedicated stage)
+**Tool Execution Model**: Tools are registered during system initialization as static capabilities. During any stage, plugins can queue structured tool calls to the context. Only the do stage actually executes tools, with results available to subsequent stages.
 
 #### **Prompt Plugins** (Processing - Controls Request Flow)
 - **Strategies**: ReAct, Chain-of-Thought, Direct Response
@@ -179,63 +175,92 @@ async def execute_stage(stage: PipelineStage, context: PipelineContext):
 - **Output**: Formatting, validation, filtering
 - **Tool Coordination**: Queue structured tool calls during processing
 
-**Default Stages**: `[PipelineStage.PROMPT_PROCESSING]` (main processing stage)
-
 #### **Adapter Plugins** (Input/Output - Interface Handling)
 - **Input Adapters**: HTTP, WebSocket, CLI interfaces
 - **Output Adapters**: HTTP responses, TTS, formatted output
   - **TTS**: Text-to-speech services
-
-**Default Stages**: `[PipelineStage.INPUT_PROCESSING, PipelineStage.OUTPUT_PROCESSING]` (interface boundary stages)
 
 #### **Failure Plugins** (Error Communication - User-Facing Error Handling)
 - **Error Formatters**: Convert technical errors to user-friendly messages
 - **Error Loggers**: Record failures for debugging and monitoring
 - **Notification Systems**: Alert administrators of critical failures
 
-**Default Stages**: `[PipelineStage.FAILURE]` (dedicated error handling stage)
-
-**Note**: Plugin use is discouraged in the failure stage to maintain reliability. Keep failure stage plugins minimal and ensure static fallback responses are available.
+**Note**: Plugin use is discouraged in the error stage to maintain reliability. Keep error stage plugins minimal and ensure static fallback responses are available.
 
 ### Plugin Stage Assignment System
 
-The framework uses a **hybrid approach** for assigning plugins to pipeline stages, balancing ease of evolution with flexibility:
+The framework uses **explicit stage assignment** for all plugins, with base classes serving as organizational categories and framework extension points:
 
-#### **Default Stage Assignment via Base Classes**
+#### **Explicit Stage Assignment (Required)**
 ```python
+from abc import ABC, abstractmethod
+
+class BasePlugin(ABC):
+    stages: List[PipelineStage]  # Always explicit, always required
+    
+    @abstractmethod
+    async def execute(self, context: PipelineContext):
+        pass
+
 class ResourcePlugin(BasePlugin):
-    default_stages = [PipelineStage.INPUT_PROCESSING, PipelineStage.PROMPT_PREPROCESSING, 
-                     PipelineStage.PROMPT_PROCESSING, PipelineStage.TOOL_EXECUTION, 
-                     PipelineStage.OUTPUT_PROCESSING, PipelineStage.FAILURE]  # Can run in any stage when needed
+    """Organizational category + framework extension point for infrastructure plugins"""
+    
+    async def health_check(self) -> bool:
+        """Framework-provided health monitoring for all resources"""
+        return True  # Override for custom health logic
+    
+    def get_metrics(self) -> Dict[str, Any]:
+        """Framework-provided metrics collection"""
+        return {"status": "healthy"}
 
 class ToolPlugin(BasePlugin):
-    default_stages = [PipelineStage.TOOL_EXECUTION]  # Tools only execute in dedicated stage
+    """Organizational category + framework extension point for tool plugins"""
+    
+    def validate_tool_params(self, params: Dict) -> bool:
+        """Framework-provided validation for all tools"""
+        return self._validate_required_params(params)
+    
+    async def execute_with_timeout(self, context, timeout=30):
+        """Framework-provided timeout wrapper for all tools"""
+        return await asyncio.wait_for(self.execute(context), timeout=timeout)
 
 class PromptPlugin(BasePlugin):
-    default_stages = [PipelineStage.PROMPT_PROCESSING]  # Main processing stage
+    """Organizational category + framework extension point for processing plugins"""
+    
+    def get_token_usage(self) -> int:
+        """Framework-provided token tracking for all prompt plugins"""
+        return getattr(self, '_token_count', 0)
 
 class AdapterPlugin(BasePlugin):
-    default_stages = [PipelineStage.INPUT_PROCESSING, PipelineStage.OUTPUT_PROCESSING]  # Interface boundaries
+    """Organizational category + framework extension point for input/output plugins"""
+    pass
 
 class FailurePlugin(BasePlugin):
-    default_stages = [PipelineStage.FAILURE]  # Dedicated error handling stage
+    """Organizational category + framework extension point for error handling plugins"""
+    pass
 ```
 
-#### **Explicit Stage Override for Multi-Stage Plugins**
+#### **Example Plugin Implementations**
 ```python
+class DatabaseResourcePlugin(ResourcePlugin):
+    stages = [PipelineStage.PARSE, PipelineStage.THINK, 
+             PipelineStage.DO, PipelineStage.REVIEW, 
+             PipelineStage.DELIVER, PipelineStage.ERROR]  # Available in all stages
+
+class WeatherToolPlugin(ToolPlugin):
+    stages = [PipelineStage.DO]  # Tools only execute in dedicated stage
+
+class ChainOfThoughtPlugin(PromptPlugin):
+    stages = [PipelineStage.THINK]  # Main processing stage
+
 class MemoryRetrievalPlugin(PromptPlugin):
-    # Override default - runs in multiple stages
-    stages = [PipelineStage.INPUT_PROCESSING, PipelineStage.PROMPT_PROCESSING]
+    stages = [PipelineStage.PARSE, PipelineStage.THINK]  # Multi-stage plugin
 
-class DebugLoggingPlugin(ResourcePlugin):
-    # Explicit override - runs in all stages for debugging
-    stages = [PipelineStage.INPUT_PROCESSING, PipelineStage.PROMPT_PREPROCESSING, 
-             PipelineStage.PROMPT_PROCESSING, PipelineStage.TOOL_EXECUTION, 
-             PipelineStage.OUTPUT_PROCESSING, PipelineStage.FAILURE]
+class HTTPAdapterPlugin(AdapterPlugin):
+    stages = [PipelineStage.PARSE, PipelineStage.DELIVER]  # Interface boundaries
 
-class ContextEnhancerPlugin(PromptPlugin):
-    # Override - only runs early in pipeline
-    stages = [PipelineStage.INPUT_PROCESSING]
+class ErrorFormatterPlugin(FailurePlugin):
+    stages = [PipelineStage.ERROR]  # Dedicated error handling stage
 ```
 
 #### **YAML Configuration Order = Execution Order**
@@ -243,7 +268,7 @@ Plugins execute within each stage in the **exact order** they appear in the YAML
 
 ```yaml
 prompts:
-  # Execution order within prompt_processing stage:
+  # Execution order within think stage:
   # 1. intent_classifier → 2. memory_retrieval → 3. chain_of_thought → 4. smart_coordinator
   intent_classifier:
     type: intent_classifier
@@ -252,8 +277,6 @@ prompts:
   memory_retrieval:
     type: memory_retrieval
     max_context_length: 4000
-    # This plugin runs in input_processing AND prompt_processing stages
-    stages: ["input_processing", "prompt_processing"]
   
   chain_of_thought:
     type: chain_of_thought
@@ -266,15 +289,50 @@ prompts:
 #### **Stage Registration Process**
 ```python
 def register_plugin_for_stages(plugin_instance, plugin_name):
-    """Register plugin for appropriate stages based on class definition"""
-    # Use explicit stages if defined, otherwise use class default
-    stages = getattr(plugin_instance.__class__, 'stages', plugin_instance.__class__.default_stages)
-    
-    for stage in stages:
+    """Register plugin for stages defined in plugin class"""
+    for stage in plugin_instance.stages:
         plugin_registry.register_plugin_for_stage(plugin_instance, stage, plugin_name)
 ```
 
 ## 🔧 Key Components
+
+### Stage Definitions
+
+#### **parse** - "Get ready to think"
+- Input validation, format conversion
+- Initial context setup
+- Memory/context retrieval (first pass)
+- Basic input sanitization
+
+#### **think** - "Reason and plan"
+- Intent classification and understanding
+- Multi-step reasoning (chain-of-thought, ReAct)
+- Planning tool usage and workflows
+- Memory retrieval during reasoning (second pass)
+- Decision making about actions
+
+#### **do** - "Execute actions"
+- Tool execution only
+- Handle tool failures and retries
+- Parse and validate tool results
+
+#### **review** - "Final processing and safety"
+- Generate responses and apply formatting
+- Privacy protection (PII scrubbing)
+- Content filtering and safety checks
+- Personality and tone adjustments
+- Response quality validation
+- Final security review
+
+#### **deliver** - "Send the response"
+- Pure output delivery (HTTP response, TTS, file write)
+- No content modification - just transmission
+- Handle delivery failures
+
+#### **error** - "Handle failures gracefully"
+- Convert technical errors to user-friendly messages
+- Log errors for debugging
+- Recovery strategies
 
 ### Error Handling and Failure Recovery
 
@@ -306,7 +364,7 @@ class PipelineContext:
         return self.current_stage == stage
     
     def add_failure(self, failure: FailureInfo):
-        """Add failure information and prepare for failure stage routing"""
+        """Add failure information and prepare for error stage routing"""
         self.failure_info = failure
         self.logger.error(
             "Pipeline failure detected",
@@ -319,16 +377,16 @@ class PipelineContext:
 ```
 
 #### **Error Handling Flow**
-1. **Plugin Failures**: Caught during stage execution, added to context, routed to failure stage
-2. **Tool Failures**: Captured in tool results, detected after tool execution, routed to failure stage  
-3. **System Failures**: Unexpected exceptions caught at pipeline level, routed to failure stage
-4. **Failure Stage**: Processes all failures through dedicated plugins for user communication
-5. **Static Fallback**: If failure stage plugins fail, return static error response
+1. **Plugin Failures**: Caught during stage execution, added to context, routed to error stage
+2. **Tool Failures**: Captured in tool results, detected after tool execution, routed to error stage  
+3. **System Failures**: Unexpected exceptions caught at pipeline level, routed to error stage
+4. **Error Stage**: Processes all failures through dedicated plugins for user communication
+5. **Static Fallback**: If error stage plugins fail, return static error response
 
 #### **Tool Retry Configuration**
 ```python
 class ToolPlugin(BasePlugin):
-    default_stages = [PipelineStage.TOOL_EXECUTION]
+    stages: List[PipelineStage]  # Must be explicitly defined
     
     def __init__(self, config: Dict):
         self.max_retries = config.get("max_retries", 1)  # Default sensible retry count
@@ -351,7 +409,7 @@ class ToolPlugin(BasePlugin):
 
 #### **Static Error Fallback**
 ```python
-# Used when failure stage plugins themselves fail
+# Used when error stage plugins themselves fail
 STATIC_ERROR_RESPONSE = {
     "error": "System error occurred",
     "message": "An unexpected error prevented processing your request. Please try again or contact support.",
@@ -361,7 +419,7 @@ STATIC_ERROR_RESPONSE = {
 }
 
 def create_static_error_response(pipeline_id: str) -> Dict[str, Any]:
-    """Create fallback error response when failure stage fails"""
+    """Create fallback error response when error stage fails"""
     response = STATIC_ERROR_RESPONSE.copy()
     response["error_id"] = pipeline_id
     response["timestamp"] = datetime.now().isoformat()
@@ -440,7 +498,7 @@ class PipelineContext:
         self.conversation.append(entry)
     
     def add_failure(self, failure: FailureInfo):
-        """Add failure information and prepare for failure stage routing"""
+        """Add failure information and prepare for error stage routing"""
         self.failure_info = failure
 ```
 
@@ -549,6 +607,7 @@ class ReconfigResult:
 
 class BasePlugin:
     dependencies = []  # List of registry keys that this plugin depends on
+    stages: List[PipelineStage]  # Always explicit, always required
     
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
@@ -559,17 +618,8 @@ class BasePlugin:
         - Values are correct types/formats
         - URLs are well-formed
         - Numeric ranges are valid
-        - Stage assignments (if provided)
         - No registry or cross-plugin concerns
         """
-        # Validate stages if explicitly provided
-        config_stages = config.get("stages", [])
-        if config_stages:
-            try:
-                [PipelineStage.from_str(stage) for stage in config_stages]
-            except ValueError as e:
-                return ValidationResult.error(f"Invalid stage configuration: {e}")
-        
         return ValidationResult(success=True)
     
     @classmethod
@@ -738,6 +788,10 @@ async def wait_for_pipeline_completion(timeout_seconds: int = 30):
 #### **Plugin Reconfiguration Examples**
 ```python
 class LLMResourcePlugin(ResourcePlugin):
+    stages = [PipelineStage.PARSE, PipelineStage.THINK, 
+             PipelineStage.DO, PipelineStage.REVIEW, 
+             PipelineStage.DELIVER, PipelineStage.ERROR]
+    
     def supports_runtime_reconfiguration(self) -> bool:
         return True  # Can change temperature, model parameters
     
@@ -756,6 +810,10 @@ class LLMResourcePlugin(ResourcePlugin):
         })
 
 class DatabaseResourcePlugin(ResourcePlugin):
+    stages = [PipelineStage.PARSE, PipelineStage.THINK, 
+             PipelineStage.DO, PipelineStage.REVIEW, 
+             PipelineStage.DELIVER, PipelineStage.ERROR]
+    
     def supports_runtime_reconfiguration(self) -> bool:
         return True  # Can change pool sizes, timeouts
     
@@ -770,6 +828,8 @@ class DatabaseResourcePlugin(ResourcePlugin):
             raise RuntimeError("Database host changes require application restart")
 
 class IntentClassifierPlugin(PromptPlugin):
+    stages = [PipelineStage.THINK]
+    
     def supports_runtime_reconfiguration(self) -> bool:
         return True  # Can change thresholds
     
@@ -815,7 +875,7 @@ class ConfigUpdateResult:
 - **Structured Tools**: Queue structured tool calls during any stage
 - **Structured LLM Access**: Any plugin can call the LLM resource with automatic observability via `self.call_llm()`
 - **Standardized Results**: Set and get standardized results with explicit dependencies
-- **Error Signaling**: Add failure information with `context.add_failure()` to route to failure stage
+- **Error Signaling**: Add failure information with `context.add_failure()` to route to error stage
 - **Tool Retry Logic**: Configure retry behavior for individual tools with `max_retries` and `retry_delay`
 - **Stage Awareness**: Access current execution stage with `context.get_current_stage()`
 
@@ -1046,7 +1106,6 @@ plugins:
       type: memory_retrieval
       max_context_length: 4000
       similarity_threshold: 0.7
-      stages: ["input_processing", "prompt_processing"]  # Multi-stage plugin
     
     intent_classifier:
       type: intent_classifier
@@ -1060,7 +1119,7 @@ plugins:
 - **Mix and Match**: Combine multiple prompt strategies
 - **Resource Flexibility**: Works with/without optional resources
 - **Easy Experimentation**: Swap plugins to test approaches
-- **Order Independent**: Plugin configuration order doesn't matter
+- **Explicit Configuration**: Clear understanding of plugin stage assignments
 
 ### For Developers  
 - **Plugin Ecosystem**: Share and discover community plugins
@@ -1078,9 +1137,10 @@ plugins:
 - **Easier Debugging**: Tool failures have clear location and context
 - **Simpler Testing**: Tool execution can be tested in isolation
 - **Fail-Fast Development**: Plugin failures caught early in development cycle
-- **Graceful Error Communication**: Dedicated failure stage for user-friendly error messages
+- **Graceful Error Communication**: Dedicated error stage for user-friendly error messages
 - **Reliable Fallback**: Static error responses ensure users always receive feedback
-- **Stage Awareness**: Explicit stage context for reliable plugin behavior
+- **Stage Awareness**: Explicit stage context enables reliable plugin behavior
+- **Framework Extension Points**: Base classes allow framework-wide capability additions
 
 ### For Operations
 - **Runtime Reconfiguration**: Update plugin configurations without restart for rapid development and tuning
@@ -1097,6 +1157,7 @@ plugins:
 ```python
 class ChainOfThoughtPlugin(PromptPlugin):
     dependencies = ["database", "logging", "ollama"]
+    stages = [PipelineStage.THINK]  # Explicit stage assignment
     
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
@@ -1150,7 +1211,7 @@ class ChainOfThoughtPlugin(PromptPlugin):
         context.set_stage_result("reasoning_steps", reasoning_steps)
         context.set_stage_result("needs_tools", self._needs_tools(reasoning_steps))
         
-        # Step 4: Queue tool calls if needed (executed later in tool_execution stage)
+        # Step 4: Queue tool calls if needed (executed later in do stage)
         if context.get_stage_result("needs_tools"):
             context.add_tool_call(ToolCall(
                 name="analysis_tool",
@@ -1177,6 +1238,7 @@ class ChainOfThoughtPlugin(PromptPlugin):
 class ReActPlugin(PromptPlugin):
     """Demonstrates stateful iteration for complex reasoning patterns"""
     dependencies = ["ollama"]
+    stages = [PipelineStage.THINK]  # Explicit stage assignment
     
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
@@ -1330,7 +1392,7 @@ class ReActPlugin(PromptPlugin):
 6. **Structured Communication**: Rich context object for plugin collaboration
 7. **Fail-Fast Validation**: All plugin dependencies validated statically before instantiation
 8. **Observable by Design**: Structured logging, metrics, and tracing built into every plugin
-9. **Order Independence**: Plugin configuration order doesn't matter - validation handles dependencies
+9. **Explicit Stage Assignment**: Plugin stages are always explicitly defined in the plugin class
 10. **Configuration Flexibility**: Multiple config formats (YAML, JSON, Dict) with secure env interpolation
 11. **Separation of Concerns**: Clear distinction between config validation and dependency validation
 12. **Load-Time Validation**: Validation should be done at load time, reducing runtime errors
@@ -1341,13 +1403,13 @@ class ReActPlugin(PromptPlugin):
 17. **Static Tool Registration**: Tools registered once at system initialization, not per-request
 18. **Centralized Tool Execution**: All tools execute at a single, well-defined stage for predictable debugging
 19. **Stateful Plugin Iteration**: Plugins manage internal state across pipeline iterations for complex reasoning patterns
-20. **Hybrid Stage Assignment**: Default stages via base classes with explicit override capability
-21. **YAML Execution Ordering**: Plugin execution order within stages determined by YAML configuration order
-22. **Fail-Fast Error Handling**: Plugin failures are caught early and routed to dedicated failure stage
-23. **Error Communication**: Technical failures are converted to user-friendly messages
-24. **Static Error Fallback**: Reliable fallback responses when error handling itself fails
-25. **Standardized Results**: Explicit result keys with no fallback mechanisms
-26. **Stage Awareness**: Explicit stage context enables reliable multi-stage plugin behavior
+20. **YAML Execution Ordering**: Plugin execution order within stages determined by YAML configuration order
+21. **Fail-Fast Error Handling**: Plugin failures are caught early and routed to dedicated error stage
+22. **Error Communication**: Technical failures are converted to user-friendly messages
+23. **Static Error Fallback**: Reliable fallback responses when error handling itself fails
+24. **Standardized Results**: Explicit result keys with no fallback mechanisms
+25. **Stage Awareness**: Explicit stage context enables reliable multi-stage plugin behavior
+26. **Framework Extension Points**: Base classes enable framework-wide capability additions without plugin changes
 
 ## 🌟 Real-World Usage
 
@@ -1369,7 +1431,7 @@ plugins:
       model: "llama3:8b"
 
   prompts:
-    # Execution order within prompt_processing stage:
+    # Execution order within think stage:
     # 1. intent_classifier → 2. smart_tool_coordinator
     intent_classifier:
       type: intent_classifier
@@ -1378,7 +1440,7 @@ plugins:
     smart_tool_coordinator:
       type: smart_tool_coordinator
 
-  # Failure handling plugins (minimal, discouraged)
+  # Error handling plugins (minimal, discouraged)
   failure:
     error_formatter:
       type: error_formatter
@@ -1415,13 +1477,12 @@ plugins:
 
   prompts:
     # Execution order within stages:
-    # input_processing: memory_retrieval
-    # prompt_processing: memory_retrieval → intent_classifier → chain_of_thought → smart_coordinator
+    # parse: memory_retrieval
+    # think: memory_retrieval → intent_classifier → chain_of_thought → smart_coordinator
     memory_retrieval:
-      type: memory_retrieval  # Runs in input_processing AND prompt_processing
+      type: memory_retrieval  # Runs in parse AND think
       max_context_length: 4000
       similarity_threshold: 0.7
-      stages: ["input_processing", "prompt_processing"]
     
     intent_classifier:
       type: intent_classifier
@@ -1468,7 +1529,9 @@ plugins:
 
 **Entity Pipeline Framework = Bevy for AI Agents**
 
-- **Three Plugin Types**: Resources (infrastructure), Tools (user functions), Prompts (processing)
+- **Five Plugin Types**: Resources (infrastructure), Tools (user functions), Prompts (processing), Adapters (input/output), Failure (error handling)
+- **Explicit Stage Assignment**: All plugins explicitly declare their execution stages
+- **Framework Extension Points**: Base classes enable framework-wide capabilities without plugin changes
 - **Infrastructure**: Clean separation between enabling vs performing
 - **Composable**: Mix and match capabilities via configuration  
 - **Testable**: Clean separation, easy mocking, isolated testing
@@ -1477,5 +1540,6 @@ plugins:
 - **Performance-Optimized**: Structured execution and parallel tool execution for better performance
 - **Linear Pipeline**: Simple, predictable execution flow with structured data
 - **Stage Awareness**: Explicit stage context for reliable plugin behavior
+- **Intuitive Mental Model**: `parse → think → do → review → deliver → error`
 
 **Result**: Build AI agents like assembling LEGO blocks - flexible, reusable, and fun! 🧩
