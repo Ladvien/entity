@@ -1,4 +1,6 @@
+# isort: off
 import asyncio
+import logging
 
 from pipeline import (
     FailurePlugin,
@@ -10,6 +12,9 @@ from pipeline import (
     ToolRegistry,
     execute_pipeline,
 )
+from pipeline.plugins.failure.basic_logger import BasicLogger
+
+# isort: on
 
 
 class FailPlugin(PromptPlugin):
@@ -37,14 +42,22 @@ class BadErrorPlugin(FailurePlugin):
 def make_registries(error_plugin):
     plugins = PluginRegistry()
     plugins.register_plugin_for_stage(FailPlugin({}), PipelineStage.DO)
+    plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR)
     plugins.register_plugin_for_stage(error_plugin({}), PipelineStage.ERROR)
     return SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
 
 
-def test_error_stage_execution():
+def test_error_stage_execution(caplog):
+    """Verify error plugins run and log failures."""
+    log_capture = caplog
+    log_capture.set_level(logging.ERROR)
     registries = make_registries(ErrorPlugin)
     result = asyncio.run(execute_pipeline("hi", registries))
     assert result == {"error": "boom"}
+    assert any(
+        "Pipeline failure encountered" in record.message
+        for record in log_capture.records
+    )
 
 
 def test_static_fallback_on_error_stage_failure():
