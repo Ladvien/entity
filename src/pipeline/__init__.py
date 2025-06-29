@@ -34,8 +34,7 @@ from .plugins import (
     ToolPlugin,
     ValidationResult,
 )
-from .registries import SystemRegistries
-from .registry import PluginRegistry, ResourceRegistry, ToolRegistry
+from .registries import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
 from .stages import PipelineStage
 from .state import FailureInfo, MetricsCollector, PipelineState
 
