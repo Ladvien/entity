@@ -158,7 +158,7 @@ class Agent:
                     and obj is not BasePlugin
                 ):
                     self.add_plugin(obj({}))
-                elif callable(obj):
+                elif callable(obj) and name.endswith("_plugin"):
                     self.plugin(obj)
             except Exception as exc:  # noqa: BLE001
                 logger.error(
