@@ -1,34 +1,14 @@
 from __future__ import annotations
 
-<<<<<<< HEAD
-from dataclasses import dataclass
-from datetime import datetime
-from typing import Any, Dict, List
-
-from .state import ConversationEntry, PipelineState, ToolCall
-=======
 import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
->>>>>>> c7b8e0ca4563f1fb9c781410e21cd0e9d18314fa
 from .stages import PipelineStage
 
 
 @dataclass
-<<<<<<< HEAD
-class SystemRegistries:
-    resources: "ResourceRegistry"
-    tools: "ToolRegistry"
-    plugins: "PluginRegistry"
-
-
-class PluginContext:
-    """Clean interface provided to plugins during execution."""
-
-    def __init__(self, state: PipelineState, registries: SystemRegistries):
-=======
 class ConversationEntry:
     content: str
     role: str
@@ -102,7 +82,6 @@ class PipelineState:
 
 class PluginContext:
     def __init__(self, state: PipelineState, registries: "SystemRegistries") -> None:
->>>>>>> c7b8e0ca4563f1fb9c781410e21cd0e9d18314fa
         self._state = state
         self._registries = registries
 
@@ -114,43 +93,17 @@ class PluginContext:
     def current_stage(self) -> PipelineStage:
         return self._state.current_stage
 
-<<<<<<< HEAD
-    # Resource access
-    def get_resource(self, name: str):
-        return self._registries.resources.get(name)
-
-    # Tool execution
-    def execute_tool(self, tool_name: str, params: Dict[str, Any], result_key: str | None = None) -> str:
-=======
     def get_resource(self, name: str) -> Any:
         return self._registries.resources.get(name)
 
     def execute_tool(
         self, tool_name: str, params: Dict[str, Any], result_key: Optional[str] = None
     ) -> str:
->>>>>>> c7b8e0ca4563f1fb9c781410e21cd0e9d18314fa
         tool = self._registries.tools.get(tool_name)
         if not tool:
             raise ValueError(f"Tool '{tool_name}' not found")
         if result_key is None:
             result_key = f"{tool_name}_result_{len(self._state.pending_tool_calls)}"
-<<<<<<< HEAD
-        call = ToolCall(name=tool_name, params=params, result_key=result_key, source="direct_execution")
-        self._state.pending_tool_calls.append(call)
-        return result_key
-
-    # Conversation access
-    def add_conversation_entry(self, content: str, role: str, metadata: Dict[str, Any] | None = None) -> None:
-        entry = ConversationEntry(content=content, role=role, timestamp=datetime.now(), metadata=metadata or {})
-        self._state.conversation.append(entry)
-
-    def get_conversation_history(self, last_n: int | None = None) -> List[ConversationEntry]:
-        if last_n is None:
-            return self._state.conversation.copy()
-        return self._state.conversation[-last_n:].copy()
-
-    # Response control
-=======
         self._state.pending_tool_calls.append(
             ToolCall(name=tool_name, params=params, result_key=result_key)
         )
@@ -175,7 +128,6 @@ class PluginContext:
             return list(self._state.conversation)
         return self._state.conversation[-last_n:]
 
->>>>>>> c7b8e0ca4563f1fb9c781410e21cd0e9d18314fa
     def set_response(self, response: Any) -> None:
         if self._state.response is not None:
             raise ValueError("Response already set")
@@ -184,10 +136,6 @@ class PluginContext:
     def has_response(self) -> bool:
         return self._state.response is not None
 
-<<<<<<< HEAD
-    # Stage results
-=======
->>>>>>> c7b8e0ca4563f1fb9c781410e21cd0e9d18314fa
     def set_stage_result(self, key: str, value: Any) -> None:
         if key in self._state.stage_results:
             raise ValueError(f"Stage result '{key}' already set")
@@ -201,21 +149,12 @@ class PluginContext:
     def has_stage_result(self, key: str) -> bool:
         return key in self._state.stage_results
 
-<<<<<<< HEAD
-    # Metadata
-=======
->>>>>>> c7b8e0ca4563f1fb9c781410e21cd0e9d18314fa
     def get_metadata(self, key: str, default: Any = None) -> Any:
         return self._state.metadata.get(key, default)
 
     def set_metadata(self, key: str, value: Any) -> None:
         self._state.metadata[key] = value
 
-<<<<<<< HEAD
-    # Error handling
-    def add_failure(self, failure: "FailureInfo") -> None:
-        self._state.failure_info = failure
-=======
     def add_failure(self, info: Any) -> None:
         self._state.failure_info = info
 
@@ -332,4 +271,3 @@ class SimpleContext(PluginContext):
     def contains(self, *keywords: str) -> bool:
         msg_lower = self.message.lower()
         return any(keyword.lower() in msg_lower for keyword in keywords)
->>>>>>> c7b8e0ca4563f1fb9c781410e21cd0e9d18314fa
