@@ -27,13 +27,15 @@ class Agent:
 
     async def handle(self, message: str) -> Any:
         await self._ensure_initialized()
-        assert self._registries is not None
+        if self._registries is None:
+            raise RuntimeError("System not initialized")
         return await execute_pipeline(message, self._registries)
 
     def run(self) -> None:
         async def _run() -> None:
             await self._ensure_initialized()
-            assert self._registries is not None
+            if self._registries is None:
+                raise RuntimeError("System not initialized")
             server_cfg = self.config.get("server", {})
             adapter = HttpAdapter(server_cfg)
             await adapter.serve(self._registries)
