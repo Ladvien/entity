@@ -204,21 +204,47 @@ class ResourcePlugin(BasePlugin):
         """Optional async initialization hook."""
         return None
 
+    async def health_check(self) -> bool:
+        """Return ``True`` if the resource is healthy."""
+        return True
+
+    def get_metrics(self) -> Dict[str, Any]:
+        """Return metrics about this resource."""
+        return {"status": "healthy"}
+
+
 
 class ToolPlugin(BasePlugin):
+    def __init__(self, config: Dict | None = None) -> None:
+        super().__init__(config)
+        self.max_retries = int(self.config.get("max_retries", 1))
+        self.retry_delay = float(self.config.get("retry_delay", 1.0))
+
     async def execute_function(self, params: Dict[str, Any]):
         raise NotImplementedError()
 
     async def execute_function_with_retry(
-        self, params: Dict[str, Any], max_retries: int = 1, delay: float = 1.0
+        self, params: Dict[str, Any],
+        max_retries: int | None = None,
+        delay: float | None = None,
     ):
-        for attempt in range(max_retries + 1):
+        max_r = self.max_retries if max_retries is None else max_retries
+        delay_v = self.retry_delay if delay is None else delay
+        for attempt in range(max_r + 1):
             try:
                 return await self.execute_function(params)
             except Exception:
-                if attempt == max_retries:
+                if attempt == max_r:
                     raise
-                await asyncio.sleep(delay)
+                await asyncio.sleep(delay_v)
+
+    def validate_tool_params(self, params: Dict[str, Any]) -> bool:
+        return True
+
+    async def execute_with_timeout(
+        self, context: PluginContext | SimpleContext, timeout: int = 30
+    ):
+        return await asyncio.wait_for(self.execute(context), timeout=timeout)
 
     async def _execute_impl(self, context: PluginContext | SimpleContext):
         """Tools are not executed in the pipeline directly."""
