@@ -206,12 +206,28 @@ class ResourcePlugin(BasePlugin):
 
 
 class ToolPlugin(BasePlugin):
+    """Base class for tool plugins executed outside the pipeline."""
+
+    required_params: List[str] = []
+
+    def _validate_required_params(self, params: Dict[str, Any]) -> bool:
+        """Ensure all :attr:`required_params` are present in ``params``."""
+        missing = [p for p in self.required_params if params.get(p) is None]
+        if missing:
+            raise ValueError(f"Missing required parameters: {', '.join(missing)}")
+        return True
+
+    def validate_tool_params(self, params: Dict[str, Any]) -> bool:
+        """Public hook for validating tool parameters."""
+        return self._validate_required_params(params)
+
     async def execute_function(self, params: Dict[str, Any]):
         raise NotImplementedError()
 
     async def execute_function_with_retry(
         self, params: Dict[str, Any], max_retries: int = 1, delay: float = 1.0
     ):
+        self.validate_tool_params(params)
         for attempt in range(max_retries + 1):
             try:
                 return await self.execute_function(params)
