@@ -1,0 +1,57 @@
+import asyncio
+
+from pipeline import (
+    PipelineStage,
+    PromptPlugin,
+    PluginRegistry,
+    update_plugin_configuration,
+    ValidationResult,
+)
+
+
+class TestReconfigPlugin(PromptPlugin):
+    stages = [PipelineStage.THINK]
+    name = "test_plugin"
+
+    async def _execute_impl(self, context):
+        pass
+
+    @classmethod
+    def validate_config(cls, config):
+        if "value" not in config:
+            return ValidationResult.error("missing value")
+        return ValidationResult.success()
+
+    async def _handle_reconfiguration(self, old_config, new_config):
+        self.updated_to = new_config["value"]
+
+
+def make_registry():
+    reg = PluginRegistry()
+    plugin = TestReconfigPlugin({"value": "one"})
+    reg.register_plugin_for_stage(plugin, PipelineStage.THINK)
+    return reg, plugin
+
+
+def test_update_plugin_configuration_success():
+    reg, plugin = make_registry()
+    result = asyncio.run(
+        update_plugin_configuration(reg, "test_plugin", {"value": "two"})
+    )
+    assert result.success
+    assert plugin.config["value"] == "two"
+    assert plugin.updated_to == "two"
+
+
+def test_update_plugin_configuration_restart_required():
+    class NRPlugin(TestReconfigPlugin):
+        def supports_runtime_reconfiguration(self) -> bool:
+            return False
+
+    reg = PluginRegistry()
+    p = NRPlugin({"value": "x"})
+    reg.register_plugin_for_stage(p, PipelineStage.THINK)
+    result = asyncio.run(
+        update_plugin_configuration(reg, "test_plugin", {"value": "y"})
+    )
+    assert not result.success and result.requires_restart
