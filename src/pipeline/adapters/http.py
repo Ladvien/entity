@@ -4,8 +4,9 @@ import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from ..pipeline import SystemRegistries, execute_pipeline
+from ..pipeline import execute_pipeline
 from ..plugins import AdapterPlugin
+from ..registries import SystemRegistries
 
 
 class MessageRequest(BaseModel):

@@ -19,7 +19,6 @@ from .initializer import (
 )
 from .manager import PipelineManager
 from .pipeline import (
-    SystemRegistries,
     create_default_response,
     create_static_error_response,
     execute_pending_tools,
@@ -38,6 +37,7 @@ from .plugins import (
     ToolPlugin,
     ValidationResult,
 )
+from .registries import SystemRegistries
 from .registry import PluginRegistry, ResourceRegistry, ToolRegistry
 from .stages import PipelineStage
 

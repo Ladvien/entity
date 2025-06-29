@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, Dict, List
 
 
@@ -34,3 +35,12 @@ class PluginRegistry:
 
     def get_for_stage(self, stage: Any) -> List[Any]:
         return self._plugins_by_stage.get(stage, [])
+
+
+@dataclass
+class SystemRegistries:
+    """Container for all runtime registries."""
+
+    resources: ResourceRegistry
+    tools: ToolRegistry
+    plugins: PluginRegistry

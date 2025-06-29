@@ -4,7 +4,7 @@ import asyncio
 from datetime import datetime
 from typing import Any, Dict, List, Optional, cast
 
-from .pipeline import SystemRegistries
+from .registries import SystemRegistries
 from .stages import PipelineStage
 from .state import (
     ConversationEntry,
