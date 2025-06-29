@@ -1,0 +1,54 @@
+server:
+  host: "0.0.0.0"
+  port: 80
+  reload: false
+  log_level: "info"
+
+plugins:
+  resources:
+    database:
+      type: postgres
+      host: "${DB_HOST}"
+      port: 5432
+      name: "memory"
+      username: "${DB_USERNAME}"
+      password: "${DB_PASSWORD}"
+      db_schema: "entity"
+      history_table: "chat_history"
+    ollama:
+      type: ollama_llm
+      base_url: "http://ollama:11434"
+      model: "llama3:8b-instruct-q6_K"
+      temperature: 0.7
+    logging:
+      type: structured_logging
+      level: "INFO"
+      file_enabled: true
+      file_path: "logs/entity.log"
+  tools:
+    weather:
+      type: weather_api
+      api_key: "${WEATHER_API_KEY}"
+      base_url: "https://api.weather.com"
+      timeout: 30
+    calculator:
+      type: calculator
+      precision: 10
+  adapters:
+    tts:
+      type: speech_synthesis
+      base_url: "http://tts:8888"
+      voice_name: "bf_emma"
+      output_format: "wav"
+  prompts:
+    chain_of_thought:
+      type: chain_of_thought
+      enable_reasoning: true
+      max_steps: 5
+    memory_retrieval:
+      type: memory_retrieval
+      max_context_length: 4000
+      similarity_threshold: 0.7
+    intent_classifier:
+      type: intent_classifier
+      confidence_threshold: 0.8
