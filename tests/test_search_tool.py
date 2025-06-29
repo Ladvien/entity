@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 from pipeline import (
@@ -8,6 +9,9 @@ from pipeline import (
     PluginContext,
     PluginRegistry,
     ResourceRegistry,
+    PluginRegistry,
+    ResourceRegistry,
+    SimpleContext,
     SystemRegistries,
     ToolRegistry,
 )
@@ -26,14 +30,16 @@ class FakeResponse:
 
 async def run_search():
     state = PipelineState(
-        conversation=[ConversationEntry(content="hi", role="user")],
+        conversation=[
+            ConversationEntry(content="hi", role="user", timestamp=datetime.now())
+        ],
         pipeline_id="1",
         metrics=MetricsCollector(),
     )
     tools = ToolRegistry()
     tools.add("search", SearchTool())
     registries = SystemRegistries(ResourceRegistry(), tools, PluginRegistry())
-    ctx = PluginContext(state, registries)
+    ctx = SimpleContext(state, registries)
     with patch("httpx.AsyncClient.get", new=AsyncMock(return_value=FakeResponse())):
         result = await ctx.use_tool("search", query="test")
     return result

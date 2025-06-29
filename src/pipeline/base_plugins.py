@@ -113,6 +113,8 @@ class BasePlugin(ABC):
             self.__class__.__name__, str(context.current_stage), purpose
         )
 
+        start = time.time()
+
         if hasattr(llm, "generate"):
             response = await llm.generate(prompt)
         else:
@@ -123,6 +125,10 @@ class BasePlugin(ABC):
                 response = await func(prompt)
             else:
                 response = func(prompt)
+
+        context._state.metrics.record_llm_duration(
+            self.__class__.__name__, str(context.current_stage), time.time() - start
+        )
 
         return LLMResponse(content=str(response))
 
