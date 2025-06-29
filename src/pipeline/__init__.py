@@ -1,3 +1,4 @@
+from .agent import Agent
 from .config_update import ConfigUpdateResult, update_plugin_configuration
 from .context import (
     ConversationEntry,
@@ -9,15 +10,18 @@ from .context import (
     SimpleContext,
     ToolCall,
 )
+from .http_adapter import HTTPAdapter
 from .initializer import (
     ClassRegistry,
     SystemInitializer,
     import_plugin_class,
     initialization_cleanup_context,
 )
+from .manager import PipelineManager
 from .pipeline import (
     SystemRegistries,
     create_default_response,
+    create_static_error_response,
     execute_pending_tools,
     execute_pipeline,
     execute_stage,
@@ -69,6 +73,10 @@ __all__ = [
     "execute_stage",
     "execute_pending_tools",
     "create_default_response",
+    "create_static_error_response",
     "ConfigUpdateResult",
     "update_plugin_configuration",
+    "Agent",
+    "PipelineManager",
+    "HTTPAdapter",
 ]
