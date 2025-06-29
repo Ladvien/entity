@@ -76,10 +76,7 @@ test = "pytest"
 test-verbose = "pytest -v"
 test-coverage = "pytest --cov=src --cov-report=html --cov-report=term-missing"
 
-[tool.poetry.scripts]
-entity = "src.client.terminal:cli"
 
-# Pytest configuration in pyproject.toml format
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
