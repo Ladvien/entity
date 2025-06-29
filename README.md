@@ -48,6 +48,13 @@ python examples/http_server.py
 python examples/pipeline_example.py
 ```
 
+### Command Line Usage
+Launch an agent from a YAML configuration file:
+
+```bash
+python src/cli.py --config path/to/config.yml
+```
+
 ### One-Liner Context Operations
 ```python
 @agent.plugin
