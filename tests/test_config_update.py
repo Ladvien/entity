@@ -1,7 +1,12 @@
 import asyncio
 
-from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      ValidationResult, update_plugin_configuration)
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    ValidationResult,
+    update_plugin_configuration,
+)
 
 
 class TestReconfigPlugin(PromptPlugin):

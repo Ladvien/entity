@@ -4,8 +4,7 @@ import tempfile
 
 import yaml
 
-from pipeline import (PipelineStage, PromptPlugin, ResourcePlugin,
-                      SystemInitializer)
+from pipeline import PipelineStage, PromptPlugin, ResourcePlugin, SystemInitializer
 
 
 class A(ResourcePlugin):
