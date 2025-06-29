@@ -19,7 +19,7 @@ repository = "https://github.com/Ladvien/entity"
 documentation = "https://entity.readthedocs.io/en/latest/"
 
 [tool.poetry.dependencies]
-python = "^3.13"
+python = "^3.11"
 pyyaml = "^6.0.2"
 rich = "^13.9.4"
 requests = "^2.32.4"

@@ -3,6 +3,8 @@
 ## 🎯 Vision
 A **pipeline-based plugin framework** for AI agents that processes requests through configurable stages, inspired by Bevy's plugin architecture. **Progressive disclosure design**: dead simple for beginners, infinitely powerful for experts.
 
+**Requires Python 3.11 or higher.**
+
 ## 🚀 The 15-Minute Experience (Layer 1: Dead Simple)
 
 ### Getting Started - Zero Config
