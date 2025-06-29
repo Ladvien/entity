@@ -61,10 +61,11 @@ python examples/pipeline_example.py
 ```
 
 ### Command Line Usage
-Launch an agent from a YAML configuration file:
+Launch an agent from a YAML configuration file. Example configurations are
+provided in `config/dev.yaml` and `config/prod.yaml`:
 
 ```bash
-python src/cli.py --config path/to/config.yml
+python src/cli.py --config config/dev.yaml
 ```
 
 ### One-Liner Context Operations
@@ -86,7 +87,12 @@ def smart_assistant(context):
 ```
 
 ### Instant Plugin Discovery
+The pipeline automatically registers plugin classes placed under
+`src/pipeline/plugins`. Simply create a new plugin class that inherits from the
+appropriate base class and it becomes available when the agent loads.
+
 ```python
+<<<<<< zu8b8u-codex/update-module-plugins-registration-and-tests
 # Framework auto-discovers plugins by naming convention
 # functions must end with `_plugin`
 # weather_plugin.py
@@ -100,6 +106,17 @@ def calculator_plugin(context):
 # Just drop files in plugins/ folder - they work automatically
 agent = Agent.from_directory("./plugins")  # Auto-loads everything
 # Import errors are logged and remaining plugins still load
+======
+from pipeline import PromptPlugin, PipelineStage
+
+class MyCustomPrompt(PromptPlugin):
+    stages = [PipelineStage.THINK]
+
+    async def _execute_impl(self, context):
+        return "Hello from my plugin"
+
+agent = Agent.from_package("pipeline.plugins")
+>>>>>> main
 agent.run()
 ```
 
@@ -1431,6 +1448,8 @@ def simple_reasoning(context):
     
     return "I've analyzed your request and I'm ready to help!"
 ```
+The following YAML mirrors the sample in `config/prod.yaml` and shows all plugin
+sections:
 ```yaml
 entity:
   entity_id: "jade"
