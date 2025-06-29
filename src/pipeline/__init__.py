@@ -1,3 +1,4 @@
+from .agent import Agent
 from .config_update import ConfigUpdateResult, update_plugin_configuration
 from .context import (
     ConversationEntry,
@@ -71,4 +72,5 @@ __all__ = [
     "create_default_response",
     "ConfigUpdateResult",
     "update_plugin_configuration",
+    "Agent",
 ]
