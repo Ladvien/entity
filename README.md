@@ -79,6 +79,7 @@ def calculator_plugin(context):
 
 # Just drop files in plugins/ folder - they work automatically
 agent = Agent.from_directory("./plugins")  # Auto-loads everything
+# Import errors are logged and remaining plugins still load
 agent.run()
 ```
 
