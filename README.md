@@ -35,6 +35,9 @@ def calculator(context):
 agent.run()  # Automatically starts server on localhost:8000
 ```
 
+The default setup registers a simple `CalculatorTool` and an `EchoLLMResource`,
+so the example above works without any configuration files.
+
 ### One-Liner Context Operations
 ```python
 @agent.plugin
