@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+import importlib.util
 import inspect
 import json
-import importlib.util
 import sys
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, HTTPServer

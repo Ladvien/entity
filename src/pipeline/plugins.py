@@ -7,7 +7,10 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Type, TypeVar
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar
+
+if TYPE_CHECKING:  # pragma: no cover - used for type hints only
+    from .registry import ClassRegistry
 
 import yaml
 
@@ -213,7 +216,6 @@ class ResourcePlugin(BasePlugin):
         return {"status": "healthy"}
 
 
-
 class ToolPlugin(BasePlugin):
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
@@ -224,19 +226,20 @@ class ToolPlugin(BasePlugin):
         raise NotImplementedError()
 
     async def execute_function_with_retry(
-        self, params: Dict[str, Any],
+        self,
+        params: Dict[str, Any],
         max_retries: int | None = None,
         delay: float | None = None,
     ):
-        max_r = self.max_retries if max_retries is None else max_retries
-        delay_v = self.retry_delay if delay is None else delay
-        for attempt in range(max_r + 1):
+        max_retry_count = self.max_retries if max_retries is None else max_retries
+        retry_delay_seconds = self.retry_delay if delay is None else delay
+        for attempt in range(max_retry_count + 1):
             try:
                 return await self.execute_function(params)
             except Exception:
-                if attempt == max_r:
+                if attempt == max_retry_count:
                     raise
-                await asyncio.sleep(delay_v)
+                await asyncio.sleep(retry_delay_seconds)
 
     def validate_tool_params(self, params: Dict[str, Any]) -> bool:
         return True
