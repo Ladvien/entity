@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List
 
 from .pipeline import execute_pending_tools
+from .pipeline_manager import PipelineManager
 from .plugins import BasePlugin
 from .registry import PluginRegistry
 
@@ -31,12 +32,12 @@ class ConfigUpdateResult:
 
 
 async def wait_for_pipeline_completion(
-    pipeline_manager=None, timeout_seconds: int = 30
+    pipeline_manager: PipelineManager | None = None, timeout_seconds: int = 30
 ):
     start = time.time()
     if pipeline_manager is None:
         return
-    while pipeline_manager.has_active_pipelines():
+    while await pipeline_manager.has_active_pipelines():
         if time.time() - start > timeout_seconds:
             raise TimeoutError("Timeout waiting for pipelines to complete")
         await asyncio.sleep(0.1)
@@ -46,7 +47,7 @@ async def update_plugin_configuration(
     plugin_registry: PluginRegistry,
     plugin_name: str,
     new_config: Dict,
-    pipeline_manager=None,
+    pipeline_manager: PipelineManager | None = None,
 ) -> ConfigUpdateResult:
     await wait_for_pipeline_completion(pipeline_manager)
     plugin_instance = next(
