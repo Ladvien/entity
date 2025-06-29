@@ -44,8 +44,13 @@ class ReActPrompt(PromptPlugin):
                 f'Based on my thought: "{thought.content}"\n'
                 "Should I:\n1. Take an action (specify: search, calculate, etc.)\n"
                 "2. Give a final answer\n\n"
+<<<<<< dhvmir-codex/remove-or-refactor-old-plugin-directories
+                'Respond with either "Action: <action_name> <parameters>" or '
+                '"Final Answer: <answer>"'
+======
                 'Respond with either "Action: <action_name> <parameters>" '
                 'or "Final Answer: <answer>"'
+>>>>>> main
             )
             action_decision = await self.call_llm(
                 context, action_prompt, purpose=f"react_action_step_{step}"
