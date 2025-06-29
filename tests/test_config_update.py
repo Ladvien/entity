@@ -1,9 +1,17 @@
 import asyncio
 
-from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
-                      PromptPlugin, ResourceRegistry, SystemRegistries,
-                      ToolRegistry, ValidationResult, execute_pipeline,
-                      update_plugin_configuration)
+from pipeline import (
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    ResourceRegistry,
+    SystemRegistries,
+    ToolRegistry,
+    ValidationResult,
+    execute_pipeline,
+    update_plugin_configuration,
+)
 
 
 class TestReconfigPlugin(PromptPlugin):
@@ -16,8 +24,8 @@ class TestReconfigPlugin(PromptPlugin):
     @classmethod
     def validate_config(cls, config):
         if "value" not in config:
-            return ValidationResult.error("missing value")
-        return ValidationResult.success()
+            return ValidationResult.error_result("missing value")
+        return ValidationResult.success_result()
 
     async def _handle_reconfiguration(self, old_config, new_config):
         self.updated_to = new_config["value"]

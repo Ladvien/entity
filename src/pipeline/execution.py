@@ -2,12 +2,22 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, cast
 
+<<<<<<< HEAD
 from .context import PluginContext, SystemRegistries
+=======
+from .context import PluginContext
+from .registries import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
+>>>>>>> 346eeb378c849154625acfe74df5c293057eca04
 from .stages import PipelineStage
-from .state import (ConversationEntry, FailureInfo, MetricsCollector,
-                    PipelineState, ToolCall)
+from .state import (
+    ConversationEntry,
+    FailureInfo,
+    MetricsCollector,
+    PipelineState,
+    ToolCall,
+)
 
 
 async def execute_pipeline(request: Any, registries: SystemRegistries) -> Any:
@@ -97,6 +107,7 @@ async def execute_pending_tools(
         if not tool:
             results[call] = f"Unknown tool: {call.name}"
             continue
+        tool = cast(Any, tool)
         try:
             if hasattr(tool, "execute_function_with_retry"):
                 result = await tool.execute_function_with_retry(call.params)

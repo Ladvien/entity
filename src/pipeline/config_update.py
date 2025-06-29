@@ -5,7 +5,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Dict, List
 
-from .pipeline_manager import PipelineManager
+from .manager import PipelineManager
 from .registry import PluginRegistry
 
 
@@ -17,11 +17,13 @@ class ConfigUpdateResult:
     updated_plugins: List[str] = field(default_factory=list)
 
     @classmethod
-    def success(cls, updated_plugins: List[str] | None = None) -> "ConfigUpdateResult":
+    def success_result(
+        cls, updated_plugins: List[str] | None = None
+    ) -> "ConfigUpdateResult":
         return cls(True, updated_plugins=updated_plugins or [])
 
     @classmethod
-    def failure(cls, msg: str) -> "ConfigUpdateResult":
+    def failure_result(cls, msg: str) -> "ConfigUpdateResult":
         return cls(False, error_message=msg)
 
     @classmethod
@@ -57,11 +59,11 @@ async def update_plugin_configuration(
         None,
     )
     if not plugin_instance:
-        return ConfigUpdateResult.failure(f"Plugin {plugin_name} not found")
+        return ConfigUpdateResult.failure_result(f"Plugin {plugin_name} not found")
 
     validation_result = plugin_instance.validate_config(new_config)
     if not validation_result.success:
-        return ConfigUpdateResult.failure(
+        return ConfigUpdateResult.failure_result(
             f"Validation failed: {validation_result.error_message}"
         )
 
@@ -69,8 +71,10 @@ async def update_plugin_configuration(
     reconfig_result = await plugin_instance.reconfigure(new_config)
     if not reconfig_result.success:
         if reconfig_result.requires_restart:
-            return ConfigUpdateResult.restart_required(reconfig_result.error_message)
-        return ConfigUpdateResult.failure(reconfig_result.error_message)
+            return ConfigUpdateResult.restart_required(
+                reconfig_result.error_message or ""
+            )
+        return ConfigUpdateResult.failure_result(reconfig_result.error_message or "")
 
     updated = [plugin_name]
 
@@ -84,9 +88,9 @@ async def update_plugin_configuration(
                     dependent, "name", dependent.__class__.__name__
                 )
                 msg = f"Dependency cascade failed for plugin: {plugin_name_str}"
-                return ConfigUpdateResult.failure(msg)
+                return ConfigUpdateResult.failure_result(msg)
             updated.append(plugin_registry.get_plugin_name(dependent))
         except Exception as e:
-            return ConfigUpdateResult.failure(str(e))
+            return ConfigUpdateResult.failure_result(str(e))
 
-    return ConfigUpdateResult.success(updated)
+    return ConfigUpdateResult.success_result(updated)

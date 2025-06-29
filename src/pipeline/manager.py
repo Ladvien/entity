@@ -3,7 +3,8 @@ from __future__ import annotations
 import asyncio
 from typing import Dict, Optional, Set
 
-from .pipeline import SystemRegistries, execute_pipeline
+from .pipeline import execute_pipeline
+from .registries import SystemRegistries
 
 
 class PipelineManager:

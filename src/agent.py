@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 import yaml
 
-from pipeline import SystemInitializer, execute_pipeline
+from pipeline import SystemInitializer, SystemRegistries, execute_pipeline
 from pipeline.adapters.http import HttpAdapter
 
 
@@ -18,19 +19,21 @@ class Agent:
         else:
             self.config = config or {}
         self.initializer = SystemInitializer(self.config)
-        self._registries = None
+        self._registries: SystemRegistries | None = None
 
     async def _ensure_initialized(self) -> None:
         if self._registries is None:
             self._registries = await self.initializer.initialize()
 
-    async def handle(self, message: str):
+    async def handle(self, message: str) -> Any:
         await self._ensure_initialized()
+        assert self._registries is not None
         return await execute_pipeline(message, self._registries)
 
     def run(self) -> None:
         async def _run() -> None:
             await self._ensure_initialized()
+            assert self._registries is not None
             server_cfg = self.config.get("server", {})
             adapter = HttpAdapter(server_cfg)
             await adapter.serve(self._registries)

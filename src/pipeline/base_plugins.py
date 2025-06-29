@@ -7,14 +7,19 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+<<<<<<< HEAD:src/pipeline/plugins.py
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .registry import ClassRegistry
+=======
+from typing import Any, Dict, List, Optional, Type, TypeVar, cast
+>>>>>>> 346eeb378c849154625acfe74df5c293057eca04:src/pipeline/base_plugins.py
 
 import yaml
 
 from .context import LLMResponse, PluginContext, SimpleContext
+from .initializer import ClassRegistry
 from .stages import PipelineStage
 
 logger = logging.getLogger(__name__)
@@ -29,11 +34,11 @@ class ValidationResult:
     warnings: List[str] = field(default_factory=list)
 
     @classmethod
-    def success(cls) -> "ValidationResult":
+    def success_result(cls) -> "ValidationResult":
         return cls(True)
 
     @classmethod
-    def error(cls, message: str) -> "ValidationResult":
+    def error_result(cls, message: str) -> "ValidationResult":
         return cls(False, error_message=message)
 
 
@@ -113,6 +118,8 @@ class BasePlugin(ABC):
             response = await llm.generate(prompt)
         else:
             func = getattr(llm, "__call__", None)
+            if func is None:
+                raise RuntimeError("LLM resource is not callable")
             if asyncio.iscoroutinefunction(func):
                 response = await func(prompt)
             else:
@@ -123,13 +130,13 @@ class BasePlugin(ABC):
     # --- Validation & Reconfiguration ---
     @classmethod
     def validate_config(cls: Type[Self], config: Dict) -> ValidationResult:
-        return ValidationResult.success()
+        return ValidationResult.success_result()
 
     @classmethod
     def validate_dependencies(
         cls: Type[Self], registry: "ClassRegistry"
     ) -> ValidationResult:
-        return ValidationResult.success()
+        return ValidationResult.success_result()
 
     def supports_runtime_reconfiguration(self) -> bool:
         return True
@@ -325,22 +332,23 @@ class PluginAutoClassifier:
         except OSError:
             source = ""
 
+        base: type[BasePlugin]
         if any(k in source for k in ["think", "reason", "analyze"]):
             stage = PipelineStage.THINK
-            base = PromptPlugin
+            base = cast(type[BasePlugin], PromptPlugin)
         elif any(k in source for k in ["parse", "validate", "check"]):
             stage = PipelineStage.PARSE
-            base = AdapterPlugin
+            base = cast(type[BasePlugin], AdapterPlugin)
         elif any(k in source for k in ["return", "response", "answer"]):
             stage = PipelineStage.DO
             base = (
-                ToolPlugin
+                cast(type[BasePlugin], ToolPlugin)
                 if any(x in source for x in ["use_tool", "execute_tool", "tool"])
-                else PromptPlugin
+                else cast(type[BasePlugin], PromptPlugin)
             )
         else:
             stage = PipelineStage.DO
-            base = ToolPlugin
+            base = cast(type[BasePlugin], ToolPlugin)
 
         if "stage" in hints:
             stage = PipelineStage.from_str(str(hints["stage"]))

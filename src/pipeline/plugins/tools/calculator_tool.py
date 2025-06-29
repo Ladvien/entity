@@ -3,8 +3,8 @@ from __future__ import annotations
 import ast
 from typing import Any, Dict
 
-from ..plugins import ToolPlugin
-from ..stages import PipelineStage
+from pipeline.plugins import ToolPlugin
+from pipeline.stages import PipelineStage
 
 
 class SafeEvaluator:
@@ -72,10 +72,14 @@ class CalculatorTool(ToolPlugin):
     stages = [PipelineStage.DO]
     _evaluator = SafeEvaluator()
 
-    async def execute_function(self, params: Dict[str, Any]):
+    async def execute_function(self, params: Dict[str, Any]) -> Any:
         expression = params.get("expression")
         if not expression:
             raise ValueError("'expression' parameter is required")
+<<<<<<< HEAD
+=======
+        allowed_names: Dict[str, Dict[str, Any]] = {"__builtins__": {}}
+>>>>>>> 346eeb378c849154625acfe74df5c293057eca04
         try:
 
           

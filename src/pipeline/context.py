@@ -1,90 +1,30 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass, field
 from datetime import datetime
+<<<<<<< HEAD
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:  # pragma: no cover - used for type checking only
     from .pipeline import SystemRegistries
+=======
+from typing import Any, Dict, List, Optional, cast
+>>>>>>> 346eeb378c849154625acfe74df5c293057eca04
 
+from .registries import SystemRegistries
 from .stages import PipelineStage
-
-
-@dataclass
-class ConversationEntry:
-    content: str
-    role: str
-    timestamp: datetime
-    metadata: Dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass
-class ToolCall:
-    name: str
-    params: Dict[str, Any]
-    result_key: str
-    source: str = "direct_execution"
-
-
-@dataclass
-class LLMResponse:
-    content: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass
-class FailureInfo:
-    stage: str
-    plugin_name: str
-    error_type: str
-    error_message: str
-    original_exception: Exception
-    context_snapshot: Dict[str, Any] | None = None
-    timestamp: datetime = field(default_factory=datetime.now)
-
-
-class MetricsCollector:
-    def __init__(self) -> None:
-        self.metrics: Dict[str, Any] = {}
-
-    def record_plugin_duration(self, plugin: str, stage: str, duration: float) -> None:
-        key = f"plugin_duration.{plugin}.{stage}"
-        self.metrics[key] = duration
-
-    def record_tool_execution(
-        self, tool_name: str, stage: str, pipeline_id: str, result_key: str, source: str
-    ) -> None:
-        key = f"tool_exec.{tool_name}.{stage}.{pipeline_id}"
-        self.metrics[key] = {"result_key": result_key, "source": source}
-
-    def record_tool_error(
-        self, tool_name: str, stage: str, pipeline_id: str, error: str
-    ) -> None:
-        key = f"tool_error.{tool_name}.{stage}.{pipeline_id}"
-        self.metrics[key] = error
-
-    def record_llm_call(self, plugin: str, stage: str, purpose: str) -> None:
-        key = f"llm_call.{plugin}.{stage}.{purpose}"
-        self.metrics[key] = self.metrics.get(key, 0) + 1
-
-
-@dataclass
-class PipelineState:
-    conversation: List[ConversationEntry]
-    response: Any = None
-    prompt: str = ""
-    stage_results: Dict[str, Any] = field(default_factory=dict)
-    pending_tool_calls: List[ToolCall] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    pipeline_id: str = ""
-    current_stage: Optional[PipelineStage] = None
-    metrics: MetricsCollector = field(default_factory=MetricsCollector)
-    failure_info: Optional[FailureInfo] = None
+from .state import (
+    ConversationEntry,
+    FailureInfo,
+    LLMResponse,
+    MetricsCollector,
+    PipelineState,
+    ToolCall,
+)
 
 
 class PluginContext:
-    def __init__(self, state: PipelineState, registries: "SystemRegistries") -> None:
+    def __init__(self, state: PipelineState, registries: SystemRegistries) -> None:
         self._state = state
         self._registries = registries
 
@@ -93,7 +33,7 @@ class PluginContext:
         return self._state.pipeline_id
 
     @property
-    def current_stage(self) -> PipelineStage:
+    def current_stage(self) -> Optional[PipelineStage]:
         return self._state.current_stage
 
     def get_resource(self, name: str) -> Any:
@@ -216,6 +156,7 @@ class SimpleContext(PluginContext):
                 self.set_stage_result(call.result_key, result)
                 self._state.pending_tool_calls.remove(call)
                 return result
+            tool = cast(Any, tool)
             try:
                 if hasattr(tool, "execute_function_with_retry"):
                     result = await tool.execute_function_with_retry(call.params)
@@ -223,6 +164,8 @@ class SimpleContext(PluginContext):
                     result = await tool.execute_function(call.params)
                 else:
                     func = getattr(tool, "run", None)
+                    if func is None:
+                        raise RuntimeError("Tool lacks execution method")
                     if asyncio.iscoroutinefunction(func):
                         result = await func(call.params)
                     else:
@@ -256,6 +199,8 @@ class SimpleContext(PluginContext):
             response = await llm.generate(prompt)
         else:
             func = getattr(llm, "__call__", None)
+            if func is None:
+                raise RuntimeError("LLM resource is not callable")
             if asyncio.iscoroutinefunction(func):
                 response = await func(prompt)
             else:

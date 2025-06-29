@@ -4,8 +4,13 @@ import os
 import pytest
 import yaml
 
-from pipeline import (PipelineStage, PromptPlugin, ResourcePlugin,
-                      SystemInitializer, ValidationResult)
+from pipeline import (
+    PipelineStage,
+    PromptPlugin,
+    ResourcePlugin,
+    SystemInitializer,
+    ValidationResult,
+)
 
 
 class A(ResourcePlugin):
@@ -42,8 +47,8 @@ class D(PromptPlugin):
     @classmethod
     def validate_dependencies(cls, registry):
         if not registry.has_plugin("a"):
-            return ValidationResult.error("missing dependency 'a'")
-        return ValidationResult.success()
+            return ValidationResult.error_result("missing dependency 'a'")
+        return ValidationResult.success_result()
 
     async def _execute_impl(self, context):
         pass

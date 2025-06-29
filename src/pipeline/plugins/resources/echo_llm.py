@@ -1,7 +1,14 @@
 from __future__ import annotations
 
+<<<<<<< HEAD
 from ..plugins import ResourcePlugin
 from ..stages import PipelineStage
+=======
+from typing import Any
+
+from pipeline.plugins import ResourcePlugin
+from pipeline.stages import PipelineStage
+>>>>>>> 346eeb378c849154625acfe74df5c293057eca04
 
 
 class EchoLLMResource(ResourcePlugin):
