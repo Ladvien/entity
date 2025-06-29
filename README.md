@@ -1191,8 +1191,8 @@ class SystemInitializer:
     def _validate_dependency_graph(self, registry, dep_graph: Dict[str, List[str]]):
         """Validate dependency graph: check existence and detect circular dependencies"""
         # Check all dependencies exist
-        for plugin_name, deps in dep_graph.items():
-            for dep in deps:
+        for plugin_name, dependencies in dep_graph.items():
+            for dep in dependencies:
                 if not registry.has_plugin(dep):
                     available = registry.list_plugins()
                     raise SystemError(f"Plugin '{plugin_name}' requires '{dep}' but it's not registered. Available: {available}")
