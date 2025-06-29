@@ -1,8 +1,9 @@
+import asyncio
 from datetime import datetime
 
 from pipeline import (
     ConversationEntry,
-    MetricsCollector,
+    LLMResponse,
     PipelineState,
     PluginRegistry,
     ResourceRegistry,
@@ -10,35 +11,6 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-
-
-def make_context():
-    state = PipelineState(
-        conversation=[
-            ConversationEntry(content="hi", role="user", timestamp=datetime.now())
-        ],
-        pipeline_id="test",
-        metrics=MetricsCollector(),
-    )
-    regs = SystemRegistries(ResourceRegistry(), ToolRegistry(), PluginRegistry())
-    return SimpleContext(state, regs)
-
-
-def test_simple_context_methods():
-    ctx = make_context()
-    ctx.say("hello")
-    assert ctx._state.response == "hello"
-
-    ctx.remember("foo", "bar")
-    assert ctx.recall("foo") == "bar"
-    assert ctx.recall("missing", 1) == 1
-
-import asyncio
-from datetime import datetime
-
-from pipeline import (ConversationEntry, LLMResponse, PipelineState,
-                      PluginRegistry, ResourceRegistry, SimpleContext,
-                      SystemRegistries, ToolRegistry)
 
 
 class EchoLLM:
@@ -61,6 +33,16 @@ def make_context(message: str = "hi", **metadata):
     )
     registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), PluginRegistry())
     return state, SimpleContext(state, registries)
+
+
+def test_simple_context_methods():
+    state, ctx = make_context()
+    ctx.say("hello")
+    assert state.response == "hello"
+
+    ctx.remember("foo", "bar")
+    assert ctx.recall("foo") == "bar"
+    assert ctx.recall("missing", 1) == 1
 
 
 def test_think_adds_entry():
