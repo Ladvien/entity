@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "listening_neuron"
+project = "entity"
 copyright = "2025, C. Thomas Brittain"
 author = "C. Thomas Brittain"
 release = "0.0.29"
@@ -37,5 +37,5 @@ html_theme = "furo"
 html_static_path = ["_static"]
 
 # https://sphinx-autoapi.readthedocs.io/en/latest/reference/config.html
-# autoapi_dirs = ['../../listening_neuron']
-autodoc2_packages = ["../../listening_neuron"]
+# autoapi_dirs = ['../../entity']
+autodoc2_packages = ["../../entity"]
