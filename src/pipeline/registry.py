@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Dict, List, Iterable, Tuple
+from typing import Dict, Iterable, List, Tuple
 
-from .stages import PipelineStage
 from .plugins import BasePlugin
+from .stages import PipelineStage
 
 
 class PluginRegistry:

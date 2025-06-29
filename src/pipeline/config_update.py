@@ -5,9 +5,9 @@ import time
 from dataclasses import dataclass, field
 from typing import Dict, List
 
+from .pipeline import execute_pending_tools
 from .plugins import BasePlugin
 from .registry import PluginRegistry
-from .pipeline import execute_pending_tools
 
 
 @dataclass
