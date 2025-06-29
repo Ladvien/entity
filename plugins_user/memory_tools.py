@@ -3,6 +3,7 @@ from typing import Optional
 from pydantic import BaseModel, Field
 from src.plugins.base import BaseToolPlugin
 from src.shared.models import ChatInteraction
+from src.core.registry import ServiceRegistry
 from math import tanh
 
 
@@ -39,12 +40,32 @@ class MemorySearchTool(BaseToolPlugin):
         return {"query": user_input, "thread_id": thread_id}
 
     async def run(self, input_data: MemorySearchInput):
-        # Set tool_used flag to True when tool is invoked
         self.tool_used = True
         self.description = f"Searches stored memories. Tool used: {self.tool_used}"
 
-        # Simulate memory search logic
-        return f"Search results for: {input_data.query}"
+        memory_system = ServiceRegistry.try_get("memory_system") if self.use_registry else None
+        if not memory_system:
+            if self.use_registry:
+                return "Memory system not available"
+            return f"Search results for: {input_data.query}"
+
+        results = await memory_system.search_memory(
+            query=input_data.query,
+            thread_id=input_data.thread_id,
+            k=input_data.limit,
+        )
+
+        if not results:
+            return f"No memories found for query: '{input_data.query}'"
+
+        lines = [f"Found {len(results)} memories:"]
+        for doc in results:
+            content = getattr(doc, "page_content", str(doc))
+            meta = getattr(doc, "metadata", {})
+            importance = meta.get("importance_score")
+            lines.append(f"{content} (importance: {importance})")
+
+        return "\n".join(lines)
 
 
 class StoreMemoryTool(BaseToolPlugin):
@@ -63,18 +84,20 @@ class StoreMemoryTool(BaseToolPlugin):
         }
 
     async def run(self, input_data: StoreMemoryInput):
-        # Set tool_used flag to True when tool is invoked
         self.tool_used = True
         self.description = f"Stores a memory entry. Tool used: {self.tool_used}"
 
-        # Simulate storing memory
+        memory_system = ServiceRegistry.try_get("memory_system") if self.use_registry else None
         raw_score = input_data.importance_score
         normalized_score = (
-            raw_score
-            if 0.0 <= raw_score <= 1.0
-            else max(0.0, min(1.0, tanh(raw_score)))
+            raw_score if 0.0 <= raw_score <= 1.0 else max(0.0, min(1.0, tanh(raw_score)))
         )
-        # Simulate saving interaction to memory system
+
+        if not memory_system:
+            if self.use_registry:
+                return "Memory system not available"
+            return f"Memory stored with importance: {normalized_score:.2f}"
+
         interaction = ChatInteraction(
             thread_id=input_data.thread_id,
             timestamp=datetime.utcnow(),
@@ -88,4 +111,15 @@ class StoreMemoryTool(BaseToolPlugin):
                 "source": "manual_storage",
             },
         )
-        return f"Memory stored with importance: {normalized_score:.2f}"
+
+        try:
+            await memory_system.add_memory(
+                content=input_data.content,
+                thread_id=input_data.thread_id,
+                memory_type=input_data.memory_type,
+                importance_score=normalized_score,
+            )
+        except Exception as e:
+            return f"[Error] Failed to store memory: {e}"
+
+        return f"Memory stored successfully: {input_data.content}"
