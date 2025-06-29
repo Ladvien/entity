@@ -181,6 +181,10 @@ class SimpleContext(PluginContext):
         if llm is None:
             raise RuntimeError("LLM resource 'ollama' not available")
 
+        self._state.metrics.record_llm_call(
+            "SimpleContext", str(self.current_stage), "ask_llm"
+        )
+
         if hasattr(llm, "generate"):
             response = await llm.generate(prompt)
         else:
