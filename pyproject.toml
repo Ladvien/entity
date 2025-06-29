@@ -9,7 +9,6 @@ package-mode = true
 
 packages = [
     { include = "src", from = "." },
-    { include = "examples", from = "." },
 ]
 
 
