@@ -1511,6 +1511,54 @@ plugins:
       confidence_threshold: 0.8
 ```
 
+### Plugin Configuration Examples
+
+#### WeatherApiTool
+Queries an external weather service. Defaults assume `https://api.weather.com`
+with a 30 second timeout and automatic retries.
+
+```yaml
+plugins:
+  tools:
+    weather:
+      type: weather_api
+      api_key: "${WEATHER_API_KEY}"
+      base_url: "https://api.weather.com"
+      timeout: 30
+      max_retries: 3
+      retry_delay: 2.0
+```
+
+#### StructuredLogging
+Captures logs as JSON and rotates files when they exceed 10 MB. Logging is
+enabled by default at the `DEBUG` level.
+
+```yaml
+plugins:
+  resources:
+    logging:
+      type: structured_logging
+      level: "DEBUG"
+      format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+      file_enabled: true
+      file_path: "logs/entity.log"
+      max_file_size: 10485760
+      backup_count: 5
+```
+
+#### MemoryRetrievalPrompt
+Injects relevant history into prompts. By default it retrieves up to 4000
+characters and uses a similarity threshold of 0.7.
+
+```yaml
+plugins:
+  prompts:
+    memory_retrieval:
+      type: memory_retrieval
+      max_context_length: 4000
+      similarity_threshold: 0.7
+```
+
 #### **Zero-Config Getting Started**
 ```python
 # This just works out of the box
