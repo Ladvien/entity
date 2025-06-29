@@ -1,6 +1,7 @@
 import asyncio
 
-from pipeline import Agent, PipelineStage
+from entity import Agent
+from pipeline import PipelineStage
 
 
 def test_agent_plugin_autoclassification():
