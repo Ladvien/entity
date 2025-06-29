@@ -41,17 +41,26 @@ class ReActPrompt(PromptPlugin):
             )
 
             action_prompt = (
-                f'Based on my thought: "{thought.content}"\n\n'
+                f'Based on my thought: "{thought.content}"\n'
                 "Should I:\n1. Take an action (specify: search, calculate, etc.)\n"
                 "2. Give a final answer\n\n"
-<<<<<< codex/add-subcommand-to-reload-config
-                "Respond with either "
-                '"Action: <action_name> <parameters>" '
-                'or "Final Answer: <answer>"'
-======
+<<<<< xb4ohw-codex/create-config-directory-and-example-configs
                 'Respond with either "Action: <action_name> <parameters>" or '
                 '"Final Answer: <answer>"'
->>>>>> main
+=====
+<<<<< codex/create-config-directory-and-example-configs
+                'Respond with either "Action: <action_name> <parameters>" or '
+                '"Final Answer: <answer>"'
+=====
+<<<< dhvmir-codex/remove-or-refactor-old-plugin-directories
+                'Respond with either "Action: <action_name> <parameters>" or '
+                '"Final Answer: <answer>"'
+====
+                'Respond with either "Action: <action_name> <parameters>" '
+                'or "Final Answer: <answer>"'
+>>>>> main
+>>>>> main
+>>>>> main
             )
             action_decision = await self.call_llm(
                 context, action_prompt, purpose=f"react_action_step_{step}"
