@@ -9,7 +9,6 @@ package-mode = true
 
 packages = [
     { include = "src", from = "." },
-    { include = "examples", from = "." },
 ]
 
 
@@ -19,33 +18,8 @@ repository = "https://github.com/Ladvien/entity"
 documentation = "https://entity.readthedocs.io/en/latest/"
 
 [tool.poetry.dependencies]
-python = "^3.13"
+python = "^3.11"
 pyyaml = "^6.0.2"
-rich = "^13.9.4"
-requests = "^2.32.4"
-pyaudio = "^0.2.14"
-scipy = "^1.15.3"
-python-dotenv = "^1.1.0"
-transformers = "^4.52.4"
-asyncpg = "^0.30.0"
-fastapi = "0.115.13"
-pydantic = ">=2.9"
-uvicorn = "^0.34.3"
-langchain = "^0.3.25"
-langchain-community = "^0.3.25"
-langchain-ollama = "^0.2.0"
-ollama = "^0.5.1"
-httpx = "^0.28.1"
-langgraph = "^0.2.0"
-langgraph-checkpoint-postgres = "^2.0.21"
-sentence-transformers = "^4.1.0"
-psycopg = "^3.2.9"
-langchain_postgres = { git = "https://github.com/langchain-ai/langchain-postgres.git", branch = "main" }
-click = "^8.2.1"
-pytest-mock = "^3.14.1"
-gevent = "^25.5.1"
-langchain-huggingface = "^0.3.0"
-uvloop = "^0.21.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
@@ -76,10 +50,7 @@ test = "pytest"
 test-verbose = "pytest -v"
 test-coverage = "pytest --cov=src --cov-report=html --cov-report=term-missing"
 
-[tool.poetry.scripts]
-entity = "src.client.terminal:cli"
 
-# Pytest configuration in pyproject.toml format
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
