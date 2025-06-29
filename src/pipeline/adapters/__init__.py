@@ -1,5 +1,5 @@
 from __future__ import annotations
 
-from .http import HttpAdapter
+from .http import HTTPAdapter
 
-__all__ = ["HttpAdapter"]
+__all__ = ["HTTPAdapter"]

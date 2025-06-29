@@ -6,7 +6,7 @@ from typing import Any
 import yaml
 
 from pipeline import SystemInitializer, SystemRegistries, execute_pipeline
-from pipeline.adapters.http import HttpAdapter
+from pipeline.adapters import HTTPAdapter
 
 
 class Agent:
@@ -37,7 +37,7 @@ class Agent:
             if self._registries is None:
                 raise RuntimeError("System not initialized")
             server_cfg = self.config.get("server", {})
-            adapter = HttpAdapter(server_cfg)
+            adapter = HTTPAdapter(server_cfg)
             await adapter.serve(self._registries)
 
         asyncio.run(_run())
