@@ -1,17 +1,11 @@
+import asyncio
 import os
 import tempfile
-import asyncio
 
-import os
-import asyncio
 import yaml
 
-from pipeline import (
-    SystemInitializer,
-    PipelineStage,
-    PromptPlugin,
-    ResourcePlugin,
-)
+from pipeline import (PipelineStage, PromptPlugin, ResourcePlugin,
+                      SystemInitializer)
 
 
 class A(ResourcePlugin):

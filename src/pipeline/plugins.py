@@ -7,11 +7,11 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, TypeVar, Type
+from typing import Any, Dict, List, Optional, Type, TypeVar
 
 import yaml
 
-from .context import PluginContext, SimpleContext
+from .context import LLMResponse, PluginContext, SimpleContext
 from .stages import PipelineStage
 
 logger = logging.getLogger(__name__)
@@ -68,6 +68,9 @@ class BasePlugin(ABC):
         try:
             result = await self._execute_impl(context)
             duration = time.time() - start
+            context._state.metrics.record_plugin_duration(
+                self.__class__.__name__, str(context.current_stage), duration
+            )
             logger.info(
                 "Plugin execution finished",
                 extra={
@@ -91,6 +94,28 @@ class BasePlugin(ABC):
     @abstractmethod
     async def _execute_impl(self, context: PluginContext | SimpleContext):
         pass
+
+    async def call_llm(
+        self, context: PluginContext, prompt: str, purpose: str
+    ) -> "LLMResponse":
+        llm = context.get_resource("ollama")
+        if llm is None:
+            raise RuntimeError("LLM resource 'ollama' not available")
+
+        context._state.metrics.record_llm_call(
+            self.__class__.__name__, str(context.current_stage), purpose
+        )
+
+        if hasattr(llm, "generate"):
+            response = await llm.generate(prompt)
+        else:
+            func = getattr(llm, "__call__", None)
+            if asyncio.iscoroutinefunction(func):
+                response = await func(prompt)
+            else:
+                response = func(prompt)
+
+        return LLMResponse(content=str(response))
 
     # --- Validation & Reconfiguration ---
     @classmethod
