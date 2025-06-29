@@ -111,6 +111,15 @@ class SystemInitializer:
                 registry.register_class(cls, cfg, name)
                 dep_graph[name] = getattr(cls, "dependencies", [])
 
+        # Validate dependencies declared by each plugin class
+        for plugin_class, _ in registry.all_plugin_classes():
+            result = plugin_class.validate_dependencies(registry)
+            if not result.success:
+                raise SystemError(
+                    f"Dependency validation failed for {plugin_class.__name__}: "
+                    f"{result.error_message}"
+                )
+
         # Phase 2: dependency validation
         self._validate_dependency_graph(registry, dep_graph)
         for plugin_class, cfg in registry.all_plugin_classes():
