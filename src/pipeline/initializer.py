@@ -6,7 +6,7 @@ from importlib import import_module
 from typing import Any, Dict, Iterable, List, Tuple
 
 from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
-from .registry import PluginRegistry, ResourceRegistry, ToolRegistry
+from .registries import PluginRegistry, ResourceRegistry, ToolRegistry
 
 
 class ClassRegistry:

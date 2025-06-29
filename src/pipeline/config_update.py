@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List
 
 from .manager import PipelineManager
-from .registry import PluginRegistry
+from .registries import PluginRegistry
 
 
 @dataclass
