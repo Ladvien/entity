@@ -1,3 +1,12 @@
+"""Run a simple HTTP server using the Entity framework."""
+
+from __future__ import annotations
+
+import pathlib
+import sys
+
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))
+
 from entity import Agent
 
 

@@ -38,6 +38,16 @@ agent.run()  # Automatically starts server on localhost:8000
 The default setup registers a simple `CalculatorTool` and an `EchoLLMResource`,
 so the example above works without any configuration files.
 
+### Running the Examples
+The example scripts in the `examples` folder can be executed directly from the
+repository root. Each script adjusts `sys.path` so the `src` directory is
+discoverable:
+
+```bash
+python examples/http_server.py
+python examples/pipeline_example.py
+```
+
 ### One-Liner Context Operations
 ```python
 @agent.plugin
