@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from ..plugins import ToolPlugin
-from ..stages import PipelineStage
+from pipeline.plugins import ToolPlugin
+from pipeline.stages import PipelineStage
 
 
 class CalculatorTool(ToolPlugin):
@@ -11,11 +11,11 @@ class CalculatorTool(ToolPlugin):
 
     stages = [PipelineStage.DO]
 
-    async def execute_function(self, params: Dict[str, Any]):
+    async def execute_function(self, params: Dict[str, Any]) -> Any:
         expression = params.get("expression")
         if not expression:
             raise ValueError("'expression' parameter is required")
-        allowed_names = {"__builtins__": {}}
+        allowed_names: Dict[str, Dict[str, Any]] = {"__builtins__": {}}
         try:
             result = eval(str(expression), allowed_names, {})
         except Exception as e:

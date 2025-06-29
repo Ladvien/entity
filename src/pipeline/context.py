@@ -3,8 +3,9 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
+from .pipeline import SystemRegistries
 from .stages import PipelineStage
 
 
@@ -81,7 +82,7 @@ class PipelineState:
 
 
 class PluginContext:
-    def __init__(self, state: PipelineState, registries: "SystemRegistries") -> None:
+    def __init__(self, state: PipelineState, registries: SystemRegistries) -> None:
         self._state = state
         self._registries = registries
 
@@ -90,7 +91,7 @@ class PluginContext:
         return self._state.pipeline_id
 
     @property
-    def current_stage(self) -> PipelineStage:
+    def current_stage(self) -> Optional[PipelineStage]:
         return self._state.current_stage
 
     def get_resource(self, name: str) -> Any:
@@ -213,6 +214,7 @@ class SimpleContext(PluginContext):
                 self.set_stage_result(call.result_key, result)
                 self._state.pending_tool_calls.remove(call)
                 return result
+            tool = cast(Any, tool)
             try:
                 if hasattr(tool, "execute_function_with_retry"):
                     result = await tool.execute_function_with_retry(call.params)
@@ -220,6 +222,8 @@ class SimpleContext(PluginContext):
                     result = await tool.execute_function(call.params)
                 else:
                     func = getattr(tool, "run", None)
+                    if func is None:
+                        raise RuntimeError("Tool lacks execution method")
                     if asyncio.iscoroutinefunction(func):
                         result = await func(call.params)
                     else:
@@ -253,6 +257,8 @@ class SimpleContext(PluginContext):
             response = await llm.generate(prompt)
         else:
             func = getattr(llm, "__call__", None)
+            if func is None:
+                raise RuntimeError("LLM resource is not callable")
             if asyncio.iscoroutinefunction(func):
                 response = await func(prompt)
             else:
