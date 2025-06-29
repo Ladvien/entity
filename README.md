@@ -92,6 +92,21 @@ The pipeline automatically registers plugin classes placed under
 appropriate base class and it becomes available when the agent loads.
 
 ```python
+<<<<<< yz015c-codex/update-module-plugins-registration-and-tests
+# Framework auto-discovers plugins by naming convention
+# functions must end with `_plugin`
+# weather_plugin.py
+def weather_plugin(context):
+    return get_weather_data()
+
+# calculator_plugin.py  
+def calculator_plugin(context):
+    return calculate_math(context.message)
+
+# Just drop files in plugins/ folder - they work automatically
+agent = Agent.from_directory("./plugins")  # Auto-loads everything
+# Import errors are logged and remaining plugins still load
+======
 from pipeline import PromptPlugin, PipelineStage
 
 class MyCustomPrompt(PromptPlugin):
@@ -101,6 +116,7 @@ class MyCustomPrompt(PromptPlugin):
         return "Hello from my plugin"
 
 agent = Agent.from_package("pipeline.plugins")
+>>>>>> main
 agent.run()
 ```
 
