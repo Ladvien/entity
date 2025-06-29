@@ -1,8 +1,15 @@
 from fastapi.testclient import TestClient
 
-from pipeline import (HTTPAdapter, PipelineManager, PipelineStage,
-                      PluginRegistry, PromptPlugin, ResourceRegistry,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    HTTPAdapter,
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    ResourceRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 
 
 class RespPlugin(PromptPlugin):
@@ -15,8 +22,8 @@ class RespPlugin(PromptPlugin):
 def make_adapter():
     plugins = PluginRegistry()
     plugins.register_plugin_for_stage(RespPlugin({}), PipelineStage.DO)
-    regs = SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
-    manager = PipelineManager(regs)
+    registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
+    manager = PipelineManager(registries)
     return HTTPAdapter(manager)
 
 
