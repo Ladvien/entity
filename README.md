@@ -61,10 +61,11 @@ python examples/pipeline_example.py
 ```
 
 ### Command Line Usage
-Launch an agent from a YAML configuration file:
+Launch an agent from a YAML configuration file. Example configurations are
+provided in `config/dev.yaml` and `config/prod.yaml`:
 
 ```bash
-python src/cli.py --config path/to/config.yml
+python src/cli.py --config config/dev.yaml
 ```
 
 ### One-Liner Context Operations
@@ -1430,6 +1431,8 @@ def simple_reasoning(context):
     
     return "I've analyzed your request and I'm ready to help!"
 ```
+The following YAML mirrors the sample in `config/prod.yaml` and shows all plugin
+sections:
 ```yaml
 entity:
   entity_id: "jade"
