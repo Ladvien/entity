@@ -1,11 +1,13 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Type
-from pydantic import BaseModel
+
 from langchain_core.tools import StructuredTool
+from pydantic import BaseModel
 
 
 class BaseToolPlugin(ABC):
     use_registry: bool = True
+
     @property
     @abstractmethod
     def name(self) -> str: ...

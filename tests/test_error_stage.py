@@ -1,15 +1,8 @@
 import asyncio
 
-from pipeline import (
-    FailurePlugin,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-    execute_pipeline,
-)
+from pipeline import (FailurePlugin, PipelineStage, PluginRegistry,
+                      PromptPlugin, ResourceRegistry, SystemRegistries,
+                      ToolRegistry, execute_pipeline)
 
 
 class FailPlugin(PromptPlugin):

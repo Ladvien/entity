@@ -9,19 +9,16 @@ from typing import Any, Dict
 from .context import PluginContext, SystemRegistries
 from .registries import PluginRegistry, ResourceRegistry, ToolRegistry
 from .stages import PipelineStage
-from .state import (
-    ConversationEntry,
-    FailureInfo,
-    MetricsCollector,
-    PipelineState,
-    ToolCall,
-)
+from .state import (ConversationEntry, FailureInfo, MetricsCollector,
+                    PipelineState, ToolCall)
 
 
 async def execute_pipeline(request: Any, registries: SystemRegistries) -> Any:
     state = PipelineState(
         conversation=[
-            ConversationEntry(content=str(request), role="user", timestamp=datetime.now())
+            ConversationEntry(
+                content=str(request), role="user", timestamp=datetime.now()
+            )
         ],
         response=None,
         prompt="",
@@ -33,17 +30,27 @@ async def execute_pipeline(request: Any, registries: SystemRegistries) -> Any:
         metrics=MetricsCollector(),
     )
 
-    for stage in [PipelineStage.PARSE, PipelineStage.THINK, PipelineStage.DO, PipelineStage.REVIEW, PipelineStage.DELIVER]:
+    for stage in [
+        PipelineStage.PARSE,
+        PipelineStage.THINK,
+        PipelineStage.DO,
+        PipelineStage.REVIEW,
+        PipelineStage.DELIVER,
+    ]:
         await execute_stage(stage, state, registries)
         if state.response is not None:
             break
 
     if state.response is None:
-        state.response = create_default_response("No response generated", state.pipeline_id)
+        state.response = create_default_response(
+            "No response generated", state.pipeline_id
+        )
     return state.response
 
 
-async def execute_stage(stage: PipelineStage, state: PipelineState, registries: SystemRegistries) -> None:
+async def execute_stage(
+    stage: PipelineStage, state: PipelineState, registries: SystemRegistries
+) -> None:
     state.current_stage = stage
     context = PluginContext(state, registries)
     plugins = registries.plugins.get_for_stage(stage)
@@ -84,7 +91,9 @@ def create_default_response(message: str, pipeline_id: str) -> Dict[str, Any]:
     }
 
 
-async def execute_pending_tools(state: PipelineState, registries: SystemRegistries) -> Dict[ToolCall, Any]:
+async def execute_pending_tools(
+    state: PipelineState, registries: SystemRegistries
+) -> Dict[ToolCall, Any]:
     results = {}
     for call in list(state.pending_tool_calls):
         tool = registries.tools.get(call.name)
