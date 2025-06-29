@@ -1,9 +1,16 @@
 import asyncio
 from unittest.mock import AsyncMock, patch
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, ResourceRegistry,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    ResourceRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.plugins.tools.search_tool import SearchTool
 
 
