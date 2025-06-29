@@ -7,7 +7,6 @@ from .context import (
     SimpleContext,
     ToolCall,
 )
-from .http_adapter import HTTPAdapter
 from .initializer import (
     ClassRegistry,
     SystemInitializer,
@@ -37,6 +36,11 @@ from .plugins import (
 from .registries import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
 from .stages import PipelineStage
 from .state import FailureInfo, MetricsCollector, PipelineState
+
+# isort: off
+from .adapters import HTTPAdapter
+
+# isort: on
 
 __all__ = [
     "PipelineStage",

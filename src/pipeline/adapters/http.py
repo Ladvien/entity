@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from typing import Any, cast
+
 import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from ..manager import PipelineManager
 from ..pipeline import execute_pipeline
 from ..plugins import AdapterPlugin
 from ..registries import SystemRegistries
@@ -13,23 +16,30 @@ class MessageRequest(BaseModel):
     message: str
 
 
-class HttpAdapter(AdapterPlugin):
-    """Simple HTTP adapter using FastAPI."""
+class HTTPAdapter(AdapterPlugin):
+    """HTTP adapter using FastAPI."""
 
     stages: list = []
 
-    def __init__(self, config: dict | None = None) -> None:
+    def __init__(
+        self, manager: PipelineManager | None = None, config: dict | None = None
+    ) -> None:
         super().__init__(config)
+        self.manager = manager
         self.app = FastAPI()
         self._registries: SystemRegistries | None = None
         self._setup_routes()
 
     def _setup_routes(self) -> None:
         @self.app.post("/")
-        async def handle(req: MessageRequest):
+        async def handle(req: MessageRequest) -> dict[str, Any]:
+            if self.manager is not None:
+                return await self.manager.run_pipeline(req.message)
             if self._registries is None:
                 raise RuntimeError("Adapter not initialized")
-            return await execute_pipeline(req.message, self._registries)
+            return cast(
+                dict[str, Any], await execute_pipeline(req.message, self._registries)
+            )
 
     async def serve(self, registries: SystemRegistries) -> None:
         self._registries = registries
@@ -39,5 +49,5 @@ class HttpAdapter(AdapterPlugin):
         server = uvicorn.Server(config)
         await server.serve()
 
-    async def _execute_impl(self, context):
+    async def _execute_impl(self, context) -> None:  # pragma: no cover - adapter
         pass

@@ -11,7 +11,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar, cast
 
 import yaml
 
-from .context import LLMResponse, PluginContext, SimpleContext
+if TYPE_CHECKING:  # pragma: no cover - used for type hints only
+    from .context import LLMResponse, PluginContext, SimpleContext
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .initializer import ClassRegistry
@@ -102,6 +103,8 @@ class BasePlugin(ABC):
     async def call_llm(
         self, context: PluginContext, prompt: str, purpose: str
     ) -> "LLMResponse":
+        from .context import LLMResponse
+
         llm = context.get_resource("ollama")
         if llm is None:
             raise RuntimeError("LLM resource 'ollama' not available")
