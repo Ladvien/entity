@@ -88,6 +88,7 @@ def smart_assistant(context):
 ### Instant Plugin Discovery
 ```python
 # Framework auto-discovers plugins by naming convention
+# functions must end with `_plugin`
 # weather_plugin.py
 def weather_plugin(context):
     return get_weather_data()
