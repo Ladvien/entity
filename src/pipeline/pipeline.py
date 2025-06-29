@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from datetime import datetime
 from typing import Any, Dict, cast
 
@@ -77,7 +78,8 @@ async def execute_pipeline(
     user_message: str,
     registries: SystemRegistries,
     pipeline_manager: PipelineManager | None = None,
-) -> Dict[str, Any]:
+    return_metrics: bool = False,
+) -> Dict[str, Any] | tuple[Dict[str, Any], MetricsCollector]:
     state = PipelineState(
         conversation=[
             ConversationEntry(
@@ -87,6 +89,7 @@ async def execute_pipeline(
         pipeline_id=generate_pipeline_id(),
         metrics=MetricsCollector(),
     )
+    start = time.time()
     if pipeline_manager is not None:
         await pipeline_manager.register(state.pipeline_id)
     try:
@@ -105,16 +108,21 @@ async def execute_pipeline(
             try:
                 await execute_stage(PipelineStage.ERROR, state, registries)
             except Exception:
-                return create_static_error_response(state.pipeline_id)
+                result = create_static_error_response(state.pipeline_id)
+                return (result, state.metrics) if return_metrics else result
             if state.response is None:
-                return create_static_error_response(state.pipeline_id)
-            return state.response
-        if state.response is None:
-            return create_default_response("No response generated", state.pipeline_id)
-        return state.response
+                result = create_static_error_response(state.pipeline_id)
+                return (result, state.metrics) if return_metrics else result
+            result = state.response
+        elif state.response is None:
+            result = create_default_response("No response generated", state.pipeline_id)
+        else:
+            result = state.response
+        return (result, state.metrics) if return_metrics else result
     finally:
         if pipeline_manager is not None:
             await pipeline_manager.deregister(state.pipeline_id)
+        state.metrics.record_pipeline_duration(time.time() - start)
 
 
 async def execute_pending_tools(

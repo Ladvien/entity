@@ -212,4 +212,4 @@ class Agent:
             tools=self.tool_registry,
             plugins=self.plugin_registry,
         )
-        return await execute_pipeline(message, registries)
+        return cast(Dict[str, Any], await execute_pipeline(message, registries))
