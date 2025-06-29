@@ -43,7 +43,9 @@ class MemorySearchTool(BaseToolPlugin):
         self.tool_used = True
         self.description = f"Searches stored memories. Tool used: {self.tool_used}"
 
-        memory_system = ServiceRegistry.try_get("memory_system") if self.use_registry else None
+        memory_system = (
+            ServiceRegistry.try_get("memory_system") if self.use_registry else None
+        )
         if not memory_system:
             if self.use_registry:
                 return "Memory system not available"
@@ -87,10 +89,14 @@ class StoreMemoryTool(BaseToolPlugin):
         self.tool_used = True
         self.description = f"Stores a memory entry. Tool used: {self.tool_used}"
 
-        memory_system = ServiceRegistry.try_get("memory_system") if self.use_registry else None
+        memory_system = (
+            ServiceRegistry.try_get("memory_system") if self.use_registry else None
+        )
         raw_score = input_data.importance_score
         normalized_score = (
-            raw_score if 0.0 <= raw_score <= 1.0 else max(0.0, min(1.0, tanh(raw_score)))
+            raw_score
+            if 0.0 <= raw_score <= 1.0
+            else max(0.0, min(1.0, tanh(raw_score)))
         )
 
         if not memory_system:

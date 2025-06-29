@@ -24,8 +24,8 @@ The Entity Pipeline Framework follows a **linear pipeline architecture** with th
 
 ```
 User Request → Parse → Think → Do → Review → Deliver → Response
-                ↓       ↓      ↓      ↓         ↓
-              Error ← Error ← Error ← Error ← Error
+                ↓       ↓      ↓      ↓         ↓        ↑
+              Error → Error → Error → Error → Error →  Error 
 ```
 
 ### Pipeline Stages
@@ -42,11 +42,15 @@ User Request → Parse → Think → Do → Review → Deliver → Response
 ### General Conventions
 
 - Use Python 3.11+ with type hints for all new code
-- Follow PEP 8 style guidelines with 100-character line limits
-- Use meaningful variable and function names that describe intent
+- Follow black style guidelines
+- Use meaningful variable, method, constant, and function names.  Ensure they describe intent.
 - Add comprehensive docstrings for all classes and methods
+- Use type hints
+- Favor dataclasses, pydantic mode;s, or other structured data types
 - Implement proper error handling with specific exception types
 - Use dataclasses for structured data with proper type annotations
+- Ensure code is readable and maintainable, with clear separation of concerns
+- 
 
 ### Plugin Development Guidelines
 
