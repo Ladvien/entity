@@ -87,19 +87,20 @@ def smart_assistant(context):
 ```
 
 ### Instant Plugin Discovery
+The pipeline automatically registers plugin classes placed under
+`src/pipeline/plugins`. Simply create a new plugin class that inherits from the
+appropriate base class and it becomes available when the agent loads.
+
 ```python
-# Framework auto-discovers plugins by naming convention
-# weather_plugin.py
-def weather_plugin(context):
-    return get_weather_data()
+from pipeline import PromptPlugin, PipelineStage
 
-# calculator_plugin.py  
-def calculator_plugin(context):
-    return calculate_math(context.message)
+class MyCustomPrompt(PromptPlugin):
+    stages = [PipelineStage.THINK]
 
-# Just drop files in plugins/ folder - they work automatically
-agent = Agent.from_directory("./plugins")  # Auto-loads everything
-# Import errors are logged and remaining plugins still load
+    async def _execute_impl(self, context):
+        return "Hello from my plugin"
+
+agent = Agent.from_package("pipeline.plugins")
 agent.run()
 ```
 
