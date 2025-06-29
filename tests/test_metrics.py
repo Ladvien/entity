@@ -56,6 +56,7 @@ def test_metrics_collected():
     stage = str(PipelineStage.DO)
     plugin_key = f"{stage}:{MetricsPlugin.__name__}"
     assert plugin_key in data["plugin_durations"]
+    assert plugin_key in data["llm_durations"]
     assert data["tool_execution_count"][f"{stage}:echo"] == 1
     assert data["llm_call_count"][f"{stage}:{MetricsPlugin.__name__}:test"] == 1
     assert data["pipeline_durations"] and data["pipeline_durations"][0] > 0

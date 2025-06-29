@@ -94,6 +94,7 @@ class MetricsCollector:
     tool_execution_count: dict[str, int] = field(default_factory=dict)
     tool_error_count: dict[str, int] = field(default_factory=dict)
     llm_call_count: dict[str, int] = field(default_factory=dict)
+    llm_durations: dict[str, list[float]] = field(default_factory=dict)
 
     def record_pipeline_duration(self, duration: float) -> None:
         self.pipeline_durations.append(duration)
@@ -118,6 +119,10 @@ class MetricsCollector:
         key = f"{stage}:{plugin}:{purpose}"
         self.llm_call_count[key] = self.llm_call_count.get(key, 0) + 1
 
+    def record_llm_duration(self, plugin: str, stage: str, duration: float) -> None:
+        key = f"{stage}:{plugin}"
+        self.llm_durations.setdefault(key, []).append(duration)
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "pipeline_durations": self.pipeline_durations,
@@ -125,6 +130,7 @@ class MetricsCollector:
             "tool_execution_count": self.tool_execution_count,
             "tool_error_count": self.tool_error_count,
             "llm_call_count": self.llm_call_count,
+            "llm_durations": self.llm_durations,
         }
 
 
