@@ -7,19 +7,15 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-<<<<<<< HEAD:src/pipeline/plugins.py
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar
-
-if TYPE_CHECKING:  # pragma: no cover - used for type hints only
-    from .registry import ClassRegistry
-=======
-from typing import Any, Dict, List, Optional, Type, TypeVar, cast
->>>>>>> 346eeb378c849154625acfe74df5c293057eca04:src/pipeline/base_plugins.py
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar, cast
 
 import yaml
 
 from .context import LLMResponse, PluginContext, SimpleContext
-from .initializer import ClassRegistry
+
+if TYPE_CHECKING:  # pragma: no cover - used for type hints only
+    from .initializer import ClassRegistry
+
 from .stages import PipelineStage
 
 logger = logging.getLogger(__name__)
@@ -224,7 +220,6 @@ class ResourcePlugin(BasePlugin):
 
 
 class ToolPlugin(BasePlugin):
-
     """Base class for tool plugins executed outside the pipeline."""
 
     required_params: List[str] = []
@@ -255,7 +250,6 @@ class ToolPlugin(BasePlugin):
         delay: float | None = None,
     ):
         self.validate_tool_params(params)
-        for attempt in range(max_retries + 1):
         max_retry_count = self.max_retries if max_retries is None else max_retries
         retry_delay_seconds = self.retry_delay if delay is None else delay
         for attempt in range(max_retry_count + 1):
@@ -265,9 +259,6 @@ class ToolPlugin(BasePlugin):
                 if attempt == max_retry_count:
                     raise
                 await asyncio.sleep(retry_delay_seconds)
-
-    def validate_tool_params(self, params: Dict[str, Any]) -> bool:
-        return True
 
     async def execute_with_timeout(
         self, context: PluginContext | SimpleContext, timeout: int = 30

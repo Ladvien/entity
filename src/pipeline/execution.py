@@ -4,12 +4,8 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, cast
 
-<<<<<<< HEAD
-from .context import PluginContext, SystemRegistries
-=======
 from .context import PluginContext
-from .registries import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
->>>>>>> 346eeb378c849154625acfe74df5c293057eca04
+from .registries import SystemRegistries
 from .stages import PipelineStage
 from .state import (
     ConversationEntry,

@@ -1,11 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-<<<<<<< HEAD
-from typing import Dict, List
-=======
-from typing import Any, Dict, Iterable, List, Tuple
->>>>>>> 346eeb378c849154625acfe74df5c293057eca04
+from typing import Any, Dict, List
 
 from .plugins import BasePlugin
 from .stages import PipelineStage
