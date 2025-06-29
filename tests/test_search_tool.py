@@ -9,8 +9,6 @@ from pipeline import (
     PluginContext,
     PluginRegistry,
     ResourceRegistry,
-    PluginRegistry,
-    ResourceRegistry,
     SimpleContext,
     SystemRegistries,
     ToolRegistry,
