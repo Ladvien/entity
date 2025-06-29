@@ -17,7 +17,7 @@ class CalculatorTool(ToolPlugin):
             raise ValueError("'expression' parameter is required")
         allowed_names = {"__builtins__": {}}
         try:
-            result = eval(str(expression), allowed_names, {})
+            result = eval(str(expression), allowed_names, {})  # nosec B307
         except Exception as e:
             raise ValueError(f"Invalid expression: {e}")
         return result

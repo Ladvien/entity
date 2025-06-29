@@ -162,7 +162,10 @@ class SystemInitializer:
                 if not registry.has_plugin(dep):
                     available = registry.list_plugins()
                     raise SystemError(
-                        f"Plugin '{plugin_name}' requires '{dep}' but it's not registered. Available: {available}"
+                        (
+                            f"Plugin '{plugin_name}' requires '{dep}' but it's not registered. "
+                            f"Available: {available}"
+                        )
                     )
 
         in_degree = {node: 0 for node in dep_graph}

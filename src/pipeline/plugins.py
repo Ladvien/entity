@@ -7,7 +7,10 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Type, TypeVar
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar
+
+if TYPE_CHECKING:  # pragma: no cover - used for type hints only
+    from .registry import ClassRegistry
 
 import yaml
 
@@ -204,21 +207,47 @@ class ResourcePlugin(BasePlugin):
         """Optional async initialization hook."""
         return None
 
+    async def health_check(self) -> bool:
+        """Return ``True`` if the resource is healthy."""
+        return True
+
+    def get_metrics(self) -> Dict[str, Any]:
+        """Return metrics about this resource."""
+        return {"status": "healthy"}
+
 
 class ToolPlugin(BasePlugin):
+    def __init__(self, config: Dict | None = None) -> None:
+        super().__init__(config)
+        self.max_retries = int(self.config.get("max_retries", 1))
+        self.retry_delay = float(self.config.get("retry_delay", 1.0))
+
     async def execute_function(self, params: Dict[str, Any]):
         raise NotImplementedError()
 
     async def execute_function_with_retry(
-        self, params: Dict[str, Any], max_retries: int = 1, delay: float = 1.0
+        self,
+        params: Dict[str, Any],
+        max_retries: int | None = None,
+        delay: float | None = None,
     ):
-        for attempt in range(max_retries + 1):
+        max_retry_count = self.max_retries if max_retries is None else max_retries
+        retry_delay_seconds = self.retry_delay if delay is None else delay
+        for attempt in range(max_retry_count + 1):
             try:
                 return await self.execute_function(params)
             except Exception:
-                if attempt == max_retries:
+                if attempt == max_retry_count:
                     raise
-                await asyncio.sleep(delay)
+                await asyncio.sleep(retry_delay_seconds)
+
+    def validate_tool_params(self, params: Dict[str, Any]) -> bool:
+        return True
+
+    async def execute_with_timeout(
+        self, context: PluginContext | SimpleContext, timeout: int = 30
+    ):
+        return await asyncio.wait_for(self.execute(context), timeout=timeout)
 
     async def _execute_impl(self, context: PluginContext | SimpleContext):
         """Tools are not executed in the pipeline directly."""
