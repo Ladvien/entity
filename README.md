@@ -369,6 +369,8 @@ The framework maintains the sophisticated five-layer plugin architecture underne
 
 **Note**: Plugin use is discouraged in the error stage to maintain reliability. Keep error stage plugins minimal and ensure static fallback responses are available.
 
+Plugin implementations live in `src/pipeline/plugins/<type>` directories. For example, error-handling plugins are located in `src/pipeline/plugins/failure`.
+
 ### Plugin Stage Assignment System
 
 The framework uses **explicit stage assignment** for advanced plugins and **automatic stage assignment** for simple plugins, with base classes serving as organizational categories and framework extension points:
