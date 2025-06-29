@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import asyncio
+import importlib.util
 import inspect
 import json
+import sys
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 
 from .pipeline import SystemRegistries, execute_pipeline
@@ -77,6 +80,21 @@ class Agent:
     @property
     def tools(self) -> ToolRegistry:
         return self.tool_registry
+
+    @classmethod
+    def from_directory(cls, directory: str) -> "Agent":
+        """Create an agent and automatically register plugins from ``directory``."""
+        agent = cls()
+        for path in Path(directory).glob("*.py"):
+            module_name = path.stem
+            spec = importlib.util.spec_from_file_location(module_name, path)
+            if spec and spec.loader:
+                module = importlib.util.module_from_spec(spec)
+                sys.modules[module_name] = module
+                spec.loader.exec_module(module)
+                for _, obj in inspect.getmembers(module, inspect.isfunction):
+                    agent.plugin(obj)
+        return agent
 
     def add_plugin(self, plugin: Any) -> None:
         """Register a plugin instance for its stages."""

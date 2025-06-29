@@ -1,8 +1,15 @@
 import asyncio
 
-from pipeline import (FailurePlugin, PipelineStage, PluginRegistry,
-                      PromptPlugin, ResourceRegistry, SystemRegistries,
-                      ToolRegistry, execute_pipeline)
+from pipeline import (
+    FailurePlugin,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    ResourceRegistry,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
 
 
 class FailPlugin(PromptPlugin):
@@ -35,12 +42,12 @@ def make_registries(error_plugin):
 
 
 def test_error_stage_execution():
-    regs = make_registries(ErrorPlugin)
-    result = asyncio.run(execute_pipeline("hi", regs))
+    registries = make_registries(ErrorPlugin)
+    result = asyncio.run(execute_pipeline("hi", registries))
     assert result == {"error": "boom"}
 
 
 def test_static_fallback_on_error_stage_failure():
-    regs = make_registries(BadErrorPlugin)
-    result = asyncio.run(execute_pipeline("hi", regs))
+    registries = make_registries(BadErrorPlugin)
+    result = asyncio.run(execute_pipeline("hi", registries))
     assert result["type"] == "static_fallback"
