@@ -5,9 +5,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Dict, List
 
-from .pipeline import execute_pending_tools
 from .pipeline_manager import PipelineManager
-from .plugins import BasePlugin
 from .registry import PluginRegistry
 
 
@@ -37,7 +35,7 @@ async def wait_for_pipeline_completion(
     start = time.time()
     if pipeline_manager is None:
         return
-    while await pipeline_manager.has_active_pipelines():
+    while await pipeline_manager.has_active_pipelines_async():
         if time.time() - start > timeout_seconds:
             raise TimeoutError("Timeout waiting for pipelines to complete")
         await asyncio.sleep(0.1)
@@ -82,9 +80,11 @@ async def update_plugin_configuration(
                 plugin_name, old_config, new_config
             )
             if not handled:
-                return ConfigUpdateResult.failure(
-                    f"Dependency cascade failed for plugin: {getattr(dependent, 'name', dependent.__class__.__name__)}"
+                plugin_name_str = getattr(
+                    dependent, "name", dependent.__class__.__name__
                 )
+                msg = f"Dependency cascade failed for plugin: {plugin_name_str}"
+                return ConfigUpdateResult.failure(msg)
             updated.append(plugin_registry.get_plugin_name(dependent))
         except Exception as e:
             return ConfigUpdateResult.failure(str(e))
