@@ -28,6 +28,15 @@ User Request → Parse → Think → Do → Review → Deliver → Response
               Error → Error → Error → Error → Error →  Error 
 ```
 
+## Development Resources
+
+You have access to a postgres 16 database for development purposes. The database connection details are as follows:
+
+- Database Type: PostgreSQL
+- Connection String: `postgresql://agent@localhost:5432/dev_db`
+
+There is no password.
+
 ### Pipeline Stages
 
 - **Parse**: Input validation, context setup, memory retrieval
@@ -48,9 +57,8 @@ User Request → Parse → Think → Do → Review → Deliver → Response
 - Use type hints
 - Favor dataclasses, pydantic mode;s, or other structured data types
 - Implement proper error handling with specific exception types
-- Use dataclasses for structured data with proper type annotations
 - Ensure code is readable and maintainable, with clear separation of concerns
-- 
+
 
 ### Plugin Development Guidelines
 
