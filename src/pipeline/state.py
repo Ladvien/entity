@@ -8,6 +8,12 @@ from .stages import PipelineStage
 
 
 @dataclass
+class LLMResponse:
+    content: str
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
 class ConversationEntry:
     content: str
     role: str
@@ -20,7 +26,7 @@ class ToolCall:
     name: str
     params: Dict[str, Any]
     result_key: str
-    source: str
+    source: str = "direct_execution"
 
 
 @dataclass
@@ -30,8 +36,8 @@ class FailureInfo:
     error_type: str
     error_message: str
     original_exception: Exception
-    context_snapshot: Dict[str, Any]
-    timestamp: datetime
+    context_snapshot: Dict[str, Any] | None = None
+    timestamp: datetime = field(default_factory=datetime.now)
 
 
 @dataclass
@@ -58,12 +64,12 @@ class MetricsCollector:
 @dataclass
 class PipelineState:
     conversation: List[ConversationEntry]
-    response: Any
-    prompt: str
-    stage_results: Dict[str, Any]
-    pending_tool_calls: List[ToolCall]
-    metadata: Dict[str, Any]
-    pipeline_id: str
-    current_stage: Optional[PipelineStage]
-    metrics: MetricsCollector
+    response: Any = None
+    prompt: str = ""
+    stage_results: Dict[str, Any] = field(default_factory=dict)
+    pending_tool_calls: List[ToolCall] = field(default_factory=list)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    pipeline_id: str = ""
+    current_stage: Optional[PipelineStage] = None
+    metrics: MetricsCollector = field(default_factory=MetricsCollector)
     failure_info: Optional[FailureInfo] = None

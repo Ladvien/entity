@@ -2,9 +2,16 @@ import asyncio
 
 from fastapi.testclient import TestClient
 
-from pipeline import (HTTPAdapter, PipelineManager, PipelineStage,
-                      PluginRegistry, PromptPlugin, ResourceRegistry,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    HTTPAdapter,
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    ResourceRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 
 
 class RespPlugin(PromptPlugin):

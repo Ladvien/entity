@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Dict, Iterable, List, Tuple
+from typing import Any, Dict, Iterable, List, Tuple
 
 from .plugins import BasePlugin
 from .stages import PipelineStage
@@ -47,21 +47,21 @@ class PluginRegistry:
 
 class ResourceRegistry:
     def __init__(self) -> None:
-        self._resources: Dict[str, any] = {}
+        self._resources: Dict[str, Any] = {}
 
-    def add(self, name: str, resource: any) -> None:
+    def add(self, name: str, resource: Any) -> None:
         self._resources[name] = resource
 
-    def get(self, name: str) -> any:
+    def get(self, name: str) -> Any | None:
         return self._resources.get(name)
 
 
 class ToolRegistry:
     def __init__(self) -> None:
-        self._tools: Dict[str, any] = {}
+        self._tools: Dict[str, Any] = {}
 
-    def add(self, name: str, tool: any) -> None:
+    def add(self, name: str, tool: Any) -> None:
         self._tools[name] = tool
 
-    def get(self, name: str) -> any:
+    def get(self, name: str) -> Any | None:
         return self._tools.get(name)
