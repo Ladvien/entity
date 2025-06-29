@@ -1,10 +1,17 @@
 import asyncio
 
-from fastapi.testclient import TestClient
+import httpx
 
-from pipeline import (HTTPAdapter, PipelineManager, PipelineStage,
-                      PluginRegistry, PromptPlugin, ResourceRegistry,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    HTTPAdapter,
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    ResourceRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 
 
 class RespPlugin(PromptPlugin):
@@ -24,7 +31,14 @@ def make_adapter():
 
 def test_http_adapter_basic():
     adapter = make_adapter()
-    client = TestClient(adapter.app)
-    resp = client.post("/", json={"message": "hello"})
-    assert resp.status_code == 200
-    assert resp.json() == {"msg": "hello"}
+
+    async def _make_request():
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=adapter.app),
+            base_url="http://testserver",
+        ) as client:
+            resp = await client.post("/", json={"message": "hello"})
+            assert resp.status_code == 200
+            assert resp.json() == {"msg": "hello"}
+
+    asyncio.run(_make_request())
