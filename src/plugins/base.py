@@ -5,6 +5,7 @@ from langchain_core.tools import StructuredTool
 
 
 class BaseToolPlugin(ABC):
+    use_registry: bool = True
     @property
     @abstractmethod
     def name(self) -> str: ...
