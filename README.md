@@ -35,8 +35,20 @@ def calculator(context):
 agent.run()  # Automatically starts server on localhost:8000
 ```
 
-The default setup registers a simple `CalculatorTool` and an `EchoLLMResource`,
-so the example above works without any configuration files.
+The default setup registers a simple `CalculatorTool`, a `SearchTool`, and an
+`EchoLLMResource`, so the example above works without any configuration files.
+
+```python
+from entity.tools import SearchTool
+
+# Add web search capability
+agent.tool_registry.add("search", SearchTool())
+
+@agent.plugin
+async def lookup(context):
+    result = await context.use_tool("search", query="Entity Pipeline")
+    return result
+```
 
 ### Running the Examples
 The example scripts in the `examples` folder can be executed directly from the
@@ -332,7 +344,7 @@ The framework maintains the sophisticated five-layer plugin architecture underne
 #### **Tool Plugins** (Functionality - Performs Tasks for Users)
 - **Weather**: Get current conditions, forecasts
 - **Calculator**: Mathematical computations
-- **Search**: Web search, document search
+- **SearchTool**: Web search, document search
 - **File Operations**: Read, write, process files
 - **API Integrations**: Slack, email, custom APIs
 
@@ -1745,7 +1757,7 @@ plugins:
 - **No Configuration**: Sensible defaults for everything
 - **Dead Simple API**: One-liner operations for common tasks
 - **Auto-Discovery**: Drop files in folder, they work automatically
-- **Built-in Tools**: Calculator, search, memory work out of the box
+- **Built-in Tools**: Calculator, SearchTool, memory work out of the box
 
 ### For Intermediate Users
 - **Gradual Learning**: Natural progression from simple to advanced
