@@ -1,0 +1,25 @@
+from __future__ import annotations
+
+from typing import List
+
+from pipeline.context import ConversationEntry, PluginContext
+from pipeline.plugins import PromptPlugin
+from pipeline.plugins.resources.memory_resource import SimpleMemoryResource
+from pipeline.stages import PipelineStage
+
+
+class MemoryRetrievalPrompt(PromptPlugin):
+    """Fetch past conversation from memory and append it to the context."""
+
+    dependencies = ["memory"]
+    stages = [PipelineStage.THINK]
+
+    async def _execute_impl(self, context: PluginContext) -> None:
+        memory: SimpleMemoryResource = context.get_resource("memory")
+        history: List[ConversationEntry] = memory.get("history", [])
+        for entry in history:
+            context.add_conversation_entry(
+                content=entry.content,
+                role=entry.role,
+                metadata=entry.metadata,
+            )
