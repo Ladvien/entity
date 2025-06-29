@@ -1,0 +1,46 @@
+server:
+  host: "0.0.0.0"
+  port: 8000
+  reload: true
+  log_level: "debug"
+
+plugins:
+  resources:
+    database:
+      type: postgres
+      host: "localhost"
+      port: 5432
+      name: "memory"
+      username: "${DB_USERNAME}"
+      password: "${DB_PASSWORD}"
+    ollama:
+      type: ollama_llm
+      base_url: "http://localhost:11434"
+      model: "llama3:8b-instruct-q6_K"
+    logging:
+      type: structured_logging
+      level: "DEBUG"
+      file_enabled: true
+      file_path: "logs/entity.log"
+  tools:
+    weather:
+      type: weather_api
+      api_key: "${WEATHER_API_KEY}"
+      base_url: "https://api.weather.com"
+    calculator:
+      type: calculator
+  adapters:
+    tts:
+      type: speech_synthesis
+      base_url: "http://localhost:8888"
+      voice_name: "bf_emma"
+  prompts:
+    chain_of_thought:
+      type: chain_of_thought
+      enable_reasoning: true
+    memory_retrieval:
+      type: memory_retrieval
+      max_context_length: 4000
+    intent_classifier:
+      type: intent_classifier
+      confidence_threshold: 0.8
