@@ -2,25 +2,11 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime
-<<<<<<< HEAD
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
-
-if TYPE_CHECKING:  # pragma: no cover - used for type checking only
-    from .pipeline import SystemRegistries
-=======
 from typing import Any, Dict, List, Optional, cast
->>>>>>> 346eeb378c849154625acfe74df5c293057eca04
 
 from .registries import SystemRegistries
 from .stages import PipelineStage
-from .state import (
-    ConversationEntry,
-    FailureInfo,
-    LLMResponse,
-    MetricsCollector,
-    PipelineState,
-    ToolCall,
-)
+from .state import ConversationEntry, LLMResponse, PipelineState, ToolCall
 
 
 class PluginContext:

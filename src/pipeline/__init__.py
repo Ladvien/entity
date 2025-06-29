@@ -2,10 +2,7 @@ from .agent import Agent
 from .config_update import ConfigUpdateResult, update_plugin_configuration
 from .context import (
     ConversationEntry,
-    FailureInfo,
     LLMResponse,
-    MetricsCollector,
-    PipelineState,
     PluginContext,
     SimpleContext,
     ToolCall,
@@ -40,6 +37,7 @@ from .plugins import (
 from .registries import SystemRegistries
 from .registry import PluginRegistry, ResourceRegistry, ToolRegistry
 from .stages import PipelineStage
+from .state import FailureInfo, MetricsCollector, PipelineState
 
 __all__ = [
     "PipelineStage",
