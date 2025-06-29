@@ -1,6 +1,15 @@
 import argparse
+import asyncio
+import os
+import sys
+from typing import Any
+
+import yaml
 
 from agent import Agent
+from pipeline import update_plugin_configuration
+
+sys.path.insert(0, os.getcwd())
 
 
 class CLI:
@@ -19,15 +28,53 @@ class CLI:
             required=True,
             help="Path to a YAML configuration file.",
         )
+
+        subparsers = parser.add_subparsers(dest="command")
+        parser.set_defaults(command="run")
+
+        subparsers.add_parser("run", help="Start the agent")
+        reload_parser = subparsers.add_parser(
+            "reload-config",
+            help="Reload plugin configuration from a YAML file",
+        )
+        reload_parser.add_argument("file", help="Updated configuration file")
+
         return parser.parse_args()
 
-    def run(self) -> None:
+    def run(self) -> int:
         agent = Agent(self.args.config)
+        if self.args.command == "reload-config":
+            return self._reload_config(agent, self.args.file)
         agent.run()
+        return 0
+
+    def _reload_config(self, agent: Agent, file_path: str) -> int:
+        async def _run() -> int:
+            await agent._ensure_initialized()
+            registries: Any | None = agent._registries
+            if registries is None:
+                raise RuntimeError("System not initialized")
+            plugin_registry = getattr(registries, "plugins", registries[0])
+            with open(file_path, "r") as fh:
+                cfg = yaml.safe_load(fh) or {}
+            success = True
+            for section in ["resources", "tools", "adapters", "prompts"]:
+                for name, conf in cfg.get("plugins", {}).get(section, {}).items():
+                    result = await update_plugin_configuration(
+                        plugin_registry, name, conf
+                    )
+                    if result.success:
+                        print(f"Updated {name}")
+                    else:
+                        print(f"Failed to update {name}: {result.error_message}")
+                        success = False
+            return 0 if success else 1
+
+        return asyncio.run(_run())
 
 
 def main() -> None:
-    CLI().run()
+    raise SystemExit(CLI().run())
 
 
 if __name__ == "__main__":
