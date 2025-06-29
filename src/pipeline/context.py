@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 
 from .stages import PipelineStage
 
+
 @dataclass
 class ConversationEntry:
     content: str
@@ -14,12 +15,56 @@ class ConversationEntry:
     timestamp: datetime
     metadata: Dict[str, Any] = field(default_factory=dict)
 
+
 @dataclass
 class ToolCall:
     name: str
     params: Dict[str, Any]
     result_key: str
     source: str = "direct_execution"
+
+
+@dataclass
+class LLMResponse:
+    content: str
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class FailureInfo:
+    stage: str
+    plugin_name: str
+    error_type: str
+    error_message: str
+    original_exception: Exception
+    context_snapshot: Dict[str, Any] | None = None
+    timestamp: datetime = field(default_factory=datetime.now)
+
+
+class MetricsCollector:
+    def __init__(self) -> None:
+        self.metrics: Dict[str, Any] = {}
+
+    def record_plugin_duration(self, plugin: str, stage: str, duration: float) -> None:
+        key = f"plugin_duration.{plugin}.{stage}"
+        self.metrics[key] = duration
+
+    def record_tool_execution(
+        self, tool_name: str, stage: str, pipeline_id: str, result_key: str, source: str
+    ) -> None:
+        key = f"tool_exec.{tool_name}.{stage}.{pipeline_id}"
+        self.metrics[key] = {"result_key": result_key, "source": source}
+
+    def record_tool_error(
+        self, tool_name: str, stage: str, pipeline_id: str, error: str
+    ) -> None:
+        key = f"tool_error.{tool_name}.{stage}.{pipeline_id}"
+        self.metrics[key] = error
+
+    def record_llm_call(self, plugin: str, stage: str, purpose: str) -> None:
+        key = f"llm_call.{plugin}.{stage}.{purpose}"
+        self.metrics[key] = self.metrics.get(key, 0) + 1
+
 
 @dataclass
 class PipelineState:
@@ -31,10 +76,12 @@ class PipelineState:
     metadata: Dict[str, Any] = field(default_factory=dict)
     pipeline_id: str = ""
     current_stage: Optional[PipelineStage] = None
-    failure_info: Any = None
+    metrics: MetricsCollector = field(default_factory=MetricsCollector)
+    failure_info: Optional[FailureInfo] = None
+
 
 class PluginContext:
-    def __init__(self, state: PipelineState, registries: 'SystemRegistries') -> None:
+    def __init__(self, state: PipelineState, registries: "SystemRegistries") -> None:
         self._state = state
         self._registries = registries
 
@@ -49,19 +96,34 @@ class PluginContext:
     def get_resource(self, name: str) -> Any:
         return self._registries.resources.get(name)
 
-    def execute_tool(self, tool_name: str, params: Dict[str, Any], result_key: Optional[str] = None) -> str:
+    def execute_tool(
+        self, tool_name: str, params: Dict[str, Any], result_key: Optional[str] = None
+    ) -> str:
         tool = self._registries.tools.get(tool_name)
         if not tool:
             raise ValueError(f"Tool '{tool_name}' not found")
         if result_key is None:
             result_key = f"{tool_name}_result_{len(self._state.pending_tool_calls)}"
-        self._state.pending_tool_calls.append(ToolCall(name=tool_name, params=params, result_key=result_key))
+        self._state.pending_tool_calls.append(
+            ToolCall(name=tool_name, params=params, result_key=result_key)
+        )
         return result_key
 
-    def add_conversation_entry(self, content: str, role: str, metadata: Optional[Dict[str, Any]] = None) -> None:
-        self._state.conversation.append(ConversationEntry(content=content, role=role, timestamp=datetime.now(), metadata=metadata or {}))
+    def add_conversation_entry(
+        self, content: str, role: str, metadata: Optional[Dict[str, Any]] = None
+    ) -> None:
+        self._state.conversation.append(
+            ConversationEntry(
+                content=content,
+                role=role,
+                timestamp=datetime.now(),
+                metadata=metadata or {},
+            )
+        )
 
-    def get_conversation_history(self, last_n: Optional[int] = None) -> List[ConversationEntry]:
+    def get_conversation_history(
+        self, last_n: Optional[int] = None
+    ) -> List[ConversationEntry]:
         if last_n is None:
             return list(self._state.conversation)
         return self._state.conversation[-last_n:]
@@ -95,6 +157,7 @@ class PluginContext:
 
     def add_failure(self, info: Any) -> None:
         self._state.failure_info = info
+
 
 class SimpleContext(PluginContext):
     @property

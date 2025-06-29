@@ -1,5 +1,6 @@
 from enum import Enum, auto
 
+
 class PipelineStage(Enum):
     PARSE = auto()
     THINK = auto()
@@ -12,10 +13,9 @@ class PipelineStage(Enum):
         return self.name.lower()
 
     @classmethod
-    def from_str(cls, name: str) -> 'PipelineStage':
+    def from_str(cls, name: str) -> "PipelineStage":
         try:
             return cls[name.upper()]
         except KeyError as exc:
-            valid = ', '.join(s.name.lower() for s in cls)
+            valid = ", ".join(s.name.lower() for s in cls)
             raise ValueError(f"Invalid stage '{name}'. Valid stages: {valid}") from exc
-

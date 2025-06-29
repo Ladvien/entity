@@ -3,9 +3,9 @@ from __future__ import annotations
 import os
 from contextlib import contextmanager
 from importlib import import_module
-from typing import Any, Dict, List, Tuple, Iterable
+from typing import Any, Dict, Iterable, List, Tuple
 
-from .plugins import ResourcePlugin, ToolPlugin, BasePlugin
+from .plugins import BasePlugin, ResourcePlugin, ToolPlugin
 from .registry import PluginRegistry, ResourceRegistry, ToolRegistry
 
 
