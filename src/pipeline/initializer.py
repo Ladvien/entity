@@ -100,15 +100,15 @@ class SystemInitializer:
 
         # Phase 1: register all plugin classes
         resources = self.config.get("plugins", {}).get("resources", {})
-        for name, cfg in resources.items():
-            cls = import_plugin_class(cfg.get("type", name))
-            registry.register_class(cls, cfg, name)
+        for name, config in resources.items():
+            cls = import_plugin_class(config.get("type", name))
+            registry.register_class(cls, config, name)
             dep_graph[name] = getattr(cls, "dependencies", [])
 
         for section in ["tools", "adapters", "prompts"]:
-            for name, cfg in self.config.get("plugins", {}).get(section, {}).items():
-                cls = import_plugin_class(cfg.get("type", name))
-                registry.register_class(cls, cfg, name)
+            for name, config in self.config.get("plugins", {}).get(section, {}).items():
+                cls = import_plugin_class(config.get("type", name))
+                registry.register_class(cls, config, name)
                 dep_graph[name] = getattr(cls, "dependencies", [])
 
         # Validate dependencies declared by each plugin class
@@ -122,8 +122,8 @@ class SystemInitializer:
 
         # Phase 2: dependency validation
         self._validate_dependency_graph(registry, dep_graph)
-        for plugin_class, cfg in registry.all_plugin_classes():
-            result = plugin_class.validate_config(cfg)
+        for plugin_class, config in registry.all_plugin_classes():
+            result = plugin_class.validate_config(config)
             if not result.success:
                 raise SystemError(
                     f"Config validation failed for {plugin_class.__name__}: {result.error_message}"
@@ -131,8 +131,8 @@ class SystemInitializer:
 
         # Phase 3: initialize resources
         resource_registry = ResourceRegistry()
-        for cls, cfg in registry.resource_classes():
-            instance = cls(cfg)
+        for cls, config in registry.resource_classes():
+            instance = cls(config)
             if hasattr(instance, "initialize") and callable(
                 getattr(instance, "initialize")
             ):
@@ -141,14 +141,14 @@ class SystemInitializer:
 
         # Phase 3.5: register tools
         tool_registry = ToolRegistry()
-        for cls, cfg in registry.tool_classes():
-            instance = cls(cfg)
+        for cls, config in registry.tool_classes():
+            instance = cls(config)
             tool_registry.add(getattr(instance, "name", cls.__name__), instance)
 
         # Phase 4: instantiate prompt and adapter plugins
         plugin_registry = PluginRegistry()
-        for cls, cfg in registry.non_resource_non_tool_classes():
-            instance = cls(cfg)
+        for cls, config in registry.non_resource_non_tool_classes():
+            instance = cls(config)
             for stage in getattr(cls, "stages", []):
                 plugin_registry.register_plugin_for_stage(instance, stage)
 
@@ -157,12 +157,15 @@ class SystemInitializer:
     def _validate_dependency_graph(
         self, registry: ClassRegistry, dep_graph: Dict[str, List[str]]
     ):
-        for plugin_name, deps in dep_graph.items():
-            for dep in deps:
+        for plugin_name, dependencies in dep_graph.items():
+            for dep in dependencies:
                 if not registry.has_plugin(dep):
                     available = registry.list_plugins()
                     raise SystemError(
-                        f"Plugin '{plugin_name}' requires '{dep}' but it's not registered. Available: {available}"
+                        (
+                            f"Plugin '{plugin_name}' requires '{dep}' but it's not registered. "
+                            f"Available: {available}"
+                        )
                     )
 
         in_degree = {node: 0 for node in dep_graph}

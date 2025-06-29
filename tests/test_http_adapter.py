@@ -1,6 +1,7 @@
 import asyncio
-
 import httpx
+from fastapi.testclient import TestClient
+
 
 from pipeline import (
     HTTPAdapter,
@@ -24,8 +25,8 @@ class RespPlugin(PromptPlugin):
 def make_adapter():
     plugins = PluginRegistry()
     plugins.register_plugin_for_stage(RespPlugin({}), PipelineStage.DO)
-    regs = SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
-    manager = PipelineManager(regs)
+    registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
+    manager = PipelineManager(registries)
     return HTTPAdapter(manager)
 
 
