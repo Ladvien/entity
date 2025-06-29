@@ -217,6 +217,22 @@ class ResourcePlugin(BasePlugin):
 
 
 class ToolPlugin(BasePlugin):
+
+    """Base class for tool plugins executed outside the pipeline."""
+
+    required_params: List[str] = []
+
+    def _validate_required_params(self, params: Dict[str, Any]) -> bool:
+        """Ensure all :attr:`required_params` are present in ``params``."""
+        missing = [p for p in self.required_params if params.get(p) is None]
+        if missing:
+            raise ValueError(f"Missing required parameters: {', '.join(missing)}")
+        return True
+
+    def validate_tool_params(self, params: Dict[str, Any]) -> bool:
+        """Public hook for validating tool parameters."""
+        return self._validate_required_params(params)
+
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
         self.max_retries = int(self.config.get("max_retries", 1))
@@ -231,6 +247,8 @@ class ToolPlugin(BasePlugin):
         max_retries: int | None = None,
         delay: float | None = None,
     ):
+        self.validate_tool_params(params)
+        for attempt in range(max_retries + 1):
         max_retry_count = self.max_retries if max_retries is None else max_retries
         retry_delay_seconds = self.retry_delay if delay is None else delay
         for attempt in range(max_retry_count + 1):
