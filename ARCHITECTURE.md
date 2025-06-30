@@ -1012,7 +1012,7 @@ class BasePlugin:
 
 - **Three Layers**: Async function decorators → Class plugins → Full pipeline control
 - **Async-First**: Consistent async patterns throughout with modern Python best practices
-- **Zero Config**: Sensible defaults, auto-discovery, built-in tools
+- **Configuration Examples**: Comprehensive YAML configuration with environment variable interpolation
 - **Preserve All Power**: Advanced users get complete sophisticated pipeline
 - **Natural Progression**: Smooth path from beginner to expert
 - **Community-Friendly**: Easy to contribute and share async plugins
