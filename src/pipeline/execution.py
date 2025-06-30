@@ -4,11 +4,7 @@ import time
 from datetime import datetime
 from typing import Any, Dict
 
-<<<<<<< HEAD:src/pipeline/pipeline.py
-from .context import ConversationEntry, PluginContext
-=======
-from .context import PluginContext, SimpleContext
->>>>>>> bccf226b109c98ca22b55a6635c78d0da388625a:src/pipeline/execution.py
+from .context import PluginContext
 from .manager import PipelineManager
 from .registries import SystemRegistries
 from .stages import PipelineStage
