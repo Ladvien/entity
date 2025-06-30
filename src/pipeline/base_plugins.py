@@ -12,20 +12,43 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar, cast
 import yaml
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
+<<<<<< codex/resolve-merge-conflict-artifacts
+    from .context import LLMResponse, PluginContext, SimpleContext
+======
     from .context import PluginContext, SimpleContext
     from .state import LLMResponse
+>>>>>> main
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .initializer import ClassRegistry
 
+<<<<<< codex/resolve-merge-conflict-artifacts
+from .stages import PipelineStage
+======
 from .logging import get_logger
 from .observability.utils import execute_with_observability
 from .stages import PipelineStage
 from .validation import ValidationResult
+>> >>>> main
 
 logger = logging.getLogger(__name__)
 
 Self = TypeVar("Self", bound="BasePlugin")
+
+
+@dataclass
+class ValidationResult:
+    success: bool
+    error_message: Optional[str] = None
+    warnings: List[str] = field(default_factory=list)
+
+    @classmethod
+    def success_result(cls) -> "ValidationResult":
+        return cls(True)
+
+    @classmethod
+    def error_result(cls, message: str) -> "ValidationResult":
+        return cls(False, error_message=message)
 
 
 @dataclass
@@ -53,9 +76,12 @@ class BasePlugin(ABC):
 
     def __init__(self, config: Dict | None = None) -> None:
         self.config = config or {}
-        self.logger = get_logger(self.__class__.__name__)
+        self.logger = logging.getLogger(self.__class__.__name__)
 
-<<<<< codex/add-docstring-to-baseplugin-class
+<<<<<< codex/resolve-merge-conflict-artifacts
+    async def execute(self, context: PluginContext | SimpleContext):
+======
+<<<< codex/add-docstring-to-baseplugin-class
     async def execute(self, context: PluginContext | SimpleContext):
         async def run() -> Any:
             return await self._execute_impl(context)
@@ -68,8 +94,9 @@ class BasePlugin(ABC):
             stage=str(context.current_stage),
         )
 =====
-<<<<< codex/re-add-pluginautoclassifier-class
+<<<< codex/re-add-pluginautoclassifier-class
     async def execute(self, context: PluginContext | SimpleContext):
+>>>>>> main
         logger.info(
             "Plugin execution started",
             extra={
@@ -102,6 +129,8 @@ class BasePlugin(ABC):
                 },
             )
             raise
+<<<<<< codex/resolve-merge-conflict-artifacts
+======
 =====
     async def execute(self, context: PluginContext | SimpleContext) -> Any:
         async def run() -> Any:
@@ -114,15 +143,15 @@ class BasePlugin(ABC):
             plugin=self.__class__.__name__,
             stage=str(context.current_stage),
         )
->>>>> main
->>>>>>
+>>>>>
+>>>>>> main
 
     @abstractmethod
-    async def _execute_impl(self, context: "PluginContext"):
+    async def _execute_impl(self, context: PluginContext | SimpleContext):
         pass
 
     async def call_llm(
-        self, context: "PluginContext", prompt: str, purpose: str
+        self, context: PluginContext, prompt: str, purpose: str
     ) -> "LLMResponse":
         from .context import LLMResponse
 
@@ -183,7 +212,7 @@ class BasePlugin(ABC):
             self.config = new_config
             await self._handle_reconfiguration(old_config, new_config)
             return ReconfigResult(success=True)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             self.config = old_config
             return ReconfigResult(
                 success=False, error_message=f"Reconfiguration failed: {e}"
@@ -232,11 +261,6 @@ class BasePlugin(ABC):
 
 
 class ResourcePlugin(BasePlugin):
-    """Infrastructure plugin following **Resource Agnostic (11)**.
-
-    Resources may be optional yet still provide consistent interfaces.
-    """
-
     async def initialize(self) -> None:
         """Optional async initialization hook."""
         return None
@@ -251,11 +275,7 @@ class ResourcePlugin(BasePlugin):
 
 
 class ToolPlugin(BasePlugin):
-    """Base class for tool plugins executed outside the pipeline.
-
-    Embodies **Immediate Tool Access (24)** by letting any stage
-    call tool functions directly.
-    """
+    """Base class for tool plugins executed outside the pipeline."""
 
     required_params: List[str] = []
 
@@ -290,29 +310,31 @@ class ToolPlugin(BasePlugin):
         for attempt in range(max_retry_count + 1):
             try:
                 return await self.execute_function(params)
-            except Exception:  # noqa: BLE001
+            except Exception:
                 if attempt == max_retry_count:
                     raise
                 await asyncio.sleep(retry_delay_seconds)
 
-    async def execute_with_timeout(self, context: "PluginContext", timeout: int = 30):
+    async def execute_with_timeout(
+        self, context: PluginContext | SimpleContext, timeout: int = 30
+    ):
         return await asyncio.wait_for(self.execute(context), timeout=timeout)
 
-    async def _execute_impl(self, context: "PluginContext"):
+    async def _execute_impl(self, context: PluginContext | SimpleContext):
         """Tools are not executed in the pipeline directly."""
         pass
 
 
 class PromptPlugin(BasePlugin):
-    """Processing logic plugins supporting **Plugin-Level Iteration (26)**."""
+    pass
 
 
 class AdapterPlugin(BasePlugin):
-    """Input/output adapters keeping the **Linear Pipeline Flow (23)** intact."""
+    pass
 
 
 class FailurePlugin(BasePlugin):
-    """Handle errors according to **Error Communication (30)**."""
+    pass
 
 
 class AutoGeneratedPlugin(BasePlugin):
@@ -332,12 +354,11 @@ class AutoGeneratedPlugin(BasePlugin):
         if base_class and base_class is not BasePlugin:
             self.__class__.__bases__ = (base_class,)
 
-    async def _execute_impl(self, context: "PluginContext") -> None:
-        if not inspect.iscoroutinefunction(self.func):
-            raise TypeError(
-                f"Plugin function '{getattr(self.func, '__name__', 'unknown')}' must be async"
-            )
-        result = await self.func(context)
+    async def _execute_impl(self, context: PluginContext | SimpleContext):
+        if inspect.iscoroutinefunction(self.func):
+            result = await self.func(context)
+        else:
+            result = self.func(context)
         if isinstance(result, str) and not context.has_response():
             context.set_response(result)
 

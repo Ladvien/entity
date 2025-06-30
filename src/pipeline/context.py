@@ -11,19 +11,6 @@ from .state import ConversationEntry, FailureInfo, LLMResponse, PipelineState, T
 
 
 class PluginContext:
-<<<<<< codex/add-docstrings-to-plugincontext-and-simplecontext
-    """Provide controlled access to pipeline state and registries.
-
-    This context object wraps :class:`PipelineState` and
-    :class:`SystemRegistries` so plugins can safely interact with the
-    surrounding system. It exposes methods to read and modify state,
-    schedule tool execution, and manage conversation history.  Note that
-    ``PluginContext`` itself is *not* a plugin.
-    """
-======
-    """Rich state container enabling **Structured Communication (14)**."""
->>>>>> main
-
     def __init__(self, state: PipelineState, registries: SystemRegistries) -> None:
         # store state privately to discourage direct access from plugins
         self.__state = state
@@ -161,8 +148,6 @@ class PluginContext:
 
 
 class SimpleContext(PluginContext):
-    """Convenience wrapper with helper methods built on ``PluginContext``."""
-
     @property
     def message(self) -> str:
         for entry in reversed(self._get_state().conversation):
