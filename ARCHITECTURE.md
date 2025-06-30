@@ -1,201 +1,13 @@
-# Entity Pipeline Framework Architecture Summary
+# Entity Pipeline Framework - Architecture Document
 
 ## 🎯 Vision
-A **pipeline-based plugin framework** for AI agents that processes requests through configurable stages, inspired by Bevy's plugin architecture. **Progressive disclosure design**: dead simple for beginners, infinitely powerful for experts.
+A **pipeline-based plugin framework** for AI agents that processes requests through configurable stages, inspired by Bevy's plugin architecture. **Progressive disclosure design**: approachable for beginners, infinitely powerful for experts.
 
 **Requires Python 3.11 or higher.**
 
-## 🚀 The 15-Minute Experience (Layer 1: Dead Simple)
+## 🏗️ Core Architecture
 
-### Getting Started - Zero Config
-```python
-from entity import Agent
-
-# Create an agent in one line
-agent = Agent()
-
-# Add functionality with decorators
-@agent.plugin
-def hello(context):
-    return f"Hello {context.user}! How can I help?"
-
-@agent.plugin  
-def weather(context):
-    if "weather" in context.message:
-        return "It's sunny and 72°F today!"
-
-@agent.plugin
-def calculator(context):
-    if "calculate" in context.message:
-        # Built-in tools available automatically
-        result = context.calculate("2 + 2")
-        return f"The answer is {result}"
-
-# Run the agent
-agent.run_http()  # Automatically starts server on localhost:8000
-```
-
-The default setup registers a simple `CalculatorTool`, a `SearchTool`, and an
-`EchoLLMResource`, so the example above works without any configuration files.
-
-```python
-from entity.tools import SearchTool
-
-# Add web search capability
-agent.tool_registry.add("search", SearchTool())
-
-@agent.plugin
-async def lookup(context):
-    result = await context.use_tool("search", query="Entity Pipeline")
-    return result
-```
-
-### Running the Examples
-The example scripts in the `examples` folder can be executed directly from the
-repository root. Each script adjusts `sys.path` so the `src` directory is
-discoverable:
-
-```bash
-python examples/http_server.py
-python examples/pipeline_example.py
-```
-
-### Command Line Usage
-Launch an agent from a YAML configuration file. Example configurations are
-provided in `config/dev.yaml` and `config/prod.yaml`:
-
-```bash
-python src/cli.py --config config/dev.yaml
-```
-
-### One-Liner Context Operations
-```python
-@agent.plugin
-def smart_assistant(context):
-    # Dead simple context operations
-    context.think("Let me analyze this request...")      # Internal reasoning
-    context.say("I'm working on that...")                # User-visible response
-    
-    weather = context.use_tool("weather", city="SF")     # Returns result directly
-    context.remember("user_location", "San Francisco")   # Auto-persistence
-    
-    # Conversation helpers
-    if context.is_question():
-        return context.ask_llm("Please answer: " + context.message)
-    
-    return "I understand!"
-```
-
-### Instant Plugin Discovery
-The pipeline automatically registers plugin classes placed under
-`src/pipeline/plugins`. Simply create a new plugin class that inherits from the
-appropriate base class and it becomes available when the agent loads.
-
-```python
-<<<<<< yz015c-codex/update-module-plugins-registration-and-tests
-# Framework auto-discovers plugins by naming convention
-# functions must end with `_plugin`
-# weather_plugin.py
-def weather_plugin(context):
-    return get_weather_data()
-
-# calculator_plugin.py  
-def calculator_plugin(context):
-    return calculate_math(context.message)
-
-# Just drop files in plugins/ folder - they work automatically
-agent = Agent.from_directory("./plugins")  # Auto-loads everything
-# Import errors are logged and remaining plugins still load
-======
-from pipeline import PromptPlugin, PipelineStage
-
-class MyCustomPrompt(PromptPlugin):
-    stages = [PipelineStage.THINK]
-
-    async def _execute_impl(self, context):
-        return "Hello from my plugin"
-
-agent = Agent.from_package("pipeline.plugins")
->>>>>> main
-agent.run_http()
-```
-
-### Multi-Turn and Complex Reasoning Patterns
-
-The framework supports complex reasoning and multi-turn scenarios through explicit mechanisms:
-
-#### **Plugin-Level Iteration for Complex Reasoning**
-```python
-class ReActPlugin(PromptPlugin):
-    stages = [PipelineStage.THINK]
-    
-    async def _execute_impl(self, context: PluginContext):
-        max_steps = self.config.get("max_steps", 5)
-        
-        # Internal plugin iteration - no pipeline loops needed
-        for step in range(max_steps):
-            # Think
-            thought = await self.call_llm(context, thought_prompt, purpose=f"react_thought_{step}")
-            
-            # Act (execute tools immediately)
-            if self._should_take_action(thought.content):
-                action_name, params = self._parse_action_from_thought(thought.content)
-                result_key = context.execute_tool(action_name, params)
-                # Tool result immediately available
-            
-            # Decide if done
-            if self._should_conclude(thought.content):
-                context.set_response(self._extract_final_answer(thought.content))
-                return
-        
-        context.set_response("Reached reasoning limit without conclusion.")
-```
-
-#### **Explicit Pipeline Delegation for Multi-Step Workflows**
-```python
-class MultiStepWorkflowPlugin(PromptPlugin):
-    async def _execute_impl(self, context: PluginContext):
-        if self._needs_more_processing(context):
-            # Explicitly delegate back to pipeline for another pass
-            context.set_response({
-                "type": "continue_processing",
-                "message": "I need to search for more information about X",
-                "internal": True,
-                "workflow_state": {"step": 2, "data": "..."}
-            })
-
-# Agent-level conversation management
-class ConversationManager:
-    async def process_request(self, user_message: str) -> str:
-        response = await execute_pipeline(user_message)
-        
-        # Handle multi-step workflows
-        while response.get("type") == "continue_processing":
-            follow_up = response["message"]
-            response = await execute_pipeline(follow_up)
-        
-        return response
-```
-
-#### **Multi-Turn Conversations (Application Level)**
-```python
-# Each user message triggers one pipeline execution
-conversation_history = []
-
-for user_message in conversation:
-    # Add conversation history to context
-    enhanced_request = {
-        "message": user_message,
-        "history": conversation_history[-10:]  # Last 10 messages
-    }
-    
-    response = await execute_pipeline(enhanced_request)
-    conversation_history.append({"user": user_message, "assistant": response})
-```
-
-The framework maintains its sophisticated five-stage pipeline underneath the simple interface, automatically routing simple plugins to appropriate stages.
-
-### Detailed Pipeline Execution Model
+### Pipeline Execution Model
 
 The pipeline follows a **single-execution pattern** with tools and resources available throughout all stages:
 
@@ -288,6 +100,7 @@ def create_default_response(message: str, pipeline_id: str) -> Dict[str, Any]:
         "type": "default_response"
     }
 ```
+
 ```mermaid
 flowchart TD
     Users[👤 Users] --> API[🌐 API]
@@ -347,9 +160,50 @@ flowchart TD
     class SimplePlugins,AutoRouter simple
 ```
 
-### Progressive Five-Layer Plugin System
+### Stage Definitions
 
-The framework maintains the sophisticated five-layer plugin architecture underneath the simple interface, with automatic classification for simple plugins:
+#### **parse** - "Get ready to think"
+- Input validation, format conversion
+- Initial context setup
+- Memory/context retrieval (first pass)
+- Basic input sanitization
+
+#### **think** - "Reason and plan"  
+- Intent classification and understanding
+- Multi-step reasoning (chain-of-thought, ReAct)
+- Planning tool usage and workflows
+- Memory retrieval during reasoning (second pass)
+- Decision making about actions
+
+#### **do** - "Execute actions"
+- Primary stage for complex tool orchestration
+- Handle tool failures and retries
+- Parse and validate tool results
+- Coordinate multiple tool interactions
+
+#### **review** - "Final processing and safety"
+- Generate responses and apply formatting
+- Privacy protection (PII scrubbing)
+- Content filtering and safety checks
+- Personality and tone adjustments
+- Response quality validation
+- Final security review
+
+#### **deliver** - "Send the response"
+- Pure output delivery (HTTP response, TTS, file write)
+- No content modification - just transmission
+- Handle delivery failures
+
+#### **error** - "Handle failures gracefully"
+- Convert technical errors to user-friendly messages
+- Log errors for debugging
+- Recovery strategies
+
+## 🔌 Plugin System Architecture
+
+### Five-Layer Plugin System
+
+The framework maintains a sophisticated five-layer plugin architecture with automatic classification for simple plugins:
 
 #### **Resource Plugins** (Infrastructure - Enables System Function)
 - **Database**: PostgreSQL, SQLite connections
@@ -467,17 +321,17 @@ class FailurePlugin(BasePlugin):
 ```python
 # Framework automatically determines plugin type and stage placement
 @agent.plugin
-def weather_check(context):
+async def weather_check(context):
     """Auto-classified as ToolPlugin, auto-routed to DO stage"""
-    return get_weather()
+    return await get_weather()
 
 @agent.plugin(stage="think")  # Optional explicit control
-def reasoning_plugin(context):
+async def reasoning_plugin(context):
     """Auto-classified as PromptPlugin, explicit stage assignment"""
     context.think("Analyzing the request...")
 
 @agent.plugin(priority=10)  # Optional execution order
-def high_priority_plugin(context):
+async def high_priority_plugin(context):
     """Runs early in its stage"""
     pass
 
@@ -487,7 +341,7 @@ class AutoGeneratedWeatherPlugin(ToolPlugin):
     priority = 50  # Default
     
     async def execute(self, context):
-        return weather_check(context)  # Wraps user function
+        return await weather_check(context)  # Wraps user function
 ```
 
 #### **Layer 2: Class-Based Plugins (Explicit Control)**
@@ -567,110 +421,70 @@ class ChainOfThoughtPlugin(PromptPlugin):
         return user_entries[-1] if user_entries else ""
 ```
 
-#### **Stage Registration Process**
+### Automatic Plugin Classification and Routing
+
+The framework automatically classifies simple plugins and routes them appropriately:
+
 ```python
-def register_plugin_for_stages(plugin_instance, plugin_name):
-    """Register plugin for stages defined in plugin class"""
-    for stage in plugin_instance.stages:
-        plugin_registry.register_plugin_for_stage(plugin_instance, stage, plugin_name)
-```
-
-### Error Handling and Failure Recovery
-
-The framework implements a **fail-fast error handling strategy** with dedicated failure communication:
-
-#### **Failure Information Structure**
-```python
-@dataclass
-class FailureInfo:
-    stage: str                    # Stage where failure occurred
-    plugin_name: str              # Plugin that caused the failure
-    error_type: str               # "plugin_error", "tool_error", "system_error"
-    error_message: str            # Human-readable error description
-    original_exception: Exception # Original exception for debugging
-    context_snapshot: Dict[str, Any] = None  # Context state when failure occurred
-    timestamp: datetime = field(default_factory=datetime.now)
-```
-
-#### **Error Handling Flow**
-1. **Plugin Failures**: Caught during stage execution, added to context, routed to error stage
-2. **Tool Failures**: Captured in tool results, detected after tool execution, routed to error stage  
-3. **System Failures**: Unexpected exceptions caught at pipeline level, routed to error stage
-4. **Error Stage**: Processes all failures through dedicated plugins for user communication
-5. **Static Fallback**: If error stage plugins fail, return static error response
-
-#### **Progressive Error Handling**
-```python
-# Layer 1: Automatic error handling for simple plugins
-@agent.plugin
-def might_fail(context):
-    result = risky_operation()  # Framework automatically catches and handles errors
-    return result
-
-# Layer 2-3: Full error control for advanced plugins
-class AdvancedPlugin(Plugin):
-    async def execute(self, context):
-        try:
-            # Complex operation
-            pass
-        except Exception as e:
-            context.add_failure(FailureInfo(
-                stage=str(context.current_stage),
-                plugin_name=self.__class__.__name__,
-                error_type="plugin_error",
-                error_message=str(e),
-                original_exception=e
-            ))
-```
-
-#### **Tool Retry Configuration**
-```python
-class ToolPlugin(BasePlugin):
-    stages: List[PipelineStage]  # Must be explicitly defined
-    
-    def __init__(self, config: Dict):
-        self.max_retries = config.get("max_retries", 1)  # Default sensible retry count
-        self.retry_delay = config.get("retry_delay", 1.0)  # Seconds between retries
-    
-    async def execute_function_with_retry(self, params: Dict) -> str:
-        """Execute tool function with configured retry logic"""
-        for attempt in range(self.max_retries + 1):
-            try:
-                return await self.execute_function(params)
-            except Exception as e:
-                if attempt == self.max_retries:
-                    raise e  # Final attempt failed
-                await asyncio.sleep(self.retry_delay)
+class PluginAutoClassifier:
+    @staticmethod
+    def classify_and_route(plugin_func, user_hints=None):
+        """Automatically determine plugin type and stage from function analysis"""
         
-    async def execute_function(self, params: Dict) -> str:
-        """Override this method in tool implementations"""
-        raise NotImplementedError("Tool plugins must implement execute_function")
+        # Ensure all plugin functions are async
+        if not asyncio.iscoroutinefunction(plugin_func):
+            raise ValueError(f"Plugin function {plugin_func.__name__} must be async. Use: async def {plugin_func.__name__}(context):")
+        
+        # Analyze function for automatic classification
+        source = inspect.getsource(plugin_func)
+        
+        # Smart defaults based on content analysis
+        if any(keyword in source for keyword in ["return", "response", "answer"]):
+            stage = PipelineStage.DO  # Likely produces output
+            plugin_type = ToolPlugin if "tool" in source or "use_tool" in source else PromptPlugin
+        elif any(keyword in source for keyword in ["think", "reason", "analyze"]):
+            stage = PipelineStage.THINK  # Likely reasoning
+            plugin_type = PromptPlugin
+        elif any(keyword in source for keyword in ["parse", "validate", "check"]):
+            stage = PipelineStage.PARSE  # Likely input processing
+            plugin_type = AdapterPlugin
+        else:
+            stage = PipelineStage.DO  # Safe default
+            plugin_type = ToolPlugin
+        
+        # User hints override automatic detection
+        if user_hints and "stage" in user_hints:
+            stage = PipelineStage.from_str(user_hints["stage"])
+        
+        # Generate full plugin class with appropriate base class
+        return AutoGeneratedPlugin(
+            func=plugin_func,
+            stages=[stage],
+            priority=user_hints.get("priority", 50),
+            name=plugin_func.__name__,
+            base_class=plugin_type
+        )
+
+class AutoGeneratedPlugin(BasePlugin):
+    def __init__(self, func, stages, priority, name, base_class):
+        self.func = func
+        self.stages = stages
+        self.priority = priority
+        self.name = name
+        self.__class__.__bases__ = (base_class,)  # Dynamic inheritance
+    
+    async def execute(self, context):
+        # All plugin functions are async
+        result = await self.func(context)
+        
+        # Auto-set response if function returns a string
+        if isinstance(result, str) and not context.has_response():
+            context.set_response(result)
 ```
 
-#### **Static Error Fallback**
-```python
-# Used when error stage plugins themselves fail
-STATIC_ERROR_RESPONSE = {
-    "error": "System error occurred",
-    "message": "An unexpected error prevented processing your request. Please try again or contact support.",
-    "error_id": None,  # Will be populated with pipeline_id
-    "timestamp": None,  # Will be populated with current time
-    "type": "static_fallback"
-}
+## 🗃️ Data Structures and Context
 
-def create_static_error_response(pipeline_id: str) -> Dict[str, Any]:
-    """Create fallback error response when error stage fails"""
-    response = STATIC_ERROR_RESPONSE.copy()
-    response["error_id"] = pipeline_id
-    response["timestamp"] = datetime.now().isoformat()
-    return response
-```
-
-### Context and Data Structures
-
-The framework uses a **layered context architecture** with controlled access to ensure clean separation between plugin interfaces and internal pipeline state:
-
-#### **Three-Layer Context System**
+### Three-Layer Context System
 
 ```python
 @dataclass
@@ -809,101 +623,74 @@ class SystemRegistries:
     plugins: PluginRegistry
 ```
 
-### Automatic Plugin Classification and Routing
+## ⚠️ Error Handling and Failure Recovery
 
-The framework automatically classifies simple plugins and routes them appropriately:
+The framework implements a **fail-fast error handling strategy** with dedicated failure communication:
 
+### Failure Information Structure
 ```python
-class PluginAutoClassifier:
-    @staticmethod
-    def classify_and_route(plugin_func, user_hints=None):
-        """Automatically determine plugin type and stage from function analysis"""
-        
-        # Analyze function for automatic classification
-        source = inspect.getsource(plugin_func)
-        
-        # Smart defaults based on content analysis
-        if any(keyword in source for keyword in ["return", "response", "answer"]):
-            stage = PipelineStage.DO  # Likely produces output
-            plugin_type = ToolPlugin if "tool" in source or "use_tool" in source else PromptPlugin
-        elif any(keyword in source for keyword in ["think", "reason", "analyze"]):
-            stage = PipelineStage.THINK  # Likely reasoning
-            plugin_type = PromptPlugin
-        elif any(keyword in source for keyword in ["parse", "validate", "check"]):
-            stage = PipelineStage.PARSE  # Likely input processing
-            plugin_type = AdapterPlugin
-        else:
-            stage = PipelineStage.DO  # Safe default
-            plugin_type = ToolPlugin
-        
-        # User hints override automatic detection
-        if user_hints and "stage" in user_hints:
-            stage = PipelineStage.from_str(user_hints["stage"])
-        
-        # Generate full plugin class with appropriate base class
-        return AutoGeneratedPlugin(
-            func=plugin_func,
-            stages=[stage],
-            priority=user_hints.get("priority", 50),
-            name=plugin_func.__name__,
-            base_class=plugin_type
-        )
-
-class AutoGeneratedPlugin(BasePlugin):
-    def __init__(self, func, stages, priority, name, base_class):
-        self.func = func
-        self.stages = stages
-        self.priority = priority
-        self.name = name
-        self.__class__.__bases__ = (base_class,)  # Dynamic inheritance
-    
-    async def execute(self, context):
-        # Handle both sync and async functions
-        if asyncio.iscoroutinefunction(self.func):
-            result = await self.func(context)
-        else:
-            result = self.func(context)
-        
-        # Auto-set response if function returns a string
-        if isinstance(result, str) and not context.has_response():
-            context.set_response(result)
-```reason", "analyze"]):
-            stage = PipelineStage.THINK  # Likely reasoning
-        elif any(keyword in source for keyword in ["parse", "validate", "check"]):
-            stage = PipelineStage.PARSE  # Likely input processing
-        else:
-            stage = PipelineStage.DO  # Safe default
-        
-        # User hints override automatic detection
-        if user_hints and "stage" in user_hints:
-            stage = PipelineStage.from_str(user_hints["stage"])
-        
-        # Generate full plugin class
-        return AutoGeneratedPlugin(
-            func=plugin_func,
-            stages=[stage],
-            priority=user_hints.get("priority", 50),
-            name=plugin_func.__name__
-        )
-
-class AutoGeneratedPlugin(Plugin):
-    def __init__(self, func, stages, priority, name):
-        self.func = func
-        self.stages = stages
-        self.priority = priority
-        self.name = name
-    
-    async def execute(self, context):
-        # Handle both sync and async functions
-        if asyncio.iscoroutinefunction(self.func):
-            result = await self.func(context)
-        else:
-            result = self.func(context)
-        
-        # Auto-set response if function returns a string
-        if isinstance(result, str) and not context.has_response():
-            context.set_response(result)
+@dataclass
+class FailureInfo:
+    stage: str                    # Stage where failure occurred
+    plugin_name: str              # Plugin that caused the failure
+    error_type: str               # "plugin_error", "tool_error", "system_error"
+    error_message: str            # Human-readable error description
+    original_exception: Exception # Original exception for debugging
+    context_snapshot: Dict[str, Any] = None  # Context state when failure occurred
+    timestamp: datetime = field(default_factory=datetime.now)
 ```
+
+### Error Handling Flow
+1. **Plugin Failures**: Caught during stage execution, added to context, routed to error stage
+2. **Tool Failures**: Captured in tool results, detected after tool execution, routed to error stage  
+3. **System Failures**: Unexpected exceptions caught at pipeline level, routed to error stage
+4. **Error Stage**: Processes all failures through dedicated plugins for user communication
+5. **Static Fallback**: If error stage plugins fail, return static error response
+
+### Tool Retry Configuration
+```python
+class ToolPlugin(BasePlugin):
+    stages: List[PipelineStage]  # Must be explicitly defined
+    
+    def __init__(self, config: Dict):
+        self.max_retries = config.get("max_retries", 1)  # Default sensible retry count
+        self.retry_delay = config.get("retry_delay", 1.0)  # Seconds between retries
+    
+    async def execute_function_with_retry(self, params: Dict) -> str:
+        """Execute tool function with configured retry logic"""
+        for attempt in range(self.max_retries + 1):
+            try:
+                return await self.execute_function(params)
+            except Exception as e:
+                if attempt == self.max_retries:
+                    raise e  # Final attempt failed
+                await asyncio.sleep(self.retry_delay)
+        
+    async def execute_function(self, params: Dict) -> str:
+        """Override this method in tool implementations"""
+        raise NotImplementedError("Tool plugins must implement execute_function")
+```
+
+### Static Error Fallback
+```python
+# Used when error stage plugins themselves fail
+STATIC_ERROR_RESPONSE = {
+    "error": "System error occurred",
+    "message": "An unexpected error prevented processing your request. Please try again or contact support.",
+    "error_id": None,  # Will be populated with pipeline_id
+    "timestamp": None,  # Will be populated with current time
+    "type": "static_fallback"
+}
+
+def create_static_error_response(pipeline_id: str) -> Dict[str, Any]:
+    """Create fallback error response when error stage fails"""
+    response = STATIC_ERROR_RESPONSE.copy()
+    response["error_id"] = pipeline_id
+    response["timestamp"] = datetime.now().isoformat()
+    return response
+```
+
+## 🔧 Tool Execution System
 
 ### Tool Execution (Available Throughout Pipeline)
 ```python
@@ -943,6 +730,8 @@ async def execute_pending_tools(state: PipelineState, registries: SystemRegistri
     
     return results
 ```
+
+## 📊 Observability & Monitoring
 
 ### Plugin Observability & Logging
 ```python
@@ -1018,161 +807,7 @@ class BasePlugin:
         pass
 ```
 
-### Plugin Validation System
-```python
-class ValidationResult:
-    success: bool
-    error_message: str = None
-    warnings: List[str] = []
-
-@dataclass
-class ReconfigResult:
-    success: bool
-    error_message: str = None
-    requires_restart: bool = False
-    warnings: List[str] = []
-
-class BasePlugin:
-    dependencies = []  # List of registry keys that this plugin depends on
-    stages: List[PipelineStage]  # Always explicit, always required
-    
-    @classmethod
-    def validate_config(cls, config: Dict) -> ValidationResult:
-        """Pure configuration validation - no external dependencies"""
-        return ValidationResult(success=True)
-    
-    @classmethod
-    def validate_dependencies(cls, registry) -> ValidationResult:
-        """Dependency validation - checks that declared dependencies exist in registry"""
-        for dep in cls.dependencies:
-            if not registry.has_plugin(dep):
-                available = registry.list_plugins()
-                return ValidationResult(
-                    success=False,
-                    error_message=f"{cls.__name__} requires '{dep}' but it's not registered. Available: {available}"
-                )
-        
-        return ValidationResult(success=True)
-    
-    def supports_runtime_reconfiguration(self) -> bool:
-        """Can this plugin be reconfigured without restart?"""
-        return True  # Override in plugins that can't handle runtime reconfiguration
-    
-    async def reconfigure(self, new_config: Dict) -> ReconfigResult:
-        """Update plugin configuration at runtime"""
-        validation_result = self.validate_config(new_config)
-        if not validation_result.success:
-            return ReconfigResult(
-                success=False,
-                error_message=f"Configuration validation failed: {validation_result.error_message}"
-            )
-        
-        if not self.supports_runtime_reconfiguration():
-            return ReconfigResult(
-                success=False,
-                requires_restart=True,
-                error_message="This plugin requires application restart for configuration changes"
-            )
-        
-        try:
-            old_config = self.config
-            self.config = new_config
-            await self._handle_reconfiguration(old_config, new_config)
-            return ReconfigResult(success=True)
-        except Exception as e:
-            self.config = old_config
-            return ReconfigResult(
-                success=False,
-                error_message=f"Reconfiguration failed: {str(e)}"
-            )
-    
-    async def _handle_reconfiguration(self, old_config: Dict, new_config: Dict):
-        """Override this method to handle configuration changes"""
-        pass  # Default: no special handling needed
-```
-
-### Plugin Capabilities
-- **Read/Write Context**: Plugins can modify conversation and response through controlled interface
-- **Resource Access**: `context.get_resource("llm")` - request what you need with validation
-- **Tool Access**: `context.execute_tool("name", params)` - execute tools when needed with immediate results
-- **Short Circuit**: Skip remaining pipeline stages by setting `context.set_response()`
-- **Plugin-Level Iteration**: Handle complex reasoning patterns with internal loops
-- **Pipeline Delegation**: Explicitly request additional pipeline passes for multi-step workflows
-- **Dynamic Reconfiguration**: Update configuration at runtime via `reconfigure()` method with cascading dependency notifications
-- **Immediate Tool Execution**: Execute tools in any stage with immediate access to results
-- **Structured LLM Access**: Any plugin can call the LLM resource with automatic observability via `self.call_llm()`
-- **Standardized Results**: Set and get standardized results with explicit dependencies via controlled interface
-- **Error Signaling**: Add failure information with `context.add_failure()` to route to error stage
-- **Tool Retry Logic**: Configure retry behavior for individual tools with `max_retries` and `retry_delay`
-- **Stage Awareness**: Access current execution stage with `context.current_stage` property
-- **Controlled Access**: Clean interface prevents accidental system state corruption
-- **Metadata Persistence**: Store plugin state across single pipeline execution via `context.get_metadata()` and `context.set_metadata()`
-
-#### **Layer 1: Simple Context (Beginner-Friendly)**
-```python
-class SimpleContext:
-    """Dead simple interface that hides complexity"""
-    
-    # Properties that just work
-    @property
-    def message(self) -> str:
-        """The user's message"""
-        return self._get_latest_user_message()
-    
-    @property  
-    def user(self) -> str:
-        """The user's name"""
-        return self._get_user_name()
-    
-    @property
-    def location(self) -> str:
-        """User's location if available"""
-        return self._get_user_location()
-    
-    # One-liner operations
-    def say(self, message: str):
-        """Send a message to the user"""
-        self.set_response(message)
-    
-    def think(self, thought: str):
-        """Internal reasoning (logged but not shown to user)"""
-        self._add_internal_thought(thought)
-    
-    def use_tool(self, tool_name: str, **params):
-        """Execute a tool and return the result immediately"""
-        result_key = self.execute_tool(tool_name, params)
-        return self._get_tool_result(result_key)  # Blocks until available
-    
-    def remember(self, key: str, value: Any):
-        """Store something in memory"""
-        self.set_metadata(f"memory_{key}", value)
-    
-    def recall(self, key: str, default=None):
-        """Retrieve something from memory"""
-        return self.get_metadata(f"memory_{key}", default)
-    
-    def ask_llm(self, prompt: str) -> str:
-        """Ask the LLM a question and get response"""
-        llm = self.get_resource("llm")
-        response = asyncio.run(llm.generate(prompt))  # Handle async automatically
-        return response.content
-    
-    def calculate(self, expression: str):
-        """Built-in calculator"""
-        return self.use_tool("calculator", expression=expression)
-    
-    # Convenience methods
-    def is_question(self) -> bool:
-        """Check if user message is a question"""
-        return self.message.strip().endswith('?')
-    
-    def contains(self, *keywords) -> bool:
-        """Check if message contains any keywords"""
-        return any(keyword.lower() in self.message.lower() for keyword in keywords)
-```
-
-#### **Layer 2-3: Full Context (Advanced)**
-The complete `PluginContext` from the original architecture remains available for advanced users who need full pipeline control.
+## 🔄 System Initialization
 
 ### Four-Phase System Initialization
 ```python
@@ -1277,681 +912,110 @@ class SystemInitializer:
             return config
 ```
 
-## 🔌 Plugin Examples (Complete Implementations)
+## 🔍 Plugin Validation System
 
-### Chain of Thought with Controlled Context
 ```python
-class ChainOfThoughtPlugin(PromptPlugin):
-    dependencies = ["database", "logging", "ollama"]
-    stages = [PipelineStage.THINK]
+class ValidationResult:
+    success: bool
+    error_message: str = None
+    warnings: List[str] = []
+
+@dataclass
+class ReconfigResult:
+    success: bool
+    error_message: str = None
+    requires_restart: bool = False
+    warnings: List[str] = []
+
+class BasePlugin:
+    dependencies = []  # List of registry keys that this plugin depends on
+    stages: List[PipelineStage]  # Always explicit, always required
     
-    async def _execute_impl(self, context: PluginContext):
-        if not self.config.get("enable_reasoning", True):
-            return
-            
-        # Get clean conversation history through controlled interface
-        conversation_text = self._get_conversation_text(context.get_conversation_history())
-        
-        # Step 1: Break down the problem
-        breakdown_prompt = f"Break this problem into logical steps: {conversation_text}"
-        breakdown = await self.call_llm(context, breakdown_prompt, purpose="problem_breakdown")
-        
-        # Add reasoning to conversation through controlled interface
-        context.add_conversation_entry(
-            content=f"Problem breakdown: {breakdown.content}",
-            role="assistant",
-            metadata={"reasoning_step": "breakdown"}
-        )
-        
-        # Step 2: Reason through each step
-        reasoning_steps = []
-        for step_num in range(self.config.get("max_steps", 5)):
-            reasoning_prompt = f"Reason through step {step_num + 1} of solving: {conversation_text}"
-            reasoning = await self.call_llm(context, reasoning_prompt, purpose=f"reasoning_step_{step_num + 1}")
-            reasoning_steps.append(reasoning.content)
-            
-            context.add_conversation_entry(
-                content=f"Reasoning step {step_num + 1}: {reasoning.content}",
-                role="assistant",
-                metadata={"reasoning_step": step_num + 1}
-            )
-            
-            # Execute tools immediately if needed
-            if self._needs_tools(reasoning.content):
-                result_key = context.execute_tool(
-                    "analysis_tool",
-                    {"data": conversation_text, "reasoning_step": reasoning.content}
+    @classmethod
+    def validate_config(cls, config: Dict) -> ValidationResult:
+        """Pure configuration validation - no external dependencies"""
+        return ValidationResult(success=True)
+    
+    @classmethod
+    def validate_dependencies(cls, registry) -> ValidationResult:
+        """Dependency validation - checks that declared dependencies exist in registry"""
+        for dep in cls.dependencies:
+            if not registry.has_plugin(dep):
+                available = registry.list_plugins()
+                return ValidationResult(
+                    success=False,
+                    error_message=f"{cls.__name__} requires '{dep}' but it's not registered. Available: {available}"
                 )
-                
-            if "final answer" in reasoning.content.lower():
-                break
         
-        # Set results through controlled interface
-        context.set_stage_result("reasoning_complete", True)
-        context.set_stage_result("reasoning_steps", reasoning_steps)
+        return ValidationResult(success=True)
     
-    def _needs_tools(self, reasoning_text: str) -> bool:
-        tool_indicators = ["need to calculate", "should look up", "requires analysis"]
-        return any(indicator in reasoning_text.lower() for indicator in tool_indicators)
+    def supports_runtime_reconfiguration(self) -> bool:
+        """Can this plugin be reconfigured without restart?"""
+        return True  # Override in plugins that can't handle runtime reconfiguration
     
-    def _get_conversation_text(self, conversation: List[ConversationEntry]) -> str:
-        user_entries = [entry.content for entry in conversation if entry.role == "user"]
-        return user_entries[-1] if user_entries else ""
-```
-
-### ReAct Plugin with Controlled Access
-```python
-class ReActPlugin(PromptPlugin):
-    dependencies = ["ollama"]
-    stages = [PipelineStage.THINK]
-    
-    async def _execute_impl(self, context: PluginContext):
-        max_steps = self.config.get("max_steps", 5)
-        
-        # Get user question through controlled interface
-        conversation = context.get_conversation_history()
-        user_messages = [entry.content for entry in conversation if entry.role == "user"]
-        question = user_messages[-1] if user_messages else "No question provided"
-        
-        # ReAct loop with controlled context access
-        for step in range(max_steps):
-            step_context = self._build_step_context(context.get_conversation_history(), question)
-            
-            # Thought
-            thought_prompt = f"Think step by step about this problem:\n\nContext: {step_context}\n\nWhat should I think about next?"
-            thought = await self.call_llm(context, thought_prompt, purpose=f"react_thought_step_{step}")
-            
-            context.add_conversation_entry(
-                content=f"Thought: {thought.content}",
-                role="assistant",
-                metadata={"react_step": step, "type": "thought"}
+    async def reconfigure(self, new_config: Dict) -> ReconfigResult:
+        """Update plugin configuration at runtime"""
+        validation_result = self.validate_config(new_config)
+        if not validation_result.success:
+            return ReconfigResult(
+                success=False,
+                error_message=f"Configuration validation failed: {validation_result.error_message}"
             )
-            
-            # Action decision
-            action_prompt = f"Based on my thought: \"{thought.content}\"\n\nShould I:\n1. Take an action (specify: search, calculate, etc.)\n2. Give a final answer\n\nRespond with either \"Action: <action_name> <parameters>\" or \"Final Answer: <answer>\""
-            action_decision = await self.call_llm(context, action_prompt, purpose=f"react_action_step_{step}")
-            
-            if action_decision.content.startswith("Final Answer:"):
-                final_answer = action_decision.content.replace("Final Answer:", "").strip()
-                context.set_response(final_answer)
-                return
-            
-            elif action_decision.content.startswith("Action:"):
-                action_text = action_decision.content.replace("Action:", "").strip()
-                action_name, params = self._parse_action(action_text)
-                
-                context.add_conversation_entry(
-                    content=f"Action: {action_text}",
-                    role="assistant",
-                    metadata={"react_step": step, "type": "action"}
-                )
-                
-                # Execute tool through controlled interface
-                result_key = context.execute_tool(action_name, params)
         
-        context.set_response("I've reached my reasoning limit without finding a definitive answer.")
-    
-    def _build_step_context(self, conversation: List[ConversationEntry], question: str) -> str:
-        context_parts = [f"Question: {question}"]
+        if not self.supports_runtime_reconfiguration():
+            return ReconfigResult(
+                success=False,
+                requires_restart=True,
+                error_message="This plugin requires application restart for configuration changes"
+            )
         
-        recent_entries = conversation[-10:]
-        for entry in recent_entries:
-            if entry.role == "assistant" and entry.metadata.get("type") in ["thought", "action"]:
-                context_parts.append(f"{entry.content}")
-            elif entry.role == "system" and "Tool result:" in entry.content:
-                context_parts.append(f"Observation: {entry.content.replace('Tool result: ', '')}")
-        
-        return "\n".join(context_parts)
-    
-    def _parse_action(self, action_text: str) -> Tuple[str, Dict[str, Any]]:
-        parts = action_text.split(" ", 1)
-        if len(parts) < 2:
-            return "search_tool", {"query": action_text}
-        
-        action_name = parts[0].lower()
-        params_text = parts[1]
-        
-        if action_name == "search":
-            return "search_tool", {"query": params_text}
-        elif action_name == "calculate":
-            return "calculator_tool", {"expression": params_text}
-        else:
-            return "search_tool", {"query": action_text}
-```
-
-### Simple Plugin Examples (Auto-Generated)
-```python
-# Layer 1: Dead simple examples that auto-generate sophisticated plugins
-
-@agent.plugin
-def weather_helper(context):
-    """Auto-classified as ToolPlugin, routed to DO stage"""
-    if context.contains("weather"):
-        location = context.extract_location() or "San Francisco"
-        weather = context.use_tool("weather_api", city=location)
-        return f"The weather in {location} is {weather}"
-
-@agent.plugin
-def smart_calculator(context):
-    """Auto-classified as ToolPlugin, routed to DO stage"""
-    if context.contains("calculate", "math", "compute"):
-        expression = context.extract_math_expression()
-        result = context.calculate(expression)
-        return f"The answer is {result}"
-
-@agent.plugin(stage="think")
-def simple_reasoning(context):
-    """Auto-classified as PromptPlugin, explicit stage assignment"""
-    context.think("Let me analyze this request step by step...")
-    
-    if context.is_question():
-        analysis = context.ask_llm(f"Analyze this question: {context.message}")
-        context.think(f"Analysis: {analysis}")
-    
-    return "I've analyzed your request and I'm ready to help!"
-```
-The following YAML mirrors the sample in `config/prod.yaml` and shows all plugin
-sections:
-```yaml
-entity:
-  entity_id: "jade"
-  name: "Jade"
-  server:
-    host: "0.0.0.0"
-    port: 8000
-    reload: false
-    log_level: "info"
-
-plugins:
-  resources:
-    database:
-      type: postgres
-      host: "192.168.1.104"
-      port: 5432
-      name: "memory"
-      username: "${DB_USERNAME}"
-      password: "${DB_PASSWORD}"
-      db_schema: "entity"
-      history_table: "chat_history"
-      min_pool_size: 2
-      max_pool_size: 10
-      init_on_startup: true
-    
-    ollama:
-      type: ollama_llm
-      base_url: "http://192.168.1.110:11434"
-      model: "llama3:8b-instruct-q6_K"
-      temperature: 0.7
-      top_p: 0.9
-      top_k: 40
-      repeat_penalty: 1.1
-    
-    logging:
-      type: structured_logging
-      level: "DEBUG"
-      format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-      file_enabled: true
-      file_path: "logs/entity.log"
-      max_file_size: 10485760
-      backup_count: 5
-  
-  tools:
-    weather:
-      type: weather_api
-      api_key: "${WEATHER_API_KEY}"
-      base_url: "https://api.weather.com"
-      timeout: 30
-      max_retries: 3
-      retry_delay: 2.0
-    
-    calculator:
-      type: calculator
-      precision: 10
-      max_retries: 1
-  
-  adapters:
-    tts:
-      type: speech_synthesis
-      base_url: "http://192.168.1.110:8888"
-      voice_name: "bf_emma"
-      output_format: "wav"
-      speed: 0.3
-  
-  prompts:
-    chain_of_thought:
-      type: chain_of_thought
-      enable_reasoning: true
-      max_steps: 5
-    
-    memory_retrieval:
-      type: memory_retrieval
-      max_context_length: 4000
-      similarity_threshold: 0.7
-    
-    intent_classifier:
-      type: intent_classifier
-      confidence_threshold: 0.8
-```
-
-### Plugin Configuration Examples
-
-#### WeatherApiTool
-Queries an external weather service. Defaults assume `https://api.weather.com`
-with a 30 second timeout and automatic retries.
-
-```yaml
-plugins:
-  tools:
-    weather:
-      type: weather_api
-      api_key: "${WEATHER_API_KEY}"
-      base_url: "https://api.weather.com"
-      timeout: 30
-      max_retries: 3
-      retry_delay: 2.0
-```
-
-#### StructuredLogging
-Captures logs as JSON and rotates files when they exceed 10 MB. Logging is
-enabled by default at the `DEBUG` level.
-
-```yaml
-plugins:
-  resources:
-    logging:
-      type: structured_logging
-      level: "DEBUG"
-      format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-      file_enabled: true
-      file_path: "logs/entity.log"
-      max_file_size: 10485760
-      backup_count: 5
-```
-
-#### MemoryRetrievalPrompt
-Injects relevant history into prompts. By default it retrieves up to 4000
-characters and uses a similarity threshold of 0.7.
-
-```yaml
-plugins:
-  prompts:
-    memory_retrieval:
-      type: memory_retrieval
-      max_context_length: 4000
-      similarity_threshold: 0.7
-```
-
-#### **Zero-Config Getting Started**
-```python
-# This just works out of the box
-agent = Agent()  # Automatically configures sensible defaults
-
-# Equivalent to this full configuration:
-agent = Agent({
-    "llm": "ollama://localhost:11434/llama3",  # Auto-detects local LLM
-    "database": "sqlite://memory.db",           # Auto-creates local storage
-    "logging": "console",                       # Simple console logging
-    "server": {"host": "localhost", "port": 8000}
-})
-```
-
-#### **Progressive Configuration**
-```python
-# Layer 1: Dead simple
-agent = Agent()
-
-# Layer 2: Some customization
-agent = Agent(llm="gpt-4", database="postgresql://localhost/mydb")
-
-# Layer 3: Full configuration
-agent = Agent.from_config("config.yaml")  # Complete YAML config
-```
-
-### Built-in Plugin Ecosystem
-
-The framework includes batteries-included plugins that work immediately:
-
-```python
-# These work out of the box with zero configuration
-@agent.plugin
-def use_calculator(context):
-    if context.contains("calculate", "math", "compute"):
-        expression = extract_math(context.message)
-        result = context.calculate(expression)  # Built-in
-        return f"The answer is {result}"
-
-@agent.plugin  
-def web_search(context):
-    if context.contains("search", "look up", "find"):
-        query = extract_search_query(context.message)
-        results = context.use_tool("web_search", query=query)  # Built-in
-        return f"I found: {results}"
-
-@agent.plugin
-def remember_facts(context):
-    if context.contains("remember", "my name is"):
-        fact = extract_fact(context.message)
-        context.remember("user_fact", fact)  # Built-in memory
-        return "I'll remember that!"
-```
-
-## 🔧 Key Components (Preserved Architecture)
-
-### Pipeline Execution Model
-
-The sophisticated pipeline execution model remains unchanged underneath, but is hidden from simple users:
-
-```python
-async def execute_pipeline(request):
-    """Main pipeline execution with layered context"""
-    state = PipelineState(
-        conversation=[ConversationEntry(content=str(request), role="user", timestamp=datetime.now())],
-        response=None,
-        prompt="",
-        stage_results={},
-        pending_tool_calls=[],
-        metadata={},
-        pipeline_id=generate_pipeline_id(),
-        current_stage=None,
-        metrics=MetricsCollector()
-    )
-    
-    registries = SystemRegistries(
-        resources=resource_registry,
-        tools=tool_registry,
-        plugins=plugin_registry
-    )
-    
-    # Single pipeline execution - always produces a response
-    await execute_stage(PipelineStage.PARSE, state, registries)
-    await execute_stage(PipelineStage.THINK, state, registries)
-    await execute_stage(PipelineStage.DO, state, registries)
-    await execute_stage(PipelineStage.REVIEW, state, registries)
-    await execute_stage(PipelineStage.DELIVER, state, registries)
-    
-    return state.response or create_default_response("No response generated", state.pipeline_id)
-
-async def execute_stage(stage: PipelineStage, state: PipelineState, registries: SystemRegistries):
-    """Execute a pipeline stage with controlled plugin access"""
-    state.current_stage = stage
-    
-    # Create appropriate context layer based on plugin sophistication
-    stage_plugins = registries.plugins.get_for_stage(stage)
-    for plugin in stage_plugins:
-        if isinstance(plugin, AutoGeneratedPlugin):
-            # Simple plugins get simple context
-            simple_context = SimpleContext(state, registries)
-            await plugin.execute(simple_context)
-        else:
-            # Advanced plugins get full context
-            plugin_context = PluginContext(state, registries)
-            await plugin.execute(plugin_context)
-        
-        # Execute pending tools (framework handles this)
-        if state.pending_tool_calls:
-            tool_results = await execute_pending_tools(state, registries)
-            state.pending_tool_calls.clear()
-```
-
-### Stage Definitions (Unchanged)
-
-#### **parse** - "Get ready to think"
-- Input validation, format conversion
-- Initial context setup
-- Memory/context retrieval (first pass)
-- Basic input sanitization
-
-#### **think** - "Reason and plan"  
-- Intent classification and understanding
-- Multi-step reasoning (chain-of-thought, ReAct)
-- Planning tool usage and workflows
-- Memory retrieval during reasoning (second pass)
-- Decision making about actions
-
-#### **do** - "Execute actions"
-- Primary stage for complex tool orchestration
-- Handle tool failures and retries
-- Parse and validate tool results
-- Coordinate multiple tool interactions
-
-#### **review** - "Final processing and safety"
-- Generate responses and apply formatting
-- Privacy protection (PII scrubbing)
-- Content filtering and safety checks
-- Personality and tone adjustments
-- Response quality validation
-- Final security review
-
-#### **deliver** - "Send the response"
-- Pure output delivery (HTTP response, TTS, file write)
-- No content modification - just transmission
-- Handle delivery failures
-
-#### **error** - "Handle failures gracefully"
-- Convert technical errors to user-friendly messages
-- Log errors for debugging
-- Recovery strategies
-
-### Error Handling and Failure Recovery (Preserved)
-
-All sophisticated error handling remains, but is hidden from simple plugins:
-
-```python
-# Simple plugins get automatic error handling
-@agent.plugin
-def might_fail(context):
-    result = risky_operation()  # Framework automatically catches and handles errors
-    return result
-
-# Advanced plugins get full error control
-class AdvancedPlugin(Plugin):
-    async def execute(self, context):
         try:
-            # Complex operation
-            pass
+            old_config = self.config
+            self.config = new_config
+            await self._handle_reconfiguration(old_config, new_config)
+            return ReconfigResult(success=True)
         except Exception as e:
-            context.add_failure(FailureInfo(
-                stage=str(context.current_stage),
-                plugin_name=self.__class__.__name__,
-                error_type="plugin_error",
-                error_message=str(e),
-                original_exception=e
-            ))
-```
-
-### Context and Data Structures (Enhanced)
-
-The layered context architecture is enhanced with the simple interface:
-
-```python
-# Layer 1: Simple Context (New)
-class SimpleContext:
-    def __init__(self, state: PipelineState, registries: SystemRegistries):
-        self._context = PluginContext(state, registries)  # Delegate to full context
+            self.config = old_config
+            return ReconfigResult(
+                success=False,
+                error_message=f"Reconfiguration failed: {str(e)}"
+            )
     
-    # Simple interface methods that delegate to full context
-    def say(self, message: str):
-        self._context.set_response(message)
-    
-    def use_tool(self, tool_name: str, **params):
-        result_key = self._context.execute_tool(tool_name, params)
-        return self._wait_for_tool_result(result_key)
-    
-    # ... other simple methods
-
-# Layer 2-3: Full Context (Unchanged)
-# Complete PluginContext implementation preserved
+    async def _handle_reconfiguration(self, old_config: Dict, new_config: Dict):
+        """Override this method to handle configuration changes"""
+        pass  # Default: no special handling needed
 ```
 
-## ⚙️ Configuration (Progressive Disclosure)
 
-### Zero Configuration (Layer 1)
-```python
-# Just works
-agent = Agent()
-agent.run_http()
-```
+## 🚀 Plugin Capabilities Summary
 
-### Simple Configuration (Layer 2)  
-```python
-# Key settings only
-agent = Agent(
-    llm="gpt-4",
-    database="postgresql://localhost/mydb"
-)
-```
+- **Read/Write Context**: Plugins can modify conversation and response through controlled interface
+- **Resource Access**: `context.get_resource("llm")` - request what you need with validation
+- **Tool Access**: `context.execute_tool("name", params)` - execute tools when needed with immediate results
+- **Short Circuit**: Skip remaining pipeline stages by setting `context.set_response()`
+- **Plugin-Level Iteration**: Handle complex reasoning patterns with internal loops
+- **Pipeline Delegation**: Explicitly request additional pipeline passes for multi-step workflows
+- **Dynamic Reconfiguration**: Update configuration at runtime via `reconfigure()` method with cascading dependency notifications
+- **Immediate Tool Execution**: Execute tools in any stage with immediate access to results
+- **Structured LLM Access**: Any plugin can call the LLM resource with automatic observability via `self.call_llm()`
+- **Standardized Results**: Set and get standardized results with explicit dependencies via controlled interface
+- **Error Signaling**: Add failure information with `context.add_failure()` to route to error stage
+- **Tool Retry Logic**: Configure retry behavior for individual tools with `max_retries` and `retry_delay`
+- **Stage Awareness**: Access current execution stage with `context.current_stage` property
+- **Controlled Access**: Clean interface prevents accidental system state corruption
+- **Metadata Persistence**: Store plugin state across single pipeline execution via `context.get_metadata()` and `context.set_metadata()`
 
-### Full Configuration (Layer 3)
-The complete YAML configuration system is preserved for power users:
-
-```yaml
-entity:
-  entity_id: "jade"
-  name: "Jade"
-  server:
-    host: "0.0.0.0"
-    port: 8000
-
-plugins:
-  resources:
-    database:
-      type: postgres
-      host: "192.168.1.104"
-      # ... full configuration
-```
-
-## 🚀 Key Benefits
-
-### For Beginners
-- **5-Minute Success**: Working agent in minutes, not hours
-- **No Configuration**: Sensible defaults for everything
-- **Dead Simple API**: One-liner operations for common tasks
-- **Auto-Discovery**: Drop files in folder, they work automatically
-- **Built-in Tools**: Calculator, SearchTool, memory work out of the box
-
-### For Intermediate Users
-- **Gradual Learning**: Natural progression from simple to advanced
-- **Optional Configuration**: Customize only what you need
-- **Clear Stage Control**: Explicit stage assignment when needed
-- **Plugin Ecosystem**: Share and discover community plugins
-
-### For Advanced Users (Preserved)
-- **Full Pipeline Access**: Complete control over sophisticated pipeline
-- **Complex Reasoning**: Multi-step workflows, ReAct patterns, etc.
-- **Resource Management**: Database, LLM, logging infrastructure
-- **Production Features**: Monitoring, metrics, error handling
-- **Configuration-Driven**: YAML configuration for complex deployments
-
-### For Framework Adoption
-- **Instant Gratification**: Working examples in minutes
-- **Gentle Learning Curve**: Progressive complexity
-- **Community Growth**: Easy to contribute simple plugins
-- **Production Scale**: Graduates naturally to enterprise needs
-
-## 🌟 Real-World Usage Examples
-
-### Beginner (5 minutes to success)
-```python
-from entity import Agent
-
-agent = Agent()
-
-@agent.plugin
-def help(context):
-    return "I can help with weather, calculations, and general questions!"
-
-@agent.plugin
-def weather(context):
-    if "weather" in context.message:
-        return "It's sunny and 75°F today!"
-
-agent.run_http()  # http://localhost:8000 - ready to use!
-```
-
-### Intermediate (Growing sophistication)
-```python
-from entity import Agent, Plugin
-
-agent = Agent(llm="gpt-4")
-
-class SmartWeatherPlugin(Plugin):
-    stages = [PipelineStage.DO]
-    
-    async def execute(self, context):
-        if context.contains("weather"):
-            location = context.extract_location() or "San Francisco"
-            weather = context.use_tool("weather_api", city=location)
-            context.say(f"The weather in {location} is {weather}")
-
-agent.add_plugin(SmartWeatherPlugin())
-agent.run_http()
-```
-
-### Advanced (Full power)
-```python
-# Complete sophisticated pipeline with full YAML configuration
-# All original architecture capabilities preserved
-```
-
-## 🎯 Design Principles (Merged)
-
-### **Progressive Disclosure Principles (New - Override Conflicts)**
-1. **Progressive Disclosure**: Make simple things simple, complex things possible
-2. **15-Minute Rule**: Working agent in 15 minutes or less  
-3. **Zero Configuration Default**: Sensible defaults for everything (overrides "Configuration Over Code" for Layer 1)
-4. **Convention Over Configuration**: Smart defaults based on analysis (overrides explicit config requirement for simple cases)
-5. **Natural Graduation**: Smooth path from simple to sophisticated
-6. **Immediate Gratification**: Instant feedback and results
-7. **Preserve All Power**: Advanced users lose no capabilities
-8. **Community-Friendly**: Easy to contribute and share simple plugins
-
-### **Original Architecture Principles (Preserved)**
-9. **Configuration Over Code**: Behavior defined in YAML, not hardcoded (Layer 2-3)
-10. **Plugin Composition**: Multiple plugins work together seamlessly
-11. **Resource Agnostic**: Plugins work with/without optional dependencies
-12. **Explicit Dependencies**: Missing requirements cause immediate, clear errors
-13. **Pipeline Control**: Plugins can short-circuit by setting response or trigger reprocessing
-14. **Structured Communication**: Rich context object for plugin collaboration
-15. **Fail-Fast Validation**: All plugin dependencies validated statically before instantiation
-16. **Observable by Design**: Structured logging, metrics, and tracing built into every plugin
-17. **Explicit Stage Assignment**: Plugin stages are always explicitly defined in the plugin class (Layer 2-3; Layer 1 uses smart auto-assignment)
-18. **Configuration Flexibility**: Multiple config formats (YAML, JSON, Dict) with secure env interpolation
-19. **Separation of Concerns**: Clear distinction between config validation and dependency validation
-20. **Load-Time Validation**: Validation should be done at load time, reducing runtime errors
-21. **Intuitive Mental Models**: Mental models should be intensely easy to understand
-22. **Structured LLM Access**: LLM available throughout pipeline with automatic observability
-23. **Linear Pipeline Flow**: Simple, predictable execution order with clear stage responsibilities
-24. **Immediate Tool Access**: Tools available in any stage with immediate execution and result access
-25. **Distributed Tool Execution**: Tools execute when needed with centralized logging for debugging
-26. **Plugin-Level Iteration**: Complex reasoning patterns handle iteration internally within plugins
-27. **Explicit Multi-Turn Support**: Multi-iteration scenarios handled explicitly through delegation or conversation management
-28. **YAML Execution Ordering**: Plugin execution order within stages determined by YAML configuration order (Layer 2-3)
-29. **Fail-Fast Error Handling**: Plugin failures are caught early and routed to dedicated error stage
-30. **Error Communication**: Technical failures are converted to user-friendly messages
-31. **Static Error Fallback**: Reliable fallback responses when error handling itself fails
-32. **Standardized Results**: Explicit result keys with no fallback mechanisms
-33. **Stage Awareness**: Explicit stage context enables reliable multi-stage plugin behavior
-34. **Framework Extension Points**: Base classes enable framework-wide capability additions without plugin changes
-35. **Controlled Plugin Access**: Layered context architecture prevents accidental system state corruption
-36. **Clear Interface Contracts**: Plugin capabilities explicitly defined through controlled access methods
-
-### **Principle Conflicts Resolved**
-- **Configuration vs Convention**: Layer 1 uses convention over configuration for simplicity; Layers 2-3 preserve configuration over code
-- **Explicit vs Auto Assignment**: Layer 1 uses smart auto-assignment; Layers 2-3 require explicit stage assignment  
-- **Zero Config vs Explicit Config**: Layer 1 provides zero-config defaults; Layers 2-3 support full explicit configuration
 
 ## 🎨 Bottom Line
 
 **Entity Pipeline Framework = Bevy for AI Agents + Amazing Developer Experience**
 
-- **Three Layers**: Function decorators → Class plugins → Full pipeline control
-- **15-Minute Success**: Working agent in minutes, not hours  
+- **Three Layers**: Async function decorators → Class plugins → Full pipeline control
+- **Async-First**: Consistent async patterns throughout with modern Python best practices
 - **Zero Config**: Sensible defaults, auto-discovery, built-in tools
 - **Preserve All Power**: Advanced users get complete sophisticated pipeline
 - **Natural Progression**: Smooth path from beginner to expert
-- **Community-Friendly**: Dead simple to contribute and share plugins
+- **Community-Friendly**: Easy to contribute and share async plugins
 - **Production-Ready**: Graduates seamlessly from prototype to enterprise
 
-**Result**: The easiest AI agent framework to start with, the most powerful to grow with! 🚀
-
-**Framework Adoption Rating**: This progressive disclosure approach dramatically improves adoption potential from 3/5 to 5/5 by making the framework irresistibly easy to start with while preserving all sophisticated capabilities.
+**Result**: An async-first AI agent framework that's approachable for beginners while maintaining full sophistication for experts! 🚀

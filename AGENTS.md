@@ -396,3 +396,45 @@ The framework implements fail-fast error handling:
 - Plugin dependencies explicitly declared and validated
 
 This framework enables building production-ready AI agents through composable, testable, and observable plugin architectures. All AI agents working with this codebase should follow these patterns and conventions to ensure consistency and reliability.
+
+
+## Design Principles for AI Agents
+
+## 🎯 Design Principles
+
+1. **Progressive Disclosure**: Make simple things simple, complex things possible
+2. **15-Minute Rule**: Working agent in 15 minutes or less  
+3. **Zero Configuration Default**: Sensible defaults for everything
+4. **Async-First**: Consistent async patterns throughout with educational support
+5. **Natural Graduation**: Smooth path from simple to sophisticated
+6. **Immediate Gratification**: Instant feedback and results
+7. **Preserve All Power**: Advanced users lose no capabilities
+8. **Community-Friendly**: Easy to contribute and share async plugins
+9. **Configuration Over Code**: Behavior defined in YAML, not hardcoded (Layer 2-3)
+10. **Plugin Composition**: Multiple plugins work together seamlessly
+11. **Resource Agnostic**: Plugins work with/without optional dependencies
+12. **Explicit Dependencies**: Missing requirements cause immediate, clear errors
+13. **Pipeline Control**: Plugins can short-circuit by setting response or trigger reprocessing
+14. **Structured Communication**: Rich context object for plugin collaboration
+15. **Fail-Fast Validation**: All plugin dependencies validated statically before instantiation
+16. **Observable by Design**: Structured logging, metrics, and tracing built into every plugin
+17. **Explicit Stage Assignment**: Plugin stages are always explicitly defined in the plugin class (Layer 2-3; Layer 1 uses smart auto-assignment)
+18. **Configuration Flexibility**: Multiple config formats (YAML, JSON, Dict) with secure env interpolation
+19. **Separation of Concerns**: Clear distinction between config validation and dependency validation
+20. **Load-Time Validation**: Validation should be done at load time, reducing runtime errors
+21. **Intuitive Mental Models**: Mental models should be intensely easy to understand
+22. **Structured LLM Access**: LLM available throughout pipeline with automatic observability
+23. **Linear Pipeline Flow**: Simple, predictable execution order with clear stage responsibilities
+24. **Immediate Tool Access**: Tools available in any stage with immediate execution and result access
+25. **Distributed Tool Execution**: Tools execute when needed with centralized logging for debugging
+26. **Plugin-Level Iteration**: Complex reasoning patterns handle iteration internally within plugins
+27. **Explicit Multi-Turn Support**: Multi-iteration scenarios handled explicitly through delegation or conversation management
+28. **YAML Execution Ordering**: Plugin execution order within stages determined by YAML configuration order (Layer 2-3)
+29. **Fail-Fast Error Handling**: Plugin failures are caught early and routed to dedicated error stage
+30. **Error Communication**: Technical failures are converted to user-friendly messages
+31. **Static Error Fallback**: Reliable fallback responses when error handling itself fails
+32. **Standardized Results**: Explicit result keys with no fallback mechanisms
+33. **Stage Awareness**: Explicit stage context enables reliable multi-stage plugin behavior
+34. **Framework Extension Points**: Base classes enable framework-wide capability additions without plugin changes
+35. **Controlled Plugin Access**: Layered context architecture prevents accidental system state corruption
+36. **Clear Interface Contracts**: Plugin capabilities explicitly defined through controlled access methods
