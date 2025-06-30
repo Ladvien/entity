@@ -8,6 +8,7 @@ from .context import (
     ToolCall,
 )
 from .conversation_manager import ConversationManager
+from .errors import create_static_error_response
 from .initializer import (
     ClassRegistry,
     SystemInitializer,
@@ -17,7 +18,6 @@ from .initializer import (
 from .manager import PipelineManager
 from .pipeline import (
     create_default_response,
-    create_static_error_response,
     execute_pending_tools,
     execute_pipeline,
     execute_stage,

@@ -180,3 +180,7 @@ class Agent:
             plugins=self.plugin_registry,
         )
         return cast(Dict[str, Any], await execute_pipeline(message, registries))
+
+    async def handle(self, message: str) -> Dict[str, Any]:
+        """Backward-compatible wrapper around :meth:`run_message`."""
+        return await self.run_message(message)
