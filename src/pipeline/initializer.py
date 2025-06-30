@@ -1,15 +1,16 @@
 from __future__ import annotations
 
+import copy
+import json
 import os
 from contextlib import contextmanager
 from importlib import import_module
 from typing import Any, Dict, Iterable, List, Tuple
-import copy
 
 from src.config.environment import load_env
-from .defaults import DEFAULT_CONFIG
 
 from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
+from .defaults import DEFAULT_CONFIG
 from .registries import PluginRegistry, ResourceRegistry, ToolRegistry
 
 
@@ -92,6 +93,23 @@ class SystemInitializer:
         config = yaml.safe_load(content)
         load_env(env_file)
         config = cls._interpolate_env_vars(config)
+        return cls(config, env_file)
+
+    @classmethod
+    def from_json(cls, json_path: str, env_file: str = ".env") -> "SystemInitializer":
+        with open(json_path, "r") as fh:
+            content = fh.read()
+        config = json.loads(content or "{}")
+        load_env(env_file)
+        config = cls._interpolate_env_vars(config)
+        return cls(config, env_file)
+
+    @classmethod
+    def from_dict(
+        cls, cfg: Dict[str, Any], env_file: str = ".env"
+    ) -> "SystemInitializer":
+        load_env(env_file)
+        config = cls._interpolate_env_vars(dict(cfg))
         return cls(config, env_file)
 
     def get_resource_config(self, name: str) -> Dict:
