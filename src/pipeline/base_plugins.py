@@ -7,7 +7,8 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar, cast
+from typing import (TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar,
+                    cast)
 
 import yaml
 
@@ -57,8 +58,17 @@ class BasePlugin(ABC):
     dependencies: List[str] = []
 
     def __init__(self, config: Dict | None = None) -> None:
-        self.config = config or {}
+        self._config = config or {}
         self.logger = logging.getLogger(self.__class__.__name__)
+
+    @property
+    def config(self) -> Dict:
+        """Return the plugin configuration."""
+        return self._config
+
+    @config.setter
+    def config(self, value: Dict) -> None:
+        self._config = value
 
     async def execute(self, context: PluginContext | SimpleContext):
         logger.info(

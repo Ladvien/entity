@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from contextlib import contextmanager
 from importlib import import_module
 from typing import Any, Dict, Iterable, List, Tuple
@@ -8,6 +7,7 @@ from typing import Any, Dict, Iterable, List, Tuple
 from src.config.environment import load_env
 
 from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
+from .config import ConfigLoader
 from .registries import PluginRegistry, ResourceRegistry, ToolRegistry
 
 
@@ -103,13 +103,19 @@ class SystemInitializer:
 
     @classmethod
     def from_yaml(cls, yaml_path: str, env_file: str = ".env") -> "SystemInitializer":
-        import yaml
+        config = ConfigLoader.from_yaml(yaml_path, env_file)
+        return cls(config, env_file)
 
-        with open(yaml_path, "r") as fh:
-            content = fh.read()
-        config = yaml.safe_load(content)
-        load_env(env_file)
-        config = cls._interpolate_env_vars(config)
+    @classmethod
+    def from_json(cls, json_path: str, env_file: str = ".env") -> "SystemInitializer":
+        config = ConfigLoader.from_json(json_path, env_file)
+        return cls(config, env_file)
+
+    @classmethod
+    def from_dict(
+        cls, config_dict: Dict[str, Any], env_file: str = ".env"
+    ) -> "SystemInitializer":
+        config = ConfigLoader.from_dict(config_dict, env_file)
         return cls(config, env_file)
 
     def get_resource_config(self, name: str) -> Dict:
@@ -218,19 +224,3 @@ class SystemInitializer:
         if len(processed) != len(in_degree):
             cycle_nodes = [n for n in in_degree if n not in processed]
             raise SystemError(f"Circular dependency detected involving: {cycle_nodes}")
-
-    @staticmethod
-    def _interpolate_env_vars(config: Any) -> Any:
-        if isinstance(config, dict):
-            return {
-                k: SystemInitializer._interpolate_env_vars(v) for k, v in config.items()
-            }
-        if isinstance(config, list):
-            return [SystemInitializer._interpolate_env_vars(i) for i in config]
-        if isinstance(config, str) and config.startswith("${") and config.endswith("}"):
-            key = config[2:-1]
-            value = os.environ.get(key)
-            if value is None:
-                raise EnvironmentError(f"Required environment variable {key} not found")
-            return value
-        return config
