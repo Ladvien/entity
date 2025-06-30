@@ -6,11 +6,12 @@ from pipeline import (
     ConversationEntry,
     MetricsCollector,
     PipelineState,
+    PluginContext,
     PluginRegistry,
     ResourceRegistry,
-    SimpleContext,
     SystemRegistries,
     ToolRegistry,
+    execute_pending_tools,
 )
 from pipeline.plugins.tools.search_tool import SearchTool
 
@@ -36,9 +37,10 @@ async def run_search():
     tools = ToolRegistry()
     tools.add("search", SearchTool())
     registries = SystemRegistries(ResourceRegistry(), tools, PluginRegistry())
-    ctx = SimpleContext(state, registries)
+    ctx = PluginContext(state, registries)
     with patch("httpx.AsyncClient.get", new=AsyncMock(return_value=FakeResponse())):
-        result = await ctx.use_tool("search", query="test")
+        key = ctx.execute_tool("search", {"query": "test"})
+        result = (await execute_pending_tools(state, registries))[key]
     return result
 
 

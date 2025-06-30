@@ -8,11 +8,11 @@ def test_agent_plugin_autoclassification():
     agent = Agent()
 
     @agent.plugin
-    def think_response(context):
+    async def think_response(context):
         return "thinking"
 
     @agent.plugin(stage=PipelineStage.PARSE)
-    def parse_func(context):
+    async def parse_func(context):
         return "parsed"
 
     think_plugins = agent.plugins.get_for_stage(PipelineStage.THINK)
