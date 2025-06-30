@@ -32,7 +32,7 @@ def calculator(context):
         return f"The answer is {result}"
 
 # Run the agent
-agent.run()  # Automatically starts server on localhost:8000
+agent.run_http()  # Automatically starts server on localhost:8000
 ```
 
 The default setup registers a simple `CalculatorTool`, a `SearchTool`, and an
@@ -117,7 +117,7 @@ class MyCustomPrompt(PromptPlugin):
 
 agent = Agent.from_package("pipeline.plugins")
 >>>>>> main
-agent.run()
+agent.run_http()
 ```
 
 ### Multi-Turn and Complex Reasoning Patterns
@@ -1789,7 +1789,7 @@ class SimpleContext:
 ```python
 # Just works
 agent = Agent()
-agent.run()
+agent.run_http()
 ```
 
 ### Simple Configuration (Layer 2)  
@@ -1865,7 +1865,7 @@ def weather(context):
     if "weather" in context.message:
         return "It's sunny and 75°F today!"
 
-agent.run()  # http://localhost:8000 - ready to use!
+agent.run_http()  # http://localhost:8000 - ready to use!
 ```
 
 ### Intermediate (Growing sophistication)
@@ -1884,7 +1884,7 @@ class SmartWeatherPlugin(Plugin):
             context.say(f"The weather in {location} is {weather}")
 
 agent.add_plugin(SmartWeatherPlugin())
-agent.run()
+agent.run_http()
 ```
 
 ### Advanced (Full power)

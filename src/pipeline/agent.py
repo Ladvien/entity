@@ -4,15 +4,14 @@ import asyncio
 import importlib
 import importlib.util
 import inspect
-import json
 import logging
 import pkgutil
 from dataclasses import dataclass, field
-from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from types import ModuleType
 from typing import Any, Callable, Dict, Optional, cast
 
+from .adapters.http import HTTPAdapter
 from .base_plugins import PluginAutoClassifier
 from .pipeline import execute_pipeline
 from .plugins import BasePlugin
@@ -150,43 +149,29 @@ class Agent:
                     exc,
                 )
 
-    def _create_server(self, host: str, port: int) -> HTTPServer:
+    def create_http_adapter(
+        self, host: str = "127.0.0.1", port: int = 8000
+    ) -> HTTPAdapter:
+        """Return an :class:`HTTPAdapter` for this agent's registries."""
+
+        config: dict[str, Any] = {"host": host, "port": port}
+        return HTTPAdapter(config=config)
+
+    async def serve_http(self, host: str = "127.0.0.1", port: int = 8000) -> None:
+        """Serve requests using the :class:`HTTPAdapter`."""
+
+        adapter = self.create_http_adapter(host, port)
         registries = SystemRegistries(
             resources=self.resource_registry,
             tools=self.tool_registry,
             plugins=self.plugin_registry,
         )
+        await adapter.serve(registries)
 
-        class Handler(BaseHTTPRequestHandler):
-            def do_POST(self) -> None:  # noqa: N802 - http server naming
-                length = int(self.headers.get("Content-Length", "0"))
-                body = self.rfile.read(length).decode("utf-8")
-                try:
-                    data = json.loads(body)
-                except json.JSONDecodeError:
-                    self.send_response(400)
-                    self.end_headers()
-                    self.wfile.write(b"Invalid JSON")
-                    return
-                message = data.get("message", "")
-                response = asyncio.run(execute_pipeline(message, registries))
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self.end_headers()
-                self.wfile.write(json.dumps(response).encode("utf-8"))
+    def run_http(self, host: str = "127.0.0.1", port: int = 8000) -> None:
+        """Convenience wrapper to start the HTTP adapter."""
 
-        return HTTPServer((host, port), Handler)
-
-    def run(self, host: str = "localhost", port: int = 8000) -> None:
-        """Launch a minimal HTTP adapter for the agent."""
-        server = self._create_server(host, port)
-        print(f"Serving on http://{host}:{port}")
-        try:
-            server.serve_forever()
-        except KeyboardInterrupt:
-            pass
-        finally:
-            server.server_close()
+        asyncio.run(self.serve_http(host, port))
 
     async def run_message(self, message: str) -> Dict[str, Any]:
         registries = SystemRegistries(
