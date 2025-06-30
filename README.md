@@ -37,3 +37,19 @@ from app import create_app
 agent = Agent(...)
 app = create_app(agent)
 ```
+
+## Design Principles in Action
+
+- **Progressive Disclosure (1)**: `Agent()` works out of the box with helpful defaults.
+- **Zero Configuration Default (3)**: Basic resources and tools require no YAML.
+- **Fail-Fast Validation (15)**: `SystemInitializer` raises clear errors when dependencies are missing.
+- **Intuitive Mental Models (21)**: Stages map directly to `Parse`, `Think`, `Do`, `Review`, `Deliver`, and `Error`.
+
+
+```python
+# Progressive Disclosure example
+agent = Agent()
+@agent.plugin
+def hello(context):
+    return "hello"
+```
