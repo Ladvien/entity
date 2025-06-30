@@ -89,7 +89,10 @@ class SystemInitializer:
                     "type": "pipeline.plugins.tools.calculator_tool:CalculatorTool"
                 },
             },
-            "adapters": {"http": {"type": "pipeline.adapters.http:HTTPAdapter"}},
+            "adapters": {
+                "http": {"type": "pipeline.adapters.http:HTTPAdapter"},
+                "cli": {"type": "pipeline.adapters.cli:CLIAdapter"},
+            },
         }
     }
 
