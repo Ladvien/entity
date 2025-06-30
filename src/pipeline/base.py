@@ -19,8 +19,13 @@ class BasePlugin(ABC):
     stages: List[PipelineStage] = []
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
-        self.config = config or {}
+        self._config = config or {}
         self.logger = None
+
+    @property
+    def config(self) -> Dict[str, Any]:
+        """Return the plugin configuration."""
+        return self._config
 
     async def execute(self, context: PluginContext) -> Any:
         if self.logger:
@@ -33,12 +38,7 @@ class BasePlugin(ABC):
         start = time.time()
         try:
             result = await self._execute_impl(context)
-            if context._state.metrics:
-                context._state.metrics.record_plugin_duration(
-                    plugin=self.__class__.__name__,
-                    stage=str(context.current_stage),
-                    duration=time.time() - start,
-                )
+            context.record_plugin_duration(self.__class__.__name__, time.time() - start)
             return result
         except Exception as e:
             if self.logger:

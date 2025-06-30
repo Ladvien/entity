@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import asyncio
 import inspect
 import json
@@ -7,36 +5,25 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar
 
 import yaml
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
-    from .context import LLMResponse, PluginContext, SimpleContext
+    from .context import PluginContext
+    from .state import LLMResponse
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .initializer import ClassRegistry
 
 from .stages import PipelineStage
+from .logging import get_logger
+from .observability.utils import execute_with_observability
+from .validation import ValidationResult
 
 logger = logging.getLogger(__name__)
 
 Self = TypeVar("Self", bound="BasePlugin")
-
-
-@dataclass
-class ValidationResult:
-    success: bool
-    error_message: Optional[str] = None
-    warnings: List[str] = field(default_factory=list)
-
-    @classmethod
-    def success_result(cls) -> "ValidationResult":
-        return cls(True)
-
-    @classmethod
-    def error_result(cls, message: str) -> "ValidationResult":
-        return cls(False, error_message=message)
 
 
 @dataclass
@@ -58,9 +45,21 @@ class BasePlugin(ABC):
 
     def __init__(self, config: Dict | None = None) -> None:
         self.config = config or {}
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = get_logger(self.__class__.__name__)
 
+<<<<< hxttvb-codex/extend-baseplugin-with-logging-and-metrics
     async def execute(self, context: PluginContext | SimpleContext):
+        async def run() -> Any:
+            return await self._execute_impl(context)
+
+        return await execute_with_observability(
+            run,
+            logger=self.logger,
+            metrics=context._state.metrics,
+            plugin=self.__class__.__name__,
+            stage=str(context.current_stage),
+=====
+    async def execute(self, context: "PluginContext"):
         logger.info(
             "Plugin execution started",
             extra={
@@ -68,14 +67,14 @@ class BasePlugin(ABC):
                 "stage": str(context.current_stage),
                 "pipeline_id": context.pipeline_id,
             },
+>>>>> main
         )
+<<<<<< codex/secure-plugincontext-methods-and-enforce-encapsulation
         start = time.time()
         try:
             result = await self._execute_impl(context)
             duration = time.time() - start
-            context._state.metrics.record_plugin_duration(
-                self.__class__.__name__, str(context.current_stage), duration
-            )
+            context.record_plugin_duration(self.__class__.__name__, duration)
             logger.info(
                 "Plugin execution finished",
                 extra={
@@ -95,13 +94,15 @@ class BasePlugin(ABC):
                 },
             )
             raise
+=======
+>>>>>> main
 
     @abstractmethod
-    async def _execute_impl(self, context: PluginContext | SimpleContext):
+    async def _execute_impl(self, context: "PluginContext"):
         pass
 
     async def call_llm(
-        self, context: PluginContext, prompt: str, purpose: str
+        self, context: "PluginContext", prompt: str, purpose: str
     ) -> "LLMResponse":
         from .context import LLMResponse
 
@@ -109,9 +110,7 @@ class BasePlugin(ABC):
         if llm is None:
             raise RuntimeError("LLM resource 'ollama' not available")
 
-        context._state.metrics.record_llm_call(
-            self.__class__.__name__, str(context.current_stage), purpose
-        )
+        context.record_llm_call(self.__class__.__name__, purpose)
 
         start = time.time()
 
@@ -126,9 +125,7 @@ class BasePlugin(ABC):
             else:
                 response = func(prompt)
 
-        context._state.metrics.record_llm_duration(
-            self.__class__.__name__, str(context.current_stage), time.time() - start
-        )
+        context.record_llm_duration(self.__class__.__name__, time.time() - start)
 
         return LLMResponse(content=str(response))
 
@@ -166,7 +163,7 @@ class BasePlugin(ABC):
             self.config = new_config
             await self._handle_reconfiguration(old_config, new_config)
             return ReconfigResult(success=True)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             self.config = old_config
             return ReconfigResult(
                 success=False, error_message=f"Reconfiguration failed: {e}"
@@ -273,17 +270,15 @@ class ToolPlugin(BasePlugin):
         for attempt in range(max_retry_count + 1):
             try:
                 return await self.execute_function(params)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 if attempt == max_retry_count:
                     raise
                 await asyncio.sleep(retry_delay_seconds)
 
-    async def execute_with_timeout(
-        self, context: PluginContext | SimpleContext, timeout: int = 30
-    ):
+    async def execute_with_timeout(self, context: "PluginContext", timeout: int = 30):
         return await asyncio.wait_for(self.execute(context), timeout=timeout)
 
-    async def _execute_impl(self, context: PluginContext | SimpleContext):
+    async def _execute_impl(self, context: "PluginContext"):
         """Tools are not executed in the pipeline directly."""
         pass
 
@@ -317,66 +312,11 @@ class AutoGeneratedPlugin(BasePlugin):
         if base_class and base_class is not BasePlugin:
             self.__class__.__bases__ = (base_class,)
 
-    async def _execute_impl(self, context: PluginContext | SimpleContext):
-        if inspect.iscoroutinefunction(self.func):
-            result = await self.func(context)
-        else:
-            result = self.func(context)
+    async def _execute_impl(self, context: "PluginContext") -> None:
+        if not inspect.iscoroutinefunction(self.func):
+            raise TypeError(
+                f"Plugin function '{getattr(self.func, '__name__', 'unknown')}' must be async"
+            )
+        result = await self.func(context)
         if isinstance(result, str) and not context.has_response():
             context.set_response(result)
-
-
-class PluginAutoClassifier:
-    """Utility to generate plugin classes from simple functions."""
-
-    @staticmethod
-    def classify(
-        plugin_func: Any, user_hints: Optional[Dict[str, Any]] | None = None
-    ) -> AutoGeneratedPlugin:
-        """Classify ``plugin_func`` and return an :class:`AutoGeneratedPlugin`."""
-
-        hints = user_hints or {}
-        try:
-            source = inspect.getsource(plugin_func)
-        except OSError:
-            source = ""
-
-        base: type[BasePlugin]
-        if any(k in source for k in ["think", "reason", "analyze"]):
-            stage = PipelineStage.THINK
-            base = cast(type[BasePlugin], PromptPlugin)
-        elif any(k in source for k in ["parse", "validate", "check"]):
-            stage = PipelineStage.PARSE
-            base = cast(type[BasePlugin], AdapterPlugin)
-        elif any(k in source for k in ["return", "response", "answer"]):
-            stage = PipelineStage.DO
-            base = (
-                cast(type[BasePlugin], ToolPlugin)
-                if any(x in source for x in ["use_tool", "execute_tool", "tool"])
-                else cast(type[BasePlugin], PromptPlugin)
-            )
-        else:
-            stage = PipelineStage.DO
-            base = cast(type[BasePlugin], ToolPlugin)
-
-        if "stage" in hints:
-            stage = PipelineStage.from_str(str(hints["stage"]))
-
-        priority = int(hints.get("priority", 50))
-        name = hints.get("name", plugin_func.__name__)
-
-        return AutoGeneratedPlugin(
-            func=plugin_func,
-            stages=[stage],
-            priority=priority,
-            name=name,
-            base_class=base,
-        )
-
-    @staticmethod
-    def classify_and_route(
-        plugin_func: Any, user_hints: Optional[Dict[str, Any]] | None = None
-    ) -> AutoGeneratedPlugin:
-        """Backward-compatible wrapper for :meth:`classify`."""
-
-        return PluginAutoClassifier.classify(plugin_func, user_hints)

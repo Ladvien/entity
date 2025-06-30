@@ -28,7 +28,8 @@ class ErrorPlugin(FailurePlugin):
     stages = [PipelineStage.ERROR]
 
     async def _execute_impl(self, context):
-        info = context._state.failure_info
+        info = context.get_failure_info()
+        assert info is not None
         context.set_response({"error": info.error_message})
 
 
