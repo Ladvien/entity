@@ -3,6 +3,7 @@ from .memory_resource import SimpleMemoryResource
 from .ollama_llm import OllamaLLMResource
 from .postgres import PostgresResource
 from .structured_logging import StructuredLogging
+from .vector_memory import VectorMemoryResource
 
 __all__ = [
     "EchoLLMResource",
@@ -10,4 +11,5 @@ __all__ = [
     "SimpleMemoryResource",
     "StructuredLogging",
     "PostgresResource",
+    "VectorMemoryResource",
 ]
