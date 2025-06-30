@@ -1,0 +1,89 @@
+"""Run a pipeline with vector memory support.
+
+Usage:
+    python examples/vector_memory_pipeline.py
+"""
+
+from __future__ import annotations
+
+import asyncio
+import pathlib
+import sys
+from typing import Dict, List
+
+# Ensure project source is available for imports
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))  # noqa: E402
+
+from entity import Agent  # noqa: E402
+from pipeline import PipelineStage, PromptPlugin, ResourcePlugin  # noqa: E402
+from pipeline.context import PluginContext  # noqa: E402
+
+
+class VectorMemoryResource(ResourcePlugin):
+    """In-memory vector store."""
+
+    stages = [PipelineStage.PARSE]
+    name = "vector_memory"
+
+    def __init__(self, config: Dict | None = None) -> None:
+        super().__init__(config)
+        self.vectors: Dict[str, List[float]] = {}
+
+    async def _execute_impl(self, context: PluginContext) -> None:
+        return None
+
+    def add(self, key: str, vector: List[float]) -> None:
+        self.vectors[key] = vector
+
+    def get(self, key: str) -> List[float] | None:
+        return self.vectors.get(key)
+
+
+class ComplexPrompt(PromptPlugin):
+    """Example prompt using the vector memory."""
+
+    dependencies = ["database", "ollama", "vector_memory"]
+    stages = [PipelineStage.THINK]
+
+    async def _execute_impl(self, context: PluginContext) -> None:
+        memory: VectorMemoryResource = context.get_resource("vector_memory")
+        memory.add("greeting", [1.0, 0.0, 0.0])
+        llm = context.get_resource("ollama")
+        response = await llm.generate("Respond to the user using stored context.")
+        context.add_conversation_entry(response, role="assistant")
+
+
+def main() -> None:
+    config = {
+        "plugins": {
+            "resources": {
+                "database": {
+                    "type": "pipeline.plugins.resources.postgres:PostgresResource",
+                    "host": "localhost",
+                    "port": 5432,
+                    "name": "dev_db",
+                    "username": "agent",
+                    "password": "",
+                },
+                "ollama": {
+                    "type": "pipeline.plugins.resources.ollama_llm:OllamaLLMResource",
+                    "base_url": "http://localhost:11434",
+                    "model": "tinyllama",
+                },
+            }
+        }
+    }
+    agent = Agent(config)
+    agent.resource_registry.add("vector_memory", VectorMemoryResource())
+    agent.plugin_registry.register_plugin_for_stage(
+        ComplexPrompt(), PipelineStage.THINK
+    )
+
+    async def run() -> None:
+        print(await agent.handle("hello"))
+
+    asyncio.run(run())
+
+
+if __name__ == "__main__":
+    main()
