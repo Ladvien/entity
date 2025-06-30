@@ -1,16 +1,22 @@
 import asyncio
+import os
 from datetime import datetime
+from pathlib import Path
 
 import pytest
 
+from config.environment import load_env
 from pipeline.plugins.resources.postgres import PostgresResource
 from pipeline.state import ConversationEntry
 
+load_env(Path(__file__).resolve().parents[2] / ".env.example")
+
 CONN = {
-    "host": "localhost",
+    "host": os.environ["DB_HOST"],
     "port": 5432,
     "name": "dev_db",
-    "username": "agent",
+    "username": os.environ["DB_USERNAME"],
+    "password": os.environ.get("DB_PASSWORD", ""),
     "history_table": "test_history",
 }
 

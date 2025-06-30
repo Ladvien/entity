@@ -1,7 +1,10 @@
 import asyncio
+import os
 from datetime import datetime
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
+from config.environment import load_env
 from pipeline import (
     ConversationEntry,
     MetricsCollector,
@@ -13,6 +16,8 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.plugins.tools.weather_api_tool import WeatherApiTool
+
+load_env(Path(__file__).resolve().parents[1] / ".env.example")
 
 
 class FakeResponse:
@@ -34,7 +39,9 @@ async def run_weather():
         metrics=MetricsCollector(),
     )
     tools = ToolRegistry()
-    tool = WeatherApiTool({"base_url": "http://test/weather", "api_key": "key"})
+    tool = WeatherApiTool(
+        {"base_url": "http://test/weather", "api_key": os.environ["WEATHER_API_KEY"]}
+    )
     tools.add("weather", tool)
     registries = SystemRegistries(ResourceRegistry(), tools, PluginRegistry())
     ctx = SimpleContext(state, registries)
@@ -44,7 +51,7 @@ async def run_weather():
         result = await ctx.use_tool("weather", location="Berlin")
         mock_get.assert_called_with(
             "http://test/weather",
-            params={"location": "Berlin", "api_key": "key"},
+            params={"location": "Berlin", "api_key": os.environ["WEATHER_API_KEY"]},
         )
     return result
 

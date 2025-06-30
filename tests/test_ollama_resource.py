@@ -1,7 +1,12 @@
 import asyncio
+import os
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
+from config.environment import load_env
 from pipeline.plugins.resources.ollama_llm import OllamaLLMResource
+
+load_env(Path(__file__).resolve().parents[1] / ".env.example")
 
 
 class FakeResponse:
@@ -16,15 +21,18 @@ class FakeResponse:
 
 async def run_generate():
     resource = OllamaLLMResource(
-        {"base_url": "http://ollama:11434", "model": "tinyllama"}
+        {
+            "base_url": os.environ["OLLAMA_BASE_URL"],
+            "model": os.environ["OLLAMA_MODEL"],
+        }
     )
     with patch(
         "httpx.AsyncClient.post", new=AsyncMock(return_value=FakeResponse())
     ) as mock_post:
         result = await resource.generate("hello")
         mock_post.assert_called_with(
-            "http://ollama:11434/api/generate",
-            json={"model": "tinyllama", "prompt": "hello"},
+            f"{os.environ['OLLAMA_BASE_URL']}/api/generate",
+            json={"model": os.environ["OLLAMA_MODEL"], "prompt": "hello"},
         )
     return result
 
