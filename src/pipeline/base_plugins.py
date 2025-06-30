@@ -21,6 +21,7 @@ if TYPE_CHECKING:  # pragma: no cover - used for type hints only
 from .logging import get_logger
 from .observability.utils import execute_with_observability
 from .stages import PipelineStage
+
 from .validation import ValidationResult
 
 logger = logging.getLogger(__name__)
@@ -49,6 +50,41 @@ class BasePlugin(ABC):
         self.config = config or {}
         self.logger = get_logger(self.__class__.__name__)
 
+<<<<<< codex/re-add-pluginautoclassifier-class
+    async def execute(self, context: PluginContext | SimpleContext):
+        logger.info(
+            "Plugin execution started",
+            extra={
+                "plugin": self.__class__.__name__,
+                "stage": str(context.current_stage),
+                "pipeline_id": context.pipeline_id,
+            },
+        )
+        start = time.time()
+        try:
+            result = await self._execute_impl(context)
+            duration = time.time() - start
+            context.record_plugin_duration(self.__class__.__name__, duration)
+            logger.info(
+                "Plugin execution finished",
+                extra={
+                    "plugin": self.__class__.__name__,
+                    "stage": str(context.current_stage),
+                    "duration": duration,
+                },
+            )
+            return result
+        except Exception as e:
+            logger.exception(
+                "Plugin execution failed",
+                extra={
+                    "plugin": self.__class__.__name__,
+                    "stage": str(context.current_stage),
+                    "error": str(e),
+                },
+            )
+            raise
+======
     async def execute(self, context: PluginContext | SimpleContext) -> Any:
         async def run() -> Any:
             return await self._execute_impl(context)
@@ -60,6 +96,7 @@ class BasePlugin(ABC):
             plugin=self.__class__.__name__,
             stage=str(context.current_stage),
         )
+>>>>>> main
 
     @abstractmethod
     async def _execute_impl(self, context: "PluginContext"):
