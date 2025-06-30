@@ -24,6 +24,8 @@ class RegistryValidator:
         self.initializer = SystemInitializer.from_yaml(config_path)
         self.registry = ClassRegistry()
         self.dep_graph: Dict[str, List[str]] = {}
+        self.has_vector_memory = False
+        self.has_complex_prompt = False
 
     def _register_classes(self) -> None:
         plugins_cfg = self.initializer.config.get("plugins", {})
@@ -33,6 +35,11 @@ class RegistryValidator:
                 self.registry.register_class(cls, cfg, name)
                 self.dep_graph[name] = list(getattr(cls, "dependencies", []))
                 self._validate_stage_assignment(name, cls)
+
+                if name == "vector_memory" or cls.__name__ == "VectorMemoryResource":
+                    self.has_vector_memory = True
+                if name == "complex_prompt" or cls.__name__ == "ComplexPrompt":
+                    self.has_complex_prompt = True
 
     @staticmethod
     def _validate_stage_assignment(name: str, cls: type) -> None:
@@ -86,6 +93,10 @@ class RegistryValidator:
     def run(self) -> None:
         self._register_classes()
         self._validate_dependencies()
+        if self.has_complex_prompt and not self.has_vector_memory:
+            raise SystemError(
+                "ComplexPrompt requires the 'vector_memory' resource to be registered"
+            )
 
 
 def main() -> None:
