@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from typing import Any
 
 from pipeline import (
@@ -29,10 +30,9 @@ def make_adapter() -> tuple[CLIAdapter, SystemRegistries]:
     return CLIAdapter(manager), registries
 
 
-def test_cli_adapter_round_trip(monkeypatch):
+def test_cli_adapter_round_trip(monkeypatch, caplog):
     adapter, registries = make_adapter()
     inputs: list[Any] = ["hello", EOFError()]
-    outputs: list[str] = []
 
     def fake_input(prompt: str = "") -> str:
         value = inputs.pop(0)
@@ -40,12 +40,8 @@ def test_cli_adapter_round_trip(monkeypatch):
             raise value
         return str(value)
 
-    def fake_print(*args, **kwargs) -> None:
-        outputs.append(" ".join(str(a) for a in args))
-
     monkeypatch.setattr("builtins.input", fake_input)
-    monkeypatch.setattr("builtins.print", fake_print)
 
+    caplog.set_level(logging.INFO)
     asyncio.run(adapter.serve(registries))
-    combined = " ".join(outputs)
-    assert "'msg': 'hello'" in combined
+    assert any("'msg': 'hello'" in record.getMessage() for record in caplog.records)
