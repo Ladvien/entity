@@ -11,7 +11,11 @@ from pipeline.stages import PipelineStage
 
 
 class PostgresResource(ResourcePlugin):
-    """Asynchronous PostgreSQL connection resource."""
+    """Asynchronous PostgreSQL connection resource.
+
+    Highlights **Configuration Over Code (9)** by defining all connection
+    details in YAML rather than hardcoding them in the class.
+    """
 
     stages = [PipelineStage.PARSE]
     name = "database"

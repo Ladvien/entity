@@ -24,6 +24,9 @@ async def lookup(context):
     return await context.use_tool("search", query="Entity Pipeline")
 ```
 
+The `context` argument is an instance of `PluginContext`. See
+[the context guide](context.md) for an overview of its helper methods.
+
 ### Enabling the Ollama Resource
 Add the Ollama LLM resource to your configuration so plugins can use it:
 
@@ -40,3 +43,5 @@ The development environment does not require authentication.
 Copy `.env.example` to `.env` and update the variables to quickly
 configure database and LLM credentials. These values will be automatically
 loaded when running the agent or tests.
+This fast path aligns with the **15-Minute Rule (2)**, giving new
+contributors a working agent almost immediately.

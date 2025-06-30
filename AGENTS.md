@@ -29,6 +29,22 @@ The `ARCHITECTURE.md` file provides a high-level overview of the Entity Pipeline
 - pytest
 - mypy
 
+## 📚 Crafting Beautiful Documentation
+
+Your project's documentation lives in the `project_root/docs/` folder and serves as the welcoming front door to your work. Think of it as your project's autobiography - it should tell the story of what you've built, why it matters, and how others can join the journey.
+
+### Essential Components
+
+**ReadTheDocs Integration** - Connect your repository to ReadTheDocs for automatic building and hosting. Configure your `.readthedocs.yaml` file to specify Python version, requirements, and build settings. This creates a professional, searchable documentation site that updates with every commit.
+
+**Sphinx Configuration** - Your `conf.py` file is the control center. Set up extensions like `autodoc` for automatic API documentation, `napoleon` for Google-style docstrings, and `sphinx_rtd_theme` for that polished look. Don't forget to configure your project metadata and version handling.
+
+**Markdown Magic** - Structure your content with clear hierarchies. Start with a compelling `index.md` that hooks readers immediately. Create separate files for installation, quickstart guides, API references, and examples. Use consistent formatting, helpful code blocks, and engaging language that makes complex topics approachable.
+
+**The Human Touch** - Sprinkle in personality through friendly explanations, real-world examples, and occasional humor. Documentation doesn't have to be dry - make it a conversation with your future users and collaborators.
+
+Remember: great documentation is written for the person discovering your project at 2 AM, slightly caffeinated, trying to solve a pressing problem.
+
 ## Architecture Overview for AI Agents
 
 The Entity Pipeline Framework follows a **linear pipeline architecture** with these stages:

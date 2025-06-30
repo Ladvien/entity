@@ -9,7 +9,11 @@ from pipeline.stages import PipelineStage
 
 
 class MemoryRetrievalPrompt(PromptPlugin):
-    """Fetch past conversation from memory and append it to the context."""
+    """Fetch past conversation from memory and append it to the context.
+
+    Applies **Explicit Multi-Turn Support (27)** by retrieving prior messages
+    when available.
+    """
 
     dependencies = ["memory"]
     stages = [PipelineStage.THINK]

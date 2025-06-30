@@ -9,18 +9,18 @@ from pipeline.stages import PipelineStage
 
 
 class BasicLogger(FailurePlugin):
-    """Log failure information using Python's logging module."""
+    """Log failure information using Python's logging module.
+
+    Implements **Error Communication (30)** so users receive clear
+    messages when something goes wrong.
+    """
 
     stages = [PipelineStage.ERROR]
 
     async def _execute_impl(self, context: PluginContext) -> Any:
-<<<<<< codex/secure-plugincontext-methods-and-enforce-encapsulation
-        info = context.get_failure_info()
-======
->>>>>> main
         logger = logging.getLogger(self.__class__.__name__)
         try:
-            info = context._state.failure_info
+            info = context.get_failure_info()
             if info is not None:
                 logger.error(
                     "Pipeline failure encountered",

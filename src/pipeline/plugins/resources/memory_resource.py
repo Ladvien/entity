@@ -7,7 +7,11 @@ from pipeline.stages import PipelineStage
 
 
 class SimpleMemoryResource(ResourcePlugin):
-    """In-memory key/value store persisted across pipeline runs."""
+    """In-memory key/value store persisted across pipeline runs.
+
+    Demonstrates **Resource Agnostic (11)** since plugins can operate with or
+    without persistent storage.
+    """
 
     stages = [PipelineStage.PARSE]
     name = "memory"

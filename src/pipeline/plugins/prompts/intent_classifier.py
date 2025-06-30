@@ -6,7 +6,11 @@ from pipeline.stages import PipelineStage
 
 
 class IntentClassifierPrompt(PromptPlugin):
-    """Classify user intent using an LLM."""
+    """Classify user intent using an LLM.
+
+    Uses **Structured LLM Access (22)** so prompt logic stays simple
+    while maintaining observability.
+    """
 
     dependencies = ["ollama"]
     stages = [PipelineStage.THINK]
