@@ -16,9 +16,9 @@ if TYPE_CHECKING:  # pragma: no cover - used for type hints only
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .initializer import ClassRegistry
 
-from .stages import PipelineStage
 from .logging import get_logger
 from .observability.utils import execute_with_observability
+from .stages import PipelineStage
 from .validation import ValidationResult
 
 logger = logging.getLogger(__name__)
@@ -39,6 +39,12 @@ class ConfigurationError(Exception):
 
 
 class BasePlugin(ABC):
+    """Base class for all pipeline plugins.
+
+    Subclasses declare the pipeline ``stages`` they run in. ``priority`` controls
+    ordering within a stage, and ``dependencies`` lists required registry keys.
+    """
+
     stages: List[PipelineStage]
     priority: int = 50
     dependencies: List[str] = []
@@ -47,7 +53,6 @@ class BasePlugin(ABC):
         self.config = config or {}
         self.logger = get_logger(self.__class__.__name__)
 
-<<<<< hxttvb-codex/extend-baseplugin-with-logging-and-metrics
     async def execute(self, context: PluginContext | SimpleContext):
         async def run() -> Any:
             return await self._execute_impl(context)
@@ -58,44 +63,7 @@ class BasePlugin(ABC):
             metrics=context._state.metrics,
             plugin=self.__class__.__name__,
             stage=str(context.current_stage),
-=====
-    async def execute(self, context: "PluginContext"):
-        logger.info(
-            "Plugin execution started",
-            extra={
-                "plugin": self.__class__.__name__,
-                "stage": str(context.current_stage),
-                "pipeline_id": context.pipeline_id,
-            },
->>>>> main
         )
-<<<<<< codex/secure-plugincontext-methods-and-enforce-encapsulation
-        start = time.time()
-        try:
-            result = await self._execute_impl(context)
-            duration = time.time() - start
-            context.record_plugin_duration(self.__class__.__name__, duration)
-            logger.info(
-                "Plugin execution finished",
-                extra={
-                    "plugin": self.__class__.__name__,
-                    "stage": str(context.current_stage),
-                    "duration": duration,
-                },
-            )
-            return result
-        except Exception as e:
-            logger.exception(
-                "Plugin execution failed",
-                extra={
-                    "plugin": self.__class__.__name__,
-                    "stage": str(context.current_stage),
-                    "error": str(e),
-                },
-            )
-            raise
-=======
->>>>>> main
 
     @abstractmethod
     async def _execute_impl(self, context: "PluginContext"):
