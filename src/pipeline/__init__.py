@@ -1,11 +1,11 @@
 from .agent import Agent
 from .config_update import ConfigUpdateResult, update_plugin_configuration
-<<<<<< codex/create-cliadapter-and-add-unit-tests
+<<<< codex/create-cliadapter-and-add-unit-tests
 from .context import (ConversationEntry, LLMResponse, PluginContext,
                       SimpleContext, ToolCall)
 from .initializer import (ClassRegistry, SystemInitializer,
                           import_plugin_class, initialization_cleanup_context)
-======
+=====
 from .context import (
     ConversationEntry,
     LLMResponse,
@@ -20,7 +20,7 @@ from .initializer import (
     import_plugin_class,
     initialization_cleanup_context,
 )
->>>>>> main
+>>> main
 from .manager import PipelineManager
 from .pipeline import (create_default_response, create_static_error_response,
                        execute_pending_tools, execute_pipeline, execute_stage)
@@ -34,7 +34,11 @@ from .stages import PipelineStage
 from .state import FailureInfo, MetricsCollector, PipelineState
 
 # isort: off
+<<<< codex/implement-websocket-adapter-with-tests
+from .adapters import HTTPAdapter, WebSocketAdapter
+====
 from .adapters import HTTPAdapter, CLIAdapter
+>>>> main
 
 # isort: on
 
@@ -77,5 +81,9 @@ __all__ = [
     "PipelineManager",
     "ConversationManager",
     "HTTPAdapter",
+<<<<<< codex/implement-websocket-adapter-with-tests
+    "WebSocketAdapter",
+======
     "CLIAdapter",
+>>>>>> main
 ]
