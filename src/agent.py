@@ -23,7 +23,16 @@ class Agent:
 
     async def _ensure_initialized(self) -> None:
         if self._registries is None:
-            self._registries = await self.initializer.initialize()
+            initialized = await self.initializer.initialize()
+            if isinstance(initialized, tuple):
+                plugin_reg, resource_reg, tool_reg = initialized
+                self._registries = SystemRegistries(
+                    resources=resource_reg,
+                    tools=tool_reg,
+                    plugins=plugin_reg,
+                )
+            else:
+                self._registries = initialized
 
     async def handle(self, message: str) -> Any:
         await self._ensure_initialized()
