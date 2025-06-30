@@ -6,6 +6,7 @@ import yaml
 
 from src.config.environment import load_env  # noqa: E402
 from src.pipeline import SystemInitializer  # noqa: E402
+from src.pipeline.config import ConfigLoader
 
 
 class ConfigValidator:
@@ -31,7 +32,7 @@ class ConfigValidator:
             with Path(self.args.config).open("r") as fh:
                 config = yaml.safe_load(fh) or {}
             load_env()
-            config = SystemInitializer._interpolate_env_vars(config)
+            config = ConfigLoader.from_dict(config)
             self._validate_vector_memory(config)
             initializer = SystemInitializer(config)
             asyncio.run(initializer.initialize())
