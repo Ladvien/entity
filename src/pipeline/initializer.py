@@ -7,7 +7,7 @@ from typing import Any, Dict, Iterable, List, Tuple
 
 from src.config.environment import load_env
 
-from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
+from .plugins import BasePlugin, ResourcePlugin, ToolPlugin
 from .registries import PluginRegistry, ResourceRegistry, ToolRegistry
 
 

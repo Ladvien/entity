@@ -20,25 +20,11 @@ if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .initializer import ClassRegistry
 
 from .stages import PipelineStage
+from .validation import ValidationResult
 
 logger = logging.getLogger(__name__)
 
 Self = TypeVar("Self", bound="BasePlugin")
-
-
-@dataclass
-class ValidationResult:
-    success: bool
-    error_message: Optional[str] = None
-    warnings: List[str] = field(default_factory=list)
-
-    @classmethod
-    def success_result(cls) -> "ValidationResult":
-        return cls(True)
-
-    @classmethod
-    def error_result(cls, message: str) -> "ValidationResult":
-        return cls(False, error_message=message)
 
 
 @dataclass
