@@ -7,6 +7,7 @@ from .context import (
     SimpleContext,
     ToolCall,
 )
+from .conversation_manager import ConversationManager
 from .initializer import (
     ClassRegistry,
     SystemInitializer,
@@ -79,5 +80,6 @@ __all__ = [
     "update_plugin_configuration",
     "Agent",
     "PipelineManager",
+    "ConversationManager",
     "HTTPAdapter",
 ]
