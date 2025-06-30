@@ -19,7 +19,10 @@ CONN = {
 def test_save_and_load_history():
     async def run():
         resource = PostgresResource(CONN)
-        await resource.initialize()
+        try:
+            await resource.initialize()
+        except OSError as exc:
+            pytest.skip(f"PostgreSQL not available: {exc}")
         await resource._connection.execute("DROP TABLE IF EXISTS test_history")
         await resource._connection.execute(
             "CREATE TABLE test_history ("
