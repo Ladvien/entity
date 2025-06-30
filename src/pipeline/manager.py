@@ -7,7 +7,11 @@ from .registries import SystemRegistries
 
 
 class PipelineManager:
-    """Manage concurrent pipeline executions and track active pipelines."""
+    """Manage concurrent pipeline executions and track active pipelines.
+
+    Ensures **Linear Pipeline Flow (23)** by coordinating stage execution
+    across multiple requests.
+    """
 
     def __init__(self, registries: Optional[SystemRegistries] = None) -> None:
         self._registries = registries

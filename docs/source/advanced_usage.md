@@ -29,3 +29,5 @@ plugins:
 
 For a working example, see
 [`vector_memory_pipeline.py`](../../examples/vector_memory_pipeline.py).
+These advanced capabilities highlight **Preserve All Power (7)** by allowing
+low-level database features without sacrificing the simple default setup.

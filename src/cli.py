@@ -6,6 +6,9 @@ import yaml
 
 from entity import Agent
 from pipeline import update_plugin_configuration
+from pipeline.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class CLI:
@@ -62,9 +65,11 @@ class CLI:
                         plugin_registry, name, conf
                     )
                     if result.success:
-                        print(f"Updated {name}")
+                        logger.info("Updated %s", name)
                     else:
-                        print(f"Failed to update {name}: {result.error_message}")
+                        logger.error(
+                            "Failed to update %s: %s", name, result.error_message
+                        )
                         success = False
             return 0 if success else 1
 

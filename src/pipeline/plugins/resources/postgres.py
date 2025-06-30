@@ -11,7 +11,11 @@ from pipeline.stages import PipelineStage
 
 
 class PostgresResource(ResourcePlugin):
-    """Asynchronous PostgreSQL connection resource."""
+    """Asynchronous PostgreSQL connection resource.
+
+    Highlights **Configuration Over Code (9)** by defining all connection
+    details in YAML rather than hardcoding them in the class.
+    """
 
     stages = [PipelineStage.PARSE]
     name = "database"
@@ -23,8 +27,7 @@ class PostgresResource(ResourcePlugin):
         self._history_table = self.config.get("history_table")
 
     async def initialize(self) -> None:
-        print("🔍 Connecting to Postgres with:")
-        print(self.config)
+        self.logger.info("Connecting to Postgres", extra={"config": self.config})
         self._connection = await asyncpg.connect(
             database=str(self.config.get("name")),
             host=str(self.config.get("host", "localhost")),

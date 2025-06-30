@@ -1,4 +1,4 @@
-"""Compatibility wrapper for renamed execution module."""
+from __future__ import annotations
 
 import asyncio
 import time
@@ -159,3 +159,15 @@ async def execute_pending_tools(
                 str(exc),
             )
     return results
+<<<<<< codex/run-code-validation-tools-and-tests
+======
+<<<<< codex/resolve-merge-conflict-artifacts
+=====
+<<<<< codex/add-docstring-to-baseplugin-class
+
+
+from .execution import *  # noqa: F401,F403
+======
+>>>>> main
+>>>>> main
+>>>>>> main

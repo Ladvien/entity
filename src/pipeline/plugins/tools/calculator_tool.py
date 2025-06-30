@@ -67,7 +67,11 @@ class SafeEvaluator:
 
 
 class CalculatorTool(ToolPlugin):
-    """Evaluate simple math expressions using a safe evaluator."""
+    """Evaluate simple math expressions using a safe evaluator.
+
+    Supports **Immediate Tool Access (24)** for quick calculations within
+    any stage.
+    """
 
     stages = [PipelineStage.DO]
     _evaluator = SafeEvaluator()
