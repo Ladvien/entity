@@ -38,7 +38,7 @@ from .stages import PipelineStage
 from .state import FailureInfo, MetricsCollector, PipelineState
 
 # isort: off
-from .adapters import HTTPAdapter
+from .adapters import HTTPAdapter, WebSocketAdapter
 
 # isort: on
 
@@ -80,4 +80,5 @@ __all__ = [
     "Agent",
     "PipelineManager",
     "HTTPAdapter",
+    "WebSocketAdapter",
 ]
