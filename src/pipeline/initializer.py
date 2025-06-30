@@ -4,8 +4,10 @@ import os
 from contextlib import contextmanager
 from importlib import import_module
 from typing import Any, Dict, Iterable, List, Tuple
+import copy
 
 from src.config.environment import load_env
+from .defaults import DEFAULT_CONFIG
 
 from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
 from .registries import PluginRegistry, ResourceRegistry, ToolRegistry
@@ -73,33 +75,9 @@ def initialization_cleanup_context():
 class SystemInitializer:
     """Initialize and validate all plugins for the pipeline."""
 
-    DEFAULT_CONFIG: Dict[str, Any] = {
-        "plugins": {
-            "resources": {
-                "ollama": {
-                    "type": "pipeline.plugins.resources.echo_llm:EchoLLMResource"
-                },
-                "memory": {
-                    "type": "pipeline.plugins.resources.memory_resource:SimpleMemoryResource"
-                },
-            },
-            "tools": {
-                "search": {"type": "pipeline.plugins.tools.search_tool:SearchTool"},
-                "calculator": {
-                    "type": "pipeline.plugins.tools.calculator_tool:CalculatorTool"
-                },
-            },
-            "adapters": {
-                "http": {"type": "pipeline.adapters.http:HTTPAdapter"},
-                "websocket": {"type": "pipeline.adapters.websocket:WebSocketAdapter"},
-                "cli": {"type": "pipeline.adapters.cli:CLIAdapter"},
-            },
-        }
-    }
-
     def __init__(self, config: Dict | None = None, env_file: str = ".env") -> None:
         load_env(env_file)
-        self.config = config or self.DEFAULT_CONFIG
+        self.config = config or copy.deepcopy(DEFAULT_CONFIG)
 
     @classmethod
     def from_yaml(cls, yaml_path: str, env_file: str = ".env") -> "SystemInitializer":
