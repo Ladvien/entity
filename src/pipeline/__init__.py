@@ -1,9 +1,26 @@
 from .agent import Agent
 from .config_update import ConfigUpdateResult, update_plugin_configuration
+<<<<<< codex/create-cliadapter-and-add-unit-tests
 from .context import (ConversationEntry, LLMResponse, PluginContext,
                       SimpleContext, ToolCall)
 from .initializer import (ClassRegistry, SystemInitializer,
                           import_plugin_class, initialization_cleanup_context)
+======
+from .context import (
+    ConversationEntry,
+    LLMResponse,
+    PluginContext,
+    SimpleContext,
+    ToolCall,
+)
+from .conversation_manager import ConversationManager
+from .initializer import (
+    ClassRegistry,
+    SystemInitializer,
+    import_plugin_class,
+    initialization_cleanup_context,
+)
+>>>>>> main
 from .manager import PipelineManager
 from .pipeline import (create_default_response, create_static_error_response,
                        execute_pending_tools, execute_pipeline, execute_stage)
@@ -58,6 +75,7 @@ __all__ = [
     "update_plugin_configuration",
     "Agent",
     "PipelineManager",
+    "ConversationManager",
     "HTTPAdapter",
     "CLIAdapter",
 ]
