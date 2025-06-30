@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+"""HTTP adapter exposing the pipeline through a FastAPI endpoint.
+
+The :class:`HTTPAdapter` defined here spins up a small FastAPI
+application with a single POST route. Incoming messages are forwarded
+to the pipeline and the JSON response is returned to the caller.
+"""
+
 from typing import Any, cast
 
 import uvicorn
@@ -43,6 +50,13 @@ class HTTPAdapter(AdapterPlugin):
             )
 
     async def serve(self, registries: SystemRegistries) -> None:
+        """Start the FastAPI HTTP server.
+
+        Parameters
+        ----------
+        registries:
+            System registries containing all initialized plugins and resources.
+        """
         self._registries = registries
         host = self.config.get("host", "127.0.0.1")
         port = int(self.config.get("port", 8000))
