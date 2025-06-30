@@ -15,6 +15,7 @@
 
 quick_start
 config
+context
 advanced_usage
 apidocs/index
 ```
