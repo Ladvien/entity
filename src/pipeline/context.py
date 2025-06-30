@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional
 
 from .registries import SystemRegistries
 from .stages import PipelineStage
-from .state import ConversationEntry, LLMResponse, PipelineState, ToolCall
+from .state import ConversationEntry, PipelineState, ToolCall
 
 
 class PluginContext:
@@ -93,6 +92,7 @@ class PluginContext:
 
     def add_failure(self, info: Any) -> None:
         self._state.failure_info = info
+<<<<<< codex/add-llm-integration-and-metrics-collection
 
 
 class SimpleContext(PluginContext):
@@ -214,3 +214,5 @@ class SimpleContext(PluginContext):
     def contains(self, *keywords: str) -> bool:
         msg_lower = self.message.lower()
         return any(keyword.lower() in msg_lower for keyword in keywords)
+======
+>>>>>> main

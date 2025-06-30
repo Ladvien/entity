@@ -50,11 +50,17 @@ class PluginRegistry:
         self._names: Dict[BasePlugin, str] = {}
 
     def register_plugin_for_stage(
-        self, plugin: BasePlugin, stage: PipelineStage, name: str | None = None
+        self, plugin: BasePlugin, stage: PipelineStage | str, name: str | None = None
     ) -> None:
         """Register ``plugin`` to execute during ``stage``."""
+        try:
+            stage_enum = PipelineStage.ensure(stage)
+        except ValueError as exc:
+            raise ValueError(
+                f"Cannot register {plugin.__class__.__name__} for invalid stage '{stage}'"
+            ) from exc
 
-        self._stage_plugins[stage].append(plugin)
+        self._stage_plugins[stage_enum].append(plugin)
         plugin_name = name or getattr(plugin, "name", plugin.__class__.__name__)
         self._names.setdefault(plugin, str(plugin_name))
 

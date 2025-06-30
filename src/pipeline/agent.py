@@ -12,7 +12,11 @@ from types import ModuleType
 from typing import Any, Callable, Dict, Optional, cast
 
 from .adapters.http import HTTPAdapter
-from .base_plugins import PluginAutoClassifier
+<<<<<< codex/enhance-plugin-auto-detection-and-creation
+from .plugins.classifier import PluginClassifier
+======
+from .plugins.classifier import PluginAutoClassifier
+>>>>>> main
 from .pipeline import execute_pipeline
 from .plugins import BasePlugin
 from .registries import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
@@ -43,6 +47,9 @@ class Agent:
 
     def add_plugin(self, plugin: Any) -> None:
         """Register a plugin instance for its stages."""
+        if not inspect.iscoroutinefunction(getattr(plugin, "_execute_impl", None)):
+            name = getattr(plugin, "name", plugin.__class__.__name__)
+            raise TypeError(f"Plugin '{name}' must implement async '_execute_impl'")
         for stage in getattr(plugin, "stages", []):
             name = getattr(plugin, "name", plugin.__class__.__name__)
             self.plugin_registry.register_plugin_for_stage(plugin, stage, name)
@@ -51,7 +58,7 @@ class Agent:
         """Decorator to register a function as a plugin."""
 
         def decorator(f: Callable) -> Callable:
-            plugin = PluginAutoClassifier.classify(f, hints)
+            plugin = PluginClassifier.classify(f, hints)
             self.add_plugin(plugin)
             return f
 
@@ -141,6 +148,8 @@ class Agent:
                     self.add_plugin(obj({}))
                 elif callable(obj) and name.endswith("_plugin"):
                     self.plugin(obj)
+                elif callable(obj) and hasattr(obj, "__entity_plugin__"):
+                    self.add_plugin(getattr(obj, "__entity_plugin__"))
             except Exception as exc:  # noqa: BLE001
                 logger.error(
                     "Failed to register plugin %s from %s: %s",

@@ -6,7 +6,7 @@ def test_plugin_decorator_registration():
     agent = Agent()
 
     @agent.plugin
-    def hello(context):
+    async def hello(context):
         return "hi"
 
     do_plugins = agent.plugin_registry.get_for_stage(PipelineStage.DO)
