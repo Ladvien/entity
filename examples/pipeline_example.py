@@ -39,7 +39,7 @@ class CalculatorTool(ToolPlugin):
             raise ValueError(f"Invalid expression: {exc}") from exc
 
 
-def hello_plugin(ctx):  # pragma: no cover - example code
+async def hello_plugin(ctx):  # pragma: no cover - example code
     if "hello" in ctx.message.lower():
         return "Hello there!"
     return None
