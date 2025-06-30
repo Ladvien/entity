@@ -10,6 +10,15 @@ from .state import ConversationEntry, LLMResponse, PipelineState, ToolCall
 
 
 class PluginContext:
+    """Provide controlled access to pipeline state and registries.
+
+    This context object wraps :class:`PipelineState` and
+    :class:`SystemRegistries` so plugins can safely interact with the
+    surrounding system. It exposes methods to read and modify state,
+    schedule tool execution, and manage conversation history.  Note that
+    ``PluginContext`` itself is *not* a plugin.
+    """
+
     def __init__(self, state: PipelineState, registries: SystemRegistries) -> None:
         self._state = state
         self._registries = registries
@@ -96,6 +105,8 @@ class PluginContext:
 
 
 class SimpleContext(PluginContext):
+    """Convenience wrapper with helper methods built on ``PluginContext``."""
+
     @property
     def message(self) -> str:
         for entry in reversed(self._state.conversation):
