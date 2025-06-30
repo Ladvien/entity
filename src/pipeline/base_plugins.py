@@ -45,6 +45,24 @@ class BasePlugin(ABC):
     priority: int = 50
     dependencies: List[str] = []
 
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        super().__init_subclass__(**kwargs)
+
+        if cls.__module__ in {__name__, "pipeline.plugins.base"}:
+            return
+
+        if "ToolPlugin" in [base.__name__ for base in cls.__mro__]:
+            return
+
+        stages = getattr(cls, "stages", None)
+        if not stages:
+            raise ValueError(f"{cls.__name__} must define a non-empty 'stages' list")
+
+        if any(not isinstance(stage, PipelineStage) for stage in stages):
+            raise ValueError(
+                f"All items in {cls.__name__}.stages must be PipelineStage instances"
+            )
+
     def __init__(self, config: Dict | None = None) -> None:
         self.config = config or {}
         self.logger = get_logger(self.__class__.__name__)
