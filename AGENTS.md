@@ -37,6 +37,15 @@ You have access to a postgres 16 database for development purposes. The database
 
 There is no password.
 
+Ollama is available for LLM interactions. The Ollama server is running locally with the following details:
+
+Host: localhost
+Port: 11434
+Model: tinyllama
+Auth: None (insecure dev only)
+
+Startup: Automatically launched in background by the dev init script.
+
 ### Pipeline Stages
 
 - **Parse**: Input validation, context setup, memory retrieval

@@ -6,7 +6,6 @@ from pipeline import (
     ConversationEntry,
     MetricsCollector,
     PipelineState,
-    PluginContext,
     PluginRegistry,
     ResourceRegistry,
     SimpleContext,
