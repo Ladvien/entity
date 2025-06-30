@@ -17,8 +17,8 @@ plugins:
       history_table: "chat_history"
     ollama:
       type: pipeline.plugins.resources.ollama_llm:OllamaLLMResource
-      base_url: "http://ollama:11434"
-      model: "llama3:8b-instruct-q6_K"
+      base_url: "${OLLAMA_BASE_URL}"
+      model: "${OLLAMA_MODEL}"
       temperature: 0.7
     logging:
       type: pipeline.plugins.resources.structured_logging:StructuredLogging

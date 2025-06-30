@@ -9,6 +9,7 @@ import yaml
 sys.path.insert(0, os.path.join(os.getcwd(), "src"))
 
 from pipeline import SystemInitializer  # noqa: E402
+from config.environment import load_env
 
 
 class ConfigValidator:
@@ -33,6 +34,7 @@ class ConfigValidator:
         try:
             with Path(self.args.config).open("r") as fh:
                 config = yaml.safe_load(fh) or {}
+            load_env()
             config = SystemInitializer._interpolate_env_vars(config)
             initializer = SystemInitializer(config)
             asyncio.run(initializer.initialize())

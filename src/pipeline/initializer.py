@@ -5,6 +5,8 @@ from contextlib import contextmanager
 from importlib import import_module
 from typing import Any, Dict, Iterable, List, Tuple
 
+from config.environment import load_env
+
 from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
 from .registries import PluginRegistry, ResourceRegistry, ToolRegistry
 
@@ -91,18 +93,20 @@ class SystemInitializer:
         }
     }
 
-    def __init__(self, config: Dict | None = None) -> None:
+    def __init__(self, config: Dict | None = None, env_file: str = ".env") -> None:
+        load_env(env_file)
         self.config = config or self.DEFAULT_CONFIG
 
     @classmethod
-    def from_yaml(cls, yaml_path: str) -> "SystemInitializer":
+    def from_yaml(cls, yaml_path: str, env_file: str = ".env") -> "SystemInitializer":
         import yaml
 
         with open(yaml_path, "r") as fh:
             content = fh.read()
         config = yaml.safe_load(content)
+        load_env(env_file)
         config = cls._interpolate_env_vars(config)
-        return cls(config)
+        return cls(config, env_file)
 
     def get_resource_config(self, name: str) -> Dict:
         return self.config["plugins"]["resources"][name]

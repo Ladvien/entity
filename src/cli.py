@@ -54,7 +54,9 @@ class CLI:
             registries: Any | None = agent._registries
             if registries is None:
                 raise RuntimeError("System not initialized")
-            plugin_registry = getattr(registries, "plugins", registries[0])
+            plugin_registry = getattr(registries, "plugins", None)
+            if plugin_registry is None:
+                plugin_registry = registries[0]
             with open(file_path, "r") as fh:
                 cfg = yaml.safe_load(fh) or {}
             success = True
