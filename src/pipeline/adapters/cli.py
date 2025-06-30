@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+"""Command-line adapter for interactive pipeline usage.
+
+This module defines :class:`CLIAdapter`, an adapter that exposes the
+pipeline through an interactive REPL style prompt. Users can type a
+message, the pipeline processes it, and the resulting response is
+printed to standard output.
+"""
+
 import asyncio
 from typing import Any, cast
 
@@ -25,7 +33,13 @@ class CLIAdapter(AdapterPlugin):
         self._registries: SystemRegistries | None = None
 
     async def serve(self, registries: SystemRegistries) -> None:
-        """Start interactive prompt loop."""
+        """Run the interactive command-line loop.
+
+        Parameters
+        ----------
+        registries:
+            System registries containing all initialized plugins and resources.
+        """
         self._registries = registries
         print("Enter message (Ctrl-D to quit)")
         while True:

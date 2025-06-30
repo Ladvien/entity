@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-# Export the high level :class:`Agent` class so users can simply do
-# ``from entity import Agent``.  We re-export the implementation from the
-# :mod:`pipeline` package to keep the import path stable.
+"""Public package entrypoints."""
+
+# ``Agent`` is re-exported from :mod:`pipeline.agent` so that applications can
+# ``from entity import Agent``. The implementation lives in ``pipeline.agent``
+# and is considered the canonical API.
 from pipeline.agent import Agent
 
 __all__ = ["Agent"]
