@@ -9,11 +9,12 @@ from pipeline import (
     ConversationEntry,
     MetricsCollector,
     PipelineState,
+    PluginContext,
     PluginRegistry,
     ResourceRegistry,
-    SimpleContext,
     SystemRegistries,
     ToolRegistry,
+    execute_pending_tools,
 )
 from pipeline.plugins.tools.weather_api_tool import WeatherApiTool
 
@@ -44,11 +45,12 @@ async def run_weather():
     )
     tools.add("weather", tool)
     registries = SystemRegistries(ResourceRegistry(), tools, PluginRegistry())
-    ctx = SimpleContext(state, registries)
+    ctx = PluginContext(state, registries)
     with patch(
         "httpx.AsyncClient.get", new=AsyncMock(return_value=FakeResponse())
     ) as mock_get:
-        result = await ctx.use_tool("weather", location="Berlin")
+        key = ctx.execute_tool("weather", {"location": "Berlin"})
+        result = (await execute_pending_tools(state, registries))[key]
         mock_get.assert_called_with(
             "http://test/weather",
             params={"location": "Berlin", "api_key": os.environ["WEATHER_API_KEY"]},

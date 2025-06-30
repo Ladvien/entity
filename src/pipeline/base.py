@@ -14,8 +14,13 @@ class BasePlugin(ABC):
     stages: List[PipelineStage] = []
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
-        self.config = config or {}
+        self._config = config or {}
         self.logger = None
+
+    @property
+    def config(self) -> Dict[str, Any]:
+        """Return the plugin configuration."""
+        return self._config
 
     async def execute(self, context: PluginContext) -> Any:
         if self.logger:

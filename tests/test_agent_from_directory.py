@@ -9,7 +9,7 @@ def test_from_directory_import_error(tmp_path, caplog):
     good = tmp_path / "good.py"
     good.write_text(
         """\n
-def hi_plugin(ctx):\n    return 'hi'\n"""
+async def hi_plugin(ctx):\n    return 'hi'\n"""
     )
 
     bad = tmp_path / "bad.py"
@@ -28,7 +28,7 @@ def test_directory_plugin_naming(tmp_path):
         """
 from pipeline import BasePlugin, PipelineStage
 
-def good_plugin(ctx):
+async def good_plugin(ctx):
     return 'ok'
 
 def bad(ctx):

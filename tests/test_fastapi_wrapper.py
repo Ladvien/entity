@@ -2,8 +2,8 @@ import asyncio
 
 import httpx
 
-from entity import Agent
 from app import create_app
+from entity import Agent
 
 
 def test_fastapi_wrapper():
