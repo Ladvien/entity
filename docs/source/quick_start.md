@@ -24,6 +24,9 @@ async def lookup(context):
     return await context.use_tool("search", query="Entity Pipeline")
 ```
 
+The `context` argument is an instance of `PluginContext`. See
+[the context guide](context.md) for an overview of its helper methods.
+
 ### Enabling the Ollama Resource
 Add the Ollama LLM resource to your configuration so plugins can use it:
 
