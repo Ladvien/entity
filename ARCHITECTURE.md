@@ -1,15 +1,26 @@
 # Entity Pipeline Framework - Architecture Document
 
 ## 🎯 Vision
-A **pipeline-based plugin framework** for AI agents that processes requests through configurable stages, inspired by Bevy's plugin architecture. **Progressive disclosure design**: approachable for beginners, infinitely powerful for experts.
+A **reconfigurable pipeline framework** that makes AI agent behavior easily adjustable through plugins and configuration, inspired by Bevy's plugin architecture. **Progressive disclosure design**: approachable for beginners, infinitely powerful for experts. Change agent behavior through configuration, not code rewrites.
 
 **Requires Python 3.11 or higher.**
+
+## 🔄 Reconfigurable Agent Infrastructure
+
+The framework's core value is **making agent behavior adjustable** without code changes:
+
+- **Swap reasoning strategies**: Change from ReAct to Chain-of-Thought by replacing a single plugin
+- **Modify tool combinations**: Add weather tools to a research agent through configuration
+- **Adjust personality**: Switch from professional to casual tone with prompt plugin changes
+- **Runtime reconfiguration**: Update agent behavior while the system is running
+
+**Example**: Transform a basic Q&A agent into a research assistant by adding memory plugins, search tools, and citation formatting - all through configuration changes.
 
 ## 🏗️ Core Architecture
 
 ### Pipeline Execution Model
 
-The pipeline follows a **single-execution pattern** with tools and resources available throughout all stages:
+The pipeline follows a **single-execution pattern** optimized for reconfigurable agent behavior:
 
 1. **Single Pipeline Execution**: Each request runs through the pipeline once with a guaranteed response
 2. **Structured LLM Access**: Any stage can call the LLM when needed with automatic observability
@@ -19,6 +30,8 @@ The pipeline follows a **single-execution pattern** with tools and resources ava
 6. **Dynamic Configuration Updates**: Runtime configuration changes without application restart via plugin reconfiguration
 7. **Fail-Fast Error Handling**: Plugin failures route to dedicated error stage for user communication
 8. **Explicit Multi-Turn Support**: Multi-iteration scenarios handled explicitly through delegation or conversation management
+
+**Why Single Execution for Agents**: Predictable execution patterns make behavior changes more reliable and easier to debug. Plugin swaps produce consistent results because the execution flow remains stable.
 
 ```python
 from enum import Enum, auto
@@ -124,8 +137,8 @@ flowchart TD
     Stage5 -.-> ErrorStage
     ErrorStage --> OA
     
-    %% LLM Resource Available Throughout Pipeline
-    LLM[🧠 LLM Resource] -.-> Stage1
+    %% LLM / DB / Misc. Resources Available Throughout Pipeline
+    LLM[🧠 LLM / DB / Misc. Resources] -.-> Stage1
     LLM -.-> Stage2
     LLM -.-> Stage3
     LLM -.-> Stage4
@@ -160,13 +173,14 @@ flowchart TD
     class SimplePlugins,AutoRouter simple
 ```
 
-### Stage Definitions
+### Agent-Focused Stage Definitions
 
 #### **parse** - "Get ready to think"
 - Input validation, format conversion
 - Initial context setup
 - Memory/context retrieval (first pass)
 - Basic input sanitization
+- **Agent Context**: Prepare the request for reasoning
 
 #### **think** - "Reason and plan"  
 - Intent classification and understanding
@@ -174,12 +188,14 @@ flowchart TD
 - Planning tool usage and workflows
 - Memory retrieval during reasoning (second pass)
 - Decision making about actions
+- **Agent Context**: Core reasoning and planning stage
 
 #### **do** - "Execute actions"
 - Primary stage for complex tool orchestration
 - Handle tool failures and retries
 - Parse and validate tool results
 - Coordinate multiple tool interactions
+- **Agent Context**: Take actions in the world
 
 #### **review** - "Final processing and safety"
 - Generate responses and apply formatting
@@ -188,24 +204,27 @@ flowchart TD
 - Personality and tone adjustments
 - Response quality validation
 - Final security review
+- **Agent Context**: Ensure response quality and safety
 
 #### **deliver** - "Send the response"
 - Pure output delivery (HTTP response, TTS, file write)
 - No content modification - just transmission
 - Handle delivery failures
+- **Agent Context**: Communicate with the user
 
 #### **error** - "Handle failures gracefully"
 - Convert technical errors to user-friendly messages
 - Log errors for debugging
 - Recovery strategies
+- **Agent Context**: Maintain user experience during failures
 
 ## 🔌 Plugin System Architecture
 
-### Five-Layer Plugin System
+### Five-Layer Reconfigurable Plugin System
 
-The framework maintains a sophisticated five-layer plugin architecture with automatic classification for simple plugins:
+The framework maintains a sophisticated five-layer plugin architecture designed for easy agent behavior modification:
 
-#### **Resource Plugins** (Infrastructure - Enables System Function)
+#### **Resource Plugins** (Infrastructure - Enables Agent Function)
 - **Database**: PostgreSQL, SQLite connections
 - **LLM**: Ollama, OpenAI, Claude servers  
 - **Semantic Memory**: Vector databases, Redis cache
@@ -213,7 +232,9 @@ The framework maintains a sophisticated five-layer plugin architecture with auto
 - **Logging**: Structured logging, metrics, tracing
 - **Monitoring**: Health checks, performance metrics
 
-#### **Tool Plugins** (Functionality - Performs Tasks for Users)
+**Reconfiguration Example**: Switch from OpenAI to local Ollama by changing one configuration line.
+
+#### **Tool Plugins** (Functionality - Performs Tasks for Agents)
 - **Weather**: Get current conditions, forecasts
 - **Calculator**: Mathematical computations
 - **SearchTool**: Web search, document search
@@ -222,17 +243,23 @@ The framework maintains a sophisticated five-layer plugin architecture with auto
 
 **Tool Execution Model**: Tools are registered during system initialization as static capabilities and are available throughout all pipeline stages. Any plugin in any stage can execute tools immediately when needed, with results available to subsequent plugins in the same stage or later stages.
 
-#### **Prompt Plugins** (Processing - Controls Request Flow)
+**Reconfiguration Example**: Add web search capability to a math tutor agent by including search tool plugins in configuration.
+
+#### **Prompt Plugins** (Processing - Controls Agent Behavior)
 - **Strategies**: ReAct, Chain-of-Thought, Direct Response
 - **Personality**: Sarcasm, loyalty, wit injection
 - **Memory**: Context retrieval and storage
 - **Output**: Formatting, validation, filtering
 - **Tool Coordination**: Execute tools during processing with immediate access to results
 
+**Reconfiguration Example**: Change agent personality from formal to casual by swapping personality prompt plugins.
+
 #### **Adapter Plugins** (Input/Output - Interface Handling)
 - **Input Adapters**: HTTP, WebSocket, CLI interfaces
 - **Output Adapters**: HTTP responses, TTS, formatted output
   - **TTS**: Text-to-speech services
+
+**Reconfiguration Example**: Add voice interface to a text-based agent by including TTS adapter plugins.
 
 #### **Failure Plugins** (Error Communication - User-Facing Error Handling)
 - **Error Formatters**: Convert technical errors to user-friendly messages
@@ -480,6 +507,42 @@ class AutoGeneratedPlugin(BasePlugin):
         # Auto-set response if function returns a string
         if isinstance(result, str) and not context.has_response():
             context.set_response(result)
+```
+
+## 🧠 LLM Access and Usage Guidelines
+
+### LLM Availability Throughout Pipeline
+
+The LLM resource is available in all pipeline stages to support flexible agent behavior, with usage guidelines for optimal performance:
+
+**Available Everywhere**: Any plugin in any stage can access the LLM resource through `context.get_resource("llm")` or `self.call_llm(context, prompt, purpose)`.
+
+**Usage Guidelines by Stage**:
+- **Parse**: Minimal LLM use - only for complex input interpretation when necessary
+- **Think**: Primary LLM stage - reasoning, planning, decision making
+- **Do**: LLM for tool result interpretation and next-step decisions
+- **Review**: LLM for response formatting, safety checks, quality validation
+- **Deliver**: No LLM use - pure output transmission
+- **Error**: **Strongly discouraged** - keep error handling simple and reliable
+
+**Best Practices**:
+```python
+# Good: Structured LLM access with purpose tracking
+async def execute(self, context):
+    reasoning = await self.call_llm(
+        context, 
+        "Analyze this request: " + context.get_conversation_history()[-1].content,
+        purpose="intent_analysis"
+    )
+
+# Avoid: LLM calls in error stage
+class ErrorPlugin(FailurePlugin):
+    async def execute(self, context):
+        # Don't do this - keep error handling deterministic
+        # llm_response = await self.call_llm(context, "Explain this error...")
+        
+        # Do this instead
+        return self.format_static_error(context.failure_info)
 ```
 
 ## 🗃️ Data Structures and Context
@@ -986,7 +1049,6 @@ class BasePlugin:
         pass  # Default: no special handling needed
 ```
 
-
 ## 🚀 Plugin Capabilities Summary
 
 - **Read/Write Context**: Plugins can modify conversation and response through controlled interface
@@ -1004,7 +1066,6 @@ class BasePlugin:
 - **Stage Awareness**: Access current execution stage with `context.current_stage` property
 - **Controlled Access**: Clean interface prevents accidental system state corruption
 - **Metadata Persistence**: Store plugin state across single pipeline execution via `context.get_metadata()` and `context.set_metadata()`
-
 
 ## 🎨 Bottom Line
 
