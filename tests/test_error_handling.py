@@ -25,7 +25,7 @@ class FallbackPlugin(FailurePlugin):
     stages = [PipelineStage.ERROR]
 
     async def _execute_impl(self, context):
-        info = context._state.failure_info
+        info = context.get_failure_info()
         context.set_response({"error": info.error_message})
 
 
