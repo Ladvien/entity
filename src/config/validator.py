@@ -8,8 +8,8 @@ import yaml
 
 sys.path.insert(0, os.path.join(os.getcwd(), "src"))
 
+from config.environment import load_env  # noqa: E402
 from pipeline import SystemInitializer  # noqa: E402
-from config.environment import load_env
 
 
 class ConfigValidator:
