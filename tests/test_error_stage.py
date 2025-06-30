@@ -13,6 +13,7 @@ from pipeline import (
     execute_pipeline,
 )
 from pipeline.plugins.failure.basic_logger import BasicLogger
+from pipeline.plugins.failure.error_formatter import ErrorFormatter
 
 # isort: on
 
@@ -65,3 +66,10 @@ def test_static_fallback_on_error_stage_failure():
     registries = make_registries(BadErrorPlugin)
     result = asyncio.run(execute_pipeline("hi", registries))
     assert result["type"] == "static_fallback"
+
+
+def test_error_formatter_produces_message():
+    """Ensure ErrorFormatter creates a user-facing error message."""
+    registries = make_registries(ErrorFormatter)
+    result = asyncio.run(execute_pipeline("hi", registries))
+    assert result == {"error": "FailPlugin failed: boom"}
