@@ -21,7 +21,6 @@ if TYPE_CHECKING:  # pragma: no cover - used for type hints only
 from .logging import get_logger
 from .observability.utils import execute_with_observability
 from .stages import PipelineStage
-
 from .validation import ValidationResult
 
 logger = logging.getLogger(__name__)
@@ -42,6 +41,12 @@ class ConfigurationError(Exception):
 
 
 class BasePlugin(ABC):
+    """Base class for all pipeline plugins.
+
+    Subclasses declare the pipeline ``stages`` they run in. ``priority`` controls
+    ordering within a stage, and ``dependencies`` lists required registry keys.
+    """
+
     stages: List[PipelineStage]
     priority: int = 50
     dependencies: List[str] = []
@@ -50,7 +55,20 @@ class BasePlugin(ABC):
         self.config = config or {}
         self.logger = get_logger(self.__class__.__name__)
 
-<<<<<< codex/re-add-pluginautoclassifier-class
+<<<<< codex/add-docstring-to-baseplugin-class
+    async def execute(self, context: PluginContext | SimpleContext):
+        async def run() -> Any:
+            return await self._execute_impl(context)
+
+        return await execute_with_observability(
+            run,
+            logger=self.logger,
+            metrics=context._state.metrics,
+            plugin=self.__class__.__name__,
+            stage=str(context.current_stage),
+        )
+=====
+<<<<< codex/re-add-pluginautoclassifier-class
     async def execute(self, context: PluginContext | SimpleContext):
         logger.info(
             "Plugin execution started",
@@ -84,7 +102,7 @@ class BasePlugin(ABC):
                 },
             )
             raise
-======
+=====
     async def execute(self, context: PluginContext | SimpleContext) -> Any:
         async def run() -> Any:
             return await self._execute_impl(context)
@@ -96,7 +114,8 @@ class BasePlugin(ABC):
             plugin=self.__class__.__name__,
             stage=str(context.current_stage),
         )
->>>>>> main
+>>>>> main
+>>>>>>
 
     @abstractmethod
     async def _execute_impl(self, context: "PluginContext"):
