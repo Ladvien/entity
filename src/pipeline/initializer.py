@@ -69,8 +69,30 @@ def initialization_cleanup_context():
 
 
 class SystemInitializer:
-    def __init__(self, config: Dict) -> None:
-        self.config = config
+    """Initialize and validate all plugins for the pipeline."""
+
+    DEFAULT_CONFIG: Dict[str, Any] = {
+        "plugins": {
+            "resources": {
+                "ollama": {
+                    "type": "pipeline.plugins.resources.echo_llm:EchoLLMResource"
+                },
+                "memory": {
+                    "type": "pipeline.plugins.resources.memory_resource:SimpleMemoryResource"
+                },
+            },
+            "tools": {
+                "search": {"type": "pipeline.plugins.tools.search_tool:SearchTool"},
+                "calculator": {
+                    "type": "pipeline.plugins.tools.calculator_tool:CalculatorTool"
+                },
+            },
+            "adapters": {"http": {"type": "pipeline.adapters.http:HTTPAdapter"}},
+        }
+    }
+
+    def __init__(self, config: Dict | None = None) -> None:
+        self.config = config or self.DEFAULT_CONFIG
 
     @classmethod
     def from_yaml(cls, yaml_path: str) -> "SystemInitializer":

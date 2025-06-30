@@ -17,7 +17,7 @@ class Agent:
             with open(config, "r") as fh:
                 self.config = yaml.safe_load(fh)
         else:
-            self.config = config or {}
+            self.config = config
         self.initializer = SystemInitializer(self.config)
         self._registries: SystemRegistries | None = None
 
@@ -36,7 +36,7 @@ class Agent:
             await self._ensure_initialized()
             if self._registries is None:
                 raise RuntimeError("System not initialized")
-            server_cfg = self.config.get("server", {})
+            server_cfg = (self.config or {}).get("server", {})
             adapter = HTTPAdapter(server_cfg)
             await adapter.serve(self._registries)
 
