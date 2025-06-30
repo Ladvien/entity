@@ -12,7 +12,7 @@ from pipeline import Agent  # noqa: E402
 
 def main() -> None:
     agent = Agent.from_directory("../plugins")
-    agent.run()
+    agent.run_http()
 
 
 if __name__ == "__main__":
