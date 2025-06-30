@@ -7,7 +7,7 @@ from entity import Agent
 
 
 def test_fastapi_wrapper():
-    agent = Agent(llm="pipeline.plugins.resources.echo_llm:EchoLLMResource")
+    agent = Agent()
     app = create_app(agent)
 
     async def _run():
