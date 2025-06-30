@@ -17,7 +17,7 @@ from pipeline import (
 )
 from pipeline.plugins.tools.weather_api_tool import WeatherApiTool
 
-load_env(Path(__file__).resolve().parents[1] / ".env.example")
+load_env(Path(__file__).resolve().parents[1] / ".env")
 
 
 class FakeResponse:
