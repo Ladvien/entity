@@ -10,6 +10,7 @@ from ..base_plugins import (
     ToolPlugin,
     ValidationResult,
 )
+from .classifier import PluginAutoClassifier
 
 __all__ = [
     "AdapterPlugin",
@@ -22,4 +23,5 @@ __all__ = [
     "ResourcePlugin",
     "ToolPlugin",
     "ValidationResult",
+    "PluginAutoClassifier",
 ]
