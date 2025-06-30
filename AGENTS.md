@@ -18,6 +18,13 @@ This AGENTS.md file provides comprehensive guidance for AI agents working with t
 - `/tests`: Test files organized by plugin type and core functionality
 - `/docs`: Additional documentation and architecture guides
 
+## Project Tools
+- poetry
+- readthedocs
+- pyenv
+- pytest
+- mypy
+
 ## Architecture Overview for AI Agents
 
 The Entity Pipeline Framework follows a **linear pipeline architecture** with these stages:
