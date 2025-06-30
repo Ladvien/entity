@@ -6,8 +6,12 @@ from typing import Any, Dict, Iterable, List, Tuple
 
 from src.config.environment import load_env
 
+<<<<<< codex/introduce-configuration-module-and-updates
 from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
 from .config import ConfigLoader
+======
+from .plugins import BasePlugin, ResourcePlugin, ToolPlugin
+>>>>>> main
 from .registries import PluginRegistry, ResourceRegistry, ToolRegistry
 
 

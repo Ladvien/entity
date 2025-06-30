@@ -12,7 +12,7 @@ from types import ModuleType
 from typing import Any, Callable, Dict, Optional, cast
 
 from .adapters.http import HTTPAdapter
-from .base_plugins import PluginAutoClassifier
+from .plugins.classifier import PluginAutoClassifier
 from .pipeline import execute_pipeline
 from .plugins import BasePlugin
 from .registries import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
@@ -43,6 +43,9 @@ class Agent:
 
     def add_plugin(self, plugin: Any) -> None:
         """Register a plugin instance for its stages."""
+        if not inspect.iscoroutinefunction(getattr(plugin, "_execute_impl", None)):
+            name = getattr(plugin, "name", plugin.__class__.__name__)
+            raise TypeError(f"Plugin '{name}' must implement async '_execute_impl'")
         for stage in getattr(plugin, "stages", []):
             name = getattr(plugin, "name", plugin.__class__.__name__)
             self.plugin_registry.register_plugin_for_stage(plugin, stage, name)
