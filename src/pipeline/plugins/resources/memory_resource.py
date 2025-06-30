@@ -12,8 +12,8 @@ class SimpleMemoryResource(ResourcePlugin):
     stages = [PipelineStage.PARSE]
     name = "memory"
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, config: Dict | None = None) -> None:
+        super().__init__(config)
         self._store: Dict[str, Any] = {}
 
     async def _execute_impl(self, context) -> None:  # pragma: no cover - no op

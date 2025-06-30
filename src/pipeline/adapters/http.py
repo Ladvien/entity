@@ -10,6 +10,7 @@ from ..manager import PipelineManager
 from ..pipeline import execute_pipeline
 from ..plugins import AdapterPlugin
 from ..registries import SystemRegistries
+from ..stages import PipelineStage
 
 
 class MessageRequest(BaseModel):
@@ -19,7 +20,7 @@ class MessageRequest(BaseModel):
 class HTTPAdapter(AdapterPlugin):
     """HTTP adapter using FastAPI."""
 
-    stages: list = []
+    stages = [PipelineStage.DELIVER]
 
     def __init__(
         self, manager: PipelineManager | None = None, config: dict | None = None
