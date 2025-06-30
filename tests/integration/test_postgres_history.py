@@ -14,7 +14,7 @@ load_env(Path(__file__).resolve().parents[2] / ".env")
 CONN = {
     "host": os.environ["DB_HOST"],
     "port": 5432,
-    "name": "dev_db",
+    "name": os.environ["DB_NAME"],
     "username": os.environ["DB_USERNAME"],
     "password": os.environ.get("DB_PASSWORD", ""),
     "history_table": "test_history",

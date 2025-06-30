@@ -10,7 +10,7 @@ plugins:
       type: pipeline.plugins.resources.postgres:PostgresResource
       host: "${DB_HOST}"
       port: 5432
-      name: "dev_db"
+      name: "${DB_USERNAME}"
       username: "${DB_USERNAME}"
       password: "${DB_PASSWORD}"
     ollama:
