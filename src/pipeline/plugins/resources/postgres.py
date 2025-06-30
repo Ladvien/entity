@@ -27,8 +27,7 @@ class PostgresResource(ResourcePlugin):
         self._history_table = self.config.get("history_table")
 
     async def initialize(self) -> None:
-        print("🔍 Connecting to Postgres with:")
-        print(self.config)
+        self.logger.info("Connecting to Postgres", extra={"config": self.config})
         self._connection = await asyncpg.connect(
             database=str(self.config.get("name")),
             host=str(self.config.get("host", "localhost")),
