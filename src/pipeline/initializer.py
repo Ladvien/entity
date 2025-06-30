@@ -92,6 +92,7 @@ class SystemInitializer:
             "adapters": {
                 "http": {"type": "pipeline.adapters.http:HTTPAdapter"},
                 "websocket": {"type": "pipeline.adapters.websocket:WebSocketAdapter"},
+                "cli": {"type": "pipeline.adapters.cli:CLIAdapter"},
             },
         }
     }

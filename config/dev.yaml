@@ -34,6 +34,8 @@ plugins:
   adapters:
     http:
       type: pipeline.adapters.http:HTTPAdapter
+    cli:
+      type: pipeline.adapters.cli:CLIAdapter
   prompts:
     chain_of_thought:
       type: pipeline.plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
