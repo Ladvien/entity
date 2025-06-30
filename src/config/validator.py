@@ -1,13 +1,18 @@
 import argparse
 import asyncio
+import sys
 from pathlib import Path
+
+SRC_PATH = Path(__file__).resolve().parents[1]
+if str(SRC_PATH) not in sys.path:
+    sys.path.insert(0, str(SRC_PATH))
 
 import yaml
 
-from pipeline.logging import get_logger
+from pipeline.logging import configure_logging, get_logger
 from src.config.environment import load_env  # noqa: E402
-from src.pipeline import SystemInitializer  # noqa: E402
-from src.pipeline.config import ConfigLoader
+from pipeline import SystemInitializer  # noqa: E402
+from pipeline.config import ConfigLoader
 
 logger = get_logger(__name__)
 
@@ -31,6 +36,7 @@ class ConfigValidator:
         return parser.parse_args()
 
     def run(self) -> int:
+        configure_logging()
         try:
             with Path(self.args.config).open("r") as fh:
                 config = yaml.safe_load(fh) or {}
@@ -40,8 +46,10 @@ class ConfigValidator:
             initializer = SystemInitializer(config)
             asyncio.run(initializer.initialize())
         except Exception as exc:  # pragma: no cover - error path
+            print(f"Configuration invalid: {exc}")
             logger.error("Configuration invalid: %s", exc)
             return 1
+        print("Configuration valid")
         logger.info("Configuration valid.")
         return 0
 
