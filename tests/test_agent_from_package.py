@@ -9,7 +9,7 @@ def test_from_package_import_error(tmp_path, caplog, monkeypatch):
     pkg = tmp_path / "pkg"
     pkg.mkdir()
     (pkg / "__init__.py").write_text("")
-    (pkg / "good.py").write_text("def ok_plugin(ctx):\n    return 'ok'")
+    (pkg / "good.py").write_text("async def ok_plugin(ctx):\n    return 'ok'")
     (pkg / "bad.py").write_text("import nonexistent_module")
 
     monkeypatch.syspath_prepend(str(tmp_path))
@@ -31,7 +31,7 @@ def test_package_plugin_naming(tmp_path, monkeypatch):
         """
 from pipeline import BasePlugin, PipelineStage
 
-def top_plugin(ctx):
+async def top_plugin(ctx):
     return 'top'
 
 class TopClass(BasePlugin):
@@ -47,7 +47,7 @@ class BadClass:
 
     (sub / "submod.py").write_text(
         """
-def sub_plugin(ctx):
+async def sub_plugin(ctx):
     return 'sub'
 """
     )
