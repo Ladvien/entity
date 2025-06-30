@@ -31,3 +31,15 @@ For a working example, see
 [`vector_memory_pipeline.py`](../../examples/vector_memory_pipeline.py).
 These advanced capabilities highlight **Preserve All Power (7)** by allowing
 low-level database features without sacrificing the simple default setup.
+
+### Runtime Configuration Reload
+
+Update plugin settings without restarting the agent:
+
+```bash
+python -m src.cli reload-config updated.yaml
+```
+
+The command waits for active pipelines to finish, then applies the new YAML
+configuration. This demonstrates **Dynamic Configuration Updates**, letting you
+tweak resources or tools at runtime while keeping the system responsive.
