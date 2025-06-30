@@ -1,33 +1,91 @@
 from __future__ import annotations
 
 import asyncio
+from copy import deepcopy
 from datetime import datetime
 from typing import Any, Dict, List, Optional, cast
 
 from .registries import SystemRegistries
 from .stages import PipelineStage
-from .state import ConversationEntry, LLMResponse, PipelineState, ToolCall
+from .state import ConversationEntry, FailureInfo, LLMResponse, PipelineState, ToolCall
 
 
 class PluginContext:
+<<<<<< codex/add-docstrings-to-plugincontext-and-simplecontext
+    """Provide controlled access to pipeline state and registries.
+
+    This context object wraps :class:`PipelineState` and
+    :class:`SystemRegistries` so plugins can safely interact with the
+    surrounding system. It exposes methods to read and modify state,
+    schedule tool execution, and manage conversation history.  Note that
+    ``PluginContext`` itself is *not* a plugin.
+    """
+======
+    """Rich state container enabling **Structured Communication (14)**."""
+>>>>>> main
+
     def __init__(self, state: PipelineState, registries: SystemRegistries) -> None:
-        self._state = state
+        # store state privately to discourage direct access from plugins
+        self.__state = state
         self._registries = registries
+
+    # do not allow external code to read _state
+    @property
+    def _state(self) -> PipelineState:  # pragma: no cover - defensive measure
+        raise AttributeError("Direct PipelineState access is not allowed")
+
+    def _get_state(self) -> PipelineState:
+        """Internal helper to retrieve the pipeline state."""
+        return self.__state
+
+    # --- Metrics helpers -------------------------------------------------
+    def record_plugin_duration(self, plugin: str, duration: float) -> None:
+        self._get_state().metrics.record_plugin_duration(
+            plugin, str(self.current_stage), duration
+        )
+
+    def record_llm_call(self, plugin: str, purpose: str) -> None:
+        self._get_state().metrics.record_llm_call(
+            plugin, str(self.current_stage), purpose
+        )
+
+    def record_llm_duration(self, plugin: str, duration: float) -> None:
+        self._get_state().metrics.record_llm_duration(
+            plugin, str(self.current_stage), duration
+        )
+
+    def record_tool_execution(
+        self, tool_name: str, result_key: str, source: str
+    ) -> None:
+        self._get_state().metrics.record_tool_execution(
+            tool_name,
+            str(self.current_stage),
+            self.pipeline_id,
+            result_key,
+            source,
+        )
+
+    def record_tool_error(self, tool_name: str, error: str) -> None:
+        self._get_state().metrics.record_tool_error(
+            tool_name, str(self.current_stage), self.pipeline_id, error
+        )
+
+    # --------------------------------------------------------------------
 
     @property
     def pipeline_id(self) -> str:
-        return self._state.pipeline_id
+        return self._get_state().pipeline_id
 
     @property
     def current_stage(self) -> Optional[PipelineStage]:
-        return self._state.current_stage
+        return self._get_state().current_stage
 
     def get_resource(self, name: str) -> Any:
         return self._registries.resources.get(name)
 
     @property
     def message(self) -> str:
-        for entry in reversed(self._state.conversation):
+        for entry in reversed(self._get_state().conversation):
             if entry.role == "user":
                 return entry.content
         return ""
@@ -39,8 +97,10 @@ class PluginContext:
         if not tool:
             raise ValueError(f"Tool '{tool_name}' not found")
         if result_key is None:
-            result_key = f"{tool_name}_result_{len(self._state.pending_tool_calls)}"
-        self._state.pending_tool_calls.append(
+            result_key = (
+                f"{tool_name}_result_{len(self._get_state().pending_tool_calls)}"
+            )
+        self._get_state().pending_tool_calls.append(
             ToolCall(name=tool_name, params=params, result_key=result_key)
         )
         return result_key
@@ -48,7 +108,7 @@ class PluginContext:
     def add_conversation_entry(
         self, content: str, role: str, metadata: Optional[Dict[str, Any]] = None
     ) -> None:
-        self._state.conversation.append(
+        self._get_state().conversation.append(
             ConversationEntry(
                 content=content,
                 role=role,
@@ -60,56 +120,63 @@ class PluginContext:
     def get_conversation_history(
         self, last_n: Optional[int] = None
     ) -> List[ConversationEntry]:
-        if last_n is None:
-            return list(self._state.conversation)
-        return self._state.conversation[-last_n:]
+        state = self._get_state()
+        history = state.conversation if last_n is None else state.conversation[-last_n:]
+        return [deepcopy(entry) for entry in history]
 
     def set_response(self, response: Any) -> None:
-        if self._state.response is not None:
+        state = self._get_state()
+        if state.response is not None:
             raise ValueError("Response already set")
-        self._state.response = response
+        state.response = response
 
     def has_response(self) -> bool:
-        return self._state.response is not None
+        return self._get_state().response is not None
 
     def set_stage_result(self, key: str, value: Any) -> None:
-        if key in self._state.stage_results:
+        state = self._get_state()
+        if key in state.stage_results:
             raise ValueError(f"Stage result '{key}' already set")
-        self._state.stage_results[key] = value
+        state.stage_results[key] = value
 
     def get_stage_result(self, key: str) -> Any:
-        if key not in self._state.stage_results:
+        if key not in self._get_state().stage_results:
             raise KeyError(key)
-        return self._state.stage_results[key]
+        return self._get_state().stage_results[key]
 
     def has_stage_result(self, key: str) -> bool:
-        return key in self._state.stage_results
+        return key in self._get_state().stage_results
 
     def get_metadata(self, key: str, default: Any = None) -> Any:
-        return self._state.metadata.get(key, default)
+        return self._get_state().metadata.get(key, default)
 
     def set_metadata(self, key: str, value: Any) -> None:
-        self._state.metadata[key] = value
+        self._get_state().metadata[key] = value
 
     def add_failure(self, info: Any) -> None:
-        self._state.failure_info = info
+        self._get_state().failure_info = info
+
+    def get_failure_info(self) -> FailureInfo | None:
+        return self._get_state().failure_info
 
 
 class SimpleContext(PluginContext):
+    """Convenience wrapper with helper methods built on ``PluginContext``."""
+
     @property
     def message(self) -> str:
-        for entry in reversed(self._state.conversation):
+        for entry in reversed(self._get_state().conversation):
             if entry.role == "user":
                 return entry.content
         return ""
 
     @property
     def user(self) -> str:
-        return self._state.metadata.get("user", "user")
+        return self._get_state().metadata.get("user", "user")
 
     @property
     def location(self) -> Optional[str]:
-        return self._state.metadata.get("location")
+        return self._get_state().metadata.get("location")
 
     def say(self, message: str) -> None:
         self.set_response(message)
@@ -132,13 +199,10 @@ class SimpleContext(PluginContext):
         return await self._wait_for_tool_result(result_key)
 
     async def _wait_for_tool_result(self, result_key: str) -> Any:
-        if result_key not in self._state.stage_results:
+        state = self._get_state()
+        if result_key not in state.stage_results:
             call = next(
-                (
-                    c
-                    for c in self._state.pending_tool_calls
-                    if c.result_key == result_key
-                ),
+                (c for c in state.pending_tool_calls if c.result_key == result_key),
                 None,
             )
             if call is None:
@@ -147,7 +211,7 @@ class SimpleContext(PluginContext):
             if not tool:
                 result = f"Error: tool {call.name} not found"
                 self.set_stage_result(call.result_key, result)
-                self._state.pending_tool_calls.remove(call)
+                state.pending_tool_calls.remove(call)
                 return result
             tool = cast(Any, tool)
             try:
@@ -164,23 +228,12 @@ class SimpleContext(PluginContext):
                     else:
                         result = func(call.params)
                 self.set_stage_result(call.result_key, result)
-                self._state.metrics.record_tool_execution(
-                    call.name,
-                    str(self.current_stage),
-                    self.pipeline_id,
-                    call.result_key,
-                    call.source,
-                )
+                self.record_tool_execution(call.name, call.result_key, call.source)
             except Exception as exc:
                 result = f"Error: {exc}"
                 self.set_stage_result(call.result_key, result)
-                self._state.metrics.record_tool_error(
-                    call.name,
-                    str(self.current_stage),
-                    self.pipeline_id,
-                    str(exc),
-                )
-            self._state.pending_tool_calls.remove(call)
+                self.record_tool_error(call.name, str(exc))
+            state.pending_tool_calls.remove(call)
         return self.get_stage_result(result_key)
 
     async def ask_llm(self, prompt: str) -> str:
@@ -188,9 +241,8 @@ class SimpleContext(PluginContext):
         if llm is None:
             raise RuntimeError("LLM resource 'ollama' not available")
 
-        self._state.metrics.record_llm_call(
-            "SimpleContext", str(self.current_stage), "ask_llm"
-        )
+        self.record_llm_call("SimpleContext", "ask_llm")
+        start = asyncio.get_event_loop().time()
 
         if hasattr(llm, "generate"):
             response = await llm.generate(prompt)
@@ -202,6 +254,10 @@ class SimpleContext(PluginContext):
                 response = await func(prompt)
             else:
                 response = func(prompt)
+
+        self.record_llm_duration(
+            "SimpleContext", asyncio.get_event_loop().time() - start
+        )
 
         if isinstance(response, LLMResponse):
             return response.content

@@ -17,6 +17,7 @@ quick_start
 config
 context
 advanced_usage
+principle_checklist
 apidocs/index
 ```
 

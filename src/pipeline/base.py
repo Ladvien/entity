@@ -9,7 +9,12 @@ from .stages import PipelineStage
 
 
 class BasePlugin(ABC):
-    """Base class for all pipeline plugins."""
+    """Base class for all pipeline plugins.
+
+    Implements **Explicit Stage Assignment (17)** and
+    **Observable by Design (16)** by requiring subclasses to
+    declare their stages and by logging each execution.
+    """
 
     stages: List[PipelineStage] = []
 
@@ -33,12 +38,7 @@ class BasePlugin(ABC):
         start = time.time()
         try:
             result = await self._execute_impl(context)
-            if context._state.metrics:
-                context._state.metrics.record_plugin_duration(
-                    plugin=self.__class__.__name__,
-                    stage=str(context.current_stage),
-                    duration=time.time() - start,
-                )
+            context.record_plugin_duration(self.__class__.__name__, time.time() - start)
             return result
         except Exception as e:
             if self.logger:
