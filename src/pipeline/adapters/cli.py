@@ -41,12 +41,12 @@ class CLIAdapter(AdapterPlugin):
             System registries containing all initialized plugins and resources.
         """
         self._registries = registries
-        print("Enter message (Ctrl-D to quit)")
+        self.logger.info("Enter message (Ctrl-D to quit)")
         while True:
             try:
                 message = await asyncio.to_thread(input, "> ")
             except EOFError:
-                print()
+                self.logger.info("Exiting CLI")
                 break
             message = message.strip()
             if not message:
@@ -60,7 +60,7 @@ class CLIAdapter(AdapterPlugin):
                     dict[str, Any],
                     await execute_pipeline(message, self._registries),
                 )
-            print(response)
+            self.logger.info("%s", response)
 
     async def _execute_impl(self, context) -> None:  # pragma: no cover - adapter
         pass

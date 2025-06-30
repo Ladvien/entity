@@ -4,9 +4,12 @@ from pathlib import Path
 
 import yaml
 
+from pipeline.logging import get_logger
 from src.config.environment import load_env  # noqa: E402
 from src.pipeline import SystemInitializer  # noqa: E402
 from src.pipeline.config import ConfigLoader
+
+logger = get_logger(__name__)
 
 
 class ConfigValidator:
@@ -37,9 +40,9 @@ class ConfigValidator:
             initializer = SystemInitializer(config)
             asyncio.run(initializer.initialize())
         except Exception as exc:  # pragma: no cover - error path
-            print(f"Configuration invalid: {exc}")
+            logger.error("Configuration invalid: %s", exc)
             return 1
-        print("Configuration valid.")
+        logger.info("Configuration valid.")
         return 0
 
     def _validate_vector_memory(self, config: dict) -> None:

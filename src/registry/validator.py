@@ -13,8 +13,11 @@ if str(SRC_PATH) not in sys.path:
 
 from pipeline.initializer import ClassRegistry  # noqa: E402
 from pipeline.initializer import SystemInitializer, import_plugin_class  # noqa: E402
+from pipeline.logging import get_logger
 from pipeline.plugins import ValidationResult  # noqa: E402
 from pipeline.stages import PipelineStage  # noqa: E402
+
+logger = get_logger(__name__)
 
 
 class RegistryValidator:
@@ -113,9 +116,9 @@ def main() -> None:
     try:
         RegistryValidator(args.config).run()
     except SystemError as exc:  # pragma: no cover - CLI only
-        print(f"Validation failed: {exc}")
+        logger.error("Validation failed: %s", exc)
         raise SystemExit(1)
-    print("Validation succeeded")
+    logger.info("Validation succeeded")
 
 
 if __name__ == "__main__":  # pragma: no cover - CLI entrypoint
