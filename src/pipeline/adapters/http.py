@@ -25,9 +25,12 @@ class MessageRequest(BaseModel):
 
 
 class HTTPAdapter(AdapterPlugin):
-    """HTTP adapter using FastAPI."""
+    """HTTP adapter using FastAPI for input and output."""
 
-    stages = [PipelineStage.DELIVER]
+    # Adapter serves both as the request entry point and response delivery
+    # mechanism. It therefore participates in the PARSE and DELIVER stages to
+    # mirror the input/output boundary of the pipeline.
+    stages = [PipelineStage.PARSE, PipelineStage.DELIVER]
 
     def __init__(
         self, manager: PipelineManager | None = None, config: dict | None = None
