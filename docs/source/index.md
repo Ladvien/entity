@@ -27,6 +27,7 @@ long-running agents responsive.
 quick_start
 config
 context
+plugin_guide
 advanced_usage
 principle_checklist
 apidocs/index
