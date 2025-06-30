@@ -193,19 +193,17 @@ class SimpleContext(PluginContext):
         )
 
         if hasattr(llm, "generate"):
-            response = await llm.generate(prompt)
+            result = await llm.generate(prompt)
         else:
             func = getattr(llm, "__call__", None)
             if func is None:
                 raise RuntimeError("LLM resource is not callable")
             if asyncio.iscoroutinefunction(func):
-                response = await func(prompt)
+                result = await func(prompt)
             else:
-                response = func(prompt)
+                result = func(prompt)
 
-        if isinstance(response, LLMResponse):
-            return response.content
-        return str(response)
+        return result.content if isinstance(result, LLMResponse) else str(result)
 
     async def calculate(self, expression: str) -> Any:
         return await self.use_tool("calculator", expression=expression)

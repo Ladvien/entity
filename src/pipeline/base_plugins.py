@@ -103,15 +103,24 @@ class BasePlugin(ABC):
     async def call_llm(
         self, context: PluginContext, prompt: str, purpose: str
     ) -> "LLMResponse":
-        from .context import LLMResponse
+        """Call the configured LLM resource with logging and metrics."""
 
-        llm = context.get_resource("ollama")
-        if llm is None:
-            raise RuntimeError("LLM resource 'ollama' not available")
+        logger.info(
+            "LLM call started",
+            extra={
+                "plugin": self.__class__.__name__,
+                "stage": str(context.current_stage),
+                "purpose": purpose,
+            },
+        )
 
         context._state.metrics.record_llm_call(
             self.__class__.__name__, str(context.current_stage), purpose
         )
+
+        llm = context.get_resource("ollama")
+        if llm is None:
+            raise RuntimeError("LLM resource 'ollama' not available")
 
         start = time.time()
 
@@ -126,11 +135,29 @@ class BasePlugin(ABC):
             else:
                 response = func(prompt)
 
+        duration = time.time() - start
+
         context._state.metrics.record_llm_duration(
-            self.__class__.__name__, str(context.current_stage), time.time() - start
+            self.__class__.__name__, str(context.current_stage), duration
         )
 
-        return LLMResponse(content=str(response))
+        logger.info(
+            "LLM call finished",
+            extra={
+                "plugin": self.__class__.__name__,
+                "stage": str(context.current_stage),
+                "purpose": purpose,
+                "duration": duration,
+            },
+        )
+
+        from .context import LLMResponse
+
+        return (
+            response
+            if isinstance(response, LLMResponse)
+            else LLMResponse(content=str(response))
+        )
 
     # --- Validation & Reconfiguration ---
     @classmethod
