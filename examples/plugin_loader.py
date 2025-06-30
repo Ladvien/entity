@@ -7,7 +7,7 @@ import sys
 
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
-from pipeline import Agent  # noqa: E402
+from entity import Agent  # noqa: E402
 
 
 def main() -> None:
