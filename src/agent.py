@@ -7,11 +7,10 @@ from typing import Any
 import yaml
 
 from pipeline import SystemInitializer, SystemRegistries, execute_pipeline
-from pipeline.adapters import HTTPAdapter
 
 
 class Agent:
-    """Simple agent wrapper that can run an HTTP server."""
+    """Simple agent that executes the pipeline."""
 
     def __init__(
         self,
@@ -83,14 +82,3 @@ class Agent:
         if self._registries is None:
             raise RuntimeError("System not initialized")
         return await execute_pipeline(message, self._registries)
-
-    def run(self) -> None:
-        async def _run() -> None:
-            await self._ensure_initialized()
-            if self._registries is None:
-                raise RuntimeError("System not initialized")
-            server_cfg = (self.config or {}).get("server", {})
-            adapter = HTTPAdapter(server_cfg)
-            await adapter.serve(self._registries)
-
-        asyncio.run(_run())
