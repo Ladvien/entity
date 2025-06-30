@@ -61,11 +61,12 @@ class PluginRegistry:
             ) from exc
 
         self._stage_plugins[stage_enum].append(plugin)
+        self._stage_plugins[stage_enum].sort(key=lambda p: getattr(p, "priority", 50))
         plugin_name = name or getattr(plugin, "name", plugin.__class__.__name__)
         self._names.setdefault(plugin, str(plugin_name))
 
     def get_for_stage(self, stage: PipelineStage) -> List[BasePlugin]:
-        """Return plugins registered for ``stage`` in registration order."""
+        """Return plugins for ``stage`` sorted by ascending priority."""
 
         return list(self._stage_plugins.get(stage, []))
 
