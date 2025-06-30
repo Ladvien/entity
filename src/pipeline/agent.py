@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+import importlib
 import importlib.util
 import inspect
 import json
 import logging
+import pkgutil
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
@@ -121,6 +123,18 @@ class Agent:
         agent.load_plugins_from_directory(directory)
         return agent
 
+    @classmethod
+    def from_package(cls, package_name: str) -> "Agent":
+        """Create an agent and load plugins from ``package_name``.
+
+        All modules within the package are imported and scanned for plugin
+        objects. Modules that fail to import are logged and skipped.
+        """
+
+        agent = cls()
+        agent.load_plugins_from_package(package_name)
+        return agent
+
     def load_plugins_from_directory(self, directory: str) -> None:
         """Load plugin modules from ``directory``."""
 
@@ -130,6 +144,24 @@ class Agent:
             module = self._import_module(file)
             if module is not None:
                 self._register_module_plugins(module)
+
+    def load_plugins_from_package(self, package_name: str) -> None:
+        """Load plugin modules from a package and its submodules."""
+
+        package = importlib.import_module(package_name)
+        if not hasattr(package, "__path__"):
+            self._register_module_plugins(package)
+            return
+
+        for info in pkgutil.walk_packages(
+            package.__path__, prefix=package.__name__ + "."
+        ):
+            try:
+                module = importlib.import_module(info.name)
+            except Exception as exc:  # noqa: BLE001
+                logger.error("Failed to import plugin module %s: %s", info.name, exc)
+                continue
+            self._register_module_plugins(module)
 
     def _import_module(self, file: Path) -> ModuleType | None:
         """Import ``file`` and return the loaded module or ``None`` on error."""
