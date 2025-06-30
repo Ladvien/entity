@@ -11,6 +11,8 @@ from .state import ConversationEntry, FailureInfo, LLMResponse, PipelineState, T
 
 
 class PluginContext:
+    """Rich state container enabling **Structured Communication (14)**."""
+
     def __init__(self, state: PipelineState, registries: SystemRegistries) -> None:
         # store state privately to discourage direct access from plugins
         self.__state = state

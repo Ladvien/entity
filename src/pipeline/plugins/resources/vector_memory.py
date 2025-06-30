@@ -11,7 +11,11 @@ from pipeline.stages import PipelineStage
 
 
 class VectorMemoryResource(ResourcePlugin):
-    """Postgres-backed vector memory using pgvector."""
+    """Postgres-backed vector memory using pgvector.
+
+    Demonstrates **Preserve All Power (7)** by enabling advanced storage
+    without changing the simple plugin API.
+    """
 
     stages = [PipelineStage.PARSE]
     name = "vector_memory"

@@ -9,7 +9,11 @@ from pipeline.stages import PipelineStage
 
 
 class BasicLogger(FailurePlugin):
-    """Log failure information using Python's logging module."""
+    """Log failure information using Python's logging module.
+
+    Implements **Error Communication (30)** so users receive clear
+    messages when something goes wrong.
+    """
 
     stages = [PipelineStage.ERROR]
 

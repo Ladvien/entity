@@ -8,7 +8,11 @@ from pipeline.stages import PipelineStage
 
 
 class ChainOfThoughtPrompt(PromptPlugin):
-    """Incremental reasoning via chain-of-thought."""
+    """Incremental reasoning via chain-of-thought.
+
+    Exemplifies **Plugin-Level Iteration (26)** by looping over reasoning steps
+    within a single plugin execution.
+    """
 
     dependencies = ["ollama"]
     stages = [PipelineStage.THINK]

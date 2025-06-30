@@ -9,7 +9,11 @@ from pipeline.stages import PipelineStage
 
 
 class WeatherApiTool(ToolPlugin):
-    """Fetch weather information from an external API."""
+    """Fetch weather information from an external API.
+
+    Shows **Distributed Tool Execution (25)** as each request is made only when
+    needed and results are logged centrally.
+    """
 
     stages = [PipelineStage.DO]
     required_params = ["location"]
