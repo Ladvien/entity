@@ -21,52 +21,49 @@ class Agent:
         database: dict | str | bool | None = None,
         logging: dict | str | bool | None = None,
     ) -> None:
-        if isinstance(config, str):
-            with open(config, "r") as fh:
-                base_config = yaml.safe_load(fh)
-        else:
-            base_config = copy.deepcopy(config) if config is not None else None
-
+        base_cfg = self._load_config(config)
         if any(arg is not None for arg in (llm, database, logging)):
-            base_config = (
-                copy.deepcopy(base_config)
-                if base_config
-                else copy.deepcopy(SystemInitializer.DEFAULT_CONFIG)
-            )
-
-            resources = base_config.setdefault("plugins", {}).setdefault(
-                "resources", {}
-            )
-
-            def normalize(value: dict | str | bool | None) -> dict | None:
-                if value is False or value is None:
-                    return None
-                if isinstance(value, str):
-                    return {"type": value}
-                if isinstance(value, dict):
-                    return value
-                raise TypeError(f"Unsupported config type: {type(value)!r}")
-
-            mapping = {
-                "llm": ("ollama", llm),
-                "database": ("database", database),
-                "logging": ("logging", logging),
-            }
-
-            for name, value in mapping.values():
-                if value is not None:
-                    cfg = normalize(value)
-                    if cfg is None:
-                        resources.pop(name, None)
-                    else:
-                        resources[name] = cfg
-
-            self.config = base_config
-        else:
-            self.config = base_config
+            base_cfg = base_cfg or copy.deepcopy(SystemInitializer.DEFAULT_CONFIG)
+            self._apply_kwargs(base_cfg, llm=llm, database=database, logging=logging)
+        self.config = base_cfg
 
         self.initializer = SystemInitializer(self.config)
         self._registries: SystemRegistries | None = None
+
+    @staticmethod
+    def _load_config(config: dict | str | None) -> dict | None:
+        if isinstance(config, str):
+            with open(config, "r") as fh:
+                return yaml.safe_load(fh)
+        return copy.deepcopy(config) if config is not None else None
+
+    @staticmethod
+    def _normalize(value: dict | str | bool | None) -> dict | None:
+        if value is False or value is None:
+            return None
+        if isinstance(value, str):
+            return {"type": value}
+        if isinstance(value, dict):
+            return value
+        raise TypeError(f"Unsupported config type: {type(value)!r}")
+
+    def _apply_kwargs(
+        self,
+        config: dict,
+        *,
+        llm: dict | str | None = None,
+        database: dict | str | bool | None = None,
+        logging: dict | str | bool | None = None,
+    ) -> None:
+        resources = config.setdefault("plugins", {}).setdefault("resources", {})
+        mapping = {"ollama": llm, "database": database, "logging": logging}
+        for name, value in mapping.items():
+            if value is not None:
+                normalized = self._normalize(value)
+                if normalized is None:
+                    resources.pop(name, None)
+                else:
+                    resources[name] = normalized
 
     async def _ensure_initialized(self) -> None:
         if self._registries is None:
