@@ -159,6 +159,9 @@ async def execute_pending_tools(
                 str(exc),
             )
     return results
+<<<<<< codex/add-docstring-to-baseplugin-class
 
 
 from .execution import *  # noqa: F401,F403
+======
+>>>>>> main

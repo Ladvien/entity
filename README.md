@@ -11,6 +11,13 @@ plugins so the pipeline can run out of the box:
 These defaults allow ``Agent()`` to process messages without any external
 configuration.
 
+Every plugin executes with a ``PluginContext`` which grants controlled
+access to resources, conversation history, and helper methods for calling
+tools or LLMs. This context keeps plugin logic focused while the framework
+handles state management. See the
+[context guide](docs/source/context.md) for a detailed overview of its
+methods and responsibilities.
+
 ``Agent`` also accepts keyword arguments for common resources so you can build a
 configuration programmatically instead of providing a YAML file:
 
@@ -36,4 +43,20 @@ from app import create_app
 
 agent = Agent(...)
 app = create_app(agent)
+```
+
+## Design Principles in Action
+
+- **Progressive Disclosure (1)**: `Agent()` works out of the box with helpful defaults.
+- **Zero Configuration Default (3)**: Basic resources and tools require no YAML.
+- **Fail-Fast Validation (15)**: `SystemInitializer` raises clear errors when dependencies are missing.
+- **Intuitive Mental Models (21)**: Stages map directly to `Parse`, `Think`, `Do`, `Review`, `Deliver`, and `Error`.
+
+
+```python
+# Progressive Disclosure example
+agent = Agent()
+@agent.plugin
+def hello(context):
+    return "hello"
 ```

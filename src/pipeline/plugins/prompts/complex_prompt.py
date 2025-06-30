@@ -8,7 +8,11 @@ from pipeline.stages import PipelineStage
 
 
 class ComplexPrompt(PromptPlugin):
-    """Generate responses using DB history and vector memory."""
+    """Generate responses using DB history and vector memory.
+
+    Demonstrates **Plugin Composition (10)** by orchestrating multiple resources
+    and memory components to craft a single reply.
+    """
 
     dependencies = ["ollama", "database", "vector_memory"]
     stages = [PipelineStage.THINK]

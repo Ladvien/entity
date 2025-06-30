@@ -9,7 +9,11 @@ from pipeline.stages import PipelineStage
 
 
 class OllamaLLMResource(ResourcePlugin):
-    """LLM resource backed by a running Ollama server."""
+    """LLM resource backed by a running Ollama server.
+
+    Uses **Structured LLM Access (22)** so any stage can generate text while the
+    framework automatically tracks token usage.
+    """
 
     stages = [PipelineStage.PARSE]
     name = "ollama"
