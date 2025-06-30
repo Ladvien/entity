@@ -18,22 +18,6 @@ handles state management. See the
 [context guide](docs/source/context.md) for a detailed overview of its
 methods and responsibilities.
 
-``Agent`` also accepts keyword arguments for common resources so you can build a
-configuration programmatically instead of providing a YAML file:
-
-```python
-agent = Agent(
-    llm="pipeline.plugins.resources.ollama_llm:OllamaLLMResource",
-    database=False,  # disable database resource
-    logging={
-        "type": "pipeline.plugins.resources.structured_logging:StructuredLogging",
-        "file_enabled": False,
-    },
-)
-```
-
-Each argument is converted into the dictionary structure expected by
-``SystemInitializer``.
 
 To expose the agent over HTTP, build a FastAPI app that uses the agent:
 
