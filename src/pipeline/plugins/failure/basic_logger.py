@@ -14,7 +14,12 @@ class BasicLogger(FailurePlugin):
     stages = [PipelineStage.ERROR]
 
     async def _execute_impl(self, context: PluginContext) -> Any:
-<<<<<< codex/resolve-merge-conflict-artifacts
+<<<<<< codex/run-code-validation-tools-and-tests
+        logger = logging.getLogger(self.__class__.__name__)
+        try:
+            info = context.get_failure_info()
+======
+<<<<< codex/resolve-merge-conflict-artifacts
         info = context.get_failure_info()
         logger = logging.getLogger(self.__class__.__name__)
         if info is not None:
@@ -25,7 +30,7 @@ class BasicLogger(FailurePlugin):
                     "plugin": info.plugin_name,
                     "error": info.error_message,
                 },
-=======
+======
 <<<<< codex/add-docstring-to-baseplugin-class
         info = context.get_failure_info()
         logger = logging.getLogger(self.__class__.__name__)
@@ -35,6 +40,7 @@ class BasicLogger(FailurePlugin):
         try:
             info = context.get_failure_info()
 >>>>> main
+>>>>>> main
             if info is not None:
                 logger.error(
                     "Pipeline failure encountered",
@@ -49,7 +55,7 @@ class BasicLogger(FailurePlugin):
         except Exception as exc:  # pragma: no cover - logging must not fail
             logging.getLogger(__name__).exception(
                 "BasicLogger failed while handling an error: %s", exc
->>>>>> main
+>>>>> main
             )
         else:
             logger.error("Pipeline failure encountered with no context")

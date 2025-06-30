@@ -159,12 +159,15 @@ async def execute_pending_tools(
                 str(exc),
             )
     return results
-<<<<<< codex/resolve-merge-conflict-artifacts
+<<<<<< codex/run-code-validation-tools-and-tests
 ======
-<<<<<< codex/add-docstring-to-baseplugin-class
+<<<<< codex/resolve-merge-conflict-artifacts
+=====
+<<<<< codex/add-docstring-to-baseplugin-class
 
 
 from .execution import *  # noqa: F401,F403
 ======
+>>>>> main
 >>>>> main
 >>>>>> main

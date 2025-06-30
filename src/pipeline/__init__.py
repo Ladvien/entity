@@ -3,6 +3,7 @@ from .config_update import ConfigUpdateResult, update_plugin_configuration
 from .context import ConversationEntry, PluginContext, ToolCall
 from .conversation_manager import ConversationManager
 from .decorators import plugin
+from .errors import create_static_error_response
 from .execution import (
     create_default_response,
     create_static_error_response,
@@ -16,6 +17,11 @@ from .initializer import (
     initialization_cleanup_context,
 )
 from .manager import PipelineManager
+<<<<<< codex/run-code-validation-tools-and-tests
+from .metrics import MetricsCollector
+from .observability import execute_with_observability
+=======
+>>>>>> main
 from .pipeline import (
     create_default_response,
     create_static_error_response,
@@ -36,6 +42,10 @@ from .plugins import (
     ToolPlugin,
     ValidationResult,
 )
+<<<<<< codex/run-code-validation-tools-and-tests
+from .plugins.classifier import PluginAutoClassifier
+=======
+>>>>>> main
 from .registries import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
 from .resources import LLM
 from .stages import PipelineStage
@@ -90,4 +100,8 @@ __all__ = [
     "HTTPAdapter",
     "WebSocketAdapter",
     "CLIAdapter",
+<<<<< codex/run-code-validation-tools-and-tests
+    "execute_with_observability",
+=====
+>>>>> main
 ]
