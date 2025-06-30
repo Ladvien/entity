@@ -6,7 +6,7 @@ from typing import Any
 
 import yaml
 
-from agent import Agent
+from entity import Agent
 from pipeline import update_plugin_configuration
 
 sys.path.insert(0, os.getcwd())

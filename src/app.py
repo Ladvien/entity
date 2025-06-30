@@ -5,7 +5,7 @@ from typing import Any
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from agent import Agent
+from entity import Agent
 
 
 class MessageRequest(BaseModel):
