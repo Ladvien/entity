@@ -8,7 +8,11 @@ from pipeline.stages import PipelineStage
 
 
 class ReActPrompt(PromptPlugin):
-    """Reasoning and acting in a loop using an LLM."""
+    """Reasoning and acting in a loop using an LLM.
+
+    Combines tool use and reflection to illustrate **Structured LLM Access (22)**
+    and **Plugin-Level Iteration (26)** in tandem.
+    """
 
     dependencies = ["ollama"]
     stages = [PipelineStage.THINK]

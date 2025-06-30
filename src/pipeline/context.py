@@ -10,6 +10,8 @@ from .state import ConversationEntry, LLMResponse, PipelineState, ToolCall
 
 
 class PluginContext:
+    """Rich state container enabling **Structured Communication (14)**."""
+
     def __init__(self, state: PipelineState, registries: SystemRegistries) -> None:
         self._state = state
         self._registries = registries

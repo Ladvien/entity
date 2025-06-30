@@ -9,7 +9,11 @@ from pipeline.stages import PipelineStage
 
 
 class SearchTool(ToolPlugin):
-    """Simple search tool using DuckDuckGo's public API."""
+    """Simple search tool using DuckDuckGo's public API.
+
+    Embodies **Immediate Tool Access (24)** so prompts can query the web at any
+    stage.
+    """
 
     stages = [PipelineStage.DO]
     required_params = ["query"]

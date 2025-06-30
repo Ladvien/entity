@@ -13,8 +13,10 @@ from pipeline.stages import PipelineStage
 class StructuredLogging(ResourcePlugin):
     """Configure a unified JSON logger based on YAML configuration.
 
-    The optional ``ENTITY_LOG_PATH`` environment variable overrides ``file_path``
-    so multiple deployments can route logs to the same location.
+    Implements **Observable by Design (16)** by capturing structured logs for
+    every pipeline execution. The optional ``ENTITY_LOG_PATH`` environment
+    variable overrides ``file_path`` so multiple deployments can route logs to
+    the same location.
     """
 
     stages = [PipelineStage.PARSE]

@@ -9,7 +9,12 @@ from .stages import PipelineStage
 
 
 class BasePlugin(ABC):
-    """Base class for all pipeline plugins."""
+    """Base class for all pipeline plugins.
+
+    Implements **Explicit Stage Assignment (17)** and
+    **Observable by Design (16)** by requiring subclasses to
+    declare their stages and by logging each execution.
+    """
 
     stages: List[PipelineStage] = []
 

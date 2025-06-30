@@ -71,7 +71,11 @@ def initialization_cleanup_context():
 
 
 class SystemInitializer:
-    """Initialize and validate all plugins for the pipeline."""
+    """Initialize and validate all plugins for the pipeline.
+
+    Applies **Fail-Fast Validation (15)** and **Load-Time Validation (20)**
+    by verifying configuration and dependencies before any plugin runs.
+    """
 
     DEFAULT_CONFIG: Dict[str, Any] = {
         "plugins": {

@@ -1,7 +1,8 @@
 """Backward-compatible agent import."""
 
-from entity import Agent
 import copy
 from typing import Any
+
+from entity import Agent
 
 __all__ = ["Agent"]
