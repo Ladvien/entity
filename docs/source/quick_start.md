@@ -37,3 +37,6 @@ plugins:
 ```
 
 The development environment does not require authentication.
+Copy `.env.example` to `.env` and update the variables to quickly
+configure database and LLM credentials. These values will be automatically
+loaded when running the agent or tests.

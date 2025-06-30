@@ -11,7 +11,7 @@ from entity import Agent
 
 
 def main() -> None:
-    agent = Agent({"server": {"host": "127.0.0.1", "port": 8000}})
+    agent = Agent({"server": {"host": "127.0.0.1", "port": 8000}})  # type: ignore[arg-type]
     agent.run()
 
 

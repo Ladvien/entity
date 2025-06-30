@@ -8,15 +8,15 @@ plugins:
   resources:
     database:
       type: pipeline.plugins.resources.postgres:PostgresResource
-      host: "localhost"
+      host: "${DB_HOST}"
       port: 5432
       name: "dev_db"
       username: "${DB_USERNAME}"
       password: "${DB_PASSWORD}"
     ollama:
       type: pipeline.plugins.resources.ollama_llm:OllamaLLMResource
-      base_url: "http://localhost:11434"
-      model: "llama3:8b-instruct-q6_K"
+      base_url: "${OLLAMA_BASE_URL}"
+      model: "${OLLAMA_MODEL}"
     logging:
       type: pipeline.plugins.resources.structured_logging:StructuredLogging
       level: "DEBUG"

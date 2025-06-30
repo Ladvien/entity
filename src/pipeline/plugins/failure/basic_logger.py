@@ -16,11 +16,14 @@ class BasicLogger(FailurePlugin):
     async def _execute_impl(self, context: PluginContext) -> Any:
         info = context._state.failure_info
         logger = logging.getLogger(self.__class__.__name__)
-        logger.error(
-            "Pipeline failure encountered",
-            extra={
-                "stage": info.stage,
-                "plugin": info.plugin_name,
-                "error": info.error_message,
-            },
-        )
+        if info is not None:
+            logger.error(
+                "Pipeline failure encountered",
+                extra={
+                    "stage": info.stage,
+                    "plugin": info.plugin_name,
+                    "error": info.error_message,
+                },
+            )
+        else:
+            logger.error("Pipeline failure encountered with no context")

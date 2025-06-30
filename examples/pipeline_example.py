@@ -32,7 +32,7 @@ class CalculatorTool(ToolPlugin):
         expression = params.get("expression")
         if expression is None:
             raise ValueError("'expression' parameter is required")
-        allowed_names = {"__builtins__": {}}
+        allowed_names: dict[str, dict[str, object]] = {"__builtins__": {}}
         try:
             return eval(str(expression), allowed_names, {})
         except Exception as exc:  # noqa: BLE001
