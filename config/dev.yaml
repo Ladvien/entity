@@ -14,7 +14,7 @@ plugins:
       username: "${DB_USERNAME}"
       password: "${DB_PASSWORD}"
     ollama:
-      type: ollama_llm
+      type: pipeline.plugins.resources.ollama_llm:OllamaLLMResource
       base_url: "http://localhost:11434"
       model: "llama3:8b-instruct-q6_K"
     logging:
