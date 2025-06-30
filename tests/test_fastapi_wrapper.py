@@ -2,7 +2,7 @@ import asyncio
 
 import httpx
 
-from agent import Agent
+from entity import Agent
 from app import create_app
 
 

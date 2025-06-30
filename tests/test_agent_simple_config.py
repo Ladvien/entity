@@ -1,6 +1,6 @@
 import asyncio
 
-from agent import Agent
+from entity import Agent
 
 
 def test_agent_simple_config():

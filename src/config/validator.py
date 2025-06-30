@@ -1,15 +1,11 @@
 import argparse
 import asyncio
-import os
-import sys
 from pathlib import Path
 
 import yaml
 
-sys.path.insert(0, os.path.join(os.getcwd(), "src"))
-
-from config.environment import load_env  # noqa: E402
-from pipeline import SystemInitializer  # noqa: E402
+from src.config.environment import load_env  # noqa: E402
+from src.pipeline import SystemInitializer  # noqa: E402
 
 
 class ConfigValidator:

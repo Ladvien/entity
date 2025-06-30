@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Adapter implementations used to expose the pipeline externally."""
+
 from .cli import CLIAdapter
 from .http import HTTPAdapter
 from .websocket import WebSocketAdapter
