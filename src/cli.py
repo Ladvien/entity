@@ -45,7 +45,7 @@ class CLI:
         agent = Agent(self.args.config)
         if self.args.command == "reload-config":
             return self._reload_config(agent, self.args.file)
-        agent.run()
+        agent.run_http()
         return 0
 
     def _reload_config(self, agent: Agent, file_path: str) -> int:
