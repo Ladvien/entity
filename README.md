@@ -11,3 +11,20 @@ plugins so the pipeline can run out of the box:
 
 These defaults allow ``Agent()`` to process messages without any external
 configuration.
+
+``Agent`` also accepts keyword arguments for common resources so you can build a
+configuration programmatically instead of providing a YAML file:
+
+```python
+agent = Agent(
+    llm="pipeline.plugins.resources.ollama_llm:OllamaLLMResource",
+    database=False,  # disable database resource
+    logging={
+        "type": "pipeline.plugins.resources.structured_logging:StructuredLogging",
+        "file_enabled": False,
+    },
+)
+```
+
+Each argument is converted into the dictionary structure expected by
+``SystemInitializer``.
