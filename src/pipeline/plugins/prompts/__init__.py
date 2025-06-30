@@ -3,6 +3,7 @@ from .complex_prompt import ComplexPrompt
 from .intent_classifier import IntentClassifierPrompt
 from .memory_retrieval import MemoryRetrievalPrompt
 from .conversation_history_saver import ConversationHistorySaver
+from .pii_scrubber import PIIScrubberPrompt
 from .react_prompt import ReActPrompt
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     "ComplexPrompt",
     "ChainOfThoughtPrompt",
     "ConversationHistorySaver",
+    "PIIScrubberPrompt",
 ]
