@@ -68,21 +68,6 @@ provided in `config/dev.yaml` and `config/prod.yaml`:
 python src/cli.py --config config/dev.yaml
 ```
 
-### Development PostgreSQL 17 Server
-Use Docker to launch a non-secure PostgreSQL 17 instance for local testing:
-
-```bash
-docker compose -f docker-compose.dev.yml up -d
-```
-
-Alternatively run the helper script:
-
-```bash
-python scripts/run_postgres_dev.py
-```
-
-The container listens on port `5432` with username `postgres` and password `postgres`.
-
 ### One-Liner Context Operations
 ```python
 @agent.plugin
