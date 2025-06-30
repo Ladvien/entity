@@ -11,6 +11,13 @@ plugins so the pipeline can run out of the box:
 These defaults allow ``Agent()`` to process messages without any external
 configuration.
 
+Every plugin executes with a ``PluginContext`` which grants controlled
+access to resources, conversation history, and helper methods for calling
+tools or LLMs. This context keeps plugin logic focused while the framework
+handles state management. See the
+[context guide](docs/source/context.md) for a detailed overview of its
+methods and responsibilities.
+
 ``Agent`` also accepts keyword arguments for common resources so you can build a
 configuration programmatically instead of providing a YAML file:
 
