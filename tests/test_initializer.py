@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 
 import pytest
@@ -88,3 +89,38 @@ def test_validate_dependencies_missing(tmp_path):
     initializer = SystemInitializer.from_yaml(str(path))
     with pytest.raises(SystemError, match="missing dependency 'a'"):
         asyncio.run(initializer.initialize())
+
+
+def test_initializer_from_json_and_dict(tmp_path):
+    config = {
+        "plugins": {
+            "resources": {
+                "a": {"type": "tests.test_initializer:A"},
+            },
+            "prompts": {
+                "b": {"type": "tests.test_initializer:B"},
+            },
+        }
+    }
+
+    yaml_path = tmp_path / "cfg.yml"
+    json_path = tmp_path / "cfg.json"
+    yaml_path.write_text(yaml.dump(config))
+    json_path.write_text(json.dumps(config))
+
+    init_yaml = SystemInitializer.from_yaml(str(yaml_path))
+    init_json = SystemInitializer.from_json(str(json_path))
+    init_dict = SystemInitializer.from_dict(config)
+
+    assert init_yaml.config == init_json.config == init_dict.config
+
+    py, ry, _ = asyncio.run(init_yaml.initialize())
+    pj, rj, _ = asyncio.run(init_json.initialize())
+    pd, rd, _ = asyncio.run(init_dict.initialize())
+
+    assert (
+        len(py.get_for_stage(PipelineStage.THINK))
+        == len(pj.get_for_stage(PipelineStage.THINK))
+        == len(pd.get_for_stage(PipelineStage.THINK))
+    )
+    assert ry.get("A") and rj.get("A") and rd.get("A")
