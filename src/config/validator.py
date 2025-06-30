@@ -9,10 +9,10 @@ if str(SRC_PATH) not in sys.path:
 
 import yaml
 
-from pipeline.logging import configure_logging, get_logger
-from src.config.environment import load_env  # noqa: E402
+from config.environment import load_env  # noqa: E402
 from pipeline import SystemInitializer  # noqa: E402
 from pipeline.config import ConfigLoader
+from pipeline.logging import configure_logging, get_logger
 
 logger = get_logger(__name__)
 

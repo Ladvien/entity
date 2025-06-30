@@ -9,7 +9,7 @@ from typing import Any, Dict
 
 import yaml
 
-from src.config.environment import load_env
+from config.environment import load_env
 
 
 def _interpolate_env_vars(config: Any) -> Any:

@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from importlib import import_module
 from typing import Any, Dict, Iterable, List, Tuple
 
-from src.config.environment import load_env
+from config.environment import load_env
 
 from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
 from .defaults import DEFAULT_CONFIG
