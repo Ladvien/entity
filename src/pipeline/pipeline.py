@@ -1,6 +1,5 @@
-"""Compatibility wrapper for renamed execution module."""
+from __future__ import annotations
 
-<<<<<< codex/define-static_error_response-and-update-execute_pipeline
 import asyncio
 import time
 from datetime import datetime
@@ -160,6 +159,3 @@ async def execute_pending_tools(
                 str(exc),
             )
     return results
-======
-from .execution import *  # noqa: F401,F403
->>>>>> main
