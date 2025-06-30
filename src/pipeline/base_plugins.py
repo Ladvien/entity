@@ -18,6 +18,8 @@ if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .initializer import ClassRegistry
 
 from .stages import PipelineStage
+from .logging import get_logger
+from .observability.utils import execute_with_observability
 
 logger = logging.getLogger(__name__)
 
@@ -58,43 +60,19 @@ class BasePlugin(ABC):
 
     def __init__(self, config: Dict | None = None) -> None:
         self.config = config or {}
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = get_logger(self.__class__.__name__)
 
     async def execute(self, context: PluginContext | SimpleContext):
-        logger.info(
-            "Plugin execution started",
-            extra={
-                "plugin": self.__class__.__name__,
-                "stage": str(context.current_stage),
-                "pipeline_id": context.pipeline_id,
-            },
+        async def run() -> Any:
+            return await self._execute_impl(context)
+
+        return await execute_with_observability(
+            run,
+            logger=self.logger,
+            metrics=context._state.metrics,
+            plugin=self.__class__.__name__,
+            stage=str(context.current_stage),
         )
-        start = time.time()
-        try:
-            result = await self._execute_impl(context)
-            duration = time.time() - start
-            context._state.metrics.record_plugin_duration(
-                self.__class__.__name__, str(context.current_stage), duration
-            )
-            logger.info(
-                "Plugin execution finished",
-                extra={
-                    "plugin": self.__class__.__name__,
-                    "stage": str(context.current_stage),
-                    "duration": duration,
-                },
-            )
-            return result
-        except Exception as e:
-            logger.exception(
-                "Plugin execution failed",
-                extra={
-                    "plugin": self.__class__.__name__,
-                    "stage": str(context.current_stage),
-                    "error": str(e),
-                },
-            )
-            raise
 
     @abstractmethod
     async def _execute_impl(self, context: PluginContext | SimpleContext):

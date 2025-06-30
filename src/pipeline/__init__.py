@@ -36,7 +36,8 @@ from .plugins import (
 )
 from .registries import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
 from .stages import PipelineStage
-from .state import FailureInfo, MetricsCollector, PipelineState
+from .state import FailureInfo, PipelineState
+from .metrics import MetricsCollector
 
 # isort: off
 from .adapters import CLIAdapter, HTTPAdapter, WebSocketAdapter
