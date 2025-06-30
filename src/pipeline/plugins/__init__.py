@@ -1,3 +1,5 @@
+"""Public re-exports for plugin base classes."""
+
 from ..validation import ValidationResult
 from .base import (
     AdapterPlugin,
