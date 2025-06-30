@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from .stages import PipelineStage
+from .metrics import MetricsCollector
 
 
 @dataclass
@@ -75,63 +76,6 @@ class FailureInfo:
     original_exception: Exception
     context_snapshot: Dict[str, Any] | None = None
     timestamp: datetime = field(default_factory=datetime.now)
-
-
-@dataclass
-class MetricsCollector:
-    """Accumulates runtime metrics for a single pipeline run.
-
-    Attributes:
-        pipeline_durations: Execution times for each run.
-        plugin_durations: Execution times per plugin and stage.
-        tool_execution_count: Count of tool executions.
-        tool_error_count: Count of tool failures.
-        llm_call_count: Count of LLM calls by stage and plugin.
-    """
-
-    pipeline_durations: list[float] = field(default_factory=list)
-    plugin_durations: dict[str, list[float]] = field(default_factory=dict)
-    tool_execution_count: dict[str, int] = field(default_factory=dict)
-    tool_error_count: dict[str, int] = field(default_factory=dict)
-    llm_call_count: dict[str, int] = field(default_factory=dict)
-    llm_durations: dict[str, list[float]] = field(default_factory=dict)
-
-    def record_pipeline_duration(self, duration: float) -> None:
-        self.pipeline_durations.append(duration)
-
-    def record_plugin_duration(self, plugin: str, stage: str, duration: float) -> None:
-        key = f"{stage}:{plugin}"
-        self.plugin_durations.setdefault(key, []).append(duration)
-
-    def record_tool_execution(
-        self, tool_name: str, stage: str, pipeline_id: str, result_key: str, source: str
-    ) -> None:
-        key = f"{stage}:{tool_name}"
-        self.tool_execution_count[key] = self.tool_execution_count.get(key, 0) + 1
-
-    def record_tool_error(
-        self, tool_name: str, stage: str, pipeline_id: str, error: str
-    ) -> None:
-        key = f"{stage}:{tool_name}"
-        self.tool_error_count[key] = self.tool_error_count.get(key, 0) + 1
-
-    def record_llm_call(self, plugin: str, stage: str, purpose: str) -> None:
-        key = f"{stage}:{plugin}:{purpose}"
-        self.llm_call_count[key] = self.llm_call_count.get(key, 0) + 1
-
-    def record_llm_duration(self, plugin: str, stage: str, duration: float) -> None:
-        key = f"{stage}:{plugin}"
-        self.llm_durations.setdefault(key, []).append(duration)
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "pipeline_durations": self.pipeline_durations,
-            "plugin_durations": self.plugin_durations,
-            "tool_execution_count": self.tool_execution_count,
-            "tool_error_count": self.tool_error_count,
-            "llm_call_count": self.llm_call_count,
-            "llm_durations": self.llm_durations,
-        }
 
 
 @dataclass

@@ -41,6 +41,8 @@ from .plugins.classifier import PluginClassifier
 from .registries import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
 from .resources import LLM
 from .stages import PipelineStage
+from .state import FailureInfo, PipelineState
+from .metrics import MetricsCollector
 from .state import FailureInfo, LLMResponse, MetricsCollector, PipelineState
 from .tools.execution import execute_pending_tools
 
