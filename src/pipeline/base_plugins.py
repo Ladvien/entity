@@ -47,7 +47,7 @@ class BasePlugin(ABC):
         self.config = config or {}
         self.logger = get_logger(self.__class__.__name__)
 
-<<<<<< hxttvb-codex/extend-baseplugin-with-logging-and-metrics
+<<<<< hxttvb-codex/extend-baseplugin-with-logging-and-metrics
     async def execute(self, context: PluginContext | SimpleContext):
         async def run() -> Any:
             return await self._execute_impl(context)
@@ -58,7 +58,7 @@ class BasePlugin(ABC):
             metrics=context._state.metrics,
             plugin=self.__class__.__name__,
             stage=str(context.current_stage),
-======
+=====
     async def execute(self, context: "PluginContext"):
         logger.info(
             "Plugin execution started",
@@ -67,8 +67,35 @@ class BasePlugin(ABC):
                 "stage": str(context.current_stage),
                 "pipeline_id": context.pipeline_id,
             },
->>>>>> main
+>>>>> main
         )
+<<<<<< codex/secure-plugincontext-methods-and-enforce-encapsulation
+        start = time.time()
+        try:
+            result = await self._execute_impl(context)
+            duration = time.time() - start
+            context.record_plugin_duration(self.__class__.__name__, duration)
+            logger.info(
+                "Plugin execution finished",
+                extra={
+                    "plugin": self.__class__.__name__,
+                    "stage": str(context.current_stage),
+                    "duration": duration,
+                },
+            )
+            return result
+        except Exception as e:
+            logger.exception(
+                "Plugin execution failed",
+                extra={
+                    "plugin": self.__class__.__name__,
+                    "stage": str(context.current_stage),
+                    "error": str(e),
+                },
+            )
+            raise
+=======
+>>>>>> main
 
     @abstractmethod
     async def _execute_impl(self, context: "PluginContext"):
@@ -83,9 +110,7 @@ class BasePlugin(ABC):
         if llm is None:
             raise RuntimeError("LLM resource 'ollama' not available")
 
-        context._state.metrics.record_llm_call(
-            self.__class__.__name__, str(context.current_stage), purpose
-        )
+        context.record_llm_call(self.__class__.__name__, purpose)
 
         start = time.time()
 
@@ -100,9 +125,7 @@ class BasePlugin(ABC):
             else:
                 response = func(prompt)
 
-        context._state.metrics.record_llm_duration(
-            self.__class__.__name__, str(context.current_stage), time.time() - start
-        )
+        context.record_llm_duration(self.__class__.__name__, time.time() - start)
 
         return LLMResponse(content=str(response))
 
