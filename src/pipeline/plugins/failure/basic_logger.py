@@ -14,7 +14,7 @@ class BasicLogger(FailurePlugin):
     stages = [PipelineStage.ERROR]
 
     async def _execute_impl(self, context: PluginContext) -> Any:
-        info = context._state.failure_info
+        info = context.get_failure_info()
         logger = logging.getLogger(self.__class__.__name__)
         if info is not None:
             logger.error(

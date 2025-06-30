@@ -28,12 +28,7 @@ class BasePlugin(ABC):
         start = time.time()
         try:
             result = await self._execute_impl(context)
-            if context._state.metrics:
-                context._state.metrics.record_plugin_duration(
-                    plugin=self.__class__.__name__,
-                    stage=str(context.current_stage),
-                    duration=time.time() - start,
-                )
+            context.record_plugin_duration(self.__class__.__name__, time.time() - start)
             return result
         except Exception as e:
             if self.logger:

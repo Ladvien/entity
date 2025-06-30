@@ -17,7 +17,8 @@ class EchoPlugin(PromptPlugin):
     stages = [PipelineStage.DO]
 
     async def _execute_impl(self, context):
-        context.set_response({"msg": context._state.conversation[0].content})
+        first = context.get_conversation_history()[0]
+        context.set_response({"msg": first.content})
 
 
 def make_adapter() -> tuple[CLIAdapter, SystemRegistries]:

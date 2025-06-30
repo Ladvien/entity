@@ -73,9 +73,7 @@ class BasePlugin(ABC):
         try:
             result = await self._execute_impl(context)
             duration = time.time() - start
-            context._state.metrics.record_plugin_duration(
-                self.__class__.__name__, str(context.current_stage), duration
-            )
+            context.record_plugin_duration(self.__class__.__name__, duration)
             logger.info(
                 "Plugin execution finished",
                 extra={
@@ -109,9 +107,7 @@ class BasePlugin(ABC):
         if llm is None:
             raise RuntimeError("LLM resource 'ollama' not available")
 
-        context._state.metrics.record_llm_call(
-            self.__class__.__name__, str(context.current_stage), purpose
-        )
+        context.record_llm_call(self.__class__.__name__, purpose)
 
         start = time.time()
 
@@ -126,9 +122,7 @@ class BasePlugin(ABC):
             else:
                 response = func(prompt)
 
-        context._state.metrics.record_llm_duration(
-            self.__class__.__name__, str(context.current_stage), time.time() - start
-        )
+        context.record_llm_duration(self.__class__.__name__, time.time() - start)
 
         return LLMResponse(content=str(response))
 
