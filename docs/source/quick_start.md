@@ -23,3 +23,17 @@ agent.tool_registry.add("search", SearchTool())
 async def lookup(context):
     return await context.use_tool("search", query="Entity Pipeline")
 ```
+
+### Enabling the Ollama Resource
+Add the Ollama LLM resource to your configuration so plugins can use it:
+
+```yaml
+plugins:
+  resources:
+    ollama:
+      type: ollama_llm
+      base_url: "http://localhost:11434"
+      model: "tinyllama"
+```
+
+The development environment does not require authentication.
