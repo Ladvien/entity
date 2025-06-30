@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 from config.environment import load_env
 from pipeline.plugins.resources.ollama_llm import OllamaLLMResource
 
-load_env(Path(__file__).resolve().parents[1] / ".env.example")
+load_env(Path(__file__).resolve().parents[1] / ".env")
 
 
 class FakeResponse:

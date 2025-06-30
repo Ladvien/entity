@@ -9,7 +9,7 @@ from config.environment import load_env
 from pipeline.plugins.resources.postgres import PostgresResource
 from pipeline.state import ConversationEntry
 
-load_env(Path(__file__).resolve().parents[2] / ".env.example")
+load_env(Path(__file__).resolve().parents[2] / ".env")
 
 CONN = {
     "host": os.environ["DB_HOST"],
