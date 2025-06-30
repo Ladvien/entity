@@ -45,6 +45,21 @@ class E(PromptPlugin):
         pass
 
 
+class VectorMemoryResource(ResourcePlugin):
+    stages = [PipelineStage.PARSE]
+
+    async def _execute_impl(self, context):
+        pass
+
+
+class ComplexPrompt(PromptPlugin):
+    stages = [PipelineStage.THINK]
+    dependencies = ["vector_memory"]
+
+    async def _execute_impl(self, context):
+        pass
+
+
 def _write_config(tmp_path, plugins):
     path = tmp_path / "config.yml"
     path.write_text(yaml.dump({"plugins": plugins}))
@@ -77,3 +92,29 @@ def test_validator_cycle_detection(tmp_path):
     path = _write_config(tmp_path, plugins)
     with pytest.raises(SystemError, match="Circular dependency detected"):
         RegistryValidator(str(path)).run()
+
+
+def test_complex_prompt_requires_vector_memory(tmp_path):
+    plugins = {
+        "prompts": {
+            "complex_prompt": {"type": "tests.test_registry_validator:ComplexPrompt"}
+        }
+    }
+    path = _write_config(tmp_path, plugins)
+    with pytest.raises(SystemError, match="vector_memory"):
+        RegistryValidator(str(path)).run()
+
+
+def test_complex_prompt_with_vector_memory(tmp_path):
+    plugins = {
+        "resources": {
+            "vector_memory": {
+                "type": "tests.test_registry_validator:VectorMemoryResource"
+            }
+        },
+        "prompts": {
+            "complex_prompt": {"type": "tests.test_registry_validator:ComplexPrompt"}
+        },
+    }
+    path = _write_config(tmp_path, plugins)
+    RegistryValidator(str(path)).run()
