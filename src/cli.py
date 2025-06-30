@@ -32,6 +32,7 @@ class CLI:
         parser.set_defaults(command="run")
 
         subparsers.add_parser("run", help="Start the agent")
+        subparsers.add_parser("serve-websocket", help="Start the agent via WebSocket")
         reload_parser = subparsers.add_parser(
             "reload-config",
             help="Reload plugin configuration from a YAML file",
@@ -42,6 +43,9 @@ class CLI:
 
     def run(self) -> int:
         agent = Agent(self.args.config)
+        if self.args.command == "serve-websocket":
+            agent.run_websocket()
+            return 0
         if self.args.command == "reload-config":
             return self._reload_config(agent, self.args.file)
         agent.run_http()

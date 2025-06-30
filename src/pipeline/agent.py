@@ -12,6 +12,7 @@ from types import ModuleType
 from typing import Any, Callable, Dict, Optional, cast
 
 from .adapters.http import HTTPAdapter
+from .adapters.websocket import WebSocketAdapter
 from .pipeline import execute_pipeline
 from .plugins import BasePlugin
 from .plugins.classifier import PluginAutoClassifier
@@ -160,6 +161,14 @@ class Agent:
         config: dict[str, Any] = {"host": host, "port": port}
         return HTTPAdapter(config=config)
 
+    def create_websocket_adapter(
+        self, host: str = "127.0.0.1", port: int = 8001
+    ) -> WebSocketAdapter:
+        """Return a :class:`WebSocketAdapter` for this agent's registries."""
+
+        config: dict[str, Any] = {"host": host, "port": port}
+        return WebSocketAdapter(config=config)
+
     async def serve_http(self, host: str = "127.0.0.1", port: int = 8000) -> None:
         """Serve requests using the :class:`HTTPAdapter`."""
 
@@ -171,10 +180,26 @@ class Agent:
         )
         await adapter.serve(registries)
 
+    async def serve_websocket(self, host: str = "127.0.0.1", port: int = 8001) -> None:
+        """Serve requests using the :class:`WebSocketAdapter`."""
+
+        adapter = self.create_websocket_adapter(host, port)
+        registries = SystemRegistries(
+            resources=self.resource_registry,
+            tools=self.tool_registry,
+            plugins=self.plugin_registry,
+        )
+        await adapter.serve(registries)
+
     def run_http(self, host: str = "127.0.0.1", port: int = 8000) -> None:
         """Convenience wrapper to start the HTTP adapter."""
 
         asyncio.run(self.serve_http(host, port))
+
+    def run_websocket(self, host: str = "127.0.0.1", port: int = 8001) -> None:
+        """Convenience wrapper to start the WebSocket adapter."""
+
+        asyncio.run(self.serve_websocket(host, port))
 
     async def run_message(self, message: str) -> Dict[str, Any]:
         registries = SystemRegistries(
