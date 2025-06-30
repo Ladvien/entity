@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from .registries import SystemRegistries
 from .stages import PipelineStage
-from .state import ConversationEntry, PipelineState, ToolCall
+from .state import ConversationEntry, LLMResponse, PipelineState, ToolCall
 
 
 class PluginContext:
@@ -92,7 +93,6 @@ class PluginContext:
 
     def add_failure(self, info: Any) -> None:
         self._state.failure_info = info
-<<<<<< codex/add-llm-integration-and-metrics-collection
 
 
 class SimpleContext(PluginContext):
@@ -193,17 +193,19 @@ class SimpleContext(PluginContext):
         )
 
         if hasattr(llm, "generate"):
-            result = await llm.generate(prompt)
+            response = await llm.generate(prompt)
         else:
             func = getattr(llm, "__call__", None)
             if func is None:
                 raise RuntimeError("LLM resource is not callable")
             if asyncio.iscoroutinefunction(func):
-                result = await func(prompt)
+                response = await func(prompt)
             else:
-                result = func(prompt)
+                response = func(prompt)
 
-        return result.content if isinstance(result, LLMResponse) else str(result)
+        if isinstance(response, LLMResponse):
+            return response.content
+        return str(response)
 
     async def calculate(self, expression: str) -> Any:
         return await self.use_tool("calculator", expression=expression)
@@ -214,5 +216,3 @@ class SimpleContext(PluginContext):
     def contains(self, *keywords: str) -> bool:
         msg_lower = self.message.lower()
         return any(keyword.lower() in msg_lower for keyword in keywords)
-======
->>>>>> main

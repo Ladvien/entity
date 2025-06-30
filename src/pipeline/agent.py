@@ -12,13 +12,9 @@ from types import ModuleType
 from typing import Any, Callable, Dict, Optional, cast
 
 from .adapters.http import HTTPAdapter
-<<<<<< codex/enhance-plugin-auto-detection-and-creation
-from .plugins.classifier import PluginClassifier
-======
-from .plugins.classifier import PluginAutoClassifier
->>>>>> main
 from .pipeline import execute_pipeline
 from .plugins import BasePlugin
+from .plugins.classifier import PluginAutoClassifier
 from .registries import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
 
 logger = logging.getLogger(__name__)
@@ -58,7 +54,7 @@ class Agent:
         """Decorator to register a function as a plugin."""
 
         def decorator(f: Callable) -> Callable:
-            plugin = PluginClassifier.classify(f, hints)
+            plugin = PluginAutoClassifier.classify(f, hints)
             self.add_plugin(plugin)
             return f
 
@@ -148,8 +144,6 @@ class Agent:
                     self.add_plugin(obj({}))
                 elif callable(obj) and name.endswith("_plugin"):
                     self.plugin(obj)
-                elif callable(obj) and hasattr(obj, "__entity_plugin__"):
-                    self.add_plugin(getattr(obj, "__entity_plugin__"))
             except Exception as exc:  # noqa: BLE001
                 logger.error(
                     "Failed to register plugin %s from %s: %s",
