@@ -11,20 +11,20 @@ import asyncio
 from typing import Any
 
 from entity import Agent
-from pipeline import ConversationManager, PipelineManager
+from pipeline import ConversationManager, PipelineManager, SystemRegistries
 from pipeline.adapters.http import HTTPAdapter, MessageRequest
 
 
 async def main() -> None:
-    agent = Agent({"server": {"host": "127.0.0.1", "port": 8000}})  # type: ignore[arg-type]
-    await agent._ensure_initialized()
-    registries = agent._registries
-    if registries is None:
-        raise RuntimeError("System not initialized")
-
+    agent = Agent()
+    registries = SystemRegistries(
+        resources=agent.resource_registry,
+        tools=agent.tool_registry,
+        plugins=agent.plugin_registry,
+    )
     pipeline_manager = PipelineManager(registries)
     conversation_manager = ConversationManager(registries, pipeline_manager)
-    adapter = HTTPAdapter(pipeline_manager, agent.config.get("server", {}))
+    adapter = HTTPAdapter(pipeline_manager, {"host": "127.0.0.1", "port": 8000})
 
     @adapter.app.post("/conversation")
     async def conversation(req: MessageRequest) -> dict[str, Any]:

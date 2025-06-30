@@ -17,6 +17,8 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))  # noq
 from entity import Agent  # noqa: E402
 from pipeline import PipelineStage, PromptPlugin, ResourcePlugin  # noqa: E402
 from pipeline.context import PluginContext  # noqa: E402
+from pipeline.plugins.resources.echo_llm import EchoLLMResource  # noqa: E402
+from pipeline.plugins.resources.postgres import PostgresResource  # noqa: E402
 
 
 class VectorMemoryResource(ResourcePlugin):
@@ -54,26 +56,20 @@ class ComplexPrompt(PromptPlugin):
 
 
 def main() -> None:
-    config = {
-        "plugins": {
-            "resources": {
-                "database": {
-                    "type": "pipeline.plugins.resources.postgres:PostgresResource",
-                    "host": "localhost",
-                    "port": 5432,
-                    "name": "dev_db",
-                    "username": "agent",
-                    "password": "",
-                },
-                "ollama": {
-                    "type": "pipeline.plugins.resources.ollama_llm:OllamaLLMResource",
-                    "base_url": "http://localhost:11434",
-                    "model": "tinyllama",
-                },
+    agent = Agent()
+    agent.resource_registry.add(
+        "database",
+        PostgresResource(
+            {
+                "host": "localhost",
+                "port": 5432,
+                "name": "dev_db",
+                "username": "agent",
+                "password": "",
             }
-        }
-    }
-    agent = Agent(config)
+        ),
+    )
+    agent.resource_registry.add("ollama", EchoLLMResource())
     agent.resource_registry.add("vector_memory", VectorMemoryResource())
     agent.plugin_registry.register_plugin_for_stage(
         ComplexPrompt(), PipelineStage.THINK
