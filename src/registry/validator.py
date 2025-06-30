@@ -1,3 +1,5 @@
+"""Helpers for validating plugin dependencies and stage assignments."""
+
 from __future__ import annotations
 
 import argparse
@@ -9,11 +11,10 @@ SRC_PATH = pathlib.Path(__file__).resolve().parents[1]
 if str(SRC_PATH) not in sys.path:
     sys.path.insert(0, str(SRC_PATH))
 
-from pipeline.initializer import ClassRegistry, SystemInitializer, import_plugin_class
-from pipeline.plugins import ValidationResult
-from pipeline.stages import PipelineStage
-
-"""Helpers for validating plugin dependencies and stage assignments."""
+from pipeline.initializer import ClassRegistry  # noqa: E402
+from pipeline.initializer import SystemInitializer, import_plugin_class  # noqa: E402
+from pipeline.plugins import ValidationResult  # noqa: E402
+from pipeline.stages import PipelineStage  # noqa: E402
 
 
 class RegistryValidator:

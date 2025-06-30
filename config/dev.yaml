@@ -7,10 +7,10 @@ server:
 plugins:
   resources:
     database:
-      type: postgres
+      type: pipeline.plugins.resources.postgres:PostgresResource
       host: "localhost"
       port: 5432
-      name: "memory"
+      name: "dev_db"
       username: "${DB_USERNAME}"
       password: "${DB_PASSWORD}"
     ollama:
@@ -18,29 +18,29 @@ plugins:
       base_url: "http://localhost:11434"
       model: "llama3:8b-instruct-q6_K"
     logging:
-      type: structured_logging
+      type: pipeline.plugins.resources.structured_logging:StructuredLogging
       level: "DEBUG"
       file_enabled: true
       file_path: "logs/entity.log"
+    memory:
+      type: pipeline.plugins.resources.memory_resource:SimpleMemoryResource
   tools:
     weather:
-      type: weather_api
+      type: pipeline.plugins.tools.weather_api_tool:WeatherApiTool
       api_key: "${WEATHER_API_KEY}"
       base_url: "https://api.weather.com"
     calculator:
-      type: calculator
+      type: pipeline.plugins.tools.calculator_tool:CalculatorTool
   adapters:
-    tts:
-      type: speech_synthesis
-      base_url: "http://localhost:8888"
-      voice_name: "bf_emma"
+    http:
+      type: pipeline.adapters.http:HTTPAdapter
   prompts:
     chain_of_thought:
-      type: chain_of_thought
+      type: pipeline.plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
       enable_reasoning: true
     memory_retrieval:
-      type: memory_retrieval
+      type: pipeline.plugins.prompts.memory_retrieval:MemoryRetrievalPrompt
       max_context_length: 4000
     intent_classifier:
-      type: intent_classifier
+      type: pipeline.plugins.prompts.intent_classifier:IntentClassifierPrompt
       confidence_threshold: 0.8
