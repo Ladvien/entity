@@ -25,6 +25,13 @@ class PluginContext:
     def get_resource(self, name: str) -> Any:
         return self._registries.resources.get(name)
 
+    @property
+    def message(self) -> str:
+        for entry in reversed(self._state.conversation):
+            if entry.role == "user":
+                return entry.content
+        return ""
+
     def execute_tool(
         self, tool_name: str, params: Dict[str, Any], result_key: Optional[str] = None
     ) -> str:
