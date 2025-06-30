@@ -11,6 +11,10 @@ packages = [
     { include = "src", from = "." },
 ]
 
+[tool.poetry.scripts]
+entity-cli = "src.cli:main"
+entity-config-validate = "src.config.validator:main"
+
 
 [tool.poetry.urls]
 homepage = "https://github.com/Ladvien/entity"
