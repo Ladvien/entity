@@ -15,6 +15,7 @@ from .initializer import (
     initialization_cleanup_context,
 )
 from .manager import PipelineManager
+from .observability import log_metrics, metrics_as_json
 from .pipeline import (
     create_default_response,
     create_static_error_response,
@@ -35,6 +36,7 @@ from .plugins import (
     ValidationResult,
 )
 from .registries import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
+from .resources import LLM
 from .stages import PipelineStage
 from .state import FailureInfo, MetricsCollector, PipelineState
 
@@ -51,6 +53,7 @@ __all__ = [
     "ConversationEntry",
     "ToolCall",
     "LLMResponse",
+    "LLM",
     "FailureInfo",
     "MetricsCollector",
     "BasePlugin",
@@ -84,4 +87,6 @@ __all__ = [
     "HTTPAdapter",
     "WebSocketAdapter",
     "CLIAdapter",
+    "log_metrics",
+    "metrics_as_json",
 ]

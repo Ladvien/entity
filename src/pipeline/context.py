@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import asyncio
+import logging
+import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional, cast
 
 from .registries import SystemRegistries
+from .resources import LLM
 from .stages import PipelineStage
 from .state import ConversationEntry, LLMResponse, PipelineState, ToolCall
 
@@ -24,6 +27,25 @@ class PluginContext:
 
     def get_resource(self, name: str) -> Any:
         return self._registries.resources.get(name)
+
+    async def call_llm(self, prompt: str) -> LLMResponse:
+        """Return LLM output for ``prompt`` without additional instrumentation."""
+
+        llm = cast(LLM, self.get_resource("ollama"))
+        if llm is None:
+            raise RuntimeError("LLM resource 'ollama' not available")
+
+        result = (
+            await llm.generate(prompt)
+            if hasattr(llm, "generate")
+            else await llm(prompt)
+        )
+
+        return (
+            result
+            if isinstance(result, LLMResponse)
+            else LLMResponse(content=str(result))
+        )
 
     @property
     def message(self) -> str:
@@ -184,28 +206,8 @@ class SimpleContext(PluginContext):
         return self.get_stage_result(result_key)
 
     async def ask_llm(self, prompt: str) -> str:
-        llm = self.get_resource("ollama")
-        if llm is None:
-            raise RuntimeError("LLM resource 'ollama' not available")
-
-        self._state.metrics.record_llm_call(
-            "SimpleContext", str(self.current_stage), "ask_llm"
-        )
-
-        if hasattr(llm, "generate"):
-            response = await llm.generate(prompt)
-        else:
-            func = getattr(llm, "__call__", None)
-            if func is None:
-                raise RuntimeError("LLM resource is not callable")
-            if asyncio.iscoroutinefunction(func):
-                response = await func(prompt)
-            else:
-                response = func(prompt)
-
-        if isinstance(response, LLMResponse):
-            return response.content
-        return str(response)
+        response = await self.call_llm(prompt)
+        return response.content
 
     async def calculate(self, expression: str) -> Any:
         return await self.use_tool("calculator", expression=expression)
