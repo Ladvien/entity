@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-from pipeline.resources.storage import StorageBackend, StorageResource
-
-__all__ = ["StorageBackend", "StorageResource"]
-=======
 from __future__ import annotations
 
 import json
@@ -109,4 +104,3 @@ class StorageBackend(ResourcePlugin):
             if self._history_table
             else ""
         )
->>>>>>> 41e9ce33055fea658287c473f9fa43fe2b5cbcc7
