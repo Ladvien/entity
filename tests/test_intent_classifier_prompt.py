@@ -29,6 +29,7 @@ def make_context(llm: FakeLLM):
     )
     resources = ResourceRegistry()
     resources.add("ollama", llm)
+    resources.add("llm", llm)
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
     return state, PluginContext(state, registries)
 

@@ -43,6 +43,7 @@ def make_context(llm: FakeLLM):
     tools = ToolRegistry()
     plugins = PluginRegistry()
     resources.add("ollama", llm)
+    resources.add("llm", llm)
     tools.add("analysis_tool", DummyTool())
     registries = SystemRegistries(resources, tools, plugins)
     return state, PluginContext(state, registries)
