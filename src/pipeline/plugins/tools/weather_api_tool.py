@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 import httpx
 
-from pipeline.plugins import ToolPlugin
+from pipeline.base_plugins import ToolPlugin
 from pipeline.stages import PipelineStage
 
 

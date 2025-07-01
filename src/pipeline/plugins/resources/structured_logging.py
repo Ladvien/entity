@@ -6,7 +6,7 @@ import os
 from logging.handlers import RotatingFileHandler
 from typing import Any, Dict
 
-from pipeline.plugins import ResourcePlugin, ValidationResult
+from pipeline.base_plugins import ResourcePlugin, ValidationResult
 from pipeline.stages import PipelineStage
 
 

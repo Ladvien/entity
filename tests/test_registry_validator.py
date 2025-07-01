@@ -1,7 +1,7 @@
 import pytest
 import yaml
 
-from pipeline.plugins import PromptPlugin, ResourcePlugin
+from pipeline.base_plugins import PromptPlugin, ResourcePlugin
 from pipeline.stages import PipelineStage
 from registry.validator import RegistryValidator
 

@@ -15,7 +15,7 @@ from pipeline.initializer import ClassRegistry  # noqa: E402
 from pipeline.initializer import SystemInitializer  # noqa: E402
 from pipeline.initializer import import_plugin_class
 from pipeline.logging import get_logger
-from pipeline.plugins import ValidationResult  # noqa: E402
+from pipeline.base_plugins import ValidationResult  # noqa: E402
 from pipeline.stages import PipelineStage  # noqa: E402
 
 logger = get_logger(__name__)
