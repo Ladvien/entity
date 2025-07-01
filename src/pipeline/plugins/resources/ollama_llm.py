@@ -4,19 +4,19 @@ from typing import Any, Dict
 
 import httpx
 
-from pipeline.plugins import ResourcePlugin, ValidationResult
-from pipeline.stages import PipelineStage
+from pipeline.plugins import ValidationResult
+from pipeline.plugins.resources.llm_resource import LLMResource
 
 
-class OllamaLLMResource(ResourcePlugin):
+class OllamaLLMResource(LLMResource):
     """LLM resource backed by a running Ollama server.
 
     Uses **Structured LLM Access (22)** so any stage can generate text while the
     framework automatically tracks token usage.
     """
 
-    stages = [PipelineStage.PARSE]
     name = "ollama"
+    aliases = ["llm"]
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)

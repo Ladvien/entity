@@ -45,3 +45,24 @@ configure database and LLM credentials. These values will be automatically
 loaded when running the agent or tests.
 This fast path aligns with the **15-Minute Rule (2)**, giving new
 contributors a working agent almost immediately.
+
+### Runtime Configuration Reload
+Reload plugin definitions while the agent is running:
+
+```bash
+python src/cli.py reload-config updated.yaml
+```
+
+For more on dynamic configuration, see [ARCHITECTURE.md](../../ARCHITECTURE.md#%F0%9F%94%84-reconfigurable-agent-infrastructure).
+
+### Using the "llm" Resource Key
+Configure a shared LLM resource in YAML:
+
+```yaml
+plugins:
+  resources:
+    llm:
+      type: openai_llm
+      model: gpt-4
+      api_key: ${OPENAI_API_KEY}
+```

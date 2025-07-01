@@ -90,9 +90,21 @@ class BasePlugin(ABC):
     ) -> "LLMResponse":
         from .context import LLMResponse
 
+<<<<<< codex/rename-ollama-to-llm-and-update-configs
         llm = context.get_resource("llm")
         if llm is None:
             raise RuntimeError("LLM resource 'llm' not available")
+======
+<<<<< codex/replace--ollama--with--llm--in-code
+        llm = context.get_resource("llm")
+        if llm is None:
+            raise RuntimeError("LLM resource 'llm' not available")
+======
+        llm = context.get_llm()
+        if llm is None:
+            raise RuntimeError("LLM resource not available")
+>>>>>> main
+>>>>>> main
 
         context.record_llm_call(self.__class__.__name__, purpose)
 
@@ -109,9 +121,24 @@ class BasePlugin(ABC):
             else:
                 response = func(prompt)
 
-        context.record_llm_duration(self.__class__.__name__, time.time() - start)
+        duration = time.time() - start
+        context.record_llm_duration(self.__class__.__name__, duration)
 
-        return LLMResponse(content=str(response))
+        llm_response = LLMResponse(content=str(response))
+        self.logger.info(
+            "LLM call completed",
+            extra={
+                "plugin": self.__class__.__name__,
+                "stage": str(context.current_stage),
+                "purpose": purpose,
+                "prompt_length": len(prompt),
+                "response_length": len(llm_response.content),
+                "duration": duration,
+                "pipeline_id": context.pipeline_id,
+            },
+        )
+
+        return llm_response
 
     # --- Validation & Reconfiguration ---
     @classmethod

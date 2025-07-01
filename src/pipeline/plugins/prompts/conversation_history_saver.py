@@ -8,7 +8,7 @@ from pipeline.stages import PipelineStage
 class ConversationHistorySaver(PromptPlugin):
     """Persist conversation history to the configured database."""
 
-    dependencies = ["database"]
+    dependencies = ["database", "llm"]
     stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context: PluginContext) -> None:

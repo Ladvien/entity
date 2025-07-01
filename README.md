@@ -44,3 +44,24 @@ agent = Agent()
 def hello(context):
     return "hello"
 ```
+
+## Runtime Configuration Reload
+Update plugin settings without restarting the agent.
+
+```bash
+python src/cli.py reload-config updated.yaml
+```
+
+See [ARCHITECTURE.md](ARCHITECTURE.md#%F0%9F%94%84-reconfigurable-agent-infrastructure) for details on dynamic reconfiguration.
+
+### Using the "llm" Resource Key
+Define your LLM once and share it across plugins:
+
+```yaml
+plugins:
+  resources:
+    llm:
+      type: openai_llm
+      model: gpt-4
+      api_key: ${OPENAI_API_KEY}
+```

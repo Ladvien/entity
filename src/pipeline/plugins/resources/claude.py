@@ -4,15 +4,15 @@ from typing import Any, Dict
 
 import httpx
 
-from pipeline.plugins import ValidationResult
-from pipeline.plugins.resources.llm_resource import LLMResource
+from pipeline.plugins import ResourcePlugin, ValidationResult
+from pipeline.stages import PipelineStage
 
 
-class OpenAIResource(LLMResource):
-    """LLM resource for OpenAI's chat completion API."""
+class ClaudeResource(ResourcePlugin):
+    """LLM resource for Anthropic's Claude API."""
 
-    name = "openai"
-    aliases = ["llm"]
+    stages = [PipelineStage.PARSE]
+    name = "claude"
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
@@ -40,10 +40,13 @@ class OpenAIResource(LLMResource):
 
     async def generate(self, prompt: str) -> str:
         if not self.api_key or not self.model or not self.base_url:
-            raise RuntimeError("OpenAI resource not properly configured")
+            raise RuntimeError("Claude resource not properly configured")
 
-        url = f"{self.base_url.rstrip('/')}/v1/chat/completions"
-        headers = {"Authorization": f"Bearer {self.api_key}"}
+        url = f"{self.base_url.rstrip('/')}/v1/messages"
+        headers = {
+            "x-api-key": self.api_key,
+            "anthropic-version": "2023-06-01",
+        }
         payload = {
             "model": self.model,
             "messages": [{"role": "user", "content": prompt}],
@@ -54,10 +57,10 @@ class OpenAIResource(LLMResource):
                 response = await client.post(url, headers=headers, json=payload)
                 response.raise_for_status()
         except httpx.HTTPError as exc:
-            raise RuntimeError(f"OpenAI request failed: {exc}") from exc
+            raise RuntimeError(f"Claude request failed: {exc}") from exc
 
         data = response.json()
-        text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+        text = data.get("content", [{}])[0].get("text", "")
         return str(text)
 
     __call__ = generate
