@@ -18,11 +18,8 @@ if TYPE_CHECKING:  # pragma: no cover - used for type hints only
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .initializer import ClassRegistry
 
-<<<<<<< HEAD
-from .exceptions import CircuitBreakerTripped, PluginExecutionError
-=======
-from .exceptions import CircuitBreakerTripped, PluginError, PluginExecutionError
->>>>>>> 4dbf3a92c50743e827fc62272eb07044f1bb4653
+from .exceptions import (CircuitBreakerTripped, PluginError,
+                         PluginExecutionError)
 from .logging import get_logger
 from .observability.utils import execute_with_observability
 from .stages import PipelineStage
@@ -99,23 +96,16 @@ class BasePlugin(ABC):
             result = await execute_with_observability(
                 run,
                 logger=self.logger,
-<<<<<<< HEAD
                 metrics=context.metrics,
-=======
-                metrics=context._get_state().metrics,
->>>>>>> 4dbf3a92c50743e827fc62272eb07044f1bb4653
                 plugin=self.__class__.__name__,
                 stage=str(context.current_stage),
             )
             self._failure_count = 0
             return result
-<<<<<<< HEAD
-=======
         except PluginError:
             self._failure_count += 1
             self._last_failure = time.time()
             raise
->>>>>>> 4dbf3a92c50743e827fc62272eb07044f1bb4653
         except Exception as exc:  # noqa: BLE001 - convert to PluginExecutionError
             self._failure_count += 1
             self._last_failure = time.time()
@@ -369,4 +359,5 @@ __all__ = [
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .plugins.classifier import PluginAutoClassifier
 else:  # pragma: no cover - runtime import for compatibility
-    from .plugins.classifier import PluginAutoClassifier  # type: ignore  # noqa: E402
+    from .plugins.classifier import \
+        PluginAutoClassifier  # type: ignore  # noqa: E402
