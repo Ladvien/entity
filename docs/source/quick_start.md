@@ -27,14 +27,15 @@ async def lookup(context):
 The `context` argument is an instance of `PluginContext`. See
 [the context guide](context.md) for an overview of its helper methods.
 
-### Enabling the Ollama Resource
-Add the Ollama LLM resource to your configuration so plugins can use it:
+### Configuring the LLM Resource
+Select an LLM provider in your configuration. The following example uses
+Ollama, but you can set `provider` to `openai`, `gemini`, or `claude`:
 
 ```yaml
 plugins:
   resources:
-    ollama:
-      type: ollama_llm
+    llm:
+      provider: ollama  # openai, ollama, gemini, claude
       base_url: "http://localhost:11434"
       model: "tinyllama"
 ```

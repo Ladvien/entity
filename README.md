@@ -11,6 +11,30 @@ plugins so the pipeline can run out of the box:
 These defaults allow ``Agent()`` to process messages without any external
 configuration.
 
+<!-- start quick_start -->
+Get started quickly by installing the package and running an agent with a YAML
+file:
+
+```bash
+pip install entity-pipeline
+python src/cli.py --config config.yaml
+```
+<!-- end quick_start -->
+
+<!-- start config -->
+The ``llm`` resource now accepts a ``provider`` key. Choose from ``openai``,
+``ollama``, ``gemini``, or ``claude``:
+
+```yaml
+plugins:
+  resources:
+    llm:
+      provider: ollama  # openai, ollama, gemini, claude
+      model: tinyllama
+      base_url: "http://localhost:11434"
+```
+<!-- end config -->
+
 Every plugin executes with a ``PluginContext`` which grants controlled
 access to resources, conversation history, and helper methods for calling
 tools or LLMs. This context keeps plugin logic focused while the framework
