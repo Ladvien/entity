@@ -14,10 +14,11 @@ from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
 from .defaults import DEFAULT_CONFIG
 
 LLM_PROVIDERS = {
-    "openai": "pipeline.plugins.resources.openai:OpenAIResource",
-    "ollama": "pipeline.plugins.resources.ollama_llm:OllamaLLMResource",
-    "gemini": "pipeline.plugins.resources.gemini:GeminiResource",
-    "claude": "pipeline.plugins.resources.claude:ClaudeResource",
+    "openai": "pipeline.plugins.resources.llm.unified:UnifiedLLMResource",
+    "ollama": "pipeline.plugins.resources.llm.unified:UnifiedLLMResource",
+    "gemini": "pipeline.plugins.resources.llm.unified:UnifiedLLMResource",
+    "claude": "pipeline.plugins.resources.llm.unified:UnifiedLLMResource",
+    "echo": "pipeline.plugins.resources.llm.unified:UnifiedLLMResource",
 }
 
 

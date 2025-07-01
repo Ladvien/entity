@@ -17,7 +17,7 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.plugins.prompts.complex_prompt import ComplexPrompt
-from pipeline.plugins.resources.echo_llm import EchoLLMResource
+from pipeline.plugins.resources.llm.unified import UnifiedLLMResource
 from pipeline.plugins.resources.postgres import PostgresResource
 from pipeline.plugins.resources.vector_memory import VectorMemoryResource
 
@@ -48,7 +48,7 @@ def test_vector_memory_integration():
         }
         db = PostgresResource(db_cfg)
         vm = VectorMemoryResource(vm_cfg)
-        llm = EchoLLMResource()
+        llm = UnifiedLLMResource({"provider": "echo"})
         try:
             await db.initialize()
             await vm.initialize()

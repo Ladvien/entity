@@ -4,7 +4,7 @@ from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from config.environment import load_env
-from pipeline.plugins.resources.ollama_llm import OllamaLLMResource
+from pipeline.plugins.resources.llm.unified import UnifiedLLMResource
 
 load_env(Path(__file__).resolve().parents[1] / ".env")
 
@@ -20,8 +20,9 @@ class FakeResponse:
 
 
 async def run_generate():
-    resource = OllamaLLMResource(
+    resource = UnifiedLLMResource(
         {
+            "provider": "ollama",
             "base_url": os.environ["OLLAMA_BASE_URL"],
             "model": os.environ["OLLAMA_MODEL"],
         }

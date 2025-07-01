@@ -15,7 +15,10 @@ DEFAULT_LOGGING_CONFIG: Dict[str, Any] = {
 }
 
 DEFAULT_RESOURCES: Dict[str, Dict[str, Any]] = {
-    "llm": {"type": "pipeline.plugins.resources.echo_llm:EchoLLMResource"},
+    "llm": {
+        "type": "pipeline.plugins.resources.llm.unified:UnifiedLLMResource",
+        "provider": "echo",
+    },
     "memory": {
         "type": "pipeline.plugins.resources.memory_resource:SimpleMemoryResource"
     },
@@ -59,7 +62,8 @@ def discover_local_llm() -> Optional[Dict[str, Any]]:
     if not model:
         model = "tinyllama"
     return {
-        "type": "pipeline.plugins.resources.ollama_llm:OllamaLLMResource",
+        "type": "pipeline.plugins.resources.llm.unified:UnifiedLLMResource",
+        "provider": "ollama",
         "base_url": base_url,
         "model": model,
     }

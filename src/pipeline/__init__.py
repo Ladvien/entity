@@ -7,12 +7,16 @@ from .conversation_manager import ConversationManager
 from .decorators import plugin
 from .errors import create_static_error_response
 from .execution import create_default_response, execute_pipeline
+<<<<<<< HEAD
 from .initializer import (
     ClassRegistry,
     SystemInitializer,
     import_plugin_class,
     initialization_cleanup_context,
 )
+=======
+from .initializer import ClassRegistry, SystemInitializer
+>>>>>>> 3af5ebbd7ab1a0be50f4aa9aaff800a652da812e
 from .manager import PipelineManager
 from .metrics import MetricsCollector
 from .base_plugins import (
@@ -76,4 +80,5 @@ __all__ = [
     "HTTPAdapter",
     "WebSocketAdapter",
     "CLIAdapter",
+    "PluginAutoClassifier",
 ]
