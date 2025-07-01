@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Dict, List, Optional
 
 import asyncpg
+from asyncpg.utils import _quote_ident
 from pgvector import Vector
 from pgvector.asyncpg import register_vector
 
@@ -26,6 +27,9 @@ class VectorMemoryResource(ResourcePlugin):
         self._table = self.config.get("table", "vector_memory")
         self._dim = int(self.config.get("dimensions", 3))
 
+    def _quoted_table(self) -> str:
+        return _quote_ident(self._table)
+
     async def initialize(self) -> None:
         self._connection = await asyncpg.connect(
             database=str(self.config.get("name")),
@@ -36,14 +40,14 @@ class VectorMemoryResource(ResourcePlugin):
         )
         await register_vector(self._connection)
         await self._connection.execute("CREATE EXTENSION IF NOT EXISTS vector")
-        await self._connection.execute(
-            f"""
-            CREATE TABLE IF NOT EXISTS {self._table} (
+        table = self._quoted_table()
+        query = f"""
+            CREATE TABLE IF NOT EXISTS {table} (
                 text TEXT,
                 embedding VECTOR({self._dim})
             )
-            """
-        )
+        """
+        await self._connection.execute(query)
 
     async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
         return None
@@ -58,8 +62,9 @@ class VectorMemoryResource(ResourcePlugin):
         if self._connection is None:
             raise RuntimeError("Resource not initialized")
         embedding = Vector(self._embed(text))
+        table = self._quoted_table()
         await self._connection.execute(
-            f"INSERT INTO {self._table} (text, embedding) VALUES ($1, $2)",  # nosec B608
+            f"INSERT INTO {table} (text, embedding) VALUES ($1, $2)",
             text,
             embedding,
         )
@@ -68,8 +73,9 @@ class VectorMemoryResource(ResourcePlugin):
         if self._connection is None:
             return []
         embedding = Vector(self._embed(text))
+        table = self._quoted_table()
         rows = await self._connection.fetch(
-            f"SELECT text FROM {self._table} ORDER BY embedding <-> $1 LIMIT $2",  # nosec B608
+            f"SELECT text FROM {table} ORDER BY embedding <-> $1 LIMIT $2",
             embedding,
             k,
         )
