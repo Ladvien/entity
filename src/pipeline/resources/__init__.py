@@ -1,3 +1,3 @@
-from .llm import LLM
+from .llm import LLM, LLMResource
 
-__all__ = ["LLM"]
+__all__ = ["LLM", "LLMResource"]

@@ -16,6 +16,7 @@ DEFAULT_LOGGING_CONFIG: Dict[str, Any] = {
 
 DEFAULT_RESOURCES: Dict[str, Dict[str, Any]] = {
     "ollama": {"type": "pipeline.plugins.resources.echo_llm:EchoLLMResource"},
+    "llm": {"type": "pipeline.plugins.resources.echo_llm:EchoLLMResource"},
     "memory": {
         "type": "pipeline.plugins.resources.memory_resource:SimpleMemoryResource"
     },

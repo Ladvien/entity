@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-from pipeline.plugins import ResourcePlugin
-from pipeline.stages import PipelineStage
+from pipeline.plugins.resources.llm_resource import LLMResource
 
 
-class EchoLLMResource(ResourcePlugin):
+class EchoLLMResource(LLMResource):
     """Simple LLM resource that echoes the prompt back."""
 
-    stages = [PipelineStage.PARSE]
-    name = "ollama"
+    name = "echo"
+    aliases = ["llm"]
 
     async def _execute_impl(self, context):
         return None
