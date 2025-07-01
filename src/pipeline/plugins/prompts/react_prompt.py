@@ -14,7 +14,7 @@ class ReActPrompt(PromptPlugin):
     and **Plugin-Level Iteration (26)** in tandem.
     """
 
-    dependencies = ["ollama"]
+    dependencies = ["llm"]
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context: PluginContext) -> None:
