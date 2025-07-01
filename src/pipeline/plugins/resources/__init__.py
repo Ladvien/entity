@@ -7,7 +7,7 @@ from .http_llm_resource import HttpLLMResource
 from .memory_resource import SimpleMemoryResource
 from .ollama_llm import OllamaLLMResource
 from .openai import OpenAIResource
-from .postgres import PostgresResource
+from .postgres import PostgresConnectionPool, PostgresResource
 from .structured_logging import StructuredLogging
 from .vector_memory import VectorMemoryResource
 
@@ -17,6 +17,7 @@ __all__ = [
     "OllamaLLMResource",
     "SimpleMemoryResource",
     "StructuredLogging",
+    "PostgresConnectionPool",
     "PostgresResource",
     "VectorMemoryResource",
     "OpenAIResource",
