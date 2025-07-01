@@ -10,8 +10,7 @@ from .context import PluginContext
 from .errors import create_static_error_response
 from .manager import PipelineManager
 from .stages import PipelineStage
-from .state import (ConversationEntry, FailureInfo, MetricsCollector,
-                    PipelineState)
+from .state import ConversationEntry, FailureInfo, MetricsCollector, PipelineState
 from .tools.execution import execute_pending_tools
 
 

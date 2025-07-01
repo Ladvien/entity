@@ -6,8 +6,8 @@ import yaml
 
 from entity import Agent
 from pipeline import update_plugin_configuration
-from pipeline.initializer import ClassRegistry, SystemInitializer, import_plugin_class
 from pipeline.base_plugins import ResourcePlugin, ToolPlugin
+from pipeline.initializer import ClassRegistry, SystemInitializer, import_plugin_class
 from pipeline.logging import get_logger
 
 logger = get_logger(__name__)
