@@ -24,6 +24,7 @@ class BasicLogger(FailurePlugin):
                         "stage": info.stage,
                         "plugin": info.plugin_name,
                         "error": info.error_message,
+                        "type": info.error_type,
                     },
                 )
             else:

@@ -48,3 +48,40 @@ agent = Agent.from_directory("./plugins")
 
 Any import errors are logged and the remaining plugins continue to load.
 
+## Implementing Storage Backends
+
+Storage resources persist conversation history and other agent data. To add a
+new backend, subclass `ResourcePlugin` and implement the `save_history` and
+`load_history` methods.
+
+```python
+import asyncpg
+from pipeline.plugins import ResourcePlugin
+from pipeline.stages import PipelineStage
+
+
+class MyStorage(ResourcePlugin):
+    stages = [PipelineStage.PARSE]
+
+    async def initialize(self) -> None:
+        self.pool = await asyncpg.create_pool(dsn=self.config["dsn"], min_size=1, max_size=5)
+
+    async def save_history(self, conversation_id: str, history):
+        async with self.pool.acquire() as conn:
+            for entry in history:
+                await conn.execute(
+                    "INSERT INTO history (id, role, content) VALUES ($1, $2, $3)",
+                    conversation_id,
+                    entry.role,
+                    entry.content,
+                )
+
+    async def load_history(self, conversation_id: str):
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch("SELECT role, content FROM history WHERE id=$1", conversation_id)
+        return [row["content"] for row in rows]
+```
+
+Any plugin can now call `context.get_resource("database")` and use these
+methods, enabling a consistent storage interface across resources.
+

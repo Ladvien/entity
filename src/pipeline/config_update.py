@@ -5,8 +5,9 @@ import time
 from dataclasses import dataclass, field
 from typing import Dict, List
 
+from registry import PluginRegistry
+
 from .manager import PipelineManager
-from .registries import PluginRegistry
 
 
 @dataclass

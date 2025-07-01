@@ -22,10 +22,12 @@ class PIIScrubberPrompt(PromptPlugin):
     )
 
     async def _execute_impl(self, context: PluginContext) -> None:
-        state = context._get_state()
-        state.conversation = [self._scrub_entry(entry) for entry in state.conversation]
-        if state.response is not None:
-            state.response = self._scrub_value(state.response)
+        new_history = [
+            self._scrub_entry(entry) for entry in context.get_conversation_history()
+        ]
+        context.replace_conversation_history(new_history)
+        if context.has_response():
+            context.update_response(self._scrub_value)
 
     def _scrub_entry(self, entry: ConversationEntry) -> ConversationEntry:
         """Return ``entry`` with its content sanitized."""

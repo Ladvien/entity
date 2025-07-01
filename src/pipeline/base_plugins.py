@@ -18,6 +18,8 @@ if TYPE_CHECKING:  # pragma: no cover - used for type hints only
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .initializer import ClassRegistry
 
+from .exceptions import (CircuitBreakerTripped, PluginError,
+                         PluginExecutionError)
 from .logging import get_logger
 from .observability.utils import execute_with_observability
 from .stages import PipelineStage
@@ -66,20 +68,48 @@ class BasePlugin(ABC):
     def __init__(self, config: Dict | None = None) -> None:
         self.config = config or {}
         self.logger = get_logger(self.__class__.__name__)
+        self.failure_threshold = int(self.config.get("failure_threshold", 3))
+        self.failure_reset_timeout = float(
+            self.config.get("failure_reset_timeout", 60.0)
+        )
+        self._failure_count = 0
+        self._last_failure = 0.0
 
     async def execute(self, context: PluginContext | SimpleContext) -> Any:
-        """Execute plugin with logging and metrics."""
+        """Execute plugin with logging, metrics and circuit breaker."""
+
+        def circuit_open() -> bool:
+            if self._failure_count < self.failure_threshold:
+                return False
+            if time.time() - self._last_failure > self.failure_reset_timeout:
+                self._failure_count = 0
+                return False
+            return True
+
+        if circuit_open():
+            raise CircuitBreakerTripped(self.__class__.__name__)
 
         async def run() -> Any:
             return await self._execute_impl(context)
 
-        return await execute_with_observability(
-            run,
-            logger=self.logger,
-            metrics=context._get_state().metrics,
-            plugin=self.__class__.__name__,
-            stage=str(context.current_stage),
-        )
+        try:
+            result = await execute_with_observability(
+                run,
+                logger=self.logger,
+                metrics=context.metrics,
+                plugin=self.__class__.__name__,
+                stage=str(context.current_stage),
+            )
+            self._failure_count = 0
+            return result
+        except PluginError:
+            self._failure_count += 1
+            self._last_failure = time.time()
+            raise
+        except Exception as exc:  # noqa: BLE001 - convert to PluginExecutionError
+            self._failure_count += 1
+            self._last_failure = time.time()
+            raise PluginExecutionError(self.__class__.__name__, exc) from exc
 
     @abstractmethod
     async def _execute_impl(self, context: "PluginContext"):
@@ -329,4 +359,5 @@ __all__ = [
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .plugins.classifier import PluginAutoClassifier
 else:  # pragma: no cover - runtime import for compatibility
-    from .plugins.classifier import PluginAutoClassifier  # type: ignore  # noqa: E402
+    from .plugins.classifier import \
+        PluginAutoClassifier  # type: ignore  # noqa: E402

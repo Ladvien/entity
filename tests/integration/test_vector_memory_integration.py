@@ -6,9 +6,16 @@ from pathlib import Path
 import pytest
 
 from config.environment import load_env
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, ResourceRegistry,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    ResourceRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.plugins.prompts.complex_prompt import ComplexPrompt
 from pipeline.plugins.resources.echo_llm import EchoLLMResource
 from pipeline.plugins.resources.postgres import PostgresResource
@@ -47,14 +54,14 @@ def test_vector_memory_integration():
             await vm.initialize()
         except OSError as exc:
             pytest.skip(f"PostgreSQL not available: {exc}")
-        await db._connection.execute(f"DROP TABLE IF EXISTS {db_cfg['history_table']}")
-        await db._connection.execute(
+        await db._pool.execute(f"DROP TABLE IF EXISTS {db_cfg['history_table']}")
+        await db._pool.execute(
             f"CREATE TABLE {db_cfg['history_table']} ("
             "conversation_id text, role text, content text, "
             "metadata jsonb, timestamp timestamptz)"
         )
-        await vm._connection.execute(f"DROP TABLE IF EXISTS {vm_cfg['table']}")
-        await vm._connection.execute(
+        await vm._pool.execute(f"DROP TABLE IF EXISTS {vm_cfg['table']}")
+        await vm._pool.execute(
             f"CREATE TABLE {vm_cfg['table']} (text text, embedding vector({vm_cfg['dimensions']}))"
         )
         history_entry = ConversationEntry(
@@ -80,8 +87,8 @@ def test_vector_memory_integration():
         plugin = ComplexPrompt({"k": 1})
         await plugin.execute(ctx)
         response = state.response
-        await db._connection.close()
-        await vm._connection.close()
+        await db.shutdown()
+        await vm.shutdown()
         return response
 
     result = asyncio.run(run())

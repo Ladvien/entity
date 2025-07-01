@@ -1,11 +1,22 @@
+from registry import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
+
 from .agent import Agent
 from .config_update import ConfigUpdateResult, update_plugin_configuration
 from .context import ConversationEntry, PluginContext, SimpleContext, ToolCall
 from .conversation_manager import ConversationManager
 from .decorators import plugin
 from .errors import create_static_error_response
+<<<<<< codex/refactor-public-api-and-deprecations
 from .execution import create_default_response, execute_pipeline
 from .initializer import ClassRegistry, SystemInitializer
+======
+from .initializer import (
+    ClassRegistry,
+    SystemInitializer,
+    import_plugin_class,
+    initialization_cleanup_context,
+)
+>>>>>> main
 from .manager import PipelineManager
 from .metrics import MetricsCollector
 from .plugins import (
@@ -20,7 +31,11 @@ from .plugins import (
     ToolPlugin,
     ValidationResult,
 )
+<<<<<< codex/refactor-public-api-and-deprecations
 from .registries import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
+======
+from .plugins.classifier import PluginAutoClassifier
+>>>>>> main
 from .resources import LLM
 from .stages import PipelineStage
 from .state import FailureInfo, LLMResponse, PipelineState

@@ -33,6 +33,8 @@ async def run_generate():
         mock_post.assert_called_with(
             f"{os.environ['OLLAMA_BASE_URL']}/api/generate",
             json={"model": os.environ["OLLAMA_MODEL"], "prompt": "hello"},
+            headers=None,
+            params=None,
         )
     return result
 
