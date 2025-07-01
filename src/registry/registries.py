@@ -4,8 +4,8 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
-from .plugins import BasePlugin
-from .stages import PipelineStage
+from pipeline.plugins import BasePlugin
+from pipeline.stages import PipelineStage
 
 
 class ResourceRegistry:
@@ -55,7 +55,7 @@ class PluginRegistry:
         """Register ``plugin`` to execute during ``stage``."""
         try:
             stage_enum = PipelineStage.ensure(stage)
-        except ValueError as exc:
+        except ValueError as exc:  # pragma: no cover - defensive
             raise ValueError(
                 f"Cannot register {plugin.__class__.__name__} for invalid stage '{stage}'"
             ) from exc

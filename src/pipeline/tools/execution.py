@@ -3,7 +3,8 @@ from __future__ import annotations
 import asyncio
 from typing import Any, Dict, cast
 
-from ..registries import SystemRegistries
+from registry import SystemRegistries
+
 from ..state import PipelineState, ToolCall
 from .base import RetryOptions
 

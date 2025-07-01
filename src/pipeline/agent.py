@@ -11,12 +11,14 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Callable, Dict, Optional, cast
 
+from registry import (PluginRegistry, ResourceRegistry, SystemRegistries,
+                      ToolRegistry)
+
 from .adapters.http import HTTPAdapter
 from .adapters.websocket import WebSocketAdapter
 from .execution import execute_pipeline
 from .plugins import BasePlugin
 from .plugins.classifier import PluginAutoClassifier
-from .registries import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
 
 logger = logging.getLogger(__name__)
 
