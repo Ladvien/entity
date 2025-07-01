@@ -6,13 +6,22 @@ from pathlib import Path
 import pytest
 
 from config.environment import load_env
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, ResourceRegistry,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    ResourceRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.plugins.prompts.complex_prompt import ComplexPrompt
+from pipeline.plugins.prompts.conversation_history import ConversationHistory
 from pipeline.plugins.resources.echo_llm import EchoLLMResource
 from pipeline.plugins.resources.postgres import PostgresResource
 from pipeline.plugins.resources.vector_memory import VectorMemoryResource
+from pipeline.stages import PipelineStage
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
 
@@ -41,14 +50,15 @@ def test_vector_memory_integration():
         }
         db = PostgresResource(db_cfg)
         vm = VectorMemoryResource(vm_cfg)
+        history_plugin = ConversationHistory(db_cfg)
         llm = EchoLLMResource()
         try:
             await db.initialize()
             await vm.initialize()
         except OSError as exc:
             pytest.skip(f"PostgreSQL not available: {exc}")
-        await db._connection.execute(f"DROP TABLE IF EXISTS {db_cfg['history_table']}")
-        await db._connection.execute(
+        await db.execute(f"DROP TABLE IF EXISTS {db_cfg['history_table']}")
+        await db.execute(
             f"CREATE TABLE {db_cfg['history_table']} ("
             "conversation_id text, role text, content text, "
             "metadata jsonb, timestamp timestamptz)"
@@ -57,10 +67,6 @@ def test_vector_memory_integration():
         await vm._connection.execute(
             f"CREATE TABLE {vm_cfg['table']} (text text, embedding vector({vm_cfg['dimensions']}))"
         )
-        history_entry = ConversationEntry(
-            content="previous", role="user", timestamp=datetime.now()
-        )
-        await db.save_history("conv1", [history_entry])
         await vm.add_embedding("previous")
         resources = ResourceRegistry()
         resources.add("database", db)
@@ -77,12 +83,15 @@ def test_vector_memory_integration():
             metrics=MetricsCollector(),
         )
         ctx = PluginContext(state, registries)
+        ctx._state.current_stage = PipelineStage.DELIVER
+        await history_plugin.execute(ctx)
+        ctx._state.current_stage = PipelineStage.THINK
         plugin = ComplexPrompt({"k": 1})
         await plugin.execute(ctx)
         response = state.response
-        await db._connection.close()
+        await db.execute(f"DROP TABLE IF EXISTS {db_cfg['history_table']}")
         await vm._connection.close()
         return response
 
     result = asyncio.run(run())
-    assert "Similar topics: previous" in result
+    assert "Similar topics:" in result

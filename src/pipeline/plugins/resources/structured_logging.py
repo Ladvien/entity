@@ -13,16 +13,18 @@ from pipeline.stages import PipelineStage
 class StructuredLogging(ResourcePlugin):
     """Configure a unified JSON logger based on YAML configuration.
 
-    Implements **Observable by Design (16)** by capturing structured logs for
-    every pipeline execution. The optional ``ENTITY_LOG_PATH`` environment
-    variable overrides ``file_path`` so multiple deployments can route logs to
-    the same location.
+    Configuration keys include typical logging options such as ``level`` and
+    ``format``. If ``file_enabled`` is true, ``file_path`` specifies the log
+    destination. The ``ENTITY_LOG_PATH`` environment variable overrides the
+    configured ``file_path``.
     """
 
     stages = [PipelineStage.PARSE]
     name = "logging"
 
     def __init__(self, config: Dict | None = None) -> None:
+        """Create an unconfigured logger."""
+
         super().__init__(config)
         self._configured = False
 
@@ -71,6 +73,8 @@ class StructuredLogging(ResourcePlugin):
 
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
+        """Validate logging configuration options."""
+
         level = config.get("level")
         if level is not None and str(level).upper() not in logging._nameToLevel:
             return ValidationResult.error_result(f"Invalid log level: {level}")
@@ -83,6 +87,8 @@ class StructuredLogging(ResourcePlugin):
         return ValidationResult.success_result()
 
     def _configure_logging(self) -> None:
+        """Set up the Python logging module according to ``self.config``."""
+
         if self._configured:
             return
 
@@ -120,6 +126,8 @@ class StructuredLogging(ResourcePlugin):
         self._configured = True
 
     async def initialize(self) -> None:
+        """Configure logging and create a module logger."""
+
         self._configure_logging()
         self.logger = logging.getLogger(self.__class__.__name__)
 

@@ -14,7 +14,7 @@ plugins:
       username: "${DB_USERNAME}"
       password: "${DB_PASSWORD}"
     llm:
-      type: pipeline.plugins.resources.ollama_llm:OllamaLLMResource
+      provider: ollama
       base_url: "${OLLAMA_BASE_URL}"
       model: "${OLLAMA_MODEL}"
     logging:
@@ -40,6 +40,9 @@ plugins:
     chain_of_thought:
       type: pipeline.plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
       enable_reasoning: true
+    conversation_history:
+      type: pipeline.plugins.prompts.conversation_history:ConversationHistory
+      history_table: chat_history
     memory_retrieval:
       type: pipeline.plugins.prompts.memory_retrieval:MemoryRetrievalPrompt
       max_context_length: 4000

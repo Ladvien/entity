@@ -1,13 +1,16 @@
+"""Resource plugins bundled with the framework."""
+
 from pipeline.resources import LLMResource
 
+from .claude import ClaudeResource
 from .echo_llm import EchoLLMResource
-from .llm_resource import LLMResource
+from .gemini import GeminiResource
+from .http_llm_resource import HttpLLMResource
 from .memory_resource import SimpleMemoryResource
 from .ollama_llm import OllamaLLMResource
 from .openai import OpenAIResource
-from .gemini import GeminiResource
-from .claude import ClaudeResource
 from .postgres import PostgresResource
+from .postgres_pool import PostgresConnectionPool
 from .structured_logging import StructuredLogging
 from .vector_memory import VectorMemoryResource
 
@@ -17,10 +20,11 @@ __all__ = [
     "OllamaLLMResource",
     "SimpleMemoryResource",
     "StructuredLogging",
+    "PostgresConnectionPool",
     "PostgresResource",
     "VectorMemoryResource",
-    "LLMResource",
     "OpenAIResource",
     "GeminiResource",
     "ClaudeResource",
+    "HttpLLMResource",
 ]

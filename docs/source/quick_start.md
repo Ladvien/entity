@@ -63,7 +63,7 @@ Configure a shared LLM resource in YAML:
 plugins:
   resources:
     llm:
-      type: openai_llm
+      provider: openai
       model: gpt-4
       api_key: ${OPENAI_API_KEY}
 ```

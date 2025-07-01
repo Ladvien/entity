@@ -1,56 +1,46 @@
 from __future__ import annotations
 
-from typing import Any, Dict
-
-import httpx
+from typing import Dict
 
 from pipeline.plugins import ValidationResult
-from pipeline.plugins.resources.llm_resource import LLMResource
+from pipeline.plugins.resources.http_llm_resource import HttpLLMResource
+from pipeline.resources.llm import LLMResource
 
 
 class OllamaLLMResource(LLMResource):
     """LLM resource backed by a running Ollama server.
 
-    Uses **Structured LLM Access (22)** so any stage can generate text while the
-    framework automatically tracks token usage.
+    The configuration requires ``base_url`` and ``model``. Any additional
+    keys are forwarded to the API request payload.
     """
 
     name = "ollama"
     aliases = ["llm"]
 
     def __init__(self, config: Dict | None = None) -> None:
+        """Parse connection details from ``config``."""
         super().__init__(config)
-        self.base_url: str | None = self.config.get("base_url")
-        self.model: str | None = self.config.get("model")
-        self.params: Dict[str, Any] = {
-            k: v for k, v in self.config.items() if k not in {"base_url", "model"}
-        }
+        self.http = HttpLLMResource(self.config)
 
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
-        if not config.get("base_url"):
-            return ValidationResult.error_result("'base_url' is required")
-        if not config.get("model"):
-            return ValidationResult.error_result("'model' is required")
-        return ValidationResult.success_result()
+        """Validate that ``base_url`` and ``model`` are provided."""
+        return HttpLLMResource(config).validate_config()
 
     async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
+        """No-op; this resource does not run in a pipeline stage."""
         return None
 
     async def generate(self, prompt: str) -> str:
-        if not self.base_url or not self.model:
+        """Generate text from ``prompt`` using the Ollama model."""
+        if not self.http.validate_config().valid:
             raise RuntimeError("Ollama resource not properly configured")
+        base_url = self.http.base_url or ""
+        model = self.http.model or ""
 
-        url = f"{self.base_url.rstrip('/')}/api/generate"
-        payload = {"model": self.model, "prompt": prompt, **self.params}
-        try:
-            async with httpx.AsyncClient(timeout=30) as client:
-                response = await client.post(url, json=payload)
-                response.raise_for_status()
-        except httpx.HTTPError as exc:
-            raise RuntimeError(f"Ollama request failed: {exc}") from exc
-
-        data = response.json()
+        url = f"{base_url.rstrip('/')}/api/generate"
+        payload = {"model": model, "prompt": prompt, **self.http.params}
+        data = await self.http._post_request(url, payload)
         text = data.get("response", "")
         return str(text)
 

@@ -76,7 +76,7 @@ class BasePlugin(ABC):
         return await execute_with_observability(
             run,
             logger=self.logger,
-            metrics=context._get_state().metrics,
+            metrics=context.metrics,
             plugin=self.__class__.__name__,
             stage=str(context.current_stage),
         )

@@ -6,8 +6,18 @@ from pathlib import Path
 import pytest
 
 from config.environment import load_env
+from pipeline import (
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    ResourceRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
+from pipeline.plugins.prompts.conversation_history import ConversationHistory
 from pipeline.plugins.resources.postgres import PostgresResource
-from pipeline.state import ConversationEntry
+from pipeline.state import ConversationEntry, PipelineStage
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
 
@@ -24,25 +34,41 @@ CONN = {
 @pytest.mark.integration
 def test_save_and_load_history():
     async def run():
-        resource = PostgresResource(CONN)
+        db = PostgresResource(CONN)
+        plugin = ConversationHistory(CONN)
         try:
-            await resource.initialize()
+            await db.initialize()
         except OSError as exc:
             pytest.skip(f"PostgreSQL not available: {exc}")
-        await resource._connection.execute("DROP TABLE IF EXISTS test_history")
-        await resource._connection.execute(
+        await db.execute("DROP TABLE IF EXISTS test_history")
+        await db.execute(
             "CREATE TABLE test_history ("
+            ""
             "conversation_id text, role text, content text, "
             "metadata jsonb, timestamp timestamptz)"
         )
-        entries = [
-            ConversationEntry(content="hello", role="user", timestamp=datetime.now())
-        ]
-        await resource.save_history("conv1", entries)
-        loaded = await resource.load_history("conv1")
-        await resource._connection.close()
-        return loaded
+        state = PipelineState(
+            conversation=[], pipeline_id="conv1", metrics=MetricsCollector()
+        )
+        resources = ResourceRegistry()
+        resources.add("database", db)
+        registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
+        ctx = PluginContext(state, registries)
+        ctx._state.current_stage = PipelineStage.PARSE
+        await plugin.execute(ctx)
+        entry = ConversationEntry(
+            content="hello", role="user", timestamp=datetime.now()
+        )
+        ctx.add_conversation_entry(
+            content=entry.content, role=entry.role, timestamp=entry.timestamp
+        )
+        ctx._state.current_stage = PipelineStage.DELIVER
+        await plugin.execute(ctx)
+        rows = await db.fetch(
+            "SELECT content FROM test_history WHERE conversation_id=$1", "conv1"
+        )
+        await db.execute("DROP TABLE IF EXISTS test_history")
+        return rows
 
-    history = asyncio.run(run())
-    assert len(history) == 1
-    assert history[0].content == "hello"
+    result = asyncio.run(run())
+    assert len(result) == 1
