@@ -1,31 +1,25 @@
 from __future__ import annotations
 
-import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import asyncpg
 from asyncpg.utils import _quote_ident
 
-from pipeline.context import ConversationEntry
 from pipeline.plugins import ResourcePlugin
 from pipeline.stages import PipelineStage
 
+from .postgres_pool import PostgresConnectionPool
+
 
 class PostgresResource(ResourcePlugin):
-    """Asynchronous PostgreSQL connection resource.
-
-    Highlights **Configuration Over Code (9)** by defining all connection
-    details in YAML rather than hardcoding them in the class.
-    """
+    """Thin wrapper around an asyncpg connection pool."""
 
     stages = [PipelineStage.PARSE]
     name = "database"
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
-        self._connection: Optional[asyncpg.Connection] = None
-        self._schema = self.config.get("db_schema")
-        self._history_table = self.config.get("history_table")
+        self._pool = PostgresConnectionPool(self.config)
 
     def _qualified_history_table(self) -> str:
         table = _quote_ident(self._history_table)
@@ -35,6 +29,9 @@ class PostgresResource(ResourcePlugin):
         return table
 
     async def initialize(self) -> None:
+<<<<< codex/implement-postgresconnectionpool-and-refactor-postgresresour
+        await self._pool.initialize()
+=====
         self.logger.info("Connecting to Postgres", extra={"config": self.config})
         self._connection = await asyncpg.connect(
             database=str(self.config.get("name")),
@@ -55,27 +52,19 @@ class PostgresResource(ResourcePlugin):
                 )
             """
             await self._connection.execute(query)
+>>>>> main
 
     async def _execute_impl(self, context) -> Any:  # pragma: no cover - no op
         return None
 
     async def health_check(self) -> bool:
-        if self._connection is None:
-            return False
-        try:
-            await self._connection.fetchval("SELECT 1")
-            return True
-        except Exception:
-            return False
+        return await self._pool.health_check()
 
-    async def save_history(
-        self, conversation_id: str, history: List[ConversationEntry]
-    ) -> None:
-        """Persist conversation ``history`` for ``conversation_id``."""
-
-        if self._connection is None or not self._history_table:
-            return
-
+<<<< codex/implement-postgresconnectionpool-and-refactor-postgresresour
+    async def execute(self, query: str, *args: Any) -> None:
+        async with self._pool.connection() as conn:
+            await conn.execute(query, *args)
+=====
         table = self._qualified_history_table()
         for entry in history:
             query = (
@@ -91,13 +80,21 @@ class PostgresResource(ResourcePlugin):
                 json.dumps(entry.metadata),
                 entry.timestamp,
             )
+>>>>>> main
 
-    async def load_history(self, conversation_id: str) -> List[ConversationEntry]:
-        """Retrieve stored history for ``conversation_id``."""
+    async def fetch(self, query: str, *args: Any) -> List[asyncpg.Record]:
+        async with self._pool.connection() as conn:
+            return await conn.fetch(query, *args)
 
-        if self._connection is None or not self._history_table:
-            return []
+    async def fetchrow(self, query: str, *args: Any) -> asyncpg.Record | None:
+        async with self._pool.connection() as conn:
+            return await conn.fetchrow(query, *args)
 
+<<<<<< codex/implement-postgresconnectionpool-and-refactor-postgresresour
+    async def fetchval(self, query: str, *args: Any) -> Any:
+        async with self._pool.connection() as conn:
+            return await conn.fetchval(query, *args)
+======
         table = self._qualified_history_table()
         query = (
             f"SELECT role, content, metadata, timestamp FROM {table} "
@@ -118,3 +115,4 @@ class PostgresResource(ResourcePlugin):
                 )
             )
         return history
+>>>>>> main

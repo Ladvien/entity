@@ -12,14 +12,17 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from pipeline.plugins.prompts.conversation_history_saver import ConversationHistorySaver
+from pipeline.plugins.prompts.conversation_history import ConversationHistory
+from pipeline.stages import PipelineStage
 
 
 class FakeDB:
     name = "database"
 
     def __init__(self) -> None:
-        self.save_history = AsyncMock()
+        self.fetch = AsyncMock(return_value=[])
+        self.execute = AsyncMock()
+        self.history: list[tuple] = []
 
 
 def make_context(db: FakeDB):
@@ -36,12 +39,13 @@ def make_context(db: FakeDB):
     return state, PluginContext(state, registries)
 
 
-def test_history_saver_invokes_db():
+def test_history_plugin_saves_conversation():
     db = FakeDB()
     state, ctx = make_context(db)
-    plugin = ConversationHistorySaver({})
+    plugin = ConversationHistory({"history_table": "tbl"})
 
+    ctx._state.current_stage = PipelineStage.DELIVER
     expected_history = ctx.get_conversation_history()
     asyncio.run(plugin.execute(ctx))
 
-    db.save_history.assert_awaited_with("1", expected_history)
+    assert db.execute.await_count == len(expected_history)

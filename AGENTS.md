@@ -62,6 +62,9 @@ You have access to a postgres 16 database for development purposes. The database
 - Database Type: PostgreSQL
 - Connection String: `postgresql://agent@localhost:5432/dev_db`
 
+The `PostgresConnectionPool` resource manages asyncpg connections, while the
+`ConversationHistory` plugin loads and saves chat history via the pool.
+
 There is no password.
 
 Ollama is available for LLM interactions. The Ollama server is running locally with the following details:

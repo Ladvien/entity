@@ -226,6 +226,8 @@ The framework maintains a sophisticated five-layer plugin architecture designed 
 
 #### **Resource Plugins** (Infrastructure - Enables Agent Function)
 - **Database**: PostgreSQL, SQLite connections
+- **Connection Pool**: `PostgresConnectionPool` shares asyncpg connections
+- **Conversation History**: Prompt plugin that persists chats
 - **LLM**: Ollama, OpenAI, Claude servers  
 - **Semantic Memory**: Vector databases, Redis cache
 - **Storage**: File systems, cloud storage
