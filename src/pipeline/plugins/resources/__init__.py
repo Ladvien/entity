@@ -1,3 +1,5 @@
+from pipeline.resources import LLMResource
+
 from .echo_llm import EchoLLMResource
 from .memory_resource import SimpleMemoryResource
 from .ollama_llm import OllamaLLMResource
@@ -13,5 +15,6 @@ __all__ = [
     "StructuredLogging",
     "PostgresResource",
     "VectorMemoryResource",
+    "LLMResource",
     "OpenAIResource",
 ]
