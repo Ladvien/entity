@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pipeline.plugins.resources.llm_resource import LLMResource
+from pipeline.resources.llm import LLMResource
 
 
 class EchoLLMResource(LLMResource):
