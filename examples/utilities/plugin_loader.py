@@ -5,7 +5,7 @@ from __future__ import annotations
 import pathlib
 import sys
 
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))
 
 from entity import Agent  # noqa: E402
 

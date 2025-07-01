@@ -12,7 +12,7 @@ import sys
 from typing import Dict, List
 
 # Ensure project source is available for imports
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))  # noqa: E402
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))  # noqa: E402
 
 from entity import Agent  # noqa: E402
 from pipeline import PipelineStage, PromptPlugin, ResourcePlugin  # noqa: E402

@@ -56,8 +56,8 @@ repository root. Each script adjusts `sys.path` so the `src` directory is
 discoverable:
 
 ```bash
-python examples/http_server.py
-python examples/pipeline_example.py
+python examples/servers/http_server.py
+python examples/pipelines/pipeline_example.py
 ```
 
 ### Command Line Usage
