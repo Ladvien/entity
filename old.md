@@ -982,7 +982,7 @@ class BasePlugin:
     
     async def call_llm(self, context, prompt: str, purpose: str) -> LLMResponse:
         """Structured LLM access with automatic logging and metrics"""
-        llm = context.get_resource("ollama")  # or configured LLM resource
+        llm = context.get_llm()  # previously context.get_resource("ollama")
         
         # Enhanced observability
         if hasattr(context, '_state'):
