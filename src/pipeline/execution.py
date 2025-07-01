@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any, Dict
 
 from .context import PluginContext
+from .errors import create_static_error_response
 from .manager import PipelineManager
 from .registries import SystemRegistries
 from .stages import PipelineStage
@@ -23,22 +24,6 @@ def create_default_response(message: str, pipeline_id: str) -> Dict[str, Any]:
         "timestamp": datetime.now().isoformat(),
         "type": "default_response",
     }
-
-
-STATIC_ERROR_RESPONSE = {
-    "error": "System error occurred",
-    "message": "An unexpected error prevented processing your request.",
-    "error_id": None,
-    "timestamp": None,
-    "type": "static_fallback",
-}
-
-
-def create_static_error_response(pipeline_id: str) -> Dict[str, Any]:
-    response = STATIC_ERROR_RESPONSE.copy()
-    response["error_id"] = pipeline_id
-    response["timestamp"] = datetime.now().isoformat()
-    return response
 
 
 async def execute_stage(
