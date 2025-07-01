@@ -90,9 +90,15 @@ class BasePlugin(ABC):
     ) -> "LLMResponse":
         from .context import LLMResponse
 
+<<<<<< codex/replace--ollama--with--llm--in-code
+        llm = context.get_resource("llm")
+        if llm is None:
+            raise RuntimeError("LLM resource 'llm' not available")
+======
         llm = context.get_llm()
         if llm is None:
             raise RuntimeError("LLM resource not available")
+>>>>>> main
 
         context.record_llm_call(self.__class__.__name__, purpose)
 

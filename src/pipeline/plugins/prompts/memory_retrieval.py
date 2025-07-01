@@ -15,7 +15,7 @@ class MemoryRetrievalPrompt(PromptPlugin):
     when available.
     """
 
-    dependencies = ["memory"]
+    dependencies = ["memory", "llm"]
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context: PluginContext) -> None:

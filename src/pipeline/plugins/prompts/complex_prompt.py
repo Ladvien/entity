@@ -14,7 +14,7 @@ class ComplexPrompt(PromptPlugin):
     and memory components to craft a single reply.
     """
 
-    dependencies = ["ollama", "database", "vector_memory"]
+    dependencies = ["llm", "database", "vector_memory"]
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context: PluginContext) -> None:

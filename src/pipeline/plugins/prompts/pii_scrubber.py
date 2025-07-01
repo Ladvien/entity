@@ -12,6 +12,8 @@ from pipeline.state import ConversationEntry
 class PIIScrubberPrompt(PromptPlugin):
     """Scrub email addresses and phone numbers from text."""
 
+    dependencies = ["llm"]
+
     stages = [PipelineStage.REVIEW]
 
     EMAIL_PATTERN = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
