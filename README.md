@@ -33,6 +33,26 @@ plugins:
       model: tinyllama
       base_url: "http://localhost:11434"
 ```
+Lightweight deployments can use SQLite:
+
+```yaml
+plugins:
+  resources:
+    database:
+      type: pipeline.plugins.resources.sqlite_storage:SQLiteStorage
+      path: ./entity.db
+      pool_min_size: 1
+      pool_max_size: 5
+```
+
+For ephemeral sessions, an in-memory backend is available:
+
+```yaml
+plugins:
+  resources:
+    database:
+      type: pipeline.plugins.resources.memory_storage:MemoryStorage
+```
 <!-- end config -->
 
 Every plugin executes with a ``PluginContext`` which grants controlled
