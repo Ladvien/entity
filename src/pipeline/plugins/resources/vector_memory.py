@@ -6,11 +6,12 @@ import asyncpg
 from pgvector import Vector
 from pgvector.asyncpg import register_vector
 
-from pipeline.plugins import ResourcePlugin
 from pipeline.stages import PipelineStage
 
+from .postgres import ConnectionPoolResource
 
-class VectorMemoryResource(ResourcePlugin):
+
+class VectorMemoryResource(ConnectionPoolResource):
     """Postgres-backed vector memory using pgvector.
 
     Demonstrates **Preserve All Power (7)** by enabling advanced storage
@@ -76,5 +77,4 @@ class VectorMemoryResource(ResourcePlugin):
         return [row["text"] for row in rows]
 
     async def shutdown(self) -> None:
-        if self._pool is not None:
-            await self._pool.close()
+        await super().shutdown()

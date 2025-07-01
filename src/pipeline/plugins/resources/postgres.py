@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, List, Optional
+from contextlib import asynccontextmanager
+from typing import Any, AsyncIterator, Dict, List, Optional
 
 import asyncpg
 
@@ -10,19 +11,61 @@ from pipeline.plugins import ResourcePlugin
 from pipeline.stages import PipelineStage
 
 
-class PostgresConnectionPool(ResourcePlugin):
+class ConnectionPoolResource(ResourcePlugin):
+    """Generic async connection pool resource."""
+
+    stages = [PipelineStage.PARSE]
+
+    def __init__(self, config: Dict | None = None) -> None:
+        super().__init__(config)
+        self._pool: Optional[Any] = None
+
+    @asynccontextmanager
+    async def connection(self) -> AsyncIterator[Any]:
+        conn = await self.acquire()
+        try:
+            yield conn
+        finally:
+            await self.release(conn)
+
+    async def acquire(self) -> Any:
+        if self._pool is None:
+            raise RuntimeError("Pool not initialized")
+        return await self._pool.acquire()
+
+    async def release(self, connection: Any) -> None:
+        if self._pool is not None:
+            await self._pool.release(connection)
+
+    async def shutdown(self) -> None:
+        if self._pool is not None:
+            await self._pool.close()
+
+    async def health_check(self) -> bool:
+        if self._pool is None:
+            return False
+        async with self.connection() as conn:
+            try:
+                await self._do_health_check(conn)
+                return True
+            except Exception:
+                return False
+
+    async def _do_health_check(self, connection: Any) -> None:
+        raise NotImplementedError
+
+
+class PostgresPoolResource(ConnectionPoolResource):
     """Asynchronous PostgreSQL connection pool.
 
     Highlights **Configuration Over Code (9)** by defining all connection
     details in YAML rather than hardcoding them in the class.
     """
 
-    stages = [PipelineStage.PARSE]
     name = "database"
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
-        self._pool: Optional[asyncpg.Pool] = None
         self._schema = self.config.get("db_schema")
         self._history_table = self.config.get("history_table")
 
@@ -39,7 +82,7 @@ class PostgresConnectionPool(ResourcePlugin):
         )
         if self._history_table:
             table = f"{self._schema + '.' if self._schema else ''}{self._history_table}"
-            async with self.acquire() as conn:
+            async with self.connection() as conn:
                 await conn.execute(
                     f"""
                     CREATE TABLE IF NOT EXISTS {table} (
@@ -55,30 +98,8 @@ class PostgresConnectionPool(ResourcePlugin):
     async def _execute_impl(self, context) -> Any:  # pragma: no cover - no op
         return None
 
-    async def acquire(self) -> asyncpg.Connection:
-        if self._pool is None:
-            raise RuntimeError("Pool not initialized")
-        return await self._pool.acquire()
-
-    async def release(self, connection: asyncpg.Connection) -> None:
-        if self._pool is not None:
-            await self._pool.release(connection)
-
-    async def shutdown(self) -> None:
-        if self._pool is not None:
-            await self._pool.close()
-
-    async def health_check(self) -> bool:
-        if self._pool is None:
-            return False
-        conn = await self.acquire()
-        try:
-            await conn.fetchval("SELECT 1")
-            return True
-        except Exception:
-            return False
-        finally:
-            await self.release(conn)
+    async def _do_health_check(self, connection: asyncpg.Connection) -> None:
+        await connection.fetchval("SELECT 1")
 
     async def save_history(
         self, conversation_id: str, history: List[ConversationEntry]
@@ -133,4 +154,4 @@ class PostgresConnectionPool(ResourcePlugin):
 
 
 # Backwards compatibility alias
-PostgresResource = PostgresConnectionPool
+PostgresResource = PostgresPoolResource
