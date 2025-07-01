@@ -3,6 +3,7 @@ from __future__ import annotations
 """Convenient built-in tool functions."""
 
 from typing import Any
+
 import httpx
 
 from pipeline.plugins.tools.calculator_tool import SafeEvaluator

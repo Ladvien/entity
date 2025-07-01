@@ -5,12 +5,7 @@ from typing import Any, Dict, cast
 from registry import SystemRegistries
 
 from .manager import PipelineManager
-<<<<<<< HEAD
-from .execution import execute_pipeline
-from .registries import SystemRegistries
-=======
 from .pipeline import execute_pipeline
->>>>>>> bc963938b2f74fdb07a5703e6f208b76d358f948
 
 
 class ConversationManager:

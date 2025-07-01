@@ -329,5 +329,4 @@ __all__ = [
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .plugins.classifier import PluginAutoClassifier
 else:  # pragma: no cover - runtime import for compatibility
-    from .plugins.classifier import \
-        PluginAutoClassifier  # type: ignore  # noqa: E402
+    from .plugins.classifier import PluginAutoClassifier  # type: ignore  # noqa: E402
