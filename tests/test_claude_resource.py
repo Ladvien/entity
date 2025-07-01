@@ -8,7 +8,7 @@ from pipeline import (
     SystemInitializer,
     SystemRegistries,
 )
-from pipeline.plugins.resources.claude import ClaudeResource
+from pipeline.plugins.resources.llm.unified import UnifiedLLMResource
 
 
 class FakeResponse:
@@ -22,8 +22,9 @@ class FakeResponse:
 
 
 async def run_generate():
-    resource = ClaudeResource(
+    resource = UnifiedLLMResource(
         {
+            "provider": "claude",
             "api_key": "key",
             "model": "claude-3",
             "base_url": "https://api.anthropic.com",
@@ -66,4 +67,4 @@ def test_context_get_llm_with_provider():
     plugin_reg, resource_reg, tool_reg = asyncio.run(initializer.initialize())
     state = PipelineState(conversation=[], pipeline_id="1", metrics=MetricsCollector())
     ctx = SimpleContext(state, SystemRegistries(resource_reg, tool_reg, plugin_reg))
-    assert isinstance(ctx.get_llm(), ClaudeResource)
+    assert isinstance(ctx.get_llm(), UnifiedLLMResource)

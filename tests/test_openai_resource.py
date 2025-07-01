@@ -1,7 +1,7 @@
 import asyncio
 from unittest.mock import AsyncMock, patch
 
-from pipeline.plugins.resources.openai import OpenAIResource
+from pipeline.plugins.resources.llm.unified import UnifiedLLMResource
 
 
 class FakeResponse:
@@ -15,8 +15,9 @@ class FakeResponse:
 
 
 async def run_generate():
-    resource = OpenAIResource(
+    resource = UnifiedLLMResource(
         {
+            "provider": "openai",
             "api_key": "key",
             "model": "gpt-4",
             "base_url": "https://api.openai.com",
