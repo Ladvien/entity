@@ -6,9 +6,11 @@ import asyncpg
 from pgvector import Vector
 from pgvector.asyncpg import register_vector
 
+from pipeline.plugins import ValidationResult
+from pipeline.stages import PipelineStage
+from .postgres import ConnectionPoolResource, PostgresPoolResource
 from pipeline.stages import PipelineStage
 
-from .postgres import ConnectionPoolResource
 
 
 class VectorMemoryResource(ConnectionPoolResource):
@@ -19,7 +21,20 @@ class VectorMemoryResource(ConnectionPoolResource):
     """
 
     stages = [PipelineStage.PARSE]
+    dependencies = ["database"]
     name = "vector_memory"
+
+    @classmethod
+    def validate_dependencies(cls, registry) -> ValidationResult:
+        if not registry.has_plugin("database"):
+            return ValidationResult.error_result("'database' resource is required")
+
+        db_cls = registry._classes.get("database")
+        if db_cls is None or not issubclass(db_cls, PostgresPoolResource):
+            return ValidationResult.error_result(
+                "database resource must support vector store (Postgres)"
+            )
+        return ValidationResult.success_result()
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
