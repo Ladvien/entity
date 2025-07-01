@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Dict
 
 from pipeline.plugins import ValidationResult
 from pipeline.plugins.resources.http_llm_resource import HttpLLMResource
-from pipeline.plugins.resources.llm_resource import LLMResource
+from pipeline.resources.llm import LLMResource
 from pipeline.stages import PipelineStage
 
 
