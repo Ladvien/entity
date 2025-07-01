@@ -4,15 +4,15 @@ from typing import Any, Dict
 
 import httpx
 
-from pipeline.plugins import ResourcePlugin, ValidationResult
-from pipeline.stages import PipelineStage
+from pipeline.plugins import ValidationResult
+from pipeline.plugins.resources.llm_resource import LLMResource
 
 
-class OpenAIResource(ResourcePlugin):
+class OpenAIResource(LLMResource):
     """LLM resource for OpenAI's chat completion API."""
 
-    stages = [PipelineStage.PARSE]
     name = "openai"
+    aliases = ["llm"]
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)

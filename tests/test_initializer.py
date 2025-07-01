@@ -124,3 +124,25 @@ def test_initializer_from_json_and_dict(tmp_path):
         == len(pd.get_for_stage(PipelineStage.THINK))
     )
     assert ry.get("A") and rj.get("A") and rd.get("A")
+
+
+def test_llm_alias_registration(tmp_path):
+    config = {
+        "plugins": {
+            "resources": {
+                "ollama": {
+                    "type": "pipeline.plugins.resources.ollama_llm:OllamaLLMResource",
+                    "base_url": "http://localhost:11434",
+                    "model": "tiny",
+                }
+            }
+        }
+    }
+
+    path = tmp_path / "cfg.yml"
+    path.write_text(yaml.dump(config))
+
+    initializer = SystemInitializer.from_yaml(str(path))
+    _, resources, _ = asyncio.run(initializer.initialize())
+
+    assert resources.get("llm") is resources.get("ollama")
