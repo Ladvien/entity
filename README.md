@@ -85,7 +85,7 @@ Define your LLM once and share it across plugins:
 plugins:
   resources:
     llm:
-      type: openai_llm
+      provider: openai
       model: gpt-4
       api_key: ${OPENAI_API_KEY}
 ```

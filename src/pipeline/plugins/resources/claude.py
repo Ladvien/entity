@@ -13,6 +13,7 @@ class ClaudeResource(LLMResource):
 
     stages = [PipelineStage.PARSE]
     name = "claude"
+    aliases = ["llm"]
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
