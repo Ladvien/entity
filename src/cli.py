@@ -6,6 +6,8 @@ import yaml
 
 from entity import Agent
 from pipeline import update_plugin_configuration
+from pipeline.initializer import ClassRegistry, SystemInitializer, import_plugin_class
+from pipeline.base_plugins import ResourcePlugin, ToolPlugin
 from pipeline.logging import get_logger
 
 logger = get_logger(__name__)
@@ -53,28 +55,100 @@ class CLI:
 
     def _reload_config(self, agent: Agent, file_path: str) -> int:
         async def _run() -> int:
-            await agent._ensure_initialized()
-            registries: Any | None = agent._registries
+            ensure_init = getattr(agent, "_ensure_initialized", None)
+            if ensure_init is not None:
+                await ensure_init()
+
+            registries: Any | None = getattr(agent, "_registries", None)
             if registries is None:
-                raise RuntimeError("System not initialized")
-            plugin_registry = getattr(registries, "plugins", None)
-            if plugin_registry is None:
-                plugin_registry = registries[0]
+                initializer = SystemInitializer.from_yaml(self.args.config)
+                registries = await initializer.initialize()
+                agent._registries = registries
+
+            resource_registry = getattr(registries, "resources", registries[1])
+            tool_registry = getattr(registries, "tools", registries[2])
+            plugin_registry = getattr(registries, "plugins", registries[0])
+
             with open(file_path, "r") as fh:
                 cfg = yaml.safe_load(fh) or {}
+
             success = True
+
+            def plugin_exists(section: str, plugin_name: str) -> bool:
+                if section == "resources":
+                    return plugin_name in getattr(resource_registry, "_resources", {})
+                if section == "tools":
+                    return plugin_name in getattr(tool_registry, "_tools", {})
+                for p in plugin_registry.list_plugins():
+                    if plugin_registry.get_plugin_name(p) == plugin_name:
+                        return True
+                return False
+
+            async def register_new_plugin(section: str, name: str, conf: dict) -> bool:
+                cls = import_plugin_class(conf.get("type", name))
+                if not cls.validate_config(conf).success:
+                    logger.error("Failed to validate config for %s", name)
+                    return False
+
+                class_reg = ClassRegistry()
+                for n, r in getattr(resource_registry, "_resources", {}).items():
+                    class_reg.register_class(r.__class__, getattr(r, "config", {}), n)
+                for n, t in getattr(tool_registry, "_tools", {}).items():
+                    class_reg.register_class(t.__class__, getattr(t, "config", {}), n)
+                for p in plugin_registry.list_plugins():
+                    class_reg.register_class(
+                        p.__class__,
+                        getattr(p, "config", {}),
+                        plugin_registry.get_plugin_name(p),
+                    )
+                class_reg.register_class(cls, conf, name)
+
+                dep_result = cls.validate_dependencies(class_reg)
+                if not dep_result.success:
+                    logger.error(
+                        "Dependency validation failed for %s: %s",
+                        name,
+                        dep_result.error_message,
+                    )
+                    return False
+                for dep in getattr(cls, "dependencies", []):
+                    if not class_reg.has_plugin(dep):
+                        logger.error("Missing dependency %s for plugin %s", dep, name)
+                        return False
+
+                instance = cls(conf)
+                if issubclass(cls, ResourcePlugin):
+                    if hasattr(instance, "initialize") and callable(
+                        instance.initialize
+                    ):
+                        await instance.initialize()
+                    resource_registry.add(name, instance)
+                elif issubclass(cls, ToolPlugin):
+                    tool_registry.add(name, instance)
+                else:
+                    for stage in getattr(cls, "stages", []):
+                        plugin_registry.register_plugin_for_stage(instance, stage, name)
+                logger.info("Registered %s", name)
+                return True
+
             for section in ["resources", "tools", "adapters", "prompts"]:
                 for name, conf in cfg.get("plugins", {}).get(section, {}).items():
-                    result = await update_plugin_configuration(
-                        plugin_registry, name, conf
-                    )
-                    if result.success:
-                        logger.info("Updated %s", name)
-                    else:
-                        logger.error(
-                            "Failed to update %s: %s", name, result.error_message
+                    if plugin_exists(section, name):
+                        result = await update_plugin_configuration(
+                            plugin_registry, name, conf
                         )
-                        success = False
+                        if result.success:
+                            logger.info("Updated %s", name)
+                        else:
+                            logger.error(
+                                "Failed to update %s: %s", name, result.error_message
+                            )
+                            success = False
+                    else:
+                        ok = await register_new_plugin(section, name, conf)
+                        if not ok:
+                            success = False
+
             return 0 if success else 1
 
         return asyncio.run(_run())
