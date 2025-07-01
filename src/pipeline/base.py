@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List
 
 from .context import PluginContext
-from .exceptions import CircuitBreakerTripped, PluginExecutionError
+from .exceptions import CircuitBreakerTripped, PluginError, PluginExecutionError
 from .stages import PipelineStage
 
 
@@ -55,6 +55,10 @@ class BasePlugin(ABC):
             context.record_plugin_duration(self.__class__.__name__, time.time() - start)
             self._failure_count = 0
             return result
+        except PluginError:
+            self._failure_count += 1
+            self._last_failure = time.time()
+            raise
         except Exception as exc:  # noqa: BLE001 - converted to PluginExecutionError
             if self.logger:
                 self.logger.error(

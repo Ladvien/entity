@@ -18,7 +18,7 @@ if TYPE_CHECKING:  # pragma: no cover - used for type hints only
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .initializer import ClassRegistry
 
-from .exceptions import CircuitBreakerTripped, PluginExecutionError
+from .exceptions import CircuitBreakerTripped, PluginError, PluginExecutionError
 from .logging import get_logger
 from .observability.utils import execute_with_observability
 from .stages import PipelineStage
@@ -101,6 +101,10 @@ class BasePlugin(ABC):
             )
             self._failure_count = 0
             return result
+        except PluginError:
+            self._failure_count += 1
+            self._last_failure = time.time()
+            raise
         except Exception as exc:  # noqa: BLE001 - convert to PluginExecutionError
             self._failure_count += 1
             self._last_failure = time.time()
