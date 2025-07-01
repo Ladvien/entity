@@ -8,7 +8,8 @@
 ## Examples
 
 - [`vector_memory_pipeline.py`](../../examples/vector_memory_pipeline.py)
-  demonstrates using Postgres, an Ollama LLM, and simple vector memory.
+  demonstrates using Postgres, an LLM with the Ollama provider, and simple
+  vector memory.
 
 ## Runtime Configuration Reload
 
