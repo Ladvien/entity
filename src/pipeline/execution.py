@@ -7,7 +7,10 @@ from typing import Any, Dict
 from registry import SystemRegistries
 
 from .context import PluginContext
+<<<<<<< HEAD
 from .errors import create_static_error_response
+=======
+>>>>>>> 4dbf3a92c50743e827fc62272eb07044f1bb4653
 from .exceptions import CircuitBreakerTripped, PluginExecutionError
 from .manager import PipelineManager
 from .stages import PipelineStage
