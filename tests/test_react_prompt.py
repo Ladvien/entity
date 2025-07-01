@@ -39,6 +39,7 @@ def make_context(llm: FakeLLM):
     tools = ToolRegistry()
     plugins = PluginRegistry()
     resources.add("ollama", llm)
+    resources.add("llm", llm)
 
     calculator = CalculatorTool()
     tools.add("calculator_tool", calculator)
