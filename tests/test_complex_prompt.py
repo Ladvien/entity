@@ -16,7 +16,7 @@ from pipeline.plugins.prompts.complex_prompt import ComplexPrompt
 
 
 class FakeLLM:
-    name = "ollama"
+    name = "llm"
 
     def __init__(self):
         self.generate = AsyncMock(return_value="done")
@@ -46,7 +46,6 @@ def make_context(llm, db, memory):
         metrics=MetricsCollector(),
     )
     resources = ResourceRegistry()
-    resources.add("ollama", llm)
     resources.add("llm", llm)
     resources.add("database", db)
     resources.add("vector_memory", memory)
