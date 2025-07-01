@@ -6,6 +6,8 @@ from pathlib import Path
 import pytest
 
 from config.environment import load_env
+
+# isort: off
 from pipeline import (
     ConversationEntry,
     MetricsCollector,
@@ -16,6 +18,8 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
+
+# isort: on
 from pipeline.plugins.prompts.complex_prompt import ComplexPrompt
 from pipeline.plugins.resources.echo_llm import EchoLLMResource
 from pipeline.plugins.resources.postgres import PostgresResource

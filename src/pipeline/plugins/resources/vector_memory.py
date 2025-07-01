@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import asyncpg
 from pgvector import Vector
@@ -8,10 +8,10 @@ from pgvector.asyncpg import register_vector
 
 from pipeline.stages import PipelineStage
 
-from .postgres import ConnectionPoolResource
+from .database import DatabaseResource
 
 
-class VectorMemoryResource(ConnectionPoolResource):
+class VectorMemoryResource(DatabaseResource):
     """Postgres-backed vector memory using pgvector.
 
     Demonstrates **Preserve All Power (7)** by enabling advanced storage
@@ -23,19 +23,23 @@ class VectorMemoryResource(ConnectionPoolResource):
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
-        self._pool: Optional[asyncpg.Pool] = None
         self._table = self.config.get("table", "vector_memory")
         self._dim = int(self.config.get("dimensions", 3))
 
-    async def initialize(self) -> None:
-        self._pool = await asyncpg.create_pool(
+    async def _create_pool(self) -> asyncpg.Pool:
+        pool = await asyncpg.create_pool(
             database=str(self.config.get("name")),
             host=str(self.config.get("host", "localhost")),
             port=int(self.config.get("port", 5432)),
             user=str(self.config.get("username")),
             password=str(self.config.get("password")),
         )
-        await register_vector(self._pool)
+        await register_vector(pool)
+        return pool
+
+    async def initialize(self) -> None:
+        await super().initialize()
+        assert self._pool is not None
         await self._pool.execute("CREATE EXTENSION IF NOT EXISTS vector")
         await self._pool.execute(
             f"""
