@@ -16,7 +16,7 @@ from pipeline.plugins.tools.calculator_tool import CalculatorTool
 
 
 class FakeLLM:
-    name = "ollama"
+    name = "llm"
 
     def __init__(self, responses):
         self._responses = list(responses)
@@ -38,7 +38,7 @@ def make_context(llm: FakeLLM):
     resources = ResourceRegistry()
     tools = ToolRegistry()
     plugins = PluginRegistry()
-    resources.add("ollama", llm)
+    resources.add("llm", llm)
 
     calculator = CalculatorTool()
     tools.add("calculator_tool", calculator)
