@@ -13,7 +13,7 @@ from typing import Any, Callable, Dict, Optional, cast
 
 from .adapters.http import HTTPAdapter
 from .adapters.websocket import WebSocketAdapter
-from .pipeline import execute_pipeline
+from .execution import execute_pipeline
 from .plugins import BasePlugin
 from .plugins.classifier import PluginAutoClassifier
 from .registries import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
