@@ -35,3 +35,6 @@ Could you walk me through the updates to the architecture document?  Don't make 
 
 # Next Steps
 Please review the README.md for architectural notes and continue developing this agentic Python framework.  Create tasks in small units that do not overlap for maximum concurrent development without merge conflicts.
+
+# Abstract Resources
+Can we review this code.  I'd rather have general resources like "DatabaseResource" that abstract out "PostgresDatabaseResource."  Then, the user only has to worry about learning one interface, but can switch out the backend as much as they'd like.
