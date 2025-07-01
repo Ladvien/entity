@@ -5,7 +5,7 @@ from typing import Any, Dict
 import httpx
 
 from pipeline.plugins import ValidationResult
-from pipeline.plugins.resources.llm_resource import LLMResource
+from pipeline.resources.llm import LLMResource
 
 
 class OllamaLLMResource(LLMResource):
