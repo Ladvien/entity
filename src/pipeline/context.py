@@ -5,11 +5,14 @@ from __future__ import annotations
 import asyncio
 from copy import deepcopy
 from datetime import datetime
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Callable, Dict, List, Optional, cast
 
-from .registries import SystemRegistries
+from registry import SystemRegistries
+
+from .metrics import MetricsCollector
 from .stages import PipelineStage
-from .state import ConversationEntry, FailureInfo, LLMResponse, PipelineState, ToolCall
+from .state import (ConversationEntry, FailureInfo, LLMResponse, PipelineState,
+                    ToolCall)
 
 
 class PluginContext:
@@ -27,26 +30,20 @@ class PluginContext:
     def _state(self) -> PipelineState:  # pragma: no cover - defensive measure
         raise AttributeError("Direct PipelineState access is not allowed")
 
-    def _get_state(self) -> PipelineState:
-        """Return the underlying :class:`PipelineState`."""
-        return self.__state
-
     # --- Metrics helpers -------------------------------------------------
     def record_plugin_duration(self, plugin: str, duration: float) -> None:
         """Record how long ``plugin`` took to run."""
-        self._get_state().metrics.record_plugin_duration(
+        self.__state.metrics.record_plugin_duration(
             plugin, str(self.current_stage), duration
         )
 
     def record_llm_call(self, plugin: str, purpose: str) -> None:
         """Increment LLM call count for ``plugin`` and ``purpose``."""
-        self._get_state().metrics.record_llm_call(
-            plugin, str(self.current_stage), purpose
-        )
+        self.__state.metrics.record_llm_call(plugin, str(self.current_stage), purpose)
 
     def record_llm_duration(self, plugin: str, duration: float) -> None:
         """Record the time spent waiting on the LLM."""
-        self._get_state().metrics.record_llm_duration(
+        self.__state.metrics.record_llm_duration(
             plugin, str(self.current_stage), duration
         )
 
@@ -54,7 +51,7 @@ class PluginContext:
         self, tool_name: str, result_key: str, source: str
     ) -> None:
         """Log execution of ``tool_name`` for observability."""
-        self._get_state().metrics.record_tool_execution(
+        self.__state.metrics.record_tool_execution(
             tool_name,
             str(self.current_stage),
             self.pipeline_id,
@@ -64,21 +61,26 @@ class PluginContext:
 
     def record_tool_error(self, tool_name: str, error: str) -> None:
         """Record a tool failure for monitoring."""
-        self._get_state().metrics.record_tool_error(
+        self.__state.metrics.record_tool_error(
             tool_name, str(self.current_stage), self.pipeline_id, error
         )
 
     # --------------------------------------------------------------------
 
     @property
+    def metrics(self) -> MetricsCollector:
+        """Return the metrics collector for this pipeline."""
+        return self.__state.metrics
+
+    @property
     def pipeline_id(self) -> str:
         """Unique identifier for the current pipeline run."""
-        return self._get_state().pipeline_id
+        return self.__state.pipeline_id
 
     @property
     def current_stage(self) -> Optional[PipelineStage]:
         """Stage currently being executed."""
-        return self._get_state().current_stage
+        return self.__state.current_stage
 
     def get_resource(self, name: str) -> Any:
         """Return a shared resource plugin registered as ``name``."""
@@ -96,7 +98,7 @@ class PluginContext:
     @property
     def message(self) -> str:
         """Return the latest user message."""
-        for entry in reversed(self._get_state().conversation):
+        for entry in reversed(self.__state.conversation):
             if entry.role == "user":
                 return entry.content
         return ""
@@ -112,10 +114,8 @@ class PluginContext:
         if not tool:
             raise ValueError(f"Tool '{tool_name}' not found")
         if result_key is None:
-            result_key = (
-                f"{tool_name}_result_{len(self._get_state().pending_tool_calls)}"
-            )
-        self._get_state().pending_tool_calls.append(
+            result_key = f"{tool_name}_result_{len(self.__state.pending_tool_calls)}"
+        self.__state.pending_tool_calls.append(
             ToolCall(name=tool_name, params=params, result_key=result_key)
         )
         return result_key
@@ -124,7 +124,7 @@ class PluginContext:
         self, content: str, role: str, metadata: Optional[Dict[str, Any]] = None
     ) -> None:
         """Append a new conversation ``entry`` to the history."""
-        self._get_state().conversation.append(
+        self.__state.conversation.append(
             ConversationEntry(
                 content=content,
                 role=role,
@@ -137,53 +137,64 @@ class PluginContext:
         self, last_n: Optional[int] = None
     ) -> List[ConversationEntry]:
         """Return conversation history, optionally limited to ``last_n`` entries."""
-        state = self._get_state()
+        state = self.__state
         history = state.conversation if last_n is None else state.conversation[-last_n:]
         return [deepcopy(entry) for entry in history]
 
+    def replace_conversation_history(
+        self, new_history: List[ConversationEntry]
+    ) -> None:
+        """Replace entire conversation history with ``new_history``."""
+        self.__state.conversation = new_history
+
     def set_response(self, response: Any) -> None:
         """Set the pipeline's final ``response`` if not already set."""
-        state = self._get_state()
+        state = self.__state
         if state.response is not None:
             raise ValueError("Response already set")
         state.response = response
 
+    def update_response(self, updater: Callable[[Any], Any]) -> None:
+        """Update ``response`` using ``updater`` if a response exists."""
+        if self.__state.response is not None:
+            self.__state.response = updater(self.__state.response)
+
     def has_response(self) -> bool:
         """Return ``True`` if a response has been provided."""
-        return self._get_state().response is not None
+        return self.__state.response is not None
 
     def set_stage_result(self, key: str, value: Any) -> None:
         """Store intermediate ``value`` for the current stage under ``key``."""
-        state = self._get_state()
+        state = self.__state
         if key in state.stage_results:
             raise ValueError(f"Stage result '{key}' already set")
         state.stage_results[key] = value
 
     def get_stage_result(self, key: str) -> Any:
         """Retrieve a stage result stored with :meth:`set_stage_result`."""
-        if key not in self._get_state().stage_results:
+        if key not in self.__state.stage_results:
             raise KeyError(key)
-        return self._get_state().stage_results[key]
+        return self.__state.stage_results[key]
 
     def has_stage_result(self, key: str) -> bool:
         """Return ``True`` if ``key`` exists in stage results."""
-        return key in self._get_state().stage_results
+        return key in self.__state.stage_results
 
     def get_metadata(self, key: str, default: Any = None) -> Any:
         """Return arbitrary metadata value previously stored."""
-        return self._get_state().metadata.get(key, default)
+        return self.__state.metadata.get(key, default)
 
     def set_metadata(self, key: str, value: Any) -> None:
         """Store arbitrary metadata associated with the pipeline."""
-        self._get_state().metadata[key] = value
+        self.__state.metadata[key] = value
 
     def add_failure(self, info: Any) -> None:
         """Attach failure ``info`` to the pipeline state."""
-        self._get_state().failure_info = info
+        self.__state.failure_info = info
 
     def get_failure_info(self) -> FailureInfo | None:
         """Return any failure recorded during execution."""
-        return self._get_state().failure_info
+        return self.__state.failure_info
 
 
 class SimpleContext(PluginContext):
@@ -192,7 +203,7 @@ class SimpleContext(PluginContext):
     @property
     def message(self) -> str:
         """Return the latest user message."""
-        for entry in reversed(self._get_state().conversation):
+        for entry in reversed(self.__state.conversation):
             if entry.role == "user":
                 return entry.content
         return ""
@@ -200,12 +211,12 @@ class SimpleContext(PluginContext):
     @property
     def user(self) -> str:
         """User identifier from metadata."""
-        return self._get_state().metadata.get("user", "user")
+        return self.__state.metadata.get("user", "user")
 
     @property
     def location(self) -> Optional[str]:
         """Return location metadata if available."""
-        return self._get_state().metadata.get("location")
+        return self.__state.metadata.get("location")
 
     def say(self, message: str) -> None:
         """Convenience wrapper around :meth:`set_response`."""
@@ -234,7 +245,7 @@ class SimpleContext(PluginContext):
 
     async def _wait_for_tool_result(self, result_key: str) -> Any:
         """Wait for a queued tool call to finish and return its result."""
-        state = self._get_state()
+        state = self.__state
         if result_key not in state.stage_results:
             call = next(
                 (c for c in state.pending_tool_calls if c.result_key == result_key),

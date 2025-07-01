@@ -13,10 +13,11 @@ import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from registry import SystemRegistries
+
 from ..manager import PipelineManager
 from ..pipeline import execute_pipeline
 from ..plugins import AdapterPlugin
-from ..registries import SystemRegistries
 from ..stages import PipelineStage
 
 

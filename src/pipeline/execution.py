@@ -4,11 +4,13 @@ import time
 from datetime import datetime
 from typing import Any, Dict
 
+from registry import SystemRegistries
+
 from .context import PluginContext
 from .manager import PipelineManager
-from .registries import SystemRegistries
 from .stages import PipelineStage
-from .state import ConversationEntry, FailureInfo, MetricsCollector, PipelineState
+from .state import (ConversationEntry, FailureInfo, MetricsCollector,
+                    PipelineState)
 from .tools.execution import execute_pending_tools
 
 
