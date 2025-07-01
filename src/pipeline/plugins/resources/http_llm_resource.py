@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional
 
 import httpx
 
-from pipeline.plugins import ValidationResult
+from pipeline.base_plugins import ValidationResult
 
 
 class HttpLLMResource:

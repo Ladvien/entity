@@ -3,7 +3,7 @@ from __future__ import annotations
 import ast
 from typing import Any, Dict
 
-from pipeline.plugins import ToolPlugin
+from pipeline.base_plugins import ToolPlugin
 from pipeline.stages import PipelineStage
 
 

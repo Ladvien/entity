@@ -4,7 +4,7 @@ import json
 from typing import Dict, List
 
 from pipeline.context import ConversationEntry, PluginContext
-from pipeline.plugins import PromptPlugin
+from pipeline.base_plugins import PromptPlugin
 from pipeline.stages import PipelineStage
 
 

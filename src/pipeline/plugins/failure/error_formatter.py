@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pipeline.context import PluginContext
-from pipeline.plugins import FailurePlugin
+from pipeline.base_plugins import FailurePlugin
 from pipeline.stages import PipelineStage
 
 

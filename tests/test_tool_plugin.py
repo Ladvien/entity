@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from pipeline.plugins import ToolPlugin
+from pipeline.base_plugins import ToolPlugin
 
 
 class EchoTool(ToolPlugin):

@@ -4,7 +4,7 @@ import re
 from typing import Any
 
 from pipeline.context import PluginContext
-from pipeline.plugins import PromptPlugin
+from pipeline.base_plugins import PromptPlugin
 from pipeline.stages import PipelineStage
 from pipeline.state import ConversationEntry
 

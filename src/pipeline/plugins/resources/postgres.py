@@ -7,7 +7,7 @@ from typing import Any, AsyncIterator, Dict, List, Optional
 import asyncpg
 
 from pipeline.context import ConversationEntry
-from pipeline.plugins import ResourcePlugin
+from pipeline.base_plugins import ResourcePlugin
 from pipeline.stages import PipelineStage
 
 

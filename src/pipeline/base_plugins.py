@@ -18,8 +18,7 @@ if TYPE_CHECKING:  # pragma: no cover - used for type hints only
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .initializer import ClassRegistry
 
-from .exceptions import (CircuitBreakerTripped, PluginError,
-                         PluginExecutionError)
+from .exceptions import CircuitBreakerTripped, PluginError, PluginExecutionError
 from .logging import get_logger
 from .observability.utils import execute_with_observability
 from .stages import PipelineStage
@@ -359,5 +358,4 @@ __all__ = [
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .plugins.classifier import PluginAutoClassifier
 else:  # pragma: no cover - runtime import for compatibility
-    from .plugins.classifier import \
-        PluginAutoClassifier  # type: ignore  # noqa: E402
+    from .plugins.classifier import PluginAutoClassifier  # type: ignore  # noqa: E402

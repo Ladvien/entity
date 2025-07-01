@@ -4,7 +4,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
-from pipeline.plugins import BasePlugin
+from pipeline.base_plugins import BasePlugin
 from pipeline.stages import PipelineStage
 
 

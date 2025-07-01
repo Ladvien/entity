@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from pipeline.plugins import ResourcePlugin
+from pipeline.base_plugins import ResourcePlugin
 from pipeline.stages import PipelineStage
 
 

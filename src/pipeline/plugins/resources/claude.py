@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-from pipeline.plugins import ValidationResult
+from pipeline.base_plugins import ValidationResult
 from pipeline.plugins.resources.http_llm_resource import HttpLLMResource
 from pipeline.resources.llm import LLMResource
 from pipeline.stages import PipelineStage

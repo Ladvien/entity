@@ -6,11 +6,10 @@ import asyncpg
 from pgvector import Vector
 from pgvector.asyncpg import register_vector
 
-from pipeline.plugins import ValidationResult
+from pipeline.base_plugins import ValidationResult
 from pipeline.stages import PipelineStage
 from .postgres import ConnectionPoolResource, PostgresPoolResource
 from pipeline.stages import PipelineStage
-
 
 
 class VectorMemoryResource(ConnectionPoolResource):
