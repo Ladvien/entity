@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any, Dict
 
 from .context import PluginContext
+from .exceptions import CircuitBreakerTripped, PluginExecutionError
 from .manager import PipelineManager
 from .registries import SystemRegistries
 from .stages import PipelineStage
@@ -50,11 +51,29 @@ async def execute_stage(
         context = PluginContext(state, registries)
         try:
             await plugin.execute(context)
-        except Exception as exc:
+        except CircuitBreakerTripped as exc:
             state.failure_info = FailureInfo(
                 stage=str(stage),
                 plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
-                error_type="plugin_error",
+                error_type="circuit_breaker",
+                error_message=str(exc),
+                original_exception=exc,
+            )
+            return
+        except PluginExecutionError as exc:
+            state.failure_info = FailureInfo(
+                stage=str(stage),
+                plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
+                error_type=exc.original_exception.__class__.__name__,
+                error_message=str(exc.original_exception),
+                original_exception=exc.original_exception,
+            )
+            return
+        except Exception as exc:  # noqa: BLE001
+            state.failure_info = FailureInfo(
+                stage=str(stage),
+                plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
+                error_type=exc.__class__.__name__,
                 error_message=str(exc),
                 original_exception=exc,
             )
