@@ -39,7 +39,6 @@ def make_registries():
     plugins.register_plugin_for_stage(MetricsPlugin({}), PipelineStage.DO)
     resources = ResourceRegistry()
     llm = EchoLLM()
-    resources.add("ollama", llm)
     resources.add("llm", llm)
     tools = ToolRegistry()
     tools.add("echo", EchoTool({}))

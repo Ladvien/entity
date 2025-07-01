@@ -6,6 +6,8 @@ from pipeline.context import ConversationEntry, PluginContext
 from pipeline.plugins import PromptPlugin
 from pipeline.stages import PipelineStage
 
+from ...constants import LLM_RESOURCE
+
 
 class ComplexPrompt(PromptPlugin):
     """Generate responses using DB history and vector memory.
@@ -14,7 +16,7 @@ class ComplexPrompt(PromptPlugin):
     and memory components to craft a single reply.
     """
 
-    dependencies = ["ollama", "database", "vector_memory"]
+    dependencies = [LLM_RESOURCE, "database", "vector_memory"]
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context: PluginContext) -> None:

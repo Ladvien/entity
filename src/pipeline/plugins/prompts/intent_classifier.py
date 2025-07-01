@@ -4,6 +4,8 @@ from pipeline.context import PluginContext
 from pipeline.plugins import PromptPlugin, ValidationResult
 from pipeline.stages import PipelineStage
 
+from ...constants import LLM_RESOURCE
+
 
 class IntentClassifierPrompt(PromptPlugin):
     """Classify user intent using an LLM.
@@ -12,7 +14,7 @@ class IntentClassifierPrompt(PromptPlugin):
     while maintaining observability.
     """
 
-    dependencies = ["ollama"]
+    dependencies = [LLM_RESOURCE]
     stages = [PipelineStage.THINK]
 
     @classmethod

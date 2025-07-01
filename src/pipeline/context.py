@@ -264,9 +264,11 @@ class SimpleContext(PluginContext):
 
     async def ask_llm(self, prompt: str) -> str:
         """Send ``prompt`` to the configured LLM and return its reply."""
-        llm = self.get_resource("ollama")
+        from .constants import LLM_RESOURCE
+
+        llm = self.get_resource(LLM_RESOURCE)
         if llm is None:
-            raise RuntimeError("LLM resource 'ollama' not available")
+            raise RuntimeError(f"LLM resource '{LLM_RESOURCE}' not available")
 
         self.record_llm_call("SimpleContext", "ask_llm")
         start = asyncio.get_event_loop().time()

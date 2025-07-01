@@ -6,6 +6,8 @@ from pipeline.context import ConversationEntry, PluginContext
 from pipeline.plugins import PromptPlugin
 from pipeline.stages import PipelineStage
 
+from ...constants import LLM_RESOURCE
+
 
 class ChainOfThoughtPrompt(PromptPlugin):
     """Incremental reasoning via chain-of-thought.
@@ -14,7 +16,7 @@ class ChainOfThoughtPrompt(PromptPlugin):
     within a single plugin execution.
     """
 
-    dependencies = ["ollama"]
+    dependencies = [LLM_RESOURCE]
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context: PluginContext) -> None:

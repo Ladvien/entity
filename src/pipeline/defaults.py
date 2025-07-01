@@ -2,10 +2,12 @@ from __future__ import annotations
 
 """Default configuration values and helpers."""
 
-from typing import Any, Dict, Optional
 import os
+from typing import Any, Dict, Optional
+
 import httpx
 
+from .constants import LLM_RESOURCE
 
 DEFAULT_LOGGING_CONFIG: Dict[str, Any] = {
     "type": "pipeline.plugins.resources.structured_logging:StructuredLogging",
@@ -15,7 +17,7 @@ DEFAULT_LOGGING_CONFIG: Dict[str, Any] = {
 }
 
 DEFAULT_RESOURCES: Dict[str, Dict[str, Any]] = {
-    "ollama": {"type": "pipeline.plugins.resources.echo_llm:EchoLLMResource"},
+    LLM_RESOURCE: {"type": "pipeline.plugins.resources.echo_llm:EchoLLMResource"},
     "memory": {
         "type": "pipeline.plugins.resources.memory_resource:SimpleMemoryResource"
     },

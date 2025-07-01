@@ -6,6 +6,8 @@ from pipeline.context import ConversationEntry, PluginContext
 from pipeline.plugins import PromptPlugin
 from pipeline.stages import PipelineStage
 
+from ...constants import LLM_RESOURCE
+
 
 class ReActPrompt(PromptPlugin):
     """Reasoning and acting in a loop using an LLM.
@@ -14,7 +16,7 @@ class ReActPrompt(PromptPlugin):
     and **Plugin-Level Iteration (26)** in tandem.
     """
 
-    dependencies = ["ollama"]
+    dependencies = [LLM_RESOURCE]
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context: PluginContext) -> None:

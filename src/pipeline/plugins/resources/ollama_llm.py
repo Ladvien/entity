@@ -7,6 +7,8 @@ import httpx
 from pipeline.plugins import ResourcePlugin, ValidationResult
 from pipeline.stages import PipelineStage
 
+from ...constants import LLM_RESOURCE
+
 
 class OllamaLLMResource(ResourcePlugin):
     """LLM resource backed by a running Ollama server.
@@ -16,7 +18,7 @@ class OllamaLLMResource(ResourcePlugin):
     """
 
     stages = [PipelineStage.PARSE]
-    name = "ollama"
+    name = LLM_RESOURCE
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)

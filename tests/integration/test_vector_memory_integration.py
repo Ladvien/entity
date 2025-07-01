@@ -72,7 +72,6 @@ def test_vector_memory_integration():
         resources = ResourceRegistry()
         resources.add("database", db)
         resources.add("vector_memory", vm)
-        resources.add("ollama", llm)
         resources.add("llm", llm)
         registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
         state = PipelineState(
