@@ -40,6 +40,7 @@ async def run_generate():
                 "model": "claude-3",
                 "messages": [{"role": "user", "content": "hello"}],
             },
+            params=None,
         )
     return result
 

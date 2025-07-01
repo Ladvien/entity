@@ -30,6 +30,7 @@ async def run_generate():
             "https://api.openai.com/v1/chat/completions",
             headers={"Authorization": "Bearer key"},
             json={"model": "gpt-4", "messages": [{"role": "user", "content": "hello"}]},
+            params=None,
         )
     return result
 

@@ -11,7 +11,10 @@ def test_fastapi_wrapper():
     app = create_app(agent)
 
     async def _run():
-        async with httpx.AsyncClient(app=app, base_url="http://test") as client:
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(
+            transport=transport, base_url="http://test"
+        ) as client:
             resp = await client.post("/", json={"message": "ping"})
             assert resp.status_code == 200
             assert resp.json().get("message")
