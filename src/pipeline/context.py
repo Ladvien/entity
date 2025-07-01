@@ -84,6 +84,15 @@ class PluginContext:
         """Return a shared resource plugin registered as ``name``."""
         return self._registries.resources.get(name)
 
+    def get_llm(self) -> Any | None:
+        """Return the configured LLM resource.
+
+        Looks for a resource registered as ``"llm"`` first and falls back to
+        ``"ollama"`` for backward compatibility.
+        """
+        llm = self.get_resource("llm")
+        return llm if llm is not None else self.get_resource("ollama")
+
     @property
     def message(self) -> str:
         """Return the latest user message."""
@@ -264,9 +273,15 @@ class SimpleContext(PluginContext):
 
     async def ask_llm(self, prompt: str) -> str:
         """Send ``prompt`` to the configured LLM and return its reply."""
-        llm = self.get_resource("ollama")
+<<<<<< codex/replace--ollama--with--llm--in-code
+        llm = self.get_resource("llm")
         if llm is None:
-            raise RuntimeError("LLM resource 'ollama' not available")
+            raise RuntimeError("LLM resource 'llm' not available")
+=======
+        llm = self.get_llm()
+        if llm is None:
+            raise RuntimeError("LLM resource not available")
+>>>>>> main
 
         self.record_llm_call("SimpleContext", "ask_llm")
         start = asyncio.get_event_loop().time()

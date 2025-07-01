@@ -3,7 +3,7 @@ import sys
 
 import yaml
 
-from pipeline import PipelineStage, PromptPlugin, ValidationResult
+from pipeline import PipelineStage, PromptPlugin, ToolPlugin, ValidationResult
 
 
 class ReloadPlugin(PromptPlugin):
@@ -20,7 +20,14 @@ class ReloadPlugin(PromptPlugin):
         return ValidationResult.success_result()
 
 
-def _write_config(path, value=True):
+class ReloadTool(ToolPlugin):
+    name = "echo"
+
+    async def execute_function(self, params):
+        return params.get("text", "")
+
+
+def _write_config(path, value=True, tool=False):
     cfg = {
         "plugins": {
             "prompts": {
@@ -32,6 +39,10 @@ def _write_config(path, value=True):
     }
     if value is not False:
         cfg["plugins"]["prompts"]["reload"]["value"] = value
+    if tool:
+        cfg["plugins"].setdefault("tools", {})["echo"] = {
+            "type": "tests.test_cli_reload:ReloadTool",
+        }
     path.write_text(yaml.dump(cfg))
 
 
@@ -77,3 +88,25 @@ def test_cli_reload_failure(tmp_path):
     )
     assert result.returncode != 0
     assert "Failed to update" in result.stdout
+
+
+def test_cli_reload_add_tool(tmp_path):
+    base = tmp_path / "base.yml"
+    update = tmp_path / "update.yml"
+    _write_config(base, value="one")
+    _write_config(update, value="two", tool=True)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "src/cli.py",
+            "--config",
+            str(base),
+            "reload-config",
+            str(update),
+        ],
+        text=True,
+        capture_output=True,
+    )
+    assert result.returncode == 0
+    assert "Registered echo" in result.stdout
