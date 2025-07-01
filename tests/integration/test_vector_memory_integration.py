@@ -57,14 +57,19 @@ def test_vector_memory_integration():
             await vm.initialize()
         except OSError as exc:
             pytest.skip(f"PostgreSQL not available: {exc}")
+<<<<<<< HEAD
         await db.execute(f"DROP TABLE IF EXISTS {db_cfg['history_table']}")
         await db.execute(
+=======
+        await db._pool.execute(f"DROP TABLE IF EXISTS {db_cfg['history_table']}")
+        await db._pool.execute(
+>>>>>>> 66ac501313b5b7eaa42b03d18024eecb130295bc
             f"CREATE TABLE {db_cfg['history_table']} ("
             "conversation_id text, role text, content text, "
             "metadata jsonb, timestamp timestamptz)"
         )
-        await vm._connection.execute(f"DROP TABLE IF EXISTS {vm_cfg['table']}")
-        await vm._connection.execute(
+        await vm._pool.execute(f"DROP TABLE IF EXISTS {vm_cfg['table']}")
+        await vm._pool.execute(
             f"CREATE TABLE {vm_cfg['table']} (text text, embedding vector({vm_cfg['dimensions']}))"
         )
         await vm.add_embedding("previous")
@@ -89,8 +94,13 @@ def test_vector_memory_integration():
         plugin = ComplexPrompt({"k": 1})
         await plugin.execute(ctx)
         response = state.response
+<<<<<<< HEAD
         await db.execute(f"DROP TABLE IF EXISTS {db_cfg['history_table']}")
         await vm._connection.close()
+=======
+        await db.shutdown()
+        await vm.shutdown()
+>>>>>>> 66ac501313b5b7eaa42b03d18024eecb130295bc
         return response
 
     result = asyncio.run(run())

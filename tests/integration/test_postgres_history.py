@@ -40,13 +40,19 @@ def test_save_and_load_history():
             await db.initialize()
         except OSError as exc:
             pytest.skip(f"PostgreSQL not available: {exc}")
+<<<<<<< HEAD
         await db.execute("DROP TABLE IF EXISTS test_history")
         await db.execute(
+=======
+        await resource._pool.execute("DROP TABLE IF EXISTS test_history")
+        await resource._pool.execute(
+>>>>>>> 66ac501313b5b7eaa42b03d18024eecb130295bc
             "CREATE TABLE test_history ("
             ""
             "conversation_id text, role text, content text, "
             "metadata jsonb, timestamp timestamptz)"
         )
+<<<<<<< HEAD
         state = PipelineState(
             conversation=[], pipeline_id="conv1", metrics=MetricsCollector()
         )
@@ -69,6 +75,15 @@ def test_save_and_load_history():
         )
         await db.execute("DROP TABLE IF EXISTS test_history")
         return rows
+=======
+        entries = [
+            ConversationEntry(content="hello", role="user", timestamp=datetime.now())
+        ]
+        await resource.save_history("conv1", entries)
+        loaded = await resource.load_history("conv1")
+        await resource.shutdown()
+        return loaded
+>>>>>>> 66ac501313b5b7eaa42b03d18024eecb130295bc
 
     result = asyncio.run(run())
     assert len(result) == 1
