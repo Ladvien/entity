@@ -2,6 +2,8 @@ from .echo_llm import EchoLLMResource
 from .memory_resource import SimpleMemoryResource
 from .ollama_llm import OllamaLLMResource
 from .openai import OpenAIResource
+from .gemini import GeminiResource
+from .claude import ClaudeResource
 from .postgres import PostgresResource
 from .structured_logging import StructuredLogging
 from .vector_memory import VectorMemoryResource
@@ -14,4 +16,6 @@ __all__ = [
     "PostgresResource",
     "VectorMemoryResource",
     "OpenAIResource",
+    "GeminiResource",
+    "ClaudeResource",
 ]
