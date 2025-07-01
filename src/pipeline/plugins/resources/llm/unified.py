@@ -32,14 +32,24 @@ class UnifiedLLMResource(LLMResource):
         super().__init__(config)
         provider_name = str(self.config.get("provider", "echo")).lower()
         provider_cls = self.PROVIDERS.get(provider_name, EchoProvider)
-        self._provider = provider_cls(self.config)
+        clean_config = {
+            k: v for k, v in self.config.items() if k not in {"provider", "fallback"}
+        }
+        result = provider_cls.validate_config(clean_config)
+        if not result.success:
+            raise ValueError(result.error_message)
+        self._provider = provider_cls(clean_config)
         self.aliases = ["llm", provider_name]
+
         fallback_name = str(self.config.get("fallback", "echo")).lower()
         if fallback_name == provider_name:
             self._fallback = None
         else:
             fallback_cls = self.PROVIDERS.get(fallback_name, EchoProvider)
-            self._fallback = fallback_cls(self.config)
+            fb_result = fallback_cls.validate_config(clean_config)
+            if not fb_result.success:
+                raise ValueError(fb_result.error_message)
+            self._fallback = fallback_cls(clean_config)
 
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
