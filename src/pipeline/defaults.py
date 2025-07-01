@@ -2,10 +2,10 @@ from __future__ import annotations
 
 """Default configuration values and helpers."""
 
-from typing import Any, Dict, Optional
 import os
-import httpx
+from typing import Any, Dict, Optional
 
+import httpx
 
 DEFAULT_LOGGING_CONFIG: Dict[str, Any] = {
     "type": "pipeline.plugins.resources.structured_logging:StructuredLogging",
@@ -15,7 +15,6 @@ DEFAULT_LOGGING_CONFIG: Dict[str, Any] = {
 }
 
 DEFAULT_RESOURCES: Dict[str, Dict[str, Any]] = {
-    "ollama": {"type": "pipeline.plugins.resources.echo_llm:EchoLLMResource"},
     "llm": {"type": "pipeline.plugins.resources.echo_llm:EchoLLMResource"},
     "memory": {
         "type": "pipeline.plugins.resources.memory_resource:SimpleMemoryResource"
@@ -43,8 +42,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
 }
 
 
-def discover_local_ollama() -> Optional[Dict[str, Any]]:
-    """Return configuration for a local Ollama server if available."""
+def discover_local_llm() -> Optional[Dict[str, Any]]:
+    """Return configuration for a local LLM server if available."""
     base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
     model = os.environ.get("OLLAMA_MODEL")
     try:

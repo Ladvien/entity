@@ -15,7 +15,7 @@ plugins:
       password: "${DB_PASSWORD}"
       db_schema: "public"
       history_table: "chat_history"
-    ollama:
+    llm:
       type: pipeline.plugins.resources.ollama_llm:OllamaLLMResource
       base_url: "${OLLAMA_BASE_URL}"
       model: "${OLLAMA_MODEL}"

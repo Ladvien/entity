@@ -13,7 +13,7 @@ plugins:
       name: "${DB_USERNAME}"
       username: "${DB_USERNAME}"
       password: "${DB_PASSWORD}"
-    ollama:
+    llm:
       type: pipeline.plugins.resources.ollama_llm:OllamaLLMResource
       base_url: "${OLLAMA_BASE_URL}"
       model: "${OLLAMA_MODEL}"
