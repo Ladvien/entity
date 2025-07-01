@@ -10,6 +10,27 @@
 - [`vector_memory_pipeline.py`](../../examples/pipelines/vector_memory_pipeline.py)
   demonstrates using Postgres, an LLM with the Ollama provider, and simple
   vector memory.
+- **Postgres connection pooling**
+  ```python
+  PostgresResource(
+      {
+          "host": "localhost",
+          "name": "dev_db",
+          "username": "agent",
+          "password": "",
+          "pool_min_size": 1,
+          "pool_max_size": 5,
+      }
+  )
+  ```
+- **Storage interface usage**
+  ```python
+  db = context.get_resource("database")
+  await db.save_history(
+      context.pipeline_id,
+      context.get_conversation_history(),
+  )
+  ```
 
 ## Runtime Configuration Reload
 
