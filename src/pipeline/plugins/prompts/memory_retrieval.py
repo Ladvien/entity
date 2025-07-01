@@ -4,7 +4,7 @@ from typing import List
 
 from pipeline.context import ConversationEntry, PluginContext
 from pipeline.plugins import PromptPlugin
-from pipeline.plugins.resources.memory_resource import SimpleMemoryResource
+from pipeline.resources.memory import Memory
 from pipeline.stages import PipelineStage
 
 
@@ -19,7 +19,7 @@ class MemoryRetrievalPrompt(PromptPlugin):
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context: PluginContext) -> None:
-        memory: SimpleMemoryResource = context.get_resource("memory")
+        memory: Memory = context.get_resource("memory")
         history: List[ConversationEntry] = memory.get("history", [])
         if not history:
             db = context.get_resource("database")
