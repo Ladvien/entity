@@ -4,6 +4,7 @@ import json
 from typing import Any, Dict, List, Optional
 
 import asyncpg
+from asyncpg.utils import _quote_ident
 
 from pipeline.context import ConversationEntry
 from pipeline.plugins import ResourcePlugin
@@ -26,6 +27,13 @@ class PostgresResource(ResourcePlugin):
         self._schema = self.config.get("db_schema")
         self._history_table = self.config.get("history_table")
 
+    def _qualified_history_table(self) -> str:
+        table = _quote_ident(self._history_table)
+        if self._schema:
+            schema = _quote_ident(self._schema)
+            return f"{schema}.{table}"
+        return table
+
     async def initialize(self) -> None:
         self.logger.info("Connecting to Postgres", extra={"config": self.config})
         self._connection = await asyncpg.connect(
@@ -36,9 +44,8 @@ class PostgresResource(ResourcePlugin):
             password=str(self.config.get("password")),
         )
         if self._history_table:
-            table = f"{self._schema + '.' if self._schema else ''}{self._history_table}"
-            await self._connection.execute(
-                f"""
+            table = self._qualified_history_table()
+            query = f"""
                 CREATE TABLE IF NOT EXISTS {table} (
                     conversation_id TEXT,
                     role TEXT,
@@ -46,8 +53,8 @@ class PostgresResource(ResourcePlugin):
                     metadata JSONB,
                     timestamp TIMESTAMPTZ
                 )
-                """
-            )
+            """
+            await self._connection.execute(query)
 
     async def _execute_impl(self, context) -> Any:  # pragma: no cover - no op
         return None
@@ -69,11 +76,11 @@ class PostgresResource(ResourcePlugin):
         if self._connection is None or not self._history_table:
             return
 
-        table = f"{self._schema + '.' if self._schema else ''}{self._history_table}"
+        table = self._qualified_history_table()
         for entry in history:
             query = (
                 f"INSERT INTO {table} "
-                "(conversation_id, role, content, metadata, timestamp)"  # nosec B608
+                "(conversation_id, role, content, metadata, timestamp)"
                 " VALUES ($1, $2, $3, $4, $5)"
             )
             await self._connection.execute(
@@ -91,9 +98,9 @@ class PostgresResource(ResourcePlugin):
         if self._connection is None or not self._history_table:
             return []
 
-        table = f"{self._schema + '.' if self._schema else ''}{self._history_table}"
+        table = self._qualified_history_table()
         query = (
-            f"SELECT role, content, metadata, timestamp FROM {table} "  # nosec B608
+            f"SELECT role, content, metadata, timestamp FROM {table} "
             "WHERE conversation_id=$1 ORDER BY timestamp"
         )
         rows = await self._connection.fetch(query, conversation_id)
