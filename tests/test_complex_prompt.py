@@ -47,6 +47,7 @@ def make_context(llm, db, memory):
     )
     resources = ResourceRegistry()
     resources.add("ollama", llm)
+    resources.add("llm", llm)
     resources.add("database", db)
     resources.add("vector_memory", memory)
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
