@@ -13,6 +13,13 @@ from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
 from .defaults import DEFAULT_CONFIG
 from .registries import PluginRegistry, ResourceRegistry, ToolRegistry
 
+LLM_PROVIDERS = {
+    "openai": "pipeline.plugins.resources.openai:OpenAIResource",
+    "ollama": "pipeline.plugins.resources.ollama_llm:OllamaLLMResource",
+    "gemini": "pipeline.plugins.resources.gemini:GeminiResource",
+    "claude": "pipeline.plugins.resources.claude:ClaudeResource",
+}
+
 
 class ClassRegistry:
     """Store plugin classes and configs before instantiation."""
@@ -125,6 +132,7 @@ class SystemInitializer:
         return self.config["plugins"]["prompts"][name]
 
     async def initialize(self):
+        self._apply_llm_provider()
         registry = ClassRegistry()
         dep_graph: Dict[str, List[str]] = {}
 
@@ -238,3 +246,12 @@ class SystemInitializer:
                 raise EnvironmentError(f"Required environment variable {key} not found")
             return value
         return config
+
+    def _apply_llm_provider(self) -> None:
+        resources = self.config.get("plugins", {}).get("resources", {})
+        llm_cfg = resources.get("llm")
+        if llm_cfg and "provider" in llm_cfg and "type" not in llm_cfg:
+            provider = str(llm_cfg["provider"]).lower()
+            if provider not in LLM_PROVIDERS:
+                raise ValueError(f"Unknown LLM provider '{provider}'")
+            llm_cfg["type"] = LLM_PROVIDERS[provider]

@@ -1,6 +1,13 @@
 import asyncio
 from unittest.mock import AsyncMock, patch
 
+from pipeline import (
+    MetricsCollector,
+    PipelineState,
+    SimpleContext,
+    SystemInitializer,
+    SystemRegistries,
+)
 from pipeline.plugins.resources.claude import ClaudeResource
 
 
@@ -39,3 +46,23 @@ async def run_generate():
 
 def test_generate_sends_prompt_and_returns_text():
     assert asyncio.run(run_generate()) == "hi"
+
+
+def test_context_get_llm_with_provider():
+    cfg = {
+        "plugins": {
+            "resources": {
+                "llm": {
+                    "provider": "claude",
+                    "api_key": "key",
+                    "model": "claude-3",
+                    "base_url": "https://api.anthropic.com",
+                }
+            }
+        }
+    }
+    initializer = SystemInitializer.from_dict(cfg)
+    plugin_reg, resource_reg, tool_reg = asyncio.run(initializer.initialize())
+    state = PipelineState(conversation=[], pipeline_id="1", metrics=MetricsCollector())
+    ctx = SimpleContext(state, SystemRegistries(resource_reg, tool_reg, plugin_reg))
+    assert isinstance(ctx.get_llm(), ClaudeResource)
