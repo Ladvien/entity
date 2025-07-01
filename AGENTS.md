@@ -138,7 +138,7 @@ Plugins interact through a controlled context interface:
 
 ```python
 # Resource access
-llm = context.get_resource("ollama")
+llm = context.get_llm()
 db = context.get_resource("database")
 
 # Tool execution (immediate)

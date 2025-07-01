@@ -50,7 +50,7 @@ class ComplexPrompt(PromptPlugin):
     async def _execute_impl(self, context: PluginContext) -> None:
         memory: VectorMemoryResource = context.get_resource("vector_memory")
         memory.add("greeting", [1.0, 0.0, 0.0])
-        llm = context.get_resource("ollama")
+        llm = context.get_llm()
         response = await llm.generate("Respond to the user using stored context.")
         context.add_conversation_entry(response, role="assistant")
 
