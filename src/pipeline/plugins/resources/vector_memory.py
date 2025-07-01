@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Dict, List, Optional
 
 import asyncpg
-from asyncpg.utils import _quote_ident
 from pgvector import Vector
 from pgvector.asyncpg import register_vector
 
@@ -28,9 +27,6 @@ class VectorMemoryResource(ConnectionPoolResource):
         self._table = self.config.get("table", "vector_memory")
         self._dim = int(self.config.get("dimensions", 3))
 
-    def _quoted_table(self) -> str:
-        return _quote_ident(self._table)
-
     async def initialize(self) -> None:
         self._pool = await asyncpg.create_pool(
             database=str(self.config.get("name")),
@@ -39,24 +35,16 @@ class VectorMemoryResource(ConnectionPoolResource):
             user=str(self.config.get("username")),
             password=str(self.config.get("password")),
         )
-<<<<<<< HEAD
-        await register_vector(self._connection)
-        await self._connection.execute("CREATE EXTENSION IF NOT EXISTS vector")
-        table = self._quoted_table()
-        query = f"""
-            CREATE TABLE IF NOT EXISTS {table} (
-=======
         await register_vector(self._pool)
         await self._pool.execute("CREATE EXTENSION IF NOT EXISTS vector")
         await self._pool.execute(
             f"""
             CREATE TABLE IF NOT EXISTS {self._table} (
->>>>>>> 66ac501313b5b7eaa42b03d18024eecb130295bc
                 text TEXT,
                 embedding VECTOR({self._dim})
             )
-        """
-        await self._connection.execute(query)
+            """
+        )
 
     async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
         return None
@@ -71,14 +59,8 @@ class VectorMemoryResource(ConnectionPoolResource):
         if self._pool is None:
             raise RuntimeError("Resource not initialized")
         embedding = Vector(self._embed(text))
-<<<<<<< HEAD
-        table = self._quoted_table()
-        await self._connection.execute(
-            f"INSERT INTO {table} (text, embedding) VALUES ($1, $2)",
-=======
         await self._pool.execute(
             f"INSERT INTO {self._table} (text, embedding) VALUES ($1, $2)",  # nosec B608
->>>>>>> 66ac501313b5b7eaa42b03d18024eecb130295bc
             text,
             embedding,
         )
@@ -87,14 +69,8 @@ class VectorMemoryResource(ConnectionPoolResource):
         if self._pool is None:
             return []
         embedding = Vector(self._embed(text))
-<<<<<<< HEAD
-        table = self._quoted_table()
-        rows = await self._connection.fetch(
-            f"SELECT text FROM {table} ORDER BY embedding <-> $1 LIMIT $2",
-=======
         rows = await self._pool.fetch(
             f"SELECT text FROM {self._table} ORDER BY embedding <-> $1 LIMIT $2",  # nosec B608
->>>>>>> 66ac501313b5b7eaa42b03d18024eecb130295bc
             embedding,
             k,
         )

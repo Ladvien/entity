@@ -91,20 +91,11 @@ class BasePlugin(ABC):
         async def run() -> Any:
             return await self._execute_impl(context)
 
-<<<<<<< HEAD
-        return await execute_with_observability(
-            run,
-            logger=self.logger,
-            metrics=context.metrics,
-            plugin=self.__class__.__name__,
-            stage=str(context.current_stage),
-        )
-=======
         try:
             result = await execute_with_observability(
                 run,
                 logger=self.logger,
-                metrics=context._get_state().metrics,
+                metrics=context.metrics,
                 plugin=self.__class__.__name__,
                 stage=str(context.current_stage),
             )
@@ -114,7 +105,6 @@ class BasePlugin(ABC):
             self._failure_count += 1
             self._last_failure = time.time()
             raise PluginExecutionError(self.__class__.__name__, exc) from exc
->>>>>>> 687b80743a969fc60f52facd6803c0968786989e
 
     @abstractmethod
     async def _execute_impl(self, context: "PluginContext"):
