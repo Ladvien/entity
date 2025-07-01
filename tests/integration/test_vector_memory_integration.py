@@ -6,16 +6,9 @@ from pathlib import Path
 import pytest
 
 from config.environment import load_env
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginContext, PluginRegistry, ResourceRegistry,
+                      SystemRegistries, ToolRegistry)
 from pipeline.plugins.prompts.complex_prompt import ComplexPrompt
 from pipeline.plugins.resources.echo_llm import EchoLLMResource
 from pipeline.plugins.resources.postgres import PostgresResource
@@ -72,7 +65,7 @@ def test_vector_memory_integration():
         resources = ResourceRegistry()
         resources.add("database", db)
         resources.add("vector_memory", vm)
-        resources.add("ollama", llm)
+        resources.add("llm", llm)
         registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
         state = PipelineState(
             conversation=[

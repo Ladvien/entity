@@ -14,7 +14,7 @@ class ChainOfThoughtPrompt(PromptPlugin):
     within a single plugin execution.
     """
 
-    dependencies = ["ollama"]
+    dependencies = ["llm"]
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context: PluginContext) -> None:

@@ -1,21 +1,14 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginContext, PluginRegistry, ResourceRegistry,
+                      SystemRegistries, ToolRegistry)
 from pipeline.plugins.prompts.chain_of_thought import ChainOfThoughtPrompt
 
 
 class FakeLLM:
-    name = "ollama"
+    name = "llm"
 
     def __init__(self, responses):
         self._responses = list(responses)
@@ -42,7 +35,7 @@ def make_context(llm: FakeLLM):
     resources = ResourceRegistry()
     tools = ToolRegistry()
     plugins = PluginRegistry()
-    resources.add("ollama", llm)
+    resources.add("llm", llm)
     tools.add("analysis_tool", DummyTool())
     registries = SystemRegistries(resources, tools, plugins)
     return state, PluginContext(state, registries)

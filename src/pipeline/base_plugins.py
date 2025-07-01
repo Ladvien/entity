@@ -90,9 +90,9 @@ class BasePlugin(ABC):
     ) -> "LLMResponse":
         from .context import LLMResponse
 
-        llm = context.get_resource("ollama")
+        llm = context.get_resource("llm")
         if llm is None:
-            raise RuntimeError("LLM resource 'ollama' not available")
+            raise RuntimeError("LLM resource 'llm' not available")
 
         context.record_llm_call(self.__class__.__name__, purpose)
 
@@ -314,4 +314,5 @@ __all__ = [
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .plugins.classifier import PluginAutoClassifier
 else:  # pragma: no cover - runtime import for compatibility
-    from .plugins.classifier import PluginAutoClassifier  # type: ignore  # noqa: E402
+    from .plugins.classifier import \
+        PluginAutoClassifier  # type: ignore  # noqa: E402

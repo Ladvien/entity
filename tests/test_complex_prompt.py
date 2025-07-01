@@ -2,21 +2,14 @@ import asyncio
 from datetime import datetime
 from unittest.mock import AsyncMock
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginContext, PluginRegistry, ResourceRegistry,
+                      SystemRegistries, ToolRegistry)
 from pipeline.plugins.prompts.complex_prompt import ComplexPrompt
 
 
 class FakeLLM:
-    name = "ollama"
+    name = "llm"
 
     def __init__(self):
         self.generate = AsyncMock(return_value="done")
@@ -46,7 +39,7 @@ def make_context(llm, db, memory):
         metrics=MetricsCollector(),
     )
     resources = ResourceRegistry()
-    resources.add("ollama", llm)
+    resources.add("llm", llm)
     resources.add("database", db)
     resources.add("vector_memory", memory)
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())

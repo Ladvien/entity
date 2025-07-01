@@ -12,7 +12,7 @@ class IntentClassifierPrompt(PromptPlugin):
     while maintaining observability.
     """
 
-    dependencies = ["ollama"]
+    dependencies = ["llm"]
     stages = [PipelineStage.THINK]
 
     @classmethod

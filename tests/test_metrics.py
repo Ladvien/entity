@@ -1,16 +1,8 @@
 import asyncio
 
-from pipeline import (
-    LLMResponse,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolPlugin,
-    ToolRegistry,
-    execute_pipeline,
-)
+from pipeline import (LLMResponse, PipelineStage, PluginRegistry, PromptPlugin,
+                      ResourceRegistry, SystemRegistries, ToolPlugin,
+                      ToolRegistry, execute_pipeline)
 
 
 class EchoLLM:
@@ -38,7 +30,7 @@ def make_registries():
     plugins = PluginRegistry()
     plugins.register_plugin_for_stage(MetricsPlugin({}), PipelineStage.DO)
     resources = ResourceRegistry()
-    resources.add("ollama", EchoLLM())
+    resources.add("llm", EchoLLM())
     tools = ToolRegistry()
     tools.add("echo", EchoTool({}))
     return SystemRegistries(resources, tools, plugins)
