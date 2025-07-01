@@ -16,6 +16,22 @@ The framework's core value is **making agent behavior adjustable** without code 
 
 **Example**: Transform a basic Q&A agent into a research assistant by adding memory plugins, search tools, and citation formatting - all through configuration changes.
 
+### Module Structure
+
+The codebase now consolidates the core engine under `src/pipeline`. This module
+contains the context system, execution logic and shared abstractions. Plugins
+are located in `src/pipeline/plugins` and grouped by type:
+
+- `resources` for databases, LLM providers and storage backends
+- `tools` for user-facing functions
+- `prompts` for reasoning strategies
+- `adapters` for input/output interfaces
+- `failure` for error formatting and logging
+
+Common interfaces such as `LLM` live in `src/pipeline/resources`. Storage
+resources optionally expose `save_history` and `load_history` so plugins can
+persist conversations independently of the concrete backend.
+
 ## 🏗️ Core Architecture
 
 ### Pipeline Execution Model
@@ -226,6 +242,8 @@ The framework maintains a sophisticated five-layer plugin architecture designed 
 
 #### **Resource Plugins** (Infrastructure - Enables Agent Function)
 - **Database**: PostgreSQL, SQLite connections
+- **Connection Pool**: `PostgresConnectionPool` shares asyncpg connections
+- **Conversation History**: Prompt plugin that persists chats
 - **LLM**: Ollama, OpenAI, Claude servers  
 - **Semantic Memory**: Vector databases, Redis cache
 - **Storage**: File systems, cloud storage

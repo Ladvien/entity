@@ -13,8 +13,6 @@ plugins:
       name: "${DB_USERNAME}"
       username: "${DB_USERNAME}"
       password: "${DB_PASSWORD}"
-      db_schema: "public"
-      history_table: "chat_history"
     llm:
       provider: ollama
       base_url: "${OLLAMA_BASE_URL}"
@@ -46,6 +44,10 @@ plugins:
       type: pipeline.plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
       enable_reasoning: true
       max_steps: 5
+    conversation_history:
+      type: pipeline.plugins.prompts.conversation_history:ConversationHistory
+      db_schema: public
+      history_table: chat_history
     memory_retrieval:
       type: pipeline.plugins.prompts.memory_retrieval:MemoryRetrievalPrompt
       max_context_length: 4000

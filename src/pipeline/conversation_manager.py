@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from typing import Any, Dict, cast
 
+from registry import SystemRegistries
+
 from .manager import PipelineManager
 from .pipeline import execute_pipeline
-from .registries import SystemRegistries
 
 
 class ConversationManager:

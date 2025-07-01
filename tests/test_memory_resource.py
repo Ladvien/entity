@@ -10,6 +10,7 @@ from pipeline import (
     execute_pipeline,
 )
 from pipeline.plugins.resources.memory_resource import SimpleMemoryResource
+from pipeline.resources.memory import Memory
 
 
 class IncrementPlugin(PromptPlugin):
@@ -17,7 +18,7 @@ class IncrementPlugin(PromptPlugin):
     dependencies = ["memory"]
 
     async def _execute_impl(self, context):
-        memory = context.get_resource("memory")
+        memory: Memory = context.get_resource("memory")
         count = memory.get("count", 0) + 1
         memory.set("count", count)
         context.set_response(count)

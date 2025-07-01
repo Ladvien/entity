@@ -10,7 +10,7 @@ from pipeline import (
     ToolRegistry,
     execute_pipeline,
 )
-from pipeline.pipeline import create_static_error_response
+from pipeline.errors import create_static_error_response
 from pipeline.plugins.failure.basic_logger import BasicLogger
 
 

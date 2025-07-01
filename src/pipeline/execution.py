@@ -4,9 +4,12 @@ import time
 from datetime import datetime
 from typing import Any, Dict
 
+from registry import SystemRegistries
+
 from .context import PluginContext
+from .errors import create_static_error_response
+from .exceptions import CircuitBreakerTripped, PluginExecutionError
 from .manager import PipelineManager
-from .registries import SystemRegistries
 from .stages import PipelineStage
 from .state import ConversationEntry, FailureInfo, MetricsCollector, PipelineState
 from .tools.execution import execute_pending_tools
@@ -25,22 +28,6 @@ def create_default_response(message: str, pipeline_id: str) -> Dict[str, Any]:
     }
 
 
-STATIC_ERROR_RESPONSE = {
-    "error": "System error occurred",
-    "message": "An unexpected error prevented processing your request.",
-    "error_id": None,
-    "timestamp": None,
-    "type": "static_fallback",
-}
-
-
-def create_static_error_response(pipeline_id: str) -> Dict[str, Any]:
-    response = STATIC_ERROR_RESPONSE.copy()
-    response["error_id"] = pipeline_id
-    response["timestamp"] = datetime.now().isoformat()
-    return response
-
-
 async def execute_stage(
     stage: PipelineStage, state: PipelineState, registries: SystemRegistries
 ) -> None:
@@ -50,11 +37,29 @@ async def execute_stage(
         context = PluginContext(state, registries)
         try:
             await plugin.execute(context)
-        except Exception as exc:
+        except CircuitBreakerTripped as exc:
             state.failure_info = FailureInfo(
                 stage=str(stage),
                 plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
-                error_type="plugin_error",
+                error_type="circuit_breaker",
+                error_message=str(exc),
+                original_exception=exc,
+            )
+            return
+        except PluginExecutionError as exc:
+            state.failure_info = FailureInfo(
+                stage=str(stage),
+                plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
+                error_type=exc.original_exception.__class__.__name__,
+                error_message=str(exc.original_exception),
+                original_exception=exc.original_exception,
+            )
+            return
+        except Exception as exc:  # noqa: BLE001
+            state.failure_info = FailureInfo(
+                stage=str(stage),
+                plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
+                error_type=exc.__class__.__name__,
                 error_message=str(exc),
                 original_exception=exc,
             )

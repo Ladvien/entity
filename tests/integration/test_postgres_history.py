@@ -29,8 +29,8 @@ def test_save_and_load_history():
             await resource.initialize()
         except OSError as exc:
             pytest.skip(f"PostgreSQL not available: {exc}")
-        await resource._connection.execute("DROP TABLE IF EXISTS test_history")
-        await resource._connection.execute(
+        await resource._pool.execute("DROP TABLE IF EXISTS test_history")
+        await resource._pool.execute(
             "CREATE TABLE test_history ("
             "conversation_id text, role text, content text, "
             "metadata jsonb, timestamp timestamptz)"
@@ -40,7 +40,7 @@ def test_save_and_load_history():
         ]
         await resource.save_history("conv1", entries)
         loaded = await resource.load_history("conv1")
-        await resource._connection.close()
+        await resource.shutdown()
         return loaded
 
     history = asyncio.run(run())

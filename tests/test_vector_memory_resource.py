@@ -19,9 +19,13 @@ async def init_resource():
         "username": os.environ["DB_USERNAME"],
         "password": os.environ.get("DB_PASSWORD", ""),
     }
-    conn = AsyncMock()
+    pool = AsyncMock()
+    pool.execute = AsyncMock()
+    pool.fetch = AsyncMock()
     with (
-        patch("asyncpg.connect", new=AsyncMock(return_value=conn)) as mock_connect,
+        patch(
+            "asyncpg.create_pool", new=AsyncMock(return_value=pool)
+        ) as mock_create_pool,
         patch(
             "pipeline.plugins.resources.vector_memory.register_vector",
             new=AsyncMock(),
@@ -29,23 +33,23 @@ async def init_resource():
     ):
         plugin = VectorMemoryResource(cfg)
         await plugin.initialize()
-        mock_connect.assert_awaited_with(
+        mock_create_pool.assert_awaited_with(
             database="db",
             host=os.environ["DB_HOST"],
             port=5432,
             user=os.environ["DB_USERNAME"],
             password=os.environ.get("DB_PASSWORD", ""),
         )
-        mock_register.assert_awaited_with(conn)
-    return plugin, conn
+        mock_register.assert_awaited_with(pool)
+    return plugin, pool
 
 
 def test_add_embedding_inserts_row():
     async def run():
-        plugin, conn = await init_resource()
+        plugin, pool = await init_resource()
         with patch.object(plugin, "_embed", return_value=[1.0, 2.0, 3.0]):
             await plugin.add_embedding("hello")
-            conn.execute.assert_awaited_with(
+            pool.execute.assert_awaited_with(
                 "INSERT INTO vector_memory (text, embedding) VALUES ($1, $2)",
                 "hello",
                 Vector([1.0, 2.0, 3.0]),
@@ -56,11 +60,11 @@ def test_add_embedding_inserts_row():
 
 def test_query_similar_returns_texts():
     async def run():
-        plugin, conn = await init_resource()
-        conn.fetch = AsyncMock(return_value=[{"text": "a"}, {"text": "b"}])
+        plugin, pool = await init_resource()
+        pool.fetch = AsyncMock(return_value=[{"text": "a"}, {"text": "b"}])
         with patch.object(plugin, "_embed", return_value=[1.0, 2.0, 3.0]):
             result = await plugin.query_similar("hello", 2)
-            conn.fetch.assert_awaited_with(
+            pool.fetch.assert_awaited_with(
                 "SELECT text FROM vector_memory ORDER BY embedding <-> $1 LIMIT $2",
                 Vector([1.0, 2.0, 3.0]),
                 2,

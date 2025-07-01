@@ -6,21 +6,20 @@ This AGENTS.md file provides comprehensive guidance for AI agents working with t
 
 The `ARCHITECTURE.md` file provides a high-level overview of the Entity Pipeline framework's architecture, including its vision, key components, and how to get started with the framework.  PLEASE REVIEW IT FOR ALL ARCHITECTURE DECISIONS!
 
-## Project Structure for AI Agent Navigation
+-## Project Structure for AI Agent Navigation
 
-- `/src/core`: Core pipeline execution engine that AI agents should understand
-- `/src/plugins`: Plugin implementations organized by type (resources, tools, prompts, adapters, failure)
-  - `/src/plugins/resources`: Infrastructure plugins (database, LLM, logging, monitoring)
-  - `/src/plugins/tools`: User-facing function plugins (weather, calculator, search, APIs)
-  - `/src/plugins/prompts`: Processing logic plugins (chain-of-thought, ReAct, memory)
-  - `/src/plugins/adapters`: Input/output interface plugins (HTTP, TTS, WebSocket)
-  - `/src/plugins/failure`: Error handling plugins (formatters, loggers, notifications)
-- `/src/context`: Plugin context and state management system
-- `/src/config`: Configuration management and validation system
-- `/src/registry`: Plugin registration and dependency management
-- `/config`: YAML configuration files for different environments
-- `/tests`: Test files organized by plugin type and core functionality
-- `/docs`: Additional documentation and architecture guides
+- `/src/pipeline` – core execution engine, context system and shared abstractions
+- `/src/pipeline/plugins` – plugin implementations organized by type
+  - `/resources` – databases, LLMs and storage backends
+  - `/tools` – user functions such as weather or search
+  - `/prompts` – reasoning logic and memory helpers
+  - `/adapters` – input/output interfaces (HTTP, CLI, WebSocket)
+  - `/failure` – error formatting and logging
+- `/src/config` – configuration management and validation
+- `/src/registry` – plugin registration and dependency management
+- `/config` – YAML configuration files for different environments
+- `/tests` – test files organized by plugin type and core functionality
+- `/docs` – additional documentation and architecture guides
 
 ## Project Tools
 - poetry
@@ -61,6 +60,9 @@ You have access to a postgres 16 database for development purposes. The database
 
 - Database Type: PostgreSQL
 - Connection String: `postgresql://agent@localhost:5432/dev_db`
+
+The `PostgresConnectionPool` resource manages asyncpg connections, while the
+`ConversationHistory` plugin loads and saves chat history via the pool.
 
 There is no password.
 
@@ -202,10 +204,15 @@ entity:
 plugins:
   resources:
     database:
-      type: sqlite
-      file_path: "dev.db"
+      type: pipeline.plugins.resources.postgres:PostgresResource
+      host: "localhost"
+      name: "dev_db"
+      username: "agent"
+      password: ""
+      pool_min_size: 1
+      pool_max_size: 5
     ollama:
-      type: ollama_llm
+      type: pipeline.plugins.resources.ollama_llm:OllamaLLMResource
       base_url: "http://localhost:11434"
       model: "llama3:8b"
 
@@ -229,10 +236,13 @@ entity:
 plugins:
   resources:
     database:
-      type: postgresql
+      type: pipeline.plugins.resources.postgres:PostgresResource
       host: "${DB_HOST}"
+      name: "${DB_NAME}"
       username: "${DB_USERNAME}"
       password: "${DB_PASSWORD}"
+      pool_min_size: 5
+      pool_max_size: 20
     openai:
       type: openai_llm
       api_key: "${OPENAI_API_KEY}"
