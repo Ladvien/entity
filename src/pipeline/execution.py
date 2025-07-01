@@ -7,11 +7,8 @@ from typing import Any, Dict
 from registry import SystemRegistries
 
 from .context import PluginContext
-<<<<<<< HEAD
 from .errors import create_static_error_response
-=======
 from .exceptions import CircuitBreakerTripped, PluginExecutionError
->>>>>>> 687b80743a969fc60f52facd6803c0968786989e
 from .manager import PipelineManager
 from .stages import PipelineStage
 from .state import ConversationEntry, FailureInfo, MetricsCollector, PipelineState

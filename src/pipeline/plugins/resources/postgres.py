@@ -1,26 +1,16 @@
 from __future__ import annotations
 
-<<<<<<< HEAD
-from typing import Any, Dict, List
-=======
 import json
 from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator, Dict, List, Optional
->>>>>>> 66ac501313b5b7eaa42b03d18024eecb130295bc
 
 import asyncpg
-from asyncpg.utils import _quote_ident
 
+from pipeline.context import ConversationEntry
 from pipeline.plugins import ResourcePlugin
 from pipeline.stages import PipelineStage
 
-from .postgres_pool import PostgresConnectionPool
 
-
-<<<<<<< HEAD
-class PostgresResource(ResourcePlugin):
-    """Thin wrapper around an asyncpg connection pool."""
-=======
 class ConnectionPoolResource(ResourcePlugin):
     """Generic async connection pool resource."""
 
@@ -71,42 +61,15 @@ class PostgresPoolResource(ConnectionPoolResource):
     Highlights **Configuration Over Code (9)** by defining all connection
     details in YAML rather than hardcoding them in the class.
     """
->>>>>>> 66ac501313b5b7eaa42b03d18024eecb130295bc
 
     name = "database"
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
-<<<<<<< HEAD
-        self._pool = PostgresConnectionPool(self.config)
-=======
->>>>>>> 66ac501313b5b7eaa42b03d18024eecb130295bc
         self._schema = self.config.get("db_schema")
         self._history_table = self.config.get("history_table")
 
-    def _qualified_history_table(self) -> str:
-        table = _quote_ident(self._history_table)
-        if self._schema:
-            schema = _quote_ident(self._schema)
-            return f"{schema}.{table}"
-        return table
-
     async def initialize(self) -> None:
-<<<<<<< HEAD
-        await self._pool.initialize()
-        if self._history_table:
-            table = self._qualified_history_table()
-            query = f"""
-                CREATE TABLE IF NOT EXISTS {table} (
-                    conversation_id TEXT,
-                    role TEXT,
-                    content TEXT,
-                    metadata JSONB,
-                    timestamp TIMESTAMPTZ
-                )
-            """
-            await self.execute(query)
-=======
         self.logger.info(
             "Creating Postgres connection pool", extra={"config": self.config}
         )
@@ -131,36 +94,18 @@ class PostgresPoolResource(ConnectionPoolResource):
                     )
                     """
                 )
->>>>>>> 66ac501313b5b7eaa42b03d18024eecb130295bc
 
     async def _execute_impl(self, context) -> Any:  # pragma: no cover - no op
         return None
 
-<<<<<<< HEAD
-    async def health_check(self) -> bool:
-        return await self._pool.health_check()
-=======
     async def _do_health_check(self, connection: asyncpg.Connection) -> None:
         await connection.fetchval("SELECT 1")
->>>>>>> 66ac501313b5b7eaa42b03d18024eecb130295bc
 
-    async def execute(self, query: str, *args: Any) -> None:
-        async with self._pool.connection() as conn:
-            await conn.execute(query, *args)
+    async def save_history(
+        self, conversation_id: str, history: List[ConversationEntry]
+    ) -> None:
+        """Persist conversation ``history`` for ``conversation_id``."""
 
-<<<<<<< HEAD
-    async def fetch(self, query: str, *args: Any) -> List[asyncpg.Record]:
-        async with self._pool.connection() as conn:
-            return await conn.fetch(query, *args)
-
-    async def fetchrow(self, query: str, *args: Any) -> asyncpg.Record | None:
-        async with self._pool.connection() as conn:
-            return await conn.fetchrow(query, *args)
-
-    async def fetchval(self, query: str, *args: Any) -> Any:
-        async with self._pool.connection() as conn:
-            return await conn.fetchval(query, *args)
-=======
         if self._pool is None or not self._history_table:
             return
 
@@ -210,4 +155,3 @@ class PostgresPoolResource(ConnectionPoolResource):
 
 # Backwards compatibility alias
 PostgresResource = PostgresPoolResource
->>>>>>> 66ac501313b5b7eaa42b03d18024eecb130295bc
