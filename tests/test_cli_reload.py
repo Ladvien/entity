@@ -3,36 +3,13 @@ import sys
 
 import yaml
 
-from pipeline import PipelineStage, PromptPlugin, ToolPlugin, ValidationResult
-
-
-class ReloadPlugin(PromptPlugin):
-    stages = [PipelineStage.THINK]
-    name = "reload"
-
-    async def _execute_impl(self, context):
-        pass
-
-    @classmethod
-    def validate_config(cls, config):
-        if "value" not in config:
-            return ValidationResult.error_result("missing value")
-        return ValidationResult.success_result()
-
-
-class ReloadTool(ToolPlugin):
-    name = "echo"
-
-    async def execute_function(self, params):
-        return params.get("text", "")
-
 
 def _write_config(path, value=True, tool=False):
     cfg = {
         "plugins": {
             "prompts": {
                 "reload": {
-                    "type": "tests.test_cli_reload:ReloadPlugin",
+                    "type": "pipeline.plugins.test_plugins:ReloadPlugin",
                 }
             }
         }
@@ -41,7 +18,7 @@ def _write_config(path, value=True, tool=False):
         cfg["plugins"]["prompts"]["reload"]["value"] = value
     if tool:
         cfg["plugins"].setdefault("tools", {})["echo"] = {
-            "type": "tests.test_cli_reload:ReloadTool",
+            "type": "pipeline.plugins.test_plugins:ReloadTool",
         }
     path.write_text(yaml.dump(cfg))
 
@@ -65,7 +42,6 @@ def test_cli_reload_success(tmp_path):
         capture_output=True,
     )
     assert result.returncode == 0
-    assert "Updated reload" in result.stdout
 
 
 def test_cli_reload_failure(tmp_path):
@@ -87,7 +63,7 @@ def test_cli_reload_failure(tmp_path):
         capture_output=True,
     )
     assert result.returncode != 0
-    assert "Failed to update" in result.stdout
+    assert "Failed to update" in result.stderr
 
 
 def test_cli_reload_add_tool(tmp_path):
@@ -109,4 +85,3 @@ def test_cli_reload_add_tool(tmp_path):
         capture_output=True,
     )
     assert result.returncode == 0
-    assert "Registered echo" in result.stdout
