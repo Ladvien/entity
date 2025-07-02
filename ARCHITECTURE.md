@@ -483,6 +483,35 @@ resource exposes a single canonical name to keep the mental model clear.
 
 **Reconfiguration Example**: Switch from OpenAI to local Ollama by changing one configuration line.
 
+
+### Single-Name Resources and Unified LLM
+
+Every resource registers under a single, unchanging name. The concrete implementation can vary or be composed of other resources, but callers always reference the same key. This keeps configuration small and mental models easy to grasp.
+
+The `UnifiedLLMResource` embodies this principle. Regardless of which provider you choose—OpenAI, Ollama, Claude or Gemini—the resource is simply named `llm`. Provider selection happens through the `provider` field:
+
+```yaml
+plugins:
+  resources:
+    llm:
+      type: pipeline.plugins.resources.llm.unified:UnifiedLLMResource
+      provider: openai
+      api_key: ${OPENAI_API_KEY}
+```
+
+Switching to a local Ollama server requires only a single line change:
+
+```yaml
+plugins:
+  resources:
+    llm:
+      type: pipeline.plugins.resources.llm.unified:UnifiedLLMResource
+      provider: ollama
+      base_url: http://localhost:11434
+      model: llama3:8b
+```
+
+Because the name stays constant, plugins and configuration always refer to the same key. This simplifies reasoning and reinforces the single-name resource principle across the entire framework.
 #### **Tool Plugins** (Functionality - Performs Tasks for Agents)
 - **Weather**: Get current conditions, forecasts
 - **Calculator**: Mathematical computations
