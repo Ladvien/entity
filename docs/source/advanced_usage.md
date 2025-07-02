@@ -23,7 +23,7 @@ plugins:
         - "CREATE EXTENSION IF NOT EXISTS vector"
   prompts:
     vector_memory:
-      type: vector_memory
+      type: pipeline.plugins.resources.pg_vector_store:PgVectorStore
       dependencies: ["database"]
 ```
 

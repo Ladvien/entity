@@ -42,7 +42,10 @@ class PgVectorStore(VectorStoreResource):
             async with self._pool.connection() as conn:
                 await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
                 await conn.execute(
-                    f"CREATE TABLE IF NOT EXISTS {self._table} (text TEXT, embedding VECTOR({self._dim}))"
+                    (
+                        f"CREATE TABLE IF NOT EXISTS {self._table} "
+                        f"(text TEXT, embedding VECTOR({self._dim}))"
+                    )
                 )
             return
 
@@ -60,7 +63,10 @@ class PgVectorStore(VectorStoreResource):
             async with self._pool.connection() as conn:
                 await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
                 await conn.execute(
-                    f"CREATE TABLE IF NOT EXISTS {self._table} (text TEXT, embedding VECTOR({self._dim}))"
+                    (
+                        f"CREATE TABLE IF NOT EXISTS {self._table} "
+                        f"(text TEXT, embedding VECTOR({self._dim}))"
+                    )
                 )
             return
 
