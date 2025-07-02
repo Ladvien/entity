@@ -13,7 +13,7 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.plugins.prompts.conversation_history import ConversationHistory
-from pipeline.plugins.resources.memory_resource import MemoryResource
+from pipeline.plugins.resources.memory import MemoryResource
 from pipeline.stages import PipelineStage
 
 

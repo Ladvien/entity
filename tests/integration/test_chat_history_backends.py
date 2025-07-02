@@ -19,7 +19,7 @@ from pipeline import (
 )
 from pipeline.plugins.prompts.chat_history import ChatHistory
 from pipeline.plugins.resources.in_memory_storage import InMemoryStorageResource
-from pipeline.plugins.resources.memory_resource import MemoryResource
+from pipeline.plugins.resources.memory import MemoryResource
 from pipeline.plugins.resources.postgres_database import PostgresDatabaseResource
 from pipeline.plugins.resources.sqlite_storage import SQLiteStorageResource
 
