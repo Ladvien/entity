@@ -1,7 +1,7 @@
 import asyncio
 from unittest.mock import AsyncMock, patch
 
-from pipeline.plugins.resources.sqlite_storage import SQLiteStorage
+from pipeline.plugins.resources.sqlite_storage import SQLiteStorageResource
 
 
 async def init_resource():
@@ -10,7 +10,7 @@ async def init_resource():
     conn.execute = AsyncMock()
     conn.commit = AsyncMock()
     with patch("aiosqlite.connect", new=AsyncMock(return_value=conn)) as mock_connect:
-        plugin = SQLiteStorage(cfg)
+        plugin = SQLiteStorageResource(cfg)
         await plugin.initialize()
         mock_connect.assert_awaited()
     return plugin, conn
@@ -23,7 +23,7 @@ def test_initialize_opens_pool():
 
 def test_health_check_runs_query():
     async def run():
-        plugin = SQLiteStorage({})
+        plugin = SQLiteStorageResource({})
         plugin.fetch = AsyncMock(return_value=[(1,)])
         result = await plugin.health_check()
         plugin.fetch.assert_awaited_with("SELECT 1")

@@ -250,6 +250,12 @@ The framework maintains a sophisticated five-layer plugin architecture designed 
 - **Logging**: Structured logging, metrics, tracing
 - **Monitoring**: Health checks, performance metrics
 
+Resource plugins can depend on other resources. For example, a
+`StorageResource` typically requires a `DatabaseResource`, a
+`VectorStoreResource`, and a `FileSystemResource`. A `DatabaseResource` then
+selects a concrete implementation like `PostgresDatabaseResource`. Each
+resource exposes a single canonical name to keep the mental model clear.
+
 **Reconfiguration Example**: Switch from OpenAI to local Ollama by changing one configuration line.
 
 #### **Tool Plugins** (Functionality - Performs Tasks for Agents)
