@@ -1,17 +1,9 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginRegistry,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolCall,
-    ToolRegistry,
-    execute_pending_tools,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginRegistry, ResourceRegistry, SystemRegistries,
+                      ToolCall, ToolRegistry, execute_pending_tools)
 
 
 class EchoTool:

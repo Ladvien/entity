@@ -1,16 +1,8 @@
 import asyncio
 
-from pipeline import (
-    LLMResponse,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolPlugin,
-    ToolRegistry,
-    execute_pipeline,
-)
+from pipeline import (LLMResponse, PipelineStage, PluginRegistry, PromptPlugin,
+                      ResourceRegistry, SystemRegistries, ToolPlugin,
+                      ToolRegistry, execute_pipeline)
 
 
 class EchoLLM:

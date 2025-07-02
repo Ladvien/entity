@@ -1,13 +1,8 @@
 import asyncio
 from unittest.mock import AsyncMock, patch
 
-from pipeline import (
-    MetricsCollector,
-    PipelineState,
-    SimpleContext,
-    SystemInitializer,
-    SystemRegistries,
-)
+from pipeline import (MetricsCollector, PipelineState, SimpleContext,
+                      SystemInitializer, SystemRegistries)
 from pipeline.plugins.resources.claude import ClaudeResource
 
 

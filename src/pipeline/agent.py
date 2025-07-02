@@ -11,7 +11,8 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Callable, Dict, Optional, cast
 
-from registry import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
+from registry import (PluginRegistry, ResourceRegistry, SystemRegistries,
+                      ToolRegistry)
 
 from .adapters.http import HTTPAdapter
 from .adapters.websocket import WebSocketAdapter

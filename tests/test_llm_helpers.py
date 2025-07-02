@@ -3,18 +3,10 @@ from datetime import datetime
 
 import pytest
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineStage,
-    PipelineState,
-    PluginRegistry,
-    PromptPlugin,
-    ResourceRegistry,
-    SimpleContext,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
+                      PipelineState, PluginRegistry, PromptPlugin,
+                      ResourceRegistry, SimpleContext, SystemRegistries,
+                      ToolRegistry)
 
 
 class StubLLM:

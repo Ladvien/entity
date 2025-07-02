@@ -1,16 +1,9 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginContext, PluginRegistry, ResourceRegistry,
+                      SystemRegistries, ToolRegistry)
 from pipeline.plugins.prompts.memory_retrieval import MemoryRetrievalPrompt
 from pipeline.plugins.resources.memory_resource import SimpleMemoryResource
 from pipeline.resources.memory import Memory

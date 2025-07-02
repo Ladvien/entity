@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from .registries import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
+from .registries import (PluginRegistry, ResourceRegistry, SystemRegistries,
+                         ToolRegistry)
 from .validator import RegistryValidator
 
 __all__ = [

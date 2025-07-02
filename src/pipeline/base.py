@@ -5,7 +5,8 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List
 
 from .context import PluginContext
-from .exceptions import CircuitBreakerTripped, PluginError, PluginExecutionError
+from .exceptions import (CircuitBreakerTripped, PluginError,
+                         PluginExecutionError)
 from .stages import PipelineStage
 
 
