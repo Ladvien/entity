@@ -14,11 +14,13 @@ DEFAULT_LOGGING_CONFIG: Dict[str, Any] = {
     "file_enabled": False,
 }
 
+DEFAULT_LLM_CONFIG: Dict[str, Any] = {
+    "type": "pipeline.plugins.resources.llm.unified:UnifiedLLMResource",
+    "provider": "echo",
+}
+
 DEFAULT_RESOURCES: Dict[str, Dict[str, Any]] = {
-    "llm": {
-        "type": "pipeline.plugins.resources.llm.unified:UnifiedLLMResource",
-        "provider": "echo",
-    },
+    "llm": DEFAULT_LLM_CONFIG,
     "memory": {
         "type": "pipeline.plugins.resources.memory:MemoryResource",
         "backend": {"type": "pipeline.plugins.resources.memory:SimpleMemoryResource"},
