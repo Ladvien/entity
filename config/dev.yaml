@@ -6,20 +6,15 @@ server:
 
 plugins:
   resources:
-<<<<<<< HEAD
-    storage:
-      type: pipeline.plugins.resources.postgres:PostgresResource
-=======
     database:
       type: pipeline.plugins.resources.postgres_database:PostgresDatabaseResource
->>>>>>> 66045f0cc3ea9a831e3ec579ceb40548cd673716
       host: "${DB_HOST}"
       port: 5432
       name: "${DB_USERNAME}"
       username: "${DB_USERNAME}"
       password: "${DB_PASSWORD}"
     llm:
-      provider: ollama
+      type: pipeline.plugins.resources.ollama_llm:OllamaLLMResource
       base_url: "${OLLAMA_BASE_URL}"
       model: "${OLLAMA_MODEL}"
     logging:
@@ -45,13 +40,8 @@ plugins:
     chain_of_thought:
       type: pipeline.plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
       enable_reasoning: true
-<<<<<<< HEAD
-    chat_history:
-      type: pipeline.plugins.prompts.chat_history:ChatHistory
-=======
     conversation_history:
       type: pipeline.plugins.prompts.conversation_history:ConversationHistory
->>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
       history_table: chat_history
     memory_retrieval:
       type: pipeline.plugins.prompts.memory_retrieval:MemoryRetrievalPrompt

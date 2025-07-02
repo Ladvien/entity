@@ -4,11 +4,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
-<<<<<<< HEAD
-from pipeline.base_plugins import BasePlugin
-=======
 from pipeline.plugins import BasePlugin
->>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
 from pipeline.stages import PipelineStage
 
 
@@ -58,53 +54,26 @@ class PluginRegistry:
     ) -> None:
         """Register ``plugin`` to execute during ``stage``."""
         try:
-            stage_enum = PipelineStage.ensure(stage)
-        except ValueError as exc:  # pragma: no cover - defensive
-            raise ValueError(
-                f"Cannot register {plugin.__class__.__name__} for invalid stage '{stage}'"
-            ) from exc
+            stage = PipelineStage(stage)
+        except ValueError as exc:
+            raise SystemError(f"Invalid stage: {stage}") from exc
+        self._stage_plugins[stage].append(plugin)
+        if name:
+            self._names[plugin] = name
 
-        self._stage_plugins[stage_enum].append(plugin)
-        self._stage_plugins[stage_enum].sort(key=lambda p: getattr(p, "priority", 50))
-        plugin_name = name or getattr(plugin, "name", plugin.__class__.__name__)
-        self._names.setdefault(plugin, str(plugin_name))
+    def get_plugins_for_stage(self, stage: PipelineStage) -> List[BasePlugin]:
+        """Return list of plugins registered for ``stage``."""
 
-    def get_for_stage(self, stage: PipelineStage) -> List[BasePlugin]:
-        """Return plugins for ``stage`` sorted by ascending priority."""
+        return self._stage_plugins.get(stage, [])
 
-        return list(self._stage_plugins.get(stage, []))
+    def get_name(self, plugin: BasePlugin) -> str | None:
+        """Return registered name for ``plugin`` if any."""
 
-    def list_plugins(self) -> List[BasePlugin]:
-        """Return all registered plugins without duplicates."""
-
-        seen = set()
-        plugins: List[BasePlugin] = []
-        for stage_list in self._stage_plugins.values():
-            for plugin in stage_list:
-                if plugin not in seen:
-                    seen.add(plugin)
-                    plugins.append(plugin)
-        return plugins
-
-    def get_plugin_name(self, plugin: BasePlugin) -> str:
-        """Return the canonical name for ``plugin``."""
-
-        return self._names.get(plugin, plugin.__class__.__name__)
-
-    def get_dependents(self, dependency_name: str) -> List[BasePlugin]:
-        """Return plugins that depend on ``dependency_name``."""
-
-        dependents: List[BasePlugin] = []
-        for plugin in self.list_plugins():
-            if dependency_name in getattr(plugin, "dependencies", []):
-                dependents.append(plugin)
-        return dependents
+        return self._names.get(plugin)
 
 
 @dataclass
 class SystemRegistries:
-    """Container for all runtime registries."""
-
     resources: ResourceRegistry
     tools: ToolRegistry
     plugins: PluginRegistry

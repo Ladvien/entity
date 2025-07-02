@@ -56,11 +56,7 @@ new backend, subclass `ResourcePlugin` and implement the `save_history` and
 
 ```python
 import asyncpg
-<<<<<<< HEAD
-from pipeline.base_plugins import ResourcePlugin
-=======
 from pipeline.plugins import ResourcePlugin
->>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
 from pipeline.stages import PipelineStage
 
 
@@ -86,12 +82,7 @@ class MyStorage(ResourcePlugin):
         return [row["content"] for row in rows]
 ```
 
-<<<<<<< HEAD
-Any plugin can now call `context.get_resource("storage")` and use these
-methods. Prompt plugins like `ChatHistory` or `MemoryPlugin` work with
-PostgreSQL, SQLite, or in-memory backends without code changes.
-=======
 Any plugin can now call `context.get_resource("database")` and use these
 methods, enabling a consistent storage interface across resources.
->>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
+
 

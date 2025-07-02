@@ -12,21 +12,10 @@ if str(SRC_PATH) not in sys.path:
     sys.path.insert(0, str(SRC_PATH))
 
 from pipeline.initializer import ClassRegistry  # noqa: E402
-<<<<<<< HEAD
-<<<<<<< HEAD
-from pipeline.initializer import SystemInitializer  # noqa: E402
-from pipeline.initializer import import_plugin_class
-from pipeline.logging import get_logger
-from pipeline.base_plugins import ValidationResult  # noqa: E402
-=======
-from pipeline.initializer import SystemInitializer, import_plugin_class  # noqa: E402
-=======
 from pipeline.initializer import SystemInitializer  # noqa: E402
 from pipeline.initializer import import_plugin_class  # noqa: E402
->>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
 from pipeline.logging import get_logger  # noqa: E402
 from pipeline.plugins import ValidationResult  # noqa: E402
->>>>>>> 66045f0cc3ea9a831e3ec579ceb40548cd673716
 from pipeline.stages import PipelineStage  # noqa: E402
 
 logger = get_logger(__name__)

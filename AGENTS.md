@@ -31,11 +31,7 @@ The `ARCHITECTURE.md` file provides a high-level overview of the Entity Pipeline
 - pytest
 - mypy
 
-<<<<<<< HEAD
 > **Please always use the poetry virtual environment and dependencies.**
-
-=======
->>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
 ## Public API Overview
 
 Import :class:`Agent` from the ``entity`` package and use ``pipeline`` for
@@ -271,13 +267,8 @@ plugins:
       password: ""
       pool_min_size: 1
       pool_max_size: 5
-<<<<<<< HEAD
-    llm:
-      provider: ollama
-=======
     ollama:
       type: pipeline.plugins.resources.ollama_llm:OllamaLLMResource
->>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
       base_url: "http://localhost:11434"
       model: "llama3:8b"
 

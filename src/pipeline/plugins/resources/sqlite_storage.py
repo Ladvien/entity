@@ -47,8 +47,11 @@ class SQLiteStorageResource(ResourcePlugin, StorageBackend):
             return
         for entry in history:
             await self._conn.execute(
-                f"INSERT INTO {self._table} (conversation_id, role, content, metadata, timestamp)"  # nosec B608
-                " VALUES (?, ?, ?, ?, ?)",
+                (
+                    f"INSERT INTO {self._table} "
+                    "(conversation_id, role, content, metadata, timestamp)"  # nosec B608
+                    " VALUES (?, ?, ?, ?, ?)"
+                ),
                 (
                     conversation_id,
                     entry.role,

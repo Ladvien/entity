@@ -3,8 +3,8 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from pipeline.context import PluginContext
 from pipeline.base_plugins import PromptPlugin
+from pipeline.context import PluginContext
 from pipeline.stages import PipelineStage
 from pipeline.state import ConversationEntry
 

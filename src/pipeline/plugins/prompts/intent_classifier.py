@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from pipeline.context import PluginContext
 from pipeline.base_plugins import PromptPlugin, ValidationResult
+from pipeline.context import PluginContext
 from pipeline.stages import PipelineStage
 
 

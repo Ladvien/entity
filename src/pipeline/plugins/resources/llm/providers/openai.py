@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Dict
-
 from .base import BaseProvider
 
 
