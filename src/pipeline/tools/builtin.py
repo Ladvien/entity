@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Convenient built-in tool functions."""
 
-from typing import Any
+from typing import Any, Mapping, cast
 
 import httpx
 
@@ -18,9 +18,18 @@ def calculator(expression: str) -> Any:
 def search(query: str) -> str:
     """Return the first DuckDuckGo result snippet."""
     url = "https://api.duckduckgo.com/"
-    params = {"q": query, "format": "json", "no_redirect": 1, "no_html": 1}
+    params: Mapping[str, str | int | float | bool | None] = {
+        "q": query,
+        "format": "json",
+        "no_redirect": 1,
+        "no_html": 1,
+    }
     try:
-        resp = httpx.get(url, params=params, timeout=10)
+        resp = httpx.get(
+            url,
+            params=cast(Mapping[str, str | int | float | bool | None], params),
+            timeout=10,
+        )
         resp.raise_for_status()
         data = resp.json()
     except Exception as exc:  # noqa: BLE001 - network errors
