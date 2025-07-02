@@ -47,7 +47,7 @@ class VectorMemoryResource(ResourcePlugin):
 class ComplexPrompt(PromptPlugin):
     """Example prompt using the vector memory."""
 
-    dependencies = ["database", "ollama", "vector_memory"]
+    dependencies = ["database", "llm", "vector_memory"]
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context: PluginContext) -> None:
@@ -72,10 +72,14 @@ def main() -> None:
             }
         ),
     )
+<<<<<<< HEAD
     agent.resource_registry.add(
         "ollama",
         UnifiedLLMResource({"provider": "echo"}),
     )
+=======
+    agent.resource_registry.add("llm", EchoLLMResource())
+>>>>>>> d413bfe50cf145aa10f8b54f30ac78babd0bc417
     agent.resource_registry.add("vector_memory", VectorMemoryResource())
     agent.plugin_registry.register_plugin_for_stage(
         ComplexPrompt(), PipelineStage.THINK

@@ -70,6 +70,7 @@ def setup_registries() -> SystemRegistries:
     tools.add("calculator", CalculatorTool())
 
     resources.add(
+<<<<<<< HEAD
         "ollama",
         UnifiedLLMResource(
             {
@@ -78,6 +79,10 @@ def setup_registries() -> SystemRegistries:
                 "model": "tinyllama",
             }
         ),
+=======
+        "llm",
+        OllamaLLMResource({"base_url": "http://localhost:11434", "model": "tinyllama"}),
+>>>>>>> d413bfe50cf145aa10f8b54f30ac78babd0bc417
     )
 
     plugins.register_plugin_for_stage(

@@ -5,7 +5,10 @@ from __future__ import annotations
 import asyncio
 from copy import deepcopy
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, cast
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, cast
+
+if TYPE_CHECKING:  # pragma: no cover
+    from pipeline.resources.llm import LLM
 
 from registry import SystemRegistries
 
@@ -85,10 +88,24 @@ class PluginContext:
         """Return a shared resource plugin registered as ``name``."""
         return self._registries.resources.get(name)
 
+<<<<<<< HEAD
     def get_llm(self) -> Any | None:
         """Return the configured LLM resource registered as ``"llm"``."""
 
         return self.get_resource("llm")
+=======
+    def get_llm(self) -> LLM:
+        """Return the configured LLM resource.
+
+        Raises a :class:`RuntimeError` if no ``"llm"`` resource is found.
+        """
+        llm = self.get_resource("llm")
+        if llm is None:
+            raise RuntimeError(
+                "No LLM resource configured. Add 'llm' to resources section."
+            )
+        return cast(LLM, llm)
+>>>>>>> d413bfe50cf145aa10f8b54f30ac78babd0bc417
 
     @property
     def message(self) -> str:
