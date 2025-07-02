@@ -3,13 +3,8 @@ from __future__ import annotations
 from typing import Dict
 
 from pipeline.plugins.resources.http_llm_resource import HttpLLMResource
-<<<<<<< HEAD
-from pipeline.resources.llm import LLMResource
-from pipeline.validation import ValidationResult
-=======
 from pipeline.plugins.resources.llm_resource import LLMResource
-from pipeline.stages import PipelineStage
->>>>>>> cf2f639e2825c3c5653576aef6ed05524944e947
+from pipeline.validation import ValidationResult
 
 
 class GeminiResource(LLMResource):

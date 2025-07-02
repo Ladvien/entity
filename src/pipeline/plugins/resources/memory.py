@@ -4,31 +4,28 @@ from typing import Any, Dict, List
 
 from pipeline.context import ConversationEntry
 from pipeline.initializer import import_plugin_class
-<<<<<<< HEAD
+from pipeline.plugins import ResourcePlugin, ValidationResult
 from pipeline.resources import (
-    BaseResource,
     DatabaseResource,
     FileSystemResource,
     Memory,
     VectorStoreResource,
 )
-from pipeline.validation import ValidationResult
-=======
-from pipeline.plugins import ResourcePlugin, ValidationResult
-from pipeline.resources import (DatabaseResource, FileSystemResource, Memory,
-                                VectorStoreResource)
 from pipeline.stages import PipelineStage
->>>>>>> 2f11255869dff0db634640e503f183cca2160667
 
 
-class SimpleMemoryResource(BaseResource, Memory):
+class SimpleMemoryResource(ResourcePlugin, Memory):
     """Basic in-memory key/value store."""
 
+    stages = [PipelineStage.PARSE]
     name = "memory"
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
         self._store: Dict[str, Any] = {}
+
+    async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
+        return None
 
     def get(self, key: str, default: Any | None = None) -> Any:
         return self._store.get(key, default)
@@ -40,9 +37,10 @@ class SimpleMemoryResource(BaseResource, Memory):
         self._store.clear()
 
 
-class MemoryResource(BaseResource, Memory):
+class MemoryResource(ResourcePlugin, Memory):
     """Composite memory resource composed of optional backends."""
 
+    stages = [PipelineStage.PARSE]
     name = "memory"
 
     def __init__(
@@ -76,6 +74,9 @@ class MemoryResource(BaseResource, Memory):
         vector_store = build("vector_store")
         filesystem = build("filesystem")
         return cls(database, vector_store, filesystem, config)
+
+    async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
+        return None
 
     def get(self, key: str, default: Any | None = None) -> Any:
         return self._kv.get(key, default)

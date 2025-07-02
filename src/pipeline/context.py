@@ -88,16 +88,11 @@ class PluginContext:
         """Return a shared resource plugin registered as ``name``."""
         return self._registries.resources.get(name)
 
-<<<<<<< HEAD
-    def get_llm(self) -> Any | None:
-        """Return the configured LLM resource registered as ``"llm"``."""
-
-        return self.get_resource("llm")
-=======
     def get_llm(self) -> LLM:
         """Return the configured LLM resource.
 
-        Raises a :class:`RuntimeError` if no ``"llm"`` resource is found.
+        Raises:
+            RuntimeError: If no ``"llm"`` resource is found.
         """
         llm = self.get_resource("llm")
         if llm is None:
@@ -105,7 +100,6 @@ class PluginContext:
                 "No LLM resource configured. Add 'llm' to resources section."
             )
         return cast(LLM, llm)
->>>>>>> d413bfe50cf145aa10f8b54f30ac78babd0bc417
 
     @property
     def message(self) -> str:

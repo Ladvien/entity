@@ -4,7 +4,7 @@ import json
 import logging
 import os
 from logging.handlers import RotatingFileHandler
-from typing import Any, Dict
+from typing import Dict
 
 from pipeline.resources.base import BaseResource
 from pipeline.validation import ValidationResult
