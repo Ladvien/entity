@@ -13,9 +13,15 @@ from .storage_backend import StorageBackend
 class MemoryStorage(StorageBackend):
     """In-memory storage backend for testing and ephemeral runs."""
 
-    def __init__(self, config: Dict | None = None) -> None:
-        super().__init__(config)
+    def __init__(
+        self, config: Dict | None = None, *, history_table: str | None = None
+    ) -> None:
+        self.config = config or {}
+        self._history_table = history_table or self.config.get("history_table")
         self._data: DefaultDict[str, List[Dict[str, Any]]] = defaultdict(list)
+
+    def _table_name(self) -> str:
+        return self._history_table or "chat_history"
 
     async def initialize(self) -> None:  # pragma: no cover - no setup needed
         return None
@@ -77,7 +83,11 @@ class MemoryStorage(StorageBackend):
     ) -> None:
         for entry in history:
             await self.execute(
-                f"INSERT INTO {self._table_name()} (conversation_id, role, content, metadata, timestamp) VALUES (?, ?, ?, ?, ?)",
+                (
+                    f"INSERT INTO {self._table_name()} "
+                    "(conversation_id, role, content, metadata, timestamp) "
+                    "VALUES (?, ?, ?, ?, ?)"
+                ),
                 conversation_id,
                 entry.role,
                 entry.content,
@@ -87,7 +97,10 @@ class MemoryStorage(StorageBackend):
 
     async def load_history(self, conversation_id: str) -> List[ConversationEntry]:
         rows = await self.fetch(
-            f"SELECT role, content, metadata, timestamp FROM {self._table_name()} WHERE conversation_id=? ORDER BY timestamp",
+            (
+                f"SELECT role, content, metadata, timestamp FROM {self._table_name()} "
+                "WHERE conversation_id=? ORDER BY timestamp"
+            ),
             conversation_id,
         )
         history: List[ConversationEntry] = []
