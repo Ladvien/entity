@@ -209,6 +209,62 @@ This is an excellent mental model! The composition pattern you're proposing alig
    - Matches how developers think about storage layers
    - Clear upgrade path from simple to complex
 
+
+Here’s a more expanded, agent-focused version for your `AGENTS.md`, written to be both practical and opinionated, with a concrete example that reinforces the composability model:
+
+---
+
+## 🧱 Composable Resources: Building Blocks for Agent Capability
+
+Agents in this framework are powered by *resources*—pluggable components like databases, vector stores, and file systems—that provide persistent capability. Rather than tightly coupling functionality to a specific backend, we follow a **composition pattern**: each resource is composed of smaller, interchangeable parts that work together to deliver the desired behavior. This design makes agents easier to extend, test, and deploy across environments.
+
+Take the `MemoryResource` as a canonical example. It doesn’t “store memory” in one specific place. Instead, it acts as an orchestration layer that can delegate persistence to a relational database, semantic search to a vector store, and file handling to an object store. You might start with a basic setup using SQLite and a local folder. Later, without rewriting your agent logic, you can swap in PostgreSQL, PGVector, and S3—just by changing the YAML config or passing different objects programmatically.
+
+```yaml
+plugins:
+  resources:
+    memory:
+      type: memory
+      database:
+        type: sqlite
+        path: ./agent.db
+```
+
+Later:
+
+```yaml
+plugins:
+  resources:
+    memory:
+      type: memory
+      database:
+        type: postgres
+        host: db.internal
+        name: agent_db
+      vector_store:
+        type: pgvector
+        table: embeddings
+      filesystem:
+        type: s3
+        bucket: agent-files
+```
+
+This approach isn’t limited to memory. It applies to *any* agent capability—logging, configuration, tools, adapters. You can compose a `VectorMemorySystem` that reuses a shared `PostgresDatabaseResource` connection pool, or build a `KnowledgeBaseResource` that pulls from both local files and cloud APIs.
+
+### 🧠 Why It Matters
+
+* **Progressive adoption**: start simple, scale later
+* **Swappable backends**: move from SQLite to Postgres with zero code changes
+* **Shared dependencies**: vector store can piggyback off a DB connection
+* **Modular testing**: mock individual components cleanly
+* **Clear upgrade paths**: every resource supports layered enhancement
+
+This composition pattern is at the heart of agent development. Instead of hardwiring behavior into monoliths, you build capability from decoupled parts—each with a focused responsibility and predictable interface. The result is a framework where simple things stay simple, and complex things become possible *on your terms*.
+
+---
+
+Let me know if you'd like a Mermaid diagram or resource registry pattern callout added.
+
 ## Suggested Implementation
 
 ```python
