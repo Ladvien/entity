@@ -240,6 +240,10 @@ memory = MemoryResource(
 )
 ```
 
+### S3 File Storage
+The `S3FileSystem` backend persists files in Amazon S3. Configure the
+`bucket` and optional `region` keys under `filesystem`.
+
 ## Implementation Recommendations
 
 1. **Create Abstract Base Classes**
