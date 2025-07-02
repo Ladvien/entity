@@ -2,6 +2,7 @@ from .claude import ClaudeResource
 from .echo_llm import EchoLLMResource
 from .gemini import GeminiResource
 from .llm_resource import LLMResource
+from .local_filesystem import LocalFileSystemResource
 from .memory import MemoryResource, SimpleMemoryResource
 from .ollama_llm import OllamaLLMResource
 from .openai import OpenAIResource
@@ -19,6 +20,7 @@ __all__ = [
     "StructuredLogging",
     "PostgresDatabaseResource",
     "PgVectorStore",
+    "LocalFileSystemResource",
     "OpenAIResource",
     "GeminiResource",
     "ClaudeResource",
