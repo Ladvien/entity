@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any, Dict, Optional, Set, cast
 
-from .registries import SystemRegistries
+from registry import SystemRegistries
 
 
 class PipelineManager:
@@ -40,7 +40,7 @@ class PipelineManager:
     async def _run_pipeline(self, message: str) -> Dict[str, Any]:
         if self._registries is None:
             raise ValueError("PipelineManager requires registries to run pipelines")
-        from .pipeline import execute_pipeline
+        from .execution import execute_pipeline
 
         result = await execute_pipeline(
             message, self._registries, pipeline_manager=self

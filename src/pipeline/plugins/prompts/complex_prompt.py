@@ -2,38 +2,24 @@ from __future__ import annotations
 
 from typing import List
 
-from pipeline.context import ConversationEntry, PluginContext
+from pipeline.context import PluginContext
 from pipeline.plugins import PromptPlugin
 from pipeline.stages import PipelineStage
 
 
 class ComplexPrompt(PromptPlugin):
-    """Generate responses using DB history and vector memory.
+    """Generate responses using vector memory."""
 
-    Demonstrates **Plugin Composition (10)** by orchestrating multiple resources
-    and memory components to craft a single reply.
-    """
-
-    dependencies = ["llm", "database", "vector_memory"]
+    dependencies = ["llm", "vector_memory"]
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context: PluginContext) -> None:
-        """Compose a context-aware reply.
-
-        Steps:
-        1. Load recent history from the database.
-        2. Embed the latest user message and find similar entries.
-        3. Call the LLM to create a reply.
-        4. Record the reply in the conversation and set the pipeline response.
-        """
-
-        db = context.get_resource("database")
+        """Compose a context-aware reply."""
         vector_memory = context.get_resource("vector_memory")
 
-        history: List[ConversationEntry] = []
-        if db and hasattr(db, "load_history"):
-            history = await db.load_history(context.pipeline_id)
-        history_text = "\n".join(f"{h.role}: {h.content}" for h in history)
+        history_text = "\n".join(
+            f"{h.role}: {h.content}" for h in context.get_conversation_history()
+        )
 
         last_message = ""
         for entry in reversed(context.get_conversation_history()):

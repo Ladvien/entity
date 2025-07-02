@@ -2,9 +2,16 @@ import asyncio
 from datetime import datetime
 from unittest.mock import AsyncMock
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, ResourceRegistry,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    ResourceRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.plugins.prompts.complex_prompt import ComplexPrompt
 
 
@@ -56,7 +63,6 @@ def test_complex_prompt_uses_resources():
 
     asyncio.run(plugin.execute(ctx))
 
-    db.load_history.assert_awaited_with("1")
     memory.add_embedding.assert_awaited_with("hello")
     memory.query_similar.assert_awaited_with("hello", 1)
     llm.generate.assert_awaited()

@@ -118,3 +118,32 @@ def test_complex_prompt_with_vector_memory(tmp_path):
     }
     path = _write_config(tmp_path, plugins)
     RegistryValidator(str(path)).run()
+
+
+def test_vector_memory_requires_postgres(tmp_path):
+    plugins = {
+        "resources": {
+            "vector_memory": {
+                "type": "pipeline.plugins.resources.vector_memory:VectorMemoryResource"
+            },
+            "database": {"type": "tests.test_registry_validator:A"},
+        }
+    }
+    path = _write_config(tmp_path, plugins)
+    with pytest.raises(SystemError, match="vector store"):
+        RegistryValidator(str(path)).run()
+
+
+def test_vector_memory_with_postgres(tmp_path):
+    plugins = {
+        "resources": {
+            "vector_memory": {
+                "type": "pipeline.plugins.resources.vector_memory:VectorMemoryResource"
+            },
+            "database": {
+                "type": "pipeline.plugins.resources.postgres:PostgresResource"
+            },
+        }
+    }
+    path = _write_config(tmp_path, plugins)
+    RegistryValidator(str(path)).run()

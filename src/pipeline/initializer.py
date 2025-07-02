@@ -8,10 +8,10 @@ from importlib import import_module
 from typing import Any, Dict, Iterable, List, Tuple
 
 from config.environment import load_env
+from registry import PluginRegistry, ResourceRegistry, ToolRegistry
 
 from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
 from .defaults import DEFAULT_CONFIG
-from .registries import PluginRegistry, ResourceRegistry, ToolRegistry
 
 LLM_PROVIDERS = {
     "openai": "pipeline.plugins.resources.openai:OpenAIResource",
