@@ -40,7 +40,7 @@ class RegistryValidator:
                 self.dep_graph[name] = list(getattr(cls, "dependencies", []))
                 self._validate_stage_assignment(name, cls)
 
-                if name == "vector_memory" or cls.__name__ == "VectorMemoryResource":
+                if name == "vector_memory" or cls.__name__ == "PgVectorStore":
                     self.has_vector_memory = True
                 if name == "complex_prompt" or cls.__name__ == "ComplexPrompt":
                     self.has_complex_prompt = True
