@@ -1,10 +1,5 @@
 from __future__ import annotations
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> fee954f06165411f769e9903b20bedd74edfc69e
 from abc import abstractmethod
 from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator, Dict, List, Optional, Protocol
@@ -125,29 +120,5 @@ class StorageResource(ResourcePlugin, StorageBackend):
     ) -> None:
         raise NotImplementedError
 
-<<<<<<< HEAD
-    async def load_history(self, conversation_id: str) -> List[ConversationEntry]: ...
->>>>>>> a2fde49ed50a219b934336428d39351655a5f9c5
-=======
-from typing import Any, Iterable, Protocol
-
-
-class StorageBackend(Protocol):
-    """Interface for basic async storage backends."""
-
-    async def execute(self, query: str, *args: Any) -> Any:
-        """Run ``query`` without returning rows."""
-        ...
-
-    async def fetch(self, query: str, *args: Any) -> Iterable[Any]:
-        """Return rows for ``query``."""
-        ...
-
-    async def fetchval(self, query: str, *args: Any) -> Any:
-        """Return a single value for ``query``."""
-        ...
->>>>>>> 5e83dad2333366e3475cc1780350f7148fd6a771
-=======
     async def load_history(self, conversation_id: str) -> List[ConversationEntry]:
         raise NotImplementedError
->>>>>>> fee954f06165411f769e9903b20bedd74edfc69e
