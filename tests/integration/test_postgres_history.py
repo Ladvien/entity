@@ -30,8 +30,13 @@ def test_save_and_load_history():
             await resource.initialize()
         except OSError as exc:
             pytest.skip(f"PostgreSQL not available: {exc}")
+<<<<<<< HEAD
         await resource.execute("DROP TABLE IF EXISTS test_history")
         await resource.execute(
+=======
+        await resource._pool.execute("DROP TABLE IF EXISTS test_history")
+        await resource._pool.execute(
+>>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
             "CREATE TABLE test_history ("
             "conversation_id text, role text, content text, "
             "metadata jsonb, timestamp timestamptz)"
@@ -61,6 +66,11 @@ def test_save_and_load_history():
             )
             for r in rows
         ]
+<<<<<<< HEAD
+=======
+        await resource.save_history("conv1", entries)
+        loaded = await resource.load_history("conv1")
+>>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
         await resource.shutdown()
         return loaded
 

@@ -7,12 +7,18 @@ from pgvector import Vector
 from pgvector.asyncpg import register_vector
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 from pipeline.base_plugins import ValidationResult
 from pipeline.stages import PipelineStage
 from .postgres import ConnectionPoolResource, PostgresPoolResource
+=======
+from pipeline.plugins import ValidationResult
+>>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
 from pipeline.stages import PipelineStage
 
+from .postgres import ConnectionPoolResource, PostgresPoolResource
 
+<<<<<<< HEAD
 class VectorMemoryResource(ConnectionPoolResource):
 =======
 from pipeline.plugins import ResourcePlugin
@@ -22,6 +28,10 @@ from pipeline.stages import PipelineStage
 
 class VectorMemoryResource(ResourcePlugin, Memory):
 >>>>>>> 66045f0cc3ea9a831e3ec579ceb40548cd673716
+=======
+
+class VectorMemoryResource(ConnectionPoolResource):
+>>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
     """Postgres-backed vector memory using pgvector.
 
     Demonstrates **Preserve All Power (7)** by enabling advanced storage
@@ -91,12 +101,16 @@ class VectorMemoryResource(ResourcePlugin, Memory):
 
     async def add_embedding(self, text: str) -> None:
 <<<<<<< HEAD
+<<<<<<< HEAD
         if self._pool is None:
 =======
         """Store an embedding for ``text`` in the backing database."""
 
         if self._connection is None:
 >>>>>>> 5254d8c570961a7008f230d11e4766175159d40a
+=======
+        if self._pool is None:
+>>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
             raise RuntimeError("Resource not initialized")
         embedding = Vector(self._embed(text))
         await self._pool.execute(
@@ -108,12 +122,15 @@ class VectorMemoryResource(ResourcePlugin, Memory):
 <<<<<<< HEAD
     async def query_similar(self, text: str, k: int) -> List[str]:
         if self._pool is None:
+<<<<<<< HEAD
 =======
     async def query_similar(self, text: str, top_k: int) -> List[str]:
         """Return ``top_k`` texts most similar to ``text``."""
 
         if self._connection is None:
 >>>>>>> 5254d8c570961a7008f230d11e4766175159d40a
+=======
+>>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
             return []
         embedding = Vector(self._embed(text))
         rows = await self._pool.fetch(

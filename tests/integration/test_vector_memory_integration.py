@@ -60,9 +60,15 @@ def test_vector_memory_integration():
             await vm.initialize()
         except OSError as exc:
             pytest.skip(f"PostgreSQL not available: {exc}")
+<<<<<<< HEAD
         await db.execute("DROP TABLE IF EXISTS test_history_int")
         await db.execute(
             "CREATE TABLE test_history_int ("
+=======
+        await db._pool.execute(f"DROP TABLE IF EXISTS {db_cfg['history_table']}")
+        await db._pool.execute(
+            f"CREATE TABLE {db_cfg['history_table']} ("
+>>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
             "conversation_id text, role text, content text, "
             "metadata jsonb, timestamp timestamptz)"
         )

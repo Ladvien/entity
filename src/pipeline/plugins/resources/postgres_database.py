@@ -58,6 +58,7 @@ class ConnectionPoolResource(ResourcePlugin):
 
 class PostgresPoolResource(ConnectionPoolResource):
     """Asynchronous PostgreSQL connection pool.
+<<<<<<< HEAD:src/pipeline/plugins/resources/postgres_database.py
 =======
 from pipeline.resources.database import DatabaseResource
 from pipeline.stages import PipelineStage
@@ -66,6 +67,8 @@ from pipeline.stages import PipelineStage
 class PostgresDatabaseResource(DatabaseResource):
     """Asynchronous PostgreSQL connection resource.
 >>>>>>> 66045f0cc3ea9a831e3ec579ceb40548cd673716:src/pipeline/plugins/resources/postgres_database.py
+=======
+>>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99:src/pipeline/plugins/resources/postgres.py
 
     Highlights **Configuration Over Code (9)** by defining all connection
     details in YAML rather than hardcoding them in the class.

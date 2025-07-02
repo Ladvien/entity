@@ -3,7 +3,11 @@ from __future__ import annotations
 from typing import List
 
 from pipeline.context import PluginContext
+<<<<<<< HEAD
 from pipeline.base_plugins import PromptPlugin
+=======
+from pipeline.plugins import PromptPlugin
+>>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
 from pipeline.stages import PipelineStage
 
 

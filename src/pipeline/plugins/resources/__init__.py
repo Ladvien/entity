@@ -21,11 +21,15 @@ from .memory_resource import SimpleMemoryResource
 from .ollama_llm import OllamaLLMResource
 from .openai import OpenAIResource
 <<<<<<< HEAD
+<<<<<<< HEAD
 from .postgres import PostgresResource
 >>>>>>> 5254d8c570961a7008f230d11e4766175159d40a
 =======
 from .postgres_database import PostgresDatabaseResource
 >>>>>>> 66045f0cc3ea9a831e3ec579ceb40548cd673716
+=======
+from .postgres import ConnectionPoolResource, PostgresPoolResource, PostgresResource
+>>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
 from .structured_logging import StructuredLogging
 from .vector_memory import VectorMemoryResource
 
@@ -35,8 +39,11 @@ __all__ = [
     "SimpleMemoryResource",
     "StructuredLogging",
 <<<<<<< HEAD
+<<<<<<< HEAD
     "StorageBackend",
     "StorageResource",
+=======
+>>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
     "ConnectionPoolResource",
     "PostgresPoolResource",
     "PostgresResource",

@@ -4,7 +4,11 @@ import json
 from typing import Dict, List
 
 from pipeline.context import ConversationEntry, PluginContext
+<<<<<<< HEAD
 from pipeline.base_plugins import PromptPlugin
+=======
+from pipeline.plugins import PromptPlugin
+>>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
 from pipeline.stages import PipelineStage
 
 
@@ -42,6 +46,10 @@ class ConversationHistory(PromptPlugin):
                     content=row["content"],
                     role=row["role"],
                     metadata=metadata,
+<<<<<<< HEAD
+=======
+                    timestamp=row["timestamp"],
+>>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
                 )
         else:
             history: List[ConversationEntry] = context.get_conversation_history()

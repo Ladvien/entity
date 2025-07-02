@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
 from typing import Any, Protocol
 
 
@@ -10,6 +13,7 @@ class Memory(Protocol):
     def get(self, key: str, default: Any | None = None) -> Any: ...
 
     def set(self, key: str, value: Any) -> None: ...
+<<<<<<< HEAD
 =======
 from abc import ABC, abstractmethod
 from typing import Any
@@ -34,3 +38,5 @@ class Memory(ABC):
     def clear(self) -> None:
         """Remove all values from memory."""
 >>>>>>> 66045f0cc3ea9a831e3ec579ceb40548cd673716
+=======
+>>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
