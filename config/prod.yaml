@@ -7,7 +7,7 @@ server:
 plugins:
   resources:
     database:
-      type: pipeline.plugins.resources.postgres:PostgresResource
+      type: pipeline.plugins.resources.postgres_database:PostgresDatabaseResource
       host: "${DB_HOST}"
       port: 5432
       name: "${DB_USERNAME}"

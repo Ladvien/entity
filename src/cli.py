@@ -6,8 +6,8 @@ import yaml
 
 from entity import Agent
 from pipeline import update_plugin_configuration
-from pipeline.initializer import ClassRegistry, SystemInitializer, import_plugin_class
 from pipeline.base_plugins import ResourcePlugin, ToolPlugin
+from pipeline.initializer import ClassRegistry, SystemInitializer, import_plugin_class
 from pipeline.logging import get_logger
 
 logger = get_logger(__name__)
@@ -63,7 +63,7 @@ class CLI:
             if registries is None:
                 initializer = SystemInitializer.from_yaml(self.args.config)
                 registries = await initializer.initialize()
-                agent._registries = registries
+                agent._registries = registries  # type: ignore[attr-defined]
 
             resource_registry = getattr(registries, "resources", registries[1])
             tool_registry = getattr(registries, "tools", registries[2])

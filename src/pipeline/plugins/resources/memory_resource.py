@@ -3,10 +3,11 @@ from __future__ import annotations
 from typing import Any, Dict
 
 from pipeline.plugins import ResourcePlugin
+from pipeline.resources.memory import Memory
 from pipeline.stages import PipelineStage
 
 
-class SimpleMemoryResource(ResourcePlugin):
+class SimpleMemoryResource(ResourcePlugin, Memory):
     """In-memory key/value store persisted across pipeline runs.
 
     Demonstrates **Resource Agnostic (11)** since plugins can operate with or

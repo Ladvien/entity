@@ -6,11 +6,11 @@ from typing import Any, Dict, List, Optional
 import asyncpg
 
 from pipeline.context import ConversationEntry
-from pipeline.plugins import ResourcePlugin
+from pipeline.resources.database import DatabaseResource
 from pipeline.stages import PipelineStage
 
 
-class PostgresResource(ResourcePlugin):
+class PostgresDatabaseResource(DatabaseResource):
     """Asynchronous PostgreSQL connection resource.
 
     Highlights **Configuration Over Code (9)** by defining all connection
@@ -35,6 +35,10 @@ class PostgresResource(ResourcePlugin):
             user=str(self.config.get("username")),
             password=str(self.config.get("password")),
         )
+        ext_check = await self._connection.fetchval(
+            "SELECT COUNT(*) FROM pg_extension WHERE extname='vector'"
+        )
+        self.has_vector_store = bool(ext_check)
         if self._history_table:
             table = f"{self._schema + '.' if self._schema else ''}{self._history_table}"
             await self._connection.execute(

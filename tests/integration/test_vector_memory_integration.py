@@ -6,12 +6,19 @@ from pathlib import Path
 import pytest
 
 from config.environment import load_env
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, ResourceRegistry,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    ResourceRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.plugins.prompts.complex_prompt import ComplexPrompt
 from pipeline.plugins.resources.echo_llm import EchoLLMResource
-from pipeline.plugins.resources.postgres import PostgresResource
+from pipeline.plugins.resources.postgres_database import PostgresDatabaseResource
 from pipeline.plugins.resources.vector_memory import VectorMemoryResource
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
@@ -39,7 +46,7 @@ def test_vector_memory_integration():
             "table": "test_vectors_int",
             "dimensions": 3,
         }
-        db = PostgresResource(db_cfg)
+        db = PostgresDatabaseResource(db_cfg)
         vm = VectorMemoryResource(vm_cfg)
         llm = EchoLLMResource()
         try:

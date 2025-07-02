@@ -7,12 +7,12 @@ SRC_PATH = Path(__file__).resolve().parents[1]
 if str(SRC_PATH) not in sys.path:
     sys.path.insert(0, str(SRC_PATH))
 
-import yaml
+import yaml  # noqa: E402
 
 from config.environment import load_env  # noqa: E402
 from pipeline import SystemInitializer  # noqa: E402
-from pipeline.config import ConfigLoader
-from pipeline.logging import configure_logging, get_logger
+from pipeline.config import ConfigLoader  # noqa: E402
+from pipeline.logging import configure_logging, get_logger  # noqa: E402
 
 logger = get_logger(__name__)
 

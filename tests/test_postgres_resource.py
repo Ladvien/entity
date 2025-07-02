@@ -4,7 +4,7 @@ from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from config.environment import load_env
-from pipeline.plugins.resources.postgres import PostgresResource
+from pipeline.plugins.resources.postgres_database import PostgresDatabaseResource
 
 load_env(Path(__file__).resolve().parents[1] / ".env")
 
@@ -18,8 +18,9 @@ async def init_resource():
         "password": os.environ.get("DB_PASSWORD", ""),
     }
     conn = AsyncMock()
+    conn.fetchval = AsyncMock(return_value=1)
     with patch("asyncpg.connect", new=AsyncMock(return_value=conn)) as mock_connect:
-        plugin = PostgresResource(cfg)
+        plugin = PostgresDatabaseResource(cfg)
         await plugin.initialize()
         mock_connect.assert_awaited_with(
             database="db",
@@ -34,10 +35,11 @@ async def init_resource():
 def test_initialize_opens_connection():
     plugin, _ = asyncio.run(init_resource())
     assert plugin._connection is not None
+    assert plugin.has_vector_store
 
 
 async def run_health_check():
-    plugin = PostgresResource({})
+    plugin = PostgresDatabaseResource({})
     conn = AsyncMock()
     conn.fetchval = AsyncMock(return_value=1)
     plugin._connection = conn

@@ -4,12 +4,6 @@ from .context import ConversationEntry, PluginContext, SimpleContext, ToolCall
 from .conversation_manager import ConversationManager
 from .decorators import plugin
 from .errors import create_static_error_response
-from .execution import (
-    create_default_response,
-    create_static_error_response,
-    execute_pipeline,
-    execute_stage,
-)
 from .initializer import (
     ClassRegistry,
     SystemInitializer,
@@ -38,12 +32,10 @@ from .plugins import (
     ToolPlugin,
     ValidationResult,
 )
-from .plugins.classifier import PluginAutoClassifier
 from .registries import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
 from .resources import LLM
 from .stages import PipelineStage
-from .state import FailureInfo, LLMResponse, MetricsCollector, PipelineState
-from .tools.execution import execute_pending_tools
+from .state import FailureInfo, LLMResponse, PipelineState
 
 # isort: off
 from .adapters import CLIAdapter, HTTPAdapter, WebSocketAdapter

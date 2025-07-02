@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from config.environment import load_env
-from pipeline.plugins.resources.postgres import PostgresResource
+from pipeline.plugins.resources.postgres_database import PostgresDatabaseResource
 from pipeline.state import ConversationEntry
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
@@ -24,7 +24,7 @@ CONN = {
 @pytest.mark.integration
 def test_save_and_load_history():
     async def run():
-        resource = PostgresResource(CONN)
+        resource = PostgresDatabaseResource(CONN)
         try:
             await resource.initialize()
         except OSError as exc:

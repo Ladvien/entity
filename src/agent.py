@@ -1,8 +1,4 @@
-"""Backward-compatible agent import."""
-
-import copy
-from typing import Any
-from entity import Agent
+"""Backward-compatible Agent import alias."""
 
 from entity import Agent
 
