@@ -2,7 +2,8 @@ from .database import DatabaseResource
 from .filesystem import FileSystemResource
 from .llm import LLM, LLMResource
 from .memory import Memory
-from .vectorstore import VectorStore, VectorStoreResource
+from .vector_store import VectorStoreResource
+from .vectorstore import VectorStore
 
 __all__ = [
     "LLM",
