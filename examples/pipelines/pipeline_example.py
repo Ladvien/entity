@@ -70,7 +70,7 @@ def setup_registries() -> SystemRegistries:
     tools.add("calculator", CalculatorTool())
 
     resources.add(
-        "ollama",
+        "llm",
         OllamaLLMResource({"base_url": "http://localhost:11434", "model": "tinyllama"}),
     )
 
