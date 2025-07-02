@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any, Dict, Optional
 
+from pipeline.plugins import ValidationResult
 from pipeline.plugins.resources.http_llm_resource import HttpLLMResource
 from pipeline.resources.llm import LLM
 
@@ -18,9 +19,7 @@ class BaseProvider(LLM):
         self.retry_attempts = int(config.get("retries", 3))
 
     @classmethod
-    def validate_config(cls, config: Dict) -> "ValidationResult":
-        from pipeline.plugins import ValidationResult
-
+    def validate_config(cls, config: Dict) -> ValidationResult:
         return HttpLLMResource(
             config, require_api_key=cls.requires_api_key
         ).validate_config()

@@ -19,6 +19,7 @@ CONN = {
     "password": os.environ.get("DB_PASSWORD", ""),
     "pool_min_size": 1,
     "pool_max_size": 2,
+    "history_table": "test_history",
 }
 
 
@@ -30,48 +31,18 @@ def test_save_and_load_history():
             await resource.initialize()
         except OSError as exc:
             pytest.skip(f"PostgreSQL not available: {exc}")
-<<<<<<< HEAD
-        await resource.execute("DROP TABLE IF EXISTS test_history")
-        await resource.execute(
-=======
-        await resource._pool.execute("DROP TABLE IF EXISTS test_history")
-        await resource._pool.execute(
->>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
+        await resource._connection.execute("DROP TABLE IF EXISTS test_history")
+        await resource._connection.execute(
             "CREATE TABLE test_history ("
             "conversation_id text, role text, content text, "
             "metadata jsonb, timestamp timestamptz)"
         )
-        entry = ConversationEntry(
-            content="hello", role="user", timestamp=datetime.now()
-        )
-        await resource.execute(
-            "INSERT INTO test_history (conversation_id, role, content, metadata, timestamp)"
-            " VALUES ($1, $2, $3, $4, $5)",
-            "conv1",
-            entry.role,
-            entry.content,
-            "{}",
-            entry.timestamp,
-        )
-        rows = await resource.fetch(
-            "SELECT role, content, metadata, timestamp FROM test_history WHERE conversation_id=$1",
-            "conv1",
-        )
-        loaded = [
-            ConversationEntry(
-                role=r["role"],
-                content=r["content"],
-                metadata={},
-                timestamp=r["timestamp"],
-            )
-            for r in rows
+        entries = [
+            ConversationEntry(content="hello", role="user", timestamp=datetime.now())
         ]
-<<<<<<< HEAD
-=======
         await resource.save_history("conv1", entries)
         loaded = await resource.load_history("conv1")
->>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
-        await resource.shutdown()
+        await resource._connection.close()
         return loaded
 
     history = asyncio.run(run())
