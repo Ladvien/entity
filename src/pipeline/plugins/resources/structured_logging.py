@@ -6,11 +6,11 @@ import os
 from logging.handlers import RotatingFileHandler
 from typing import Any, Dict
 
-from pipeline.base_plugins import ResourcePlugin, ValidationResult
-from pipeline.stages import PipelineStage
+from pipeline.resources.base import BaseResource
+from pipeline.validation import ValidationResult
 
 
-class StructuredLogging(ResourcePlugin):
+class StructuredLogging(BaseResource):
     """Configure a unified JSON logger based on YAML configuration.
 
     Implements **Observable by Design (16)** by capturing structured logs for
@@ -19,7 +19,6 @@ class StructuredLogging(ResourcePlugin):
     the same location.
     """
 
-    stages = [PipelineStage.PARSE]
     name = "logging"
 
     def __init__(self, config: Dict | None = None) -> None:
@@ -122,8 +121,3 @@ class StructuredLogging(ResourcePlugin):
     async def initialize(self) -> None:
         self._configure_logging()
         self.logger = logging.getLogger(self.__class__.__name__)
-
-    async def _execute_impl(
-        self, context
-    ) -> Any:  # pragma: no cover - no runtime action
-        return None

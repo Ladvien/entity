@@ -7,7 +7,6 @@ import asyncpg
 
 from pipeline.context import ConversationEntry
 from pipeline.resources.database import DatabaseResource
-from pipeline.stages import PipelineStage
 
 
 class PostgresDatabaseResource(DatabaseResource):
@@ -17,7 +16,6 @@ class PostgresDatabaseResource(DatabaseResource):
     details in YAML rather than hardcoding them in the class.
     """
 
-    stages = [PipelineStage.PARSE]
     name = "database"
 
     def __init__(self, config: Dict | None = None) -> None:
@@ -52,9 +50,6 @@ class PostgresDatabaseResource(DatabaseResource):
                 )
                 """
             )
-
-    async def _execute_impl(self, context) -> Any:  # pragma: no cover - no op
-        return None
 
     async def health_check(self) -> bool:
         if self._connection is None:

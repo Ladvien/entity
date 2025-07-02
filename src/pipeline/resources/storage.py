@@ -5,8 +5,7 @@ from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator, Dict, List, Optional, Protocol
 
 from pipeline.context import ConversationEntry
-from pipeline.plugins import ResourcePlugin
-from pipeline.stages import PipelineStage
+from pipeline.resources.base import BaseResource
 
 
 class StorageBackend(Protocol):
@@ -36,10 +35,8 @@ class StorageBackend(Protocol):
         """Retrieve stored history for ``conversation_id``."""
 
 
-class StorageResource(ResourcePlugin, StorageBackend):
+class StorageResource(BaseResource, StorageBackend):
     """Base class for storage resources with connection pooling support."""
-
-    stages = [PipelineStage.PARSE]
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)

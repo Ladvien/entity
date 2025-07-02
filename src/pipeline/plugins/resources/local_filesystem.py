@@ -4,24 +4,19 @@ import asyncio
 import pathlib
 from typing import Dict
 
-from pipeline.plugins import ResourcePlugin
+from pipeline.resources import BaseResource
 from pipeline.resources.filesystem import FileSystemResource
-from pipeline.stages import PipelineStage
 
 
-class LocalFileSystemResource(ResourcePlugin, FileSystemResource):
+class LocalFileSystemResource(BaseResource, FileSystemResource):
     """Persist files on the local disk."""
 
-    stages = [PipelineStage.PARSE]
     name = "filesystem"
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
         base_path = self.config.get("base_path", "./data")
         self._base = pathlib.Path(base_path)
-
-    async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
-        return None
 
     async def store(self, key: str, content: bytes) -> str:
         path = self._base / key

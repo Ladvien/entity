@@ -3,8 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Dict, List
 
-from pipeline.base_plugins import ResourcePlugin
-from pipeline.stages import PipelineStage
+from pipeline.resources.base import BaseResource
 
 
 class VectorStore(ABC):
@@ -19,10 +18,5 @@ class VectorStore(ABC):
         """Return the ``k`` most similar items for ``query``."""
 
 
-class VectorStoreResource(ResourcePlugin, VectorStore, ABC):
+class VectorStoreResource(BaseResource, VectorStore, ABC):
     """Base class for vector store resources."""
-
-    stages = [PipelineStage.PARSE]
-
-    async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
-        return None

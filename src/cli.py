@@ -9,6 +9,7 @@ from pipeline import update_plugin_configuration
 from pipeline.base_plugins import ResourcePlugin, ToolPlugin
 from pipeline.initializer import ClassRegistry, SystemInitializer, import_plugin_class
 from pipeline.logging import get_logger
+from pipeline.resources.base import Resource
 
 logger = get_logger(__name__)
 
@@ -117,7 +118,7 @@ class CLI:
                         return False
 
                 instance = cls(conf)
-                if issubclass(cls, ResourcePlugin):
+                if issubclass(cls, ResourcePlugin) or issubclass(cls, Resource):
                     if hasattr(instance, "initialize") and callable(
                         instance.initialize
                     ):

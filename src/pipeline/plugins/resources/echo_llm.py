@@ -9,8 +9,5 @@ class EchoLLMResource(LLMResource):
     name = "echo"
     aliases = ["llm"]
 
-    async def _execute_impl(self, context):
-        return None
-
     async def generate(self, prompt: str) -> str:
         return prompt
