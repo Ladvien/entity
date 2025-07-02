@@ -1,18 +1,13 @@
 from __future__ import annotations
 
-import warnings
+import json
 from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator, Dict, List, Optional
 
 import asyncpg
 
-<<<<<<< HEAD
-from pipeline.context import ConversationEntry
 from pipeline.base_plugins import ResourcePlugin
-=======
-from pipeline.plugins import ResourcePlugin
-from pipeline.resources import StorageBackend
->>>>>>> 5e83dad2333366e3475cc1780350f7148fd6a771
+from pipeline.context import ConversationEntry
 from pipeline.stages import PipelineStage
 
 
@@ -60,15 +55,19 @@ class ConnectionPoolResource(ResourcePlugin):
         raise NotImplementedError
 
 
-class PostgresStorageBackend(ConnectionPoolResource, StorageBackend):
-    """Asynchronous PostgreSQL storage backend."""
+class PostgresPoolResource(ConnectionPoolResource):
+    """Asynchronous PostgreSQL connection pool.
+
+    Highlights **Configuration Over Code (9)** by defining all connection
+    details in YAML rather than hardcoding them in the class.
+    """
 
     name = "database"
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
-        self._min_size = int(self.config.get("pool_min_size", 1))
-        self._max_size = int(self.config.get("pool_max_size", 5))
+        self._schema = self.config.get("db_schema")
+        self._history_table = self.config.get("history_table")
 
     async def initialize(self) -> None:
         self.logger.info(
@@ -80,9 +79,21 @@ class PostgresStorageBackend(ConnectionPoolResource, StorageBackend):
             port=int(self.config.get("port", 5432)),
             user=str(self.config.get("username")),
             password=str(self.config.get("password")),
-            min_size=self._min_size,
-            max_size=self._max_size,
         )
+        if self._history_table:
+            table = f"{self._schema + '.' if self._schema else ''}{self._history_table}"
+            async with self.connection() as conn:
+                await conn.execute(
+                    f"""
+                    CREATE TABLE IF NOT EXISTS {table} (
+                        conversation_id TEXT,
+                        role TEXT,
+                        content TEXT,
+                        metadata JSONB,
+                        timestamp TIMESTAMPTZ
+                    )
+                    """
+                )
 
     async def _execute_impl(self, context) -> Any:  # pragma: no cover - no op
         return None
@@ -90,35 +101,56 @@ class PostgresStorageBackend(ConnectionPoolResource, StorageBackend):
     async def _do_health_check(self, connection: asyncpg.Connection) -> None:
         await connection.fetchval("SELECT 1")
 
-    async def execute(self, query: str, *args: Any) -> Any:
-        if self._pool is None:
-            raise RuntimeError("Pool not initialized")
-        async with self.connection() as conn:
-            return await conn.execute(query, *args)
+    async def save_history(
+        self, conversation_id: str, history: List[ConversationEntry]
+    ) -> None:
+        """Persist conversation ``history`` for ``conversation_id``."""
 
-    async def fetch(self, query: str, *args: Any) -> List[Any]:
-        if self._pool is None:
-            raise RuntimeError("Pool not initialized")
-        async with self.connection() as conn:
-            return await conn.fetch(query, *args)
+        if self._pool is None or not self._history_table:
+            return
 
-    async def fetchval(self, query: str, *args: Any) -> Any:
-        if self._pool is None:
-            raise RuntimeError("Pool not initialized")
-        async with self.connection() as conn:
-            return await conn.fetchval(query, *args)
+        table = f"{self._schema + '.' if self._schema else ''}{self._history_table}"
+        for entry in history:
+            query = (
+                f"INSERT INTO {table} "
+                "(conversation_id, role, content, metadata, timestamp)"  # nosec B608
+                " VALUES ($1, $2, $3, $4, $5)"
+            )
+            await self._pool.execute(
+                query,
+                conversation_id,
+                entry.role,
+                entry.content,
+                json.dumps(entry.metadata),
+                entry.timestamp,
+            )
 
+    async def load_history(self, conversation_id: str) -> List[ConversationEntry]:
+        """Retrieve stored history for ``conversation_id``."""
 
-class PostgresPoolResource(PostgresStorageBackend):
-    """Deprecated compatibility wrapper."""
+        if self._pool is None or not self._history_table:
+            return []
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        warnings.warn(
-            "PostgresPoolResource is deprecated, use PostgresStorageBackend instead",
-            DeprecationWarning,
-            stacklevel=2,
+        table = f"{self._schema + '.' if self._schema else ''}{self._history_table}"
+        query = (
+            f"SELECT role, content, metadata, timestamp FROM {table} "  # nosec B608
+            "WHERE conversation_id=$1 ORDER BY timestamp"
         )
-        super().__init__(*args, **kwargs)
+        rows = await self._pool.fetch(query, conversation_id)
+        history: List[ConversationEntry] = []
+        for row in rows:
+            metadata = row["metadata"]
+            if not isinstance(metadata, dict):
+                metadata = json.loads(metadata) if metadata else {}
+            history.append(
+                ConversationEntry(
+                    content=row["content"],
+                    role=row["role"],
+                    timestamp=row["timestamp"],
+                    metadata=metadata,
+                )
+            )
+        return history
 
 
 # Backwards compatibility alias
