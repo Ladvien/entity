@@ -9,7 +9,7 @@ from pipeline import (
     ToolRegistry,
     execute_pipeline,
 )
-from pipeline.plugins.resources.memory_resource import SimpleMemoryResource
+from pipeline.plugins.resources.memory import SimpleMemoryResource
 from pipeline.resources.memory import Memory
 
 

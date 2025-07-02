@@ -2,7 +2,7 @@ from .claude import ClaudeResource
 from .echo_llm import EchoLLMResource
 from .gemini import GeminiResource
 from .llm_resource import LLMResource
-from .memory_resource import MemoryResource, SimpleMemoryResource
+from .memory import MemoryResource, SimpleMemoryResource
 from .ollama_llm import OllamaLLMResource
 from .openai import OpenAIResource
 from .pg_vector_store import PgVectorStore

@@ -13,7 +13,7 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.plugins.prompts.complex_prompt import ComplexPrompt
-from pipeline.plugins.resources.memory_resource import MemoryResource
+from pipeline.plugins.resources.memory import MemoryResource
 
 
 class FakeLLM:
