@@ -11,7 +11,6 @@ class OpenAIResource(LLMResource):
     """LLM resource for OpenAI's chat completion API."""
 
     name = "openai"
-    aliases = ["llm"]
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)

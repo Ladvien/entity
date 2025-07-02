@@ -182,9 +182,6 @@ class SystemInitializer:
                 getattr(instance, "initialize")
             ):
                 await instance.initialize()
-            for alias in getattr(instance, "aliases", []):
-                if alias != primary_name:
-                    resource_registry.add(alias, instance)
 
         # Phase 3.5: register tools
         tool_registry = ToolRegistry()

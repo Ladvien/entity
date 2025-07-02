@@ -13,7 +13,6 @@ class GeminiResource(LLMResource):
 
     stages = [PipelineStage.PARSE]
     name = "gemini"
-    aliases = ["llm"]
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)

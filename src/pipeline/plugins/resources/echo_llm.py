@@ -7,7 +7,6 @@ class EchoLLMResource(LLMResource):
     """Simple LLM resource that echoes the prompt back."""
 
     name = "echo"
-    aliases = ["llm"]
 
     async def _execute_impl(self, context):
         return None

@@ -15,7 +15,6 @@ class OllamaLLMResource(LLMResource):
     """
 
     name = "ollama"
-    aliases = ["llm"]
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
