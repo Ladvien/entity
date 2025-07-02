@@ -32,8 +32,10 @@ class OllamaLLMResource(LLMResource):
         return None
 
     async def generate(self, prompt: str) -> str:
-        if not self.base_url or not self.model:
-            raise RuntimeError("Ollama resource not properly configured")
+        """Return a completion from the local Ollama server for ``prompt``."""
+
+        self.require_fields("base_url", "model")
+        assert self.base_url and self.model
 
         url = f"{self.base_url.rstrip('/')}/api/generate"
         payload = {"model": self.model, "prompt": prompt, **self.params}

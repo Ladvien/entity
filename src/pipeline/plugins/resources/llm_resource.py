@@ -24,6 +24,16 @@ class LLMResource(ResourcePlugin, LLM):
 
     __call__ = generate
 
+    def require_fields(self, *fields: str) -> None:
+        """Raise ``RuntimeError`` if any named instance attributes are falsy."""
+
+        missing = [name for name in fields if not getattr(self, name)]
+        if missing:
+            joined = ", ".join(missing)
+            raise RuntimeError(
+                f"{self.__class__.__name__} missing required fields: {joined}"
+            )
+
     @staticmethod
     def validate_required_fields(config: Dict, fields: List[str]) -> "ValidationResult":
         """Verify that all ``fields`` exist in ``config``."""

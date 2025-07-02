@@ -13,4 +13,6 @@ class EchoLLMResource(LLMResource):
         return None
 
     async def generate(self, prompt: str) -> str:
+        """Return ``prompt`` unchanged."""
+
         return prompt

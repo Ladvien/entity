@@ -29,8 +29,10 @@ class OpenAIResource(LLMResource):
         return None
 
     async def generate(self, prompt: str) -> str:
-        if not self.api_key or not self.model or not self.base_url:
-            raise RuntimeError("OpenAI resource not properly configured")
+        """Return an OpenAI chat completion for ``prompt``."""
+
+        self.require_fields("api_key", "model", "base_url")
+        assert self.api_key and self.model and self.base_url
 
         url = f"{self.base_url.rstrip('/')}/v1/chat/completions"
         headers = {"Authorization": f"Bearer {self.api_key}"}

@@ -30,8 +30,10 @@ class GeminiResource(LLMResource):
         return None
 
     async def generate(self, prompt: str) -> str:
-        if not self.api_key or not self.model or not self.base_url:
-            raise RuntimeError("Gemini resource not properly configured")
+        """Return a Gemini completion for ``prompt``."""
+
+        self.require_fields("api_key", "model", "base_url")
+        assert self.api_key and self.model and self.base_url
 
         url = f"{self.base_url.rstrip('/')}/v1beta/models/{self.model}:generateContent"
         headers = {"Content-Type": "application/json"}
