@@ -14,7 +14,8 @@ plugins:
       username: "${DB_USERNAME}"
       password: "${DB_PASSWORD}"
     llm:
-      type: pipeline.plugins.resources.ollama_llm:OllamaLLMResource
+      type: pipeline.plugins.resources.llm.unified:UnifiedLLMResource
+      provider: ollama
       base_url: "${OLLAMA_BASE_URL}"
       model: "${OLLAMA_MODEL}"
       temperature: 0.7

@@ -17,11 +17,11 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))  # noq
 from entity import Agent  # noqa: E402
 from pipeline import PipelineStage, PromptPlugin, ResourcePlugin  # noqa: E402
 from pipeline.context import PluginContext  # noqa: E402
-from pipeline.plugins.resources.echo_llm import EchoLLMResource  # noqa: E402
+from pipeline.plugins.resources.llm import UnifiedLLMResource  # noqa: E402
 from pipeline.plugins.resources.pg_vector_store import PgVectorStore  # noqa: E402
-from pipeline.plugins.resources.postgres_database import (  # noqa: E402
+from pipeline.plugins.resources.postgres_database import (
     PostgresDatabaseResource,
-)
+)  # noqa: E402
 
 
 class VectorMemoryResource(ResourcePlugin):
@@ -72,7 +72,10 @@ def main() -> None:
             }
         ),
     )
-    agent.resource_registry.add("ollama", EchoLLMResource())
+    agent.resource_registry.add(
+        "ollama",
+        UnifiedLLMResource({"provider": "echo"}),
+    )
     agent.resource_registry.add("vector_memory", VectorMemoryResource())
     agent.plugin_registry.register_plugin_for_stage(
         ComplexPrompt(), PipelineStage.THINK
