@@ -63,7 +63,7 @@ class CLI:
             if registries is None:
                 initializer = SystemInitializer.from_yaml(self.args.config)
                 registries = await initializer.initialize()
-                agent._registries = registries
+                agent._registries = registries  # type: ignore[attr-defined]
 
             resource_registry = getattr(registries, "resources", registries[1])
             tool_registry = getattr(registries, "tools", registries[2])

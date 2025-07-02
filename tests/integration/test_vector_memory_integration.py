@@ -17,8 +17,13 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.plugins.prompts.complex_prompt import ComplexPrompt
+<<<<<<< HEAD
 from pipeline.plugins.resources.llm.unified import UnifiedLLMResource
 from pipeline.plugins.resources.postgres import PostgresResource
+=======
+from pipeline.plugins.resources.echo_llm import EchoLLMResource
+from pipeline.plugins.resources.postgres_database import PostgresDatabaseResource
+>>>>>>> 66045f0cc3ea9a831e3ec579ceb40548cd673716
 from pipeline.plugins.resources.vector_memory import VectorMemoryResource
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
@@ -47,7 +52,7 @@ def test_vector_memory_integration():
             "table": "test_vectors_int",
             "dimensions": 3,
         }
-        db = PostgresResource(db_cfg)
+        db = PostgresDatabaseResource(db_cfg)
         vm = VectorMemoryResource(vm_cfg)
         llm = UnifiedLLMResource({"provider": "echo"})
         try:

@@ -6,6 +6,7 @@ import asyncpg
 from pgvector import Vector
 from pgvector.asyncpg import register_vector
 
+<<<<<<< HEAD
 from pipeline.base_plugins import ValidationResult
 from pipeline.stages import PipelineStage
 from .postgres import ConnectionPoolResource, PostgresPoolResource
@@ -13,6 +14,14 @@ from pipeline.stages import PipelineStage
 
 
 class VectorMemoryResource(ConnectionPoolResource):
+=======
+from pipeline.plugins import ResourcePlugin
+from pipeline.resources.memory import Memory
+from pipeline.stages import PipelineStage
+
+
+class VectorMemoryResource(ResourcePlugin, Memory):
+>>>>>>> 66045f0cc3ea9a831e3ec579ceb40548cd673716
     """Postgres-backed vector memory using pgvector.
 
     Demonstrates **Preserve All Power (7)** by enabling advanced storage
@@ -62,6 +71,15 @@ class VectorMemoryResource(ConnectionPoolResource):
 
     async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
         return None
+
+    def get(self, key: str, default: Optional[str] | None = None) -> str:
+        raise NotImplementedError("VectorMemoryResource does not support get")
+
+    def set(self, key: str, value: str) -> None:
+        raise NotImplementedError("VectorMemoryResource does not support set")
+
+    def clear(self) -> None:
+        raise NotImplementedError("VectorMemoryResource does not support clear")
 
     def _embed(self, text: str) -> List[float]:
         """Generate a naive embedding vector from ``text``."""

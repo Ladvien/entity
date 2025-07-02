@@ -18,7 +18,9 @@ from entity import Agent  # noqa: E402
 from pipeline import PipelineStage, PromptPlugin, ResourcePlugin  # noqa: E402
 from pipeline.context import PluginContext  # noqa: E402
 from pipeline.plugins.resources.echo_llm import EchoLLMResource  # noqa: E402
-from pipeline.plugins.resources.postgres import PostgresResource  # noqa: E402
+from pipeline.plugins.resources.postgres_database import (
+    PostgresDatabaseResource,
+)  # noqa: E402
 
 
 class VectorMemoryResource(ResourcePlugin):
@@ -59,7 +61,7 @@ def main() -> None:
     agent = Agent()
     agent.resource_registry.add(
         "database",
-        PostgresResource(
+        PostgresDatabaseResource(
             {
                 "host": "localhost",
                 "port": 5432,

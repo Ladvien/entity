@@ -6,8 +6,13 @@ server:
 
 plugins:
   resources:
+<<<<<<< HEAD
     storage:
       type: pipeline.plugins.resources.postgres:PostgresResource
+=======
+    database:
+      type: pipeline.plugins.resources.postgres_database:PostgresDatabaseResource
+>>>>>>> 66045f0cc3ea9a831e3ec579ceb40548cd673716
       host: "${DB_HOST}"
       port: 5432
       name: "${DB_USERNAME}"

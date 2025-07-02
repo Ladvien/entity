@@ -8,6 +8,7 @@ import asyncpg
 
 from pipeline.base_plugins import ResourcePlugin
 from pipeline.context import ConversationEntry
+<<<<<<< HEAD:src/pipeline/plugins/resources/postgres.py
 from pipeline.stages import PipelineStage
 
 
@@ -57,6 +58,14 @@ class ConnectionPoolResource(ResourcePlugin):
 
 class PostgresPoolResource(ConnectionPoolResource):
     """Asynchronous PostgreSQL connection pool.
+=======
+from pipeline.resources.database import DatabaseResource
+from pipeline.stages import PipelineStage
+
+
+class PostgresDatabaseResource(DatabaseResource):
+    """Asynchronous PostgreSQL connection resource.
+>>>>>>> 66045f0cc3ea9a831e3ec579ceb40548cd673716:src/pipeline/plugins/resources/postgres_database.py
 
     Highlights **Configuration Over Code (9)** by defining all connection
     details in YAML rather than hardcoding them in the class.
@@ -80,6 +89,10 @@ class PostgresPoolResource(ConnectionPoolResource):
             user=str(self.config.get("username")),
             password=str(self.config.get("password")),
         )
+        ext_check = await self._connection.fetchval(
+            "SELECT COUNT(*) FROM pg_extension WHERE extname='vector'"
+        )
+        self.has_vector_store = bool(ext_check)
         if self._history_table:
             table = f"{self._schema + '.' if self._schema else ''}{self._history_table}"
             async with self.connection() as conn:
