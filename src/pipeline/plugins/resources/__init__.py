@@ -7,6 +7,7 @@ from .ollama_llm import OllamaLLMResource
 from .openai import OpenAIResource
 from .pg_vector_store import PgVectorStore
 from .postgres_database import PostgresDatabaseResource
+from .s3_filesystem import S3FileSystem
 from .structured_logging import StructuredLogging
 
 __all__ = [
@@ -21,4 +22,5 @@ __all__ = [
     "OpenAIResource",
     "GeminiResource",
     "ClaudeResource",
+    "S3FileSystem",
 ]
