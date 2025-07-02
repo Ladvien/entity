@@ -18,19 +18,19 @@ class SimpleMemoryResource(ResourcePlugin):
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
-        self._store: Dict[str, Any] = {}
+        self._memory: Dict[str, Any] = {}
 
     async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
         return None
 
     def get(self, key: str, default: Any | None = None) -> Any:
         """Retrieve a value from memory."""
-        return self._store.get(key, default)
+        return self._memory.get(key, default)
 
     def set(self, key: str, value: Any) -> None:
         """Store a value in memory."""
-        self._store[key] = value
+        self._memory[key] = value
 
     def clear(self) -> None:
         """Remove all stored values."""
-        self._store.clear()
+        self._memory.clear()

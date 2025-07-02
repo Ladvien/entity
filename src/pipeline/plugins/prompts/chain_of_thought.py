@@ -60,9 +60,13 @@ class ChainOfThoughtPrompt(PromptPlugin):
         context.set_stage_result("reasoning_steps", reasoning_steps)
 
     def _needs_tools(self, reasoning_text: str) -> bool:
+        """Return True if ``reasoning_text`` suggests tool usage."""
+
         tool_indicators = ["need to calculate", "should look up", "requires analysis"]
         return any(indicator in reasoning_text.lower() for indicator in tool_indicators)
 
     def _get_conversation_text(self, conversation: List[ConversationEntry]) -> str:
+        """Return the most recent user message from ``conversation``."""
+
         user_entries = [entry.content for entry in conversation if entry.role == "user"]
         return user_entries[-1] if user_entries else ""
