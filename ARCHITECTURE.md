@@ -189,6 +189,175 @@ flowchart TD
     class SimplePlugins,AutoRouter simple
 ```
 
+### Resource Composition
+This is an excellent mental model! The composition pattern you're proposing aligns perfectly with the framework's design principles and would make memory management much more intuitive. Here are my thoughts:
+
+## Strengths of This Approach
+
+1. **Clear Separation of Concerns**
+   - Each resource has a single, well-defined responsibility
+   - Easy to understand what each component does
+   - Follows the Single Responsibility Principle
+
+2. **Flexible Composition**
+   - Users can mix and match backends
+   - Easy to swap implementations (Postgres → SQLite, S3 → local filesystem)
+   - Supports gradual complexity (start with just DB, add vector store later)
+
+3. **Intuitive Mental Model**
+   - Memory = Database + Vector Store + File System
+   - Matches how developers think about storage layers
+   - Clear upgrade path from simple to complex
+
+## Suggested Implementation
+
+```python
+from abc import ABC, abstractmethod
+from typing import Optional, List, Dict, Any
+
+class MemoryResource(ResourcePlugin):
+    """Unified memory interface composing multiple storage backends."""
+    
+    stages = [PipelineStage.PARSE]
+    name = "memory"
+    
+    def __init__(
+        self,
+        database: Optional[DatabaseResource] = None,
+        vector_store: Optional[VectorStoreResource] = None,
+        filesystem: Optional[FileSystemResource] = None,
+        config: Optional[Dict] = None
+    ):
+        super().__init__(config or {})
+        self.database = database
+        self.vector_store = vector_store
+        self.filesystem = filesystem
+        
+    @classmethod
+    def from_config(cls, config: Dict) -> "MemoryResource":
+        """Create MemoryResource from YAML configuration."""
+        # Allow both programmatic and config-based initialization
+        db_config = config.get("database")
+        if db_config:
+            db_type = db_config.get("type", "postgres")
+            if db_type == "postgres":
+                db = PostgresDatabaseResource(db_config)
+            elif db_type == "sqlite":
+                db = SQLiteDatabaseResource(db_config)
+            else:
+                db = None
+        else:
+            db = None
+            
+        # Similar for vector_store and filesystem
+        return cls(database=db, vector_store=vector_store, filesystem=filesystem)
+    
+    async def save_conversation(self, conversation_id: str, entries: List[ConversationEntry]):
+        """Save conversation history using the database backend."""
+        if self.database:
+            await self.database.save_history(conversation_id, entries)
+    
+    async def search_similar(self, query: str, k: int = 5) -> List[str]:
+        """Semantic search using the vector store."""
+        if self.vector_store:
+            return await self.vector_store.query_similar(query, k)
+        return []
+    
+    async def store_file(self, key: str, content: bytes) -> str:
+        """Store a file using the filesystem backend."""
+        if self.filesystem:
+            return await self.filesystem.store(key, content)
+        raise ValueError("No filesystem backend configured")
+```
+
+## Configuration Examples
+
+### Simple Configuration
+```yaml
+plugins:
+  resources:
+    memory:
+      type: memory
+      database:
+        type: sqlite
+        path: ./agent.db
+```
+
+### Advanced Configuration
+```yaml
+plugins:
+  resources:
+    memory:
+      type: memory
+      database:
+        type: postgres
+        host: localhost
+        name: agent_db
+      vector_store:
+        type: pgvector
+        dimensions: 768
+        table: embeddings
+      filesystem:
+        type: s3
+        bucket: agent-files
+        region: us-east-1
+```
+
+### Programmatic Configuration
+```python
+# Start simple
+memory = MemoryResource(
+    database=SQLiteDatabaseResource("./agent.db")
+)
+
+# Evolve to complex
+postgres = PostgresDatabaseResource(connection_str)
+memory = MemoryResource(
+    database=postgres,
+    vector_store=PgVectorStore(postgres, dimensions=768),
+    filesystem=S3FileSystem(bucket="agent-files")
+)
+```
+
+## Implementation Recommendations
+
+1. **Create Abstract Base Classes**
+   ```python
+   class DatabaseResource(ABC):
+       @abstractmethod
+       async def save_history(self, conversation_id: str, entries: List[ConversationEntry]): ...
+       
+       @abstractmethod
+       async def load_history(self, conversation_id: str) -> List[ConversationEntry]: ...
+   
+   class VectorStoreResource(ABC):
+       @abstractmethod
+       async def add_embedding(self, text: str, metadata: Dict = None): ...
+       
+       @abstractmethod
+       async def query_similar(self, query: str, k: int) -> List[Dict]: ...
+   ```
+
+2. **Support Dependency Sharing**
+   ```python
+   # Vector store can reuse database connection
+   postgres = PostgresDatabaseResource(config)
+   vector_store = PgVectorStore(postgres)  # Reuses connection pool
+   ```
+
+3. **Provide Sensible Defaults**
+   ```python
+   # If no config provided, use SQLite + local filesystem
+   memory = MemoryResource()  # Works out of the box
+   ```
+
+4. **Clear Migration Path**
+   ```python
+   # Easy to migrate data between backends
+   await memory.migrate_to(new_memory)
+   ```
+
+
 ### Agent-Focused Stage Definitions
 
 #### **parse** - "Get ready to think"

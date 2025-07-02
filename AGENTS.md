@@ -20,12 +20,9 @@ The `ARCHITECTURE.md` file provides a high-level overview of the Entity Pipeline
 - `/config` – YAML configuration files for different environments
 - `/tests` – test files organized by plugin type and core functionality
 - `/docs` – additional documentation and architecture guides
-<<<<<<< HEAD
 
 ## Important Notes
 - This is a pre-alpha project.  We do NOT need to maintain backwards compatibility or legacy systems.  If we do not need it, delete it.
-=======
->>>>>>> 993de08c4c8e26f1c4f76d5337df519d1e21df99
 
 ## Project Tools
 - poetry 
