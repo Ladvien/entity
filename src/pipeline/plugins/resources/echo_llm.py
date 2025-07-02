@@ -14,5 +14,3 @@ class EchoLLMResource(LLMResource):
 
     async def generate(self, prompt: str) -> str:
         return prompt
-
-    __call__ = generate

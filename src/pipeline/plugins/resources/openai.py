@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Dict
 
 import httpx
 
@@ -19,21 +19,11 @@ class OpenAIResource(LLMResource):
         self.api_key: str | None = self.config.get("api_key")
         self.model: str | None = self.config.get("model")
         self.base_url: str | None = self.config.get("base_url")
-        self.params: Dict[str, Any] = {
-            k: v
-            for k, v in self.config.items()
-            if k not in {"api_key", "model", "base_url"}
-        }
+        self.params = self.extract_params(self.config, ["api_key", "model", "base_url"])
 
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
-        if not config.get("api_key"):
-            return ValidationResult.error_result("'api_key' is required")
-        if not config.get("model"):
-            return ValidationResult.error_result("'model' is required")
-        if not config.get("base_url"):
-            return ValidationResult.error_result("'base_url' is required")
-        return ValidationResult.success_result()
+        return cls.validate_required_fields(config, ["api_key", "model", "base_url"])
 
     async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
         return None
@@ -59,5 +49,3 @@ class OpenAIResource(LLMResource):
         data = response.json()
         text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
         return str(text)
-
-    __call__ = generate

@@ -49,12 +49,16 @@ class VectorMemoryResource(ResourcePlugin):
         return None
 
     def _embed(self, text: str) -> List[float]:
-        values = [0.0] * self._dim
+        """Generate a naive embedding vector from ``text``."""
+
+        embedding = [0.0] * self._dim
         for i, byte in enumerate(text.encode("utf-8")):
-            values[i % self._dim] += float(byte)
-        return [v / 255.0 for v in values]
+            embedding[i % self._dim] += float(byte)
+        return [value / 255.0 for value in embedding]
 
     async def add_embedding(self, text: str) -> None:
+        """Store an embedding for ``text`` in the backing database."""
+
         if self._connection is None:
             raise RuntimeError("Resource not initialized")
         embedding = Vector(self._embed(text))
@@ -64,13 +68,15 @@ class VectorMemoryResource(ResourcePlugin):
             embedding,
         )
 
-    async def query_similar(self, text: str, k: int) -> List[str]:
+    async def query_similar(self, text: str, top_k: int) -> List[str]:
+        """Return ``top_k`` texts most similar to ``text``."""
+
         if self._connection is None:
             return []
         embedding = Vector(self._embed(text))
         rows = await self._connection.fetch(
             f"SELECT text FROM {self._table} ORDER BY embedding <-> $1 LIMIT $2",  # nosec B608
             embedding,
-            k,
+            top_k,
         )
         return [row["text"] for row in rows]

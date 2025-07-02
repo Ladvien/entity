@@ -80,6 +80,7 @@ class ReActPrompt(PromptPlugin):
     def _build_step_context(
         self, conversation: List[ConversationEntry], question: str
     ) -> str:
+        """Return a summary of ``conversation`` for the next reasoning step."""
         context_parts = [f"Question: {question}"]
 
         recent_entries = conversation[-10:]
@@ -97,6 +98,7 @@ class ReActPrompt(PromptPlugin):
         return "\n".join(context_parts)
 
     def _parse_action(self, action_text: str) -> Tuple[str, Dict[str, Any]]:
+        """Parse an action command from ``action_text``."""
         parts = action_text.split(" ", 1)
         if len(parts) < 2:
             return "search_tool", {"query": action_text}

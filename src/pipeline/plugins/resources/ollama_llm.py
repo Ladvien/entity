@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Dict
 
 import httpx
 
@@ -22,17 +22,11 @@ class OllamaLLMResource(LLMResource):
         super().__init__(config)
         self.base_url: str | None = self.config.get("base_url")
         self.model: str | None = self.config.get("model")
-        self.params: Dict[str, Any] = {
-            k: v for k, v in self.config.items() if k not in {"base_url", "model"}
-        }
+        self.params = self.extract_params(self.config, ["base_url", "model"])
 
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
-        if not config.get("base_url"):
-            return ValidationResult.error_result("'base_url' is required")
-        if not config.get("model"):
-            return ValidationResult.error_result("'model' is required")
-        return ValidationResult.success_result()
+        return cls.validate_required_fields(config, ["base_url", "model"])
 
     async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
         return None
@@ -53,5 +47,3 @@ class OllamaLLMResource(LLMResource):
         data = response.json()
         text = data.get("response", "")
         return str(text)
-
-    __call__ = generate
