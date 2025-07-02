@@ -24,7 +24,10 @@ plugins:
       file_enabled: true
       file_path: "logs/entity.log"
     memory:
+<<<<<<< HEAD
       type: pipeline.plugins.resources.memory:MemoryResource
+=======
+>>>>>>> 92a5f930cb56f66154cc0e647e0797cfa0c1afaf
       backend:
         type: pipeline.plugins.resources.memory:SimpleMemoryResource
   tools:
