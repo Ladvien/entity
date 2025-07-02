@@ -60,9 +60,19 @@ class MemoryResource(ResourcePlugin, Memory):
     def from_config(cls, config: Dict) -> "MemoryResource":
         def build(key: str):
             cfg = config.get(key)
-            if not cfg or not isinstance(cfg, dict) or not cfg.get("type"):
+            if not cfg or not isinstance(cfg, dict):
                 return None
-            cls_obj = import_plugin_class(cfg["type"])
+
+            type_hint = cfg.get("type")
+            if not type_hint:
+                return None
+
+            if key == "filesystem" and str(type_hint).lower() == "s3":
+                from .s3_filesystem import S3FileSystem
+
+                return S3FileSystem(cfg)
+
+            cls_obj = import_plugin_class(type_hint)
             return cls_obj(cfg)
 
         database = build("database")

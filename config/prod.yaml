@@ -24,12 +24,18 @@ plugins:
       file_enabled: true
       file_path: "logs/entity.log"
     memory:
-<<<<<<< HEAD
       type: pipeline.plugins.resources.memory:MemoryResource
-=======
->>>>>>> 92a5f930cb56f66154cc0e647e0797cfa0c1afaf
-      backend:
-        type: pipeline.plugins.resources.memory:SimpleMemoryResource
+      database:
+        type: pipeline.plugins.resources.postgres_database:PostgresDatabaseResource
+        host: "${DB_HOST}"
+        port: 5432
+        name: "${DB_NAME}"
+        username: "${DB_USERNAME}"
+        password: "${DB_PASSWORD}"
+      filesystem:
+        type: s3
+        bucket: agent-files
+        region: us-east-1
   tools:
     weather:
       type: pipeline.plugins.tools.weather_api_tool:WeatherApiTool
