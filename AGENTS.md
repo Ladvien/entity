@@ -22,11 +22,13 @@ The `ARCHITECTURE.md` file provides a high-level overview of the Entity Pipeline
 - `/docs` – additional documentation and architecture guides
 
 ## Project Tools
-- poetry
+- poetry 
 - readthedocs
 - pyenv
 - pytest
 - mypy
+
+> **Please always use the poetry virtual environment and dependencies.**
 
 ## Public API Overview
 
