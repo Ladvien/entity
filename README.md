@@ -3,11 +3,7 @@
 When instantiated without a configuration file, ``Agent`` loads a basic set of
 plugins so the pipeline can run out of the box:
 
-<<<<<<< HEAD
-- ``UnifiedLLMResource`` – configured with the ``echo`` provider by default.
-=======
-- ``UnifiedLLMResource`` (provider ``echo``) – minimal LLM resource that simply echoes prompts.
->>>>>>> 8b97def929145abb996b25b8e31999e109bc9598
+- ``EchoLLMResource`` – minimal LLM resource that simply echoes prompts.
 - ``MemoryResource`` – unified interface that delegates to an in-memory backend by default.
 - ``SearchTool`` – wrapper around DuckDuckGo's search API.
 - ``CalculatorTool`` – safe evaluator for arithmetic expressions.

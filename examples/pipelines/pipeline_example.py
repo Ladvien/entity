@@ -20,11 +20,7 @@ from pipeline import (
     ToolRegistry,
     execute_pipeline,
 )
-<<<<<<< HEAD
-from pipeline.plugins.resources.llm import UnifiedLLMResource
-=======
 from pipeline.plugins.resources.llm.unified import UnifiedLLMResource
->>>>>>> 8b97def929145abb996b25b8e31999e109bc9598
 
 
 class CalculatorTool(ToolPlugin):
@@ -74,12 +70,7 @@ def setup_registries() -> SystemRegistries:
     tools.add("calculator", CalculatorTool())
 
     resources.add(
-<<<<<<< HEAD
-<<<<<<< HEAD
-        "ollama",
-=======
         "llm",
->>>>>>> 8b97def929145abb996b25b8e31999e109bc9598
         UnifiedLLMResource(
             {
                 "provider": "ollama",
@@ -87,13 +78,6 @@ def setup_registries() -> SystemRegistries:
                 "model": "tinyllama",
             }
         ),
-<<<<<<< HEAD
-=======
-        "llm",
-        OllamaLLMResource({"base_url": "http://localhost:11434", "model": "tinyllama"}),
->>>>>>> d413bfe50cf145aa10f8b54f30ac78babd0bc417
-=======
->>>>>>> 8b97def929145abb996b25b8e31999e109bc9598
     )
 
     plugins.register_plugin_for_stage(
