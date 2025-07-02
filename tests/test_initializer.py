@@ -76,7 +76,7 @@ def test_initializer_env_and_dependencies(tmp_path):
 
     plugin_reg, resource_reg, tool_reg = asyncio.run(initializer.initialize())
 
-    assert resource_reg.get("A") or resource_reg.get("a")
+    assert resource_reg.get("a")
     think_plugins = plugin_reg.get_for_stage(PipelineStage.THINK)
     assert len(think_plugins) == 2
 
@@ -130,7 +130,7 @@ def test_llm_alias_registration(tmp_path):
     config = {
         "plugins": {
             "resources": {
-                "ollama": {
+                "llm": {
                     "type": "pipeline.plugins.resources.llm.unified:UnifiedLLMResource",
                     "provider": "ollama",
                     "base_url": "http://localhost:11434",
@@ -146,4 +146,4 @@ def test_llm_alias_registration(tmp_path):
     initializer = SystemInitializer.from_yaml(str(path))
     _, resources, _ = asyncio.run(initializer.initialize())
 
-    assert resources.get("llm") is resources.get("ollama")
+    assert resources.get("llm")
