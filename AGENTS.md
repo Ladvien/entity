@@ -21,6 +21,9 @@ The `ARCHITECTURE.md` file provides a high-level overview of the Entity Pipeline
 - `/tests` – test files organized by plugin type and core functionality
 - `/docs` – additional documentation and architecture guides
 
+## Important Notes
+- This is a pre-alpha project.  We do NOT need to maintain backwards compatibility or legacy systems.  If we do not need it, delete it.
+
 ## Project Tools
 - poetry 
 - readthedocs
