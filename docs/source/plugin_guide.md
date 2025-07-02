@@ -82,6 +82,7 @@ class MyStorage(ResourcePlugin):
         return [row["content"] for row in rows]
 ```
 
-Any plugin can now call `context.get_resource("database")` and use these
-methods, enabling a consistent storage interface across resources.
+Any plugin can now call `context.get_resource("storage")` and use these
+methods. Prompt plugins like `ChatHistory` or `MemoryPlugin` work with
+PostgreSQL, SQLite, or in-memory backends without code changes.
 
