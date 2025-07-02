@@ -2,8 +2,13 @@ from __future__ import annotations
 
 from typing import Dict, Type
 
+<<<<<<< HEAD
 from pipeline.resources.llm import LLMResource
 from pipeline.validation import ValidationResult
+=======
+from pipeline.plugins import ValidationResult
+from pipeline.plugins.resources.llm_resource import LLMResource
+>>>>>>> cf2f639e2825c3c5653576aef6ed05524944e947
 
 from .providers import (
     ClaudeProvider,

@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+<<<<<<< HEAD
 from typing import Any, Dict, Protocol, runtime_checkable
 
 from pipeline.logging import get_logger
+=======
+from typing import Any, Protocol, runtime_checkable
+>>>>>>> cf2f639e2825c3c5653576aef6ed05524944e947
 
 
 @runtime_checkable
 class Resource(Protocol):
+<<<<<<< HEAD
     """Minimal interface expected from a pipeline resource."""
 
     async def initialize(self) -> None:
@@ -14,10 +19,17 @@ class Resource(Protocol):
 
     async def shutdown(self) -> None:
         """Optional cleanup hook."""
+=======
+    """Lightweight interface for runtime resources."""
+
+    async def initialize(self) -> None:
+        """Perform optional async initialization."""
+>>>>>>> cf2f639e2825c3c5653576aef6ed05524944e947
 
     async def health_check(self) -> bool:
         """Return ``True`` if the resource is healthy."""
 
+<<<<<<< HEAD
     def get_metrics(self) -> Dict[str, Any]:
         """Return metrics about the resource."""
 
@@ -40,3 +52,7 @@ class BaseResource:
 
     def get_metrics(self) -> Dict[str, Any]:
         return {"status": "healthy"}
+=======
+    def get_metrics(self) -> dict[str, Any]:
+        """Return metrics describing the resource."""
+>>>>>>> cf2f639e2825c3c5653576aef6ed05524944e947
