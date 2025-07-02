@@ -42,6 +42,7 @@ class ConfigValidator:
                 config = yaml.safe_load(fh) or {}
             load_env()
             config = ConfigLoader.from_dict(config)
+            self._validate_memory(config)
             self._validate_vector_memory(config)
             initializer = SystemInitializer(config)
             asyncio.run(initializer.initialize())
@@ -52,6 +53,17 @@ class ConfigValidator:
         print("Configuration valid")
         logger.info("Configuration valid.")
         return 0
+
+    def _validate_memory(self, config: dict) -> None:
+        """Validate nested memory configuration."""
+
+        mem_cfg = config.get("plugins", {}).get("resources", {}).get("memory")
+        if not mem_cfg:
+            return
+
+        backend = mem_cfg.get("backend")
+        if backend is not None and not isinstance(backend, dict):
+            raise ValueError("memory: 'backend' must be a mapping")
 
     def _validate_vector_memory(self, config: dict) -> None:
         """Ensure vector memory configuration contains required fields."""

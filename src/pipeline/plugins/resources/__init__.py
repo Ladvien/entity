@@ -2,12 +2,21 @@ from .claude import ClaudeResource
 from .echo_llm import EchoLLMResource
 from .gemini import GeminiResource
 from .llm_resource import LLMResource
+<<<<<<< HEAD
 from .memory_resource import MemoryResource, SimpleMemoryResource
+=======
+<<<<<< 7xkyng-codex/update-memory-configuration-validation
+from .memory_resource import MemoryResource, SimpleMemoryResource
+======
+from .memory_resource import SimpleMemoryResource
+from .memory import MemoryResource
+>>>>>> main
+>>>>>>> 675e5906c4d22f829a34870d1fbc1d9cbdba58ad
 from .ollama_llm import OllamaLLMResource
 from .openai import OpenAIResource
+from .pg_vector_store import PgVectorStore
 from .postgres_database import PostgresDatabaseResource
 from .structured_logging import StructuredLogging
-from .vector_memory import VectorMemoryResource
 
 __all__ = [
     "EchoLLMResource",
@@ -15,9 +24,10 @@ __all__ = [
     "OllamaLLMResource",
     "MemoryResource",
     "SimpleMemoryResource",
+    "MemoryResource",
     "StructuredLogging",
     "PostgresDatabaseResource",
-    "VectorMemoryResource",
+    "PgVectorStore",
     "OpenAIResource",
     "GeminiResource",
     "ClaudeResource",

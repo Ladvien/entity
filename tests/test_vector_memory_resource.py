@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 from pgvector import Vector
 
 from config.environment import load_env
-from pipeline.plugins.resources.vector_memory import VectorMemoryResource
+from pipeline.plugins.resources.pg_vector_store import PgVectorStore
 
 load_env(Path(__file__).resolve().parents[1] / ".env")
 
@@ -27,11 +27,11 @@ async def init_resource():
             "asyncpg.create_pool", new=AsyncMock(return_value=pool)
         ) as mock_create_pool,
         patch(
-            "pipeline.plugins.resources.vector_memory.register_vector",
+            "pipeline.plugins.resources.pg_vector_store.register_vector",
             new=AsyncMock(),
         ) as mock_register,
     ):
-        plugin = VectorMemoryResource(cfg)
+        plugin = PgVectorStore(cfg)
         await plugin.initialize()
         mock_create_pool.assert_awaited_with(
             database="db",
