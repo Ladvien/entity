@@ -25,8 +25,8 @@
   ```
 - **Storage interface usage**
   ```python
-  db = context.get_resource("database")
-  await db.save_history(
+  storage = context.get_resource("storage")
+  await storage.save_history(
       context.pipeline_id,
       context.get_conversation_history(),
   )

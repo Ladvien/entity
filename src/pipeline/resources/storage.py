@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+<<<<<<< HEAD
 from abc import abstractmethod
 from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator, Dict, Optional, Protocol
@@ -119,3 +120,18 @@ class StorageResource(ResourcePlugin, StorageBackend):
     @abstractmethod
     async def execute(self, command: str, *args: Any, **kwargs: Any) -> Any:
         raise NotImplementedError
+=======
+from typing import List, Protocol
+
+from pipeline.context import ConversationEntry
+
+
+class StorageBackend(Protocol):
+    """Protocol for resources that persist conversation history."""
+
+    async def save_history(
+        self, conversation_id: str, history: List[ConversationEntry]
+    ) -> None: ...
+
+    async def load_history(self, conversation_id: str) -> List[ConversationEntry]: ...
+>>>>>>> a2fde49ed50a219b934336428d39351655a5f9c5

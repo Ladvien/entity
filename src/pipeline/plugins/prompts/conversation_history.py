@@ -42,7 +42,6 @@ class ConversationHistory(PromptPlugin):
                     content=row["content"],
                     role=row["role"],
                     metadata=metadata,
-                    timestamp=row["timestamp"],
                 )
         else:
             history: List[ConversationEntry] = context.get_conversation_history()

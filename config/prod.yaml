@@ -6,7 +6,7 @@ server:
 
 plugins:
   resources:
-    database:
+    storage:
       type: pipeline.plugins.resources.postgres:PostgresResource
       host: "${DB_HOST}"
       port: 5432
@@ -44,8 +44,8 @@ plugins:
       type: pipeline.plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
       enable_reasoning: true
       max_steps: 5
-    conversation_history:
-      type: pipeline.plugins.prompts.conversation_history:ConversationHistory
+    chat_history:
+      type: pipeline.plugins.prompts.chat_history:ChatHistory
       db_schema: public
       history_table: chat_history
     memory_retrieval:
