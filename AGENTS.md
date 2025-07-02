@@ -122,14 +122,9 @@ The `PostgresConnectionPool` resource manages asyncpg connections, while the
 
 There is no password.
 
-Ollama is available for LLM interactions. The Ollama server is running locally with the following details:
-
-Host: localhost
-Port: 11434
-Model: tinyllama
-Auth: None (insecure dev only)
-
-Startup: Automatically launched in background by the dev init script.
+A local LLM server is available at `http://localhost:11434` for development.
+Configure the `llm` resource with `provider: ollama` to use it. The dev init
+script launches the server automatically.
 
 ### Pipeline Stages
 
