@@ -82,6 +82,7 @@ markers = [
     "tools: Tests related to tool system",
     "api: Tests related to API endpoints",
     "cli: Tests related to CLI interface",
+    "benchmark: Performance benchmarking tests",
 ]
 filterwarnings = [
     "ignore::DeprecationWarning",
