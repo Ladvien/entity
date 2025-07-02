@@ -86,13 +86,9 @@ class PluginContext:
         return self._registries.resources.get(name)
 
     def get_llm(self) -> Any | None:
-        """Return the configured LLM resource.
+        """Return the configured LLM resource registered as ``"llm"``."""
 
-        Looks for a resource registered as ``"llm"`` first and falls back to
-        ``"ollama"`` for backward compatibility.
-        """
-        llm = self.get_resource("llm")
-        return llm if llm is not None else self.get_resource("ollama")
+        return self.get_resource("llm")
 
     @property
     def message(self) -> str:

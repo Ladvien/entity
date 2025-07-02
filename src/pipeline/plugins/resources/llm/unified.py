@@ -18,7 +18,6 @@ class UnifiedLLMResource(LLMResource):
     """LLM resource selecting a provider at runtime."""
 
     name = "llm"
-    aliases = ["llm"]
 
     PROVIDERS: Dict[str, Type[LLMResource]] = {
         "openai": OpenAIProvider,
@@ -39,7 +38,6 @@ class UnifiedLLMResource(LLMResource):
         if not result.success:
             raise ValueError(result.error_message)
         self._provider = provider_cls(clean_config)
-        self.aliases = ["llm", provider_name]
 
         fallback_name = str(self.config.get("fallback", "echo")).lower()
         if fallback_name == provider_name:

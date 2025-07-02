@@ -12,7 +12,6 @@ class LLMResource(ResourcePlugin, LLM):
 
     stages = [PipelineStage.PARSE]
     name = "llm"
-    aliases: List[str] = ["llm"]
 
     async def _execute_impl(self, context) -> None:
         return None

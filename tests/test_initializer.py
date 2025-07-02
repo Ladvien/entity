@@ -126,7 +126,7 @@ def test_initializer_from_json_and_dict(tmp_path):
     assert ry.get("A") and rj.get("A") and rd.get("A")
 
 
-def test_llm_alias_registration(tmp_path):
+def test_llm_resource_registration(tmp_path):
     config = {
         "plugins": {
             "resources": {
@@ -146,4 +146,9 @@ def test_llm_alias_registration(tmp_path):
     initializer = SystemInitializer.from_yaml(str(path))
     _, resources, _ = asyncio.run(initializer.initialize())
 
+<<<<<<< HEAD
     assert resources.get("llm")
+=======
+    assert resources.get("llm") is not None
+    assert resources.get("ollama") is None
+>>>>>>> 76ab4f7efc6ba6494c4bfcf402a8f75b50b54588
