@@ -204,7 +204,7 @@ plugins:
     memory:
       type: memory
       database:
-        type: sqlite
+        type: pipeline.plugins.resources.sqlite_storage:SQLiteStorageResource
         path: ./agent.db
 ```
 
@@ -215,15 +215,15 @@ plugins:
     memory:
       type: memory
       database:
-        type: postgres
+        type: pipeline.plugins.resources.postgres_database:PostgresDatabaseResource
         host: localhost
         name: agent_db
       vector_store:
-        type: pgvector
+        type: pipeline.plugins.resources.pg_vector_store:PgVectorStore
         dimensions: 768
         table: embeddings
       filesystem:
-        type: s3
+        type: pipeline.plugins.resources.s3_filesystem:S3FileSystem
         bucket: agent-files
         region: us-east-1
 ```

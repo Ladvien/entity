@@ -29,7 +29,7 @@ plugins:
         type: pipeline.plugins.resources.sqlite_storage:SQLiteStorageResource
         path: ./dev.db
       filesystem:
-        type: s3
+        type: pipeline.plugins.resources.s3_filesystem:S3FileSystem
         bucket: agent-files
         region: us-east-1
   tools:

@@ -34,7 +34,7 @@ plugins:
         username: "${DB_USERNAME}"
         password: "${DB_PASSWORD}"
       filesystem:
-        type: s3
+        type: pipeline.plugins.resources.s3_filesystem:S3FileSystem
         bucket: agent-files
         region: us-east-1
   tools:
