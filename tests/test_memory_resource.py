@@ -9,7 +9,10 @@ from pipeline import (
     ToolRegistry,
     execute_pipeline,
 )
-from pipeline.plugins.resources.memory_resource import SimpleMemoryResource
+from pipeline.plugins.resources.memory_resource import (
+    MemoryResource,
+    SimpleMemoryResource,
+)
 from pipeline.resources.memory import Memory
 
 
@@ -28,7 +31,7 @@ def make_registries():
     plugins = PluginRegistry()
     plugins.register_plugin_for_stage(IncrementPlugin({}), PipelineStage.DO)
     resources = ResourceRegistry()
-    resources.add("memory", SimpleMemoryResource())
+    resources.add("memory", MemoryResource(SimpleMemoryResource({})))
     return SystemRegistries(resources, ToolRegistry(), plugins)
 
 

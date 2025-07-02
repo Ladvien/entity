@@ -13,7 +13,10 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.plugins.prompts.complex_prompt import ComplexPrompt
-from pipeline.plugins.resources.memory_resource import MemoryResource
+from pipeline.plugins.resources.memory_resource import (
+    MemoryResource,
+    SimpleMemoryResource,
+)
 
 
 class FakeLLM:
@@ -25,7 +28,7 @@ class FakeLLM:
 
 class FakeMemory(MemoryResource):
     def __init__(self, history):
-        super().__init__(None, None, {})
+        super().__init__(SimpleMemoryResource({}))
         self._history = history
 
     async def load_conversation(self, conversation_id: str):

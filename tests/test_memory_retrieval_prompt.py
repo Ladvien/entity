@@ -20,7 +20,7 @@ from pipeline.plugins.resources.memory_resource import (
 
 class DummyMemory(MemoryResource):
     def __init__(self, history):
-        super().__init__(None, None, {})
+        super().__init__(SimpleMemoryResource({}))
         self.history = history
 
     async def load_conversation(self, conversation_id: str):
@@ -36,7 +36,7 @@ def make_context(memory: MemoryResource | None = None):
             content="past message", role="assistant", timestamp=datetime.now()
         )
     ]
-    memory = memory or SimpleMemoryResource()
+    memory = memory or MemoryResource(SimpleMemoryResource({}))
     asyncio.run(memory.save_conversation("1", past))
     resources = ResourceRegistry()
     resources.add("memory", memory)

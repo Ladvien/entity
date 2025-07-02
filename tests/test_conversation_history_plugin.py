@@ -13,13 +13,16 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.plugins.prompts.conversation_history import ConversationHistory
-from pipeline.plugins.resources.memory_resource import MemoryResource
+from pipeline.plugins.resources.memory_resource import (
+    MemoryResource,
+    SimpleMemoryResource,
+)
 from pipeline.stages import PipelineStage
 
 
 class FakeMemory(MemoryResource):
     def __init__(self) -> None:
-        super().__init__(None, None, {})
+        super().__init__(SimpleMemoryResource({}))
         self.fetch = AsyncMock(return_value=[])
         self.execute = AsyncMock()
         self.history: list[ConversationEntry] = []

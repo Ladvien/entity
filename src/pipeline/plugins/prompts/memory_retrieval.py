@@ -11,7 +11,7 @@ from pipeline.stages import PipelineStage
 class MemoryRetrievalPrompt(PromptPlugin):
     """Fetch past conversation from memory and append it to the context."""
 
-    dependencies = ["memory", "llm"]
+    dependencies = ["memory"]
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context: PluginContext) -> None:

@@ -45,16 +45,9 @@ class E(PromptPlugin):
         pass
 
 
-class VectorMemoryResource(ResourcePlugin):
-    stages = [PipelineStage.PARSE]
-
-    async def _execute_impl(self, context):
-        pass
-
-
 class ComplexPrompt(PromptPlugin):
     stages = [PipelineStage.THINK]
-    dependencies = ["vector_memory"]
+    dependencies = ["memory"]
 
     async def _execute_impl(self, context):
         pass
@@ -94,56 +87,30 @@ def test_validator_cycle_detection(tmp_path):
         RegistryValidator(str(path)).run()
 
 
-def test_complex_prompt_requires_vector_memory(tmp_path):
+def test_complex_prompt_requires_memory(tmp_path):
     plugins = {
         "prompts": {
             "complex_prompt": {"type": "tests.test_registry_validator:ComplexPrompt"}
         }
     }
     path = _write_config(tmp_path, plugins)
-    with pytest.raises(SystemError, match="vector_memory"):
+    with pytest.raises(SystemError, match="memory"):
         RegistryValidator(str(path)).run()
 
 
-def test_complex_prompt_with_vector_memory(tmp_path):
+def test_complex_prompt_with_memory(tmp_path):
     plugins = {
         "resources": {
-            "vector_memory": {
-                "type": "tests.test_registry_validator:VectorMemoryResource"
+            "memory": {
+                "type": "pipeline.plugins.resources.memory_resource:MemoryResource",
+                "backend": {
+                    "type": "pipeline.plugins.resources.memory_resource:SimpleMemoryResource"
+                },
             }
         },
         "prompts": {
             "complex_prompt": {"type": "tests.test_registry_validator:ComplexPrompt"}
         },
-    }
-    path = _write_config(tmp_path, plugins)
-    RegistryValidator(str(path)).run()
-
-
-def test_vector_memory_requires_postgres(tmp_path):
-    plugins = {
-        "resources": {
-            "vector_memory": {
-                "type": "pipeline.plugins.resources.pg_vector_store:PgVectorStore"
-            },
-            "database": {"type": "tests.test_registry_validator:A"},
-        }
-    }
-    path = _write_config(tmp_path, plugins)
-    with pytest.raises(SystemError, match="vector store"):
-        RegistryValidator(str(path)).run()
-
-
-def test_vector_memory_with_postgres(tmp_path):
-    plugins = {
-        "resources": {
-            "vector_memory": {
-                "type": "pipeline.plugins.resources.pg_vector_store:PgVectorStore"
-            },
-            "database": {
-                "type": "pipeline.plugins.resources.postgres:PostgresResource"
-            },
-        }
     }
     path = _write_config(tmp_path, plugins)
     RegistryValidator(str(path)).run()
