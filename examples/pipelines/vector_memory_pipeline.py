@@ -21,6 +21,7 @@ from pipeline.plugins.resources.echo_llm import EchoLLMResource  # noqa: E402
 from pipeline.plugins.resources.postgres_database import (
     PostgresDatabaseResource,
 )  # noqa: E402
+from pipeline.plugins.resources.pg_vector_store import PgVectorStore  # noqa: E402
 
 
 class VectorMemoryResource(ResourcePlugin):

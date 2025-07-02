@@ -10,9 +10,9 @@ from .memory import MemoryResource
 >>>>>> main
 from .ollama_llm import OllamaLLMResource
 from .openai import OpenAIResource
+from .pg_vector_store import PgVectorStore
 from .postgres_database import PostgresDatabaseResource
 from .structured_logging import StructuredLogging
-from .vector_memory import VectorMemoryResource
 
 __all__ = [
     "EchoLLMResource",
@@ -22,7 +22,7 @@ __all__ = [
     "MemoryResource",
     "StructuredLogging",
     "PostgresDatabaseResource",
-    "VectorMemoryResource",
+    "PgVectorStore",
     "OpenAIResource",
     "GeminiResource",
     "ClaudeResource",

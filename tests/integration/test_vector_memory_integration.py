@@ -18,8 +18,8 @@ from pipeline import (
 )
 from pipeline.plugins.prompts.complex_prompt import ComplexPrompt
 from pipeline.plugins.resources.echo_llm import EchoLLMResource
+from pipeline.plugins.resources.pg_vector_store import PgVectorStore
 from pipeline.plugins.resources.postgres_database import PostgresDatabaseResource
-from pipeline.plugins.resources.vector_memory import VectorMemoryResource
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
 
@@ -47,7 +47,7 @@ def test_vector_memory_integration():
             "dimensions": 3,
         }
         db = PostgresDatabaseResource(db_cfg)
-        vm = VectorMemoryResource(vm_cfg)
+        vm = PgVectorStore(vm_cfg)
         llm = EchoLLMResource()
         try:
             await db.initialize()
