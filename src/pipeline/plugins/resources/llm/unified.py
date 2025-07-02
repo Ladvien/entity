@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Dict, Type
 
 from pipeline.plugins import ValidationResult
-from pipeline.resources.llm import LLMResource
+from pipeline.plugins.resources.llm_resource import LLMResource
 
 from .providers import (
     ClaudeProvider,

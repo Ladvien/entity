@@ -4,7 +4,7 @@ from typing import Dict
 
 from pipeline.plugins import ValidationResult
 from pipeline.plugins.resources.http_llm_resource import HttpLLMResource
-from pipeline.resources.llm import LLMResource
+from pipeline.plugins.resources.llm_resource import LLMResource
 
 
 class OllamaLLMResource(LLMResource):
