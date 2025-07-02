@@ -18,7 +18,11 @@ class SimpleMemoryResource(ResourcePlugin):
     name = "memory"
 
     def __init__(self, config: Dict | None = None) -> None:
-        """Initialize an empty memory store."""
+        """Initialize an empty memory store.
+
+        Args:
+            config: Optional configuration mapping.
+        """
 
         super().__init__(config)
         self._store: Dict[str, Any] = {}

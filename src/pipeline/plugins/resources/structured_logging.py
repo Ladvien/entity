@@ -23,7 +23,11 @@ class StructuredLogging(ResourcePlugin):
     name = "logging"
 
     def __init__(self, config: Dict | None = None) -> None:
-        """Create an unconfigured logger."""
+        """Create an unconfigured logger.
+
+        Args:
+            config: Optional configuration mapping.
+        """
 
         super().__init__(config)
         self._configured = False
@@ -73,7 +77,14 @@ class StructuredLogging(ResourcePlugin):
 
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
-        """Validate logging configuration options."""
+        """Validate logging configuration options.
+
+        Args:
+            config: Configuration dictionary to validate.
+
+        Returns:
+            Result indicating whether ``config`` is valid.
+        """
 
         level = config.get("level")
         if level is not None and str(level).upper() not in logging._nameToLevel:

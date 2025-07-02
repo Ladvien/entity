@@ -23,13 +23,24 @@ class GeminiResource(LLMResource):
     aliases = ["llm"]
 
     def __init__(self, config: Dict | None = None) -> None:
-        """Prepare HTTP helper using ``config``."""
+        """Prepare HTTP helper using ``config``.
+
+        Args:
+            config: Optional configuration mapping.
+        """
         super().__init__(config)
         self.http = HttpLLMResource(self.config, require_api_key=True)
 
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
-        """Validate that mandatory configuration options are present."""
+        """Validate that mandatory configuration options are present.
+
+        Args:
+            config: Configuration values to validate.
+
+        Returns:
+            Result indicating whether ``config`` is valid.
+        """
         return HttpLLMResource(config, require_api_key=True).validate_config()
 
     async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
@@ -37,7 +48,14 @@ class GeminiResource(LLMResource):
         return None
 
     async def generate(self, prompt: str) -> str:
-        """Generate text for ``prompt`` using the Gemini model."""
+        """Generate text for ``prompt`` using the Gemini model.
+
+        Args:
+            prompt: Text prompt to send.
+
+        Returns:
+            The generated completion text.
+        """
         if not self.http.validate_config().valid:
             raise RuntimeError("Gemini resource not properly configured")
         base_url = self.http.base_url or ""

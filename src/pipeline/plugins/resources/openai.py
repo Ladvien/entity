@@ -21,13 +21,24 @@ class OpenAIResource(LLMResource):
     aliases = ["llm"]
 
     def __init__(self, config: Dict | None = None) -> None:
-        """Store API connection details from ``config``."""
+        """Initialize the resource with API details from ``config``.
+
+        Args:
+            config: Optional mapping of configuration values.
+        """
         super().__init__(config)
         self.http = HttpLLMResource(self.config, require_api_key=True)
 
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
-        """Validate that required configuration fields are present."""
+        """Validate that all required configuration fields exist.
+
+        Args:
+            config: Configuration values to validate.
+
+        Returns:
+            Result indicating whether ``config`` is valid.
+        """
         return HttpLLMResource(config, require_api_key=True).validate_config()
 
     async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
@@ -35,7 +46,14 @@ class OpenAIResource(LLMResource):
         return None
 
     async def generate(self, prompt: str) -> str:
-        """Call the OpenAI API with ``prompt`` and return the response text."""
+        """Call the OpenAI API and return a completion.
+
+        Args:
+            prompt: User prompt to submit.
+
+        Returns:
+            The generated completion text from OpenAI.
+        """
         if not self.http.validate_config().valid:
             raise RuntimeError("OpenAI resource not properly configured")
         base_url = self.http.base_url or ""

@@ -10,6 +10,11 @@ class PostgresConnectionPool:
     """Simple asyncpg connection pool wrapper."""
 
     def __init__(self, config: Dict) -> None:
+        """Store configuration for later pool creation.
+
+        Args:
+            config: Connection parameters.
+        """
         self.config = config
         self._pool: Optional[asyncpg.Pool] = None
 
@@ -25,7 +30,11 @@ class PostgresConnectionPool:
 
     @asynccontextmanager
     async def connection(self) -> AsyncIterator[asyncpg.Connection]:
-        """Acquire a connection from the pool."""
+        """Acquire a connection from the pool.
+
+        Yields:
+            An active ``asyncpg.Connection`` instance.
+        """
         if self._pool is None:
             raise RuntimeError("Connection pool not initialized")
         conn = await self._pool.acquire()

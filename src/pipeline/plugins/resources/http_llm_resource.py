@@ -11,6 +11,12 @@ class HttpLLMResource:
     """Helper for LLM resources using HTTP backends."""
 
     def __init__(self, config: Dict, require_api_key: bool = False) -> None:
+        """Store common HTTP configuration for LLM resources.
+
+        Args:
+            config: Mapping of configuration values.
+            require_api_key: Whether ``api_key`` must be present.
+        """
         self.config = config
         self.require_api_key = require_api_key
         self.base_url: Optional[str] = config.get("base_url")
@@ -21,6 +27,11 @@ class HttpLLMResource:
         }
 
     def validate_config(self) -> ValidationResult:
+        """Check that mandatory settings exist.
+
+        Returns:
+            Validation result describing success or failure.
+        """
         if not self.base_url:
             return ValidationResult.error_result("'base_url' is required")
         if not self.model:
@@ -36,6 +47,17 @@ class HttpLLMResource:
         headers: Optional[Dict[str, str]] = None,
         params: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
+        """Execute an HTTP POST request.
+
+        Args:
+            url: Request URL.
+            payload: JSON body to send.
+            headers: Optional request headers.
+            params: Optional query parameters.
+
+        Returns:
+            Parsed JSON response.
+        """
         try:
             async with httpx.AsyncClient(timeout=30) as client:
                 response = await client.post(

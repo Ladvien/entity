@@ -23,7 +23,11 @@ class VectorMemoryResource(ResourcePlugin):
     name = "vector_memory"
 
     def __init__(self, config: Dict | None = None) -> None:
-        """Persist initialization parameters for later use."""
+        """Persist initialization parameters for later use.
+
+        Args:
+            config: Optional configuration mapping.
+        """
 
         super().__init__(config)
         self._connection: Optional[asyncpg.Connection] = None
@@ -64,7 +68,11 @@ class VectorMemoryResource(ResourcePlugin):
         return [v / 255.0 for v in values]
 
     async def add_embedding(self, text: str) -> None:
-        """Store ``text`` along with its generated embedding."""
+        """Store ``text`` along with its generated embedding.
+
+        Args:
+            text: Content to embed and store.
+        """
 
         if self._connection is None:
             raise RuntimeError("Resource not initialized")
@@ -77,7 +85,15 @@ class VectorMemoryResource(ResourcePlugin):
         )
 
     async def query_similar(self, text: str, k: int) -> List[str]:
-        """Return the ``k`` most similar stored texts to ``text``."""
+        """Return the ``k`` most similar stored texts to ``text``.
+
+        Args:
+            text: Query text to compare against stored embeddings.
+            k: Number of similar results to return.
+
+        Returns:
+            Ordered list of stored texts most similar to ``text``.
+        """
 
         if self._connection is None:
             return []

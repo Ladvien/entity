@@ -22,7 +22,11 @@ class PostgresResource(ResourcePlugin):
     name = "database"
 
     def __init__(self, config: Dict | None = None) -> None:
-        """Initialize the connection pool wrapper."""
+        """Initialize the connection pool wrapper.
+
+        Args:
+            config: Optional configuration mapping.
+        """
         super().__init__(config)
         self._pool = PostgresConnectionPool(self.config)
         self._schema = self.config.get("db_schema")
@@ -61,21 +65,50 @@ class PostgresResource(ResourcePlugin):
         return await self._pool.health_check()
 
     async def execute(self, query: str, *args: Any) -> None:  # type: ignore[override]
-        """Execute a statement within the pool."""
+        """Execute a statement within the pool.
+
+        Args:
+            query: SQL statement to run.
+            *args: Parameters for ``query``.
+        """
         async with self._pool.connection() as conn:
             await conn.execute(query, *args)
 
     async def fetch(self, query: str, *args: Any) -> List[asyncpg.Record]:
-        """Return a list of ``asyncpg.Record`` from ``query``."""
+        """Return a list of ``asyncpg.Record`` from ``query``.
+
+        Args:
+            query: SQL query to run.
+            *args: Query parameters.
+
+        Returns:
+            A list of rows from the database.
+        """
         async with self._pool.connection() as conn:
             return await conn.fetch(query, *args)
 
     async def fetchrow(self, query: str, *args: Any) -> asyncpg.Record | None:
-        """Return a single row for ``query`` or ``None``."""
+        """Return a single row for ``query`` or ``None``.
+
+        Args:
+            query: SQL query to run.
+            *args: Query parameters.
+
+        Returns:
+            A single record or ``None`` if no rows match.
+        """
         async with self._pool.connection() as conn:
             return await conn.fetchrow(query, *args)
 
     async def fetchval(self, query: str, *args: Any) -> Any:
-        """Return a single value for ``query``."""
+        """Return a single value for ``query``.
+
+        Args:
+            query: SQL query to run.
+            *args: Query parameters.
+
+        Returns:
+            The first column of the first row returned by ``query``.
+        """
         async with self._pool.connection() as conn:
             return await conn.fetchval(query, *args)

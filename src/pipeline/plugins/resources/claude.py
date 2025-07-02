@@ -23,13 +23,24 @@ class ClaudeResource(LLMResource):
     aliases = ["llm"]
 
     def __init__(self, config: Dict | None = None) -> None:
-        """Initialize the helper that manages HTTP requests."""
+        """Initialize the resource with HTTP helper.
+
+        Args:
+            config: Optional configuration mapping.
+        """
         super().__init__(config)
         self.http = HttpLLMResource(self.config, require_api_key=True)
 
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
-        """Ensure the configuration contains required fields."""
+        """Ensure the configuration contains required fields.
+
+        Args:
+            config: Configuration values to validate.
+
+        Returns:
+            Result indicating whether ``config`` is valid.
+        """
         return HttpLLMResource(config, require_api_key=True).validate_config()
 
     async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
@@ -37,7 +48,14 @@ class ClaudeResource(LLMResource):
         return None
 
     async def generate(self, prompt: str) -> str:
-        """Call the Claude API with ``prompt`` and return the completion."""
+        """Call the Claude API with ``prompt`` and return the completion.
+
+        Args:
+            prompt: Text prompt to send to the API.
+
+        Returns:
+            The completion text returned by Claude.
+        """
         if not self.http.validate_config().valid:
             raise RuntimeError("Claude resource not properly configured")
         base_url = self.http.base_url or ""

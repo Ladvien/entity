@@ -18,13 +18,24 @@ class OllamaLLMResource(LLMResource):
     aliases = ["llm"]
 
     def __init__(self, config: Dict | None = None) -> None:
-        """Parse connection details from ``config``."""
+        """Parse connection details from ``config``.
+
+        Args:
+            config: Optional configuration mapping.
+        """
         super().__init__(config)
         self.http = HttpLLMResource(self.config)
 
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
-        """Validate that ``base_url`` and ``model`` are provided."""
+        """Validate that ``base_url`` and ``model`` are provided.
+
+        Args:
+            config: Configuration values to validate.
+
+        Returns:
+            Result indicating whether ``config`` is valid.
+        """
         return HttpLLMResource(config).validate_config()
 
     async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
@@ -32,7 +43,14 @@ class OllamaLLMResource(LLMResource):
         return None
 
     async def generate(self, prompt: str) -> str:
-        """Generate text from ``prompt`` using the Ollama model."""
+        """Generate text from ``prompt`` using the Ollama model.
+
+        Args:
+            prompt: Text prompt to send to the Ollama server.
+
+        Returns:
+            The generated completion text.
+        """
         if not self.http.validate_config().valid:
             raise RuntimeError("Ollama resource not properly configured")
         base_url = self.http.base_url or ""
