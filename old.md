@@ -35,8 +35,9 @@ def calculator(context):
 agent.run_http()  # Automatically starts server on localhost:8000
 ```
 
-The default setup registers a simple `CalculatorTool`, a `SearchTool`, and an
-`EchoLLMResource`, so the example above works without any configuration files.
+The default setup registers a simple `CalculatorTool`, a `SearchTool`, and a
+`UnifiedLLMResource` using the `echo` provider, so the example above works
+without any configuration files.
 
 ```python
 from entity.tools import SearchTool

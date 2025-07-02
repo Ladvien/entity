@@ -267,8 +267,9 @@ plugins:
       password: ""
       pool_min_size: 1
       pool_max_size: 5
-    ollama:
-      type: pipeline.plugins.resources.ollama_llm:OllamaLLMResource
+    llm:
+      type: pipeline.plugins.resources.llm.unified:UnifiedLLMResource
+      provider: ollama
       base_url: "http://localhost:11434"
       model: "llama3:8b"
 
@@ -299,8 +300,9 @@ plugins:
       password: "${DB_PASSWORD}"
       pool_min_size: 5
       pool_max_size: 20
-    openai:
-      type: openai_llm
+    llm:
+      type: pipeline.plugins.resources.llm.unified:UnifiedLLMResource
+      provider: openai
       api_key: "${OPENAI_API_KEY}"
       model: "gpt-4"
     logging:

@@ -20,7 +20,7 @@ from pipeline import (
     ToolRegistry,
     execute_pipeline,
 )
-from pipeline.plugins.resources.ollama_llm import OllamaLLMResource
+from pipeline.plugins.resources.llm import UnifiedLLMResource
 
 
 class CalculatorTool(ToolPlugin):
@@ -71,7 +71,13 @@ def setup_registries() -> SystemRegistries:
 
     resources.add(
         "ollama",
-        OllamaLLMResource({"base_url": "http://localhost:11434", "model": "tinyllama"}),
+        UnifiedLLMResource(
+            {
+                "provider": "ollama",
+                "base_url": "http://localhost:11434",
+                "model": "tinyllama",
+            }
+        ),
     )
 
     plugins.register_plugin_for_stage(
