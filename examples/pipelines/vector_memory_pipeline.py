@@ -18,10 +18,10 @@ from entity import Agent  # noqa: E402
 from pipeline import PipelineStage, PromptPlugin, ResourcePlugin  # noqa: E402
 from pipeline.context import PluginContext  # noqa: E402
 from pipeline.plugins.resources.echo_llm import EchoLLMResource  # noqa: E402
-from pipeline.plugins.resources.postgres_database import (
-    PostgresDatabaseResource,
-)  # noqa: E402
 from pipeline.plugins.resources.pg_vector_store import PgVectorStore  # noqa: E402
+from pipeline.plugins.resources.postgres_database import (  # noqa: E402
+    PostgresDatabaseResource,
+)
 
 
 class VectorMemoryResource(ResourcePlugin):
