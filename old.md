@@ -350,7 +350,7 @@ The framework maintains the sophisticated five-layer plugin architecture underne
 
 #### **Resource Plugins** (Infrastructure - Enables System Function)
 - **Database**: PostgreSQL, SQLite connections
-- **LLM**: Ollama, OpenAI, Claude servers  
+- **LLM**: Ollama, OpenAI, Gemini, Claude servers
 - **Semantic Memory**: Vector databases, Redis cache
 - **Storage**: File systems, cloud storage
 - **Logging**: Structured logging, metrics, tracing
@@ -523,7 +523,7 @@ class ErrorFormatterFailurePlugin(FailurePlugin):
 class ChainOfThoughtPlugin(PromptPlugin):
     # Full control over pipeline behavior
     stages = [PipelineStage.THINK]
-    dependencies = ["database", "ollama"]
+    dependencies = ["database", "llm"]
     priority = 10
     
     async def execute(self, context):
@@ -1279,7 +1279,7 @@ class SystemInitializer:
 ### Chain of Thought with Controlled Context
 ```python
 class ChainOfThoughtPlugin(PromptPlugin):
-    dependencies = ["database", "logging", "ollama"]
+    dependencies = ["database", "logging", "llm"]
     stages = [PipelineStage.THINK]
     
     async def _execute_impl(self, context: PluginContext):
@@ -1339,7 +1339,7 @@ class ChainOfThoughtPlugin(PromptPlugin):
 ### ReAct Plugin with Controlled Access
 ```python
 class ReActPlugin(PromptPlugin):
-    dependencies = ["ollama"]
+    dependencies = ["llm"]
     stages = [PipelineStage.THINK]
     
     async def _execute_impl(self, context: PluginContext):
@@ -1474,8 +1474,8 @@ plugins:
       max_pool_size: 10
       init_on_startup: true
     
-    ollama:
-      type: ollama_llm
+    llm:
+      provider: ollama
       base_url: "http://192.168.1.110:11434"
       model: "llama3:8b-instruct-q6_K"
       temperature: 0.7
@@ -1585,10 +1585,14 @@ agent = Agent()  # Automatically configures sensible defaults
 
 # Equivalent to this full configuration:
 agent = Agent({
-    "llm": "ollama://localhost:11434/llama3",  # Auto-detects local LLM
+    "llm": {
+        "provider": "ollama",
+        "base_url": "http://localhost:11434",
+        "model": "llama3",
+    },
     "database": "sqlite://memory.db",           # Auto-creates local storage
     "logging": "console",                       # Simple console logging
-    "server": {"host": "localhost", "port": 8000}
+    "server": {"host": "localhost", "port": 8000},
 })
 ```
 
