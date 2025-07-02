@@ -22,7 +22,7 @@ class ResourceRegistry:
     def add_from_config(self, name: str, cls: type, config: Dict) -> None:
         """Instantiate ``cls`` from ``config`` and register it."""
 
-        if name == "memory" and hasattr(cls, "from_config"):
+        if hasattr(cls, "from_config"):
             instance = cls.from_config(config)
         else:
             instance = cls(config)

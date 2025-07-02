@@ -13,14 +13,6 @@ from registry import PluginRegistry, ResourceRegistry, ToolRegistry
 from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
 from .defaults import DEFAULT_CONFIG
 
-LLM_PROVIDERS = {
-    "openai": "pipeline.plugins.resources.llm.unified:UnifiedLLMResource",
-    "ollama": "pipeline.plugins.resources.llm.unified:UnifiedLLMResource",
-    "gemini": "pipeline.plugins.resources.llm.unified:UnifiedLLMResource",
-    "claude": "pipeline.plugins.resources.llm.unified:UnifiedLLMResource",
-    "echo": "pipeline.plugins.resources.llm.unified:UnifiedLLMResource",
-}
-
 
 class ClassRegistry:
     """Store plugin classes and configs before instantiation."""
@@ -133,24 +125,29 @@ class SystemInitializer:
         return self.config["plugins"]["prompts"][name]
 
     async def initialize(self):
-        self._apply_llm_provider()
         registry = ClassRegistry()
         dep_graph: Dict[str, List[str]] = {}
 
         # Phase 1: register all plugin classes
         resources = self.config.get("plugins", {}).get("resources", {})
         for name, config in resources.items():
-            if name == "memory" and "type" not in config:
-                cls_path = "pipeline.plugins.resources.memory:MemoryResource"
-            else:
-                cls_path = config.get("type", name)
+            default_cfg = DEFAULT_CONFIG["plugins"]["resources"].get(name, {})
+            cls_path = config.get("type", default_cfg.get("type"))
+            if not cls_path:
+                raise ValueError(f"Resource '{name}' must specify a full class path")
             cls = import_plugin_class(cls_path)
             registry.register_class(cls, config, name)
             dep_graph[name] = getattr(cls, "dependencies", [])
 
         for section in ["tools", "adapters", "prompts"]:
             for name, config in self.config.get("plugins", {}).get(section, {}).items():
-                cls = import_plugin_class(config.get("type", name))
+                default_cfg = DEFAULT_CONFIG["plugins"].get(section, {}).get(name, {})
+                cls_path = config.get("type", default_cfg.get("type"))
+                if not cls_path:
+                    raise ValueError(
+                        f"{section[:-1].capitalize()} '{name}' must specify a full class path"
+                    )
+                cls = import_plugin_class(cls_path)
                 registry.register_class(cls, config, name)
                 dep_graph[name] = getattr(cls, "dependencies", [])
 
@@ -251,12 +248,3 @@ class SystemInitializer:
                 raise EnvironmentError(f"Required environment variable {key} not found")
             return value
         return config
-
-    def _apply_llm_provider(self) -> None:
-        resources = self.config.get("plugins", {}).get("resources", {})
-        llm_cfg = resources.get("llm")
-        if llm_cfg and "provider" in llm_cfg and "type" not in llm_cfg:
-            provider = str(llm_cfg["provider"]).lower()
-            if provider not in LLM_PROVIDERS:
-                raise ValueError(f"Unknown LLM provider '{provider}'")
-            llm_cfg["type"] = LLM_PROVIDERS[provider]
