@@ -171,13 +171,13 @@ class SystemInitializer:
         # Phase 3: initialize resources
         resource_registry = ResourceRegistry()
         for cls, config in registry.resource_classes():
-            instance = cls(config)
+            primary_name = getattr(cls, "name", cls.__name__)
+            resource_registry.add_from_config(primary_name, cls, config)
+            instance = resource_registry.get(primary_name)
             if hasattr(instance, "initialize") and callable(
                 getattr(instance, "initialize")
             ):
                 await instance.initialize()
-            primary_name = getattr(instance, "name", cls.__name__)
-            resource_registry.add(primary_name, instance)
             for alias in getattr(instance, "aliases", []):
                 if alias != primary_name:
                     resource_registry.add(alias, instance)

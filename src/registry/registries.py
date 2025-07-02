@@ -19,6 +19,15 @@ class ResourceRegistry:
 
         self._resources[name] = resource
 
+    def add_from_config(self, name: str, cls: type, config: Dict) -> None:
+        """Instantiate ``cls`` from ``config`` and register it."""
+
+        if name == "memory" and hasattr(cls, "from_config"):
+            instance = cls.from_config(config)
+        else:
+            instance = cls(config)
+        self.add(getattr(instance, "name", name), instance)
+
     def get(self, name: str) -> Any | None:
         """Return the resource registered as ``name`` if present."""
 
