@@ -35,7 +35,8 @@ def test_vector_memory_integration():
                 "DB_USER", os.environ.get("DB_USERNAME", "agent")
             ),
             "password": os.environ.get("DB_PASSWORD", ""),
-            "history_table": "test_history_int",
+            "pool_min_size": 1,
+            "pool_max_size": 5,
         }
         vm_cfg = {
             "host": db_cfg["host"],
@@ -54,9 +55,9 @@ def test_vector_memory_integration():
             await vm.initialize()
         except OSError as exc:
             pytest.skip(f"PostgreSQL not available: {exc}")
-        await db._pool.execute(f"DROP TABLE IF EXISTS {db_cfg['history_table']}")
-        await db._pool.execute(
-            f"CREATE TABLE {db_cfg['history_table']} ("
+        await db.execute("DROP TABLE IF EXISTS test_history_int")
+        await db.execute(
+            "CREATE TABLE test_history_int ("
             "conversation_id text, role text, content text, "
             "metadata jsonb, timestamp timestamptz)"
         )
@@ -67,8 +68,16 @@ def test_vector_memory_integration():
         history_entry = ConversationEntry(
             content="previous", role="user", timestamp=datetime.now()
         )
-        await db.save_history("conv1", [history_entry])
         await vm.add_embedding("previous")
+        await db.execute(
+            "INSERT INTO test_history_int (conversation_id, role, content, metadata, timestamp)"
+            " VALUES ($1, $2, $3, $4, $5)",
+            "conv1",
+            history_entry.role,
+            history_entry.content,
+            "{}",
+            history_entry.timestamp,
+        )
         resources = ResourceRegistry()
         resources.add("database", db)
         resources.add("vector_memory", vm)

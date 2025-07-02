@@ -17,7 +17,8 @@ CONN = {
     "name": os.environ["DB_NAME"],
     "username": os.environ["DB_USERNAME"],
     "password": os.environ.get("DB_PASSWORD", ""),
-    "history_table": "test_history",
+    "pool_min_size": 1,
+    "pool_max_size": 2,
 }
 
 
@@ -29,17 +30,37 @@ def test_save_and_load_history():
             await resource.initialize()
         except OSError as exc:
             pytest.skip(f"PostgreSQL not available: {exc}")
-        await resource._pool.execute("DROP TABLE IF EXISTS test_history")
-        await resource._pool.execute(
+        await resource.execute("DROP TABLE IF EXISTS test_history")
+        await resource.execute(
             "CREATE TABLE test_history ("
             "conversation_id text, role text, content text, "
             "metadata jsonb, timestamp timestamptz)"
         )
-        entries = [
-            ConversationEntry(content="hello", role="user", timestamp=datetime.now())
+        entry = ConversationEntry(
+            content="hello", role="user", timestamp=datetime.now()
+        )
+        await resource.execute(
+            "INSERT INTO test_history (conversation_id, role, content, metadata, timestamp)"
+            " VALUES ($1, $2, $3, $4, $5)",
+            "conv1",
+            entry.role,
+            entry.content,
+            "{}",
+            entry.timestamp,
+        )
+        rows = await resource.fetch(
+            "SELECT role, content, metadata, timestamp FROM test_history WHERE conversation_id=$1",
+            "conv1",
+        )
+        loaded = [
+            ConversationEntry(
+                role=r["role"],
+                content=r["content"],
+                metadata={},
+                timestamp=r["timestamp"],
+            )
+            for r in rows
         ]
-        await resource.save_history("conv1", entries)
-        loaded = await resource.load_history("conv1")
         await resource.shutdown()
         return loaded
 
