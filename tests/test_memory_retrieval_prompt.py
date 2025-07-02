@@ -1,41 +1,34 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginContext, PluginRegistry, ResourceRegistry,
+                      SystemRegistries, ToolRegistry)
 from pipeline.plugins.prompts.memory_retrieval import MemoryRetrievalPrompt
-from pipeline.plugins.resources.memory_resource import SimpleMemoryResource
-from pipeline.resources.memory import Memory
+from pipeline.plugins.resources.memory_resource import (MemoryResource,
+                                                        SimpleMemoryResource)
 
 
-class DummyMemory:
+class DummyMemory(MemoryResource):
     def __init__(self, history):
+        super().__init__(None, None, {})
         self.history = history
 
-    def get(self, key: str, default=None):
-        return self.history if key == "history" else default
+    async def load_conversation(self, conversation_id: str):
+        return self.history
 
-    def set(self, key: str, value):
-        if key == "history":
-            self.history = value
+    async def save_conversation(self, conversation_id: str, entries):
+        self.history = entries
 
 
-def make_context(memory: Memory | None = None):
+def make_context(memory: MemoryResource | None = None):
     past = [
         ConversationEntry(
             content="past message", role="assistant", timestamp=datetime.now()
         )
     ]
     memory = memory or SimpleMemoryResource()
-    memory.set("history", past)
+    asyncio.run(memory.save_conversation("1", past))
     resources = ResourceRegistry()
     resources.add("memory", memory)
 

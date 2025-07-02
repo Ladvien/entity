@@ -4,6 +4,7 @@ from typing import List
 
 from pipeline.context import ConversationEntry, PluginContext
 from pipeline.plugins import PromptPlugin
+from pipeline.plugins.resources.memory_resource import MemoryResource
 from pipeline.stages import PipelineStage
 
 
@@ -14,7 +15,7 @@ class ComplexPrompt(PromptPlugin):
     and memory components to craft a single reply.
     """
 
-    dependencies = ["llm", "database", "vector_memory"]
+    dependencies = ["llm", "memory"]
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context: PluginContext) -> None:
@@ -27,12 +28,11 @@ class ComplexPrompt(PromptPlugin):
         4. Record the reply in the conversation and set the pipeline response.
         """
 
-        db = context.get_resource("database")
-        vector_memory = context.get_resource("vector_memory")
+        memory: MemoryResource = context.get_resource("memory")
 
         history: List[ConversationEntry] = []
-        if db and hasattr(db, "load_history"):
-            history = await db.load_history(context.pipeline_id)
+        if memory:
+            history = await memory.load_conversation(context.pipeline_id)
         history_text = "\n".join(f"{h.role}: {h.content}" for h in history)
 
         last_message = ""
@@ -42,10 +42,9 @@ class ComplexPrompt(PromptPlugin):
                 break
 
         similar: List[str] = []
-        if vector_memory:
-            await vector_memory.add_embedding(last_message)
+        if memory:
             k = int(self.config.get("k", 3))
-            similar = await vector_memory.query_similar(last_message, k)
+            similar = await memory.search_similar(last_message, k)
         similar_text = "; ".join(similar)
 
         prompt = (
@@ -64,3 +63,7 @@ class ComplexPrompt(PromptPlugin):
             metadata={"source": "complex_prompt"},
         )
         context.set_response(response.content)
+        if memory:
+            await memory.save_conversation(
+                context.pipeline_id, context.get_conversation_history()
+            )

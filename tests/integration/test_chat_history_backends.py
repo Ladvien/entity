@@ -6,20 +6,15 @@ from pathlib import Path
 import pytest
 
 from config.environment import load_env
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineStage,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
+                      PipelineState, PluginContext, PluginRegistry,
+                      ResourceRegistry, SystemRegistries, ToolRegistry)
 from pipeline.plugins.prompts.chat_history import ChatHistory
-from pipeline.plugins.resources.in_memory_storage import InMemoryStorageResource
-from pipeline.plugins.resources.postgres import PostgresResource
+from pipeline.plugins.resources.in_memory_storage import \
+    InMemoryStorageResource
+from pipeline.plugins.resources.memory_resource import MemoryResource
+from pipeline.plugins.resources.postgres_database import \
+    PostgresDatabaseResource
 from pipeline.plugins.resources.sqlite_storage import SQLiteStorageResource
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
@@ -27,9 +22,9 @@ load_env(Path(__file__).resolve().parents[2] / ".env")
 
 async def run_history_test(resource):
     await getattr(resource, "initialize", lambda: None)()
-    if isinstance(resource, PostgresResource):
-        await resource._pool.execute("DROP TABLE IF EXISTS test_history")
-        await resource._pool.execute(
+    if isinstance(resource, PostgresDatabaseResource):
+        await resource._connection.execute("DROP TABLE IF EXISTS test_history")
+        await resource._connection.execute(
             "CREATE TABLE test_history ("
             "conversation_id text, role text, content text, "
             "metadata jsonb, timestamp timestamptz)"
@@ -38,8 +33,9 @@ async def run_history_test(resource):
         resource._table = "test_history"
         await resource.initialize()
 
+    memory = MemoryResource(resource)
     resources = ResourceRegistry()
-    resources.add("storage", resource)
+    resources.add("memory", memory)
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
     state = PipelineState(
         conversation=[
@@ -88,7 +84,7 @@ def test_postgres_history():
         "history_table": "test_history",
     }
     try:
-        resource = PostgresResource(cfg)
+        resource = PostgresDatabaseResource(cfg)
         asyncio.run(resource.initialize())
     except OSError as exc:
         pytest.skip(f"PostgreSQL not available: {exc}")

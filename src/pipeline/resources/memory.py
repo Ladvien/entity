@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, List
+
+from pipeline.context import ConversationEntry
 
 
 class Memory(ABC):
@@ -22,3 +24,17 @@ class Memory(ABC):
     @abstractmethod
     def clear(self) -> None:
         """Remove all values from memory."""
+
+    async def save_conversation(
+        self, conversation_id: str, history: List[ConversationEntry]
+    ) -> None:
+        """Persist conversation ``history`` if supported."""
+        return None
+
+    async def load_conversation(self, conversation_id: str) -> List[ConversationEntry]:
+        """Retrieve stored conversation for ``conversation_id`` if available."""
+        return []
+
+    async def search_similar(self, query: str, k: int = 5) -> List[str]:
+        """Return semantically similar text results if supported."""
+        return []

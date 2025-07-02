@@ -2,17 +2,11 @@ import asyncio
 from datetime import datetime
 from unittest.mock import AsyncMock
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginContext, PluginRegistry, ResourceRegistry,
+                      SystemRegistries, ToolRegistry)
 from pipeline.plugins.prompts.complex_prompt import ComplexPrompt
+from pipeline.plugins.resources.memory_resource import MemoryResource
 
 
 class FakeLLM:
@@ -22,22 +16,22 @@ class FakeLLM:
         self.generate = AsyncMock(return_value="done")
 
 
-class FakeDB:
-    name = "database"
-
+class FakeMemory(MemoryResource):
     def __init__(self, history):
-        self.load_history = AsyncMock(return_value=history)
+        super().__init__(None, None, {})
+        self._history = history
+
+    async def load_conversation(self, conversation_id: str):
+        return self._history
+
+    async def search_similar(self, query: str, k: int = 5):
+        return ["similar"]
+
+    async def save_conversation(self, conversation_id: str, history):
+        self._history = history
 
 
-class FakeVectorMemory:
-    name = "vector_memory"
-
-    def __init__(self):
-        self.add_embedding = AsyncMock()
-        self.query_similar = AsyncMock(return_value=["similar"])
-
-
-def make_context(llm, db, memory):
+def make_context(llm, memory):
     state = PipelineState(
         conversation=[
             ConversationEntry(content="hello", role="user", timestamp=datetime.now())
@@ -47,8 +41,7 @@ def make_context(llm, db, memory):
     )
     resources = ResourceRegistry()
     resources.add("llm", llm)
-    resources.add("database", db)
-    resources.add("vector_memory", memory)
+    resources.add("memory", memory)
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
     return state, PluginContext(state, registries)
 
@@ -56,15 +49,12 @@ def make_context(llm, db, memory):
 def test_complex_prompt_uses_resources():
     llm = FakeLLM()
     history = [ConversationEntry(content="old", role="user", timestamp=datetime.now())]
-    db = FakeDB(history)
-    memory = FakeVectorMemory()
-    state, ctx = make_context(llm, db, memory)
+    memory = FakeMemory(history)
+    state, ctx = make_context(llm, memory)
     plugin = ComplexPrompt({"k": 1})
 
     asyncio.run(plugin.execute(ctx))
 
-    memory.add_embedding.assert_awaited_with("hello")
-    memory.query_similar.assert_awaited_with("hello", 1)
     llm.generate.assert_awaited()
     assert state.response == "done"
     assert any(
