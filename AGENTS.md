@@ -158,7 +158,7 @@ All plugins must inherit from base plugin classes and follow these patterns:
 
 ```python
 class MyPlugin(PromptPlugin):  # or ResourcePlugin, ToolPlugin, AdapterPlugin, FailurePlugin
-    dependencies = ["database", "ollama"]  # List dependency registry keys
+    dependencies = ["database", "llm"]  # List dependency registry keys
     stages = [PipelineStage.THINK]  # Explicitly declare execution stages
     
     @classmethod
@@ -265,8 +265,8 @@ plugins:
       password: ""
       pool_min_size: 1
       pool_max_size: 5
-    ollama:
-      type: pipeline.plugins.resources.ollama_llm:OllamaLLMResource
+    llm:
+      provider: ollama
       base_url: "http://localhost:11434"
       model: "llama3:8b"
 
@@ -358,7 +358,7 @@ class WeatherToolPlugin(ToolPlugin):
 ### Prompt Plugin Pattern
 ```python
 class ChainOfThoughtPlugin(PromptPlugin):
-    dependencies = ["ollama"]
+    dependencies = ["llm"]
     stages = [PipelineStage.THINK]
     
     async def _execute_impl(self, context: PluginContext):
