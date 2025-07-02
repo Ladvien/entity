@@ -1,5 +1,4 @@
 import sys
-from pathlib import Path
 
 from cli import CLI
 from pipeline.adapters.websocket import WebSocketAdapter

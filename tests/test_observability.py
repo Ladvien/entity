@@ -2,7 +2,6 @@ import asyncio
 import time
 
 from pipeline import (
-    MetricsCollector,
     PipelineStage,
     PluginRegistry,
     PromptPlugin,

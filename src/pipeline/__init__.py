@@ -7,12 +7,7 @@ from .conversation_manager import ConversationManager
 from .decorators import plugin
 from .errors import create_static_error_response
 from .execution import create_default_response, execute_pipeline
-from .initializer import (
-    ClassRegistry,
-    SystemInitializer,
-    import_plugin_class,
-    initialization_cleanup_context,
-)
+from .initializer import ClassRegistry, SystemInitializer
 from .manager import PipelineManager
 from .metrics import MetricsCollector
 from .plugins import (
@@ -27,7 +22,6 @@ from .plugins import (
     ToolPlugin,
     ValidationResult,
 )
-from .plugins.classifier import PluginAutoClassifier
 from .resources import LLM
 from .stages import PipelineStage
 from .state import FailureInfo, LLMResponse, PipelineState
