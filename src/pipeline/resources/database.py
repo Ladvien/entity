@@ -4,14 +4,12 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from pipeline.context import ConversationEntry
-from pipeline.plugins import ResourcePlugin
-from pipeline.stages import PipelineStage
+from pipeline.resources.base import BaseResource
 
 
-class DatabaseResource(ResourcePlugin, ABC):
+class DatabaseResource(BaseResource, ABC):
     """Abstract base class for database resources."""
 
-    stages = [PipelineStage.PARSE]
     name = "database"
 
     def __init__(self, config: dict | None = None) -> None:

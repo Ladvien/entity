@@ -8,6 +8,7 @@ from importlib import import_module
 from typing import Any, Dict, Iterable, List, Tuple
 
 from config.environment import load_env
+from pipeline.resources.base import Resource
 from registry import PluginRegistry, ResourceRegistry, ToolRegistry
 
 from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
@@ -37,9 +38,9 @@ class ClassRegistry:
         for name, cls in self._classes.items():
             yield cls, self._configs[name]
 
-    def resource_classes(self) -> Iterable[Tuple[type[ResourcePlugin], Dict]]:
+    def resource_classes(self) -> Iterable[Tuple[type, Dict]]:
         for name, cls in self._classes.items():
-            if issubclass(cls, ResourcePlugin):
+            if issubclass(cls, ResourcePlugin) or issubclass(cls, Resource):
                 yield cls, self._configs[name]
 
     def tool_classes(self) -> Iterable[Tuple[type[ToolPlugin], Dict]]:
@@ -49,7 +50,11 @@ class ClassRegistry:
 
     def non_resource_non_tool_classes(self) -> Iterable[Tuple[type[BasePlugin], Dict]]:
         for name, cls in self._classes.items():
-            if not issubclass(cls, ResourcePlugin) and not issubclass(cls, ToolPlugin):
+            if (
+                not issubclass(cls, ResourcePlugin)
+                and not issubclass(cls, ToolPlugin)
+                and not issubclass(cls, Resource)
+            ):
                 yield cls, self._configs[name]
 
 

@@ -3,8 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any
 
-from pipeline.base_plugins import ResourcePlugin
-from pipeline.stages import PipelineStage
+from pipeline.resources.base import BaseResource
 
 
 class LLM(ABC):
@@ -18,13 +17,8 @@ class LLM(ABC):
         return await self.generate(prompt)
 
 
-class LLMResource(ResourcePlugin, LLM):
+class LLMResource(BaseResource, LLM):
     """Base class for LLM-backed resources."""
-
-    stages = [PipelineStage.PARSE]
-
-    async def _execute_impl(self, context: Any) -> None:  # pragma: no cover - no op
-        return None
 
     async def generate(self, prompt: str) -> str:
         raise NotImplementedError

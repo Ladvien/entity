@@ -33,7 +33,7 @@ from .plugins import (
     ValidationResult,
 )
 from .registries import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
-from .resources import LLM
+from .resources import LLM, BaseResource, Resource
 from .stages import PipelineStage
 from .state import FailureInfo, LLMResponse, PipelineState
 
@@ -51,6 +51,8 @@ __all__ = [
     "ToolCall",
     "LLMResponse",
     "LLM",
+    "Resource",
+    "BaseResource",
     "FailureInfo",
     "MetricsCollector",
     "BasePlugin",

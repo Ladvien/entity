@@ -7,15 +7,13 @@ from typing import Dict, List, Optional
 import aiosqlite
 
 from pipeline.context import ConversationEntry
-from pipeline.plugins import ResourcePlugin
+from pipeline.resources.base import BaseResource
 from pipeline.resources.storage import StorageBackend
-from pipeline.stages import PipelineStage
 
 
-class SQLiteStorageResource(ResourcePlugin, StorageBackend):
+class SQLiteStorageResource(BaseResource, StorageBackend):
     """SQLite-based conversation history storage."""
 
-    stages = [PipelineStage.PARSE]
     name = "storage"
 
     def __init__(self, config: Dict | None = None) -> None:
@@ -36,9 +34,6 @@ class SQLiteStorageResource(ResourcePlugin, StorageBackend):
             )"""
         )
         await self._conn.commit()
-
-    async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
-        return None
 
     async def save_history(
         self, conversation_id: str, history: List[ConversationEntry]

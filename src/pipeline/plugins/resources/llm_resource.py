@@ -2,19 +2,14 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from pipeline.plugins import ResourcePlugin, ValidationResult
-from pipeline.resources import LLM
-from pipeline.stages import PipelineStage
+from pipeline.resources import LLM, BaseResource
+from pipeline.validation import ValidationResult
 
 
-class LLMResource(ResourcePlugin, LLM):
+class LLMResource(BaseResource, LLM):
     """Base class for language model resources."""
 
-    stages = [PipelineStage.PARSE]
     name = "llm"
-
-    async def _execute_impl(self, context) -> None:
-        return None
 
     async def generate(self, prompt: str) -> str:
         """Return a completion for ``prompt``."""

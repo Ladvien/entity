@@ -9,13 +9,11 @@ from pgvector.asyncpg import register_vector
 from pipeline.plugins.resources.postgres_database import PostgresDatabaseResource
 from pipeline.plugins.resources.postgres_pool import PostgresConnectionPool
 from pipeline.resources.vectorstore import VectorStoreResource
-from pipeline.stages import PipelineStage
 
 
 class PgVectorStore(VectorStoreResource):
     """Postgres-backed vector store using pgvector."""
 
-    stages = [PipelineStage.PARSE]
     name = "vector_memory"
 
     def __init__(

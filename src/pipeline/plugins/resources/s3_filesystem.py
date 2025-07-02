@@ -4,15 +4,13 @@ from typing import Dict
 
 import aioboto3
 
-from pipeline.plugins import ResourcePlugin, ValidationResult
-from pipeline.resources import FileSystemResource
-from pipeline.stages import PipelineStage
+from pipeline.resources import BaseResource, FileSystemResource
+from pipeline.validation import ValidationResult
 
 
-class S3FileSystem(ResourcePlugin, FileSystemResource):
+class S3FileSystem(BaseResource, FileSystemResource):
     """S3-backed file storage using ``aioboto3``."""
 
-    stages = [PipelineStage.PARSE]
     name = "filesystem"
 
     def __init__(self, config: Dict | None = None) -> None:
@@ -25,9 +23,6 @@ class S3FileSystem(ResourcePlugin, FileSystemResource):
         if not config.get("bucket"):
             return ValidationResult.error_result("'bucket' is required")
         return ValidationResult.success_result()
-
-    async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
-        return None
 
     async def store(self, key: str, content: bytes) -> str:
         async with aioboto3.client("s3", region_name=self.region) as s3:

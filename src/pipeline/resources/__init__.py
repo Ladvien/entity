@@ -1,3 +1,4 @@
+from .base import BaseResource, Resource
 from .database import DatabaseResource
 from .filesystem import FileSystemResource
 from .llm import LLM, LLMResource
@@ -13,4 +14,6 @@ __all__ = [
     "FileSystemResource",
     "VectorStore",
     "VectorStoreResource",
+    "Resource",
+    "BaseResource",
 ]

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Dict
 
-from pipeline.plugins import ValidationResult
 from pipeline.plugins.resources.http_llm_resource import HttpLLMResource
 from pipeline.resources.llm import LLMResource
+from pipeline.validation import ValidationResult
 
 
 class OllamaLLMResource(LLMResource):
@@ -23,9 +23,6 @@ class OllamaLLMResource(LLMResource):
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
         return HttpLLMResource(config).validate_config()
-
-    async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
-        return None
 
     async def generate(self, prompt: str) -> str:
         if not self.http.validate_config().valid:

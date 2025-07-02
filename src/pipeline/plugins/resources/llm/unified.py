@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Dict, Type
 
-from pipeline.plugins import ValidationResult
 from pipeline.resources.llm import LLMResource
+from pipeline.validation import ValidationResult
 
 from .providers import (
     ClaudeProvider,
@@ -58,9 +58,6 @@ class UnifiedLLMResource(LLMResource):
                 f"Unknown LLM provider '{provider_name}'"
             )
         return provider_cls.validate_config(config)
-
-    async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
-        return None
 
     async def generate(self, prompt: str) -> str:
         try:

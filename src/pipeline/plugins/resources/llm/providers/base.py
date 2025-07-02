@@ -3,9 +3,9 @@ from __future__ import annotations
 import asyncio
 from typing import Any, Dict, Optional
 
-from pipeline.plugins import ValidationResult
 from pipeline.plugins.resources.http_llm_resource import HttpLLMResource
 from pipeline.resources.llm import LLM
+from pipeline.validation import ValidationResult
 
 
 class BaseProvider(LLM):
