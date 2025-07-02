@@ -52,6 +52,7 @@ def test_context_get_llm_with_provider():
         "plugins": {
             "resources": {
                 "llm": {
+                    "type": "pipeline.plugins.resources.llm.unified:UnifiedLLMResource",
                     "provider": "gemini",
                     "api_key": "key",
                     "model": "gemini-pro",
