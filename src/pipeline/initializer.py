@@ -141,7 +141,7 @@ class SystemInitializer:
         resources = self.config.get("plugins", {}).get("resources", {})
         for name, config in resources.items():
             if name == "memory" and "type" not in config:
-                cls_path = "pipeline.plugins.resources.memory_resource:MemoryResource"
+                cls_path = "pipeline.plugins.resources.memory:MemoryResource"
             else:
                 cls_path = config.get("type", name)
             cls = import_plugin_class(cls_path)

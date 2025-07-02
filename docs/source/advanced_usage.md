@@ -4,33 +4,48 @@
 :end-before: <!-- end advanced_usage -->
 ```
 
-### Enabling pgvector Storage
+### Composing Memory Backends
 
 PostgreSQL's `pgvector` extension allows vector similarity search for embeddings.
-Add a setup command in your configuration to enable the extension and register a
-vector-aware memory plugin.
+Use `MemoryResource` with a Postgres database and optional S3 file storage:
 
 ```yaml
 plugins:
   resources:
-    database:
-      type: postgres
-      host: localhost
-      port: 5432
-      name: dev_db
-      username: agent
-      setup_commands:
-        - "CREATE EXTENSION IF NOT EXISTS vector"
-  prompts:
-    vector_memory:
-      type: vector_memory
-      dependencies: ["database"]
+    memory:
+      type: memory
+      database:
+        type: postgres
+        host: localhost
+        port: 5432
+        name: dev_db
+        username: agent
+        setup_commands:
+          - "CREATE EXTENSION IF NOT EXISTS vector"
+      vector_store:
+        type: pgvector
+        dimensions: 768
+        table: embeddings
+      filesystem:
+        type: s3
+        bucket: agent-files
+        region: us-east-1
 ```
 
-For a working example, see
-[`vector_memory_pipeline.py`](../../examples/pipelines/vector_memory_pipeline.py).
-These advanced capabilities highlight **Preserve All Power (7)** by allowing
-low-level database features without sacrificing the simple default setup.
+For local experimentation you can swap the database section with SQLite:
+
+```yaml
+plugins:
+  resources:
+    memory:
+      type: memory
+      database:
+        type: sqlite
+        path: ./agent.db
+```
+
+These configurations illustrate **Preserve All Power (7)** by enabling
+advanced storage without sacrificing the simple default setup.
 
 ### Runtime Configuration Reload
 

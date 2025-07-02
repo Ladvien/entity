@@ -8,8 +8,7 @@
 ## Examples
 
 - [`vector_memory_pipeline.py`](../../examples/pipelines/vector_memory_pipeline.py)
-  demonstrates using Postgres, an LLM with the Ollama provider, and simple
-  vector memory.
+  demonstrates composing `MemoryResource` with Postgres, pgvector, and S3.
 - **Postgres connection pooling**
   ```python
   PostgresResource(

@@ -24,6 +24,7 @@ plugins:
       file_path: "logs/entity.log"
     memory:
       type: pipeline.plugins.resources.memory:MemoryResource
+<<<<<<< HEAD
       database:
         type: pipeline.plugins.resources.sqlite_storage:SQLiteStorageResource
         path: ./dev.db
@@ -31,6 +32,8 @@ plugins:
         type: s3
         bucket: agent-files
         region: us-east-1
+=======
+>>>>>>> 9bf9b75a2e702fca00505495f9cf961eb421370a
   tools:
     weather:
       type: pipeline.plugins.tools.weather_api_tool:WeatherApiTool
