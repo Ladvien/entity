@@ -5,12 +5,8 @@ from typing import Any, Dict, List
 from pipeline.context import ConversationEntry
 from pipeline.initializer import import_plugin_class
 from pipeline.plugins import ResourcePlugin, ValidationResult
-from pipeline.resources import (
-    DatabaseResource,
-    FileSystemResource,
-    Memory,
-    VectorStoreResource,
-)
+from pipeline.resources import (DatabaseResource, FileSystemResource, Memory,
+                                VectorStoreResource)
 from pipeline.stages import PipelineStage
 
 
@@ -66,11 +62,6 @@ class MemoryResource(ResourcePlugin, Memory):
             type_hint = cfg.get("type")
             if not type_hint:
                 return None
-
-            if key == "filesystem" and str(type_hint).lower() == "s3":
-                from .s3_filesystem import S3FileSystem
-
-                return S3FileSystem(cfg)
 
             cls_obj = import_plugin_class(type_hint)
             return cls_obj(cfg)

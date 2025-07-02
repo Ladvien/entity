@@ -1,14 +1,8 @@
 import asyncio
 
-from pipeline import (
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-    execute_pipeline,
-)
+from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
+                      ResourceRegistry, SystemRegistries, ToolRegistry,
+                      execute_pipeline)
 from pipeline.plugins.resources.memory import SimpleMemoryResource
 from pipeline.resources.memory import Memory
 
@@ -38,3 +32,10 @@ def test_memory_persists_between_runs():
     second = asyncio.run(execute_pipeline("again", registries))
     assert first == 1
     assert second == 2
+
+
+def test_memory_resource_name_constant():
+    from pipeline.plugins.resources.memory import MemoryResource
+
+    assert MemoryResource.name == "memory"
+    assert not hasattr(MemoryResource, "aliases")
