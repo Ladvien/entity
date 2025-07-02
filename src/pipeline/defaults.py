@@ -20,7 +20,6 @@ DEFAULT_RESOURCES: Dict[str, Dict[str, Any]] = {
         "provider": "echo",
     },
     "memory": {
-        "type": "pipeline.plugins.resources.memory_resource:MemoryResource",
         "backend": {
             "type": "pipeline.plugins.resources.memory_resource:SimpleMemoryResource"
         },

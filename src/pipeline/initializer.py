@@ -140,7 +140,11 @@ class SystemInitializer:
         # Phase 1: register all plugin classes
         resources = self.config.get("plugins", {}).get("resources", {})
         for name, config in resources.items():
-            cls = import_plugin_class(config.get("type", name))
+            if name == "memory" and "type" not in config:
+                cls_path = "pipeline.plugins.resources.memory_resource:MemoryResource"
+            else:
+                cls_path = config.get("type", name)
+            cls = import_plugin_class(cls_path)
             registry.register_class(cls, config, name)
             dep_graph[name] = getattr(cls, "dependencies", [])
 

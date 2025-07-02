@@ -64,6 +64,9 @@ class ConfigValidator:
         backend = mem_cfg.get("backend")
         if backend is not None and not isinstance(backend, dict):
             raise ValueError("memory: 'backend' must be a mapping")
+        if isinstance(backend, dict) and "type" in backend:
+            if not isinstance(backend["type"], str):
+                raise ValueError("memory: 'backend.type' must be a string")
 
     def _validate_vector_memory(self, config: dict) -> None:
         """Ensure vector memory configuration contains required fields."""
