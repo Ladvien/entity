@@ -6,15 +6,21 @@ from pathlib import Path
 import pytest
 
 from config.environment import load_env
-from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
-                      PipelineState, PluginContext, PluginRegistry,
-                      ResourceRegistry, SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineStage,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    ResourceRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.plugins.prompts.chat_history import ChatHistory
-from pipeline.plugins.resources.in_memory_storage import \
-    InMemoryStorageResource
+from pipeline.plugins.resources.in_memory_storage import InMemoryStorageResource
 from pipeline.plugins.resources.memory_resource import MemoryResource
-from pipeline.plugins.resources.postgres_database import \
-    PostgresDatabaseResource
+from pipeline.plugins.resources.postgres_database import PostgresDatabaseResource
 from pipeline.plugins.resources.sqlite_storage import SQLiteStorageResource
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
