@@ -45,7 +45,7 @@ class E(PromptPlugin):
         pass
 
 
-class DummyMemory(ResourcePlugin):
+class VectorMemoryResource(ResourcePlugin):
     stages = [PipelineStage.PARSE]
 
     async def _execute_impl(self, context):
@@ -54,7 +54,7 @@ class DummyMemory(ResourcePlugin):
 
 class ComplexPrompt(PromptPlugin):
     stages = [PipelineStage.THINK]
-    dependencies = ["memory"]
+    dependencies = ["vector_memory"]
 
     async def _execute_impl(self, context):
         pass
@@ -94,28 +94,30 @@ def test_validator_cycle_detection(tmp_path):
         RegistryValidator(str(path)).run()
 
 
-def test_complex_prompt_requires_memory(tmp_path):
+def test_complex_prompt_requires_vector_memory(tmp_path):
     plugins = {
         "prompts": {
             "complex_prompt": {"type": "tests.test_registry_validator:ComplexPrompt"}
         }
     }
     path = _write_config(tmp_path, plugins)
-    with pytest.raises(SystemError, match="memory"):
+    with pytest.raises(SystemError, match="vector_memory"):
         RegistryValidator(str(path)).run()
 
 
-def test_complex_prompt_with_memory(tmp_path):
+def test_complex_prompt_with_vector_memory(tmp_path):
     plugins = {
-        "resources": {"memory": {"type": "tests.test_registry_validator:DummyMemory"}},
+        "resources": {
+            "vector_memory": {
+                "type": "tests.test_registry_validator:VectorMemoryResource"
+            }
+        },
         "prompts": {
             "complex_prompt": {"type": "tests.test_registry_validator:ComplexPrompt"}
         },
     }
     path = _write_config(tmp_path, plugins)
     RegistryValidator(str(path)).run()
-<<<<<<< HEAD
-=======
 
 
 def test_vector_memory_requires_postgres(tmp_path):
@@ -145,4 +147,3 @@ def test_vector_memory_with_postgres(tmp_path):
     }
     path = _write_config(tmp_path, plugins)
     RegistryValidator(str(path)).run()
->>>>>>> 675e5906c4d22f829a34870d1fbc1d9cbdba58ad
