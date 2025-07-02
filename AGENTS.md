@@ -335,6 +335,12 @@ class DatabaseResourcePlugin(ResourcePlugin):
         pass
 ```
 
+Resources compose other resources. A `StorageResource` takes a
+`DatabaseResource`, a `VectorStoreResource`, and a `FileSystemResource`. The
+`DatabaseResource` points to a specific implementation such as
+`PostgresDatabaseResource`. Each resource should expose one clear name so there
+is only one way to reference it.
+
 ### Tool Plugin Pattern
 ```python
 class WeatherToolPlugin(ToolPlugin):
@@ -516,3 +522,4 @@ This framework enables building production-ready AI agents through composable, t
 34. **Framework Extension Points**: Base classes enable framework-wide capability additions without plugin changes
 35. **Controlled Plugin Access**: Layered context architecture prevents accidental system state corruption
 36. **Clear Interface Contracts**: Plugin capabilities explicitly defined through controlled access methods
+37. **Single Resource Names**: Each resource exposes one canonical name and may depend on other resources (e.g. `StorageResource` -> `DatabaseResource`, `VectorStoreResource`, `FileSystemResource`)

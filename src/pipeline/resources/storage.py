@@ -2,21 +2,20 @@ from __future__ import annotations
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> fee954f06165411f769e9903b20bedd74edfc69e
 from abc import abstractmethod
 from contextlib import asynccontextmanager
-from typing import Any, AsyncIterator, Dict, Optional, Protocol
+from typing import Any, AsyncIterator, Dict, List, Optional, Protocol
 
+from pipeline.context import ConversationEntry
 from pipeline.plugins import ResourcePlugin
 from pipeline.stages import PipelineStage
 
 
 class StorageBackend(Protocol):
-    """Protocol for asynchronous storage backends.
-
-    Storage implementations should provide basic CRUD operations and a
-    generic command execution method.  All methods return awaitables to
-    support async resources such as databases or object stores.
-    """
+    """Protocol for asynchronous storage backends with optional history helpers."""
 
     async def save(self, key: str, data: Any) -> None:
         """Persist ``data`` under ``key``."""
@@ -33,14 +32,17 @@ class StorageBackend(Protocol):
     async def execute(self, command: str, *args: Any, **kwargs: Any) -> Any:
         """Execute an arbitrary ``command`` on the backend."""
 
+    async def save_history(
+        self, conversation_id: str, history: List[ConversationEntry]
+    ) -> None:
+        """Persist conversation ``history`` for ``conversation_id``."""
+
+    async def load_history(self, conversation_id: str) -> List[ConversationEntry]:
+        """Retrieve stored history for ``conversation_id``."""
+
 
 class StorageResource(ResourcePlugin, StorageBackend):
-    """Base class for storage resources with connection pooling support.
-
-    Subclasses provide the logic to create the connection pool during
-    :meth:`initialize`.  The helper :meth:`connection` context manager
-    ensures connections are acquired and released properly.
-    """
+    """Base class for storage resources with connection pooling support."""
 
     stages = [PipelineStage.PARSE]
 
@@ -49,12 +51,7 @@ class StorageResource(ResourcePlugin, StorageBackend):
         self._pool: Optional[Any] = None
 
     async def initialize(self) -> None:
-        """Create the underlying connection pool.
-
-        Subclasses must set :attr:`_pool` to an object exposing ``acquire``
-        and ``release`` coroutines.  The default implementation does
-        nothing.
-        """
+        """Create the underlying connection pool."""
 
     @asynccontextmanager
     async def connection(self) -> AsyncIterator[Any]:
@@ -121,19 +118,14 @@ class StorageResource(ResourcePlugin, StorageBackend):
     @abstractmethod
     async def execute(self, command: str, *args: Any, **kwargs: Any) -> Any:
         raise NotImplementedError
-=======
-from typing import List, Protocol
 
-from pipeline.context import ConversationEntry
-
-
-class StorageBackend(Protocol):
-    """Protocol for resources that persist conversation history."""
-
+    # Conversation history helpers -----------------------------------------
     async def save_history(
         self, conversation_id: str, history: List[ConversationEntry]
-    ) -> None: ...
+    ) -> None:
+        raise NotImplementedError
 
+<<<<<<< HEAD
     async def load_history(self, conversation_id: str) -> List[ConversationEntry]: ...
 >>>>>>> a2fde49ed50a219b934336428d39351655a5f9c5
 =======
@@ -155,3 +147,7 @@ class StorageBackend(Protocol):
         """Return a single value for ``query``."""
         ...
 >>>>>>> 5e83dad2333366e3475cc1780350f7148fd6a771
+=======
+    async def load_history(self, conversation_id: str) -> List[ConversationEntry]:
+        raise NotImplementedError
+>>>>>>> fee954f06165411f769e9903b20bedd74edfc69e
