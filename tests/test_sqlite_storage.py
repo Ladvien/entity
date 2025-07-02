@@ -1,5 +1,4 @@
 import asyncio
-from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from pipeline.plugins.resources.sqlite_storage import SQLiteStorage

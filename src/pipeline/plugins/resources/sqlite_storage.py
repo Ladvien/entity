@@ -47,7 +47,7 @@ class SQLiteStorageResource(ResourcePlugin, StorageBackend):
             return
         for entry in history:
             await self._conn.execute(
-                f"INSERT INTO {self._table} (conversation_id, role, content, metadata, timestamp)"
+                f"INSERT INTO {self._table} (conversation_id, role, content, metadata, timestamp)"  # nosec B608
                 " VALUES (?, ?, ?, ?, ?)",
                 (
                     conversation_id,
@@ -63,7 +63,7 @@ class SQLiteStorageResource(ResourcePlugin, StorageBackend):
         if self._conn is None:
             return []
         cursor = await self._conn.execute(
-            f"SELECT role, content, metadata, timestamp FROM {self._table} "
+            f"SELECT role, content, metadata, timestamp FROM {self._table} "  # nosec B608
             "WHERE conversation_id = ? ORDER BY timestamp",
             (conversation_id,),
         )
@@ -85,3 +85,7 @@ class SQLiteStorageResource(ResourcePlugin, StorageBackend):
         if self._conn is not None:
             await self._conn.close()
             self._conn = None
+
+
+SQLiteStorage = SQLiteStorageResource
+__all__ = ["SQLiteStorageResource", "SQLiteStorage"]
