@@ -1,23 +1,20 @@
 from .base import BaseResource, Resource
-from .database import DatabaseResource
-from .filesystem import FileSystemResource
-from .llm import LLM
-from .memory import Memory
-from .vector_store import VectorStoreResource
-from .vectorstore import VectorStore
-from .container import ResourceContainer
-
 from .bedrock import BedrockResource
+from .container import ResourceContainer
+from .database import DatabaseResource
 from .duckdb_database import DuckDBDatabaseResource
 from .duckdb_vector_store import DuckDBVectorStore
-from .llm import UnifiedLLMResource
+from .filesystem import FileSystemResource
+from .llm import LLM, UnifiedLLMResource
 from .llm_resource import LLMResource
 from .local_filesystem import LocalFileSystemResource
+from .memory import Memory
 from .memory_resource import MemoryResource, SimpleMemoryResource
 from .pg_vector_store import PgVectorStore
-from .postgres_database import PostgresDatabaseResource
 from .s3_filesystem import S3FileSystem
 from .structured_logging import StructuredLogging
+from .vector_store import VectorStoreResource
+from .vectorstore import VectorStore
 
 __all__ = [
     "LLM",
@@ -34,7 +31,6 @@ __all__ = [
     "MemoryResource",
     "SimpleMemoryResource",
     "StructuredLogging",
-    "PostgresDatabaseResource",
     "DuckDBDatabaseResource",
     "PgVectorStore",
     "DuckDBVectorStore",

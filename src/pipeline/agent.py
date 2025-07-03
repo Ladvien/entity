@@ -5,18 +5,8 @@ from typing import Any, Callable, Dict, Optional
 
 from registry import SystemRegistries
 
-<<<<<<< HEAD
-from .adapters.http import HTTPAdapter
-from .adapters.websocket import WebSocketAdapter
-from .pipeline import execute_pipeline
-from .plugins import BasePlugin
-from .plugins.classifier import PluginAutoClassifier
-
-logger = logging.getLogger(__name__)
-=======
 from .builder import AgentBuilder
 from .runtime import AgentRuntime
->>>>>>> 538aec969a0d0557ee0cb4069b859612e6527402
 
 
 @dataclass

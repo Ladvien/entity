@@ -15,11 +15,7 @@ plugins:
     memory:
       type: memory
       database:
-<<<<<<< HEAD
-        type: pipeline.plugins.resources.postgres:PostgresResource
-=======
-        type: pipeline.resources.postgres_database:PostgresDatabaseResource
->>>>>>> 31c26c6f08f011fda24b488de4c679ad0b2325fd
+        type: pipeline.resources.postgres:PostgresResource
         host: localhost
         port: 5432
         name: dev_db

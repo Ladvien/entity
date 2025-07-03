@@ -243,7 +243,7 @@ plugins:
         bucket: agent-files
 ```
 
-This approach isn’t limited to memory. It applies to *any* agent capability—logging, configuration, tools, adapters. You can compose a `VectorMemorySystem` that reuses a shared `PostgresDatabaseResource` connection pool, or build a `KnowledgeBaseResource` that pulls from both local files and cloud APIs.
+This approach isn’t limited to memory. It applies to *any* agent capability—logging, configuration, tools, adapters. You can compose a `VectorMemorySystem` that reuses a shared `PostgresResource` connection pool, or build a `KnowledgeBaseResource` that pulls from both local files and cloud APIs.
 
 ### 🧠 Why It Matters
 
@@ -291,7 +291,7 @@ class MemoryResource(ResourcePlugin):
         if db_config:
             db_type = db_config.get("type", "postgres")
             if db_type == "postgres":
-                db = PostgresDatabaseResource(db_config)
+                db = PostgresResource(db_config)
             elif db_type == "sqlite":
                 db = SQLiteDatabaseResource(db_config)
             else:
@@ -361,7 +361,7 @@ memory = MemoryResource(
 )
 
 # Evolve to complex
-postgres = PostgresDatabaseResource(connection_str)
+postgres = PostgresResource(connection_str)
 memory = MemoryResource(
     database=postgres,
     vector_store=PgVectorStore(postgres, dimensions=768),
@@ -391,7 +391,7 @@ memory = MemoryResource(
 2. **Support Dependency Sharing**
    ```python
    # Vector store can reuse database connection
-   postgres = PostgresDatabaseResource(config)
+   postgres = PostgresResource(config)
    vector_store = PgVectorStore(postgres)  # Reuses connection pool
    ```
 
@@ -472,7 +472,7 @@ The framework maintains a sophisticated five-layer plugin architecture designed 
 Resource plugins can depend on other resources. For example, a
 `StorageResource` typically requires a `DatabaseResource`, a
 `VectorStoreResource`, and a `FileSystemResource`. A `DatabaseResource` then
-selects a concrete implementation like `PostgresDatabaseResource`. Each
+selects a concrete implementation like `PostgresResource`. Each
 resource exposes a single canonical name to keep the mental model clear.
 
 **Reconfiguration Example**: Switch from OpenAI to local Ollama by changing one configuration line.
