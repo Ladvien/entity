@@ -274,6 +274,11 @@ class ToolPlugin(BasePlugin):
         self.max_retries = int(self.config.get("max_retries", 1))
         self.retry_delay = float(self.config.get("retry_delay", 1.0))
 
+    @abstractmethod
+    async def execute(self, params: Dict[str, Any]) -> Any:  # type: ignore[override]
+        """Execute the tool with ``params``."""
+        raise NotImplementedError
+
     async def execute_function(self, params: Dict[str, Any]):
         raise NotImplementedError()
 
@@ -294,8 +299,11 @@ class ToolPlugin(BasePlugin):
                     raise
                 await asyncio.sleep(retry_delay_seconds)
 
-    async def execute_with_timeout(self, context: "PluginContext", timeout: int = 30):
-        return await asyncio.wait_for(self.execute(context), timeout=timeout)
+    async def execute_with_timeout(
+        self, params: Dict[str, Any], timeout: int = 30
+    ) -> Any:
+        """Execute the tool with a timeout."""
+        return await asyncio.wait_for(self.execute(params), timeout=timeout)
 
     async def _execute_impl(self, context: "PluginContext"):
         """Tools are not executed in the pipeline directly."""
