@@ -204,6 +204,18 @@ plugins:
         path: ./agent.db
 ```
 
+### DuckDB Configuration
+```yaml
+plugins:
+  resources:
+    memory:
+      type: memory
+      database:
+        type: pipeline.plugins.resources.duckdb_database:DuckDBDatabaseResource
+        path: ./agent.duckdb
+        history_table: chat_history
+```
+
 ### Advanced Configuration
 ```yaml
 plugins:
@@ -230,6 +242,10 @@ plugins:
 memory = MemoryResource(
     database=SQLiteDatabaseResource("./agent.db")
 )
+
+# Use DuckDB
+duckdb_resource = DuckDBDatabaseResource({"path": "./agent.duckdb"})
+memory_duckdb = MemoryResource(database=duckdb_resource)
 
 # Evolve to complex
 postgres = PostgresDatabaseResource(connection_str)
