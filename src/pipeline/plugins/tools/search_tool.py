@@ -46,3 +46,6 @@ class SearchTool(ToolPlugin):
             if isinstance(first, dict) and first.get("Text"):
                 return str(first["Text"])
         return "No results found."
+
+    async def execute(self, params: Dict[str, Any]) -> Any:  # type: ignore[override]
+        return await self.execute_function(params)
