@@ -50,7 +50,7 @@ def test_history_plugin_saves_conversation():
     state, ctx = make_context(db)
     plugin = ConversationHistory({"history_table": "tbl"})
 
-    ctx._state.current_stage = PipelineStage.DELIVER
+    ctx.set_current_stage(PipelineStage.DELIVER)
     expected_history = ctx.get_conversation_history()
     asyncio.run(plugin.execute(ctx))
 

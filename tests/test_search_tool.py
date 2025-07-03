@@ -11,8 +11,8 @@ from pipeline import (
     ResourceRegistry,
     SystemRegistries,
     ToolRegistry,
-    execute_pending_tools,
 )
+from pipeline.pipeline import execute_pending_tools
 from pipeline.plugins.tools.search_tool import SearchTool
 
 

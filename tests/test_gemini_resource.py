@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 from pipeline import (
     MetricsCollector,
     PipelineState,
-    SimpleContext,
+    PluginContext,
     SystemInitializer,
     SystemRegistries,
 )
@@ -64,5 +64,5 @@ def test_context_get_llm_with_provider():
     initializer = SystemInitializer.from_dict(cfg)
     plugin_reg, resource_reg, tool_reg = asyncio.run(initializer.initialize())
     state = PipelineState(conversation=[], pipeline_id="1", metrics=MetricsCollector())
-    ctx = SimpleContext(state, SystemRegistries(resource_reg, tool_reg, plugin_reg))
+    ctx = PluginContext(state, SystemRegistries(resource_reg, tool_reg, plugin_reg))
     assert isinstance(ctx.get_llm(), UnifiedLLMResource)
