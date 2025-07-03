@@ -1,5 +1,6 @@
 from .base import BaseResource, Resource
 from .database import DatabaseResource
+from .dsl import ResourceDef, ResourceGraph
 from .filesystem import FileSystemResource
 from .llm import LLM
 from .memory import Memory
@@ -15,4 +16,6 @@ __all__ = [
     "VectorStoreResource",
     "Resource",
     "BaseResource",
+    "ResourceDef",
+    "ResourceGraph",
 ]
