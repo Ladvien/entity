@@ -6,11 +6,7 @@ from pathlib import Path
 import pytest
 
 from config.environment import load_env
-<<<<<<< HEAD
-from pipeline.plugins.resources.postgres import PostgresResource
-=======
-from pipeline.resources.postgres_database import PostgresDatabaseResource
->>>>>>> 31c26c6f08f011fda24b488de4c679ad0b2325fd
+from pipeline.resources.postgres import PostgresResource
 from pipeline.state import ConversationEntry
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
