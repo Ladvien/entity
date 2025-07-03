@@ -33,14 +33,9 @@ pgvector = "^0.4.1"
 httpx = "^0.27.0"
 aioboto3 = "^15.0.0"
 duckdb = "^1.3.1"
-<<<<<<< HEAD
-cdktf = "^0.20.0"
-cdktf-cdktf-provider-aws = "^14.0.0"
-constructs = "^10.3.0"
-=======
 cdktf = "^0.21.0"
 cdktf-cdktf-provider-aws = "^21.1.0"
->>>>>>> fdd01ee24c0cc5f74953ed08a44185415b3acc61
+constructs = "^10.3.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"

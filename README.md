@@ -318,11 +318,4 @@ The `S3FileSystem` backend persists files in Amazon S3. Configure the
    - Clear interfaces for each backend
 
 This composition pattern would significantly improve the framework's usability while maintaining its flexibility. It's a perfect example of "simple things simple, complex things possible."
-<<<<<<< HEAD
 
-## AWS Deployment
-
-Use Terraform's Python SDK to provision AWS databases, storage, and compute resources. The [deployment guide](docs/source/deploy_aws.md) walks through a minimal setup on Amazon Web Services.
-
-=======
->>>>>>> 7966420636c5eba71f9deaf1bc4b88c234ab703d

@@ -1,7 +1,5 @@
-<<<<<<< HEAD
 # AWS Deployment Guide
 
-<<<<<<< HEAD
 Deploying the Entity Pipeline Framework on AWS lets you scale reliably with managed services. This guide outlines required resources and provides a Python example that drives Terraform to create them.
 
 ## Required AWS Resources
@@ -15,73 +13,10 @@ Deploying the Entity Pipeline Framework on AWS lets you scale reliably with mana
 ## Terraform with Python
 
 The [python-terraform](https://github.com/beelit94/python-terraform) package lets you drive Terraform commands from Python. Keep your `.tf` files in an `infra/` directory and orchestrate them with a small helper class.
-=======
-This guide outlines the core AWS services required to run the framework in production and demonstrates how to provision them using the Terraform Python SDK.
-
-## Required Resources
-
-- **Database**: either Amazon RDS for relational workloads or DynamoDB for serverless NoSQL.
-- **Object Storage**: an S3 bucket for file and model storage.
-- **Compute**: choose between ECS for containerized workloads or Lambda for serverless functions.
-- **Networking**: a VPC with public and private subnets, plus the necessary security groups.
-
-## Provisioning with Terraform in Python
-
-The `python-terraform` package exposes a simple interface for executing Terraform commands from Python. The following example uses an object-oriented wrapper around the library. The class encapsulates init, plan, and apply steps.
->>>>>>> 7966420636c5eba71f9deaf1bc4b88c234ab703d
 
 ```python
 from python_terraform import Terraform
 
-<<<<<<< HEAD
-class EntityAWSInfra:
-    """Wrap Terraform commands for object oriented clarity."""
-
-    def __init__(self, working_dir: str = "infra") -> None:
-        self.tf = Terraform(working_dir=working_dir)
-
-    def init(self) -> None:
-        self.tf.init()
-
-    def apply(self) -> None:
-        # --auto-approve avoids interactive prompts
-        self.tf.apply(skip_plan=True, auto_approve=True)
-
-if __name__ == "__main__":
-    infra = EntityAWSInfra()
-    infra.init()
-    infra.apply()
-```
-
-### Example Terraform Files
-
-Below is a minimal `main.tf` showing the core resources. Adjust values to fit your environment.
-
-```hcl
-provider "aws" {
-  region = "us-east-1"
-}
-
-resource "aws_s3_bucket" "files" {
-  bucket = "entity-files"
-}
-
-resource "aws_db_instance" "postgres" {
-  allocated_storage    = 20
-  engine               = "postgres"
-  instance_class       = "db.t3.micro"
-  name                 = "entity"
-  username             = "entity"
-  password             = "${var.db_password}"
-  skip_final_snapshot  = true
-}
-
-resource "aws_ecs_cluster" "agent" {}
-```
-
-Run the Python helper after creating these `.tf` files to provision the infrastructure.
-
-=======
 class AwsDeployer:
     def __init__(self, working_dir: str):
         self.terraform = Terraform(working_dir=working_dir)
@@ -123,11 +58,6 @@ deployer.deploy()
 ```
 
 This approach keeps infrastructure management fully scripted while retaining the readability of Python.
->>>>>>> 7966420636c5eba71f9deaf1bc4b88c234ab703d
-=======
-# Deploying to AWS
-
-This guide outlines how to deploy an Entity agent using Amazon Web Services (AWS). The framework assumes you are familiar with basic AWS tools like Terraform and Docker.
 
 ## Deployment Mental Model
 
@@ -142,4 +72,3 @@ flowchart TD
 - **Define Infrastructure** – create an `Infrastructure` subclass describing resources such as VPCs and compute instances.
 - **Run Terraform** – call the class to execute Terraform and apply the configuration.
 - **Deploy Service** – once resources exist, launch the agent container or ECS task.
->>>>>>> 93bbbe9bd3ccb2f20c2b69411577aac908922e28
