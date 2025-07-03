@@ -1,5 +1,10 @@
-<<<<<<< HEAD
 import asyncio
+import importlib.util
+import sys
+from pathlib import Path
+from types import ModuleType
+
+import pytest
 
 from pipeline import PipelineStage
 from pipeline.plugins import ResourcePlugin
@@ -46,14 +51,9 @@ def test_health_report():
     container = asyncio.run(build_container())
     report = asyncio.run(container.health_report())
     assert report == {"base": True, "dep": True}
-=======
-import importlib.util
-import sys
-from types import ModuleType
-from pathlib import Path
 
-import pytest
 
+# Resource pool tests using dynamic import to avoid package path issues
 root = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location(
     "pipeline.resources.container",
@@ -64,7 +64,7 @@ sys.modules["pipeline.resources"] = ModuleType("pipeline.resources")
 module = importlib.util.module_from_spec(spec)
 sys.modules["pipeline.resources.container"] = module
 spec.loader.exec_module(module)  # type: ignore[arg-type]
-ResourceContainer = module.ResourceContainer
+ResourceContainerDynamic = module.ResourceContainer
 
 
 class Dummy:
@@ -78,7 +78,7 @@ async def make_resource() -> Dummy:
 
 @pytest.mark.asyncio
 async def test_pool_scales_and_metrics():
-    container = ResourceContainer()
+    container = ResourceContainerDynamic()
     await container.add_pool(
         "dummy",
         make_resource,
@@ -92,4 +92,3 @@ async def test_pool_scales_and_metrics():
     await container.release("dummy", r2)
     metrics = container.get_metrics()["dummy"]
     assert metrics["available"] == 2
->>>>>>> 27f390cfd8c90b5cabd424830b9de0296112183c
