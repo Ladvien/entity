@@ -37,6 +37,10 @@ plugins:
         type: pipeline.resources.s3_filesystem:S3FileSystem
         bucket: agent-files
         region: us-east-1
+    cache:
+      type: pipeline.plugins.resources.cache:CacheResource
+      backend:
+        type: pipeline.cache.redis:RedisCache
   tools:
     weather:
       type: pipeline.plugins.tools.weather_api_tool:WeatherApiTool
