@@ -15,7 +15,7 @@ from registry import PluginRegistry, ResourceRegistry, SystemRegistries, ToolReg
 
 from .adapters.http import HTTPAdapter
 from .adapters.websocket import WebSocketAdapter
-from .execution import execute_pipeline
+from .pipeline import execute_pipeline
 from .plugins import BasePlugin
 from .plugins.classifier import PluginAutoClassifier
 
