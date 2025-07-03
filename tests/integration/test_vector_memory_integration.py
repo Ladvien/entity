@@ -10,9 +10,15 @@ from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
                       PluginContext, PluginRegistry, ResourceRegistry,
                       SystemRegistries, ToolRegistry)
 from pipeline.plugins.prompts.complex_prompt import ComplexPrompt
+<<<<<<< HEAD
 from pipeline.plugins.resources.llm import UnifiedLLMResource
 from pipeline.plugins.resources.pg_vector_store import PgVectorStore
 from pipeline.plugins.resources.postgres import PostgresResource
+=======
+from pipeline.resources.llm import UnifiedLLMResource
+from pipeline.resources.pg_vector_store import PgVectorStore
+from pipeline.resources.postgres_database import PostgresDatabaseResource
+>>>>>>> 31c26c6f08f011fda24b488de4c679ad0b2325fd
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
 

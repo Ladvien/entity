@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 
 import duckdb
 
-from pipeline.plugins.resources.duckdb_database import DuckDBDatabaseResource
+from pipeline.resources.duckdb_database import DuckDBDatabaseResource
 from pipeline.resources.vectorstore import VectorStoreResource
 
 

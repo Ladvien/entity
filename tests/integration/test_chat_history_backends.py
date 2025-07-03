@@ -10,12 +10,20 @@ from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
                       PipelineState, PluginContext, PluginRegistry,
                       ResourceRegistry, SystemRegistries, ToolRegistry)
 from pipeline.plugins.prompts.chat_history import ChatHistory
+<<<<<<< HEAD
 from pipeline.plugins.resources.duckdb_database import DuckDBDatabaseResource
 from pipeline.plugins.resources.in_memory_storage import \
     InMemoryStorageResource
 from pipeline.plugins.resources.memory import MemoryResource
 from pipeline.plugins.resources.postgres import PostgresResource
 from pipeline.plugins.resources.sqlite_storage import SQLiteStorageResource
+=======
+from pipeline.resources.duckdb_database import DuckDBDatabaseResource
+from pipeline.resources.in_memory_storage import InMemoryStorageResource
+from pipeline.resources.memory_resource import MemoryResource
+from pipeline.resources.postgres_database import PostgresDatabaseResource
+from pipeline.resources.sqlite_storage import SQLiteStorageResource
+>>>>>>> 31c26c6f08f011fda24b488de4c679ad0b2325fd
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
 

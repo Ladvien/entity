@@ -6,7 +6,12 @@ import asyncpg
 from pgvector import Vector
 from pgvector.asyncpg import register_vector
 
+<<<<<<< HEAD:src/pipeline/plugins/resources/pg_vector_store.py
 from pipeline.plugins.resources.postgres import PostgresResource
+=======
+from pipeline.resources.postgres_database import PostgresDatabaseResource
+from pipeline.resources.postgres_pool import PostgresConnectionPool
+>>>>>>> 31c26c6f08f011fda24b488de4c679ad0b2325fd:src/pipeline/resources/pg_vector_store.py
 from pipeline.resources.vectorstore import VectorStoreResource
 
 

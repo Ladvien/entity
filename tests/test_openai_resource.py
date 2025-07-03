@@ -1,7 +1,7 @@
 import asyncio
 from unittest.mock import AsyncMock, patch
 
-from pipeline.plugins.resources.llm.unified import UnifiedLLMResource
+from pipeline.resources.llm.unified import UnifiedLLMResource
 
 
 class FakeResponse:

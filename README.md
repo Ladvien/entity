@@ -40,7 +40,7 @@ Lightweight deployments can use SQLite:
 plugins:
   resources:
     database:
-      type: pipeline.plugins.resources.sqlite_storage:SQLiteStorage
+      type: pipeline.resources.sqlite_storage:SQLiteStorage
       path: ./entity.db
       pool_min_size: 1
       pool_max_size: 5
@@ -52,7 +52,7 @@ For ephemeral sessions, an in-memory backend is available:
 plugins:
   resources:
     database:
-      type: pipeline.plugins.resources.memory_storage:MemoryStorage
+      type: pipeline.resources.memory_storage:MemoryStorage
 ```
 <!-- end config -->
 
@@ -201,7 +201,7 @@ plugins:
     memory:
       type: memory
       database:
-        type: pipeline.plugins.resources.sqlite_storage:SQLiteStorageResource
+        type: pipeline.resources.sqlite_storage:SQLiteStorageResource
         path: ./agent.db
 ```
 
@@ -212,7 +212,7 @@ plugins:
     memory:
       type: memory
       database:
-        type: pipeline.plugins.resources.duckdb_database:DuckDBDatabaseResource
+        type: pipeline.resources.duckdb_database:DuckDBDatabaseResource
         path: ./agent.duckdb
         history_table: chat_history
 ```
@@ -224,15 +224,19 @@ plugins:
     memory:
       type: memory
       database:
+<<<<<<< HEAD
         type: pipeline.plugins.resources.postgres:PostgresResource
+=======
+        type: pipeline.resources.postgres_database:PostgresDatabaseResource
+>>>>>>> 31c26c6f08f011fda24b488de4c679ad0b2325fd
         host: localhost
         name: agent_db
       vector_store:
-        type: pipeline.plugins.resources.pg_vector_store:PgVectorStore
+        type: pipeline.resources.pg_vector_store:PgVectorStore
         dimensions: 768
         table: embeddings
       filesystem:
-        type: pipeline.plugins.resources.s3_filesystem:S3FileSystem
+        type: pipeline.resources.s3_filesystem:S3FileSystem
         bucket: agent-files
         region: us-east-1
 ```

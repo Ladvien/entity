@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Dict
 
-from pipeline.plugins.resources.http_llm_resource import HttpLLMResource
-from pipeline.plugins.resources.llm_resource import LLMResource
+from pipeline.resources.http_llm_resource import HttpLLMResource
+from pipeline.resources.llm_resource import LLMResource
 from pipeline.validation import ValidationResult
 
 

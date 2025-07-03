@@ -488,7 +488,7 @@ The `UnifiedLLMResource` embodies this principle. Regardless of which provider y
 plugins:
   resources:
     llm:
-      type: pipeline.plugins.resources.llm.unified:UnifiedLLMResource
+      type: pipeline.resources.llm.unified:UnifiedLLMResource
       provider: openai
       api_key: ${OPENAI_API_KEY}
 ```
@@ -499,7 +499,7 @@ Switching to a local Ollama server requires only a single line change:
 plugins:
   resources:
     llm:
-      type: pipeline.plugins.resources.llm.unified:UnifiedLLMResource
+      type: pipeline.resources.llm.unified:UnifiedLLMResource
       provider: ollama
       base_url: http://localhost:11434
       model: llama3:8b

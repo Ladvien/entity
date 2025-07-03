@@ -1,6 +1,6 @@
 import asyncio
 
-from pipeline.plugins.resources.duckdb_vector_store import DuckDBVectorStore
+from pipeline.resources.duckdb_vector_store import DuckDBVectorStore
 
 
 def test_vector_store_roundtrip(tmp_path):

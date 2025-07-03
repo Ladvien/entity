@@ -8,22 +8,22 @@ from typing import Any, Dict, Optional
 import httpx
 
 DEFAULT_LOGGING_CONFIG: Dict[str, Any] = {
-    "type": "pipeline.plugins.resources.structured_logging:StructuredLogging",
+    "type": "pipeline.resources.structured_logging:StructuredLogging",
     "level": "INFO",
     "json": True,
     "file_enabled": False,
 }
 
 DEFAULT_LLM_CONFIG: Dict[str, Any] = {
-    "type": "pipeline.plugins.resources.llm.unified:UnifiedLLMResource",
+    "type": "pipeline.resources.llm.unified:UnifiedLLMResource",
     "provider": "echo",
 }
 
 DEFAULT_RESOURCES: Dict[str, Dict[str, Any]] = {
     "llm": DEFAULT_LLM_CONFIG,
     "memory": {
-        "type": "pipeline.plugins.resources.memory:MemoryResource",
-        "backend": {"type": "pipeline.plugins.resources.memory:SimpleMemoryResource"},
+        "type": "pipeline.resources.memory_resource:MemoryResource",
+        "backend": {"type": "pipeline.resources.memory_resource:SimpleMemoryResource"},
     },
     "logging": DEFAULT_LOGGING_CONFIG,
 }
@@ -65,7 +65,7 @@ def discover_local_llm() -> Optional[Dict[str, Any]]:
     if not model:
         model = "tinyllama"
     return {
-        "type": "pipeline.plugins.resources.llm.unified:UnifiedLLMResource",
+        "type": "pipeline.resources.llm.unified:UnifiedLLMResource",
         "provider": "ollama",
         "base_url": base_url,
         "model": model,
