@@ -48,11 +48,13 @@ def test_vector_memory_integration():
         }
         db = PostgresDatabaseResource(db_cfg)
         vm = PgVectorStore(vm_cfg)
-        llm = UnifiedLLMResource({"provider": "echo"})
+        llm = UnifiedLLMResource(
+            {"provider": "echo", "base_url": "http://localhost", "model": "none"}
+        )
         try:
             await db.initialize()
             await vm.initialize()
-        except OSError as exc:
+        except Exception as exc:
             pytest.skip(f"PostgreSQL not available: {exc}")
         await db._connection.execute(f"DROP TABLE IF EXISTS {db_cfg['history_table']}")
         await db._connection.execute(

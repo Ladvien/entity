@@ -32,7 +32,7 @@ async def execute_stage(
     stage: PipelineStage, state: PipelineState, registries: SystemRegistries
 ) -> None:
     state.current_stage = stage
-    stage_plugins = registries.plugins.get_for_stage(stage)
+    stage_plugins = registries.plugins.get_plugins_for_stage(stage)
     for plugin in stage_plugins:
         context = PluginContext(state, registries)
         try:
