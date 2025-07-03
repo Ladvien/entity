@@ -5,6 +5,7 @@ from .llm import LLM
 from .memory import Memory
 from .vector_store import VectorStoreResource
 from .vectorstore import VectorStore
+from .container import ResourceContainer
 
 __all__ = [
     "LLM",
@@ -13,6 +14,7 @@ __all__ = [
     "FileSystemResource",
     "VectorStore",
     "VectorStoreResource",
+    "ResourceContainer",
     "Resource",
     "BaseResource",
 ]

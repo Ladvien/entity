@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 from pipeline.context import ConversationEntry
-from pipeline.initializer import import_plugin_class
 from pipeline.plugins import ResourcePlugin, ValidationResult
 from pipeline.resources import (
     DatabaseResource,
@@ -42,6 +41,7 @@ class MemoryResource(ResourcePlugin, Memory):
 
     stages = [PipelineStage.PARSE]
     name = "memory"
+    dependencies = ["database", "vector_store", "filesystem"]
 
     def __init__(
         self,
@@ -58,22 +58,7 @@ class MemoryResource(ResourcePlugin, Memory):
 
     @classmethod
     def from_config(cls, config: Dict) -> "MemoryResource":
-        def build(key: str):
-            cfg = config.get(key)
-            if not cfg or not isinstance(cfg, dict):
-                return None
-
-            type_hint = cfg.get("type")
-            if not type_hint:
-                return None
-
-            cls_obj = import_plugin_class(type_hint)
-            return cls_obj(cfg)
-
-        database = build("database")
-        vector_store = build("vector_store")
-        filesystem = build("filesystem")
-        return cls(database, vector_store, filesystem, config)
+        return cls(config=config)
 
     async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
         return None
