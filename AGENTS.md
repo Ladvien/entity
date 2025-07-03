@@ -23,6 +23,7 @@ The `ARCHITECTURE.md` file provides a high-level overview of the Entity Pipeline
 
 ## Important Notes
 - This is a pre-alpha project.  We do NOT need to maintain backwards compatibility or legacy systems.  If we do not need it, delete it.
+- When attempting to determine if something is in scope, favor leaving a `TODO: <MESSAGE>` comment in the codebase rather than implementing it.  This will allow us to focus on the core functionality and avoid scope creep.
 
 ## Project Tools
 - poetry 
