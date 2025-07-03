@@ -7,6 +7,7 @@
 
 ## Examples
 
+For deployment details on Amazon Web Services, see [Deployment on AWS](deploy_aws.md).
 - [`vector_memory_pipeline.py`](../../examples/pipelines/vector_memory_pipeline.py)
   demonstrates using Postgres, an LLM with the Ollama provider, and simple vector memory.
 - [`memory_composition_pipeline.py`](../../examples/pipelines/memory_composition_pipeline.py)
@@ -53,6 +54,7 @@ config
 context
 plugin_guide
 advanced_usage
+deploy_aws
 principle_checklist
 apidocs/index
 ```

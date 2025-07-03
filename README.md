@@ -20,6 +20,7 @@ pip install entity-pipeline
 python src/cli.py --config config.yaml
 ```
 <!-- end quick_start -->
+For an infrastructure walkthrough on Amazon Web Services, see the [AWS deployment guide](docs/source/deploy_aws.md).
 
 <!-- start config -->
 The ``llm`` resource now accepts a ``provider`` key. Choose from ``openai``,
