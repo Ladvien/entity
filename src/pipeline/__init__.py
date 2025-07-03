@@ -1,4 +1,7 @@
 from .agent import Agent
+from .builder import AgentBuilder
+from .runtime import AgentRuntime
+from .adapters.server import AgentServer
 from .config_update import ConfigUpdateResult, update_plugin_configuration
 from .context import ConversationEntry, PluginContext, SimpleContext, ToolCall
 from .conversation_manager import ConversationManager
@@ -83,6 +86,9 @@ __all__ = [
     "ConfigUpdateResult",
     "update_plugin_configuration",
     "Agent",
+    "AgentBuilder",
+    "AgentRuntime",
+    "AgentServer",
     "PipelineManager",
     "ConversationManager",
     "HTTPAdapter",
