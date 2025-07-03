@@ -27,7 +27,12 @@ plugins:
     memory:
       type: pipeline.plugins.resources.memory:MemoryResource
       database:
+<<<<<<< HEAD
         type: pipeline.plugins.resources.postgres:PostgresResource
+=======
+        # DatabaseResource implementation
+        type: pipeline.plugins.resources.postgres_database:PostgresDatabaseResource
+>>>>>>> 3bdcdaeeb77504cd22dc3d64ed6d6085c7e6d9bd
         host: "${DB_HOST}"
         port: 5432
         name: "${DB_NAME}"

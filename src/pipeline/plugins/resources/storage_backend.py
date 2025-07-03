@@ -1,3 +1,3 @@
-from pipeline.resources.storage import StorageBackend, StorageResource
+from pipeline.resources.database import DatabaseResource, StorageBackend
 
-__all__ = ["StorageBackend", "StorageResource"]
+__all__ = ["StorageBackend", "DatabaseResource"]

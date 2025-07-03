@@ -26,6 +26,7 @@ plugins:
     memory:
       type: pipeline.plugins.resources.memory:MemoryResource
       database:
+        # DatabaseResource implementation
         type: pipeline.plugins.resources.sqlite_storage:SQLiteStorageResource
         path: ./dev.db
       filesystem:
