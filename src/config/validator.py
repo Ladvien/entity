@@ -43,6 +43,7 @@ class ConfigValidator:
             load_env()
             config = ConfigLoader.from_dict(config)
             self._validate_memory(config)
+            self._validate_cache(config)
             self._validate_vector_memory(config)
             initializer = SystemInitializer(config)
             asyncio.run(initializer.initialize())
@@ -93,6 +94,20 @@ class ConfigValidator:
                 raise ValueError(
                     "vector_memory: 'embedding_model.dimensions' must be an integer"
                 ) from exc
+
+    def _validate_cache(self, config: dict) -> None:
+        """Validate optional cache configuration."""
+
+        cache_cfg = config.get("plugins", {}).get("resources", {}).get("cache")
+        if not cache_cfg:
+            return
+
+        backend = cache_cfg.get("backend")
+        if backend is not None and not isinstance(backend, dict):
+            raise ValueError("cache: 'backend' must be a mapping")
+        if isinstance(backend, dict) and "type" in backend:
+            if not isinstance(backend["type"], str):
+                raise ValueError("cache: 'backend.type' must be a string")
 
 
 def main() -> None:

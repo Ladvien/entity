@@ -7,11 +7,7 @@ server:
 plugins:
   resources:
     database:
-<<<<<<< HEAD
-      type: pipeline.plugins.resources.postgres:PostgresResource
-=======
-      type: pipeline.resources.postgres_database:PostgresDatabaseResource
->>>>>>> 31c26c6f08f011fda24b488de4c679ad0b2325fd
+      type: pipeline.resources.postgres:PostgresResource
       host: "${DB_HOST}"
       port: 5432
       name: "${DB_USERNAME}"
@@ -29,17 +25,16 @@ plugins:
     memory:
       type: pipeline.resources.memory_resource:MemoryResource
       database:
-<<<<<<< HEAD
-        # DatabaseResource implementation
-        type: pipeline.plugins.resources.sqlite_storage:SQLiteStorageResource
-=======
         type: pipeline.resources.sqlite_storage:SQLiteStorageResource
->>>>>>> 31c26c6f08f011fda24b488de4c679ad0b2325fd
         path: ./agent.db
       filesystem:
         type: pipeline.resources.s3_filesystem:S3FileSystem
         bucket: agent-files
         region: us-east-1
+    cache:
+      type: pipeline.plugins.resources.cache:CacheResource
+      backend:
+        type: pipeline.cache.memory:InMemoryCache
   tools:
     weather:
       type: pipeline.plugins.tools.weather_api_tool:WeatherApiTool
