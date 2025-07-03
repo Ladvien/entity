@@ -18,7 +18,8 @@ if TYPE_CHECKING:  # pragma: no cover - used for type hints only
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .initializer import ClassRegistry
 
-from .exceptions import CircuitBreakerTripped, PluginError, PluginExecutionError
+from .exceptions import (CircuitBreakerTripped, PluginError,
+                         PluginExecutionError)
 from .logging import get_logger
 from .observability.utils import execute_with_observability
 from .stages import PipelineStage
@@ -123,6 +124,16 @@ class BasePlugin(ABC):
         if llm is None:
             raise RuntimeError("LLM resource not available")
 
+        cache = context.get_resource("cache")
+        cache_key = None
+        if cache:
+            import hashlib
+
+            cache_key = "llm:" + hashlib.sha256(prompt.encode()).hexdigest()
+            cached = await cache.get(cache_key)
+            if cached is not None:
+                return LLMResponse(content=str(cached))
+
         context.record_llm_call(self.__class__.__name__, purpose)
 
         start = time.time()
@@ -142,6 +153,10 @@ class BasePlugin(ABC):
         context.record_llm_duration(self.__class__.__name__, duration)
 
         llm_response = LLMResponse(content=str(response))
+
+        if cache and cache_key is not None:
+            await cache.set(cache_key, llm_response.content)
+
         self.logger.info(
             "LLM call completed",
             extra={
@@ -358,4 +373,5 @@ __all__ = [
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .plugins.classifier import PluginAutoClassifier
 else:  # pragma: no cover - runtime import for compatibility
-    from .plugins.classifier import PluginAutoClassifier  # type: ignore  # noqa: E402
+    from .plugins.classifier import \
+        PluginAutoClassifier  # type: ignore  # noqa: E402

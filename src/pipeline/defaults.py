@@ -25,6 +25,10 @@ DEFAULT_RESOURCES: Dict[str, Dict[str, Any]] = {
         "type": "pipeline.plugins.resources.memory:MemoryResource",
         "backend": {"type": "pipeline.plugins.resources.memory:SimpleMemoryResource"},
     },
+    "cache": {
+        "type": "pipeline.plugins.resources.cache:CacheResource",
+        "backend": {"type": "pipeline.cache.memory:InMemoryCache"},
+    },
     "logging": DEFAULT_LOGGING_CONFIG,
 }
 

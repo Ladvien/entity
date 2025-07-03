@@ -1,4 +1,5 @@
 from .bedrock import BedrockResource
+from .cache import CacheResource
 from .duckdb_database import DuckDBDatabaseResource
 from .duckdb_vector_store import DuckDBVectorStore
 from .llm import UnifiedLLMResource
@@ -15,6 +16,7 @@ __all__ = [
     "UnifiedLLMResource",
     "MemoryResource",
     "SimpleMemoryResource",
+    "CacheResource",
     "StructuredLogging",
     "PostgresDatabaseResource",
     "DuckDBDatabaseResource",

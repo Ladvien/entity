@@ -38,6 +38,7 @@ async def execute_pending_tools(
     """Execute queued tools and return their results by ``result_key``."""
 
     results: Dict[str, Any] = {}
+    cache = registries.resources.get("cache")
     for call in list(state.pending_tool_calls):
         tool = registries.tools.get(call.name)
         if not tool:
@@ -50,10 +51,28 @@ async def execute_pending_tools(
             max_retries=getattr(tool, "max_retries", 1),
             delay=getattr(tool, "retry_delay", 1.0),
         )
+        cache_key = None
+        if cache:
+            import hashlib
+            import json
+
+            params_repr = json.dumps(call.params, sort_keys=True)
+            cache_key = (
+                "tool:"
+                + hashlib.sha256(f"{call.name}:{params_repr}".encode()).hexdigest()
+            )
+            cached = await cache.get(cache_key)
+            if cached is not None:
+                state.stage_results[call.result_key] = cached
+                results[call.result_key] = cached
+                state.pending_tool_calls.remove(call)
+                continue
         try:
             result = await _execute_tool(tool, call, state, options)
             state.stage_results[call.result_key] = result
             results[call.result_key] = result
+            if cache and cache_key:
+                await cache.set(cache_key, result)
             state.metrics.record_tool_execution(
                 call.name,
                 cast(str, state.current_stage and str(state.current_stage)),
