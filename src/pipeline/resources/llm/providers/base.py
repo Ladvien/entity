@@ -4,7 +4,7 @@ import asyncio
 from typing import Any, Dict, Optional
 
 from pipeline.resources.http_llm_resource import HttpLLMResource
-from pipeline.resources.llm import LLM
+from pipeline.resources.llm_base import LLM
 from pipeline.validation import ValidationResult
 
 

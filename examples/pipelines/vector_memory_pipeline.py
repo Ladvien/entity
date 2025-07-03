@@ -58,7 +58,7 @@ class ComplexPrompt(PromptPlugin):
 
 def main() -> None:
     agent = Agent()
-    agent.resource_registry.add(
+    agent.builder.resource_registry.add(
         "database",
         PostgresResource(
             {
@@ -70,9 +70,14 @@ def main() -> None:
             }
         ),
     )
-    agent.resource_registry.add("llm", UnifiedLLMResource({"provider": "echo"}))
-    agent.resource_registry.add("vector_memory", VectorMemoryResource())
-    agent.plugin_registry.register_plugin_for_stage(
+    agent.builder.resource_registry.add(
+        "llm",
+        UnifiedLLMResource(
+            {"provider": "echo", "base_url": "http://localhost", "model": "none"}
+        ),
+    )
+    agent.builder.resource_registry.add("vector_memory", VectorMemoryResource())
+    agent.builder.plugin_registry.register_plugin_for_stage(
         ComplexPrompt(), PipelineStage.THINK
     )
 

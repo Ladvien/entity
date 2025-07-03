@@ -4,13 +4,12 @@ from typing import Any, Dict, List
 
 from pipeline.context import ConversationEntry
 from pipeline.plugins import ResourcePlugin, ValidationResult
-from pipeline.resources import (
-    DatabaseResource,
-    FileSystemResource,
-    Memory,
-    VectorStoreResource,
-)
 from pipeline.stages import PipelineStage
+
+from .database import DatabaseResource
+from .filesystem import FileSystemResource
+from .memory import Memory
+from .vector_store import VectorStoreResource
 
 
 class SimpleMemoryResource(ResourcePlugin, Memory):

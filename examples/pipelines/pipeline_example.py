@@ -38,6 +38,9 @@ class CalculatorTool(ToolPlugin):
         except Exception as exc:  # noqa: BLE001
             raise ValueError(f"Invalid expression: {exc}") from exc
 
+    async def execute(self, params: Dict[str, Any]) -> Any:
+        return await self.execute_function_with_retry(params)
+
 
 async def hello_plugin(ctx):  # pragma: no cover - example code
     if "hello" in ctx.message.lower():
@@ -57,6 +60,9 @@ class WeatherTool(ToolPlugin):
 
     async def execute_function(self, params: Dict[str, Any]) -> str:
         return weather_tool(params)
+
+    async def execute(self, params: Dict[str, Any]) -> str:
+        return await self.execute_function_with_retry(params)
 
 
 def setup_registries() -> SystemRegistries:

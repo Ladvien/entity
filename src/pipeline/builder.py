@@ -5,9 +5,11 @@ from pathlib import Path
 from types import ModuleType
 from typing import Callable, Optional
 
-from registry import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
+from registry import (PluginRegistry, ResourceRegistry, SystemRegistries,
+                      ToolRegistry)
 
 from .plugins import BasePlugin, PluginAutoClassifier
+from .runtime import AgentRuntime
 from .stages import PipelineStage
 
 

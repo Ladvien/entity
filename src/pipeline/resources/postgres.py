@@ -128,3 +128,6 @@ class PostgresResource(DatabaseResource):
                 )
             )
         return history
+
+    async def _do_health_check(self, connection: asyncpg.Connection) -> None:
+        await connection.fetchval("SELECT 1")
