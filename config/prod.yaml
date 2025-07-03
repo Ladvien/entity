@@ -49,6 +49,12 @@ plugins:
   adapters:
     http:
       type: pipeline.adapters.http:HTTPAdapter
+      auth_tokens:
+        - ${HTTP_TOKEN}
+      rate_limit:
+        requests: 100
+        interval: 60
+      audit_log_path: logs/audit.log
     cli:
       type: pipeline.adapters.cli:CLIAdapter
   prompts:

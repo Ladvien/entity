@@ -22,12 +22,12 @@ class RespPlugin(PromptPlugin):
         context.set_response({"msg": first.content})
 
 
-def make_adapter():
+def make_adapter(config=None):
     plugins = PluginRegistry()
     plugins.register_plugin_for_stage(RespPlugin({}), PipelineStage.DO)
     registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
     manager = PipelineManager(registries)
-    return HTTPAdapter(manager)
+    return HTTPAdapter(manager, config)
 
 
 def test_http_adapter_basic():
@@ -46,3 +46,44 @@ def test_http_adapter_basic():
             assert resp.json() == {"msg": "hello"}
 
     asyncio.run(_make_request())
+
+
+def test_http_adapter_token_auth(tmp_path):
+    cfg = {
+        "auth_tokens": ["secret"],
+        "audit_log_path": str(tmp_path / "audit.log"),
+    }
+    adapter = make_adapter(cfg)
+
+    async def _request():
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=adapter.app),
+            base_url="http://testserver",
+        ) as client:
+            resp = await client.post("/", json={"message": "hi"})
+            assert resp.status_code == 401
+
+    asyncio.run(_request())
+    assert "invalid token" in (tmp_path / "audit.log").read_text().lower()
+
+
+def test_http_adapter_rate_limit(tmp_path):
+    cfg = {
+        "auth_tokens": ["secret"],
+        "rate_limit": {"requests": 1, "interval": 60},
+        "audit_log_path": str(tmp_path / "audit.log"),
+    }
+    adapter = make_adapter(cfg)
+
+    async def _requests():
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=adapter.app),
+            base_url="http://testserver",
+            headers={"Authorization": "Bearer secret"},
+        ) as client:
+            await client.post("/", json={"message": "hi"})
+            resp = await client.post("/", json={"message": "hi"})
+            assert resp.status_code == 429
+
+    asyncio.run(_requests())
+    assert "rate limit" in (tmp_path / "audit.log").read_text().lower()

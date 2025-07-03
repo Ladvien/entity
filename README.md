@@ -54,6 +54,21 @@ plugins:
     database:
       type: pipeline.plugins.resources.memory_storage:MemoryStorage
 ```
+
+HTTP adapter configuration with authentication and rate limiting:
+
+```yaml
+plugins:
+  adapters:
+    http:
+      type: pipeline.adapters.http:HTTPAdapter
+      auth_tokens:
+        - ${HTTP_TOKEN}
+      rate_limit:
+        requests: 60
+        interval: 60
+      audit_log_path: logs/audit.log
+```
 <!-- end config -->
 
 Every plugin executes with a ``PluginContext`` which grants controlled
