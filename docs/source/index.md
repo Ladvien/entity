@@ -53,6 +53,7 @@ config
 context
 plugin_guide
 advanced_usage
+aws_deployment
 principle_checklist
 apidocs/index
 ```
