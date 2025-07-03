@@ -31,7 +31,12 @@ Welcome to the Entity Pipeline framework. These pages explain how to configure a
 ```{toctree}
 :hidden:
 quick_start
+<<<<<<< HEAD
 config_cheatsheet
+=======
+tutorial_setup
+tutorial_first_pipeline
+>>>>>>> 2145e70b6802658f66afbf30f2667b2cd50a96f6
 config
 <<<<<<< HEAD
 context
