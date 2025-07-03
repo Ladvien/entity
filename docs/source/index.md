@@ -50,6 +50,8 @@ long-running agents responsive.
 :hidden:
 
 quick_start
+tutorial_setup
+tutorial_first_pipeline
 config
 context
 logging
