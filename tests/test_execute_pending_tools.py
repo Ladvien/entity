@@ -10,8 +10,8 @@ from pipeline import (
     SystemRegistries,
     ToolCall,
     ToolRegistry,
-    execute_pending_tools,
 )
+from pipeline.pipeline import execute_pending_tools
 
 
 class EchoTool:
