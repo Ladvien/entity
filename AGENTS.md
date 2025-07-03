@@ -342,7 +342,7 @@ class DatabaseResourcePlugin(ResourcePlugin):
 Resources compose other resources. A `StorageResource` takes a
 `DatabaseResource`, a `VectorStoreResource`, and a `FileSystemResource`. The
 `DatabaseResource` points to a specific implementation such as
-`PostgresDatabaseResource`. Each resource should expose one clear name so there
+`PostgresResource`. Each resource should expose one clear name so there
 is only one way to reference it.
 
 ### Tool Plugin Pattern

@@ -6,7 +6,7 @@ from .llm_resource import LLMResource
 from .local_filesystem import LocalFileSystemResource
 from .memory import MemoryResource, SimpleMemoryResource
 from .pg_vector_store import PgVectorStore
-from .postgres_database import PostgresDatabaseResource
+from .postgres import PostgresResource
 from .s3_filesystem import S3FileSystem
 from .structured_logging import StructuredLogging
 
@@ -16,7 +16,7 @@ __all__ = [
     "MemoryResource",
     "SimpleMemoryResource",
     "StructuredLogging",
-    "PostgresDatabaseResource",
+    "PostgresResource",
     "DuckDBDatabaseResource",
     "PgVectorStore",
     "DuckDBVectorStore",
