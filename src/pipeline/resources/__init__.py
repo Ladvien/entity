@@ -5,6 +5,7 @@ from .llm import LLM
 from .memory import Memory
 from .vector_store import VectorStoreResource
 from .vectorstore import VectorStore
+from .container import ResourceContainer
 
 from .bedrock import BedrockResource
 from .duckdb_database import DuckDBDatabaseResource
@@ -25,6 +26,7 @@ __all__ = [
     "FileSystemResource",
     "VectorStore",
     "VectorStoreResource",
+    "ResourceContainer",
     "Resource",
     "BaseResource",
     "LLMResource",
