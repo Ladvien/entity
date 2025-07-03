@@ -18,11 +18,11 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.plugins.prompts.chat_history import ChatHistory
-from pipeline.plugins.resources.duckdb_database import DuckDBDatabaseResource
-from pipeline.plugins.resources.in_memory_storage import InMemoryStorageResource
-from pipeline.plugins.resources.memory import MemoryResource
-from pipeline.plugins.resources.postgres_database import PostgresDatabaseResource
-from pipeline.plugins.resources.sqlite_storage import SQLiteStorageResource
+from pipeline.resources.duckdb_database import DuckDBDatabaseResource
+from pipeline.resources.in_memory_storage import InMemoryStorageResource
+from pipeline.resources.memory_resource import MemoryResource
+from pipeline.resources.postgres_database import PostgresDatabaseResource
+from pipeline.resources.sqlite_storage import SQLiteStorageResource
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
 

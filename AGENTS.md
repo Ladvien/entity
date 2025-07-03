@@ -258,7 +258,7 @@ entity:
 plugins:
   resources:
     database:
-      type: pipeline.plugins.resources.postgres:PostgresResource
+      type: pipeline.resources.postgres:PostgresResource
       host: "localhost"
       name: "dev_db"
       username: "agent"
@@ -266,7 +266,7 @@ plugins:
       pool_min_size: 1
       pool_max_size: 5
     llm:
-      type: pipeline.plugins.resources.llm.unified:UnifiedLLMResource
+      type: pipeline.resources.llm.unified:UnifiedLLMResource
       provider: ollama
       base_url: "http://localhost:11434"
       model: "llama3:8b"
@@ -291,7 +291,7 @@ entity:
 plugins:
   resources:
     database:
-      type: pipeline.plugins.resources.postgres:PostgresResource
+      type: pipeline.resources.postgres:PostgresResource
       host: "${DB_HOST}"
       name: "${DB_NAME}"
       username: "${DB_USERNAME}"
@@ -299,7 +299,7 @@ plugins:
       pool_min_size: 5
       pool_max_size: 20
     llm:
-      type: pipeline.plugins.resources.llm.unified:UnifiedLLMResource
+      type: pipeline.resources.llm.unified:UnifiedLLMResource
       provider: openai
       api_key: "${OPENAI_API_KEY}"
       model: "gpt-4"

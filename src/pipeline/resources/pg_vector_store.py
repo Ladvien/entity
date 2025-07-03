@@ -6,8 +6,8 @@ import asyncpg
 from pgvector import Vector
 from pgvector.asyncpg import register_vector
 
-from pipeline.plugins.resources.postgres_database import PostgresDatabaseResource
-from pipeline.plugins.resources.postgres_pool import PostgresConnectionPool
+from pipeline.resources.postgres_database import PostgresDatabaseResource
+from pipeline.resources.postgres_pool import PostgresConnectionPool
 from pipeline.resources.vectorstore import VectorStoreResource
 
 

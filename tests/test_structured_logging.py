@@ -4,7 +4,7 @@ import logging
 import os
 from logging.handlers import RotatingFileHandler
 
-from pipeline.plugins.resources.structured_logging import StructuredLogging
+from pipeline.resources.structured_logging import StructuredLogging
 
 
 async def init_logging(cfg):
