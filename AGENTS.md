@@ -231,6 +231,9 @@ pytest --cov=src --cov-report=html
 # Run integration tests
 pytest tests/integration/
 
+# Run infrastructure tests
+pytest tests/infrastructure/
+
 # Run performance tests
 pytest tests/performance/ -m performance
 ```
@@ -416,6 +419,9 @@ python -m src.registry.validator
 
 # Integration tests
 pytest tests/integration/ -v
+
+# Infrastructure tests
+pytest tests/infrastructure/ -v
 
 # Performance benchmarks
 pytest tests/performance/ -m benchmark
