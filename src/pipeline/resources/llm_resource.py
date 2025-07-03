@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from pipeline.resources import LLM, BaseResource
 from pipeline.validation import ValidationResult
+
+from .base import BaseResource
+from .llm_base import LLM
 
 
 class LLMResource(BaseResource, LLM):

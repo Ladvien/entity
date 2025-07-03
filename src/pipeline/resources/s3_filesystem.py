@@ -4,8 +4,10 @@ from typing import Dict
 
 import aioboto3
 
-from pipeline.resources import BaseResource, FileSystemResource
 from pipeline.validation import ValidationResult
+
+from .base import BaseResource
+from .filesystem import FileSystemResource
 
 
 class S3FileSystem(BaseResource, FileSystemResource):

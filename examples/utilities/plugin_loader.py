@@ -8,11 +8,14 @@ import sys
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))
 
 from entity import Agent  # noqa: E402
+from pipeline.adapters.server import AgentServer  # noqa: E402
 
 
 def main() -> None:
     agent = Agent.from_directory("../plugins")
-    agent.run_http()
+    runtime = agent.builder.build_runtime()
+    server = AgentServer(runtime)
+    server.run_http()
 
 
 if __name__ == "__main__":

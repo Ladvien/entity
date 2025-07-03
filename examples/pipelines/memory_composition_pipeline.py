@@ -49,8 +49,10 @@ def main() -> None:
         filesystem=filesystem,
     )
 
-    agent.resource_registry.add("memory", memory)
-    agent.plugin_registry.register_plugin_for_stage(StorePrompt(), PipelineStage.THINK)
+    agent.builder.resource_registry.add("memory", memory)
+    agent.builder.plugin_registry.register_plugin_for_stage(
+        StorePrompt(), PipelineStage.THINK
+    )
 
     async def run() -> None:
         print(await agent.handle("remember this"))

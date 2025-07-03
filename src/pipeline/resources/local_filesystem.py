@@ -4,8 +4,8 @@ import asyncio
 import pathlib
 from typing import Dict
 
-from pipeline.resources import BaseResource
-from pipeline.resources.filesystem import FileSystemResource
+from .base import BaseResource
+from .filesystem import FileSystemResource
 
 
 class LocalFileSystemResource(BaseResource, FileSystemResource):

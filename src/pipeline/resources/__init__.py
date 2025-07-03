@@ -6,7 +6,8 @@ from .dsl import ResourceDef, ResourceGraph
 from .duckdb_database import DuckDBDatabaseResource
 from .duckdb_vector_store import DuckDBVectorStore
 from .filesystem import FileSystemResource
-from .llm import LLM, UnifiedLLMResource
+from .llm import UnifiedLLMResource
+from .llm_base import LLM
 from .llm_resource import LLMResource
 from .local_filesystem import LocalFileSystemResource
 from .memory import Memory

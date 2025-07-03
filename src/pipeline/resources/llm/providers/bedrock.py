@@ -6,7 +6,7 @@ from typing import Dict
 
 import aioboto3
 
-from pipeline.resources.llm import LLM
+from pipeline.resources.llm_base import LLM
 from pipeline.validation import ValidationResult
 
 

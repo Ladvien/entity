@@ -18,9 +18,9 @@ from pipeline.adapters.http import HTTPAdapter, MessageRequest
 async def main() -> None:
     agent = Agent()
     registries = SystemRegistries(
-        resources=agent.resource_registry,
-        tools=agent.tool_registry,
-        plugins=agent.plugin_registry,
+        resources=agent.builder.resource_registry,
+        tools=agent.builder.tool_registry,
+        plugins=agent.builder.plugin_registry,
     )
     pipeline_manager = PipelineManager(registries)
     conversation_manager = ConversationManager(registries, pipeline_manager)
