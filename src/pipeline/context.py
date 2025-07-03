@@ -80,6 +80,12 @@ class PluginContext:
         return self.__state.pipeline_id
 
     @property
+    def request_id(self) -> str:
+        """Correlation identifier for logging."""
+
+        return self.__state.pipeline_id
+
+    @property
     def current_stage(self) -> Optional[PipelineStage]:
         """Stage currently being executed."""
         return self.__state.current_stage

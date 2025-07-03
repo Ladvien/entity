@@ -1,10 +1,35 @@
 from __future__ import annotations
 
+import contextvars
 import json
 import logging
 import os
 from logging.handlers import RotatingFileHandler
 from typing import Optional
+
+_request_id_var: contextvars.ContextVar[str | None] = contextvars.ContextVar(
+    "request_id", default=None
+)
+
+
+class RequestIdFilter(logging.Filter):
+    """Attach the current request ID to each log record."""
+
+    def filter(self, record: logging.LogRecord) -> bool:  # noqa: D401
+        record.request_id = _request_id_var.get()
+        return True
+
+
+def set_request_id(request_id: str) -> contextvars.Token:
+    """Store ``request_id`` for the duration of a log context."""
+
+    return _request_id_var.set(request_id)
+
+
+def reset_request_id(token: contextvars.Token) -> None:
+    """Reset the request ID context variable."""
+
+    _request_id_var.reset(token)
 
 
 class JsonFormatter(logging.Formatter):
@@ -72,11 +97,17 @@ def configure_logging(
         if json_enabled
         else logging.Formatter("%(asctime)s [%(levelname)8s] %(name)s: %(message)s")
     )
+    request_filter = RequestIdFilter()
     for handler in handlers:
         handler.setFormatter(formatter)
+        handler.addFilter(request_filter)
     logging.basicConfig(level=log_level, handlers=handlers, force=True)
 
 
 def get_logger(name: str) -> logging.Logger:
     """Return a logger configured for the pipeline."""
-    return logging.getLogger(name)
+
+    logger = logging.getLogger(name)
+    if not any(isinstance(f, RequestIdFilter) for f in logger.filters):
+        logger.addFilter(RequestIdFilter())
+    return logger
