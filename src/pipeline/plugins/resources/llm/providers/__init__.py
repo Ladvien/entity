@@ -1,3 +1,4 @@
+from .bedrock import BedrockProvider
 from .claude import ClaudeProvider
 from .echo import EchoProvider
 from .gemini import GeminiProvider
@@ -10,4 +11,5 @@ __all__ = [
     "GeminiProvider",
     "ClaudeProvider",
     "EchoProvider",
+    "BedrockProvider",
 ]
