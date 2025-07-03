@@ -33,6 +33,11 @@ class ResourceRegistry:
 
         return self._resources.get(name)
 
+    def names(self) -> list[str]:
+        """Return the names of all registered resources."""
+
+        return list(self._resources.keys())
+
 
 class ToolRegistry:
     """Registry for tool plugins."""

@@ -74,6 +74,11 @@ agent = Agent(...)
 app = create_app(agent)
 ```
 
+The built-in ``HTTPAdapter`` exposes additional endpoints:
+
+- ``GET /health`` – reports resource health status.
+- ``GET /metrics`` – Prometheus metrics for monitoring.
+
 ## Design Principles in Action
 
 - **Progressive Disclosure (1)**: `Agent()` works out of the box with helpful defaults.

@@ -16,6 +16,7 @@ from registry import PluginRegistry, ResourceRegistry, SystemRegistries, ToolReg
 from .adapters.http import HTTPAdapter
 from .adapters.websocket import WebSocketAdapter
 from .execution import execute_pipeline
+from .metrics import MetricsCollector
 from .plugins import BasePlugin
 from .plugins.classifier import PluginAutoClassifier
 
@@ -209,6 +210,21 @@ class Agent:
             plugins=self.plugin_registry,
         )
         return cast(Dict[str, Any], await execute_pipeline(message, registries))
+
+    async def run_message_with_metrics(
+        self, message: str
+    ) -> tuple[Dict[str, Any], MetricsCollector]:
+        """Execute the pipeline and also return collected metrics."""
+
+        registries = SystemRegistries(
+            resources=self.resource_registry,
+            tools=self.tool_registry,
+            plugins=self.plugin_registry,
+        )
+        result, metrics = await execute_pipeline(
+            message, registries, return_metrics=True
+        )
+        return cast(Dict[str, Any], result), metrics
 
     async def handle(self, message: str) -> Dict[str, Any]:
         """Backward-compatible wrapper around :meth:`run_message`."""
