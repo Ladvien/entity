@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar
 import yaml
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
-    from .context import PluginContext, SimpleContext
+    from .context import PluginContext
     from .state import LLMResponse
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
@@ -74,7 +74,7 @@ class BasePlugin(ABC):
         self._failure_count = 0
         self._last_failure = 0.0
 
-    async def execute(self, context: PluginContext | SimpleContext) -> Any:
+    async def execute(self, context: PluginContext) -> Any:
         """Execute plugin with logging, metrics and circuit breaker."""
 
         def circuit_open() -> bool:

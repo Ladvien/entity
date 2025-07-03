@@ -8,10 +8,10 @@ from pipeline import (
     MetricsCollector,
     PipelineStage,
     PipelineState,
+    PluginContext,
     PluginRegistry,
     PromptPlugin,
     ResourceRegistry,
-    SimpleContext,
     SystemRegistries,
     ToolRegistry,
 )
@@ -22,7 +22,7 @@ class StubLLM:
         return prompt
 
 
-def make_context(llm=None) -> SimpleContext:
+def make_context(llm=None) -> PluginContext:
     state = PipelineState(
         conversation=[
             ConversationEntry(content="hi", role="user", timestamp=datetime.now())
@@ -34,7 +34,7 @@ def make_context(llm=None) -> SimpleContext:
     if llm is not None:
         resources.add("llm", llm)
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
-    return SimpleContext(state, registries)
+    return PluginContext(state, registries)
 
 
 def test_ask_llm_returns_text():
@@ -53,7 +53,7 @@ class DummyPlugin(PromptPlugin):
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(
-        self, context: SimpleContext
+        self, context: PluginContext
     ) -> None:  # pragma: no cover - not used
         pass
 
