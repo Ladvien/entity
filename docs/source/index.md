@@ -52,6 +52,7 @@ long-running agents responsive.
 quick_start
 config
 context
+logging
 plugin_guide
 advanced_usage
 aws_deployment
