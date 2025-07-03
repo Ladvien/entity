@@ -17,11 +17,9 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))  # noq
 from entity import Agent  # noqa: E402
 from pipeline import PipelineStage, PromptPlugin, ResourcePlugin  # noqa: E402
 from pipeline.context import PluginContext  # noqa: E402
-from pipeline.plugins.resources.llm.unified import UnifiedLLMResource  # noqa: E402
-from pipeline.plugins.resources.pg_vector_store import PgVectorStore  # noqa: E402
-from pipeline.plugins.resources.postgres_database import (
-    PostgresDatabaseResource,
-)  # noqa: E402
+from pipeline.resources.llm.unified import UnifiedLLMResource  # noqa: E402
+from pipeline.resources.pg_vector_store import PgVectorStore  # noqa: E402
+from pipeline.resources.postgres import PostgresResource  # noqa: E402
 
 
 class VectorMemoryResource(ResourcePlugin):
@@ -60,9 +58,9 @@ class ComplexPrompt(PromptPlugin):
 
 def main() -> None:
     agent = Agent()
-    agent.resource_registry.add(
+    agent.builder.resource_registry.add(
         "database",
-        PostgresDatabaseResource(
+        PostgresResource(
             {
                 "host": "localhost",
                 "port": 5432,
@@ -72,9 +70,14 @@ def main() -> None:
             }
         ),
     )
-    agent.resource_registry.add("llm", UnifiedLLMResource({"provider": "echo"}))
-    agent.resource_registry.add("vector_memory", VectorMemoryResource())
-    agent.plugin_registry.register_plugin_for_stage(
+    agent.builder.resource_registry.add(
+        "llm",
+        UnifiedLLMResource(
+            {"provider": "echo", "base_url": "http://localhost", "model": "none"}
+        ),
+    )
+    agent.builder.resource_registry.add("vector_memory", VectorMemoryResource())
+    agent.builder.plugin_registry.register_plugin_for_stage(
         ComplexPrompt(), PipelineStage.THINK
     )
 

@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime
 
 from pipeline.context import ConversationEntry
-from pipeline.plugins.resources.duckdb_database import DuckDBDatabaseResource
+from pipeline.resources.duckdb_database import DuckDBDatabaseResource
 
 
 def test_duckdb_history_roundtrip(tmp_path):

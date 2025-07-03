@@ -2,15 +2,9 @@ import asyncio
 import logging
 from typing import Any
 
-from pipeline import (
-    PipelineManager,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
+                      PromptPlugin, ResourceRegistry, SystemRegistries,
+                      ToolRegistry)
 from pipeline.adapters.cli import CLIAdapter
 
 

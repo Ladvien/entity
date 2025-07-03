@@ -9,7 +9,8 @@ from typing import Any, Dict, Iterable, List, Tuple
 
 from config.environment import load_env
 from pipeline.resources.base import Resource
-from registry import PluginRegistry, ResourceRegistry, ToolRegistry
+from pipeline.resources.container import ResourceContainer
+from registry import PluginRegistry, ToolRegistry
 
 from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
 from .defaults import DEFAULT_CONFIG
@@ -174,16 +175,12 @@ class SystemInitializer:
                     f"Config validation failed for {plugin_class.__name__}: {result.error_message}"
                 )
 
-        # Phase 3: initialize resources
-        resource_registry = ResourceRegistry()
+        # Phase 3: initialize resources via container
+        resource_registry = ResourceContainer()
         for cls, config in registry.resource_classes():
             primary_name = getattr(cls, "name", cls.__name__)
-            resource_registry.add_from_config(primary_name, cls, config)
-            instance = resource_registry.get(primary_name)
-            if hasattr(instance, "initialize") and callable(
-                getattr(instance, "initialize")
-            ):
-                await instance.initialize()
+            resource_registry.register(primary_name, cls, config)
+        await resource_registry.build_all()
 
         # Phase 3.5: register tools
         tool_registry = ToolRegistry()

@@ -1,13 +1,16 @@
 import argparse
 import asyncio
+import shutil
+from pathlib import Path
 from typing import Any
 
 import yaml
 
-from entity import Agent
+from entity import Agent, AgentServer
 from pipeline import update_plugin_configuration
 from pipeline.base_plugins import ResourcePlugin, ToolPlugin
-from pipeline.initializer import ClassRegistry, SystemInitializer, import_plugin_class
+from pipeline.initializer import (ClassRegistry, SystemInitializer,
+                                  import_plugin_class)
 from pipeline.logging import get_logger
 from pipeline.resources.base import Resource
 
@@ -42,29 +45,63 @@ class CLI:
         )
         reload_parser.add_argument("file", help="Updated configuration file")
 
+        new_parser = subparsers.add_parser(
+            "new", help="Scaffold a new project with example configuration"
+        )
+        new_parser.add_argument("path", help="Directory for the new project")
+
         return parser.parse_args()
 
     def run(self) -> int:
+        if self.args.command == "new":
+            return self._create_project(self.args.path)
+
         agent = Agent(self.args.config)
-        if self.args.command == "serve-websocket":
-            agent.run_websocket()
-            return 0
         if self.args.command == "reload-config":
             return self._reload_config(agent, self.args.file)
-        agent.run_http()
+
+        async def _serve() -> None:
+            await agent._ensure_runtime()
+            server = AgentServer(agent.runtime)
+            if self.args.command == "serve-websocket":
+                await server.serve_websocket()
+            else:
+                await server.serve_http()
+
+        asyncio.run(_serve())
+        return 0
+
+    def _create_project(self, path: str) -> int:
+        """Generate a minimal project layout with an example config."""
+        target = Path(path)
+        if target.exists() and any(target.iterdir()):
+            logger.error("%s already exists and is not empty", path)
+            return 1
+
+        (target / "config").mkdir(parents=True, exist_ok=True)
+        (target / "src").mkdir(parents=True, exist_ok=True)
+
+        template = Path(__file__).resolve().parent.parent / "config" / "template.yaml"
+        shutil.copy(template, target / "config" / "dev.yaml")
+
+        main_path = target / "src" / "main.py"
+        main_path.write_text(
+            """from entity import Agent\n\n\n"""
+            "def main() -> None:\n"
+            "    agent = Agent('config/dev.yaml')\n"
+            "    agent.run_http()\n\n\n"
+            "if __name__ == '__main__':\n"
+            "    main()\n"
+        )
+
+        print(f"Created project at {target}")
         return 0
 
     def _reload_config(self, agent: Agent, file_path: str) -> int:
         async def _run() -> int:
-            ensure_init = getattr(agent, "_ensure_initialized", None)
-            if ensure_init is not None:
-                await ensure_init()
+            await agent._ensure_runtime()
 
-            registries: Any | None = getattr(agent, "_registries", None)
-            if registries is None:
-                initializer = SystemInitializer.from_yaml(self.args.config)
-                registries = await initializer.initialize()
-                agent._registries = registries  # type: ignore[attr-defined]
+            registries = agent.runtime.registries
 
             resource_registry = getattr(registries, "resources", registries[1])
             tool_registry = getattr(registries, "tools", registries[2])

@@ -1,18 +1,10 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineStage,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    PromptPlugin,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
+                      PipelineState, PluginContext, PluginRegistry,
+                      PromptPlugin, ResourceRegistry, SystemRegistries,
+                      ToolRegistry)
 
 
 class FakeLLM:

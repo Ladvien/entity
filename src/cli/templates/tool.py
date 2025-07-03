@@ -3,8 +3,11 @@ from typing import Any, Dict
 from pipeline.plugins import ToolPlugin
 from pipeline.stages import PipelineStage
 
+# mypy: ignore-errors
 
-class {class_name}(ToolPlugin):
+
+
+class TemplateTool(ToolPlugin):
     """Example tool plugin."""
 
     stages = [PipelineStage.DO]

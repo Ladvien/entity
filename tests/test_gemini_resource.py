@@ -1,14 +1,9 @@
 import asyncio
 from unittest.mock import AsyncMock, patch
 
-from pipeline import (
-    MetricsCollector,
-    PipelineState,
-    SimpleContext,
-    SystemInitializer,
-    SystemRegistries,
-)
-from pipeline.plugins.resources.llm.unified import UnifiedLLMResource
+from pipeline import (MetricsCollector, PipelineState, PluginContext,
+                      SystemInitializer, SystemRegistries)
+from pipeline.resources.llm.unified import UnifiedLLMResource
 
 
 class FakeResponse:
@@ -52,7 +47,7 @@ def test_context_get_llm_with_provider():
         "plugins": {
             "resources": {
                 "llm": {
-                    "type": "pipeline.plugins.resources.llm.unified:UnifiedLLMResource",
+                    "type": "pipeline.resources.llm.unified:UnifiedLLMResource",
                     "provider": "gemini",
                     "api_key": "key",
                     "model": "gemini-pro",
@@ -64,5 +59,5 @@ def test_context_get_llm_with_provider():
     initializer = SystemInitializer.from_dict(cfg)
     plugin_reg, resource_reg, tool_reg = asyncio.run(initializer.initialize())
     state = PipelineState(conversation=[], pipeline_id="1", metrics=MetricsCollector())
-    ctx = SimpleContext(state, SystemRegistries(resource_reg, tool_reg, plugin_reg))
+    ctx = PluginContext(state, SystemRegistries(resource_reg, tool_reg, plugin_reg))
     assert isinstance(ctx.get_llm(), UnifiedLLMResource)

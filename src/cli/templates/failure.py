@@ -1,8 +1,10 @@
+# mypy: ignore-errors
+
 from pipeline.plugins import FailurePlugin
 from pipeline.stages import PipelineStage
 
 
-class {class_name}(FailurePlugin):
+class TemplateFailure(FailurePlugin):
     """Example failure plugin."""
 
     stages = [PipelineStage.ERROR]

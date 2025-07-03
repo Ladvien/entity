@@ -2,18 +2,11 @@ import asyncio
 from datetime import datetime
 from unittest.mock import AsyncMock
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginContext, PluginRegistry, ResourceRegistry,
+                      SystemRegistries, ToolRegistry)
 from pipeline.plugins.prompts.conversation_history import ConversationHistory
-from pipeline.plugins.resources.memory import MemoryResource
+from pipeline.resources.memory_resource import MemoryResource
 from pipeline.stages import PipelineStage
 
 
@@ -50,7 +43,7 @@ def test_history_plugin_saves_conversation():
     state, ctx = make_context(db)
     plugin = ConversationHistory({"history_table": "tbl"})
 
-    ctx._state.current_stage = PipelineStage.DELIVER
+    ctx.set_current_stage(PipelineStage.DELIVER)
     expected_history = ctx.get_conversation_history()
     asyncio.run(plugin.execute(ctx))
 

@@ -1,0 +1,12 @@
+# Troubleshooting
+
+## Initialization failures
+- **Invalid plugin path** – ensure each plugin `type` is a full import path.
+- **Missing environment variable** – check `${VAR}` placeholders in YAML and your `.env` file.
+- **Circular dependency detected** – review plugin `dependencies` for cycles.
+
+## Dependency validation errors
+- **Plugin requires a resource not registered** – confirm that all names in `dependencies` exist under `plugins:` in the config file.
+- **Config validation failed** – run `python -m src.config.validator --config your.yaml` to see detailed messages.
+
+If initialization still fails, enable debug logging with `LOG_LEVEL=DEBUG` when running the validator for verbose output.

@@ -124,7 +124,7 @@ def test_vector_memory_requires_postgres(tmp_path):
     plugins = {
         "resources": {
             "vector_memory": {
-                "type": "pipeline.plugins.resources.pg_vector_store:PgVectorStore"
+                "type": "pipeline.resources.pg_vector_store:PgVectorStore"
             },
             "database": {"type": "tests.test_registry_validator:A"},
         }
@@ -138,11 +138,9 @@ def test_vector_memory_with_postgres(tmp_path):
     plugins = {
         "resources": {
             "vector_memory": {
-                "type": "pipeline.plugins.resources.pg_vector_store:PgVectorStore"
+                "type": "pipeline.resources.pg_vector_store:PgVectorStore"
             },
-            "database": {
-                "type": "pipeline.plugins.resources.postgres:PostgresResource"
-            },
+            "database": {"type": "pipeline.resources.postgres:PostgresResource"},
         }
     }
     path = _write_config(tmp_path, plugins)

@@ -1,8 +1,10 @@
+# mypy: ignore-errors
+
 from pipeline.plugins import PromptPlugin
 from pipeline.stages import PipelineStage
 
 
-class {class_name}(PromptPlugin):
+class TemplatePrompt(PromptPlugin):
     """Example prompt plugin."""
 
     stages = [PipelineStage.THINK]

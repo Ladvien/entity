@@ -1,14 +1,8 @@
 import asyncio
 
-from pipeline import (
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-    execute_pipeline,
-)
+from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
+                      ResourceRegistry, SystemRegistries, ToolRegistry,
+                      execute_pipeline)
 from pipeline.plugins.failure.basic_logger import BasicLogger
 from pipeline.plugins.failure.error_formatter import ErrorFormatter
 

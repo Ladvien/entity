@@ -1,24 +1,17 @@
 import asyncio
 
-from pipeline import (
-    PipelineStage,
-    PluginRegistry,
-    ResourcePlugin,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolPlugin,
-    ToolRegistry,
-    execute_pipeline,
-)
+from pipeline import (PipelineStage, PluginRegistry, ResourcePlugin,
+                      ResourceRegistry, SystemRegistries, ToolPlugin,
+                      ToolRegistry, execute_pipeline)
 from pipeline.base_plugins import PluginAutoClassifier
-from pipeline.context import SimpleContext
+from pipeline.context import PluginContext
 
 
 class MyResource(ResourcePlugin):
     stages = [PipelineStage.PARSE]
 
     async def _execute_impl(self, context):
-        context._state.metadata["init"] = True
+        context.set_metadata("init", True)
 
 
 class MyTool(ToolPlugin):
@@ -28,7 +21,7 @@ class MyTool(ToolPlugin):
         return params["value"]
 
 
-async def my_prompt(ctx: SimpleContext) -> None:
+async def my_prompt(ctx: PluginContext) -> None:
     val = await ctx.use_tool("tool", value="ok")
     ctx.set_response(val)
 

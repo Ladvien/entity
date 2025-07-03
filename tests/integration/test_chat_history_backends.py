@@ -6,36 +6,29 @@ from pathlib import Path
 import pytest
 
 from config.environment import load_env
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineStage,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
+                      PipelineState, PluginContext, PluginRegistry,
+                      ResourceRegistry, SystemRegistries, ToolRegistry)
 from pipeline.plugins.prompts.chat_history import ChatHistory
-from pipeline.plugins.resources.duckdb_database import DuckDBDatabaseResource
-from pipeline.plugins.resources.in_memory_storage import InMemoryStorageResource
-from pipeline.plugins.resources.memory import MemoryResource
-from pipeline.plugins.resources.postgres_database import PostgresDatabaseResource
-from pipeline.plugins.resources.sqlite_storage import SQLiteStorageResource
+from pipeline.resources.duckdb_database import DuckDBDatabaseResource
+from pipeline.resources.in_memory_storage import InMemoryStorageResource
+from pipeline.resources.memory_resource import MemoryResource
+from pipeline.resources.postgres import PostgresResource
+from pipeline.resources.sqlite_storage import SQLiteStorageResource
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
 
 
 async def run_history_test(resource):
     await getattr(resource, "initialize", lambda: None)()
-    if isinstance(resource, PostgresDatabaseResource):
-        await resource._connection.execute("DROP TABLE IF EXISTS test_history")
-        await resource._connection.execute(
-            "CREATE TABLE test_history ("
-            "conversation_id text, role text, content text, "
-            "metadata jsonb, timestamp timestamptz)"
-        )
+    if isinstance(resource, PostgresResource):
+        async with resource.connection() as conn:
+            await conn.execute("DROP TABLE IF EXISTS test_history")
+            await conn.execute(
+                "CREATE TABLE test_history ("
+                "conversation_id text, role text, content text, "
+                "metadata jsonb, timestamp timestamptz)"
+            )
     if isinstance(resource, SQLiteStorageResource):
         resource._table = "test_history"
         await resource.initialize()
@@ -55,7 +48,7 @@ async def run_history_test(resource):
         metrics=MetricsCollector(),
     )
     ctx = PluginContext(state, registries)
-    ctx._state.current_stage = PipelineStage.DELIVER
+    ctx.set_current_stage(PipelineStage.DELIVER)
     plugin = ChatHistory({})
     await plugin.execute(ctx)
 
@@ -63,7 +56,7 @@ async def run_history_test(resource):
         conversation=[], pipeline_id="conv1", metrics=MetricsCollector()
     )
     new_ctx = PluginContext(new_state, registries)
-    new_ctx._state.current_stage = PipelineStage.PARSE
+    new_ctx.set_current_stage(PipelineStage.PARSE)
     await plugin.execute(new_ctx)
     await getattr(resource, "shutdown", lambda: None)()
     return new_ctx.get_conversation_history()
@@ -106,7 +99,7 @@ def test_postgres_history():
         "history_table": "test_history",
     }
     try:
-        resource = PostgresDatabaseResource(cfg)
+        resource = PostgresResource(cfg)
         asyncio.run(resource.initialize())
     except OSError as exc:
         pytest.skip(f"PostgreSQL not available: {exc}")

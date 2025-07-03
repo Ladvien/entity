@@ -40,7 +40,7 @@ Lightweight deployments can use SQLite:
 plugins:
   resources:
     database:
-      type: pipeline.plugins.resources.sqlite_storage:SQLiteStorage
+      type: pipeline.resources.sqlite_storage:SQLiteStorage
       path: ./entity.db
       pool_min_size: 1
       pool_max_size: 5
@@ -52,7 +52,22 @@ For ephemeral sessions, an in-memory backend is available:
 plugins:
   resources:
     database:
-      type: pipeline.plugins.resources.memory_storage:MemoryStorage
+      type: pipeline.resources.memory_storage:MemoryStorage
+```
+
+HTTP adapter configuration with authentication and rate limiting:
+
+```yaml
+plugins:
+  adapters:
+    http:
+      type: pipeline.adapters.http:HTTPAdapter
+      auth_tokens:
+        - ${HTTP_TOKEN}
+      rate_limit:
+        requests: 60
+        interval: 60
+      audit_log_path: logs/audit.log
 ```
 <!-- end config -->
 
@@ -73,6 +88,11 @@ from app import create_app
 agent = Agent(...)
 app = create_app(agent)
 ```
+
+The built-in ``HTTPAdapter`` exposes additional endpoints:
+
+- ``GET /health`` – reports resource health status.
+- ``GET /metrics`` – Prometheus metrics for monitoring.
 
 ## Design Principles in Action
 
@@ -163,7 +183,7 @@ class MemoryResource(ResourcePlugin):
         if db_config:
             db_type = db_config.get("type", "postgres")
             if db_type == "postgres":
-                db = PostgresDatabaseResource(db_config)
+                db = PostgresResource(db_config)
             elif db_type == "sqlite":
                 db = SQLiteDatabaseResource(db_config)
             else:
@@ -201,7 +221,7 @@ plugins:
     memory:
       type: memory
       database:
-        type: pipeline.plugins.resources.sqlite_storage:SQLiteStorageResource
+        type: pipeline.resources.sqlite_storage:SQLiteStorageResource
         path: ./agent.db
 ```
 
@@ -212,7 +232,7 @@ plugins:
     memory:
       type: memory
       database:
-        type: pipeline.plugins.resources.duckdb_database:DuckDBDatabaseResource
+        type: pipeline.resources.duckdb_database:DuckDBDatabaseResource
         path: ./agent.duckdb
         history_table: chat_history
 ```
@@ -224,15 +244,15 @@ plugins:
     memory:
       type: memory
       database:
-        type: pipeline.plugins.resources.postgres_database:PostgresDatabaseResource
+        type: pipeline.resources.postgres:PostgresResource
         host: localhost
         name: agent_db
       vector_store:
-        type: pipeline.plugins.resources.pg_vector_store:PgVectorStore
+        type: pipeline.resources.pg_vector_store:PgVectorStore
         dimensions: 768
         table: embeddings
       filesystem:
-        type: pipeline.plugins.resources.s3_filesystem:S3FileSystem
+        type: pipeline.resources.s3_filesystem:S3FileSystem
         bucket: agent-files
         region: us-east-1
 ```
@@ -249,7 +269,7 @@ duckdb_resource = DuckDBDatabaseResource({"path": "./agent.duckdb"})
 memory_duckdb = MemoryResource(database=duckdb_resource)
 
 # Evolve to complex
-postgres = PostgresDatabaseResource(connection_str)
+postgres = PostgresResource(connection_str)
 memory = MemoryResource(
     database=postgres,
     vector_store=PgVectorStore(postgres, dimensions=768),
@@ -283,7 +303,7 @@ The `S3FileSystem` backend persists files in Amazon S3. Configure the
 2. **Support Dependency Sharing**
    ```python
    # Vector store can reuse database connection
-   postgres = PostgresDatabaseResource(config)
+   postgres = PostgresResource(config)
    vector_store = PgVectorStore(postgres)  # Reuses connection pool
    ```
 

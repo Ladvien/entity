@@ -20,7 +20,7 @@ from pipeline import (
     ToolRegistry,
     execute_pipeline,
 )
-from pipeline.plugins.resources.llm.unified import UnifiedLLMResource
+from pipeline.resources.llm.unified import UnifiedLLMResource
 
 
 class CalculatorTool(ToolPlugin):
@@ -37,6 +37,9 @@ class CalculatorTool(ToolPlugin):
             return eval(str(expression), allowed_names, {})
         except Exception as exc:  # noqa: BLE001
             raise ValueError(f"Invalid expression: {exc}") from exc
+
+    async def execute(self, params: Dict[str, Any]) -> Any:
+        return await self.execute_function_with_retry(params)
 
 
 async def hello_plugin(ctx):  # pragma: no cover - example code
@@ -57,6 +60,9 @@ class WeatherTool(ToolPlugin):
 
     async def execute_function(self, params: Dict[str, Any]) -> str:
         return weather_tool(params)
+
+    async def execute(self, params: Dict[str, Any]) -> str:
+        return await self.execute_function_with_retry(params)
 
 
 def setup_registries() -> SystemRegistries:

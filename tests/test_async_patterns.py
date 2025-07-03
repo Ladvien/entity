@@ -1,17 +1,11 @@
 import asyncio
 import time
 
-from pipeline import (
-    PipelineStage,
-    PluginRegistry,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolPlugin,
-    ToolRegistry,
-    execute_pipeline,
-)
+from pipeline import (PipelineStage, PluginRegistry, ResourceRegistry,
+                      SystemRegistries, ToolPlugin, ToolRegistry,
+                      execute_pipeline)
 from pipeline.base_plugins import PluginAutoClassifier
-from pipeline.context import SimpleContext
+from pipeline.context import PluginContext
 
 
 class SleepTool(ToolPlugin):
@@ -20,7 +14,7 @@ class SleepTool(ToolPlugin):
         return params.get("text", "done")
 
 
-async def use_tool_plugin(ctx: SimpleContext) -> None:
+async def use_tool_plugin(ctx: PluginContext) -> None:
     result = await ctx.use_tool("sleep", text="hello")
     ctx.set_response(result)
 

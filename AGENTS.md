@@ -23,6 +23,7 @@ The `ARCHITECTURE.md` file provides a high-level overview of the Entity Pipeline
 
 ## Important Notes
 - This is a pre-alpha project.  We do NOT need to maintain backwards compatibility or legacy systems.  If we do not need it, delete it.
+- When attempting to determine if something is in scope, favor leaving a `TODO: <MESSAGE>` comment in the codebase rather than implementing it.  This will allow us to focus on the core functionality and avoid scope creep.
 
 ## Project Tools
 - poetry 
@@ -258,7 +259,7 @@ entity:
 plugins:
   resources:
     database:
-      type: pipeline.plugins.resources.postgres:PostgresResource
+      type: pipeline.resources.postgres:PostgresResource
       host: "localhost"
       name: "dev_db"
       username: "agent"
@@ -266,7 +267,7 @@ plugins:
       pool_min_size: 1
       pool_max_size: 5
     llm:
-      type: pipeline.plugins.resources.llm.unified:UnifiedLLMResource
+      type: pipeline.resources.llm.unified:UnifiedLLMResource
       provider: ollama
       base_url: "http://localhost:11434"
       model: "llama3:8b"
@@ -291,7 +292,7 @@ entity:
 plugins:
   resources:
     database:
-      type: pipeline.plugins.resources.postgres:PostgresResource
+      type: pipeline.resources.postgres:PostgresResource
       host: "${DB_HOST}"
       name: "${DB_NAME}"
       username: "${DB_USERNAME}"
@@ -299,7 +300,7 @@ plugins:
       pool_min_size: 5
       pool_max_size: 20
     llm:
-      type: pipeline.plugins.resources.llm.unified:UnifiedLLMResource
+      type: pipeline.resources.llm.unified:UnifiedLLMResource
       provider: openai
       api_key: "${OPENAI_API_KEY}"
       model: "gpt-4"
@@ -342,7 +343,7 @@ class DatabaseResourcePlugin(ResourcePlugin):
 Resources compose other resources. A `StorageResource` takes a
 `DatabaseResource`, a `VectorStoreResource`, and a `FileSystemResource`. The
 `DatabaseResource` points to a specific implementation such as
-`PostgresDatabaseResource`. Each resource should expose one clear name so there
+`PostgresResource`. Each resource should expose one clear name so there
 is only one way to reference it.
 
 ### Tool Plugin Pattern

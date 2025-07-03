@@ -6,20 +6,13 @@ from pathlib import Path
 import pytest
 
 from config.environment import load_env
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginContext, PluginRegistry, ResourceRegistry,
+                      SystemRegistries, ToolRegistry)
 from pipeline.plugins.prompts.complex_prompt import ComplexPrompt
-from pipeline.plugins.resources.llm import UnifiedLLMResource
-from pipeline.plugins.resources.pg_vector_store import PgVectorStore
-from pipeline.plugins.resources.postgres_database import PostgresDatabaseResource
+from pipeline.resources.llm import UnifiedLLMResource
+from pipeline.resources.pg_vector_store import PgVectorStore
+from pipeline.resources.postgres import PostgresResource
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
 
@@ -46,7 +39,7 @@ def test_vector_memory_integration():
             "table": "test_vectors_int",
             "dimensions": 3,
         }
-        db = PostgresDatabaseResource(db_cfg)
+        db = PostgresResource(db_cfg)
         vm = PgVectorStore(vm_cfg)
         llm = UnifiedLLMResource(
             {"provider": "echo", "base_url": "http://localhost", "model": "none"}
@@ -56,16 +49,18 @@ def test_vector_memory_integration():
             await vm.initialize()
         except Exception as exc:
             pytest.skip(f"PostgreSQL not available: {exc}")
-        await db._connection.execute(f"DROP TABLE IF EXISTS {db_cfg['history_table']}")
-        await db._connection.execute(
-            f"CREATE TABLE {db_cfg['history_table']} ("
-            "conversation_id text, role text, content text, "
-            "metadata jsonb, timestamp timestamptz)"
-        )
-        await vm._connection.execute(f"DROP TABLE IF EXISTS {vm_cfg['table']}")
-        await vm._connection.execute(
-            f"CREATE TABLE {vm_cfg['table']} (text text, embedding vector({vm_cfg['dimensions']}))"
-        )
+        async with db.connection() as conn:
+            await conn.execute(f"DROP TABLE IF EXISTS {db_cfg['history_table']}")
+            await conn.execute(
+                f"CREATE TABLE {db_cfg['history_table']} ("
+                "conversation_id text, role text, content text, "
+                "metadata jsonb, timestamp timestamptz)"
+            )
+        async with vm._db.connection() as conn:
+            await conn.execute(f"DROP TABLE IF EXISTS {vm_cfg['table']}")
+            await conn.execute(
+                f"CREATE TABLE {vm_cfg['table']} (text text, embedding vector({vm_cfg['dimensions']}))"
+            )
         history_entry = ConversationEntry(
             content="previous", role="user", timestamp=datetime.now()
         )
@@ -89,8 +84,8 @@ def test_vector_memory_integration():
         plugin = ComplexPrompt({"k": 1})
         await plugin.execute(ctx)
         response = state.response
-        await db._connection.close()
-        await vm._connection.close()
+        await db._pool.close()
+        await vm._db._pool.close()
         return response
 
     result = asyncio.run(run())

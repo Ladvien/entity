@@ -1,10 +1,10 @@
 import asyncio
 from unittest.mock import AsyncMock
 
-from pipeline.resources.storage import StorageResource
+from pipeline.resources.database import DatabaseResource
 
 
-class ExampleStorage(StorageResource):
+class ExampleStorage(DatabaseResource):
     async def initialize(self) -> None:  # pragma: no cover - not used in test
         pass
 

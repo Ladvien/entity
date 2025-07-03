@@ -1,8 +1,10 @@
+# mypy: ignore-errors
+
 from pipeline.plugins import ResourcePlugin, ValidationResult
 from pipeline.stages import PipelineStage
 
 
-class {class_name}(ResourcePlugin):
+class TemplateResource(ResourcePlugin):
     """Example resource plugin."""
 
     stages = [PipelineStage.PARSE]

@@ -12,13 +12,14 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar
 import yaml
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
-    from .context import PluginContext, SimpleContext
+    from .context import PluginContext
     from .state import LLMResponse
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .initializer import ClassRegistry
 
-from .exceptions import CircuitBreakerTripped, PluginError, PluginExecutionError
+from .exceptions import (CircuitBreakerTripped, PluginError,
+                         PluginExecutionError)
 from .logging import get_logger
 from .observability.utils import execute_with_observability
 from .stages import PipelineStage
@@ -74,7 +75,7 @@ class BasePlugin(ABC):
         self._failure_count = 0
         self._last_failure = 0.0
 
-    async def execute(self, context: PluginContext | SimpleContext) -> Any:
+    async def execute(self, context: PluginContext) -> Any:
         """Execute plugin with logging, metrics and circuit breaker."""
 
         def circuit_open() -> bool:
@@ -123,6 +124,16 @@ class BasePlugin(ABC):
         if llm is None:
             raise RuntimeError("LLM resource not available")
 
+        cache = context.get_resource("cache")
+        cache_key = None
+        if cache:
+            import hashlib
+
+            cache_key = "llm:" + hashlib.sha256(prompt.encode()).hexdigest()
+            cached = await cache.get(cache_key)
+            if cached is not None:
+                return LLMResponse(content=str(cached))
+
         context.record_llm_call(self.__class__.__name__, purpose)
 
         start = time.time()
@@ -142,6 +153,10 @@ class BasePlugin(ABC):
         context.record_llm_duration(self.__class__.__name__, duration)
 
         llm_response = LLMResponse(content=str(response))
+
+        if cache and cache_key is not None:
+            await cache.set(cache_key, llm_response.content)
+
         self.logger.info(
             "LLM call completed",
             extra={
@@ -274,6 +289,11 @@ class ToolPlugin(BasePlugin):
         self.max_retries = int(self.config.get("max_retries", 1))
         self.retry_delay = float(self.config.get("retry_delay", 1.0))
 
+    @abstractmethod
+    async def execute(self, params: Dict[str, Any]) -> Any:  # type: ignore[override]
+        """Execute the tool with ``params``."""
+        raise NotImplementedError
+
     async def execute_function(self, params: Dict[str, Any]):
         raise NotImplementedError()
 
@@ -294,8 +314,11 @@ class ToolPlugin(BasePlugin):
                     raise
                 await asyncio.sleep(retry_delay_seconds)
 
-    async def execute_with_timeout(self, context: "PluginContext", timeout: int = 30):
-        return await asyncio.wait_for(self.execute(context), timeout=timeout)
+    async def execute_with_timeout(
+        self, params: Dict[str, Any], timeout: int = 30
+    ) -> Any:
+        """Execute the tool with a timeout."""
+        return await asyncio.wait_for(self.execute(params), timeout=timeout)
 
     async def _execute_impl(self, context: "PluginContext"):
         """Tools are not executed in the pipeline directly."""
@@ -358,4 +381,5 @@ __all__ = [
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .plugins.classifier import PluginAutoClassifier
 else:  # pragma: no cover - runtime import for compatibility
-    from .plugins.classifier import PluginAutoClassifier  # type: ignore  # noqa: E402
+    from .plugins.classifier import \
+        PluginAutoClassifier  # type: ignore  # noqa: E402

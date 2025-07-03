@@ -2,17 +2,10 @@ import asyncio
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-    execute_pending_tools,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginContext, PluginRegistry, ResourceRegistry,
+                      SystemRegistries, ToolRegistry)
+from pipeline.pipeline import execute_pending_tools
 from pipeline.plugins.tools.search_tool import SearchTool
 
 
