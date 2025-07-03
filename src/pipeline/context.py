@@ -202,21 +202,15 @@ class PluginContext:
         """Return any failure recorded during execution."""
         return self.__state.failure_info
 
+    # --- Stage control ---------------------------------------------------
+    def set_current_stage(self, stage: PipelineStage) -> None:
+        """Update the pipeline's current stage (testing and internal use)."""
+        self.__state.current_stage = stage
 
-class SimpleContext(PluginContext):
-    """Convenience context with helper methods for simple plugins."""
-
-    @property
-    def message(self) -> str:
-        """Return the latest user message."""
-        for entry in reversed(self.__state.conversation):
-            if entry.role == "user":
-                return entry.content
-        return ""
-
+    # --- Convenience helpers --------------------------------------------
     @property
     def user(self) -> str:
-        """User identifier from metadata."""
+        """Return the user identifier from metadata."""
         return self.__state.metadata.get("user", "user")
 
     @property
@@ -225,11 +219,11 @@ class SimpleContext(PluginContext):
         return self.__state.metadata.get("location")
 
     def say(self, message: str) -> None:
-        """Convenience wrapper around :meth:`set_response`."""
+        """Shortcut for :meth:`set_response`."""
         self.set_response(message)
 
     def think(self, thought: str) -> None:
-        """Record an internal ``thought`` message."""
+        """Record an internal thought message."""
         self.add_conversation_entry(
             content=thought,
             role="system",
@@ -237,11 +231,11 @@ class SimpleContext(PluginContext):
         )
 
     def recall(self, key: str, default: Any = None) -> Any:
-        """Retrieve metadata value by ``key``."""
+        """Retrieve a value from pipeline metadata."""
         return self.get_metadata(key, default)
 
     def remember(self, key: str, value: Any) -> None:
-        """Persist a metadata ``value`` for later recall."""
+        """Persist a value in pipeline metadata."""
         self.set_metadata(key, value)
 
     async def use_tool(self, tool_name: str, **params: Any) -> Any:
@@ -281,7 +275,7 @@ class SimpleContext(PluginContext):
                         result = func(call.params)
                 self.set_stage_result(call.result_key, result)
                 self.record_tool_execution(call.name, call.result_key, call.source)
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001
                 result = f"Error: {exc}"
                 self.set_stage_result(call.result_key, result)
                 self.record_tool_error(call.name, str(exc))
@@ -294,7 +288,7 @@ class SimpleContext(PluginContext):
         if llm is None:
             raise RuntimeError("LLM resource not available")
 
-        self.record_llm_call("SimpleContext", "ask_llm")
+        self.record_llm_call("PluginContext", "ask_llm")
         start = asyncio.get_event_loop().time()
 
         if hasattr(llm, "generate"):
@@ -309,7 +303,7 @@ class SimpleContext(PluginContext):
                 response = func(prompt)
 
         self.record_llm_duration(
-            "SimpleContext", asyncio.get_event_loop().time() - start
+            "PluginContext", asyncio.get_event_loop().time() - start
         )
 
         if isinstance(response, LLMResponse):

@@ -17,7 +17,7 @@ class ExamplePlugin(PromptPlugin):
         rows = await db.fetch_last(context.user)
 ```
 
-`SimpleContext` extends `PluginContext` with convenience methods:
+`PluginContext` includes convenience methods for common operations:
 
 - `say()` to set the pipeline response
 - `ask_llm()` to call the configured LLM
@@ -25,7 +25,7 @@ class ExamplePlugin(PromptPlugin):
 
 ```python
 class MyPrompt(PromptPlugin):
-    async def _execute_impl(self, context: SimpleContext) -> None:
+    async def _execute_impl(self, context: PluginContext) -> None:
         reply = await context.ask_llm(context.message)
         context.say(reply)
 ```

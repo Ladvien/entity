@@ -1,6 +1,6 @@
 from .agent import Agent
 from .config_update import ConfigUpdateResult, update_plugin_configuration
-from .context import ConversationEntry, PluginContext, SimpleContext, ToolCall
+from .context import ConversationEntry, PluginContext, ToolCall
 from .conversation_manager import ConversationManager
 from .decorators import plugin
 from .errors import create_static_error_response
@@ -41,7 +41,6 @@ __all__ = [
     "PipelineStage",
     "PipelineState",
     "PluginContext",
-    "SimpleContext",
     "ConversationEntry",
     "ToolCall",
     "LLMResponse",

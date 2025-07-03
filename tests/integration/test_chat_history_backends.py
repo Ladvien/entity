@@ -49,7 +49,7 @@ async def run_history_test(resource):
         metrics=MetricsCollector(),
     )
     ctx = PluginContext(state, registries)
-    ctx._state.current_stage = PipelineStage.DELIVER
+    ctx.set_current_stage(PipelineStage.DELIVER)
     plugin = ChatHistory({})
     await plugin.execute(ctx)
 
@@ -57,7 +57,7 @@ async def run_history_test(resource):
         conversation=[], pipeline_id="conv1", metrics=MetricsCollector()
     )
     new_ctx = PluginContext(new_state, registries)
-    new_ctx._state.current_stage = PipelineStage.PARSE
+    new_ctx.set_current_stage(PipelineStage.PARSE)
     await plugin.execute(new_ctx)
     await getattr(resource, "shutdown", lambda: None)()
     return new_ctx.get_conversation_history()
