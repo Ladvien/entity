@@ -1,3 +1,5 @@
+from .duckdb_database import DuckDBDatabaseResource
+from .duckdb_vector_store import DuckDBVectorStore
 from .llm import UnifiedLLMResource
 from .llm_resource import LLMResource
 from .local_filesystem import LocalFileSystemResource
@@ -14,7 +16,9 @@ __all__ = [
     "SimpleMemoryResource",
     "StructuredLogging",
     "PostgresDatabaseResource",
+    "DuckDBDatabaseResource",
     "PgVectorStore",
+    "DuckDBVectorStore",
     "LocalFileSystemResource",
     "S3FileSystem",
 ]
