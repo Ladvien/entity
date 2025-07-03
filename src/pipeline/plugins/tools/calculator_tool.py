@@ -84,3 +84,6 @@ class CalculatorTool(ToolPlugin):
             return self._evaluator.evaluate(str(expression))
         except Exception as exc:  # noqa: BLE001 - re-raising user error
             raise ValueError(f"Invalid expression: {exc}") from exc
+
+    async def execute(self, params: Dict[str, Any]) -> Any:  # type: ignore[override]
+        return await self.execute_function(params)

@@ -40,3 +40,6 @@ class WeatherApiTool(ToolPlugin):
             raise RuntimeError(f"Weather request failed: {exc}") from exc
 
         return response.json()
+
+    async def execute(self, params: Dict[str, Any]) -> Any:  # type: ignore[override]
+        return await self.execute_function(params)
