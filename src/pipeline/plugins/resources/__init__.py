@@ -1,3 +1,4 @@
+from .bedrock import BedrockResource
 from .duckdb_database import DuckDBDatabaseResource
 from .duckdb_vector_store import DuckDBVectorStore
 from .llm import UnifiedLLMResource
@@ -21,4 +22,5 @@ __all__ = [
     "DuckDBVectorStore",
     "LocalFileSystemResource",
     "S3FileSystem",
+    "BedrockResource",
 ]

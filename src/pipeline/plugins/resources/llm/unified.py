@@ -6,6 +6,7 @@ from pipeline.plugins import ValidationResult
 from pipeline.plugins.resources.llm_resource import LLMResource
 
 from .providers import (
+    BedrockProvider,
     ClaudeProvider,
     EchoProvider,
     GeminiProvider,
@@ -24,6 +25,7 @@ class UnifiedLLMResource(LLMResource):
         "ollama": OllamaProvider,
         "gemini": GeminiProvider,
         "claude": ClaudeProvider,
+        "bedrock": BedrockProvider,
         "echo": EchoProvider,
     }
 
