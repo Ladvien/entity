@@ -8,7 +8,11 @@ readme = "README.md"
 package-mode = true
 
 packages = [
-    { include = "src", from = "." },
+    { include = "entity", from = "src" },
+    { include = "pipeline", from = "src" },
+    { include = "cli", from = "src" },
+    { include = "config", from = "src" },
+    { include = "registry", from = "src" },
 ]
 
 [tool.poetry.scripts]

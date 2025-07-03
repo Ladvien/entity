@@ -65,7 +65,7 @@ class PluginRegistry:
         try:
             stage = PipelineStage(stage)
         except ValueError as exc:
-            raise SystemError(f"Invalid stage: {stage}") from exc
+            raise ValueError(f"Invalid stage: {stage}") from exc
         self._stage_plugins[stage].append(plugin)
         if name:
             self._names[plugin] = name
