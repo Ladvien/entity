@@ -163,7 +163,7 @@ class MemoryResource(ResourcePlugin):
         if db_config:
             db_type = db_config.get("type", "postgres")
             if db_type == "postgres":
-                db = PostgresDatabaseResource(db_config)
+                db = PostgresResource(db_config)
             elif db_type == "sqlite":
                 db = SQLiteDatabaseResource(db_config)
             else:
@@ -224,7 +224,7 @@ plugins:
     memory:
       type: memory
       database:
-        type: pipeline.plugins.resources.postgres_database:PostgresDatabaseResource
+        type: pipeline.plugins.resources.postgres:PostgresResource
         host: localhost
         name: agent_db
       vector_store:
@@ -249,7 +249,7 @@ duckdb_resource = DuckDBDatabaseResource({"path": "./agent.duckdb"})
 memory_duckdb = MemoryResource(database=duckdb_resource)
 
 # Evolve to complex
-postgres = PostgresDatabaseResource(connection_str)
+postgres = PostgresResource(connection_str)
 memory = MemoryResource(
     database=postgres,
     vector_store=PgVectorStore(postgres, dimensions=768),
@@ -283,7 +283,7 @@ The `S3FileSystem` backend persists files in Amazon S3. Configure the
 2. **Support Dependency Sharing**
    ```python
    # Vector store can reuse database connection
-   postgres = PostgresDatabaseResource(config)
+   postgres = PostgresResource(config)
    vector_store = PgVectorStore(postgres)  # Reuses connection pool
    ```
 

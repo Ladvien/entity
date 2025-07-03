@@ -15,7 +15,7 @@ plugins:
     memory:
       type: memory
       database:
-        type: pipeline.plugins.resources.postgres_database:PostgresDatabaseResource
+        type: pipeline.plugins.resources.postgres:PostgresResource
         host: localhost
         port: 5432
         name: dev_db
