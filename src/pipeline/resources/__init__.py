@@ -1,6 +1,7 @@
 from .base import BaseResource, Resource
 <<<<<<< HEAD
 from .database import DatabaseResource
+from .dsl import ResourceDef, ResourceGraph
 from .filesystem import FileSystemResource
 from .llm import LLM
 from .memory import Memory
@@ -44,6 +45,7 @@ __all__ = [
     "Resource",
     "BaseResource",
 <<<<<<< HEAD
+<<<<<<< HEAD
     "LLMResource",
     "UnifiedLLMResource",
     "MemoryResource",
@@ -58,4 +60,8 @@ __all__ = [
 =======
     "ResourceContainer",
 >>>>>>> 27f390cfd8c90b5cabd424830b9de0296112183c
+=======
+    "ResourceDef",
+    "ResourceGraph",
+>>>>>>> 3971a3f47fa613b83e1bd99f482ec2d15c430adb
 ]
