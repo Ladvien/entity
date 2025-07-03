@@ -12,6 +12,7 @@
 - [`memory_composition_pipeline.py`](../../examples/pipelines/memory_composition_pipeline.py)
   shows how to compose the ``MemoryResource`` with SQLite, PGVector, and a local
   filesystem backend.
+- [AWS deployment guide](deploy_aws.md) shows how to provision AWS resources with the Terraform Python SDK.
 - **Postgres connection pooling**
   ```python
   PostgresResource(
@@ -54,6 +55,7 @@ context
 plugin_guide
 advanced_usage
 principle_checklist
+deploy_aws
 apidocs/index
 ```
 
