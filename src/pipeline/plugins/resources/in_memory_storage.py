@@ -3,14 +3,13 @@ from __future__ import annotations
 from typing import Dict, List
 
 from pipeline.context import ConversationEntry
-from pipeline.resources.base import BaseResource
-from pipeline.resources.storage import StorageBackend
+from pipeline.resources.database import DatabaseResource
 
 
-class InMemoryStorageResource(BaseResource, StorageBackend):
+class InMemoryStorageResource(DatabaseResource):
     """Simple in-memory storage backend for conversation history."""
 
-    name = "storage"
+    name = "database"
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)

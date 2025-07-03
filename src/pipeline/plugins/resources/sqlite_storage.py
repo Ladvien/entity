@@ -7,14 +7,13 @@ from typing import Dict, List, Optional
 import aiosqlite
 
 from pipeline.context import ConversationEntry
-from pipeline.resources.base import BaseResource
-from pipeline.resources.storage import StorageBackend
+from pipeline.resources.database import DatabaseResource
 
 
-class SQLiteStorageResource(BaseResource, StorageBackend):
+class SQLiteStorageResource(DatabaseResource):
     """SQLite-based conversation history storage."""
 
-    name = "storage"
+    name = "database"
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
