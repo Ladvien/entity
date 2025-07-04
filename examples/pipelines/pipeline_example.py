@@ -20,6 +20,8 @@ from pipeline import (
     ToolRegistry,
     execute_pipeline,
 )
+from config.environment import load_env
+from pipeline.config import ConfigLoader
 from pipeline.resources.llm.unified import UnifiedLLMResource
 
 
@@ -67,7 +69,7 @@ class WeatherTool(ToolPlugin):
 
 def setup_registries() -> SystemRegistries:
     """Set up default registries for the pipeline."""
-
+    load_env()
     plugins = PluginRegistry()
     resources = ResourceRegistry()
     tools = ToolRegistry()
@@ -78,11 +80,13 @@ def setup_registries() -> SystemRegistries:
     resources.add(
         "llm",
         UnifiedLLMResource(
-            {
-                "provider": "ollama",
-                "base_url": "http://localhost:11434",
-                "model": "tinyllama",
-            }
+            ConfigLoader.from_dict(
+                {
+                    "provider": "ollama",
+                    "base_url": "${OLLAMA_BASE_URL}",
+                    "model": "${OLLAMA_MODEL}",
+                }
+            )
         ),
     )
 

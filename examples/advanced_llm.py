@@ -7,16 +7,21 @@ from typing import Any, Dict
 
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
+from config.environment import load_env
+from pipeline.config import ConfigLoader
 from pipeline.resources.llm.unified import UnifiedLLMResource
 
 
 async def main() -> None:
+    load_env()
     llm = UnifiedLLMResource(
-        {
-            "provider": "ollama",
-            "base_url": "http://localhost:11434",
-            "model": "tinyllama",
-        }
+        ConfigLoader.from_dict(
+            {
+                "provider": "ollama",
+                "base_url": "${OLLAMA_BASE_URL}",
+                "model": "${OLLAMA_MODEL}",
+            }
+        )
     )
 
     print("Streaming response:")
