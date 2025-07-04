@@ -107,6 +107,7 @@ markers = [
     "api: Tests related to API endpoints",
     "cli: Tests related to CLI interface",
     "benchmark: Performance benchmarking tests",
+    "examples: Tests that run example scripts",
 ]
 filterwarnings = [
     "ignore::DeprecationWarning",
