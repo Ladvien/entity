@@ -14,8 +14,7 @@ from .memory import Memory
 from .pg_vector_store import PgVectorStore
 from .s3_filesystem import S3FileSystem
 from .structured_logging import StructuredLogging
-from .vector_store import VectorStoreResource
-from .vectorstore import VectorStore
+from .vector_store import VectorStore, VectorStoreResource
 
 __all__ = [
     "LLM",

@@ -5,11 +5,11 @@ from typing import Any, Dict, List
 from pipeline.context import ConversationEntry
 from pipeline.stages import PipelineStage
 from pipeline.user_plugins import ResourcePlugin, ValidationResult
+from plugins.resources.vector_store import VectorStoreResource
 
 from .database import DatabaseResource
 from .filesystem import FileSystemResource
 from .memory import Memory
-from .vector_store import VectorStoreResource
 
 
 class SimpleMemoryResource(ResourcePlugin, Memory):

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from pipeline.cache.base import CacheBackend
-from pipeline.resources.vectorstore import VectorStoreResource
+from plugins.resources.vector_store import VectorStoreResource
 
 
 class SemanticCache(CacheBackend):

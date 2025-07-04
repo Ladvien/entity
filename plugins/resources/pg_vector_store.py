@@ -6,7 +6,7 @@ from pgvector import Vector
 from pgvector.asyncpg import register_vector
 
 from plugins.resources.postgres import PostgresResource
-from plugins.resources.vectorstore import VectorStoreResource
+from plugins.resources.vector_store import VectorStoreResource
 
 
 class PgVectorStore(VectorStoreResource):
