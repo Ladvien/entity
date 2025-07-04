@@ -7,6 +7,8 @@ import pathlib
 import sys
 from typing import Dict, List
 
+from pipeline.utils import DependencyGraph
+
 SRC_PATH = pathlib.Path(__file__).resolve().parents[1]
 if str(SRC_PATH) not in sys.path:
     sys.path.insert(0, str(SRC_PATH))
@@ -62,6 +64,7 @@ class RegistryValidator:
                     f"Dependency validation failed for {cls.__name__}: {result.error_message}"
                 )
 
+        graph = DependencyGraph(self.dep_graph)
         for plugin_name, deps in self.dep_graph.items():
             for dep in deps:
                 if not self.registry.has_plugin(dep):
@@ -73,26 +76,7 @@ class RegistryValidator:
                         )
                     )
 
-        in_degree = {node: 0 for node in self.dep_graph}
-        for node, neighbors in self.dep_graph.items():
-            for neigh in neighbors:
-                if neigh in in_degree:
-                    in_degree[neigh] += 1
-
-        queue = [n for n, d in in_degree.items() if d == 0]
-        processed: List[str] = []
-        while queue:
-            current = queue.pop(0)
-            processed.append(current)
-            for neigh in self.dep_graph[current]:
-                if neigh in in_degree:
-                    in_degree[neigh] -= 1
-                    if in_degree[neigh] == 0:
-                        queue.append(neigh)
-
-        if len(processed) != len(in_degree):
-            cycle_nodes = [n for n in in_degree if n not in processed]
-            raise SystemError(f"Circular dependency detected involving: {cycle_nodes}")
+        graph.topological_sort()
 
     def run(self) -> None:
         self._register_classes()

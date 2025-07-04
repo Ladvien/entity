@@ -6,7 +6,11 @@ from contextlib import contextmanager
 from typing import Any, Dict, Iterable, List, Tuple
 
 from config.environment import load_env
+<<<<<< codex/implement-topological-sort-and-cycle-detection-helper
+from pipeline.utils import DependencyGraph
+======
 from pipeline.config.utils import interpolate_env_vars
+>>>>>> main
 from plugins.resources.base import Resource
 from plugins.resources.container import ResourceContainer
 from registry import PluginRegistry, ToolRegistry
@@ -202,8 +206,10 @@ class SystemInitializer:
     def _validate_dependency_graph(
         self, registry: ClassRegistry, dep_graph: Dict[str, List[str]]
     ):
-        for plugin_name, dependencies in dep_graph.items():
-            for dep in dependencies:
+        graph = DependencyGraph(dep_graph)
+        # Ensure all dependencies reference known plugins before sorting
+        for plugin_name, deps in dep_graph.items():
+            for dep in deps:
                 if not registry.has_plugin(dep):
                     available = registry.list_plugins()
                     raise SystemError(
@@ -213,6 +219,25 @@ class SystemInitializer:
                         )
                     )
 
+<<<<<< codex/implement-topological-sort-and-cycle-detection-helper
+        graph.topological_sort()
+
+    @staticmethod
+    def _interpolate_env_vars(config: Any) -> Any:
+        if isinstance(config, dict):
+            return {
+                k: SystemInitializer._interpolate_env_vars(v) for k, v in config.items()
+            }
+        if isinstance(config, list):
+            return [SystemInitializer._interpolate_env_vars(i) for i in config]
+        if isinstance(config, str) and config.startswith("${") and config.endswith("}"):
+            key = config[2:-1]
+            value = os.environ.get(key)
+            if value is None:
+                raise EnvironmentError(f"Required environment variable {key} not found")
+            return value
+        return config
+======
         in_degree = {node: 0 for node in dep_graph}
         for node in dep_graph:
             for neighbor in dep_graph[node]:
@@ -233,3 +258,4 @@ class SystemInitializer:
         if len(processed) != len(in_degree):
             cycle_nodes = [n for n in in_degree if n not in processed]
             raise SystemError(f"Circular dependency detected involving: {cycle_nodes}")
+>>>>>> main
