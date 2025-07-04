@@ -58,3 +58,13 @@ python -m src.cli reload-config updated.yaml
 The command waits for active pipelines to finish, then applies the new YAML
 configuration. This demonstrates **Dynamic Configuration Updates**, letting you
 tweak resources or tools at runtime while keeping the system responsive.
+
+### Streaming and Function Calling
+
+UnifiedLLMResource now exposes streaming via Server-Sent Events and optional
+function calling. Run the `examples/advanced_llm.py` script to see these
+features in action:
+
+```bash
+python examples/advanced_llm.py
+```

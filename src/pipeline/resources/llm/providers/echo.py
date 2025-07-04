@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from typing import Dict
+from typing import Any, AsyncIterator, Dict, List
 
+from pipeline.state import LLMResponse
 from pipeline.validation import ValidationResult
 
 from .base import BaseProvider
@@ -17,5 +18,12 @@ class EchoProvider(BaseProvider):
         """Echo provider requires no specific configuration."""
         return ValidationResult.success_result()
 
-    async def generate(self, prompt: str) -> str:  # noqa: D401 - simple echo
-        return prompt
+    async def generate(
+        self, prompt: str, functions: List[Dict[str, Any]] | None = None
+    ) -> LLMResponse:  # noqa: D401 - simple echo
+        return LLMResponse(content=prompt)
+
+    async def stream(
+        self, prompt: str, functions: List[Dict[str, Any]] | None = None
+    ) -> AsyncIterator[str]:
+        yield prompt
