@@ -20,7 +20,7 @@ plugins:
       type: plugins.tools.search:SearchTool
   prompts:
     main:
-      type: plugins.prompts.simple:SimplePrompt
+      type: user_plugins.prompts.simple:SimplePrompt
   adapters:
     http:
       type: plugins.adapters.http:HTTPAdapter
