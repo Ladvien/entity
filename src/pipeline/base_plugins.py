@@ -121,6 +121,7 @@ class BasePlugin(ABC):
         prompt: str,
         purpose: str,
 <<<<<<< HEAD
+<<<<<<< HEAD
 <<<<<< codex/implement-input-validation-and-sanitization
         *,
         sanitize: bool = False,
@@ -130,6 +131,9 @@ class BasePlugin(ABC):
 =======
         functions: list[dict[str, Any]] | None = None,
 >>>>>>> ade5ea02fe57934389c67708aacbf514ac2c4c3b
+=======
+        functions: list[dict[str, Any]] | None = None,
+>>>>>>> 9d6a2313c36e05a741a2a9b374ba1bfd354e9bd2
     ) -> "LLMResponse":
 
         llm = context.get_llm()
@@ -155,6 +159,7 @@ class BasePlugin(ABC):
         start = time.time()
 <<<<<<< HEAD
 
+<<<<<<< HEAD
 <<<<<< codex/implement-input-validation-and-sanitization
         if hasattr(llm, "call_llm"):
             response = await llm.call_llm(prompt, sanitize=sanitize)
@@ -168,6 +173,10 @@ class BasePlugin(ABC):
         if hasattr(llm, "generate"):
             response = await llm.generate(prompt, functions)
 >>>>>> main
+=======
+        if hasattr(llm, "generate"):
+            response = await llm.generate(prompt, functions)
+>>>>>>> 9d6a2313c36e05a741a2a9b374ba1bfd354e9bd2
         else:
             func = getattr(llm, "__call__", None)
             if func is None:

@@ -33,6 +33,9 @@ class ResourceRegistry:
 
         return self._resources.get(name)
 
+    def remove(self, name: str) -> None:
+        self._resources.pop(name, None)
+
 
 class ToolRegistry:
     """Registry for tool plugins."""

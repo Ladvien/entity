@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import json
+import os
 import time
 from datetime import datetime
 from typing import Any, Dict, cast
@@ -90,18 +92,25 @@ async def execute_stage(
 async def execute_pipeline(
     user_message: str,
     registries: SystemRegistries,
+    *,
+    state_file: str | None = None,
     pipeline_manager: PipelineManager | None = None,
     return_metrics: bool = False,
 ) -> Dict[str, Any] | tuple[Dict[str, Any], MetricsCollector]:
-    state = PipelineState(
-        conversation=[
-            ConversationEntry(
-                content=user_message, role="user", timestamp=datetime.now()
-            )
-        ],
-        pipeline_id=generate_pipeline_id(),
-        metrics=MetricsCollector(),
-    )
+    if state_file and os.path.exists(state_file):
+        with open(state_file, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+        state = PipelineState.from_dict(data)
+    else:
+        state = PipelineState(
+            conversation=[
+                ConversationEntry(
+                    content=user_message, role="user", timestamp=datetime.now()
+                )
+            ],
+            pipeline_id=generate_pipeline_id(),
+            metrics=MetricsCollector(),
+        )
     start = time.time()
     if pipeline_manager is not None:
         await pipeline_manager.register(state.pipeline_id)
@@ -113,9 +122,18 @@ async def execute_pipeline(
             PipelineStage.REVIEW,
             PipelineStage.DELIVER,
         ]:
+            if (
+                state.last_completed_stage is not None
+                and stage.value <= state.last_completed_stage.value
+            ):
+                continue
             await execute_stage(stage, state, registries)
             if state.failure_info:
                 break
+            state.last_completed_stage = stage
+            if state_file:
+                with open(state_file, "w", encoding="utf-8") as fh:
+                    json.dump(state.to_dict(), fh)
 
         if state.failure_info:
             try:
@@ -136,8 +154,13 @@ async def execute_pipeline(
         if pipeline_manager is not None:
             await pipeline_manager.deregister(state.pipeline_id)
         state.metrics.record_pipeline_duration(time.time() - start)
+<<<<<<< HEAD
         if _metrics_server is not None:
             _metrics_server.update(state.metrics)
+=======
+        if state_file and os.path.exists(state_file):
+            os.remove(state_file)
+>>>>>>> 9d6a2313c36e05a741a2a9b374ba1bfd354e9bd2
 
 
 async def execute_pending_tools(

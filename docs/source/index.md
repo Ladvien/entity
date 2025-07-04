@@ -35,6 +35,7 @@ Welcome to the Entity Pipeline framework. These pages explain how to configure a
 ```{toctree}
 :hidden:
 quick_start
+<<<<<<< HEAD
 tutorial_setup
 tutorial_first_pipeline
 config_cheatsheet
@@ -47,6 +48,11 @@ plugin_guide
 =======
 plugin_cheatsheet
 config
+=======
+config_cheatsheet
+config
+plugin_cheatsheet
+>>>>>>> 9d6a2313c36e05a741a2a9b374ba1bfd354e9bd2
 plugin_guide
 context
 logging
@@ -60,6 +66,9 @@ deploy_local
 deploy_docker
 deploy_cloud
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 9d6a2313c36e05a741a2a9b374ba1bfd354e9bd2
 principle_checklist
 =======
 api_reference

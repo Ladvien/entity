@@ -104,5 +104,76 @@ class PipelineState:
     metadata: Dict[str, Any] = field(default_factory=dict)
     pipeline_id: str = ""
     current_stage: Optional[PipelineStage] = None
+    last_completed_stage: Optional[PipelineStage] = None
     metrics: MetricsCollector = field(default_factory=MetricsCollector)
     failure_info: Optional[FailureInfo] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "conversation": [
+                {
+                    "content": e.content,
+                    "role": e.role,
+                    "timestamp": e.timestamp.isoformat(),
+                    "metadata": e.metadata,
+                }
+                for e in self.conversation
+            ],
+            "response": self.response,
+            "prompt": self.prompt,
+            "stage_results": self.stage_results,
+            "pending_tool_calls": [
+                {
+                    "name": c.name,
+                    "params": c.params,
+                    "result_key": c.result_key,
+                    "source": c.source,
+                }
+                for c in self.pending_tool_calls
+            ],
+            "metadata": self.metadata,
+            "pipeline_id": self.pipeline_id,
+            "current_stage": str(self.current_stage) if self.current_stage else None,
+            "last_completed_stage": (
+                str(self.last_completed_stage) if self.last_completed_stage else None
+            ),
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "PipelineState":
+        state = cls(
+            conversation=[
+                ConversationEntry(
+                    content=e["content"],
+                    role=e["role"],
+                    timestamp=datetime.fromisoformat(e["timestamp"]),
+                    metadata=e.get("metadata", {}),
+                )
+                for e in data.get("conversation", [])
+            ],
+            response=data.get("response"),
+            prompt=data.get("prompt", ""),
+            stage_results=data.get("stage_results", {}),
+            pending_tool_calls=[
+                ToolCall(
+                    name=c["name"],
+                    params=c.get("params", {}),
+                    result_key=c["result_key"],
+                    source=c.get("source", "direct_execution"),
+                )
+                for c in data.get("pending_tool_calls", [])
+            ],
+            metadata=data.get("metadata", {}),
+            pipeline_id=data.get("pipeline_id", ""),
+            current_stage=(
+                PipelineStage.from_str(data["current_stage"])
+                if data.get("current_stage")
+                else None
+            ),
+            last_completed_stage=(
+                PipelineStage.from_str(data["last_completed_stage"])
+                if data.get("last_completed_stage")
+                else None
+            ),
+        )
+        return state
