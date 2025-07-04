@@ -1,6 +1,10 @@
-<<<<<< codex/update-ci-config-for-test_examples.py
 from importlib import import_module
+import os
+import subprocess
+import sys
+from pathlib import Path
 
+import pytest
 from pipeline import SystemRegistries
 
 
@@ -21,13 +25,6 @@ def test_example_modules_importable() -> None:
     ]
     for name in modules:
         import_module(name)
-======
-import os
-import subprocess
-import sys
-from pathlib import Path
-
-import pytest
 
 
 class TestExamples:
@@ -45,4 +42,3 @@ class TestExamples:
         if not os.environ.get("RUN_EXAMPLE_TESTS"):
             pytest.skip("RUN_EXAMPLE_TESTS not set")
         subprocess.run([sys.executable, str(script)], check=True)
->>>>>> main
