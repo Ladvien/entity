@@ -6,9 +6,16 @@ from pathlib import Path
 import pytest
 
 from config.environment import load_env
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, ResourceRegistry,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    ResourceRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.plugins.prompts.complex_prompt import ComplexPrompt
 from pipeline.resources.llm import UnifiedLLMResource
 from pipeline.resources.pg_vector_store import PgVectorStore

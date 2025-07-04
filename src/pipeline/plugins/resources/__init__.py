@@ -1,5 +1,3 @@
-"""Resource plugin re-exports."""
-
-from .cache import CacheResource
+from plugins.resources import CacheResource
 
 __all__ = ["CacheResource"]

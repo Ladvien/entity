@@ -20,7 +20,9 @@ The framework's core value is **making agent behavior adjustable** without code 
 
 The codebase now consolidates the core engine under `src/pipeline`. This module
 contains the context system, execution logic and shared abstractions. Plugins
-are located in `src/pipeline/plugins` and grouped by type:
+reside in the new `src/plugins` package, grouped by type. The old
+`src/pipeline/plugins` directory remains as **temporary shims** re-exporting
+from `plugins`:
 
 - `resources` for databases, LLM providers and storage backends
 - `tools` for user-facing functions
@@ -540,7 +542,10 @@ Because the name stays constant, plugins and configuration always refer to the s
 
 **Note**: Plugin use is discouraged in the error stage to maintain reliability. Keep error stage plugins minimal and ensure static fallback responses are available.
 
-Plugin implementations live in `src/pipeline/plugins/<type>` directories. For example, error-handling plugins are located in `src/pipeline/plugins/failure`.
+Plugin implementations live in `src/plugins/<type>` directories. For example,
+error-handling plugins are located in `src/plugins/failure`. The
+`src/pipeline/plugins` paths are just thin wrappers to maintain backward
+compatibility during the transition.
 
 ### Plugin Stage Assignment System
 
