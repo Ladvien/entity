@@ -10,6 +10,7 @@ from pipeline import update_plugin_configuration
 from pipeline.base_plugins import ResourcePlugin, ToolPlugin
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 from pipeline.initializer import ClassRegistry, SystemInitializer
 =======
 from pipeline.initializer import ClassRegistry
@@ -17,6 +18,9 @@ from pipeline.initializer import ClassRegistry
 =======
 from pipeline.initializer import ClassRegistry, SystemInitializer
 >>>>>>> 9d6a2313c36e05a741a2a9b374ba1bfd354e9bd2
+=======
+from pipeline.initializer import ClassRegistry, SystemInitializer
+>>>>>>> 05754355a96c3f8124313438180394671344b866
 from pipeline.interfaces import import_plugin_class
 from pipeline.logging import get_logger
 from pipeline.resources.base import Resource

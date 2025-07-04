@@ -205,6 +205,14 @@ async def execute_pending_tools(
                 state.pipeline_id,
                 str(exc),
             )
+            if state.failure_info is None:
+                state.failure_info = FailureInfo(
+                    stage=str(state.current_stage),
+                    plugin_name=call.name,
+                    error_type=exc.__class__.__name__,
+                    error_message=str(exc),
+                    original_exception=exc,
+                )
 
     await asyncio.gather(*(run_call(call) for call in calls))
     return results

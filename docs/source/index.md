@@ -36,6 +36,7 @@ Welcome to the Entity Pipeline framework. These pages explain how to configure a
 :hidden:
 quick_start
 <<<<<<< HEAD
+<<<<<<< HEAD
 tutorial_setup
 tutorial_first_pipeline
 config_cheatsheet
@@ -57,6 +58,16 @@ plugin_guide
 context
 logging
 >>>>>>> ade5ea02fe57934389c67708aacbf514ac2c4c3b
+=======
+tutorial_setup
+tutorial_first_pipeline
+config
+config_cheatsheet
+plugin_cheatsheet
+plugin_guide
+context
+logging
+>>>>>>> 05754355a96c3f8124313438180394671344b866
 advanced_usage
 module_map
 troubleshooting
@@ -67,8 +78,11 @@ deploy_docker
 deploy_cloud
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 9d6a2313c36e05a741a2a9b374ba1bfd354e9bd2
+=======
+>>>>>>> 05754355a96c3f8124313438180394671344b866
 principle_checklist
 =======
 api_reference

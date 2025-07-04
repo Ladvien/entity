@@ -6,6 +6,7 @@ from pipeline.base_plugins import ResourcePlugin
 from pipeline.cache import CacheBackend, InMemoryCache
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 <<<<<< yvh9jp-codex/configure-pre-commit-and-enforce-quality-checks
 from pipeline.context import PluginContext
 from pipeline.initializer import import_plugin_class
@@ -20,6 +21,10 @@ from pipeline.interfaces import import_plugin_class
 from pipeline.context import PluginContext
 from pipeline.interfaces import import_plugin_class
 >>>>>>> 9d6a2313c36e05a741a2a9b374ba1bfd354e9bd2
+=======
+from pipeline.context import PluginContext
+from pipeline.interfaces import import_plugin_class
+>>>>>>> 05754355a96c3f8124313438180394671344b866
 from pipeline.stages import PipelineStage
 from pipeline.validation import ValidationResult
 

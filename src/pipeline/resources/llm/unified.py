@@ -99,6 +99,7 @@ class UnifiedLLMResource(LLMResource):
         for key, model in self._model_map.items():
             if key.lower() in prompt.lower():
 <<<<<<< HEAD
+<<<<<<< HEAD
                 if hasattr(self._provider, "http"):
                     self._provider.http.model = model
 =======
@@ -106,6 +107,10 @@ class UnifiedLLMResource(LLMResource):
                     if hasattr(provider, "http"):
                         provider.http.model = model
 >>>>>>> 9d6a2313c36e05a741a2a9b374ba1bfd354e9bd2
+=======
+                if hasattr(self._provider, "http"):
+                    self._provider.http.model = model
+>>>>>>> 05754355a96c3f8124313438180394671344b866
                 break
 
     async def generate(
@@ -113,11 +118,31 @@ class UnifiedLLMResource(LLMResource):
     ) -> LLMResponse:
         self._select_model(prompt)
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 05754355a96c3f8124313438180394671344b866
         try:
             return await self._provider.generate(prompt, functions)
         except Exception:
             if self._fallback is not None:
                 return await self._fallback.generate(prompt, functions)
+<<<<<<< HEAD
+=======
+            raise
+
+    async def stream(
+        self, prompt: str, functions: List[Dict[str, Any]] | None = None
+    ) -> AsyncIterator[str]:
+        self._select_model(prompt)
+        try:
+            async for chunk in self._provider.stream(prompt, functions):
+                yield chunk
+        except Exception:
+            if self._fallback is not None:
+                async for chunk in self._fallback.stream(prompt, functions):
+                    yield chunk
+                return
+>>>>>>> 05754355a96c3f8124313438180394671344b866
             raise
 =======
         last_exc: Exception | None = None
