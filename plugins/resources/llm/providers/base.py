@@ -36,36 +36,7 @@ class BaseProvider(LLM):
     ) -> Dict[str, Any]:
         return await self.http._post_request(url, payload, headers, params)
 
-    async def _stream_post_request(  # noqa: F811
-        self,
-        url: str,
-        payload: Dict[str, Any],
-        headers: Optional[Dict[str, str]] = None,
-        params: Optional[Dict[str, Any]] = None,
-    ) -> AsyncIterator[Dict[str, Any]]:
-        last_exc: Exception | None = None
-        for attempt in range(self.retry_attempts):
-            try:
-                async with httpx.AsyncClient(timeout=None) as client:
-                    async with client.stream(
-                        "POST", url, json=payload, headers=headers, params=params
-                    ) as response:
-                        response.raise_for_status()
-                        async for line in response.aiter_lines():
-                            if not line:
-                                continue
-                            if line.startswith("data: "):
-                                line = line[6:]
-                            if line == "[DONE]":
-                                break
-                            yield json.loads(line)
-                return
-            except Exception as exc:  # noqa: BLE001 - retry
-                last_exc = exc
-                await asyncio.sleep(2**attempt)
-        raise RuntimeError(f"{self.name} provider request failed") from last_exc
-
-    async def _stream_post_request(  # noqa: F811
+    async def _stream_post_request(
         self,
         url: str,
         payload: Dict[str, Any],
