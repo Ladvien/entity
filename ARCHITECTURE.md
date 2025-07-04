@@ -259,6 +259,25 @@ This composition pattern is at the heart of agent development. Instead of hardwi
 
 ---
 
+## Network Architecture
+
+### 🛰️ Standardized Inter-Service Communication
+
+All internal communication between agent services—such as TTS, STT, LLM, and orchestrators—**must standardize on gRPC with Protobuf and streaming**. This enables:
+
+* **Low-latency, bi-directional streaming** (ideal for audio/text chunking)
+* **Strongly typed interfaces** with Protobuf schemas
+* **Native support for async in Python (`grpc.aio`)**
+* **Multiplexed, scalable connections** over HTTP/2
+* **Robust error handling**, retries, and timeouts
+
+This architecture ensures fast, structured, and maintainable communication between distributed inference services. While WebSockets may be used for client-facing adapters (e.g., browser microphone streaming), all backend model services should expose and consume **gRPC streaming endpoints**.
+
+> ✅ All model components must be gRPC-compatible and expose Protobuf-defined streaming interfaces for maximum performance and interoperability.
+
+
+---
+
 Let me know if you'd like a Mermaid diagram or resource registry pattern callout added.
 
 ## Suggested Implementation
