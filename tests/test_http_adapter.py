@@ -87,3 +87,19 @@ def test_http_adapter_rate_limit(tmp_path):
 
     asyncio.run(_requests())
     assert "rate limit" in (tmp_path / "audit.log").read_text().lower()
+
+
+def test_http_adapter_dashboard():
+    adapter = make_adapter({"dashboard": True})
+
+    async def _requests():
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=adapter.app),
+            base_url="http://testserver",
+        ) as client:
+            await client.post("/", json={"message": "hi"})
+            resp = await client.get("/dashboard")
+            assert resp.status_code == 200
+            assert resp.json() == {"active_pipelines": 0}
+
+    asyncio.run(_requests())
