@@ -17,12 +17,24 @@ logger = get_logger(__name__)
 
 
 class CLI:
-    """Command line interface for running an Entity agent."""
+    """Command line interface for the Entity agent.
+
+    This interface can run the agent, serve over WebSocket, reload
+    configuration at runtime, and scaffold new projects.
+    """
 
     def __init__(self) -> None:
+        """Initialize and parse command-line arguments."""
+
         self.args = self._parse_args()
 
     def _parse_args(self) -> argparse.Namespace:
+        """Create and parse CLI arguments.
+
+        Returns:
+            argparse.Namespace: Parsed command-line arguments.
+        """
+
         parser = argparse.ArgumentParser(
             description="Run an Entity agent using a YAML configuration.",
         )
@@ -52,6 +64,11 @@ class CLI:
         return parser.parse_args()
 
     def run(self) -> int:
+        """Execute the requested CLI action.
+
+        Returns:
+            int: Exit code of the action.
+        """
         if self.args.command == "new":
             return self._create_project(self.args.path)
 
@@ -71,7 +88,14 @@ class CLI:
         return 0
 
     def _create_project(self, path: str) -> int:
-        """Generate a minimal project layout with an example config."""
+        """Generate a minimal project skeleton.
+
+        Args:
+            path: Destination directory for the project.
+
+        Returns:
+            int: ``0`` on success or ``1`` if the directory is not empty.
+        """
         target = Path(path)
         if target.exists() and any(target.iterdir()):
             logger.error("%s already exists and is not empty", path)
@@ -97,6 +121,16 @@ class CLI:
         return 0
 
     def _reload_config(self, agent: Agent, file_path: str) -> int:
+        """Reload plugin configuration for a running agent.
+
+        Args:
+            agent: Target agent instance.
+            file_path: YAML file containing updated plugin configuration.
+
+        Returns:
+            int: ``0`` when successful, ``1`` otherwise.
+        """
+
         async def _run() -> int:
             await agent._ensure_runtime()
 
@@ -192,6 +226,8 @@ class CLI:
 
 
 def main() -> None:
+    """Entry point for invoking the CLI."""
+
     raise SystemExit(CLI().run())
 
 
