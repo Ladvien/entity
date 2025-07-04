@@ -1,4 +1,6 @@
-from .basic_logger import BasicLogger
-from .error_formatter import ErrorFormatter
+from plugins.failure import BasicLogger, ErrorFormatter
 
-__all__ = ["BasicLogger", "ErrorFormatter"]
+__all__ = [
+    "BasicLogger",
+    "ErrorFormatter",
+]

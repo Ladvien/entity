@@ -1,9 +1,3 @@
-from __future__ import annotations
+from plugins.prompts.chat_history import ChatHistory
 
-from pipeline.plugins.prompts.memory import MemoryPlugin
-
-
-class ChatHistory(MemoryPlugin):
-    """Alias for ``MemoryPlugin`` for backward compatibility."""
-
-    pass
+__all__ = ["ChatHistory"]
