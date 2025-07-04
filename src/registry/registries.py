@@ -88,10 +88,6 @@ class PluginRegistry:
 
         return self._stage_plugins.get(stage, [])
 
-    # Backwards compatibility for older API
-    def get_for_stage(self, stage: PipelineStage) -> List[BasePlugin]:
-        return self.get_plugins_for_stage(stage)
-
     def list_plugins(self) -> List[BasePlugin]:
         plugins: List[BasePlugin] = []
         for plist in self._stage_plugins.values():

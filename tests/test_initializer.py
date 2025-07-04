@@ -77,7 +77,7 @@ def test_initializer_env_and_dependencies(tmp_path):
     plugin_reg, resource_reg, tool_reg = asyncio.run(initializer.initialize())
 
     assert resource_reg.get("a")
-    think_plugins = plugin_reg.get_for_stage(PipelineStage.THINK)
+    think_plugins = plugin_reg.get_plugins_for_stage(PipelineStage.THINK)
     assert len(think_plugins) == 2
 
 
@@ -119,9 +119,9 @@ def test_initializer_from_json_and_dict(tmp_path):
     pd, rd, _ = asyncio.run(init_dict.initialize())
 
     assert (
-        len(py.get_for_stage(PipelineStage.THINK))
-        == len(pj.get_for_stage(PipelineStage.THINK))
-        == len(pd.get_for_stage(PipelineStage.THINK))
+        len(py.get_plugins_for_stage(PipelineStage.THINK))
+        == len(pj.get_plugins_for_stage(PipelineStage.THINK))
+        == len(pd.get_plugins_for_stage(PipelineStage.THINK))
     )
     assert ry.get("A") and rj.get("A") and rd.get("A")
 
