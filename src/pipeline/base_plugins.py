@@ -18,8 +18,7 @@ if TYPE_CHECKING:  # pragma: no cover - used for type hints only
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .initializer import ClassRegistry
 
-from .exceptions import (CircuitBreakerTripped, PluginError,
-                         PluginExecutionError)
+from .exceptions import CircuitBreakerTripped, PluginError, PluginExecutionError
 from .logging import get_logger
 from .observability.utils import execute_with_observability
 from .stages import PipelineStage
@@ -289,10 +288,9 @@ class ToolPlugin(BasePlugin):
         self.max_retries = int(self.config.get("max_retries", 1))
         self.retry_delay = float(self.config.get("retry_delay", 1.0))
 
-    @abstractmethod
     async def execute(self, params: Dict[str, Any]) -> Any:  # type: ignore[override]
-        """Execute the tool with ``params``."""
-        raise NotImplementedError
+        """Execute the tool and return its result."""
+        return await self.execute_function_with_retry(params)
 
     async def execute_function(self, params: Dict[str, Any]):
         raise NotImplementedError()
@@ -381,5 +379,4 @@ __all__ = [
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .plugins.classifier import PluginAutoClassifier
 else:  # pragma: no cover - runtime import for compatibility
-    from .plugins.classifier import \
-        PluginAutoClassifier  # type: ignore  # noqa: E402
+    from .plugins.classifier import PluginAutoClassifier  # type: ignore  # noqa: E402

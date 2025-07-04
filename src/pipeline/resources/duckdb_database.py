@@ -39,10 +39,13 @@ class DuckDBDatabaseResource(DatabaseResource):
         if self._connection is None:
             return False
         try:
-            await asyncio.to_thread(self._connection.execute, "SELECT 1")
+            await self._do_health_check(self._connection)
             return True
         except Exception:
             return False
+
+    async def _do_health_check(self, connection: duckdb.DuckDBPyConnection) -> None:
+        await asyncio.to_thread(connection.execute, "SELECT 1")
 
     async def save_history(
         self, conversation_id: str, history: List[ConversationEntry]
