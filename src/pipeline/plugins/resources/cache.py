@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 from pipeline.base_plugins import ResourcePlugin
 from pipeline.cache import CacheBackend, InMemoryCache
-from pipeline.initializer import import_plugin_class
+from pipeline.interfaces import import_plugin_class
 from pipeline.stages import PipelineStage
 from pipeline.validation import ValidationResult
 
