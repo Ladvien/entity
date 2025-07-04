@@ -1,21 +1,10 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
-<<<<<<< HEAD
-from plugins.prompts.pii_scrubber import PIIScrubberPrompt
-=======
-from pipeline.user_plugins.prompts.pii_scrubber import PIIScrubberPrompt
->>>>>>> af319b68dc2109eede14ae624413f7e5304d62df
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginContext, PluginRegistry, ResourceRegistry,
+                      SystemRegistries, ToolRegistry)
+from user_plugins.prompts.pii_scrubber import PIIScrubberPrompt
 
 
 def make_context():

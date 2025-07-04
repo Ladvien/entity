@@ -1,21 +1,10 @@
 import asyncio
 
-from pipeline import (
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-    execute_pipeline,
-)
-<<<<<<< HEAD
-from plugins.resources.memory import Memory
-from plugins.resources.memory_resource import SimpleMemoryResource
-=======
+from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
+                      ResourceRegistry, SystemRegistries, ToolRegistry,
+                      execute_pipeline)
 from pipeline.resources.memory import Memory
 from pipeline.resources.memory_resource import SimpleMemoryResource
->>>>>>> af319b68dc2109eede14ae624413f7e5304d62df
 
 
 class IncrementPlugin(PromptPlugin):

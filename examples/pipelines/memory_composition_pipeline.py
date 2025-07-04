@@ -15,9 +15,9 @@ def _enable_plugins_namespace() -> None:
     import pkgutil
     import types
 
+    import pipeline.resources
     import pipeline.user_plugins
     import pipeline.user_plugins.resources as plugin_resources
-    import pipeline.resources
 
     plugins_mod = types.ModuleType("plugins")
     plugins_mod.__dict__.update(vars(pipeline.user_plugins))
@@ -46,21 +46,11 @@ _enable_plugins_namespace()
 from entity import Agent  # noqa: E402
 from pipeline import PipelineStage, PromptPlugin  # noqa: E402
 from pipeline.context import PluginContext  # noqa: E402
-<<<<<<< HEAD
-from pipeline.resources.memory_resource import MemoryResource  # noqa: E402
-from plugins.resources.local_filesystem import LocalFileSystemResource  # noqa: E402
-from plugins.resources.pg_vector_store import PgVectorStore  # noqa: E402
-from plugins.resources.sqlite_storage import (
-=======
-from user_plugins.local_filesystem import (
-    LocalFileSystemResource,
-)  # noqa: E402
+from user_plugins.local_filesystem import LocalFileSystemResource  # noqa: E402
 from user_plugins.memory_resource import MemoryResource  # noqa: E402
 from user_plugins.pg_vector_store import PgVectorStore  # noqa: E402
-from user_plugins.sqlite_storage import (
->>>>>>> af319b68dc2109eede14ae624413f7e5304d62df
-    SQLiteStorageResource as SQLiteDatabaseResource,
-)  # noqa: E402
+from user_plugins.sqlite_storage import \
+    SQLiteStorageResource as SQLiteDatabaseResource  # noqa: E402
 
 
 class StorePrompt(PromptPlugin):

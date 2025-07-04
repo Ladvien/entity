@@ -20,9 +20,9 @@ def _enable_plugins_namespace() -> None:
     import pkgutil
     import types
 
+    import pipeline.resources
     import pipeline.user_plugins
     import pipeline.user_plugins.resources as plugin_resources
-    import pipeline.resources
 
     plugins_mod = types.ModuleType("plugins")
     plugins_mod.__dict__.update(vars(pipeline.user_plugins))
@@ -51,16 +51,10 @@ from config.environment import load_env
 from entity import Agent  # noqa: E402
 from pipeline import PipelineStage, PromptPlugin, ResourcePlugin  # noqa: E402
 from pipeline.config import ConfigLoader
-<<<<<<< HEAD
 from pipeline.context import PluginContext  # noqa: E402
-from plugins.resources.llm.unified import UnifiedLLMResource  # noqa: E402
-from plugins.resources.pg_vector_store import PgVectorStore  # noqa: E402
-from plugins.resources.postgres import PostgresResource  # noqa: E402
-=======
 from user_plugins.llm.unified import UnifiedLLMResource  # noqa: E402
 from user_plugins.pg_vector_store import PgVectorStore  # noqa: E402
 from user_plugins.postgres import PostgresResource  # noqa: E402
->>>>>>> af319b68dc2109eede14ae624413f7e5304d62df
 
 
 class VectorMemoryResource(ResourcePlugin):

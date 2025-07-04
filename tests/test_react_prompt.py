@@ -1,23 +1,11 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
-<<<<<<< HEAD
-from plugins.prompts.react_prompt import ReActPrompt
-from plugins.tools.calculator_tool import CalculatorTool
-=======
-from pipeline.user_plugins.prompts.react_prompt import ReActPrompt
-from pipeline.user_plugins.tools.calculator_tool import CalculatorTool
->>>>>>> af319b68dc2109eede14ae624413f7e5304d62df
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginContext, PluginRegistry, ResourceRegistry,
+                      SystemRegistries, ToolRegistry)
+from user_plugins.prompts.react_prompt import ReActPrompt
+from user_plugins.tools.calculator_tool import CalculatorTool
 
 
 class FakeLLM:

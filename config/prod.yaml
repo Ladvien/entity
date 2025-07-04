@@ -7,11 +7,7 @@ server:
 plugins:
   resources:
     database:
-<<<<<<< HEAD
-      type: plugins.resources.postgres:PostgresResource
-=======
       type: user_plugins.postgres:PostgresResource
->>>>>>> af319b68dc2109eede14ae624413f7e5304d62df
       host: "${DB_HOST}"
       port: 5432
       name: "${DB_USERNAME}"
@@ -28,35 +24,21 @@ plugins:
       retries: 5
       backoff: 2.0
     logging:
-<<<<<<< HEAD
-      type: plugins.resources.structured_logging:StructuredLogging
-=======
       type: user_plugins.structured_logging:StructuredLogging
->>>>>>> af319b68dc2109eede14ae624413f7e5304d62df
       level: "INFO"
       file_enabled: true
       file_path: "logs/entity.log"
     memory:
-<<<<<<< HEAD
-      type: pipeline.resources.memory_resource:MemoryResource
-      database:
-        type: plugins.resources.postgres:PostgresResource
-=======
       type: user_plugins.memory_resource:MemoryResource
       database:
         type: user_plugins.postgres:PostgresResource
->>>>>>> af319b68dc2109eede14ae624413f7e5304d62df
         host: "${DB_HOST}"
         port: 5432
         name: "${DB_NAME}"
         username: "${DB_USERNAME}"
         password: "${DB_PASSWORD}"
       filesystem:
-<<<<<<< HEAD
-        type: plugins.resources.s3_filesystem:S3FileSystem
-=======
         type: user_plugins.s3_filesystem:S3FileSystem
->>>>>>> af319b68dc2109eede14ae624413f7e5304d62df
         bucket: agent-files
         region: us-east-1
     cache:

@@ -1,21 +1,10 @@
 import asyncio
 
-from pipeline import (
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-    execute_pipeline,
-)
-<<<<<<< HEAD
-from plugins.failure.basic_logger import BasicLogger
-from plugins.failure.error_formatter import ErrorFormatter
-=======
-from pipeline.user_plugins.failure.basic_logger import BasicLogger
-from pipeline.user_plugins.failure.error_formatter import ErrorFormatter
->>>>>>> af319b68dc2109eede14ae624413f7e5304d62df
+from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
+                      ResourceRegistry, SystemRegistries, ToolRegistry,
+                      execute_pipeline)
+from user_plugins.failure.basic_logger import BasicLogger
+from user_plugins.failure.error_formatter import ErrorFormatter
 
 
 class UnstablePlugin(PromptPlugin):
