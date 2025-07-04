@@ -13,6 +13,7 @@ packages = [
     { include = "cli", from = "src" },
     { include = "config", from = "src" },
     { include = "registry", from = "src" },
+    { include = "plugins" },
 ]
 
 [tool.poetry.scripts]

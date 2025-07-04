@@ -2,14 +2,13 @@ from __future__ import annotations
 
 """Utilities for validating tool input parameters."""
 
-from html import escape
 import re
+from html import escape
 from typing import Any, Callable, Dict, Type
 
 from pydantic import BaseModel, ValidationError
 
 from pipeline.logging import get_logger
-
 
 SQL_PATTERN = re.compile(r"(;|--|/\*|\b(drop|delete|insert|update)\b)", re.IGNORECASE)
 

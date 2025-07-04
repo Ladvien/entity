@@ -9,7 +9,7 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from pipeline.adapters import WebSocketAdapter
+from plugins.adapters import WebSocketAdapter
 
 
 class RespPlugin(PromptPlugin):

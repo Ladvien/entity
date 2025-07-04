@@ -6,15 +6,23 @@ from pathlib import Path
 import pytest
 
 from config.environment import load_env
-from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
-                      PipelineState, PluginContext, PluginRegistry,
-                      ResourceRegistry, SystemRegistries, ToolRegistry)
-from pipeline.plugins.prompts.chat_history import ChatHistory
-from pipeline.resources.duckdb_database import DuckDBDatabaseResource
-from pipeline.resources.in_memory_storage import InMemoryStorageResource
-from pipeline.resources.memory_resource import MemoryResource
-from pipeline.resources.postgres import PostgresResource
-from pipeline.resources.sqlite_storage import SQLiteStorageResource
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineStage,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    ResourceRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
+from plugins.prompts.chat_history import ChatHistory
+from plugins.resources.duckdb_database import DuckDBDatabaseResource
+from plugins.resources.in_memory_storage import InMemoryStorageResource
+from plugins.resources.memory_resource import MemoryResource
+from plugins.resources.postgres import PostgresResource
+from plugins.resources.sqlite_storage import SQLiteStorageResource
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
 

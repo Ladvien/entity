@@ -12,12 +12,10 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))  # noq
 from entity import Agent  # noqa: E402
 from pipeline import PipelineStage, PromptPlugin  # noqa: E402
 from pipeline.context import PluginContext  # noqa: E402
-from pipeline.resources.local_filesystem import (
-    LocalFileSystemResource,
-)  # noqa: E402
 from pipeline.resources.memory_resource import MemoryResource  # noqa: E402
-from pipeline.resources.pg_vector_store import PgVectorStore  # noqa: E402
-from pipeline.resources.sqlite_storage import (
+from plugins.resources.local_filesystem import LocalFileSystemResource  # noqa: E402
+from plugins.resources.pg_vector_store import PgVectorStore  # noqa: E402
+from plugins.resources.sqlite_storage import (
     SQLiteStorageResource as SQLiteDatabaseResource,
 )  # noqa: E402
 

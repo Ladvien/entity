@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pipeline.resources.vectorstore import VectorStoreResource
+from plugins.resources.vectorstore import VectorStoreResource
 
 from .base import CacheBackend
 

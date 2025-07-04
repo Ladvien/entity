@@ -11,7 +11,7 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from pipeline.adapters.cli import CLIAdapter
+from plugins.adapters.cli import CLIAdapter
 
 
 class EchoPlugin(PromptPlugin):

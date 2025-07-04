@@ -9,8 +9,8 @@ from pipeline import (
     ToolRegistry,
     execute_pipeline,
 )
-from pipeline.resources.memory_resource import SimpleMemoryResource
-from pipeline.resources.memory import Memory
+from plugins.resources.memory import Memory
+from plugins.resources.memory_resource import SimpleMemoryResource
 
 
 class IncrementPlugin(PromptPlugin):
@@ -41,7 +41,7 @@ def test_memory_persists_between_runs():
 
 
 def test_memory_resource_name_constant():
-    from pipeline.resources.memory_resource import MemoryResource
+    from plugins.resources.memory_resource import MemoryResource
 
     assert MemoryResource.name == "memory"
     assert not hasattr(MemoryResource, "aliases")

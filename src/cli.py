@@ -12,7 +12,7 @@ from pipeline.base_plugins import ResourcePlugin, ToolPlugin
 from pipeline.initializer import ClassRegistry, SystemInitializer
 from pipeline.interfaces import import_plugin_class
 from pipeline.logging import get_logger
-from pipeline.resources.base import Resource
+from plugins.resources.base import Resource
 
 logger = get_logger(__name__)
 

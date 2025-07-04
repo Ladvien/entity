@@ -9,7 +9,7 @@ def _write_config(path, value=True, tool=False):
         "plugins": {
             "prompts": {
                 "reload": {
-                    "type": "pipeline.plugins.test_plugins:ReloadPlugin",
+                    "type": "plugins.test_plugins:ReloadPlugin",
                 }
             }
         }
@@ -18,7 +18,7 @@ def _write_config(path, value=True, tool=False):
         cfg["plugins"]["prompts"]["reload"]["value"] = value
     if tool:
         cfg["plugins"].setdefault("tools", {})["echo"] = {
-            "type": "pipeline.plugins.test_plugins:ReloadTool",
+            "type": "plugins.test_plugins:ReloadTool",
         }
     path.write_text(yaml.dump(cfg))
 

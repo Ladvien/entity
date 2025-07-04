@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from pipeline.plugins.tools.calculator_tool import CalculatorTool
+from plugins.tools.calculator_tool import CalculatorTool
 
 
 @pytest.mark.unit

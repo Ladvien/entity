@@ -6,13 +6,20 @@ from pathlib import Path
 import pytest
 
 from config.environment import load_env
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, ResourceRegistry,
-                      SystemRegistries, ToolRegistry)
-from pipeline.plugins.prompts.complex_prompt import ComplexPrompt
-from pipeline.resources.llm import UnifiedLLMResource
-from pipeline.resources.pg_vector_store import PgVectorStore
-from pipeline.resources.postgres import PostgresResource
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    ResourceRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
+from plugins.prompts.complex_prompt import ComplexPrompt
+from plugins.resources.llm import UnifiedLLMResource
+from plugins.resources.pg_vector_store import PgVectorStore
+from plugins.resources.postgres import PostgresResource
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
 

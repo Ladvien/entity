@@ -1,4 +1,4 @@
-from pipeline.resources.dsl import ResourceGraph
+from plugins.resources.dsl import ResourceGraph
 
 
 def test_parse_and_validate():

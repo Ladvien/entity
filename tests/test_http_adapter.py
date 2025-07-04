@@ -11,7 +11,7 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from pipeline.adapters import HTTPAdapter
+from plugins.adapters import HTTPAdapter
 
 
 class RespPlugin(PromptPlugin):

@@ -7,8 +7,8 @@ from contextlib import contextmanager
 from typing import Any, Dict, Iterable, List, Tuple
 
 from config.environment import load_env
-from pipeline.resources.base import Resource
-from pipeline.resources.container import ResourceContainer
+from plugins.resources.base import Resource
+from plugins.resources.container import ResourceContainer
 from registry import PluginRegistry, ToolRegistry
 
 from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
