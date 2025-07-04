@@ -12,7 +12,7 @@ from ..base_plugins import (
     ToolPlugin,
     ValidationResult,
 )
-from .classifier import PluginAutoClassifier
+from ..interfaces import PluginAutoClassifier
 
 __all__ = [
     "AdapterPlugin",

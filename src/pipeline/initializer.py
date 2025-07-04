@@ -4,16 +4,16 @@ import copy
 import json
 import os
 from contextlib import contextmanager
-from importlib import import_module
 from typing import Any, Dict, Iterable, List, Tuple
 
 from config.environment import load_env
 from pipeline.resources.base import Resource
-from registry import PluginRegistry, ToolRegistry
 from pipeline.resources.container import ResourceContainer
+from registry import PluginRegistry, ToolRegistry
 
 from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
 from .defaults import DEFAULT_CONFIG
+from .interfaces import import_plugin_class
 
 
 class ClassRegistry:
@@ -57,18 +57,6 @@ class ClassRegistry:
                 and not issubclass(cls, Resource)
             ):
                 yield cls, self._configs[name]
-
-
-def import_plugin_class(path: str) -> type[BasePlugin]:
-    """Import plugin class from module path 'module.submodule:ClassName'."""
-    if ":" in path:
-        module_path, class_name = path.split(":", 1)
-    elif "." in path:
-        module_path, class_name = path.rsplit(".", 1)
-    else:
-        raise ValueError(f"Invalid plugin path: {path}")
-    module = import_module(module_path)
-    return getattr(module, class_name)
 
 
 @contextmanager

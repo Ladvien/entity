@@ -5,14 +5,13 @@ from pathlib import Path
 from types import ModuleType
 from typing import Callable, Optional
 
-from .logging import get_logger
-
 from registry import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
 
-from .plugins import BasePlugin, PluginAutoClassifier
+from .interfaces import PluginAutoClassifier
+from .logging import get_logger
+from .plugins import BasePlugin
 from .runtime import AgentRuntime
 from .stages import PipelineStage
-
 
 logger = get_logger(__name__)
 
