@@ -40,11 +40,7 @@ Lightweight deployments can use SQLite:
 plugins:
   resources:
     database:
-<<<<<<< HEAD
-      type: plugins.resources.sqlite_storage:SQLiteStorage
-=======
       type: user_plugins.sqlite_storage:SQLiteStorageResource
->>>>>>> af319b68dc2109eede14ae624413f7e5304d62df
       path: ./entity.db
       pool_min_size: 1
       pool_max_size: 5

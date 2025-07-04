@@ -1,21 +1,10 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
-<<<<<<< HEAD
-from plugins.prompts.chain_of_thought import ChainOfThoughtPrompt
-=======
-from pipeline.user_plugins.prompts.chain_of_thought import ChainOfThoughtPrompt
->>>>>>> af319b68dc2109eede14ae624413f7e5304d62df
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginContext, PluginRegistry, ResourceRegistry,
+                      SystemRegistries, ToolRegistry)
+from user_plugins.prompts.chain_of_thought import ChainOfThoughtPrompt
 
 
 class FakeLLM:

@@ -13,18 +13,10 @@ from typing import Any, cast
 
 from pipeline.manager import PipelineManager
 from pipeline.pipeline import execute_pipeline
-from pipeline.plugins import AdapterPlugin
 from pipeline.stages import PipelineStage
+from pipeline.user_plugins import AdapterPlugin
 from registry import SystemRegistries
 
-<<<<<<< HEAD:plugins/adapters/cli.py
-=======
-from ..manager import PipelineManager
-from ..pipeline import execute_pipeline
-from ..stages import PipelineStage
-from ..user_plugins import AdapterPlugin
-
->>>>>>> af319b68dc2109eede14ae624413f7e5304d62df:src/pipeline/adapters/cli.py
 
 class CLIAdapter(AdapterPlugin):
     """Interactive command line adapter."""

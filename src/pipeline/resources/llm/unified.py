@@ -2,25 +2,12 @@ from __future__ import annotations
 
 from typing import Any, AsyncIterator, Dict, List, Type
 
-<<<<<<< HEAD
-from pipeline.plugins import ValidationResult
-from pipeline.state import LLMResponse
-from plugins.resources.llm.providers import (
-=======
-from pipeline.resources.llm_resource import LLMResource
 from pipeline.state import LLMResponse
 from pipeline.user_plugins import ValidationResult
-
-from .providers import (
->>>>>>> af319b68dc2109eede14ae624413f7e5304d62df
-    BedrockProvider,
-    ClaudeProvider,
-    EchoProvider,
-    GeminiProvider,
-    OllamaProvider,
-    OpenAIProvider,
-)
 from plugins.resources.llm_resource import LLMResource
+
+from .providers import (BedrockProvider, ClaudeProvider, EchoProvider,
+                        GeminiProvider, OllamaProvider, OpenAIProvider)
 
 
 class UnifiedLLMResource(LLMResource):
