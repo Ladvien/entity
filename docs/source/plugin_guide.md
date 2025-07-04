@@ -86,3 +86,34 @@ Any plugin can now call `context.get_resource("database")` and use these
 methods, enabling a consistent storage interface across resources.
 
 
+
+## Example Pipelines
+
+Several example pipelines in the `examples/` directory showcase more advanced patterns.
+
+### Memory Composition
+
+`examples/pipelines/memory_composition_pipeline.py` demonstrates how to combine SQLite, PGVector and a local file system into a single `MemoryResource`:
+
+```python
+memory = MemoryResource(
+    database=SQLiteDatabaseResource({"path": "./agent.db"}),
+    vector_store=PgVectorStore({"table": "embeddings"}),
+    filesystem=LocalFileSystemResource({"base_path": "./files"}),
+)
+```
+
+### Vector Memory
+
+`examples/pipelines/vector_memory_pipeline.py` shows a custom `ResourcePlugin` that stores vectors in memory. A prompt plugin retrieves vectors and interacts with the LLM:
+
+```python
+class VectorMemoryResource(ResourcePlugin):
+    stages = [PipelineStage.PARSE]
+    name = "vector_memory"
+
+    def add(self, key: str, vector: List[float]) -> None:
+        self.vectors[key] = vector
+```
+
+These scripts are great starting points when designing your own plugins.
