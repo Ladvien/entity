@@ -60,7 +60,7 @@ plugins:
     cache:
       type: plugins.resources.cache:CacheResource
       backend:
-        type: pipeline.cache.redis:RedisCache
+        type: user_plugins.resources.cache_backends.redis:RedisCache
   tools:
     weather:
       type: plugins.tools.weather_api_tool:WeatherApiTool
