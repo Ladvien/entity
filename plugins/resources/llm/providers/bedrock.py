@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import json
 from typing import Any, AsyncIterator, Dict, List
 
@@ -8,24 +7,32 @@ import aioboto3
 
 from pipeline.state import LLMResponse
 from pipeline.validation import ValidationResult
-from plugins.resources.llm_base import LLM
+
+from .base import BaseProvider
 
 
-class BedrockProvider(LLM):
+class BedrockProvider(BaseProvider):
     """Adapter for AWS Bedrock runtime."""
 
     name = "bedrock"
 
     def __init__(self, config: Dict) -> None:
-        self.config = config
+        super().__init__(config)
         self.model_id: str = str(config.get("model_id", ""))
         self.region: str = str(config.get("region", "us-east-1"))
         self.params = {
             k: v
             for k, v in config.items()
-            if k not in {"model_id", "region", "retries"}
+            if k
+            not in {
+                "model_id",
+                "region",
+                "retries",
+                "base_url",
+                "model",
+                "api_key",
+            }
         }
-        self.retry_attempts = int(config.get("retries", 3))
 
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
@@ -35,30 +42,30 @@ class BedrockProvider(LLM):
 
     async def _invoke(self, prompt: str) -> str:
         payload = {"prompt": prompt, **self.params}
-        async with aioboto3.client(
-            "bedrock-runtime", region_name=self.region
-        ) as client:
-            response = await client.invoke_model(
-                modelId=self.model_id,
-                body=json.dumps(payload),
-                contentType="application/json",
-                accept="application/json",
-            )
-            body = json.loads(response["body"].read())
-            return str(body.get("outputText") or body.get("completion", ""))
+
+        async def call() -> str:
+            async with aioboto3.client(
+                "bedrock-runtime", region_name=self.region
+            ) as client:
+                response = await client.invoke_model(
+                    modelId=self.model_id,
+                    body=json.dumps(payload),
+                    contentType="application/json",
+                    accept="application/json",
+                )
+                body = json.loads(response["body"].read())
+                return str(body.get("outputText") or body.get("completion", ""))
+
+        try:
+            return await self.http._breaker.call(call)
+        except Exception as exc:  # pragma: no cover - bubble up
+            raise RuntimeError("bedrock provider request failed") from exc
 
     async def generate(
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
     ) -> LLMResponse:
-        last_exc: Exception | None = None
-        for attempt in range(self.retry_attempts):
-            try:
-                text = await self._invoke(prompt)
-                return LLMResponse(content=text)
-            except Exception as exc:  # noqa: BLE001 - simple retry
-                last_exc = exc
-                await asyncio.sleep(2**attempt)
-        raise RuntimeError("bedrock provider request failed") from last_exc
+        text = await self._invoke(prompt)
+        return LLMResponse(content=text)
 
     async def stream(
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
