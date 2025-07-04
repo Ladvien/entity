@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import copy
 import json
-import os
 from contextlib import contextmanager
 from typing import Any, Dict, Iterable, List, Tuple
 
 from config.environment import load_env
+<<<<<< codex/implement-topological-sort-and-cycle-detection-helper
 from pipeline.utils import DependencyGraph
+======
+from pipeline.config.utils import interpolate_env_vars
+>>>>>> main
 from plugins.resources.base import Resource
 from plugins.resources.container import ResourceContainer
 from registry import PluginRegistry, ToolRegistry
@@ -87,7 +90,7 @@ class SystemInitializer:
             content = fh.read()
         config = yaml.safe_load(content)
         load_env(env_file)
-        config = cls._interpolate_env_vars(config)
+        config = interpolate_env_vars(config)
         return cls(config, env_file)
 
     @classmethod
@@ -96,7 +99,7 @@ class SystemInitializer:
             content = fh.read()
         config = json.loads(content or "{}")
         load_env(env_file)
-        config = cls._interpolate_env_vars(config)
+        config = interpolate_env_vars(config)
         return cls(config, env_file)
 
     @classmethod
@@ -104,7 +107,7 @@ class SystemInitializer:
         cls, cfg: Dict[str, Any], env_file: str = ".env"
     ) -> "SystemInitializer":
         load_env(env_file)
-        config = cls._interpolate_env_vars(dict(cfg))
+        config = interpolate_env_vars(dict(cfg))
         return cls(config, env_file)
 
     def get_resource_config(self, name: str) -> Dict:
@@ -216,6 +219,7 @@ class SystemInitializer:
                         )
                     )
 
+<<<<<< codex/implement-topological-sort-and-cycle-detection-helper
         graph.topological_sort()
 
     @staticmethod
@@ -233,3 +237,25 @@ class SystemInitializer:
                 raise EnvironmentError(f"Required environment variable {key} not found")
             return value
         return config
+======
+        in_degree = {node: 0 for node in dep_graph}
+        for node in dep_graph:
+            for neighbor in dep_graph[node]:
+                if neighbor in in_degree:
+                    in_degree[neighbor] += 1
+
+        queue = [n for n, deg in in_degree.items() if deg == 0]
+        processed: List[str] = []
+        while queue:
+            current = queue.pop(0)
+            processed.append(current)
+            for neighbor in dep_graph[current]:
+                if neighbor in in_degree:
+                    in_degree[neighbor] -= 1
+                    if in_degree[neighbor] == 0:
+                        queue.append(neighbor)
+
+        if len(processed) != len(in_degree):
+            cycle_nodes = [n for n in in_degree if n not in processed]
+            raise SystemError(f"Circular dependency detected involving: {cycle_nodes}")
+>>>>>> main

@@ -38,3 +38,17 @@ def test_pipeline_manager_active_flag():
     result = asyncio.run(run_task())
     assert result == "ok"
     assert not manager.has_active_pipelines()
+
+
+def test_pipeline_manager_active_count():
+    manager = make_manager()
+
+    async def run_task():
+        task = manager.start_pipeline("hi")
+        assert manager.active_pipeline_count() == 1
+        res = await task
+        return res
+
+    result = asyncio.run(run_task())
+    assert result == "ok"
+    assert manager.active_pipeline_count() == 0

@@ -6,6 +6,8 @@ from typing import Any, Dict
 
 from pipeline.config import ConfigLoader
 
+from .validators import _validate_memory, _validate_vector_memory
+
 
 @dataclass
 class ConfigBuilder:
@@ -82,42 +84,10 @@ class ConfigBuilder:
     # ------------------------------------------------------------------
     # Section: Validation
     # ------------------------------------------------------------------
-    @staticmethod
-    def _validate_memory(cfg: dict) -> None:
-        mem_cfg = cfg.get("plugins", {}).get("resources", {}).get("memory")
-        if not mem_cfg:
-            return
-        backend = mem_cfg.get("backend")
-        if backend is not None and not isinstance(backend, dict):
-            raise ValueError("memory: 'backend' must be a mapping")
-        if isinstance(backend, dict) and "type" in backend:
-            if not isinstance(backend["type"], str):
-                raise ValueError("memory: 'backend.type' must be a string")
-
-    @staticmethod
-    def _validate_vector_memory(cfg: dict) -> None:
-        vm_cfg = cfg.get("plugins", {}).get("resources", {}).get("vector_memory")
-        if not vm_cfg:
-            return
-        table = vm_cfg.get("table")
-        if not isinstance(table, str) or not table:
-            raise ValueError("vector_memory: 'table' is required")
-        embedding = vm_cfg.get("embedding_model")
-        if not isinstance(embedding, dict):
-            raise ValueError("vector_memory: 'embedding_model' must be a mapping")
-        if not embedding.get("name"):
-            raise ValueError("vector_memory: 'embedding_model.name' is required")
-        if "dimensions" in embedding:
-            try:
-                int(embedding["dimensions"])
-            except (TypeError, ValueError) as exc:
-                raise ValueError(
-                    "vector_memory: 'embedding_model.dimensions' must be an integer"
-                ) from exc
 
     def validate(self) -> None:
-        self._validate_memory(self.config)
-        self._validate_vector_memory(self.config)
+        _validate_memory(self.config)
+        _validate_vector_memory(self.config)
 
     def build(self) -> Dict[str, Any]:
         self.validate()
