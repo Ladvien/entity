@@ -2,8 +2,8 @@ import asyncio
 
 import pytest
 
-from pipeline.reliability import CircuitBreaker, RetryPolicy
 from pipeline.exceptions import CircuitBreakerTripped
+from pipeline.reliability import CircuitBreaker, RetryPolicy
 
 
 @pytest.mark.integration

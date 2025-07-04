@@ -12,9 +12,9 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from pipeline.plugins.prompts.conversation_history import ConversationHistory
-from pipeline.resources.memory_resource import MemoryResource
 from pipeline.stages import PipelineStage
+from plugins.prompts.conversation_history import ConversationHistory
+from plugins.resources.memory_resource import MemoryResource
 
 
 class FakeMemory(MemoryResource):

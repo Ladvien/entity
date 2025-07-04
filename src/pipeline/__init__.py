@@ -1,4 +1,4 @@
-from .adapters.server import AgentServer
+from plugins.adapters.server import AgentServer
 from .agent import Agent
 from .builder import AgentBuilder
 from .config_update import ConfigUpdateResult, update_plugin_configuration
@@ -35,7 +35,7 @@ from .stages import PipelineStage
 from .state import FailureInfo, LLMResponse, PipelineState
 
 # isort: off
-from .adapters import CLIAdapter, HTTPAdapter, WebSocketAdapter
+from plugins.adapters import CLIAdapter, HTTPAdapter, WebSocketAdapter
 
 # isort: on
 

@@ -8,7 +8,7 @@ from pipeline import (
     SystemInitializer,
     SystemRegistries,
 )
-from pipeline.resources.llm.unified import UnifiedLLMResource
+from plugins.resources.llm.unified import UnifiedLLMResource
 
 
 class FakeResponse:
@@ -52,7 +52,7 @@ def test_context_get_llm_with_provider():
         "plugins": {
             "resources": {
                 "llm": {
-                    "type": "pipeline.resources.llm.unified:UnifiedLLMResource",
+                    "type": "plugins.resources.llm.unified:UnifiedLLMResource",
                     "provider": "gemini",
                     "api_key": "key",
                     "model": "gemini-pro",

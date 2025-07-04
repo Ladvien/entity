@@ -1,7 +1,7 @@
 import asyncio
 from unittest.mock import AsyncMock
 
-from pipeline.resources.database import DatabaseResource
+from plugins.resources.database import DatabaseResource
 
 
 class ExampleStorage(DatabaseResource):

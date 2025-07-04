@@ -14,6 +14,7 @@ from typing import Dict, List
 # Ensure project source is available for imports
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))  # noqa: E402
 
+<<<<<<< HEAD
 
 def _enable_plugins_namespace() -> None:
     import importlib
@@ -48,14 +49,22 @@ def _enable_plugins_namespace() -> None:
 
 _enable_plugins_namespace()
 
+=======
+from config.environment import load_env
+>>>>>>> 64d27a1aceba096733b70814249d0a84f4b3bce4
 from entity import Agent  # noqa: E402
 from pipeline import PipelineStage, PromptPlugin, ResourcePlugin  # noqa: E402
-from pipeline.context import PluginContext  # noqa: E402
-from config.environment import load_env
 from pipeline.config import ConfigLoader
+<<<<<<< HEAD
 from plugins.llm.unified import UnifiedLLMResource  # noqa: E402
 from plugins.pg_vector_store import PgVectorStore  # noqa: E402
 from plugins.postgres import PostgresResource  # noqa: E402
+=======
+from pipeline.context import PluginContext  # noqa: E402
+from pipeline.resources.llm.unified import UnifiedLLMResource  # noqa: E402
+from plugins.resources.pg_vector_store import PgVectorStore  # noqa: E402
+from plugins.resources.postgres import PostgresResource  # noqa: E402
+>>>>>>> 64d27a1aceba096733b70814249d0a84f4b3bce4
 
 
 class VectorMemoryResource(ResourcePlugin):

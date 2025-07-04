@@ -3,10 +3,8 @@ from __future__ import annotations
 from typing import Any, AsyncIterator, Dict, List, Type
 
 from pipeline.plugins import ValidationResult
-from pipeline.resources.llm_resource import LLMResource
 from pipeline.state import LLMResponse
-
-from .providers import (
+from plugins.resources.llm.providers import (
     BedrockProvider,
     ClaudeProvider,
     EchoProvider,
@@ -14,6 +12,7 @@ from .providers import (
     OllamaProvider,
     OpenAIProvider,
 )
+from plugins.resources.llm_resource import LLMResource
 
 
 class UnifiedLLMResource(LLMResource):

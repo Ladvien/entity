@@ -2,8 +2,8 @@ import asyncio
 
 import pytest
 
-from pipeline.plugins.tools.calculator_tool import CalculatorTool
-from pipeline.resources.llm_resource import LLMResource
+from plugins.resources.llm_resource import LLMResource
+from plugins.tools.calculator_tool import CalculatorTool
 
 
 class EchoLLM(LLMResource):

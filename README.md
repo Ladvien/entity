@@ -40,7 +40,7 @@ Lightweight deployments can use SQLite:
 plugins:
   resources:
     database:
-      type: pipeline.resources.sqlite_storage:SQLiteStorage
+      type: plugins.resources.sqlite_storage:SQLiteStorage
       path: ./entity.db
       pool_min_size: 1
       pool_max_size: 5
@@ -52,7 +52,7 @@ For ephemeral sessions, an in-memory backend is available:
 plugins:
   resources:
     database:
-      type: pipeline.resources.memory_storage:MemoryStorage
+      type: plugins.resources.memory_storage:MemoryStorage
 ```
 
 HTTP adapter configuration with authentication and rate limiting:
@@ -61,7 +61,7 @@ HTTP adapter configuration with authentication and rate limiting:
 plugins:
   adapters:
     http:
-      type: pipeline.adapters.http:HTTPAdapter
+      type: plugins.adapters.http:HTTPAdapter
       auth_tokens:
         - ${HTTP_TOKEN}
       rate_limit:

@@ -12,8 +12,8 @@ from pipeline import (
     ToolRegistry,
     execute_pipeline,
 )
-from pipeline.plugins.failure.basic_logger import BasicLogger
-from pipeline.plugins.failure.error_formatter import ErrorFormatter
+from plugins.failure.basic_logger import BasicLogger
+from plugins.failure.error_formatter import ErrorFormatter
 
 # isort: on
 

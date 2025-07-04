@@ -11,7 +11,7 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from pipeline.plugins.prompts.chain_of_thought import ChainOfThoughtPrompt
+from plugins.prompts.chain_of_thought import ChainOfThoughtPrompt
 
 
 class FakeLLM:

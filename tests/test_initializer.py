@@ -131,7 +131,7 @@ def test_llm_resource_registration(tmp_path):
         "plugins": {
             "resources": {
                 "llm": {
-                    "type": "pipeline.resources.llm.unified:UnifiedLLMResource",
+                    "type": "plugins.resources.llm.unified:UnifiedLLMResource",
                     "provider": "ollama",
                     "base_url": "http://localhost:11434",
                     "model": "tiny",

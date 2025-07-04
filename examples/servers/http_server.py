@@ -45,8 +45,8 @@ import asyncio
 from typing import Any
 
 from pipeline import ConversationManager, PipelineManager
-from pipeline.adapters.http import HTTPAdapter, MessageRequest
 from pipeline.initializer import SystemInitializer
+from plugins.adapters.http import HTTPAdapter, MessageRequest
 
 
 async def main() -> None:

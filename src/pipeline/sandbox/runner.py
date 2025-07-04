@@ -5,7 +5,7 @@ import tomllib
 from pathlib import Path
 from typing import Any, Dict
 
-from infrastructure import DockerInfrastructure
+from plugins.infrastructure import DockerInfrastructure
 
 
 class DockerSandboxRunner:

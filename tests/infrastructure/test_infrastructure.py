@@ -4,7 +4,7 @@ from unittest import mock
 import pytest
 
 # skip tests if infrastructure module is missing
-infrastructure = pytest.importorskip("pipeline.infrastructure")
+infrastructure = pytest.importorskip("plugins.infrastructure")
 Infrastructure = infrastructure.Infrastructure
 
 

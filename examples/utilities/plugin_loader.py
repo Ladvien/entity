@@ -42,7 +42,7 @@ def _enable_plugins_namespace() -> None:
 _enable_plugins_namespace()
 
 from entity import Agent  # noqa: E402
-from pipeline.adapters.server import AgentServer  # noqa: E402
+from plugins.adapters.server import AgentServer  # noqa: E402
 
 
 def main() -> None:

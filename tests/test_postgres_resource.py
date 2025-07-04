@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import asyncpg
 
 from config.environment import load_env
-from pipeline.resources.postgres import PostgresResource
+from plugins.resources.postgres import PostgresResource
 
 load_env(Path(__file__).resolve().parents[1] / ".env")
 

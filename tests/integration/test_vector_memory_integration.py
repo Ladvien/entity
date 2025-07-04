@@ -16,10 +16,17 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
+<<<<<<< HEAD
 from pipeline.plugins.prompts.complex_prompt import ComplexPrompt
 from pipeline.resources.llm import UnifiedLLMResource
 from pipeline.resources.pg_vector_store import PgVectorStore
 from pipeline.resources.postgres import PostgresResource
+=======
+from plugins.prompts.complex_prompt import ComplexPrompt
+from plugins.resources.llm import UnifiedLLMResource
+from plugins.resources.pg_vector_store import PgVectorStore
+from plugins.resources.postgres import PostgresResource
+>>>>>>> 64d27a1aceba096733b70814249d0a84f4b3bce4
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
 

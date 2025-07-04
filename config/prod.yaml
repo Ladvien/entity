@@ -7,7 +7,11 @@ server:
 plugins:
   resources:
     database:
+<<<<<<< HEAD
       type: plugins.postgres:PostgresResource
+=======
+      type: plugins.resources.postgres:PostgresResource
+>>>>>>> 64d27a1aceba096733b70814249d0a84f4b3bce4
       host: "${DB_HOST}"
       port: 5432
       name: "${DB_USERNAME}"
@@ -24,21 +28,33 @@ plugins:
       retries: 5
       backoff: 2.0
     logging:
+<<<<<<< HEAD
       type: plugins.structured_logging:StructuredLogging
+=======
+      type: plugins.resources.structured_logging:StructuredLogging
+>>>>>>> 64d27a1aceba096733b70814249d0a84f4b3bce4
       level: "INFO"
       file_enabled: true
       file_path: "logs/entity.log"
     memory:
       type: plugins.memory_resource:MemoryResource
       database:
+<<<<<<< HEAD
         type: plugins.postgres:PostgresResource
+=======
+        type: plugins.resources.postgres:PostgresResource
+>>>>>>> 64d27a1aceba096733b70814249d0a84f4b3bce4
         host: "${DB_HOST}"
         port: 5432
         name: "${DB_NAME}"
         username: "${DB_USERNAME}"
         password: "${DB_PASSWORD}"
       filesystem:
+<<<<<<< HEAD
         type: plugins.s3_filesystem:S3FileSystem
+=======
+        type: plugins.resources.s3_filesystem:S3FileSystem
+>>>>>>> 64d27a1aceba096733b70814249d0a84f4b3bce4
         bucket: agent-files
         region: us-east-1
     cache:
@@ -56,7 +72,7 @@ plugins:
       precision: 10
   adapters:
     http:
-      type: pipeline.adapters.http:HTTPAdapter
+      type: plugins.adapters.http:HTTPAdapter
       auth_tokens:
         - ${HTTP_TOKEN}
       rate_limit:
@@ -65,7 +81,7 @@ plugins:
       audit_log_path: logs/audit.log
       dashboard: false
     cli:
-      type: pipeline.adapters.cli:CLIAdapter
+      type: plugins.adapters.cli:CLIAdapter
   prompts:
     chain_of_thought:
       type: plugins.prompts.chain_of_thought:ChainOfThoughtPrompt

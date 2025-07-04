@@ -46,12 +46,19 @@ _enable_plugins_namespace()
 from entity import Agent  # noqa: E402
 from pipeline import PipelineStage, PromptPlugin  # noqa: E402
 from pipeline.context import PluginContext  # noqa: E402
+<<<<<<< HEAD
 from plugins.local_filesystem import (
     LocalFileSystemResource,
 )  # noqa: E402
 from plugins.memory_resource import MemoryResource  # noqa: E402
 from plugins.pg_vector_store import PgVectorStore  # noqa: E402
 from plugins.sqlite_storage import (
+=======
+from pipeline.resources.memory_resource import MemoryResource  # noqa: E402
+from plugins.resources.local_filesystem import LocalFileSystemResource  # noqa: E402
+from plugins.resources.pg_vector_store import PgVectorStore  # noqa: E402
+from plugins.resources.sqlite_storage import (
+>>>>>>> 64d27a1aceba096733b70814249d0a84f4b3bce4
     SQLiteStorageResource as SQLiteDatabaseResource,
 )  # noqa: E402
 
