@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 import duckdb
 
 from plugins.resources.duckdb_database import DuckDBDatabaseResource
-from plugins.resources.vectorstore import VectorStoreResource
+from plugins.resources.vector_store import VectorStoreResource
 
 
 class DuckDBVectorStore(VectorStoreResource):
