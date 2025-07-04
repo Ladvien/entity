@@ -1,10 +1,13 @@
-"""Sandbox utilities for running and auditing plugins."""
+"""Compatibility wrapper for sandbox utilities."""
 
-from .audit import PluginAuditor
+import warnings
 
-try:  # optional dependency
-    from .runner import DockerSandboxRunner
-except Exception:  # pragma: no cover - missing docker or cdktf
-    DockerSandboxRunner = None  # type: ignore
+from user_plugins.infrastructure.sandbox import DockerSandboxRunner, PluginAuditor
+
+warnings.warn(
+    "pipeline.sandbox is deprecated; use user_plugins.infrastructure.sandbox instead",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 __all__ = ["PluginAuditor", "DockerSandboxRunner"]
