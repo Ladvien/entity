@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, Optional
 
-from .plugins.classifier import PluginAutoClassifier
+from .interfaces import PluginAutoClassifier
 
 
 def plugin(func: Optional[Callable] = None, **hints: Any) -> Callable:
