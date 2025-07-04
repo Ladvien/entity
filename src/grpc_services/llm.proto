@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package entity.grpc;
+
+service LLMService {
+    // Streams generated tokens from the model
+    rpc Generate (GenerateRequest) returns (stream GenerateResponse);
+}
+
+message GenerateRequest {
+    string prompt = 1; // Raw prompt for text generation
+}
+
+message GenerateResponse {
+    string token = 1; // Token emitted by the model
+}

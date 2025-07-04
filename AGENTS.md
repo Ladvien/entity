@@ -805,6 +805,10 @@ This architecture ensures fast, structured, and maintainable communication betwe
 
 > ✅ All model components must be gRPC-compatible and expose Protobuf-defined streaming interfaces for maximum performance and interoperability.
 
+The repository's `src/grpc_services` package contains example protocol
+definitions and a stub server implementation. Use these files as templates when
+adding new model services.
+
 
 ---
 
