@@ -5,7 +5,7 @@ This document describes the key modules and their responsibilities after consoli
 ## `pipeline.base_plugins`
 All abstract plugin base classes live in this module. Other packages import from here rather than maintaining duplicates.
 
-## `user_plugins`
+## `plugins`
 Concrete plugin implementations organized by type. The package re-exports the base classes for backward compatibility but no longer defines them.
 
 ## `pipeline`

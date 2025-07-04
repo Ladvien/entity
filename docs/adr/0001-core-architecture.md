@@ -1,6 +1,6 @@
 # ADR 0001: Core Architecture
 
-The Entity Pipeline framework relies on a plugin based pipeline. Each request flows through explicit stages controlled by registered user_plugins. Resources, tools and prompts are managed via registries so behavior can be reconfigured without code changes.
+The Entity Pipeline framework relies on a plugin based pipeline. Each request flows through explicit stages controlled by registered plugins. Resources, tools and prompts are managed via registries so behavior can be reconfigured without code changes.
 
 ## Decision
 

@@ -7,7 +7,7 @@ server:
 plugins:
   resources:
     database:
-      type: user_plugins.postgres:PostgresResource
+      type: plugins.resources.postgres:PostgresResource
       host: "${DB_HOST}"
       port: 5432
       name: "${DB_USERNAME}"
@@ -16,7 +16,7 @@ plugins:
       retries: 5
       backoff: 2.0
     llm:
-      type: user_plugins.llm.unified:UnifiedLLMResource
+      type: plugins.resources.llm.unified:UnifiedLLMResource
       provider: ollama
       base_url: "${OLLAMA_BASE_URL}"
       model: "${OLLAMA_MODEL}"
@@ -24,35 +24,35 @@ plugins:
       retries: 5
       backoff: 2.0
     logging:
-      type: user_plugins.structured_logging:StructuredLogging
+      type: plugins.resources.structured_logging:StructuredLogging
       level: "INFO"
       file_enabled: true
       file_path: "logs/entity.log"
     memory:
-      type: user_plugins.memory_resource:MemoryResource
+      type: pipeline.resources.memory_resource:MemoryResource
       database:
-        type: user_plugins.postgres:PostgresResource
+        type: plugins.resources.postgres:PostgresResource
         host: "${DB_HOST}"
         port: 5432
         name: "${DB_NAME}"
         username: "${DB_USERNAME}"
         password: "${DB_PASSWORD}"
       filesystem:
-        type: user_plugins.s3_filesystem:S3FileSystem
+        type: plugins.resources.s3_filesystem:S3FileSystem
         bucket: agent-files
         region: us-east-1
     cache:
-      type: user_plugins.resources.cache:CacheResource
+      type: plugins.resources.cache:CacheResource
       backend:
-        type: user_plugins.resources.cache_backends.redis:RedisCache
+        type: plugins.resources.cache_backends.redis:RedisCache
   tools:
     weather:
-      type: user_plugins.tools.weather_api_tool:WeatherApiTool
+      type: plugins.tools.weather_api_tool:WeatherApiTool
       api_key: "${WEATHER_API_KEY}"
       base_url: "https://api.weather.com"
       timeout: 30
     calculator:
-      type: user_plugins.tools.calculator_tool:CalculatorTool
+      type: plugins.tools.calculator_tool:CalculatorTool
       precision: 10
   adapters:
     http:
@@ -68,17 +68,17 @@ plugins:
       type: plugins.adapters.cli:CLIAdapter
   prompts:
     chain_of_thought:
-      type: user_plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
+      type: plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
       enable_reasoning: true
       max_steps: 5
     conversation_history:
-      type: user_plugins.prompts.conversation_history:ConversationHistory
+      type: plugins.prompts.conversation_history:ConversationHistory
       db_schema: public
       history_table: chat_history
     memory_retrieval:
-      type: user_plugins.prompts.memory_retrieval:MemoryRetrievalPrompt
+      type: plugins.prompts.memory_retrieval:MemoryRetrievalPrompt
       max_context_length: 4000
       similarity_threshold: 0.7
     intent_classifier:
-      type: user_plugins.prompts.intent_classifier:IntentClassifierPrompt
+      type: plugins.prompts.intent_classifier:IntentClassifierPrompt
       confidence_threshold: 0.8

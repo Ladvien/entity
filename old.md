@@ -89,7 +89,7 @@ def smart_assistant(context):
 
 ### Instant Plugin Discovery
 The pipeline automatically registers plugin classes placed under
-`src/pipeline/user_plugins`. Simply create a new plugin class that inherits from the
+`plugins`. Simply create a new plugin class that inherits from the
 appropriate base class and it becomes available when the agent loads.
 
 ```python
@@ -114,7 +114,7 @@ class MyCustomPrompt(PromptPlugin):
     async def _execute_impl(self, context):
         return "Hello from my plugin"
 
-agent = Agent.from_package("pipeline.user_plugins")
+agent = Agent.from_package("plugins")
 agent.run_http()
 ```
 
@@ -385,7 +385,7 @@ The framework maintains the sophisticated five-layer plugin architecture underne
 
 **Note**: Plugin use is discouraged in the error stage to maintain reliability. Keep error stage plugins minimal and ensure static fallback responses are available.
 
-Plugin implementations live in `src/user_plugins/<type>` directories. For example, error-handling plugins are located in `src/user_plugins/failure`.
+Plugin implementations live in `plugins/<type>` directories. For example, error-handling plugins are located in `plugins/failure`.
 
 ### Plugin Stage Assignment System
 
