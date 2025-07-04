@@ -3,6 +3,10 @@ from __future__ import annotations
 import ast
 from typing import Any, Dict
 
+from pydantic import BaseModel
+
+from pipeline.validation.input import validate_params
+
 from pipeline.base_plugins import ToolPlugin
 from pipeline.stages import PipelineStage
 
@@ -76,12 +80,13 @@ class CalculatorTool(ToolPlugin):
     stages = [PipelineStage.DO]
     _evaluator = SafeEvaluator()
 
-    async def execute_function(self, params: Dict[str, Any]) -> Any:
-        expression = params.get("expression")
-        if not expression:
-            raise ValueError("'expression' parameter is required")
+    class Params(BaseModel):
+        expression: str
+
+    @validate_params(Params)
+    async def execute_function(self, params: Params) -> Any:
         try:
-            return self._evaluator.evaluate(str(expression))
+            return self._evaluator.evaluate(params.expression)
         except Exception as exc:  # noqa: BLE001 - re-raising user error
             raise ValueError(f"Invalid expression: {exc}") from exc
 

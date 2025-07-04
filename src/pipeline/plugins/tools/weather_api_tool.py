@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
+from pydantic import BaseModel
+
+from pipeline.validation.input import validate_params
+
 import httpx
 
 from pipeline.base_plugins import ToolPlugin
@@ -24,10 +28,12 @@ class WeatherApiTool(ToolPlugin):
         self.api_key: str | None = self.config.get("api_key")
         self.timeout: int = int(self.config.get("timeout", 10))
 
-    async def execute_function(self, params: Dict[str, Any]) -> Any:
-        location = params.get("location")
-        if not location:
-            raise ValueError("'location' parameter is required")
+    class Params(BaseModel):
+        location: str
+
+    @validate_params(Params)
+    async def execute_function(self, params: Params) -> Any:
+        location = params.location
 
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
