@@ -57,6 +57,8 @@ class PluginRegistry:
     def __init__(self) -> None:
         self._stage_plugins: Dict[PipelineStage, List[BasePlugin]] = defaultdict(list)
         self._names: Dict[BasePlugin, str] = {}
+        self._plugins_by_name: Dict[str, BasePlugin] = {}
+        self._dependents: Dict[str, List[BasePlugin]] = defaultdict(list)
 
     def register_plugin_for_stage(
         self, plugin: BasePlugin, stage: PipelineStage | str, name: str | None = None
@@ -66,14 +68,37 @@ class PluginRegistry:
             stage = PipelineStage(stage)
         except ValueError as exc:
             raise ValueError(f"Invalid stage: {stage}") from exc
-        self._stage_plugins[stage].append(plugin)
-        if name:
-            self._names[plugin] = name
+        plugins = self._stage_plugins[stage]
+        insert_at = len(plugins)
+        for idx, existing in enumerate(plugins):
+            if plugin.priority < existing.priority:
+                insert_at = idx
+                break
+        plugins.insert(insert_at, plugin)
+
+        plugin_name = name or getattr(plugin, "name", plugin.__class__.__name__)
+        self._names[plugin] = plugin_name
+        self._plugins_by_name[plugin_name] = plugin
+
+        for dep in getattr(plugin, "dependencies", []):
+            self._dependents.setdefault(dep, []).append(plugin)
 
     def get_plugins_for_stage(self, stage: PipelineStage) -> List[BasePlugin]:
         """Return list of plugins registered for ``stage``."""
 
         return self._stage_plugins.get(stage, [])
+
+    def list_plugins(self) -> List[BasePlugin]:
+        plugins: List[BasePlugin] = []
+        for plist in self._stage_plugins.values():
+            plugins.extend(plist)
+        return plugins
+
+    def get_plugin_name(self, plugin: BasePlugin) -> str:
+        return self._names.get(plugin, plugin.__class__.__name__)
+
+    def get_dependents(self, plugin_name: str) -> List[BasePlugin]:
+        return self._dependents.get(plugin_name, [])
 
     def get_name(self, plugin: BasePlugin) -> str | None:
         """Return registered name for ``plugin`` if any."""

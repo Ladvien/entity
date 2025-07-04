@@ -42,14 +42,10 @@ class PluginAutoClassifier:
             base = cast(type[BasePlugin], AdapterPlugin)
         elif any(k in source for k in ["return", "response", "answer"]):
             stage = PipelineStage.DO
-            base = (
-                cast(type[BasePlugin], ToolPlugin)
-                if any(x in source for x in ["use_tool", "execute_tool", "tool"])
-                else cast(type[BasePlugin], PromptPlugin)
-            )
+            base = cast(type[BasePlugin], PromptPlugin)
         else:
             stage = PipelineStage.DO
-            base = cast(type[BasePlugin], ToolPlugin)
+            base = cast(type[BasePlugin], PromptPlugin)
 
         if "stage" in hints:
             stage = PipelineStage.from_str(str(hints["stage"]))

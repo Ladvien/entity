@@ -15,8 +15,8 @@ def test_agent_plugin_autoclassification():
     async def parse_func(context):
         return "parsed"
 
-    think_plugins = agent.plugins.get_for_stage(PipelineStage.THINK)
-    parse_plugins = agent.plugins.get_for_stage(PipelineStage.PARSE)
+    think_plugins = agent.plugins.get_plugins_for_stage(PipelineStage.THINK)
+    parse_plugins = agent.plugins.get_plugins_for_stage(PipelineStage.PARSE)
 
     assert any(p.name == "think_response" for p in think_plugins)
     assert any(p.name == "parse_func" for p in parse_plugins)

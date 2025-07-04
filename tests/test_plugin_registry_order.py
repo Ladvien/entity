@@ -75,5 +75,5 @@ def test_initializer_orders_by_priority(tmp_path):
 
     initializer = SystemInitializer.from_yaml(str(path))
     plugin_reg, _, _ = asyncio.run(initializer.initialize())
-    plugins = plugin_reg.get_for_stage(PipelineStage.DO)
+    plugins = plugin_reg.get_plugins_for_stage(PipelineStage.DO)
     assert [p.__class__ for p in plugins] == [Third, Second, First]

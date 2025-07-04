@@ -9,7 +9,7 @@ def test_plugin_decorator_registration():
     async def hello(context):
         return "hi"
 
-    do_plugins = agent.plugin_registry.get_for_stage(PipelineStage.DO)
+    do_plugins = agent.plugin_registry.get_plugins_for_stage(PipelineStage.DO)
     assert any(p.name == "hello" for p in do_plugins)
 
 
@@ -24,5 +24,5 @@ def test_add_plugin():
     agent = Agent()
     plugin = ExamplePlugin()
     agent.add_plugin(plugin)
-    think_plugins = agent.plugin_registry.get_for_stage(PipelineStage.THINK)
+    think_plugins = agent.plugin_registry.get_plugins_for_stage(PipelineStage.THINK)
     assert plugin in think_plugins
