@@ -140,10 +140,10 @@ class HTTPAdapter(AdapterPlugin):
 
             @self.app.get("/dashboard")
             async def dashboard() -> dict[str, Any]:
-                active = 0
+                count = 0
                 if self.manager is not None:
-                    active = len(self.manager._active)
-                return {"active_pipelines": active}
+                    count = self.manager.active_pipeline_count()
+                return {"active_pipelines": count}
 
     async def _handle_message(self, message: str) -> dict[str, Any]:
         """Send a message through the pipeline and return the response."""

@@ -58,3 +58,14 @@ class PipelineManager:
     def has_active_pipelines(self) -> bool:
         self._tasks = {t for t in self._tasks if not t.done()}
         return bool(self._tasks or self._active)
+
+    async def active_pipeline_count_async(self) -> int:
+        """Return the number of pipelines currently executing."""
+        async with self._lock:
+            self._tasks = {t for t in self._tasks if not t.done()}
+            return max(len(self._tasks), len(self._active))
+
+    def active_pipeline_count(self) -> int:
+        """Return the number of pipelines currently executing."""
+        self._tasks = {t for t in self._tasks if not t.done()}
+        return max(len(self._tasks), len(self._active))
