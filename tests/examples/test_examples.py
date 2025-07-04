@@ -35,6 +35,8 @@ class TestExamples:
         Path("examples/advanced_llm.py"),
         Path("examples/pipelines/pipeline_example.py"),
         Path("examples/pipelines/duckdb_pipeline.py"),
+        Path("examples/pipelines/memory_composition_pipeline.py"),
+        Path("examples/pipelines/vector_memory_pipeline.py"),
     ]
 
     @pytest.mark.slow
