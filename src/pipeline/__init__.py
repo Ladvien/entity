@@ -1,4 +1,5 @@
 from plugins.adapters.server import AgentServer
+
 from .agent import Agent
 from .builder import AgentBuilder
 from .config_update import ConfigUpdateResult, update_plugin_configuration
