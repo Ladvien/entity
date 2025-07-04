@@ -13,12 +13,16 @@ plugins:
       name: "${DB_USERNAME}"
       username: "${DB_USERNAME}"
       password: "${DB_PASSWORD}"
+      retries: 5
+      backoff: 2.0
     llm:
       type: pipeline.resources.llm.unified:UnifiedLLMResource
       provider: ollama
       base_url: "${OLLAMA_BASE_URL}"
       model: "${OLLAMA_MODEL}"
       temperature: 0.7
+      retries: 5
+      backoff: 2.0
     logging:
       type: pipeline.resources.structured_logging:StructuredLogging
       level: "INFO"
@@ -59,6 +63,7 @@ plugins:
         requests: 100
         interval: 60
       audit_log_path: logs/audit.log
+      dashboard: false
     cli:
       type: pipeline.adapters.cli:CLIAdapter
   prompts:

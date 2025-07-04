@@ -100,6 +100,7 @@ class HTTPAdapter(AdapterPlugin):
         self.app = FastAPI()
         self._setup_audit_logger()
         self._setup_middleware()
+        self.dashboard_enabled = bool(self.config.get("dashboard", False))
         self._server: uvicorn.Server | None = None
         self._registries: SystemRegistries | None = None
         self._setup_routes()
@@ -136,13 +137,34 @@ class HTTPAdapter(AdapterPlugin):
         async def handle(req: MessageRequest) -> dict[str, Any]:
             return await self._handle_message(req.message)
 
+        if self.dashboard_enabled:
+
+            @self.app.get("/dashboard")
+            async def dashboard() -> dict[str, Any]:
+                active = 0
+                if self.manager is not None:
+                    active = len(self.manager._active)
+                return {"active_pipelines": active}
+
     async def _handle_message(self, message: str) -> dict[str, Any]:
         """Send a message through the pipeline and return the response."""
-        if self.manager is not None:
-            return await self.manager.run_pipeline(message)
-        if self._registries is None:
-            raise RuntimeError("Adapter not initialized")
-        return cast(dict[str, Any], await execute_pipeline(message, self._registries))
+        try:
+            if self.manager is not None:
+                result = await self.manager.run_pipeline(message)
+            else:
+                if self._registries is None:
+                    raise RuntimeError("Adapter not initialized")
+                result = cast(
+                    dict[str, Any],
+                    await execute_pipeline(message, self._registries),
+                )
+            self.audit_logger.info("request handled", extra={"status": "ok"})
+            return result
+        except Exception as exc:  # pragma: no cover - adapter error path
+            self.audit_logger.error(
+                "pipeline error", extra={"error": str(exc)}, exc_info=True
+            )
+            raise
 
     async def serve(self, registries: SystemRegistries) -> None:
         """Start the FastAPI HTTP server.

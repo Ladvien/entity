@@ -1,0 +1,7 @@
+type: object
+properties:
+  server:
+    $ref: ./server.yaml
+  plugins:
+    $ref: ./plugins.yaml
+additionalProperties: false

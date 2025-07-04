@@ -4,6 +4,8 @@ import json
 from contextlib import asynccontextmanager
 from typing import AsyncIterator, Dict, List, Optional
 
+from pipeline.reliability import CircuitBreaker, RetryPolicy
+
 import asyncpg
 
 from pipeline.context import ConversationEntry
@@ -22,6 +24,11 @@ class PostgresResource(DatabaseResource):
         self._max_size = int(self.config.get("pool_max_size", 5))
         self._schema = self.config.get("db_schema")
         self._history_table = self.config.get("history_table")
+        attempts = int(self.config.get("retries", 3))
+        backoff = float(self.config.get("backoff", 1.0))
+        self._breaker = CircuitBreaker(
+            retry_policy=RetryPolicy(attempts=attempts, backoff=backoff)
+        )
 
     async def initialize(self) -> None:
         self.logger.info("Connecting to Postgres", extra={"config": self.config})
@@ -62,7 +69,11 @@ class PostgresResource(DatabaseResource):
         """Yield a pooled database connection."""
         if self._pool is None:
             raise RuntimeError("Resource not initialized")
-        conn = await self._pool.acquire()
+
+        async def acquire() -> asyncpg.Connection:
+            return await self._pool.acquire()  # type: ignore[return-value]
+
+        conn = await self._breaker.call(acquire)
         try:
             yield conn
         finally:
@@ -93,14 +104,18 @@ class PostgresResource(DatabaseResource):
                     "(conversation_id, role, content, metadata, timestamp)"  # nosec B608
                     " VALUES ($1, $2, $3, $4, $5)"
                 )
-                await conn.execute(
-                    query,
-                    conversation_id,
-                    entry.role,
-                    entry.content,
-                    json.dumps(entry.metadata),
-                    entry.timestamp,
-                )
+
+                async def exec_cmd() -> str:
+                    return await conn.execute(
+                        query,
+                        conversation_id,
+                        entry.role,
+                        entry.content,
+                        json.dumps(entry.metadata),
+                        entry.timestamp,
+                    )
+
+                await self._breaker.call(exec_cmd)
 
     async def load_history(self, conversation_id: str) -> List[ConversationEntry]:
         if self._pool is None or not self._history_table:
@@ -113,7 +128,11 @@ class PostgresResource(DatabaseResource):
             "WHERE conversation_id=$1 ORDER BY timestamp"
         )
         async with self.connection() as conn:
-            rows = await conn.fetch(query, conversation_id)
+
+            async def run_fetch() -> list[asyncpg.Record]:
+                return await conn.fetch(query, conversation_id)
+
+            rows = await self._breaker.call(run_fetch)
         history: List[ConversationEntry] = []
         for row in rows:
             metadata = row["metadata"]

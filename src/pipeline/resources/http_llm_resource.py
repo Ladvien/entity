@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
+from pipeline.reliability import CircuitBreaker, RetryPolicy
+
 import httpx
 
 from pipeline.base_plugins import ValidationResult
@@ -19,6 +21,11 @@ class HttpLLMResource:
         self.params: Dict[str, Any] = {
             k: v for k, v in config.items() if k not in {"base_url", "model", "api_key"}
         }
+        attempts = int(config.get("retries", 3))
+        backoff = float(config.get("backoff", 1.0))
+        self._breaker = CircuitBreaker(
+            retry_policy=RetryPolicy(attempts=attempts, backoff=backoff)
+        )
 
     def validate_config(self) -> ValidationResult:
         if not self.base_url:
@@ -36,12 +43,15 @@ class HttpLLMResource:
         headers: Optional[Dict[str, str]] = None,
         params: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        try:
+        async def send() -> Dict[str, Any]:
             async with httpx.AsyncClient(timeout=30) as client:
                 response = await client.post(
                     url, json=payload, headers=headers, params=params
                 )
                 response.raise_for_status()
-        except httpx.HTTPError as exc:  # pragma: no cover
+                return response.json()
+
+        try:
+            return await self._breaker.call(send)
+        except Exception as exc:  # pragma: no cover
             raise RuntimeError(f"HTTP request failed: {exc}") from exc
-        return response.json()
