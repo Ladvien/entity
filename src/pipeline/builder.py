@@ -5,12 +5,16 @@ from pathlib import Path
 from types import ModuleType
 from typing import Callable, Optional
 
-from registry import (PluginRegistry, ResourceRegistry, SystemRegistries,
-                      ToolRegistry)
+from .logging import get_logger
+
+from registry import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
 
 from .plugins import BasePlugin, PluginAutoClassifier
 from .runtime import AgentRuntime
 from .stages import PipelineStage
+
+
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -77,7 +81,8 @@ class AgentBuilder:
         ):
             try:
                 module = importlib.import_module(info.name)
-            except Exception:  # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001
+                logger.error("Failed to import plugin module %s: %s", info.name, exc)
                 continue
             self._register_module_plugins(module)
 
@@ -101,7 +106,8 @@ class AgentBuilder:
                 spec.loader.exec_module(module)
                 return module
             raise ImportError(f"Cannot load spec for {file}")
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            logger.error("Failed to import plugin module %s: %s", file, exc)
             return None
 
     def _register_module_plugins(self, module: ModuleType) -> None:
@@ -119,5 +125,11 @@ class AgentBuilder:
                     self.add_plugin(obj({}))
                 elif callable(obj) and name.endswith("_plugin"):
                     self.plugin(obj)
-            except Exception:  # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001
+                logger.error(
+                    "Failed to register plugin from %s.%s: %s",
+                    module.__name__,
+                    name,
+                    exc,
+                )
                 continue

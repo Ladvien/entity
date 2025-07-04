@@ -86,8 +86,12 @@ class Agent:
     # ------------------------------------------------------------------
     @property
     def plugin_registry(self):  # pragma: no cover - passthrough
-        return self.get_registries().plugins
+        if self._runtime is not None:
+            return self._runtime.registries.plugins
+        return self.builder.plugin_registry
 
     @property
     def plugins(self):  # pragma: no cover - passthrough
-        return self.get_registries().plugins
+        if self._runtime is not None:
+            return self._runtime.registries.plugins
+        return self.builder.plugin_registry
