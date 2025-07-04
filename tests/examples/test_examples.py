@@ -22,6 +22,7 @@ def test_example_modules_importable() -> None:
         "examples.utilities.plugin_loader",
         "examples.pipelines.memory_composition_pipeline",
         "examples.pipelines.vector_memory_pipeline",
+        "examples.pipelines.duckdb_pipeline",
     ]
     for name in modules:
         import_module(name)
@@ -33,6 +34,7 @@ class TestExamples:
     scripts = [
         Path("examples/advanced_llm.py"),
         Path("examples/pipelines/pipeline_example.py"),
+        Path("examples/pipelines/duckdb_pipeline.py"),
     ]
 
     @pytest.mark.slow
