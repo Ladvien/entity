@@ -13,15 +13,16 @@ import yaml
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .context import PluginContext
-    from .state import LLMResponse
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .initializer import ClassRegistry
 
 from .exceptions import CircuitBreakerTripped, PluginError, PluginExecutionError
 from .logging import get_logger
+from .observability.tracing import start_span
 from .observability.utils import execute_with_observability
 from .stages import PipelineStage
+from .state import LLMResponse
 from .validation import ValidationResult
 
 logger = logging.getLogger(__name__)
@@ -119,14 +120,17 @@ class BasePlugin(ABC):
         context: "PluginContext",
         prompt: str,
         purpose: str,
+<<<<<<< HEAD
 <<<<<< codex/implement-input-validation-and-sanitization
         *,
         sanitize: bool = False,
 ======
         functions: list[dict[str, Any]] | None = None,
 >>>>>> main
+=======
+        functions: list[dict[str, Any]] | None = None,
+>>>>>>> ade5ea02fe57934389c67708aacbf514ac2c4c3b
     ) -> "LLMResponse":
-        from .context import LLMResponse
 
         llm = context.get_llm()
         if llm is None:
@@ -149,6 +153,7 @@ class BasePlugin(ABC):
         context.record_llm_call(self.__class__.__name__, purpose)
 
         start = time.time()
+<<<<<<< HEAD
 
 <<<<<< codex/implement-input-validation-and-sanitization
         if hasattr(llm, "call_llm"):
@@ -169,8 +174,19 @@ class BasePlugin(ABC):
                 raise RuntimeError("LLM resource is not callable")
             if asyncio.iscoroutinefunction(func):
                 response = await func(prompt)
+=======
+        async with start_span(f"LLM:{self.__class__.__name__}"):
+            if hasattr(llm, "generate"):
+                response = await llm.generate(prompt, functions)
+>>>>>>> ade5ea02fe57934389c67708aacbf514ac2c4c3b
             else:
-                response = func(prompt)
+                func = getattr(llm, "__call__", None)
+                if func is None:
+                    raise RuntimeError("LLM resource is not callable")
+                if asyncio.iscoroutinefunction(func):
+                    response = await func(prompt)
+                else:
+                    response = func(prompt)
 
         duration = time.time() - start
         context.record_llm_duration(self.__class__.__name__, duration)

@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Dict, Protocol, runtime_checkable
+
+if TYPE_CHECKING:  # pragma: no cover
+    from registry import ClassRegistry
 
 from pipeline.logging import get_logger
 from pipeline.validation import ValidationResult

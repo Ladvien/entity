@@ -11,7 +11,10 @@ from .interfaces import PluginAutoClassifier
 from .logging import get_logger
 from .plugins import BasePlugin
 from .runtime import AgentRuntime
+<<<<<<< HEAD
 from .stages import PipelineStage
+=======
+>>>>>>> ade5ea02fe57934389c67708aacbf514ac2c4c3b
 
 logger = get_logger(__name__)
 

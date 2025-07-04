@@ -38,11 +38,19 @@ quick_start
 tutorial_setup
 tutorial_first_pipeline
 config_cheatsheet
+<<<<<<< HEAD
 config
 context
 logging
 plugin_cheatsheet
 plugin_guide
+=======
+plugin_cheatsheet
+config
+plugin_guide
+context
+logging
+>>>>>>> ade5ea02fe57934389c67708aacbf514ac2c4c3b
 advanced_usage
 module_map
 troubleshooting
@@ -51,7 +59,11 @@ deploy_aws
 deploy_local
 deploy_docker
 deploy_cloud
+<<<<<<< HEAD
 principle_checklist
+=======
+api_reference
+>>>>>>> ade5ea02fe57934389c67708aacbf514ac2c4c3b
 apidocs/index
 api_reference
 ```

@@ -1,0 +1,55 @@
+# Monitoring the Pipeline
+
+This guide shows how to collect metrics and traces from an Entity deployment.
+
+## Prometheus Metrics
+
+Call `start_metrics_server()` at application startup to expose metrics on
+`/metrics`:
+
+```python
+from pipeline.observability import start_metrics_server
+
+start_metrics_server(port=9001)
+```
+
+The exporter provides LLM latency and failure counters along with CPU and memory
+usage. Point Prometheus at the server to scrape these metrics.
+
+## Grafana Dashboard
+
+Below is a minimal dashboard JSON you can import into Grafana:
+
+```json
+{
+  "title": "Entity Overview",
+  "panels": [
+    {"type": "graph", "title": "LLM Latency", "targets": [{"expr": "llm_latency_seconds"}]},
+    {"type": "graph", "title": "LLM Failures", "targets": [{"expr": "llm_failures_total"}]}
+  ]
+}
+```
+
+Save it as `entity_dashboard.json` and import through the Grafana UI.
+
+## Alert Rules
+
+Create alerts in Prometheus for high latency or failures:
+
+```yaml
+- alert: LLMHighLatency
+  expr: llm_latency_seconds_bucket{le="5"} > 0
+  for: 1m
+  labels:
+    severity: warning
+  annotations:
+    description: "LLM calls are taking more than five seconds"
+
+- alert: LLMFailures
+  expr: increase(llm_failures_total[5m]) > 0
+  for: 1m
+  labels:
+    severity: critical
+  annotations:
+    description: "LLM failures detected"
+```

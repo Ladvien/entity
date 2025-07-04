@@ -42,6 +42,10 @@ cdktf = "^0.21.0"
 cdktf-cdktf-provider-aws = "^21.1.0"
 constructs = "^10.3.0"
 redis = "^5.0.0"
+prometheus-client = "^0.20.0"
+psutil = "^5.9.8"
+opentelemetry-api = "^1.24.0"
+opentelemetry-sdk = "^1.24.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"

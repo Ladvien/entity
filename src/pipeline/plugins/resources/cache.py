@@ -4,12 +4,17 @@ from typing import Any, Dict
 
 from pipeline.base_plugins import ResourcePlugin
 from pipeline.cache import CacheBackend, InMemoryCache
+<<<<<<< HEAD
 <<<<<< yvh9jp-codex/configure-pre-commit-and-enforce-quality-checks
 from pipeline.context import PluginContext
 from pipeline.initializer import import_plugin_class
 ======
 from pipeline.interfaces import import_plugin_class
 >>>>>> main
+=======
+from pipeline.context import PluginContext
+from pipeline.interfaces import import_plugin_class
+>>>>>>> ade5ea02fe57934389c67708aacbf514ac2c4c3b
 from pipeline.stages import PipelineStage
 from pipeline.validation import ValidationResult
 
