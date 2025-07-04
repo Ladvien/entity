@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 from pipeline.context import ConversationEntry
-from pipeline.plugins import ResourcePlugin, ValidationResult
 from pipeline.stages import PipelineStage
+from pipeline.user_plugins import ResourcePlugin, ValidationResult
 
 from .database import DatabaseResource
 from .filesystem import FileSystemResource

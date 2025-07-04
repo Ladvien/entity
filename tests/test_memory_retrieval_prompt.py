@@ -11,8 +11,8 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from pipeline.plugins.prompts.memory_retrieval import MemoryRetrievalPrompt
 from pipeline.resources.memory_resource import MemoryResource, SimpleMemoryResource
+from pipeline.user_plugins.prompts.memory_retrieval import MemoryRetrievalPrompt
 
 
 class DummyMemory(MemoryResource):

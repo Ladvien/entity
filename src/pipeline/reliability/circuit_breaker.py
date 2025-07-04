@@ -3,8 +3,8 @@ from __future__ import annotations
 """Simple circuit breaker using :mod:`tenacity` for timing."""
 
 import time
-from dataclasses import dataclass, field
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass, field
 from typing import Any
 
 from tenacity import RetryError

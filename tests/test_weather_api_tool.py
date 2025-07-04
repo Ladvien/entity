@@ -16,7 +16,7 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.pipeline import execute_pending_tools
-from pipeline.plugins.tools.weather_api_tool import WeatherApiTool
+from pipeline.user_plugins.tools.weather_api_tool import WeatherApiTool
 
 load_env(Path(__file__).resolve().parents[1] / ".env")
 

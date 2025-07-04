@@ -20,7 +20,7 @@ from .state import ConversationEntry, FailureInfo, LLMResponse, PipelineState, T
 
 
 class PluginContext:
-    """Object exposing pipeline state and utilities to plugins."""
+    """Object exposing pipeline state and utilities to user_plugins."""
 
     def __init__(self, state: PipelineState, registries: SystemRegistries) -> None:
         """Initialize context with immutable ``state`` and ``registries``."""

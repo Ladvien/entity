@@ -9,9 +9,8 @@ from registry import PluginRegistry, ResourceRegistry, SystemRegistries, ToolReg
 
 from .interfaces import PluginAutoClassifier
 from .logging import get_logger
-from .plugins import BasePlugin
 from .runtime import AgentRuntime
-from .stages import PipelineStage
+from .user_plugins import BasePlugin
 
 logger = get_logger(__name__)
 

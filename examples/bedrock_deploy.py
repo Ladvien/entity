@@ -13,21 +13,21 @@ def _enable_plugins_namespace() -> None:
     import pkgutil
     import types
 
-    import pipeline.plugins
-    import pipeline.plugins.resources as plugin_resources
+    import pipeline.user_plugins
+    import pipeline.user_plugins.resources as plugin_resources
     import pipeline.resources
 
     plugins_mod = types.ModuleType("plugins")
-    plugins_mod.__dict__.update(vars(pipeline.plugins))
+    plugins_mod.__dict__.update(vars(pipeline.user_plugins))
     sys.modules["plugins"] = plugins_mod
-    sys.modules["plugins.resources"] = plugin_resources
+    sys.modules["user_plugins.resources"] = plugin_resources
     plugins_mod.resources = plugin_resources
 
     for _, name, _ in pkgutil.walk_packages(
         pipeline.resources.__path__, prefix="pipeline.resources."
     ):
         module = importlib.import_module(name)
-        alias = name.replace("pipeline.resources.", "plugins.")
+        alias = name.replace("pipeline.resources.", "user_plugins.")
         sys.modules[alias] = module
         parent_alias = alias.rsplit(".", 1)[0]
         if parent_alias == "plugins":
