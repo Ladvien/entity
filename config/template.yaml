@@ -55,11 +55,11 @@ plugins:
       type: plugins.adapters.cli:CLIAdapter
   prompts:
     chain_of_thought:
-      type: plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
+      type: user_plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
       enable_reasoning: true
     memory_retrieval:
       type: plugins.prompts.memory_retrieval:MemoryRetrievalPrompt
       max_context_length: 4000
     intent_classifier:
-      type: plugins.prompts.intent_classifier:IntentClassifierPrompt
+      type: user_plugins.prompts.intent_classifier:IntentClassifierPrompt
       confidence_threshold: 0.8
