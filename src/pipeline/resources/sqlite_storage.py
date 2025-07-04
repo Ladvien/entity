@@ -7,6 +7,7 @@ from typing import Dict, List, Optional
 import aiosqlite
 
 from pipeline.context import ConversationEntry
+from pipeline.observability.tracing import start_span
 from pipeline.resources.database import DatabaseResource
 
 
@@ -39,32 +40,34 @@ class SQLiteStorageResource(DatabaseResource):
     ) -> None:
         if self._conn is None:
             return
-        for entry in history:
-            await self._conn.execute(
-                (
-                    f"INSERT INTO {self._table} "
-                    "(conversation_id, role, content, metadata, timestamp)"  # nosec B608
-                    " VALUES (?, ?, ?, ?, ?)"
-                ),
-                (
-                    conversation_id,
-                    entry.role,
-                    entry.content,
-                    json.dumps(entry.metadata),
-                    entry.timestamp.timestamp(),
-                ),
-            )
+        async with start_span("SQLiteStorageResource.save_history"):
+            for entry in history:
+                await self._conn.execute(
+                    (
+                        f"INSERT INTO {self._table} "
+                        "(conversation_id, role, content, metadata, timestamp)"  # nosec B608
+                        " VALUES (?, ?, ?, ?, ?)"
+                    ),
+                    (
+                        conversation_id,
+                        entry.role,
+                        entry.content,
+                        json.dumps(entry.metadata),
+                        entry.timestamp.timestamp(),
+                    ),
+                )
         await self._conn.commit()
 
     async def load_history(self, conversation_id: str) -> List[ConversationEntry]:
         if self._conn is None:
             return []
-        cursor = await self._conn.execute(
-            f"SELECT role, content, metadata, timestamp FROM {self._table} "  # nosec B608
-            "WHERE conversation_id = ? ORDER BY timestamp",
-            (conversation_id,),
-        )
-        rows = await cursor.fetchall()
+        async with start_span("SQLiteStorageResource.load_history"):
+            cursor = await self._conn.execute(
+                f"SELECT role, content, metadata, timestamp FROM {self._table} "  # nosec B608
+                "WHERE conversation_id = ? ORDER BY timestamp",
+                (conversation_id,),
+            )
+            rows = await cursor.fetchall()
         history: List[ConversationEntry] = []
         for role, content, metadata, ts in rows:
             metadata_dict = json.loads(metadata) if metadata else {}

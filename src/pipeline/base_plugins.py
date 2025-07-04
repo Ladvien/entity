@@ -13,15 +13,16 @@ import yaml
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .context import PluginContext
-    from .state import LLMResponse
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .initializer import ClassRegistry
 
 from .exceptions import CircuitBreakerTripped, PluginError, PluginExecutionError
 from .logging import get_logger
+from .observability.tracing import start_span
 from .observability.utils import execute_with_observability
 from .stages import PipelineStage
+from .state import LLMResponse
 from .validation import ValidationResult
 
 logger = logging.getLogger(__name__)
@@ -115,9 +116,12 @@ class BasePlugin(ABC):
         pass
 
     async def call_llm(
-        self, context: "PluginContext", prompt: str, purpose: str
+        self,
+        context: "PluginContext",
+        prompt: str,
+        purpose: str,
+        functions: list[dict[str, Any]] | None = None,
     ) -> "LLMResponse":
-        from .context import LLMResponse
 
         llm = context.get_llm()
         if llm is None:
@@ -125,36 +129,57 @@ class BasePlugin(ABC):
 
         cache = context.get_resource("cache")
         cache_key = None
+        cached = None
         if cache:
             import hashlib
 
             cache_key = "llm:" + hashlib.sha256(prompt.encode()).hexdigest()
-            cached = await cache.get(cache_key)
+            if hasattr(cache, "get_semantic"):
+                cached = await cache.get_semantic(prompt)
+            if cached is None:
+                cached = await cache.get(cache_key)
             if cached is not None:
                 return LLMResponse(content=str(cached))
 
         context.record_llm_call(self.__class__.__name__, purpose)
 
         start = time.time()
-
-        if hasattr(llm, "generate"):
-            response = await llm.generate(prompt)
-        else:
-            func = getattr(llm, "__call__", None)
-            if func is None:
-                raise RuntimeError("LLM resource is not callable")
-            if asyncio.iscoroutinefunction(func):
-                response = await func(prompt)
+        async with start_span(f"LLM:{self.__class__.__name__}"):
+            if hasattr(llm, "generate"):
+                response = await llm.generate(prompt, functions)
             else:
-                response = func(prompt)
+                func = getattr(llm, "__call__", None)
+                if func is None:
+                    raise RuntimeError("LLM resource is not callable")
+                if asyncio.iscoroutinefunction(func):
+                    response = await func(prompt)
+                else:
+                    response = func(prompt)
 
         duration = time.time() - start
         context.record_llm_duration(self.__class__.__name__, duration)
 
-        llm_response = LLMResponse(content=str(response))
+        if isinstance(response, LLMResponse):
+            llm_response = response
+        else:
+            llm_response = LLMResponse(content=str(response))
 
         if cache and cache_key is not None:
             await cache.set(cache_key, llm_response.content)
+            if hasattr(cache, "set_semantic"):
+                await cache.set_semantic(prompt, llm_response.content)
+
+        tokens = (llm_response.prompt_tokens or 0) + (
+            llm_response.completion_tokens or 0
+        )
+        if tokens:
+            context.metrics.record_llm_tokens(
+                self.__class__.__name__, str(context.current_stage), tokens
+            )
+        if llm_response.cost:
+            context.metrics.record_llm_cost(
+                self.__class__.__name__, str(context.current_stage), llm_response.cost
+            )
 
         self.logger.info(
             "LLM call completed",
@@ -377,6 +402,6 @@ __all__ = [
 ]
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
-    from .plugins.classifier import PluginAutoClassifier
+    from .interfaces import PluginAutoClassifier
 else:  # pragma: no cover - runtime import for compatibility
-    from .plugins.classifier import PluginAutoClassifier  # type: ignore  # noqa: E402
+    from .interfaces import PluginAutoClassifier  # type: ignore  # noqa: E402

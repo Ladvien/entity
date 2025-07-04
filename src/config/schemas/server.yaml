@@ -1,0 +1,14 @@
+type: object
+properties:
+  host:
+    type: string
+  port:
+    type: integer
+  reload:
+    type: boolean
+  log_level:
+    type: string
+required:
+- host
+- port
+additionalProperties: true

@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Dict
+from typing import Any, AsyncIterator, Dict, List
 
 import aioboto3
 
 from pipeline.resources.llm_base import LLM
+from pipeline.state import LLMResponse
 from pipeline.validation import ValidationResult
 
 
@@ -46,12 +47,20 @@ class BedrockProvider(LLM):
             body = json.loads(response["body"].read())
             return str(body.get("outputText") or body.get("completion", ""))
 
-    async def generate(self, prompt: str) -> str:
+    async def generate(
+        self, prompt: str, functions: List[Dict[str, Any]] | None = None
+    ) -> LLMResponse:
         last_exc: Exception | None = None
         for attempt in range(self.retry_attempts):
             try:
-                return await self._invoke(prompt)
+                text = await self._invoke(prompt)
+                return LLMResponse(content=text)
             except Exception as exc:  # noqa: BLE001 - simple retry
                 last_exc = exc
                 await asyncio.sleep(2**attempt)
         raise RuntimeError("bedrock provider request failed") from last_exc
+
+    async def stream(
+        self, prompt: str, functions: List[Dict[str, Any]] | None = None
+    ) -> AsyncIterator[str]:
+        yield await (await self.generate(prompt)).content

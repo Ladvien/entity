@@ -7,6 +7,7 @@ from typing import AsyncIterator, Dict, List, Optional
 import asyncpg
 
 from pipeline.context import ConversationEntry
+from pipeline.observability.tracing import start_span
 from pipeline.resources.database import DatabaseResource
 
 
@@ -64,7 +65,8 @@ class PostgresResource(DatabaseResource):
             raise RuntimeError("Resource not initialized")
         conn = await self._pool.acquire()
         try:
-            yield conn
+            async with start_span("PostgresResource.connection"):
+                yield conn
         finally:
             await self._pool.release(conn)
 
@@ -87,20 +89,21 @@ class PostgresResource(DatabaseResource):
             f"{asyncpg.utils._quote_ident(self._schema)}." if self._schema else ""
         ) + asyncpg.utils._quote_ident(self._history_table)
         async with self.connection() as conn:
-            for entry in history:
-                query = (
-                    f"INSERT INTO {table} "
-                    "(conversation_id, role, content, metadata, timestamp)"  # nosec B608
-                    " VALUES ($1, $2, $3, $4, $5)"
-                )
-                await conn.execute(
-                    query,
-                    conversation_id,
-                    entry.role,
-                    entry.content,
-                    json.dumps(entry.metadata),
-                    entry.timestamp,
-                )
+            async with start_span("PostgresResource.save_history"):
+                for entry in history:
+                    query = (
+                        f"INSERT INTO {table} "
+                        "(conversation_id, role, content, metadata, timestamp)"  # nosec B608
+                        " VALUES ($1, $2, $3, $4, $5)"
+                    )
+                    await conn.execute(
+                        query,
+                        conversation_id,
+                        entry.role,
+                        entry.content,
+                        json.dumps(entry.metadata),
+                        entry.timestamp,
+                    )
 
     async def load_history(self, conversation_id: str) -> List[ConversationEntry]:
         if self._pool is None or not self._history_table:
@@ -113,7 +116,8 @@ class PostgresResource(DatabaseResource):
             "WHERE conversation_id=$1 ORDER BY timestamp"
         )
         async with self.connection() as conn:
-            rows = await conn.fetch(query, conversation_id)
+            async with start_span("PostgresResource.load_history"):
+                rows = await conn.fetch(query, conversation_id)
         history: List[ConversationEntry] = []
         for row in rows:
             metadata = row["metadata"]

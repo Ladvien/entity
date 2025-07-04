@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Dict, List
 
-import asyncpg
 from pgvector import Vector
 from pgvector.asyncpg import register_vector
 

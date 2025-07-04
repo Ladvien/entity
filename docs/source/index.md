@@ -20,6 +20,7 @@ Welcome to the Entity Pipeline framework. These pages explain how to configure a
 
 ### Reference
 - [Context API](context.md)
+- [API reference](api_reference.md)
 - [Advanced usage](advanced_usage.md)
 - [Module map](module_map.md)
 - [Troubleshooting](troubleshooting.md)
@@ -27,30 +28,29 @@ Welcome to the Entity Pipeline framework. These pages explain how to configure a
 ### Deployment
 - [AWS deployment](aws_deployment.md)
 - [Terraform guide](deploy_aws.md)
+- [Local](deploy_local.md)
+- [Docker](deploy_docker.md)
+- [Cloud](deploy_cloud.md)
 
 ```{toctree}
 :hidden:
 quick_start
-<<<<<<< HEAD
-config_cheatsheet
-=======
 tutorial_setup
 tutorial_first_pipeline
->>>>>>> 2145e70b6802658f66afbf30f2667b2cd50a96f6
-config
-<<<<<<< HEAD
-context
-logging
-=======
+config_cheatsheet
 plugin_cheatsheet
->>>>>>> 7b2ab2195391d87908bf6ada933de169a1543ca7
+config
 plugin_guide
 context
+logging
 advanced_usage
 module_map
 troubleshooting
 aws_deployment
 deploy_aws
-principle_checklist
+deploy_local
+deploy_docker
+deploy_cloud
+api_reference
 apidocs/index
 ```
