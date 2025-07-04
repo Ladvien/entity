@@ -11,8 +11,8 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from pipeline.plugins.prompts.react_prompt import ReActPrompt
-from pipeline.plugins.tools.calculator_tool import CalculatorTool
+from pipeline.user_plugins.prompts.react_prompt import ReActPrompt
+from pipeline.user_plugins.tools.calculator_tool import CalculatorTool
 
 
 class FakeLLM:

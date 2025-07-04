@@ -1,7 +1,8 @@
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import pytest
+
 from config.environment import load_env
 
 SRC_PATH = str(Path(__file__).resolve().parents[1] / "src")

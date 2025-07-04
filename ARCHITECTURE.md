@@ -92,7 +92,7 @@ async def execute_stage(stage: PipelineStage, state: PipelineState, registries: 
     state.current_stage = stage
     
     # Execute plugins with appropriate context layer
-    stage_plugins = registries.plugins.get_for_stage(stage)
+    stage_plugins = registries.user_plugins.get_for_stage(stage)
     for plugin in stage_plugins:
         context = PluginContext(state, registries)
         await plugin.execute(context)
@@ -526,14 +526,14 @@ Because the name stays constant, plugins and configuration always refer to the s
 - **Output**: Formatting, validation, filtering
 - **Tool Coordination**: Execute tools during processing with immediate access to results
 
-**Reconfiguration Example**: Change agent personality from formal to casual by swapping personality prompt plugins.
+**Reconfiguration Example**: Change agent personality from formal to casual by swapping personality prompt user_plugins.
 
 #### **Adapter Plugins** (Input/Output - Interface Handling)
 - **Input Adapters**: HTTP, WebSocket, CLI interfaces
 - **Output Adapters**: HTTP responses, TTS, formatted output
   - **TTS**: Text-to-speech services
 
-**Reconfiguration Example**: Add voice interface to a text-based agent by including TTS adapter plugins.
+**Reconfiguration Example**: Add voice interface to a text-based agent by including TTS adapter user_plugins.
 
 #### **Failure Plugins** (Error Communication - User-Facing Error Handling)
 - **Error Formatters**: Convert technical errors to user-friendly messages

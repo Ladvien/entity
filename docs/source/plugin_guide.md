@@ -1,6 +1,6 @@
 # Writing Plugins
 
-The Entity framework is built around extensible plugins. Plugins run during specific pipeline stages and interact with the system through `PluginContext`.
+The Entity framework is built around extensible user_plugins. Plugins run during specific pipeline stages and interact with the system through `PluginContext`.
 
 ## Basic Class Plugin
 
@@ -116,4 +116,4 @@ class VectorMemoryResource(ResourcePlugin):
         self.vectors[key] = vector
 ```
 
-These scripts are great starting points when designing your own plugins.
+These scripts are great starting points when designing your own user_plugins.

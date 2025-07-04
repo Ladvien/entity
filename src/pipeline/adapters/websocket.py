@@ -17,8 +17,8 @@ from registry import SystemRegistries
 
 from ..manager import PipelineManager
 from ..pipeline import execute_pipeline
-from ..plugins import AdapterPlugin
 from ..stages import PipelineStage
+from ..user_plugins import AdapterPlugin
 
 
 class WebSocketAdapter(AdapterPlugin):

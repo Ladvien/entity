@@ -3,7 +3,7 @@ import asyncio
 from hypothesis import given
 from hypothesis import strategies as st
 
-from pipeline.plugins.tools.calculator_tool import CalculatorTool
+from pipeline.user_plugins.tools.calculator_tool import CalculatorTool
 
 
 def _eval(expr: str) -> int | float:

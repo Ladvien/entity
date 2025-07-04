@@ -1,4 +1,4 @@
-"""Sandbox utilities for running and auditing plugins."""
+"""Sandbox utilities for running and auditing user_plugins."""
 
 from .audit import PluginAuditor
 

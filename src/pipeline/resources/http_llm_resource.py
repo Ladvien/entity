@@ -2,11 +2,10 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-from pipeline.reliability import CircuitBreaker, RetryPolicy
-
 import httpx
 
 from pipeline.base_plugins import ValidationResult
+from pipeline.reliability import CircuitBreaker, RetryPolicy
 
 
 class HttpLLMResource:

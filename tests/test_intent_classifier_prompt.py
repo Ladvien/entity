@@ -11,7 +11,7 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from pipeline.plugins.prompts.intent_classifier import IntentClassifierPrompt
+from pipeline.user_plugins.prompts.intent_classifier import IntentClassifierPrompt
 
 
 class FakeLLM:
