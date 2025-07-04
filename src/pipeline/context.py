@@ -16,8 +16,7 @@ from registry import SystemRegistries
 
 from .metrics import MetricsCollector
 from .stages import PipelineStage
-from .state import (ConversationEntry, FailureInfo, LLMResponse, PipelineState,
-                    ToolCall)
+from .state import ConversationEntry, FailureInfo, LLMResponse, PipelineState, ToolCall
 
 
 class PluginContext:
@@ -318,6 +317,17 @@ class PluginContext:
         if isinstance(response, LLMResponse):
             return response.content
         return str(response)
+
+    async def stream_llm(self, prompt: str):
+        """Stream LLM output using server-sent events."""
+        llm = self.get_llm()
+        self.record_llm_call("PluginContext", "stream_llm")
+        start = asyncio.get_event_loop().time()
+        async for chunk in llm.stream(prompt):
+            yield chunk
+        self.record_llm_duration(
+            "PluginContext", asyncio.get_event_loop().time() - start
+        )
 
     async def calculate(self, expression: str) -> Any:
         """Evaluate an arithmetic ``expression`` using the calculator tool."""
