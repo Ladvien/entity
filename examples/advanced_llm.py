@@ -7,51 +7,16 @@ from typing import Any, Dict
 
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-from config.environment import load_env
-from pipeline.config import ConfigLoader
-=======
->>>>>>> ade5ea02fe57934389c67708aacbf514ac2c4c3b
-=======
->>>>>>> 9d6a2313c36e05a741a2a9b374ba1bfd354e9bd2
-=======
->>>>>>> 05754355a96c3f8124313438180394671344b866
 from pipeline.resources.llm.unified import UnifiedLLMResource
 
 
 async def main() -> None:
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    load_env()
-    llm = UnifiedLLMResource(
-        ConfigLoader.from_dict(
-            {
-                "provider": "ollama",
-                "base_url": "${OLLAMA_BASE_URL}",
-                "model": "${OLLAMA_MODEL}",
-            }
-        )
-=======
-=======
->>>>>>> 9d6a2313c36e05a741a2a9b374ba1bfd354e9bd2
-=======
->>>>>>> 05754355a96c3f8124313438180394671344b866
     llm = UnifiedLLMResource(
         {
             "provider": "ollama",
             "base_url": "http://localhost:11434",
             "model": "tinyllama",
         }
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> ade5ea02fe57934389c67708aacbf514ac2c4c3b
-=======
->>>>>>> 9d6a2313c36e05a741a2a9b374ba1bfd354e9bd2
-=======
->>>>>>> 05754355a96c3f8124313438180394671344b866
     )
 
     print("Streaming response:")

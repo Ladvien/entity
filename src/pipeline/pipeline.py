@@ -154,13 +154,10 @@ async def execute_pipeline(
         if pipeline_manager is not None:
             await pipeline_manager.deregister(state.pipeline_id)
         state.metrics.record_pipeline_duration(time.time() - start)
-<<<<<<< HEAD
-        if _metrics_server is not None:
-            _metrics_server.update(state.metrics)
-=======
         if state_file and os.path.exists(state_file):
             os.remove(state_file)
->>>>>>> 9d6a2313c36e05a741a2a9b374ba1bfd354e9bd2
+        if _metrics_server is not None:
+            _metrics_server.update(state.metrics)
 
 
 async def execute_pending_tools(
@@ -205,14 +202,6 @@ async def execute_pending_tools(
                 state.pipeline_id,
                 str(exc),
             )
-            if state.failure_info is None:
-                state.failure_info = FailureInfo(
-                    stage=str(state.current_stage),
-                    plugin_name=call.name,
-                    error_type=exc.__class__.__name__,
-                    error_message=str(exc),
-                    original_exception=exc,
-                )
 
     await asyncio.gather(*(run_call(call) for call in calls))
     return results
