@@ -6,11 +6,8 @@ from contextlib import contextmanager
 from typing import Any, Dict, Iterable, List, Tuple
 
 from config.environment import load_env
-<<<<<< codex/implement-topological-sort-and-cycle-detection-helper
-from pipeline.utils import DependencyGraph
-======
 from pipeline.config.utils import interpolate_env_vars
->>>>>> main
+from pipeline.utils import DependencyGraph
 from plugins.resources.base import Resource
 from plugins.resources.container import ResourceContainer
 from registry import PluginRegistry, ToolRegistry
@@ -72,11 +69,7 @@ def initialization_cleanup_context():
 
 
 class SystemInitializer:
-    """Initialize and validate all plugins for the pipeline.
-
-    Applies **Fail-Fast Validation (15)** and **Load-Time Validation (20)**
-    by verifying configuration and dependencies before any plugin runs.
-    """
+    """Initialize and validate all plugins for the pipeline."""
 
     def __init__(self, config: Dict | None = None, env_file: str = ".env") -> None:
         load_env(env_file)
@@ -154,7 +147,7 @@ class SystemInitializer:
             result = plugin_class.validate_dependencies(registry)
             if not result.success:
                 raise SystemError(
-                    f"Dependency validation failed for {plugin_class.__name__}: "
+                    f"Dependency validation failed for {plugin_class.__name__}:"
                     f"{result.error_message}"
                 )
 
@@ -205,7 +198,7 @@ class SystemInitializer:
 
     def _validate_dependency_graph(
         self, registry: ClassRegistry, dep_graph: Dict[str, List[str]]
-    ):
+    ) -> None:
         graph = DependencyGraph(dep_graph)
         # Ensure all dependencies reference known plugins before sorting
         for plugin_name, deps in dep_graph.items():
@@ -213,49 +206,8 @@ class SystemInitializer:
                 if not registry.has_plugin(dep):
                     available = registry.list_plugins()
                     raise SystemError(
-                        (
-                            f"Plugin '{plugin_name}' requires '{dep}' but it's not registered. "
-                            f"Available: {available}"
-                        )
+                        f"Plugin '{plugin_name}' requires '{dep}' but it's not registered. "
+                        f"Available: {available}"
                     )
 
-<<<<<< codex/implement-topological-sort-and-cycle-detection-helper
         graph.topological_sort()
-
-    @staticmethod
-    def _interpolate_env_vars(config: Any) -> Any:
-        if isinstance(config, dict):
-            return {
-                k: SystemInitializer._interpolate_env_vars(v) for k, v in config.items()
-            }
-        if isinstance(config, list):
-            return [SystemInitializer._interpolate_env_vars(i) for i in config]
-        if isinstance(config, str) and config.startswith("${") and config.endswith("}"):
-            key = config[2:-1]
-            value = os.environ.get(key)
-            if value is None:
-                raise EnvironmentError(f"Required environment variable {key} not found")
-            return value
-        return config
-======
-        in_degree = {node: 0 for node in dep_graph}
-        for node in dep_graph:
-            for neighbor in dep_graph[node]:
-                if neighbor in in_degree:
-                    in_degree[neighbor] += 1
-
-        queue = [n for n, deg in in_degree.items() if deg == 0]
-        processed: List[str] = []
-        while queue:
-            current = queue.pop(0)
-            processed.append(current)
-            for neighbor in dep_graph[current]:
-                if neighbor in in_degree:
-                    in_degree[neighbor] -= 1
-                    if in_degree[neighbor] == 0:
-                        queue.append(neighbor)
-
-        if len(processed) != len(in_degree):
-            cycle_nodes = [n for n in in_degree if n not in processed]
-            raise SystemError(f"Circular dependency detected involving: {cycle_nodes}")
->>>>>> main
