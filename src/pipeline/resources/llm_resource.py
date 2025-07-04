@@ -20,6 +20,15 @@ class LLMResource(BaseResource, LLM):
 
     __call__ = generate
 
+    async def call_llm(self, prompt: str, sanitize: bool = False) -> str:
+        """Generate a response for ``prompt``, optionally escaping HTML."""
+
+        if sanitize:
+            from html import escape
+
+            prompt = escape(prompt)
+        return await self.generate(prompt)
+
     @staticmethod
     def validate_required_fields(config: Dict, fields: List[str]) -> "ValidationResult":
         """Verify that all ``fields`` exist in ``config``."""

@@ -115,7 +115,12 @@ class BasePlugin(ABC):
         pass
 
     async def call_llm(
-        self, context: "PluginContext", prompt: str, purpose: str
+        self,
+        context: "PluginContext",
+        prompt: str,
+        purpose: str,
+        *,
+        sanitize: bool = False,
     ) -> "LLMResponse":
         from .context import LLMResponse
 
@@ -137,7 +142,13 @@ class BasePlugin(ABC):
 
         start = time.time()
 
-        if hasattr(llm, "generate"):
+        if hasattr(llm, "call_llm"):
+            response = await llm.call_llm(prompt, sanitize=sanitize)
+        elif hasattr(llm, "generate"):
+            if sanitize:
+                from html import escape
+
+                prompt = escape(prompt)
             response = await llm.generate(prompt)
         else:
             func = getattr(llm, "__call__", None)

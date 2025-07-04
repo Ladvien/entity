@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
+from pydantic import BaseModel
+
+from pipeline.validation.input import validate_params
+
 import httpx
 
 from pipeline.base_plugins import ToolPlugin
@@ -18,10 +22,12 @@ class SearchTool(ToolPlugin):
     stages = [PipelineStage.DO]
     required_params = ["query"]
 
-    async def execute_function(self, params: Dict[str, Any]) -> str:
-        query = params.get("query")
-        if not query:
-            raise ValueError("'query' parameter is required")
+    class Params(BaseModel):
+        query: str
+
+    @validate_params(Params)
+    async def execute_function(self, params: Params) -> str:
+        query = params.query
 
         url = "https://api.duckduckgo.com/"
         try:
