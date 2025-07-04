@@ -7,7 +7,7 @@ PLEASE REVIEW IT FOR ALL ARCHITECTURE DECISIONS!  (Architecture is outlined at b
 ## Project Structure for AI Agent Navigation
 
 - `/src/pipeline` – core execution engine, context system and shared abstractions
-- `/src/pipeline/user_plugins` – plugin implementations organized by type
+- `/plugins` – plugin implementations organized by type
   - `/resources` – databases, LLMs and storage backends
   - `/tools` – user functions such as weather or search
   - `/prompts` – reasoning logic and memory helpers
@@ -550,8 +550,8 @@ The framework's core value is **making agent behavior adjustable** without code 
 
 The codebase now consolidates the core engine under `src/pipeline`. This module
 contains the context system, execution logic and shared abstractions. Plugins
-reside in the new `src/plugins` package, grouped by type. The old
-`src/pipeline/plugins` directory remains as **temporary shims** re-exporting
+reside in the new `plugins` package, grouped by type. The old
+`src/pipeline/user_plugins` directory remains as **temporary shims** re-exporting
 from `plugins`:
 
 - `resources` for databases, LLM providers and storage backends
@@ -1095,9 +1095,9 @@ Because the name stays constant, plugins and configuration always refer to the s
 
 **Note**: Plugin use is discouraged in the error stage to maintain reliability. Keep error stage plugins minimal and ensure static fallback responses are available.
 
-Plugin implementations live in `src/plugins/<type>` directories. For example,
-error-handling plugins are located in `src/plugins/failure`. The
-`src/pipeline/plugins` paths are just thin wrappers to maintain backward
+Plugin implementations live in `plugins/<type>` directories. For example,
+error-handling plugins are located in `plugins/failure`. The
+`src/pipeline/user_plugins` paths are just thin wrappers to maintain backward
 compatibility during the transition.
 
 ### Plugin Stage Assignment System

@@ -1,10 +1,10 @@
 # Plugin Development Cheat Sheet
 
-Brief reminders for writing user_plugins.
+Brief reminders for writing plugins.
 
 ## Base Classes
 - `ResourcePlugin` – provides infrastructure like databases and LLMs.
-- `ToolPlugin` – exposes a callable tool to other user_plugins.
+- `ToolPlugin` – exposes a callable tool to other plugins.
 - `PromptPlugin` – contains reasoning or memory logic.
 - `AdapterPlugin` – handles external interfaces such as HTTP or CLI.
 - `FailurePlugin` – formats and logs errors.
@@ -13,7 +13,7 @@ All plugins declare their `stages` and any `dependencies`.
 
 ## Skeleton
 ```python
-from user_plugins import PromptPlugin
+from plugins import PromptPlugin
 from pipeline.stages import PipelineStage
 
 class ExamplePlugin(PromptPlugin):

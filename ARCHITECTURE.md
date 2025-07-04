@@ -20,9 +20,9 @@ The framework's core value is **making agent behavior adjustable** without code 
 
 The codebase now consolidates the core engine under `src/pipeline`. This module
 contains the context system, execution logic and shared abstractions. Plugins
-reside in the new `src/user_plugins` package, grouped by type. The old
+reside in the new `plugins` package, grouped by type. The old
 `src/pipeline/user_plugins` directory provides thin wrappers re-exporting
-from `user_plugins`:
+from `plugins`:
 
 - `resources` for databases, LLM providers and storage backends
 - `tools` for user-facing functions
@@ -526,14 +526,14 @@ Because the name stays constant, plugins and configuration always refer to the s
 - **Output**: Formatting, validation, filtering
 - **Tool Coordination**: Execute tools during processing with immediate access to results
 
-**Reconfiguration Example**: Change agent personality from formal to casual by swapping personality prompt user_plugins.
+**Reconfiguration Example**: Change agent personality from formal to casual by swapping personality prompt plugins.
 
 #### **Adapter Plugins** (Input/Output - Interface Handling)
 - **Input Adapters**: HTTP, WebSocket, CLI interfaces
 - **Output Adapters**: HTTP responses, TTS, formatted output
   - **TTS**: Text-to-speech services
 
-**Reconfiguration Example**: Add voice interface to a text-based agent by including TTS adapter user_plugins.
+**Reconfiguration Example**: Add voice interface to a text-based agent by including TTS adapter plugins.
 
 #### **Failure Plugins** (Error Communication - User-Facing Error Handling)
 - **Error Formatters**: Convert technical errors to user-friendly messages
@@ -542,8 +542,8 @@ Because the name stays constant, plugins and configuration always refer to the s
 
 **Note**: Plugin use is discouraged in the error stage to maintain reliability. Keep error stage plugins minimal and ensure static fallback responses are available.
 
-Plugin implementations live in `src/user_plugins/<type>` directories. For example,
-error-handling plugins are located in `src/user_plugins/failure`. The
+Plugin implementations live in `plugins/<type>` directories. For example,
+error-handling plugins are located in `plugins/failure`. The
 `src/pipeline/user_plugins` paths are thin wrappers kept for backward
 compatibility during the transition.
 
