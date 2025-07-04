@@ -13,7 +13,11 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.pipeline import execute_pending_tools
+<<<<<<< HEAD
 from plugins.tools.search_tool import SearchTool
+=======
+from pipeline.user_plugins.tools.search_tool import SearchTool
+>>>>>>> af319b68dc2109eede14ae624413f7e5304d62df
 
 
 class FakeResponse:

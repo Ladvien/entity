@@ -10,7 +10,7 @@ from .stages import PipelineStage
 
 
 class BasePlugin(ABC):
-    """Base class for all pipeline plugins.
+    """Base class for all pipeline user_plugins.
 
     Implements **Explicit Stage Assignment (17)** and
     **Observable by Design (16)** by requiring subclasses to

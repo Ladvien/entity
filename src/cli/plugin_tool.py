@@ -28,7 +28,7 @@ PLUGIN_TYPES = {
 
 
 class PluginToolCLI:
-    """CLI utility for working with Entity plugins."""
+    """CLI utility for working with Entity user_plugins."""
 
     def __init__(self) -> None:
         self.args = self._parse_args()

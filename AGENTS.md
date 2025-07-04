@@ -7,7 +7,7 @@ PLEASE REVIEW IT FOR ALL ARCHITECTURE DECISIONS!  (Architecture is outlined at b
 ## Project Structure for AI Agent Navigation
 
 - `/src/pipeline` – core execution engine, context system and shared abstractions
-- `/src/pipeline/plugins` – plugin implementations organized by type
+- `/src/pipeline/user_plugins` – plugin implementations organized by type
   - `/resources` – databases, LLMs and storage backends
   - `/tools` – user functions such as weather or search
   - `/prompts` – reasoning logic and memory helpers
@@ -218,11 +218,6 @@ AI agents should run tests with the following commands:
 ```bash
 # Run all tests
 pytest
-
-# Run tests for specific plugin type
-pytest tests/plugins/resources/
-pytest tests/plugins/tools/
-pytest tests/plugins/prompts/
 
 # Run tests with coverage
 pytest --cov=src --cov-report=html

@@ -14,10 +14,17 @@ from pipeline import (
 )
 from pipeline.base_plugins import PromptPlugin
 from pipeline.cache import InMemoryCache
+<<<<<<< HEAD
 from pipeline.state import ToolCall
 from pipeline.tools.execution import execute_pending_tools
 from plugins.resources.cache import CacheResource
 from plugins.resources.llm_base import LLM
+=======
+from pipeline.resources.llm_base import LLM
+from pipeline.state import ToolCall
+from pipeline.tools.execution import execute_pending_tools
+from pipeline.user_plugins.resources.cache import CacheResource
+>>>>>>> af319b68dc2109eede14ae624413f7e5304d62df
 
 context_module.LLM = LLM
 

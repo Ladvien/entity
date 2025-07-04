@@ -36,7 +36,7 @@ class BaseProvider(LLM):
     ) -> Dict[str, Any]:
         return await self.http._post_request(url, payload, headers, params)
 
-    async def _stream_post_request(
+    async def _stream_post_request(  # noqa: F811
         self,
         url: str,
         payload: Dict[str, Any],
@@ -65,7 +65,7 @@ class BaseProvider(LLM):
                 await asyncio.sleep(2**attempt)
         raise RuntimeError(f"{self.name} provider request failed") from last_exc
 
-    async def _stream_post_request(
+    async def _stream_post_request(  # noqa: F811
         self,
         url: str,
         payload: Dict[str, Any],

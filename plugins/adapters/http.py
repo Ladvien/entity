@@ -24,6 +24,14 @@ from pipeline.plugins import AdapterPlugin
 from pipeline.stages import PipelineStage
 from registry import SystemRegistries
 
+<<<<<<< HEAD:plugins/adapters/http.py
+=======
+from ..manager import PipelineManager
+from ..pipeline import execute_pipeline
+from ..stages import PipelineStage
+from ..user_plugins import AdapterPlugin
+
+>>>>>>> af319b68dc2109eede14ae624413f7e5304d62df:src/pipeline/adapters/http.py
 
 class TokenAuthMiddleware(BaseHTTPMiddleware):
     """Validate bearer tokens on incoming requests."""

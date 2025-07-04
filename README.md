@@ -40,7 +40,11 @@ Lightweight deployments can use SQLite:
 plugins:
   resources:
     database:
+<<<<<<< HEAD
       type: plugins.resources.sqlite_storage:SQLiteStorage
+=======
+      type: user_plugins.sqlite_storage:SQLiteStorageResource
+>>>>>>> af319b68dc2109eede14ae624413f7e5304d62df
       path: ./entity.db
       pool_min_size: 1
       pool_max_size: 5
@@ -216,7 +220,7 @@ plugins:
     memory:
       type: memory
       database:
-        type: pipeline.resources.sqlite_storage:SQLiteStorageResource
+        type: user_plugins.sqlite_storage:SQLiteStorageResource
         path: ./agent.db
 ```
 
@@ -227,7 +231,7 @@ plugins:
     memory:
       type: memory
       database:
-        type: pipeline.resources.duckdb_database:DuckDBDatabaseResource
+        type: user_plugins.duckdb_database:DuckDBDatabaseResource
         path: ./agent.duckdb
         history_table: chat_history
 ```
@@ -239,15 +243,15 @@ plugins:
     memory:
       type: memory
       database:
-        type: pipeline.resources.postgres:PostgresResource
+        type: user_plugins.postgres:PostgresResource
         host: localhost
         name: agent_db
       vector_store:
-        type: pipeline.resources.pg_vector_store:PgVectorStore
+        type: user_plugins.pg_vector_store:PgVectorStore
         dimensions: 768
         table: embeddings
       filesystem:
-        type: pipeline.resources.s3_filesystem:S3FileSystem
+        type: user_plugins.s3_filesystem:S3FileSystem
         bucket: agent-files
         region: us-east-1
 ```

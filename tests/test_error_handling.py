@@ -11,7 +11,11 @@ from pipeline import (
     execute_pipeline,
 )
 from pipeline.errors import create_static_error_response
+<<<<<<< HEAD
 from plugins.failure.basic_logger import BasicLogger
+=======
+from pipeline.user_plugins.failure.basic_logger import BasicLogger
+>>>>>>> af319b68dc2109eede14ae624413f7e5304d62df
 
 
 class BoomPlugin(PromptPlugin):

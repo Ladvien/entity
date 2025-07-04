@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pipeline.plugins.prompts.memory import MemoryPlugin
+from .memory import MemoryPlugin
 
 
 class ChatHistory(MemoryPlugin):

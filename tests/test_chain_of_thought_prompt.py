@@ -11,7 +11,11 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
+<<<<<<< HEAD
 from plugins.prompts.chain_of_thought import ChainOfThoughtPrompt
+=======
+from pipeline.user_plugins.prompts.chain_of_thought import ChainOfThoughtPrompt
+>>>>>>> af319b68dc2109eede14ae624413f7e5304d62df
 
 
 class FakeLLM:

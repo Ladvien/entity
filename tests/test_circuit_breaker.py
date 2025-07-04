@@ -9,8 +9,13 @@ from pipeline import (
     ToolRegistry,
     execute_pipeline,
 )
+<<<<<<< HEAD
 from plugins.failure.basic_logger import BasicLogger
 from plugins.failure.error_formatter import ErrorFormatter
+=======
+from pipeline.user_plugins.failure.basic_logger import BasicLogger
+from pipeline.user_plugins.failure.error_formatter import ErrorFormatter
+>>>>>>> af319b68dc2109eede14ae624413f7e5304d62df
 
 
 class UnstablePlugin(PromptPlugin):

@@ -2,14 +2,13 @@ import argparse
 import asyncio
 import shutil
 from pathlib import Path
-from typing import Any
 
 import yaml
 
 from entity import Agent, AgentServer
 from pipeline import update_plugin_configuration
 from pipeline.base_plugins import ResourcePlugin, ToolPlugin
-from pipeline.initializer import ClassRegistry, SystemInitializer
+from pipeline.initializer import ClassRegistry
 from pipeline.interfaces import import_plugin_class
 from pipeline.logging import get_logger
 from plugins.resources.base import Resource

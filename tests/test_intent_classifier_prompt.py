@@ -11,7 +11,11 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
+<<<<<<< HEAD
 from plugins.prompts.intent_classifier import IntentClassifierPrompt
+=======
+from pipeline.user_plugins.prompts.intent_classifier import IntentClassifierPrompt
+>>>>>>> af319b68dc2109eede14ae624413f7e5304d62df
 
 
 class FakeLLM:

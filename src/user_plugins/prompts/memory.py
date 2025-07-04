@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import Dict
 
 from pipeline.context import PluginContext
-from pipeline.plugins import PromptPlugin
 from pipeline.resources.memory_resource import MemoryResource
 from pipeline.stages import PipelineStage
+from pipeline.user_plugins import PromptPlugin
 
 
 class MemoryPlugin(PromptPlugin):

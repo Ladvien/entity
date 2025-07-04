@@ -1,4 +1,4 @@
-"""Expose built-in prompt plugins."""
+"""Expose built-in prompt user_plugins."""
 
 from .chain_of_thought import ChainOfThoughtPrompt
 from .chat_history import ChatHistory

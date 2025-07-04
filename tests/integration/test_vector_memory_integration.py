@@ -16,10 +16,17 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
+<<<<<<< HEAD
 from plugins.prompts.complex_prompt import ComplexPrompt
 from plugins.resources.llm import UnifiedLLMResource
 from plugins.resources.pg_vector_store import PgVectorStore
 from plugins.resources.postgres import PostgresResource
+=======
+from pipeline.resources.llm import UnifiedLLMResource
+from pipeline.resources.pg_vector_store import PgVectorStore
+from pipeline.resources.postgres import PostgresResource
+from pipeline.user_plugins.prompts.complex_prompt import ComplexPrompt
+>>>>>>> af319b68dc2109eede14ae624413f7e5304d62df
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
 
@@ -66,7 +73,8 @@ def test_vector_memory_integration():
         async with vm._db.connection() as conn:
             await conn.execute(f"DROP TABLE IF EXISTS {vm_cfg['table']}")
             await conn.execute(
-                f"CREATE TABLE {vm_cfg['table']} (text text, embedding vector({vm_cfg['dimensions']}))"
+                f"CREATE TABLE {vm_cfg['table']} "
+                f"(text text, embedding vector({vm_cfg['dimensions']}))"
             )
         history_entry = ConversationEntry(
             content="previous", role="user", timestamp=datetime.now()

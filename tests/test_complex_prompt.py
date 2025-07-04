@@ -12,8 +12,13 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
+<<<<<<< HEAD
 from plugins.prompts.complex_prompt import ComplexPrompt
 from plugins.resources.memory_resource import MemoryResource
+=======
+from pipeline.resources.memory_resource import MemoryResource
+from pipeline.user_plugins.prompts.complex_prompt import ComplexPrompt
+>>>>>>> af319b68dc2109eede14ae624413f7e5304d62df
 
 
 class FakeLLM:

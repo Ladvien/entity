@@ -6,7 +6,7 @@ from typing import Any
 
 import httpx
 
-from pipeline.plugins.tools.calculator_tool import SafeEvaluator
+from pipeline.user_plugins.tools.calculator_tool import SafeEvaluator
 
 
 def calculator(expression: str) -> Any:

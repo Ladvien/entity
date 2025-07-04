@@ -1,5 +1,5 @@
-from pipeline.plugins import AdapterPlugin
 from pipeline.stages import PipelineStage
+from pipeline.user_plugins import AdapterPlugin
 
 
 class {class_name}(AdapterPlugin):
