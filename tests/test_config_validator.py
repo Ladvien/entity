@@ -30,3 +30,17 @@ def test_config_validator_failure(tmp_path):
     )
     assert result.returncode != 0
     assert "missing dependency" in result.stdout.lower()
+
+
+def test_config_validator_schema_error(tmp_path):
+    config = {"server": {"host": "localhost", "port": "not-int"}}
+    path = tmp_path / "schema.yml"
+    path.write_text(yaml.dump(config))
+
+    result = subprocess.run(
+        [sys.executable, "-m", "src.config.validator", "--config", str(path)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+    assert "port" in result.stdout.lower()
