@@ -1,3 +1,5 @@
+from pipeline.resources.llm.unified import UnifiedLLMResource
+
 from ..llm_base import LLM
 from .providers import (
     ClaudeProvider,
@@ -6,7 +8,6 @@ from .providers import (
     OllamaProvider,
     OpenAIProvider,
 )
-from .unified import UnifiedLLMResource
 
 __all__ = [
     "LLM",
