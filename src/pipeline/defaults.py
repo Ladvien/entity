@@ -26,15 +26,17 @@ DEFAULT_RESOURCES: Dict[str, Dict[str, Any]] = {
         "backend": {"type": "pipeline.resources.memory_resource:SimpleMemoryResource"},
     },
     "cache": {
-        "type": "pipeline.plugins.resources.cache:CacheResource",
+        "type": "pipeline.user_plugins.resources.cache:CacheResource",
         "backend": {"type": "pipeline.cache.memory:InMemoryCache"},
     },
     "logging": DEFAULT_LOGGING_CONFIG,
 }
 
 DEFAULT_TOOLS: Dict[str, Dict[str, Any]] = {
-    "search": {"type": "pipeline.plugins.tools.search_tool:SearchTool"},
-    "calculator": {"type": "pipeline.plugins.tools.calculator_tool:CalculatorTool"},
+    "search": {"type": "pipeline.user_plugins.tools.search_tool:SearchTool"},
+    "calculator": {
+        "type": "pipeline.user_plugins.tools.calculator_tool:CalculatorTool"
+    },
 }
 
 DEFAULT_ADAPTERS: Dict[str, Dict[str, Any]] = {

@@ -9,7 +9,7 @@ The `ARCHITECTURE.md` file provides a high-level overview of the Entity Pipeline
 -## Project Structure for AI Agent Navigation
 
 - `/src/pipeline` – core execution engine, context system and shared abstractions
-- `/src/pipeline/plugins` – plugin implementations organized by type
+- `/src/pipeline/user_plugins` – plugin implementations organized by type
   - `/resources` – databases, LLMs and storage backends
   - `/tools` – user functions such as weather or search
   - `/prompts` – reasoning logic and memory helpers

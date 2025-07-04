@@ -20,9 +20,9 @@ The framework's core value is **making agent behavior adjustable** without code 
 
 The codebase now consolidates the core engine under `src/pipeline`. This module
 contains the context system, execution logic and shared abstractions. Plugins
-reside in the new `src/plugins` package, grouped by type. The old
-`src/pipeline/plugins` directory remains as **temporary shims** re-exporting
-from `plugins`:
+reside in the new `src/user_plugins` package, grouped by type. The old
+`src/pipeline/user_plugins` directory provides thin wrappers re-exporting
+from `user_plugins`:
 
 - `resources` for databases, LLM providers and storage backends
 - `tools` for user-facing functions
@@ -92,7 +92,7 @@ async def execute_stage(stage: PipelineStage, state: PipelineState, registries: 
     state.current_stage = stage
     
     # Execute plugins with appropriate context layer
-    stage_plugins = registries.plugins.get_for_stage(stage)
+    stage_plugins = registries.user_plugins.get_for_stage(stage)
     for plugin in stage_plugins:
         context = PluginContext(state, registries)
         await plugin.execute(context)
@@ -526,14 +526,14 @@ Because the name stays constant, plugins and configuration always refer to the s
 - **Output**: Formatting, validation, filtering
 - **Tool Coordination**: Execute tools during processing with immediate access to results
 
-**Reconfiguration Example**: Change agent personality from formal to casual by swapping personality prompt plugins.
+**Reconfiguration Example**: Change agent personality from formal to casual by swapping personality prompt user_plugins.
 
 #### **Adapter Plugins** (Input/Output - Interface Handling)
 - **Input Adapters**: HTTP, WebSocket, CLI interfaces
 - **Output Adapters**: HTTP responses, TTS, formatted output
   - **TTS**: Text-to-speech services
 
-**Reconfiguration Example**: Add voice interface to a text-based agent by including TTS adapter plugins.
+**Reconfiguration Example**: Add voice interface to a text-based agent by including TTS adapter user_plugins.
 
 #### **Failure Plugins** (Error Communication - User-Facing Error Handling)
 - **Error Formatters**: Convert technical errors to user-friendly messages
@@ -542,9 +542,9 @@ Because the name stays constant, plugins and configuration always refer to the s
 
 **Note**: Plugin use is discouraged in the error stage to maintain reliability. Keep error stage plugins minimal and ensure static fallback responses are available.
 
-Plugin implementations live in `src/plugins/<type>` directories. For example,
-error-handling plugins are located in `src/plugins/failure`. The
-`src/pipeline/plugins` paths are just thin wrappers to maintain backward
+Plugin implementations live in `src/user_plugins/<type>` directories. For example,
+error-handling plugins are located in `src/user_plugins/failure`. The
+`src/pipeline/user_plugins` paths are thin wrappers kept for backward
 compatibility during the transition.
 
 ### Plugin Stage Assignment System

@@ -7,7 +7,7 @@ server:
 plugins:
   resources:
     database:
-      type: plugins.postgres:PostgresResource
+      type: user_plugins.postgres:PostgresResource
       host: "${DB_HOST}"
       port: 5432
       name: "${DB_USERNAME}"
@@ -16,37 +16,37 @@ plugins:
       retries: 3
       backoff: 1.0
     llm:
-      type: plugins.llm.unified:UnifiedLLMResource
+      type: user_plugins.llm.unified:UnifiedLLMResource
       provider: ollama
       base_url: "${OLLAMA_BASE_URL}"
       model: "${OLLAMA_MODEL}"
       retries: 3
       backoff: 1.0
     logging:
-      type: plugins.structured_logging:StructuredLogging
+      type: user_plugins.structured_logging:StructuredLogging
       level: "DEBUG"
       file_enabled: true
       file_path: "logs/entity.log"
     memory:
-      type: plugins.memory_resource:MemoryResource
+      type: user_plugins.memory_resource:MemoryResource
       database:
-        type: plugins.sqlite_storage:SQLiteStorageResource
+        type: user_plugins.sqlite_storage:SQLiteStorageResource
         path: ./dev.db
       filesystem:
-        type: plugins.s3_filesystem:S3FileSystem
+        type: user_plugins.s3_filesystem:S3FileSystem
         bucket: agent-files
         region: us-east-1
     cache:
-      type: plugins.resources.cache:CacheResource
+      type: user_plugins.resources.cache:CacheResource
       backend:
         type: pipeline.cache.memory:InMemoryCache
   tools:
     weather:
-      type: plugins.tools.weather_api_tool:WeatherApiTool
+      type: user_plugins.tools.weather_api_tool:WeatherApiTool
       api_key: "${WEATHER_API_KEY}"
       base_url: "https://api.weather.com"
     calculator:
-      type: plugins.tools.calculator_tool:CalculatorTool
+      type: user_plugins.tools.calculator_tool:CalculatorTool
   adapters:
     http:
       type: pipeline.adapters.http:HTTPAdapter
@@ -61,14 +61,14 @@ plugins:
       type: pipeline.adapters.cli:CLIAdapter
   prompts:
     chain_of_thought:
-      type: plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
+      type: user_plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
       enable_reasoning: true
     conversation_history:
-      type: plugins.prompts.conversation_history:ConversationHistory
+      type: user_plugins.prompts.conversation_history:ConversationHistory
       history_table: chat_history
     memory_retrieval:
-      type: plugins.prompts.memory_retrieval:MemoryRetrievalPrompt
+      type: user_plugins.prompts.memory_retrieval:MemoryRetrievalPrompt
       max_context_length: 4000
     intent_classifier:
-      type: plugins.prompts.intent_classifier:IntentClassifierPrompt
+      type: user_plugins.prompts.intent_classifier:IntentClassifierPrompt
       confidence_threshold: 0.8

@@ -9,8 +9,8 @@ from pipeline import (
     ToolRegistry,
     execute_pipeline,
 )
-from pipeline.resources.memory_resource import SimpleMemoryResource
 from pipeline.resources.memory import Memory
+from pipeline.resources.memory_resource import SimpleMemoryResource
 
 
 class IncrementPlugin(PromptPlugin):

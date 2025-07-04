@@ -2,8 +2,8 @@ from __future__ import annotations
 
 """Asynchronous retry helper using ``tenacity``."""
 
-from dataclasses import dataclass
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from typing import Any
 
 from tenacity import AsyncRetrying, RetryError, stop_after_attempt, wait_exponential

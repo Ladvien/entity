@@ -17,12 +17,12 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from pipeline.plugins.prompts.chat_history import ChatHistory
 from pipeline.resources.duckdb_database import DuckDBDatabaseResource
 from pipeline.resources.in_memory_storage import InMemoryStorageResource
 from pipeline.resources.memory_resource import MemoryResource
 from pipeline.resources.postgres import PostgresResource
 from pipeline.resources.sqlite_storage import SQLiteStorageResource
+from pipeline.user_plugins.prompts.chat_history import ChatHistory
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
 

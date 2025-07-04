@@ -1,5 +1,5 @@
-from pipeline.plugins import PromptPlugin
 from pipeline.stages import PipelineStage
+from pipeline.user_plugins import PromptPlugin
 
 
 class {class_name}(PromptPlugin):

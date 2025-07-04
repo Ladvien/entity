@@ -3,5 +3,5 @@ properties:
   server:
     $ref: ./server.yaml
   plugins:
-    $ref: ./plugins.yaml
+    $ref: ./user_plugins.yaml
 additionalProperties: false

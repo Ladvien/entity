@@ -7,8 +7,8 @@ from types import ModuleType
 import pytest
 
 from pipeline import PipelineStage
-from pipeline.plugins import ResourcePlugin
 from pipeline.resources import ResourceContainer
+from pipeline.user_plugins import ResourcePlugin
 
 
 class BaseRes(ResourcePlugin):

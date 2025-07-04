@@ -1,7 +1,7 @@
 from typing import Any, Dict
 
-from pipeline.plugins import ToolPlugin
 from pipeline.stages import PipelineStage
+from pipeline.user_plugins import ToolPlugin
 
 
 class {class_name}(ToolPlugin):

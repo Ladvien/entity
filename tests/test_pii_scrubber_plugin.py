@@ -11,7 +11,7 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from pipeline.plugins.prompts.pii_scrubber import PIIScrubberPrompt
+from pipeline.user_plugins.prompts.pii_scrubber import PIIScrubberPrompt
 
 
 def make_context():

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Any, AsyncIterator, Dict, List, Type
 
-from pipeline.plugins import ValidationResult
 from pipeline.resources.llm_resource import LLMResource
 from pipeline.state import LLMResponse
+from pipeline.user_plugins import ValidationResult
 
 from .providers import (
     BedrockProvider,
