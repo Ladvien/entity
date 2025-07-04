@@ -1,16 +1,15 @@
-from plugins.tools.weather_api_tool import WeatherApiTool
+from __future__ import annotations
 
-<<<<<<< HEAD:src/pipeline/plugins/tools/weather_api_tool.py
-__all__ = ["WeatherApiTool"]
-=======
 from typing import Any, Dict
 
-import httpx
 from pydantic import BaseModel
+
+from pipeline.validation.input import validate_params
+
+import httpx
 
 from pipeline.base_plugins import ToolPlugin
 from pipeline.stages import PipelineStage
-from pipeline.validation.input import validate_params
 
 
 class WeatherApiTool(ToolPlugin):
@@ -50,4 +49,6 @@ class WeatherApiTool(ToolPlugin):
 
     async def execute(self, params: Dict[str, Any]) -> Any:  # type: ignore[override]
         return await self.execute_function(params)
->>>>>>> 64d27a1aceba096733b70814249d0a84f4b3bce4:plugins/tools/weather_api_tool.py
+
+
+__all__ = ["WeatherApiTool"]

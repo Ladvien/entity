@@ -1,14 +1,11 @@
-from plugins.prompts.conversation_history import ConversationHistory
+from __future__ import annotations
 
-<<<<<<< HEAD:src/pipeline/plugins/prompts/conversation_history.py
-__all__ = ["ConversationHistory"]
-=======
 from typing import Dict, List
 
 from pipeline.context import ConversationEntry, PluginContext
 from pipeline.plugins import PromptPlugin
+from pipeline.resources.memory_resource import MemoryResource
 from pipeline.stages import PipelineStage
-from plugins.resources.memory_resource import MemoryResource
 
 
 class ConversationHistory(PromptPlugin):
@@ -36,4 +33,6 @@ class ConversationHistory(PromptPlugin):
         else:
             history: List[ConversationEntry] = context.get_conversation_history()
             await memory.save_conversation(context.pipeline_id, history)
->>>>>>> 64d27a1aceba096733b70814249d0a84f4b3bce4:plugins/prompts/conversation_history.py
+
+
+__all__ = ["ConversationHistory"]
