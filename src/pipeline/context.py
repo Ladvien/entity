@@ -17,6 +17,8 @@ from registry import SystemRegistries
 from .metrics import MetricsCollector
 from .stages import PipelineStage
 from .state import ConversationEntry, FailureInfo, LLMResponse, PipelineState, ToolCall
+from .tools.base import RetryOptions
+from .tools.execution import execute_tool
 
 
 class PluginContext:
@@ -268,19 +270,12 @@ class PluginContext:
                 state.pending_tool_calls.remove(call)
                 return result
             tool = cast(Any, tool)
+            options = RetryOptions(
+                max_retries=getattr(tool, "max_retries", 1),
+                delay=getattr(tool, "retry_delay", 1.0),
+            )
             try:
-                if hasattr(tool, "execute_function_with_retry"):
-                    result = await tool.execute_function_with_retry(call.params)
-                elif hasattr(tool, "execute_function"):
-                    result = await tool.execute_function(call.params)
-                else:
-                    func = getattr(tool, "run", None)
-                    if func is None:
-                        raise RuntimeError("Tool lacks execution method")
-                    if asyncio.iscoroutinefunction(func):
-                        result = await func(call.params)
-                    else:
-                        result = func(call.params)
+                result = await execute_tool(tool, call, state, options)
                 self.set_stage_result(call.result_key, result)
                 self.record_tool_execution(call.name, call.result_key, call.source)
             except Exception as exc:  # noqa: BLE001

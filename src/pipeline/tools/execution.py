@@ -9,7 +9,7 @@ from ..state import PipelineState, ToolCall
 from .base import RetryOptions
 
 
-async def _execute_tool(
+async def execute_tool(
     tool: Any, call: ToolCall, state: PipelineState, options: RetryOptions
 ) -> Any:
     for attempt in range(options.max_retries + 1):
@@ -68,7 +68,7 @@ async def execute_pending_tools(
                 state.pending_tool_calls.remove(call)
                 continue
         try:
-            result = await _execute_tool(tool, call, state, options)
+            result = await execute_tool(tool, call, state, options)
             state.stage_results[call.result_key] = result
             results[call.result_key] = result
             if cache and cache_key:
@@ -93,3 +93,6 @@ async def execute_pending_tools(
         finally:
             state.pending_tool_calls.remove(call)
     return results
+
+
+__all__ = ["execute_tool", "execute_pending_tools"]
