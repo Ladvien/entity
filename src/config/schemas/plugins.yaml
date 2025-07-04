@@ -1,0 +1,12 @@
+type: object
+properties:
+  resources:
+    $ref: ./plugins_section.yaml
+  tools:
+    $ref: ./plugins_section.yaml
+  adapters:
+    $ref: ./plugins_section.yaml
+  prompts:
+    $ref: ./plugins_section.yaml
+additionalProperties: false
+default: {}
