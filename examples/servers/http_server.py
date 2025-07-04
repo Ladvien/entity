@@ -10,18 +10,14 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))
 import asyncio
 from typing import Any
 
-from entity import Agent
-from pipeline import ConversationManager, PipelineManager, SystemRegistries
+from pipeline import ConversationManager, PipelineManager
 from pipeline.adapters.http import HTTPAdapter, MessageRequest
+from pipeline.initializer import SystemInitializer
 
 
 async def main() -> None:
-    agent = Agent()
-    registries = SystemRegistries(
-        resources=agent.builder.resource_registry,
-        tools=agent.builder.tool_registry,
-        plugins=agent.builder.plugin_registry,
-    )
+    initializer = SystemInitializer.from_yaml("config/dev.yaml")
+    registries = await initializer.initialize()
     pipeline_manager = PipelineManager(registries)
     conversation_manager = ConversationManager(registries, pipeline_manager)
     adapter = HTTPAdapter(pipeline_manager, {"host": "127.0.0.1", "port": 8000})

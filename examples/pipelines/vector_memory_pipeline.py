@@ -17,6 +17,8 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))  # noq
 from entity import Agent  # noqa: E402
 from pipeline import PipelineStage, PromptPlugin, ResourcePlugin  # noqa: E402
 from pipeline.context import PluginContext  # noqa: E402
+from config.environment import load_env
+from pipeline.config import ConfigLoader
 from pipeline.resources.llm.unified import UnifiedLLMResource  # noqa: E402
 from pipeline.resources.pg_vector_store import PgVectorStore  # noqa: E402
 from pipeline.resources.postgres import PostgresResource  # noqa: E402
@@ -57,23 +59,32 @@ class ComplexPrompt(PromptPlugin):
 
 
 def main() -> None:
+    load_env()
     agent = Agent()
     agent.builder.resource_registry.add(
         "database",
         PostgresResource(
-            {
-                "host": "localhost",
-                "port": 5432,
-                "name": "dev_db",
-                "username": "agent",
-                "password": "",
-            }
+            ConfigLoader.from_dict(
+                {
+                    "host": "${DB_HOST}",
+                    "port": 5432,
+                    "name": "${DB_USERNAME}",
+                    "username": "${DB_USERNAME}",
+                    "password": "${DB_PASSWORD}",
+                }
+            )
         ),
     )
     agent.builder.resource_registry.add(
         "llm",
         UnifiedLLMResource(
-            {"provider": "echo", "base_url": "http://localhost", "model": "none"}
+            ConfigLoader.from_dict(
+                {
+                    "provider": "ollama",
+                    "base_url": "${OLLAMA_BASE_URL}",
+                    "model": "${OLLAMA_MODEL}",
+                }
+            )
         ),
     )
     agent.builder.resource_registry.add("vector_memory", VectorMemoryResource())
