@@ -409,3 +409,4 @@ For detailed architecture diagrams and plugin descriptions see [ARCHITECTURE.md]
 **Result**: The easiest AI agent framework to start with, the most powerful to grow with! 🚀
 
 **Framework Adoption Rating**: This progressive disclosure approach dramatically improves adoption potential from 3/5 to 5/5 by making the framework irresistibly easy to start with while preserving all sophisticated capabilities.
+

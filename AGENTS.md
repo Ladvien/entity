@@ -2,7 +2,7 @@
 
 This AGENTS.md file provides comprehensive guidance for AI agents working with the Entity Pipeline Framework codebase, a production-ready pipeline-based plugin architecture for building AI agents.
 
-PLEASE REVIEW IT FOR ALL ARCHITECTURE DECISIONS!  (Architecture is outlined at bottom of this file.)
+PLEASE REVIEW IT FOR ALL ARCHITECTURE DECISIONS! Full architecture details are consolidated in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Project Structure for AI Agent Navigation
 
