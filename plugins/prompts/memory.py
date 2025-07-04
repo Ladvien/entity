@@ -1,14 +1,11 @@
-from plugins.prompts.memory import MemoryPlugin
+from __future__ import annotations
 
-<<<<<<< HEAD:src/pipeline/plugins/prompts/memory.py
-__all__ = ["MemoryPlugin"]
-=======
 from typing import Dict
 
 from pipeline.context import PluginContext
 from pipeline.plugins import PromptPlugin
+from pipeline.resources.memory_resource import MemoryResource
 from pipeline.stages import PipelineStage
-from plugins.resources.memory_resource import MemoryResource
 
 
 class MemoryPlugin(PromptPlugin):
@@ -37,4 +34,6 @@ class MemoryPlugin(PromptPlugin):
             await memory.save_conversation(
                 context.pipeline_id, context.get_conversation_history()
             )
->>>>>>> 64d27a1aceba096733b70814249d0a84f4b3bce4:plugins/prompts/memory.py
+
+
+__all__ = ["MemoryPlugin"]

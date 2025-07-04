@@ -1,14 +1,11 @@
-from plugins.prompts.memory_retrieval import MemoryRetrievalPrompt
+from __future__ import annotations
 
-<<<<<<< HEAD:src/pipeline/plugins/prompts/memory_retrieval.py
-__all__ = ["MemoryRetrievalPrompt"]
-=======
 from typing import List
 
 from pipeline.context import ConversationEntry, PluginContext
 from pipeline.plugins import PromptPlugin
+from pipeline.resources.memory_resource import MemoryResource
 from pipeline.stages import PipelineStage
-from plugins.resources.memory_resource import MemoryResource
 
 
 class MemoryRetrievalPrompt(PromptPlugin):
@@ -28,4 +25,6 @@ class MemoryRetrievalPrompt(PromptPlugin):
                 role=entry.role,
                 metadata=entry.metadata,
             )
->>>>>>> 64d27a1aceba096733b70814249d0a84f4b3bce4:plugins/prompts/memory_retrieval.py
+
+
+__all__ = ["MemoryRetrievalPrompt"]
