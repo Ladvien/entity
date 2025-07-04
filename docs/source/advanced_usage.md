@@ -15,7 +15,7 @@ plugins:
     memory:
       type: memory
       database:
-        type: pipeline.resources.postgres:PostgresResource
+        type: plugins.postgres:PostgresResource
         host: localhost
         port: 5432
         name: dev_db
@@ -23,11 +23,11 @@ plugins:
         setup_commands:
           - "CREATE EXTENSION IF NOT EXISTS vector"
       vector_store:
-        type: pipeline.resources.pg_vector_store:PgVectorStore
+        type: plugins.pg_vector_store:PgVectorStore
         dimensions: 768
         table: embeddings
       filesystem:
-        type: pipeline.resources.s3_filesystem:S3FileSystem
+        type: plugins.s3_filesystem:S3FileSystem
         bucket: agent-files
         region: us-east-1
 ```
@@ -40,7 +40,7 @@ plugins:
     memory:
       type: memory
       database:
-        type: pipeline.resources.sqlite_storage:SQLiteStorageResource
+        type: plugins.sqlite_storage:SQLiteStorageResource
         path: ./agent.db
 ```
 
