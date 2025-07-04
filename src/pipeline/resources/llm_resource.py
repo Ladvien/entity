@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, AsyncIterator, Dict, List
 
+from pipeline.state import LLMResponse
 from pipeline.validation import ValidationResult
 
 from .base import BaseResource
@@ -13,8 +14,15 @@ class LLMResource(BaseResource, LLM):
 
     name = "llm"
 
-    async def generate(self, prompt: str) -> str:
+    async def generate(
+        self, prompt: str, functions: list[dict[str, Any]] | None = None
+    ) -> "LLMResponse":
         """Return a completion for ``prompt``."""
+
+        raise NotImplementedError
+
+    async def stream(self, prompt: str) -> AsyncIterator[str]:
+        """Yield tokens for ``prompt`` using server-sent events."""
 
         raise NotImplementedError
 

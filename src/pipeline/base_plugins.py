@@ -119,8 +119,12 @@ class BasePlugin(ABC):
         context: "PluginContext",
         prompt: str,
         purpose: str,
+<<<<<< codex/implement-input-validation-and-sanitization
         *,
         sanitize: bool = False,
+======
+        functions: list[dict[str, Any]] | None = None,
+>>>>>> main
     ) -> "LLMResponse":
         from .context import LLMResponse
 
@@ -130,11 +134,15 @@ class BasePlugin(ABC):
 
         cache = context.get_resource("cache")
         cache_key = None
+        cached = None
         if cache:
             import hashlib
 
             cache_key = "llm:" + hashlib.sha256(prompt.encode()).hexdigest()
-            cached = await cache.get(cache_key)
+            if hasattr(cache, "get_semantic"):
+                cached = await cache.get_semantic(prompt)
+            if cached is None:
+                cached = await cache.get(cache_key)
             if cached is not None:
                 return LLMResponse(content=str(cached))
 
@@ -142,6 +150,7 @@ class BasePlugin(ABC):
 
         start = time.time()
 
+<<<<<< codex/implement-input-validation-and-sanitization
         if hasattr(llm, "call_llm"):
             response = await llm.call_llm(prompt, sanitize=sanitize)
         elif hasattr(llm, "generate"):
@@ -150,6 +159,10 @@ class BasePlugin(ABC):
 
                 prompt = escape(prompt)
             response = await llm.generate(prompt)
+======
+        if hasattr(llm, "generate"):
+            response = await llm.generate(prompt, functions)
+>>>>>> main
         else:
             func = getattr(llm, "__call__", None)
             if func is None:
@@ -162,10 +175,27 @@ class BasePlugin(ABC):
         duration = time.time() - start
         context.record_llm_duration(self.__class__.__name__, duration)
 
-        llm_response = LLMResponse(content=str(response))
+        if isinstance(response, LLMResponse):
+            llm_response = response
+        else:
+            llm_response = LLMResponse(content=str(response))
 
         if cache and cache_key is not None:
             await cache.set(cache_key, llm_response.content)
+            if hasattr(cache, "set_semantic"):
+                await cache.set_semantic(prompt, llm_response.content)
+
+        tokens = (llm_response.prompt_tokens or 0) + (
+            llm_response.completion_tokens or 0
+        )
+        if tokens:
+            context.metrics.record_llm_tokens(
+                self.__class__.__name__, str(context.current_stage), tokens
+            )
+        if llm_response.cost:
+            context.metrics.record_llm_cost(
+                self.__class__.__name__, str(context.current_stage), llm_response.cost
+            )
 
         self.logger.info(
             "LLM call completed",
@@ -388,6 +418,6 @@ __all__ = [
 ]
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
-    from .plugins.classifier import PluginAutoClassifier
+    from .interfaces import PluginAutoClassifier
 else:  # pragma: no cover - runtime import for compatibility
-    from .plugins.classifier import PluginAutoClassifier  # type: ignore  # noqa: E402
+    from .interfaces import PluginAutoClassifier  # type: ignore  # noqa: E402

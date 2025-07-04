@@ -1,7 +1,6 @@
+from .adapters.server import AgentServer
 from .agent import Agent
 from .builder import AgentBuilder
-from .runtime import AgentRuntime
-from .adapters.server import AgentServer
 from .config_update import ConfigUpdateResult, update_plugin_configuration
 from .context import ConversationEntry, PluginContext, ToolCall
 from .conversation_manager import ConversationManager
@@ -10,9 +9,9 @@ from .errors import create_static_error_response
 from .initializer import (
     ClassRegistry,
     SystemInitializer,
-    import_plugin_class,
     initialization_cleanup_context,
 )
+from .interfaces import PluginAutoClassifier, import_plugin_class
 from .manager import PipelineManager
 from .metrics import MetricsCollector
 from .observability import execute_with_observability
@@ -23,7 +22,6 @@ from .plugins import (
     BasePlugin,
     ConfigurationError,
     FailurePlugin,
-    PluginAutoClassifier,
     PromptPlugin,
     ReconfigResult,
     ResourcePlugin,
@@ -32,6 +30,7 @@ from .plugins import (
 )
 from .registries import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
 from .resources import LLM, BaseResource, Resource
+from .runtime import AgentRuntime
 from .stages import PipelineStage
 from .state import FailureInfo, LLMResponse, PipelineState
 

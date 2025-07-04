@@ -4,7 +4,12 @@ from typing import Any, Dict
 
 from pipeline.base_plugins import ResourcePlugin
 from pipeline.cache import CacheBackend, InMemoryCache
+<<<<<< yvh9jp-codex/configure-pre-commit-and-enforce-quality-checks
+from pipeline.context import PluginContext
 from pipeline.initializer import import_plugin_class
+======
+from pipeline.interfaces import import_plugin_class
+>>>>>> main
 from pipeline.stages import PipelineStage
 from pipeline.validation import ValidationResult
 
@@ -43,7 +48,10 @@ class CacheResource(ResourcePlugin, CacheBackend):
             return ValidationResult.error_result("'backend' must be a mapping")
         return ValidationResult.success_result()
 
-    async def _execute_impl(self, context):  # pragma: no cover - not used
+    async def _execute_impl(
+        self, context: PluginContext
+    ) -> None:  # pragma: no cover - not used
+        """Cache resource does not execute in the pipeline."""
         return None
 
     async def get(self, key: str) -> Any:
