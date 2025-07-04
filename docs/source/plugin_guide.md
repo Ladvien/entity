@@ -56,7 +56,7 @@ new backend, subclass `ResourcePlugin` and implement the `save_history` and
 
 ```python
 import asyncpg
-from pipeline.plugins import ResourcePlugin
+from plugins import ResourcePlugin
 from pipeline.stages import PipelineStage
 
 

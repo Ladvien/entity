@@ -79,7 +79,7 @@ builder = (
     ConfigBuilder.dev_preset()
     .add_resource(
         "llm",
-        "pipeline.plugins.resources.llm.unified:UnifiedLLMResource",
+        "plugins.resources.llm.unified:UnifiedLLMResource",
         provider="ollama",
         base_url="http://localhost:11434",
         model="tinyllama",
