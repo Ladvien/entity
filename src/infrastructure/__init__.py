@@ -2,4 +2,9 @@
 
 from .infrastructure import Infrastructure
 
-__all__ = ["Infrastructure"]
+try:  # optional dependency
+    from .docker import DockerInfrastructure
+except Exception:  # pragma: no cover - missing docker library
+    DockerInfrastructure = None  # type: ignore
+
+__all__ = ["Infrastructure", "DockerInfrastructure"]
