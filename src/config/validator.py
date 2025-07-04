@@ -18,6 +18,8 @@ from pipeline import SystemInitializer  # noqa: E402
 from pipeline.config import ConfigLoader  # noqa: E402
 from pipeline.logging import configure_logging, get_logger  # noqa: E402
 
+from .validators import _validate_cache, _validate_memory, _validate_vector_memory
+
 logger = get_logger(__name__)
 
 
@@ -70,9 +72,9 @@ class ConfigValidator:
                 validate(instance=raw, schema=self.schema, resolver=self.resolver)
                 load_env()
                 config = ConfigLoader.from_dict(raw)
-                self._validate_memory(config)
-                self._validate_cache(config)
-                self._validate_vector_memory(config)
+                _validate_memory(config)
+                _validate_cache(config)
+                _validate_vector_memory(config)
                 initializer = SystemInitializer(config)
                 asyncio.run(initializer.initialize())
             except (ValidationError, Exception) as exc:  # pragma: no cover - error path
@@ -124,60 +126,6 @@ class ConfigValidator:
                     print("Rolled back to last valid configuration")
 
         return 0
-
-    def _validate_memory(self, config: dict) -> None:
-        """Validate nested memory configuration."""
-
-        mem_cfg = config.get("plugins", {}).get("resources", {}).get("memory")
-        if not mem_cfg:
-            return
-
-        backend = mem_cfg.get("backend")
-        if backend is not None and not isinstance(backend, dict):
-            raise ValueError("memory: 'backend' must be a mapping")
-        if isinstance(backend, dict) and "type" in backend:
-            if not isinstance(backend["type"], str):
-                raise ValueError("memory: 'backend.type' must be a string")
-
-    def _validate_vector_memory(self, config: dict) -> None:
-        """Ensure vector memory configuration contains required fields."""
-
-        vm_cfg = config.get("plugins", {}).get("resources", {}).get("vector_memory")
-        if not vm_cfg:
-            return
-
-        table = vm_cfg.get("table")
-        if not isinstance(table, str) or not table:
-            raise ValueError("vector_memory: 'table' is required")
-
-        embedding = vm_cfg.get("embedding_model")
-        if not isinstance(embedding, dict):
-            raise ValueError("vector_memory: 'embedding_model' must be a mapping")
-
-        if not embedding.get("name"):
-            raise ValueError("vector_memory: 'embedding_model.name' is required")
-
-        if "dimensions" in embedding:
-            try:
-                int(embedding["dimensions"])
-            except (TypeError, ValueError) as exc:
-                raise ValueError(
-                    "vector_memory: 'embedding_model.dimensions' must be an integer"
-                ) from exc
-
-    def _validate_cache(self, config: dict) -> None:
-        """Validate optional cache configuration."""
-
-        cache_cfg = config.get("plugins", {}).get("resources", {}).get("cache")
-        if not cache_cfg:
-            return
-
-        backend = cache_cfg.get("backend")
-        if backend is not None and not isinstance(backend, dict):
-            raise ValueError("cache: 'backend' must be a mapping")
-        if isinstance(backend, dict) and "type" in backend:
-            if not isinstance(backend["type"], str):
-                raise ValueError("cache: 'backend.type' must be a string")
 
 
 def main() -> None:
