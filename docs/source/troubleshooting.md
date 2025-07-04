@@ -10,3 +10,11 @@
 - **Config validation failed** – run `python -m src.config.validator --config your.yaml` to see detailed messages.
 
 If initialization still fails, enable debug logging with `LOG_LEVEL=DEBUG` when running the validator for verbose output.
+
+## Runtime errors
+- **No response generated** – verify each stage sets the pipeline response or passes control to the next stage.
+- **Tool not found** – make sure the tool is registered in `tool_registry` and that the calling plugin uses the correct name.
+
+## Docker issues
+- **Container exits immediately** – check the command in your `Dockerfile` and ensure the configuration file path is correct.
+- **Ports not exposed** – run the container with `-p 8000:8000` so the HTTP adapter is reachable from the host.

@@ -4,16 +4,16 @@ import copy
 import json
 import os
 from contextlib import contextmanager
-from importlib import import_module
 from typing import Any, Dict, Iterable, List, Tuple
 
 from config.environment import load_env
 from pipeline.resources.base import Resource
-from registry import PluginRegistry, ToolRegistry
 from pipeline.resources.container import ResourceContainer
+from registry import PluginRegistry, ToolRegistry
 
 from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
 from .defaults import DEFAULT_CONFIG
+from .interfaces import import_plugin_class
 
 
 class ClassRegistry:
@@ -57,18 +57,6 @@ class ClassRegistry:
                 and not issubclass(cls, Resource)
             ):
                 yield cls, self._configs[name]
-
-
-def import_plugin_class(path: str) -> type[BasePlugin]:
-    """Import plugin class from module path 'module.submodule:ClassName'."""
-    if ":" in path:
-        module_path, class_name = path.split(":", 1)
-    elif "." in path:
-        module_path, class_name = path.rsplit(".", 1)
-    else:
-        raise ValueError(f"Invalid plugin path: {path}")
-    module = import_module(module_path)
-    return getattr(module, class_name)
 
 
 @contextmanager
@@ -182,18 +170,32 @@ class SystemInitializer:
             resource_registry.register(primary_name, cls, config)
         await resource_registry.build_all()
 
+        degraded: List[str] = []
+        report = await resource_registry.health_report()
+        for name, healthy in report.items():
+            if not healthy:
+                degraded.append(name)
+                resource_registry.remove(name)
+
         # Phase 3.5: register tools
         tool_registry = ToolRegistry()
         for cls, config in registry.tool_classes():
+            if any(dep in degraded for dep in getattr(cls, "dependencies", [])):
+                continue
             instance = cls(config)
             tool_registry.add(getattr(instance, "name", cls.__name__), instance)
 
         # Phase 4: instantiate prompt and adapter plugins
         plugin_registry = PluginRegistry()
         for cls, config in registry.non_resource_non_tool_classes():
+            if any(dep in degraded for dep in getattr(cls, "dependencies", [])):
+                continue
             instance = cls(config)
             for stage in getattr(cls, "stages", []):
                 plugin_registry.register_plugin_for_stage(instance, stage)
+
+        if degraded:
+            self.config.setdefault("_disabled_resources", degraded)
 
         return plugin_registry, resource_registry, tool_registry
 
