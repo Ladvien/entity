@@ -10,20 +10,20 @@ entity:
 plugins:
   resources:
     database:
-      type: pipeline.plugins.resources.sqlite_storage:SQLiteStorage
+      type: plugins.resources.sqlite_storage:SQLiteStorage
       path: ./entity.db
     llm:
       provider: openai
       model: gpt-4
   tools:
     search:
-      type: pipeline.plugins.tools.search:SearchTool
+      type: plugins.tools.search:SearchTool
   prompts:
     main:
-      type: pipeline.plugins.prompts.simple:SimplePrompt
+      type: plugins.prompts.simple:SimplePrompt
   adapters:
     http:
-      type: pipeline.plugins.adapters.http:HTTPAdapter
+      type: plugins.adapters.http:HTTPAdapter
 ```
 
 Use `entity src/cli.py --config config.yaml` to start the agent.

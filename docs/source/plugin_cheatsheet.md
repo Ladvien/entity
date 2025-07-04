@@ -13,7 +13,7 @@ All plugins declare their `stages` and any `dependencies`.
 
 ## Skeleton
 ```python
-from pipeline.plugins import PromptPlugin
+from plugins import PromptPlugin
 from pipeline.stages import PipelineStage
 
 class ExamplePlugin(PromptPlugin):

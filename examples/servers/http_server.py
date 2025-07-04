@@ -7,6 +7,40 @@ import sys
 
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))
 
+
+def _enable_plugins_namespace() -> None:
+    import importlib
+    import pkgutil
+    import types
+
+    import pipeline.plugins
+    import pipeline.plugins.resources as plugin_resources
+    import pipeline.resources
+
+    plugins_mod = types.ModuleType("plugins")
+    plugins_mod.__dict__.update(vars(pipeline.plugins))
+    sys.modules["plugins"] = plugins_mod
+    sys.modules["plugins.resources"] = plugin_resources
+    plugins_mod.resources = plugin_resources
+
+    for _, name, _ in pkgutil.walk_packages(
+        pipeline.resources.__path__, prefix="pipeline.resources."
+    ):
+        module = importlib.import_module(name)
+        alias = name.replace("pipeline.resources.", "plugins.")
+        sys.modules[alias] = module
+        parent_alias = alias.rsplit(".", 1)[0]
+        if parent_alias == "plugins":
+            setattr(plugins_mod, alias.split(".")[-1], module)
+        else:
+            parent = sys.modules.setdefault(
+                parent_alias, types.ModuleType(parent_alias)
+            )
+            setattr(parent, alias.split(".")[-1], module)
+
+
+_enable_plugins_namespace()
+
 import asyncio
 from typing import Any
 
