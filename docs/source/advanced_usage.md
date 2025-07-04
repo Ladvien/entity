@@ -68,3 +68,26 @@ features in action:
 ```bash
 python examples/advanced_llm.py
 ```
+
+### Running the Example Servers
+
+Start the demo HTTP server:
+
+```bash
+python examples/servers/http_server.py
+```
+
+For a WebSocket server use the CLI:
+
+```bash
+python src/cli.py serve-websocket --config config/dev.yaml
+```
+
+### DuckDB Pipeline Example
+
+The `examples/pipelines/duckdb_pipeline.py` script demonstrates a local vector
+store backed by DuckDB:
+
+```bash
+python examples/pipelines/duckdb_pipeline.py
+```

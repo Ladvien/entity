@@ -117,3 +117,17 @@ class VectorMemoryResource(ResourcePlugin):
 ```
 
 These scripts are great starting points when designing your own plugins.
+
+### Adapter and Failure Examples
+
+The repository also includes short examples for different adapters and basic
+failure handling. Use `src/cli.py` to run the agent interactively or over a
+WebSocket connection:
+
+```bash
+python src/cli.py --config config/dev.yaml
+python src/cli.py serve-websocket --config config/dev.yaml
+```
+
+When implementing custom error handling, refer to the failure plugin template at
+`src/cli/templates/failure.py`.
