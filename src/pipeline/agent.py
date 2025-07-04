@@ -80,3 +80,14 @@ class Agent:
         if self._runtime is None:
             raise RuntimeError("Agent not initialized")
         return self._runtime.registries
+
+    # ------------------------------------------------------------------
+    # Compatibility helpers
+    # ------------------------------------------------------------------
+    @property
+    def plugin_registry(self):  # pragma: no cover - passthrough
+        return self.get_registries().plugins
+
+    @property
+    def plugins(self):  # pragma: no cover - passthrough
+        return self.get_registries().plugins

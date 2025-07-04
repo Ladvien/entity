@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict, Protocol, runtime_checkable
 
 from pipeline.logging import get_logger
+from pipeline.validation import ValidationResult
 
 
 @runtime_checkable
@@ -40,3 +41,14 @@ class BaseResource:
 
     def get_metrics(self) -> dict[str, Any]:
         return {"status": "healthy"}
+
+    # ------------------------------------------------------------------
+    # Validation helpers matching BasePlugin API
+    # ------------------------------------------------------------------
+    @classmethod
+    def validate_config(cls, config: Dict) -> ValidationResult:
+        return ValidationResult.success_result()
+
+    @classmethod
+    def validate_dependencies(cls, registry: "ClassRegistry") -> ValidationResult:
+        return ValidationResult.success_result()

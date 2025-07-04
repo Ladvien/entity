@@ -15,6 +15,13 @@ class InMemoryStorageResource(DatabaseResource):
         super().__init__(config)
         self._data: Dict[str, List[ConversationEntry]] = {}
 
+    async def _do_health_check(self, connection: None) -> None:
+        """In-memory storage is always healthy."""
+        return None
+
+    async def health_check(self) -> bool:  # pragma: no cover - trivial
+        return True
+
     async def save_history(
         self, conversation_id: str, history: List[ConversationEntry]
     ) -> None:
