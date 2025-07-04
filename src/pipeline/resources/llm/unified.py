@@ -4,6 +4,9 @@ from typing import Any, AsyncIterator, Dict, List, Type
 
 from pipeline.state import LLMResponse
 from pipeline.user_plugins import ValidationResult
+
+# Import provider implementations from the public plugin package. Using the
+# fully qualified path avoids ambiguity if this module is restructured.
 from plugins.resources.llm.providers import (
     BedrockProvider,
     ClaudeProvider,
