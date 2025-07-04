@@ -2,8 +2,7 @@
 
 import warnings
 
-from user_plugins.infrastructure.sandbox import (DockerSandboxRunner,
-                                                 PluginAuditor)
+from user_plugins.infrastructure.sandbox import DockerSandboxRunner, PluginAuditor
 
 warnings.warn(
     "pipeline.sandbox is deprecated; use user_plugins.infrastructure.sandbox instead",
