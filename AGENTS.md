@@ -4,9 +4,11 @@ This repository contains a plugin based framework for building AI agents.
 Use this document when preparing changes or reviewing pull requests.
 
 ## IMPORTANT!
-Before commit, please pull changes from main and resolve any conflicts.
+Before commit, please pull changes from main and resolve any conflicts from main:
 ```sh
-git pull https://github.com/Ladvien/entity.git main
+git remote set-url origin https://${GITHUB_TOKEN}@github.com/Ladvien/entity.git
+git pull origin main
+git branch --set-upstream-to=origin/main work
 ```
 
 ## Project Structure
