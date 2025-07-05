@@ -74,6 +74,12 @@ The command waits for active pipelines to finish, then applies the new YAML
 configuration. This demonstrates **Dynamic Configuration Updates**, letting you
 tweak resources or tools at runtime while keeping the system responsive.
 
+For a hands-on demonstration, run `examples/config_reload_example.py`:
+
+```bash
+python examples/config_reload_example.py
+```
+
 ### Streaming and Function Calling
 
 UnifiedLLMResource now exposes streaming via Server-Sent Events and optional
