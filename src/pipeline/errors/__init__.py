@@ -3,6 +3,15 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict
 
+from .exceptions import PipelineError, ResourceError, ToolExecutionError
+
+__all__ = [
+    "create_static_error_response",
+    "PipelineError",
+    "ResourceError",
+    "ToolExecutionError",
+]
+
 # Generic fallback returned when even error handling fails
 STATIC_ERROR_RESPONSE: Dict[str, Any] = {
     "error": "System error occurred",

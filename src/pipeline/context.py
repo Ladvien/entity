@@ -14,6 +14,7 @@ else:  # pragma: no cover - runtime type reference
 
 from registry import SystemRegistries
 
+from .errors import ToolExecutionError
 from .metrics import MetricsCollector
 from .stages import PipelineStage
 from .state import ConversationEntry, FailureInfo, LLMResponse, PipelineState, ToolCall
@@ -265,10 +266,8 @@ class PluginContext:
                 raise KeyError(result_key)
             tool = self._registries.tools.get(call.name)
             if not tool:
-                result = f"Error: tool {call.name} not found"
-                self.set_stage_result(call.result_key, result)
                 state.pending_tool_calls.remove(call)
-                return result
+                raise ToolExecutionError(call.name)
             tool = cast(Any, tool)
             options = RetryOptions(
                 max_retries=getattr(tool, "max_retries", 1),
@@ -279,10 +278,10 @@ class PluginContext:
                 self.set_stage_result(call.result_key, result)
                 self.record_tool_execution(call.name, call.result_key, call.source)
             except Exception as exc:  # noqa: BLE001
-                result = f"Error: {exc}"
-                self.set_stage_result(call.result_key, result)
                 self.record_tool_error(call.name, str(exc))
-            state.pending_tool_calls.remove(call)
+                raise ToolExecutionError(call.name, exc) from exc
+            finally:
+                state.pending_tool_calls.remove(call)
         return self.get_stage_result(result_key)
 
     async def ask_llm(self, prompt: str) -> str:
