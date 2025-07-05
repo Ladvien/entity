@@ -18,7 +18,8 @@ if TYPE_CHECKING:  # pragma: no cover - used for type hints only
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .initializer import ClassRegistry
 
-from .exceptions import CircuitBreakerTripped, PluginError, PluginExecutionError
+from .exceptions import (CircuitBreakerTripped, PluginError,
+                         PluginExecutionError)
 from .logging import get_logger
 from .observability.utils import execute_with_observability
 from .stages import PipelineStage
@@ -294,6 +295,13 @@ class ResourcePlugin(BasePlugin):
     def get_metrics(self) -> Dict[str, Any]:
         """Return metrics about this resource."""
         return {"status": "healthy"}
+
+    async def __aenter__(self) -> "ResourcePlugin":
+        await self.initialize()
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        await self.shutdown()
 
 
 class ToolPlugin(BasePlugin):

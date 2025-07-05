@@ -27,6 +27,7 @@ class ResourcePool:
         self._pool: asyncio.Queue[Any] = asyncio.Queue()
         self._total_size = 0
         self._lock = asyncio.Lock()
+        self._ctx_resource: Any | None = None
 
     async def initialize(self) -> None:
         for _ in range(self._cfg.min_size):
@@ -70,6 +71,15 @@ class ResourcePool:
             "in_use": self._total_size - self._pool.qsize(),
             "available": self._pool.qsize(),
         }
+
+    async def __aenter__(self) -> Any:
+        self._ctx_resource = await self.acquire()
+        return self._ctx_resource
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        if self._ctx_resource is not None:
+            await self.release(self._ctx_resource)
+            self._ctx_resource = None
 
 
 class ResourceContainer(ResourceRegistry):
@@ -156,6 +166,12 @@ class ResourceContainer(ResourceRegistry):
 
     def get_metrics(self) -> Dict[str, Dict[str, int]]:
         return {name: pool.metrics() for name, pool in self._pools.items()}
+
+    async def __aenter__(self) -> "ResourceContainer":
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        await self.shutdown_all()
 
     def _instantiate(self, cls: type, cfg: Dict) -> Any:
         if hasattr(cls, "from_config"):

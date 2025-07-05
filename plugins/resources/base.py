@@ -46,6 +46,13 @@ class BaseResource:
     def get_metrics(self) -> dict[str, Any]:
         return {"status": "healthy"}
 
+    async def __aenter__(self) -> "BaseResource":
+        await self.initialize()
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        await self.shutdown()
+
     # ------------------------------------------------------------------
     # Validation helpers matching BasePlugin API
     # ------------------------------------------------------------------
