@@ -1,8 +1,5 @@
-<<<<<<< HEAD
-=======
 from plugins.builtin.adapters.server import AgentServer
 
->>>>>>> 94729e2a932fa4b63abaf4976b85727defa173ae
 from .agent import Agent
 from .builder import AgentBuilder
 from .config_update import ConfigUpdateResult, update_plugin_configuration
@@ -38,14 +35,10 @@ from .runtime import AgentRuntime
 from .stages import PipelineStage
 from .state import FailureInfo, LLMResponse, PipelineState
 
-<<<<<<< HEAD
-=======
 # isort: off
 from plugins.builtin.adapters import CLIAdapter, HTTPAdapter, WebSocketAdapter
 
 # isort: on
-
->>>>>>> 94729e2a932fa4b63abaf4976b85727defa173ae
 __all__ = [
     "PipelineStage",
     "PipelineState",
@@ -86,7 +79,11 @@ __all__ = [
     "Agent",
     "AgentBuilder",
     "AgentRuntime",
+    "AgentServer",
     "PipelineManager",
     "ConversationManager",
+    "HTTPAdapter",
+    "WebSocketAdapter",
+    "CLIAdapter",
     "execute_with_observability",
 ]

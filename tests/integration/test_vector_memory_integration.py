@@ -19,12 +19,7 @@ from pipeline import (
 )
 from pipeline.resources.llm import UnifiedLLMResource
 from pipeline.resources.pg_vector_store import PgVectorStore
-<<<<<<< HEAD
-from plugins.resources.postgres import PostgresResource
-from user_plugins.prompts.complex_prompt import ComplexPrompt
-=======
 from pipeline.resources.postgres import PostgresResource
->>>>>>> 94729e2a932fa4b63abaf4976b85727defa173ae
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
 

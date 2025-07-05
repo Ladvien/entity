@@ -4,12 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Dict, List, Optional
 
-<<<<<<< HEAD
 from pipeline.utils import DependencyGraph
 from registry.registries import ResourceRegistry
-=======
-from plugins.builtin.resources.container import ResourceContainer
->>>>>>> 94729e2a932fa4b63abaf4976b85727defa173ae
 
 
 @dataclass

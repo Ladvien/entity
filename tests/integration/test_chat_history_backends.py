@@ -21,7 +21,7 @@ from pipeline import (
 from pipeline.resources.duckdb_database import DuckDBDatabaseResource
 from pipeline.resources.in_memory_storage import InMemoryStorageResource
 from pipeline.resources.memory_resource import MemoryResource
-from plugins.resources.postgres import PostgresResource
+from pipeline.resources.postgres import PostgresResource
 from pipeline.resources.sqlite_storage import SQLiteStorageResource
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
