@@ -19,6 +19,7 @@ packages = [
 [tool.poetry.scripts]
 entity-cli = "src.cli:main"
 entity-config-validate = "src.config.validator:main"
+entity-config-migrate = "src.config.migrate:main"
 
 
 [tool.poetry.urls]
