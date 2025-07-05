@@ -41,6 +41,23 @@ plugins:
         type: plugins.builtin.resources.s3_filesystem:S3FileSystem
         bucket: agent-files
         region: us-east-1
+#   storage:
+#     type: pipeline.resources.storage_resource:StorageResource
+#     database:
+#       type: plugins.builtin.resources.postgres:PostgresResource
+#       host: prod-db.example.com
+#       port: 5432
+#       name: prod_storage
+#       username: prod_user
+#       password: securepass
+#     vector_store:
+#       type: plugins.builtin.resources.pg_vector_store:PgVectorStore
+#       dimensions: 768
+#       table: embeddings
+#     filesystem:
+#       type: plugins.builtin.resources.s3_filesystem:S3FileSystem
+#       bucket: agent-files
+#       region: us-east-1
     cache:
       type: plugins.contrib.resources.cache:CacheResource
       backend:

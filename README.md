@@ -260,6 +260,10 @@ plugins:
         bucket: agent-files
         region: us-east-1
 ```
+Full examples live in [`config/dev.yaml`](config/dev.yaml) and
+[`config/prod.yaml`](config/prod.yaml). Each file includes a commented
+`storage:` block showing how to wire up `StorageResource` with sample database,
+vector store, and filesystem settings.
 
 ### Programmatic Configuration
 ```python
