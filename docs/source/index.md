@@ -58,6 +58,7 @@ deploy_cloud
 principle_checklist
 apidocs/index
 api_reference
+components_overview
 architecture
 plugins
 ```
