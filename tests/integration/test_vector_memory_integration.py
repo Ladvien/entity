@@ -7,10 +7,18 @@ import pytest
 from plugins.contrib.prompts.complex_prompt import ComplexPrompt
 
 from config.environment import load_env
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, ResourceRegistry,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    ResourceRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources.llm import UnifiedLLMResource
+from pipeline.resources.memory_resource import MemoryResource
 from pipeline.resources.pg_vector_store import PgVectorStore
 from pipeline.resources.postgres import PostgresResource
 
@@ -41,6 +49,7 @@ def test_vector_memory_integration():
         }
         db = PostgresResource(db_cfg)
         vm = PgVectorStore(vm_cfg)
+        memory = MemoryResource(database=db, vector_store=vm)
         llm = UnifiedLLMResource(
             {"provider": "echo", "base_url": "http://localhost", "model": "none"}
         )
@@ -65,11 +74,10 @@ def test_vector_memory_integration():
         history_entry = ConversationEntry(
             content="previous", role="user", timestamp=datetime.now()
         )
-        await db.save_history("conv1", [history_entry])
+        await memory.save_conversation("conv1", [history_entry])
         await vm.add_embedding("previous")
         resources = ResourceRegistry()
-        await resources.add("database", db)
-        await resources.add("vector_memory", vm)
+        await resources.add("memory", memory)
         await resources.add("llm", llm)
         registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
         state = PipelineState(
