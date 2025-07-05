@@ -9,12 +9,7 @@ import httpx
 from plugins.builtin.resources.http_llm_resource import HttpLLMResource
 from plugins.builtin.resources.llm_base import LLM
 
-from interfaces.resources import LLM
 from pipeline.validation import ValidationResult
-<<<<<<<< HEAD:plugins/llm/providers/base.py
-from plugins.resources.http_llm_resource import HttpLLMResource
-========
->>>>>>>> 94729e2a932fa4b63abaf4976b85727defa173ae:plugins/builtin/resources/llm/providers/base.py
 
 
 class BaseProvider(LLM):
