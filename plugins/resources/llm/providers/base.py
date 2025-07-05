@@ -21,6 +21,16 @@ class BaseProvider(LLM):
     def __init__(self, config: Dict) -> None:
         self.http = HttpLLMResource(config, require_api_key=self.requires_api_key)
         self.retry_attempts = int(config.get("retries", 3))
+        self._client: httpx.AsyncClient | None = None
+
+    async def __aenter__(self) -> "BaseProvider":
+        self._client = httpx.AsyncClient(timeout=None)
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        if self._client is not None:
+            await self._client.aclose()
+        self._client = None
 
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
@@ -47,7 +57,9 @@ class BaseProvider(LLM):
         last_exc: Exception | None = None
         for attempt in range(self.retry_attempts):
             try:
-                async with httpx.AsyncClient(timeout=None) as client:
+                client = self._client or httpx.AsyncClient(timeout=None)
+                close_client = self._client is None
+                try:
                     async with client.stream(
                         "POST", url, json=payload, headers=headers, params=params
                     ) as response:
@@ -60,7 +72,10 @@ class BaseProvider(LLM):
                             if line == "[DONE]":
                                 break
                             yield json.loads(line)
-                return
+                    return
+                finally:
+                    if close_client:
+                        await client.aclose()
             except Exception as exc:  # noqa: BLE001 - retry
                 last_exc = exc
                 await asyncio.sleep(2**attempt)
