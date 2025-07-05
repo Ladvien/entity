@@ -5,8 +5,13 @@
 from __future__ import annotations
 
 import asyncio
+import os
+from typing import Any
 
 import grpc  # type: ignore
+
+from config.environment import load_env
+from pipeline.resources.llm.unified import UnifiedLLMResource
 
 # These modules are generated from ``llm.proto`` using ``grpcio-tools``.
 # They are intentionally excluded from version control and should be
@@ -21,14 +26,28 @@ except Exception:  # pragma: no cover - stub fallback
 class LLMService(
     llm_pb2_grpc.LLMServiceServicer if llm_pb2_grpc else object
 ):  # type: ignore[misc]
-    """Example text generation service."""
+    """Text generation service using :class:`UnifiedLLMResource`."""
+
+    def __init__(self, llm: Any | None = None) -> None:
+        load_env()
+        self.llm = llm or UnifiedLLMResource(
+            {
+                "provider": os.getenv("LLM_PROVIDER", "ollama"),
+                "base_url": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
+                "model": os.getenv("OLLAMA_MODEL", "tinyllama"),
+            }
+        )
 
     async def Generate(
         self, request: "llm_pb2.GenerateRequest", context: grpc.aio.ServicerContext
     ) -> "llm_pb2.GenerateResponse":  # type: ignore[name-defined]
-        # TODO: integrate actual model inference
-        for word in ["hello", "world"]:
-            yield llm_pb2.GenerateResponse(token=word)
+        """Stream generated tokens for ``request.prompt``."""
+
+        try:
+            async for token in self.llm.stream(request.prompt):
+                yield llm_pb2.GenerateResponse(token=str(token))
+        except Exception as exc:  # noqa: BLE001
+            await context.abort(grpc.StatusCode.INTERNAL, str(exc))
 
 
 async def serve(port: int = 50051) -> None:
