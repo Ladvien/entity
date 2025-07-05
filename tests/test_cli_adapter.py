@@ -4,15 +4,9 @@ from typing import Any
 
 from plugins.builtin.adapters.cli import CLIAdapter
 
-from pipeline import (
-    PipelineManager,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
+                      PromptPlugin, ResourceRegistry, SystemRegistries,
+                      ToolRegistry)
 
 
 class EchoPlugin(PromptPlugin):

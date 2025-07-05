@@ -1,15 +1,8 @@
 import asyncio
 
-from pipeline import (
-    ConversationManager,
-    PipelineManager,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationManager, PipelineManager, PipelineStage,
+                      PluginRegistry, PromptPlugin, ResourceRegistry,
+                      SystemRegistries, ToolRegistry)
 
 
 class ContinuePlugin(PromptPlugin):

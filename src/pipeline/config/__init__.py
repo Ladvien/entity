@@ -9,10 +9,7 @@ from typing import Any, Dict
 import yaml
 
 from config.environment import load_env
-<<<<<<< HEAD
-=======
 from config.models import validate_config
->>>>>>> 87fc8711f18eb3dd3bc6e63d717bd8ba25a4c47c
 
 from .utils import interpolate_env_vars
 

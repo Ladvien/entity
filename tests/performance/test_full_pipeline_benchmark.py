@@ -2,14 +2,8 @@ import asyncio
 
 import pytest
 
-from pipeline import (
-    PipelineManager,
-    PipelineStage,
-    PluginRegistry,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
+                      ResourceRegistry, SystemRegistries, ToolRegistry)
 
 
 class RespondPlugin:

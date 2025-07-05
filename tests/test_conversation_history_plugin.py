@@ -4,16 +4,9 @@ from unittest.mock import AsyncMock
 
 from plugins.contrib.prompts.conversation_history import ConversationHistory
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginContext, PluginRegistry, ResourceRegistry,
+                      SystemRegistries, ToolRegistry)
 from pipeline.resources.memory_resource import MemoryResource
 from pipeline.stages import PipelineStage
 

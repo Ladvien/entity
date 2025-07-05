@@ -3,17 +3,11 @@ from datetime import datetime
 
 from plugins.contrib.prompts.memory_retrieval import MemoryRetrievalPrompt
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
-from pipeline.resources.memory_resource import MemoryResource, SimpleMemoryResource
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginContext, PluginRegistry, ResourceRegistry,
+                      SystemRegistries, ToolRegistry)
+from pipeline.resources.memory_resource import (MemoryResource,
+                                                SimpleMemoryResource)
 
 
 class DummyMemory(MemoryResource):

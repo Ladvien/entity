@@ -5,7 +5,6 @@ from typing import Any, Dict, Generic, Optional, Set, TypeVar, cast
 
 from registry import SystemRegistries
 
-
 ResultT = TypeVar("ResultT")
 
 
