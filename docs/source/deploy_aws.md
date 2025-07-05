@@ -59,6 +59,28 @@ deployer.deploy()
 
 This approach keeps infrastructure management fully scripted while retaining the readability of Python.
 
+## Infrastructure Helpers with CDKTF
+
+The project provides small helpers that wrap the [`cdktf`](https://developer.hashicorp.com/terraform/cdktf) library. They let you deploy simple stacks directly from Python.
+
+```python
+from infrastructure.aws_basic import deploy
+
+# create an S3 bucket in us-east-1
+deploy()
+```
+
+`Infrastructure` creates a CDK application and invokes the `cdktf` CLI. The default stack in `aws_basic.py` provisions a single S3 bucket, but you can extend `BasicAwsStack` with additional resources.
+
+### Bedrock Example
+
+```python
+from infrastructure.aws_bedrock import deploy
+
+# deploy IAM role and bucket, then destroy with `cdktf destroy` when done
+deploy()
+```
+
 ## Deployment Mental Model
 
 Infrastructure setup mirrors the plugin configuration approach. Define your environment in an `Infrastructure` class, then let it run Terraform to provision the resources before starting the agent service.
