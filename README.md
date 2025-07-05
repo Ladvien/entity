@@ -307,6 +307,7 @@ plugins:
         type: plugins.builtin.resources.local_filesystem:LocalFileSystemResource
         base_path: ./files
 ```
+For a runnable demonstration see `examples/storage_resource_example.py`.
 
 ## Implementation Recommendations
 
