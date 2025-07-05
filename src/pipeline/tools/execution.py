@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Dict, cast
+from typing import Any, Awaitable, Callable, Dict, TypeVar, cast
+
+from interfaces import ToolPluginProtocol
 
 from registry import SystemRegistries
 
@@ -9,9 +11,15 @@ from ..state import PipelineState, ToolCall
 from .base import RetryOptions
 
 
+ResultT = TypeVar("ResultT")
+
+
 async def execute_tool(
-    tool: Any, call: ToolCall, state: PipelineState, options: RetryOptions
-) -> Any:
+    tool: ToolPluginProtocol[ResultT],
+    call: ToolCall,
+    state: PipelineState,
+    options: RetryOptions,
+) -> ResultT:
     for attempt in range(options.max_retries + 1):
         try:
             if hasattr(tool, "execute_function_with_retry"):
@@ -24,28 +32,32 @@ async def execute_tool(
             if func is None:
                 raise RuntimeError("Tool lacks execution method")
             if asyncio.iscoroutinefunction(func):
-                return await func(call.params)
-            return func(call.params)
+                async_func = cast(Callable[[Dict[str, Any]], Awaitable[ResultT]], func)
+                return await async_func(call.params)
+            sync_func = cast(Callable[[Dict[str, Any]], ResultT], func)
+            return sync_func(call.params)
         except Exception:
             if attempt == options.max_retries:
                 raise
             await asyncio.sleep(options.delay)
+    raise RuntimeError("Tool execution failed")
 
 
 async def execute_pending_tools(
     state: PipelineState, registries: SystemRegistries
-) -> Dict[str, Any]:
+) -> Dict[str, ResultT]:
     """Execute queued tools and return their results by ``result_key``."""
 
-    results: Dict[str, Any] = {}
+    results: Dict[str, ResultT] = {}
     cache = registries.resources.get("cache")
     for call in list(state.pending_tool_calls):
         tool = registries.tools.get(call.name)
         if not tool:
             error_msg = f"Error: tool {call.name} not found"
             state.stage_results[call.result_key] = error_msg
-            results[call.result_key] = error_msg
+            results[call.result_key] = cast(ResultT, error_msg)
             continue
+        tool = cast(ToolPluginProtocol[ResultT], tool)
 
         options = RetryOptions(
             max_retries=getattr(tool, "max_retries", 1),
@@ -64,7 +76,7 @@ async def execute_pending_tools(
             cached = await cache.get(cache_key)
             if cached is not None:
                 state.stage_results[call.result_key] = cached
-                results[call.result_key] = cached
+                results[call.result_key] = cast(ResultT, cached)
                 state.pending_tool_calls.remove(call)
                 continue
         try:
@@ -83,7 +95,7 @@ async def execute_pending_tools(
         except Exception as exc:
             err = f"Error: {exc}"
             state.stage_results[call.result_key] = err
-            results[call.result_key] = err
+            results[call.result_key] = cast(ResultT, err)
             state.metrics.record_tool_error(
                 call.name,
                 cast(str, state.current_stage and str(state.current_stage)),

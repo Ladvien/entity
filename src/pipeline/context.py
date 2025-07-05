@@ -5,7 +5,17 @@ from __future__ import annotations
 import asyncio
 from copy import deepcopy
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    AsyncIterator,
+    TypeVar,
+    cast,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
 <<<<<<< HEAD
@@ -27,14 +37,19 @@ from .tools.base import RetryOptions
 from .tools.execution import execute_tool
 
 
+ResourceT = TypeVar("ResourceT", covariant=True)
+
+
 class PluginContext:
     """Object exposing pipeline state and utilities to plugins."""
+
+    __state: PipelineState
 
     def __init__(self, state: PipelineState, registries: SystemRegistries) -> None:
         """Initialize context with immutable ``state`` and ``registries``."""
 
         # store state privately to discourage direct access from plugins
-        self.__state = state
+        self.__state: PipelineState = state
         self._registries = registries
 
     # do not allow external code to read _state
@@ -87,22 +102,22 @@ class PluginContext:
     @property
     def pipeline_id(self) -> str:
         """Unique identifier for the current pipeline run."""
-        return self.__state.pipeline_id
+        return cast(str, self.__state.pipeline_id)
 
     @property
     def request_id(self) -> str:
         """Correlation identifier for logging."""
-
-        return self.__state.pipeline_id
+        return cast(str, self.__state.pipeline_id)
 
     @property
     def current_stage(self) -> Optional[PipelineStage]:
         """Stage currently being executed."""
         return self.__state.current_stage
 
-    def get_resource(self, name: str) -> Any:
+    def get_resource(self, name: str) -> Optional[ResourceT]:
         """Return a shared resource plugin registered as ``name``."""
-        return self._registries.resources.get(name)
+
+        return cast(Optional[ResourceT], self._registries.resources.get(name))
 
     def get_llm(self) -> LLM:
         """Return the configured LLM resource.
@@ -122,7 +137,7 @@ class PluginContext:
         """Return the latest user message."""
         for entry in reversed(self.__state.conversation):
             if entry.role == "user":
-                return entry.content
+                return cast(str, entry.content)
         return ""
 
     def execute_tool(
@@ -227,12 +242,12 @@ class PluginContext:
     @property
     def user(self) -> str:
         """Return the user identifier from metadata."""
-        return self.__state.metadata.get("user", "user")
+        return cast(str, self.__state.metadata.get("user", "user"))
 
     @property
     def location(self) -> Optional[str]:
         """Return location metadata if available."""
-        return self.__state.metadata.get("location")
+        return cast(Optional[str], self.__state.metadata.get("location"))
 
     def say(self, message: str) -> None:
         """Shortcut for :meth:`set_response`."""
@@ -316,10 +331,10 @@ class PluginContext:
         )
 
         if isinstance(response, LLMResponse):
-            return response.content
+            return cast(str, response.content)
         return str(response)
 
-    async def stream_llm(self, prompt: str):
+    async def stream_llm(self, prompt: str) -> AsyncIterator[str]:
         """Stream LLM output using server-sent events."""
         llm = self.get_llm()
         self.record_llm_call("PluginContext", "stream_llm")
