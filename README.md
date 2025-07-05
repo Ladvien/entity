@@ -4,12 +4,11 @@ When instantiated without a configuration file, ``Agent`` loads a basic set of
 plugins so the pipeline can run out of the box:
 
 - ``EchoLLMResource`` – minimal LLM resource that simply echoes prompts.
-- ``MemoryResource`` – composite in-memory store with optional database, vector,
-  and file backends.
+- ``MemoryResource`` – persists conversation history and vectors.
 - ``SearchTool`` – wrapper around DuckDuckGo's search API.
 - ``CalculatorTool`` – safe evaluator for arithmetic expressions.
 
-StorageResource is an advanced plugin for persistent storage. See [docs/source/plugin_guide.md](docs/source/plugin_guide.md) for details.
+StorageResource handles file CRUD and can combine multiple backends. See [docs/source/plugin_guide.md](docs/source/plugin_guide.md) for details.
 These defaults allow ``Agent()`` to process messages without any external
 configuration.
 
@@ -59,7 +58,7 @@ plugins:
       pool_max_size: 5
 ```
 
-For ephemeral sessions, an in-memory backend is available:
+For quick tests you can use an in-memory backend:
 
 ```yaml
 plugins:
