@@ -1,16 +1,12 @@
-from __future__ import annotations
-
 import asyncio
 from typing import Any, Awaitable, Callable, Dict, TypeVar, cast
 
 from interfaces import ToolPluginProtocol
-
 from registry import SystemRegistries
 
 from ..errors import ToolExecutionError
 from ..state import PipelineState, ToolCall
 from .base import RetryOptions
-
 
 ResultT = TypeVar("ResultT")
 
@@ -54,15 +50,8 @@ async def execute_pending_tools(
     for call in list(state.pending_tool_calls):
         tool = registries.tools.get(call.name)
         if not tool:
-<<<<<<< HEAD
-            error_msg = f"Error: tool {call.name} not found"
-            state.stage_results[call.result_key] = error_msg
-            results[call.result_key] = cast(ResultT, error_msg)
-            continue
-        tool = cast(ToolPluginProtocol[ResultT], tool)
-=======
             raise ToolExecutionError(call.name)
->>>>>>> 6548efef9c31979c7c9316833be101808bace0c6
+        tool = cast(ToolPluginProtocol[ResultT], tool)
 
         options = RetryOptions(
             max_retries=getattr(tool, "max_retries", 1),
@@ -98,12 +87,6 @@ async def execute_pending_tools(
                 call.source,
             )
         except Exception as exc:
-<<<<<<< HEAD
-            err = f"Error: {exc}"
-            state.stage_results[call.result_key] = err
-            results[call.result_key] = cast(ResultT, err)
-=======
->>>>>>> 6548efef9c31979c7c9316833be101808bace0c6
             state.metrics.record_tool_error(
                 call.name,
                 cast(str, state.current_stage and str(state.current_stage)),
