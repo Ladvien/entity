@@ -58,3 +58,6 @@ class CacheResource(ResourcePlugin, CacheBackend):
 
     async def delete(self, key: str) -> None:
         await self._backend.delete(key)
+
+    async def clear(self) -> None:
+        await self._backend.clear()
