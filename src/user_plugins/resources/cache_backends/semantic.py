@@ -20,6 +20,12 @@ class SemanticCache(CacheBackend):
     async def set(self, key: str, value: Any, ttl: int | None = None) -> None:
         await self.inner.set(key, value, ttl)
 
+    async def delete(self, key: str) -> None:
+        await self.inner.delete(key)
+        for prompt, mapped_key in list(self._prompt_map.items()):
+            if mapped_key == key:
+                del self._prompt_map[prompt]
+
     async def clear(self) -> None:
         await self.inner.clear()
 
