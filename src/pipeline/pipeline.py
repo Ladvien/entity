@@ -13,7 +13,7 @@ from registry import SystemRegistries
 
 from .context import ConversationEntry, PluginContext, SimpleContext
 from .errors import create_static_error_response
-from .exceptions import CircuitBreakerTripped, PluginExecutionError
+from .exceptions import CircuitBreakerTripped, PluginExecutionError, ToolExecutionError
 from .logging import reset_request_id, set_request_id
 from .manager import PipelineManager
 from .observability.metrics import _metrics_server
@@ -73,6 +73,15 @@ async def execute_stage(
             state.failure_info = FailureInfo(
                 stage=str(stage),
                 plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
+                error_type=exc.original_exception.__class__.__name__,
+                error_message=str(exc.original_exception),
+                original_exception=exc.original_exception,
+            )
+            return
+        except ToolExecutionError as exc:
+            state.failure_info = FailureInfo(
+                stage=str(stage),
+                plugin_name=exc.tool_name,
                 error_type=exc.original_exception.__class__.__name__,
                 error_message=str(exc.original_exception),
                 original_exception=exc.original_exception,

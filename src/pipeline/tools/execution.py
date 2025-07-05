@@ -5,7 +5,8 @@ from typing import Any, Dict, cast
 
 from registry import SystemRegistries
 
-from ..state import PipelineState, ToolCall
+from ..exceptions import ToolExecutionError
+from ..state import FailureInfo, PipelineState, ToolCall
 from .base import RetryOptions
 
 
@@ -81,15 +82,20 @@ async def execute_pending_tools(
                 call.source,
             )
         except Exception as exc:
-            err = f"Error: {exc}"
-            state.stage_results[call.result_key] = err
-            results[call.result_key] = err
             state.metrics.record_tool_error(
                 call.name,
                 cast(str, state.current_stage and str(state.current_stage)),
                 state.pipeline_id,
                 str(exc),
             )
+            state.failure_info = FailureInfo(
+                stage=str(state.current_stage),
+                plugin_name=call.name,
+                error_type=exc.__class__.__name__,
+                error_message=str(exc),
+                original_exception=exc,
+            )
+            raise ToolExecutionError(call.name, exc, call.result_key) from exc
         finally:
             state.pending_tool_calls.remove(call)
     return results
