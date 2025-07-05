@@ -1,0 +1,33 @@
+import asyncio
+
+import pytest
+
+from pipeline import (
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    ResourceRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
+
+
+class RespondPlugin:
+    stages = [PipelineStage.DO]
+
+    async def execute(self, context):
+        context.set_response("ok")
+
+
+@pytest.mark.benchmark
+def test_full_pipeline_benchmark(benchmark):
+    plugins = PluginRegistry()
+    plugins.register_plugin_for_stage(RespondPlugin(), PipelineStage.DO)
+    registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
+    manager = PipelineManager(registries)
+
+    def run():
+        return asyncio.run(manager.run_pipeline("hi"))
+
+    result = benchmark(run)
+    assert result == "ok"
