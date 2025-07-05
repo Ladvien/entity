@@ -32,7 +32,7 @@ plugins:
         bucket: agent-files
         region: us-east-1
     cache:
-      type: plugins.resources.cache:CacheResource
+      type: pipeline.user_plugins.resources.cache:CacheResource
       backend:
         type: pipeline.cache.memory:InMemoryCache
   tools:
