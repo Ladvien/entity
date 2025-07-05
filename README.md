@@ -12,13 +12,14 @@ These defaults allow ``Agent()`` to process messages without any external
 configuration.
 
 <!-- start quick_start -->
-Get started quickly by installing the package and running an agent with a YAML
-file:
+Get started quickly by installing dependencies with Poetry and running an agent
+with a YAML file:
 
 ```bash
-pip install entity-pipeline
-python src/cli.py --config config.yaml
+poetry install
+poetry run python src/cli.py --config config.yaml
 ```
+This project relies on `httpx==0.27.*`, which Poetry will install automatically.
 <!-- end quick_start -->
 For an infrastructure walkthrough on Amazon Web Services, see the [AWS deployment guide](docs/source/deploy_aws.md).
 
