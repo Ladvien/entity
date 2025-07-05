@@ -163,5 +163,10 @@ class ResourceContainer(ResourceRegistry):
         return cls(config=cfg)
 
     def _resolve_order(self) -> List[str]:
-        graph = DependencyGraph(self._deps)
+        # Build dependency graph with edges from each dependency to its dependents
+        graph_map: Dict[str, List[str]] = {name: [] for name in self._deps}
+        for name, deps in self._deps.items():
+            for dep in deps:
+                graph_map.setdefault(dep, []).append(name)
+        graph = DependencyGraph(graph_map)
         return graph.topological_sort()

@@ -57,7 +57,7 @@ def test_health_report():
 root = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location(
     "plugins.resources.container",
-    root / "src/plugins.resources/container.py",
+    root / "plugins/resources/container.py",
 )
 
 _orig_pipeline = sys.modules.get("pipeline")
@@ -67,18 +67,20 @@ sys.modules["pipeline"] = ModuleType("pipeline")
 sys.modules["plugins.resources"] = ModuleType("plugins.resources")
 module = importlib.util.module_from_spec(spec)
 sys.modules["plugins.resources.container"] = module
-spec.loader.exec_module(module)  # type: ignore[arg-type]
+try:
+    spec.loader.exec_module(module)  # type: ignore[arg-type]
+finally:
+    if _orig_pipeline is not None:
+        sys.modules["pipeline"] = _orig_pipeline
+    else:
+        del sys.modules["pipeline"]
+
+    if _orig_resources is not None:
+        sys.modules["plugins.resources"] = _orig_resources
+    else:
+        del sys.modules["plugins.resources"]
+
 ResourceContainerDynamic = module.ResourceContainer
-
-if _orig_pipeline is not None:
-    sys.modules["pipeline"] = _orig_pipeline
-else:
-    del sys.modules["pipeline"]
-
-if _orig_resources is not None:
-    sys.modules["plugins.resources"] = _orig_resources
-else:
-    del sys.modules["plugins.resources"]
 
 
 class Dummy:
