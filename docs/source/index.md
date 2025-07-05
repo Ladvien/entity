@@ -21,6 +21,7 @@ Welcome to the Entity Pipeline framework. These pages explain how to configure a
 
 ### Architecture
 - [Architecture overview](architecture.md)
+- [Components overview](components_overview.md)
 
 ### Reference
 - [Context API](context.md)
@@ -60,5 +61,6 @@ apidocs/index
 api_reference
 components_overview
 architecture
+components_overview
 plugins
 ```
