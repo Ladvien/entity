@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+"""Persist files on the local disk."""
 import asyncio
 import pathlib
 from typing import Dict

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+"""Base class for HTTP LLM providers."""
 import asyncio
 import json
 from typing import Any, AsyncIterator, Dict, Optional

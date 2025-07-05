@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+"""Utility to launch HTTP and WebSocket adapters."""
+
+
 import asyncio
 
 from pipeline.runtime import AgentRuntime

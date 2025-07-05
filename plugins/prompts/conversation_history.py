@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+"""Synchronize conversation history using the memory resource."""
+
+
 from typing import Dict, List
 
 from pipeline.context import ConversationEntry, PluginContext

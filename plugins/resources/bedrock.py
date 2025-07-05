@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+"""Adapter for AWS Bedrock runtime."""
 import json
 from typing import Dict
 

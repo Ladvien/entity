@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+"""Resource definition DSL used by the container."""
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
 

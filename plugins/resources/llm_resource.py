@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+"""Base class for language model resources."""
 from typing import Any, AsyncIterator, Dict, List
 
 from pipeline.state import LLMResponse

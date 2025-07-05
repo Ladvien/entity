@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+"""Base class for HTTP LLM providers."""
 from typing import TYPE_CHECKING, Any, Dict, Protocol, runtime_checkable
 
 if TYPE_CHECKING:  # pragma: no cover

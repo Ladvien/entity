@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+"""Shared LLM interfaces."""
 from abc import ABC, abstractmethod
 from typing import Any, AsyncIterator
 

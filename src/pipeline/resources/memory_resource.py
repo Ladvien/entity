@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+"""Memory resource combining storage and vector store plugins."""
+
+
 from typing import Any, Dict, List
 
 from pipeline.context import ConversationEntry

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, List
+"""In-memory conversation history storage."""
 
 from pipeline.context import ConversationEntry
 from plugins.resources.database import DatabaseResource

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+"""HTTP helper for LLM resources."""
 from typing import Any, Dict, Optional
 
 import httpx

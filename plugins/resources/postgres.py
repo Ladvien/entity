@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+"""PostgreSQL database resource."""
 import json
 from contextlib import asynccontextmanager
 from typing import AsyncIterator, Dict, List, Optional

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+"""Database-backed conversation storage."""
 from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator, List, Optional, Protocol
 

@@ -1,3 +1,5 @@
+"""Resource implementations shipped with the framework."""
+
 from .base import BaseResource, Resource
 from .bedrock import BedrockResource
 from .container import ResourceContainer

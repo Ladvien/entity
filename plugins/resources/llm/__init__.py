@@ -1,3 +1,5 @@
+"""LLM resource utilities."""
+
 from pipeline.resources.llm.unified import UnifiedLLMResource
 
 from ..llm_base import LLM

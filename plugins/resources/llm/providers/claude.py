@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+"""Adapter for Anthropic Claude API."""
 from typing import Any, AsyncIterator, Dict, List
 
 from pipeline.state import LLMResponse

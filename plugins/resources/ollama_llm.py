@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+"""LLM resource backed by Ollama."""
 from typing import Dict
 
 from pipeline.validation import ValidationResult

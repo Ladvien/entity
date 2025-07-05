@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import asyncio
+"""DuckDB-backed vector store resource."""
 from typing import Dict, List, Optional
 
 import duckdb

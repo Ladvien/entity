@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+"""LLM resource that echoes prompts."""
 from plugins.resources.llm_resource import LLMResource
 
 

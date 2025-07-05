@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import asyncio
+"""Asynchronous resource container."""
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Dict, List, Optional
 

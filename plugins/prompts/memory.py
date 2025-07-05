@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+"""Store conversation messages in the configured memory resource."""
+
+
 from typing import Dict
 
 from pipeline.context import PluginContext
