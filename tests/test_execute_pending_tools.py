@@ -4,7 +4,7 @@ from datetime import datetime
 from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
                       PluginRegistry, ResourceRegistry, SystemRegistries,
                       ToolCall, ToolRegistry)
-from pipeline.pipeline import execute_pending_tools
+from pipeline.tools.execution import execute_pending_tools
 
 
 class EchoTool:

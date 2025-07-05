@@ -7,7 +7,7 @@ from plugins.contrib.tools.search_tool import SearchTool
 from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
                       PluginContext, PluginRegistry, ResourceRegistry,
                       SystemRegistries, ToolRegistry)
-from pipeline.pipeline import execute_pending_tools
+from pipeline.tools.execution import execute_pending_tools
 
 
 class FakeResponse:
