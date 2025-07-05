@@ -1,15 +1,9 @@
 import asyncio
 import time
 
-from pipeline import (
-    PipelineStage,
-    PluginRegistry,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolPlugin,
-    ToolRegistry,
-    execute_pipeline,
-)
+from pipeline import (PipelineStage, PluginRegistry, ResourceRegistry,
+                      SystemRegistries, ToolPlugin, ToolRegistry,
+                      execute_pipeline)
 from pipeline.base_plugins import PluginAutoClassifier
 from pipeline.context import PluginContext
 

@@ -8,7 +8,8 @@ from typing import Any, Awaitable, Callable
 from opentelemetry import trace
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+from opentelemetry.sdk.trace.export import (BatchSpanProcessor,
+                                            ConsoleSpanExporter)
 
 _tracer_provider = TracerProvider(resource=Resource.create({"service.name": "entity"}))
 _tracer_provider.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))

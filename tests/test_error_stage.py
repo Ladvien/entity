@@ -45,7 +45,9 @@ def make_registries(error_plugin):
     plugins = PluginRegistry()
     asyncio.run(plugins.register_plugin_for_stage(FailPlugin({}), PipelineStage.DO))
     asyncio.run(plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR))
-    asyncio.run(plugins.register_plugin_for_stage(error_plugin({}), PipelineStage.ERROR))
+    asyncio.run(
+        plugins.register_plugin_for_stage(error_plugin({}), PipelineStage.ERROR)
+    )
     return SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
 
 

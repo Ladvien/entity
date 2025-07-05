@@ -1,16 +1,11 @@
 import asyncio
+
 from fastapi.testclient import TestClient
 from plugins.builtin.adapters import WebSocketAdapter
 
-from pipeline import (
-    PipelineManager,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
+                      PromptPlugin, ResourceRegistry, SystemRegistries,
+                      ToolRegistry)
 
 
 class RespPlugin(PromptPlugin):

@@ -7,14 +7,12 @@ from typing import Any, AsyncIterator, Dict, List, Type
 
 # Import provider implementations from the public plugin package. Using the
 # fully qualified path avoids ambiguity if this module is restructured.
-from plugins.builtin.resources.llm.providers import (
-    BedrockProvider,
-    ClaudeProvider,
-    EchoProvider,
-    GeminiProvider,
-    OllamaProvider,
-    OpenAIProvider,
-)
+from plugins.builtin.resources.llm.providers import (BedrockProvider,
+                                                     ClaudeProvider,
+                                                     EchoProvider,
+                                                     GeminiProvider,
+                                                     OllamaProvider,
+                                                     OpenAIProvider)
 from plugins.builtin.resources.llm_resource import LLMResource
 
 from pipeline.base_plugins import ValidationResult

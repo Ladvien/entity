@@ -7,17 +7,9 @@ import pytest
 from plugins.contrib.prompts.chat_history import ChatHistory
 
 from config.environment import load_env
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineStage,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
+                      PipelineState, PluginContext, PluginRegistry,
+                      ResourceRegistry, SystemRegistries, ToolRegistry)
 from pipeline.resources.duckdb_database import DuckDBDatabaseResource
 from pipeline.resources.in_memory_storage import InMemoryStorageResource
 from pipeline.resources.memory_resource import MemoryResource
