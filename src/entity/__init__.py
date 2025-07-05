@@ -7,6 +7,5 @@ from __future__ import annotations
 from pipeline.agent import Agent
 from pipeline.builder import AgentBuilder
 from pipeline.runtime import AgentRuntime
-from plugins.adapters.server import AgentServer
 
-__all__ = ["Agent", "AgentBuilder", "AgentRuntime", "AgentServer"]
+__all__ = ["Agent", "AgentBuilder", "AgentRuntime"]

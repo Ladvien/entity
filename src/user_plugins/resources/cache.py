@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
+from interfaces import import_plugin_class
 from pipeline.base_plugins import ResourcePlugin
 from pipeline.cache import CacheBackend, InMemoryCache
 from pipeline.context import PluginContext
-from pipeline.interfaces import import_plugin_class
 from pipeline.stages import PipelineStage
 from pipeline.validation import ValidationResult
 

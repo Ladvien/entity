@@ -6,12 +6,12 @@ from pathlib import Path
 import yaml
 
 from entity import Agent, AgentServer
+from interfaces import import_plugin_class
+from interfaces.resources import Resource
 from pipeline import update_plugin_configuration
 from pipeline.base_plugins import ResourcePlugin, ToolPlugin
 from pipeline.initializer import ClassRegistry
-from pipeline.interfaces import import_plugin_class
 from pipeline.logging import get_logger
-from plugins.resources.base import Resource
 
 logger = get_logger(__name__)
 

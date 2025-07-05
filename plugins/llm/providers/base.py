@@ -7,9 +7,9 @@ from typing import Any, AsyncIterator, Dict, Optional
 
 import httpx
 
+from interfaces.resources import LLM
 from pipeline.validation import ValidationResult
 from plugins.resources.http_llm_resource import HttpLLMResource
-from plugins.resources.llm_base import LLM
 
 
 class BaseProvider(LLM):
