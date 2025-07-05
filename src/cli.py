@@ -193,12 +193,14 @@ class CLI:
                         instance.initialize
                     ):
                         await instance.initialize()
-                    resource_registry.add(name, instance)
+                    await resource_registry.add(name, instance)
                 elif issubclass(cls, ToolPlugin):
-                    tool_registry.add(name, instance)
+                    await tool_registry.add(name, instance)
                 else:
                     for stage in getattr(cls, "stages", []):
-                        plugin_registry.register_plugin_for_stage(instance, stage, name)
+                        await plugin_registry.register_plugin_for_stage(
+                            instance, stage, name
+                        )
                 logger.info("Registered %s", name)
                 return True
 

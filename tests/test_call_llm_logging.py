@@ -39,7 +39,7 @@ def make_context(llm: FakeLLM) -> PluginContext:
         current_stage=PipelineStage.THINK,
     )
     resources = ResourceRegistry()
-    resources.add("llm", llm)
+    asyncio.run(resources.add("llm", llm))
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
     return PluginContext(state, registries)
 

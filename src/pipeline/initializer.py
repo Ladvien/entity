@@ -172,7 +172,7 @@ class SystemInitializer:
         for name, healthy in report.items():
             if not healthy:
                 degraded.append(name)
-                resource_registry.remove(name)
+                await resource_registry.remove(name)
 
         # Phase 3.5: register tools
         tool_registry = ToolRegistry()
@@ -180,7 +180,7 @@ class SystemInitializer:
             if any(dep in degraded for dep in getattr(cls, "dependencies", [])):
                 continue
             instance = cls(config)
-            tool_registry.add(getattr(instance, "name", cls.__name__), instance)
+            await tool_registry.add(getattr(instance, "name", cls.__name__), instance)
 
         # Phase 4: instantiate prompt and adapter plugins
         plugin_registry = PluginRegistry()
@@ -189,7 +189,7 @@ class SystemInitializer:
                 continue
             instance = cls(config)
             for stage in getattr(cls, "stages", []):
-                plugin_registry.register_plugin_for_stage(instance, stage)
+                await plugin_registry.register_plugin_for_stage(instance, stage)
 
         if degraded:
             self.config.setdefault("_disabled_resources", degraded)

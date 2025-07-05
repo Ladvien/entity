@@ -36,7 +36,7 @@ def make_state():
 def test_execute_pending_tools_returns_mapping_by_result_key():
     state = make_state()
     registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), PluginRegistry())
-    registries.tools.add("echo", EchoTool())
+    asyncio.run(registries.tools.add("echo", EchoTool()))
 
     results = asyncio.run(execute_pending_tools(state, registries))
 

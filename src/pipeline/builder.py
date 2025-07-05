@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from types import ModuleType
 from typing import Callable, Optional
+import asyncio
 
 from registry import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
 
@@ -24,7 +25,7 @@ class AgentBuilder:
     tool_registry: ToolRegistry = field(default_factory=ToolRegistry)
 
     # ------------------------------ plugin utils ------------------------------
-    def add_plugin(self, plugin: BasePlugin) -> None:
+    async def add_plugin(self, plugin: BasePlugin) -> None:
         if not hasattr(plugin, "_execute_impl") or not callable(
             getattr(plugin, "_execute_impl")
         ):
@@ -32,14 +33,20 @@ class AgentBuilder:
             raise TypeError(f"Plugin '{name}' must implement async '_execute_impl'")
         for stage in getattr(plugin, "stages", []):
             name = getattr(plugin, "name", plugin.__class__.__name__)
-            self.plugin_registry.register_plugin_for_stage(plugin, stage, name)
+            await self.plugin_registry.register_plugin_for_stage(plugin, stage, name)
 
     def plugin(self, func: Optional[Callable] = None, **hints):
         """Decorator registering ``func`` as a plugin."""
 
         def decorator(f: Callable) -> Callable:
             plugin = PluginAutoClassifier.classify(f, hints)
-            self.add_plugin(plugin)
+            coro = self.add_plugin(plugin)
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                asyncio.run(coro)
+            else:
+                loop.create_task(coro)
             return f
 
         return decorator(func) if func else decorator
@@ -120,7 +127,7 @@ class AgentBuilder:
                     and issubclass(obj, BasePlugin)
                     and obj is not BasePlugin
                 ):
-                    self.add_plugin(obj({}))
+                    asyncio.run(self.add_plugin(obj({})))
                 elif callable(obj) and name.endswith("_plugin"):
                     self.plugin(obj)
             except Exception as exc:  # noqa: BLE001

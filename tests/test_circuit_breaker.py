@@ -22,12 +22,16 @@ class UnstablePlugin(PromptPlugin):
 
 def make_registries():
     plugins = PluginRegistry()
-    plugins.register_plugin_for_stage(
-        UnstablePlugin({"failure_threshold": 2, "failure_reset_timeout": 60}),
-        PipelineStage.DO,
+    asyncio.run(
+        plugins.register_plugin_for_stage(
+            UnstablePlugin({"failure_threshold": 2, "failure_reset_timeout": 60}),
+            PipelineStage.DO,
+        )
     )
-    plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR)
-    plugins.register_plugin_for_stage(ErrorFormatter({}), PipelineStage.ERROR)
+    asyncio.run(plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR))
+    asyncio.run(
+        plugins.register_plugin_for_stage(ErrorFormatter({}), PipelineStage.ERROR)
+    )
     return SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
 
 

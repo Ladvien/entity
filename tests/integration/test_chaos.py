@@ -23,7 +23,7 @@ def test_pipeline_resume_after_crash(tmp_path: Path):
     async def run() -> str:
         state_file = tmp_path / "state.json"
         plugins = PluginRegistry()
-        plugins.register_plugin_for_stage(CrashPlugin(), PipelineStage.PARSE)
+        await plugins.register_plugin_for_stage(CrashPlugin(), PipelineStage.PARSE)
         registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
         try:
             await execute_pipeline("hi", registries, state_file=str(state_file))

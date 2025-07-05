@@ -31,9 +31,9 @@ class FallbackPlugin(FailurePlugin):
 
 def make_registries(error_plugin):
     plugins = PluginRegistry()
-    plugins.register_plugin_for_stage(BoomPlugin({}), PipelineStage.DO)
-    plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR)
-    plugins.register_plugin_for_stage(error_plugin({}), PipelineStage.ERROR)
+    asyncio.run(plugins.register_plugin_for_stage(BoomPlugin({}), PipelineStage.DO))
+    asyncio.run(plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR))
+    asyncio.run(plugins.register_plugin_for_stage(error_plugin({}), PipelineStage.ERROR))
     return SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
 
 

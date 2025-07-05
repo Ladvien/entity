@@ -22,7 +22,7 @@ class TimedPlugin(PromptPlugin):
 
 def make_registries():
     plugins = PluginRegistry()
-    plugins.register_plugin_for_stage(TimedPlugin({}), PipelineStage.DO)
+    asyncio.run(plugins.register_plugin_for_stage(TimedPlugin({}), PipelineStage.DO))
     return SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
 
 

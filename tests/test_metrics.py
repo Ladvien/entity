@@ -36,11 +36,11 @@ class MetricsPlugin(PromptPlugin):
 
 def make_registries():
     plugins = PluginRegistry()
-    plugins.register_plugin_for_stage(MetricsPlugin({}), PipelineStage.DO)
+    asyncio.run(plugins.register_plugin_for_stage(MetricsPlugin({}), PipelineStage.DO))
     resources = ResourceRegistry()
-    resources.add("llm", EchoLLM())
+    asyncio.run(resources.add("llm", EchoLLM()))
     tools = ToolRegistry()
-    tools.add("echo", EchoTool({}))
+    asyncio.run(tools.add("echo", EchoTool({})))
     return SystemRegistries(resources, tools, plugins)
 
 

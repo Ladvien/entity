@@ -28,13 +28,13 @@ async def use_tool_plugin(ctx: PluginContext) -> None:
 def make_registries() -> SystemRegistries:
     resources = ResourceRegistry()
     tools = ToolRegistry()
-    tools.add("sleep", SleepTool({}))
+    asyncio.run(tools.add("sleep", SleepTool({})))
     plugins = PluginRegistry()
     plugin = PluginAutoClassifier.classify(
         use_tool_plugin,
         {"stage": PipelineStage.DO, "name": "UseToolPlugin"},
     )
-    plugins.register_plugin_for_stage(plugin, PipelineStage.DO)
+    asyncio.run(plugins.register_plugin_for_stage(plugin, PipelineStage.DO))
     return SystemRegistries(resources, tools, plugins)
 
 

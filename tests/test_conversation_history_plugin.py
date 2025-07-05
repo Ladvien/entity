@@ -40,7 +40,7 @@ def make_context(db: FakeMemory):
         metrics=MetricsCollector(),
     )
     resources = ResourceRegistry()
-    resources.add("memory", db)
+    asyncio.run(resources.add("memory", db))
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
     return state, PluginContext(state, registries)
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any, Dict, List
+import asyncio
 
 from pipeline.stages import PipelineStage
 from pipeline.user_plugins import BasePlugin
@@ -13,28 +14,31 @@ class ResourceRegistry:
 
     def __init__(self) -> None:
         self._resources: Dict[str, Any] = {}
+        self._lock = asyncio.Lock()
 
-    def add(self, name: str, resource: Any) -> None:
+    async def add(self, name: str, resource: Any) -> None:
         """Register ``resource`` under ``name``."""
 
-        self._resources[name] = resource
+        async with self._lock:
+            self._resources[name] = resource
 
-    def add_from_config(self, name: str, cls: type, config: Dict) -> None:
+    async def add_from_config(self, name: str, cls: type, config: Dict) -> None:
         """Instantiate ``cls`` from ``config`` and register it."""
 
         if hasattr(cls, "from_config"):
             instance = cls.from_config(config)
         else:
             instance = cls(config)
-        self.add(getattr(instance, "name", name), instance)
+        await self.add(getattr(instance, "name", name), instance)
 
     def get(self, name: str) -> Any | None:
         """Return the resource registered as ``name`` if present."""
 
         return self._resources.get(name)
 
-    def remove(self, name: str) -> None:
-        self._resources.pop(name, None)
+    async def remove(self, name: str) -> None:
+        async with self._lock:
+            self._resources.pop(name, None)
 
 
 class ToolRegistry:
@@ -42,11 +46,13 @@ class ToolRegistry:
 
     def __init__(self) -> None:
         self._tools: Dict[str, Any] = {}
+        self._lock = asyncio.Lock()
 
-    def add(self, name: str, tool: Any) -> None:
+    async def add(self, name: str, tool: Any) -> None:
         """Register ``tool`` under ``name``."""
 
-        self._tools[name] = tool
+        async with self._lock:
+            self._tools[name] = tool
 
     def get(self, name: str) -> Any | None:
         """Return the tool registered as ``name`` if present."""
@@ -62,8 +68,9 @@ class PluginRegistry:
         self._names: Dict[BasePlugin, str] = {}
         self._plugins_by_name: Dict[str, BasePlugin] = {}
         self._dependents: Dict[str, List[BasePlugin]] = defaultdict(list)
+        self._lock = asyncio.Lock()
 
-    def register_plugin_for_stage(
+    async def register_plugin_for_stage(
         self, plugin: BasePlugin, stage: PipelineStage | str, name: str | None = None
     ) -> None:
         """Register ``plugin`` to execute during ``stage``."""
@@ -71,20 +78,21 @@ class PluginRegistry:
             stage = PipelineStage(stage)
         except ValueError as exc:
             raise ValueError(f"Invalid stage: {stage}") from exc
-        plugins = self._stage_plugins[stage]
-        insert_at = len(plugins)
-        for idx, existing in enumerate(plugins):
-            if plugin.priority < existing.priority:
-                insert_at = idx
-                break
-        plugins.insert(insert_at, plugin)
+        async with self._lock:
+            plugins = self._stage_plugins[stage]
+            insert_at = len(plugins)
+            for idx, existing in enumerate(plugins):
+                if plugin.priority < existing.priority:
+                    insert_at = idx
+                    break
+            plugins.insert(insert_at, plugin)
 
-        plugin_name = name or getattr(plugin, "name", plugin.__class__.__name__)
-        self._names[plugin] = plugin_name
-        self._plugins_by_name[plugin_name] = plugin
+            plugin_name = name or getattr(plugin, "name", plugin.__class__.__name__)
+            self._names[plugin] = plugin_name
+            self._plugins_by_name[plugin_name] = plugin
 
-        for dep in getattr(plugin, "dependencies", []):
-            self._dependents.setdefault(dep, []).append(plugin)
+            for dep in getattr(plugin, "dependencies", []):
+                self._dependents.setdefault(dep, []).append(plugin)
 
     def get_plugins_for_stage(self, stage: PipelineStage) -> List[BasePlugin]:
         """Return list of plugins registered for ``stage``."""

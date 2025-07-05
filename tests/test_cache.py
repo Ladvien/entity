@@ -57,8 +57,8 @@ async def make_context(cache: CacheResource, llm: FakeLLM):
         current_stage=PipelineStage.THINK,
     )
     resources = ResourceRegistry()
-    resources.add("llm", llm)
-    resources.add("cache", cache)
+    await resources.add("llm", llm)
+    await resources.add("cache", cache)
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
     return PluginContext(state, registries), state, registries
 
@@ -81,7 +81,7 @@ async def test_tool_results_are_cached():
     ctx, state, registries = await make_context(cache, llm)
 
     tool = FakeTool()
-    registries.tools.add("fake", tool)
+    await registries.tools.add("fake", tool)
 
     state.pending_tool_calls.append(
         ToolCall(name="fake", params={"x": 2}, result_key="r1")

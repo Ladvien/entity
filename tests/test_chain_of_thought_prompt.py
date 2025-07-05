@@ -42,8 +42,8 @@ def make_context(llm: FakeLLM):
     resources = ResourceRegistry()
     tools = ToolRegistry()
     plugins = PluginRegistry()
-    resources.add("llm", llm)
-    tools.add("analysis_tool", DummyTool())
+    asyncio.run(resources.add("llm", llm))
+    asyncio.run(tools.add("analysis_tool", DummyTool()))
     registries = SystemRegistries(resources, tools, plugins)
     return state, PluginContext(state, registries)
 

@@ -35,7 +35,7 @@ async def run_search():
         metrics=MetricsCollector(),
     )
     tools = ToolRegistry()
-    tools.add("search", SearchTool())
+    await tools.add("search", SearchTool())
     registries = SystemRegistries(ResourceRegistry(), tools, PluginRegistry())
     ctx = PluginContext(state, registries)
     with patch("httpx.AsyncClient.get", new=AsyncMock(return_value=FakeResponse())):

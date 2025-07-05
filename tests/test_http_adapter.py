@@ -24,7 +24,7 @@ class RespPlugin(PromptPlugin):
 
 def make_adapter(config=None):
     plugins = PluginRegistry()
-    plugins.register_plugin_for_stage(RespPlugin({}), PipelineStage.DO)
+    asyncio.run(plugins.register_plugin_for_stage(RespPlugin({}), PipelineStage.DO))
     registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
     manager = PipelineManager(registries)
     return HTTPAdapter(manager, config)
