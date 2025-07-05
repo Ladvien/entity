@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import pathlib
 import sys
-from datetime import datetime
 
 # Make the repository's ``src`` directory importable
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))
@@ -19,20 +18,22 @@ from plugins.builtin.resources.sqlite_storage import (
     SQLiteStorageResource as SQLiteDatabaseResource,
 )
 from plugins.builtin.resources.storage_resource import StorageResource
-from pipeline.context import PluginContext, ConversationEntry
+from pipeline.resources import MemoryResource
+from pipeline.context import PluginContext
 from pipeline import PipelineStage, PromptPlugin
 from entity import Agent
 
 
 class StorePrompt(PromptPlugin):
-    """Store message history and save the input to a file."""
+    """Persist conversation history and save the input to a file."""
 
-    dependencies = ["storage"]
+    dependencies = ["memory", "storage"]
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, ctx: PluginContext) -> None:
+        memory: MemoryResource = ctx.get_resource("memory")
         storage: StorageResource = ctx.get_resource("storage")
-        await storage.save_history(ctx.pipeline_id, ctx.get_conversation_history())
+        await memory.save_conversation(ctx.pipeline_id, ctx.get_conversation_history())
         path = await storage.store_file("input.txt", ctx.message.encode())
         ctx.add_conversation_entry(f"File stored at {path}", role="assistant")
 
@@ -42,8 +43,10 @@ def main() -> None:
 
     database = SQLiteDatabaseResource({"path": "./agent.db"})
     filesystem = LocalFileSystemResource({"base_path": "./files"})
-    storage = StorageResource(database=database, filesystem=filesystem)
+    memory = MemoryResource(database=database)
+    storage = StorageResource(filesystem=filesystem)
 
+    agent.builder.resource_registry.add("memory", memory)
     agent.builder.resource_registry.add("storage", storage)
     agent.builder.plugin_registry.register_plugin_for_stage(
         StorePrompt(), PipelineStage.THINK
