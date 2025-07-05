@@ -18,9 +18,17 @@ class AgentRuntime:
         self.manager = PipelineManager(self.registries)
 
     async def run_pipeline(self, message: str) -> Dict[str, Any]:
-        return await self.manager.run_pipeline(message)
+        async with self.registries.resources:
+            return await self.manager.run_pipeline(message)
 
     async def handle(self, message: str) -> Dict[str, Any]:
         """Alias for :meth:`run_pipeline`."""
 
         return cast(Dict[str, Any], await self.run_pipeline(message))
+
+    async def __aenter__(self) -> "AgentRuntime":
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        if hasattr(self.registries.resources, "shutdown_all"):
+            await self.registries.resources.shutdown_all()

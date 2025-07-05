@@ -117,25 +117,26 @@ async def execute_pipeline(
     if pipeline_manager is not None:
         await pipeline_manager.register(state.pipeline_id)
     try:
-        for stage in [
-            PipelineStage.PARSE,
-            PipelineStage.THINK,
-            PipelineStage.DO,
-            PipelineStage.REVIEW,
-            PipelineStage.DELIVER,
-        ]:
-            if (
-                state.last_completed_stage is not None
-                and stage.value <= state.last_completed_stage.value
-            ):
-                continue
-            await execute_stage(stage, state, registries)
-            if state.failure_info:
-                break
-            state.last_completed_stage = stage
-            if state_file:
-                with open(state_file, "w", encoding="utf-8") as fh:
-                    json.dump(state.to_dict(), fh)
+        async with registries.resources:
+            for stage in [
+                PipelineStage.PARSE,
+                PipelineStage.THINK,
+                PipelineStage.DO,
+                PipelineStage.REVIEW,
+                PipelineStage.DELIVER,
+            ]:
+                if (
+                    state.last_completed_stage is not None
+                    and stage.value <= state.last_completed_stage.value
+                ):
+                    continue
+                await execute_stage(stage, state, registries)
+                if state.failure_info:
+                    break
+                state.last_completed_stage = stage
+                if state_file:
+                    with open(state_file, "w", encoding="utf-8") as fh:
+                        json.dump(state.to_dict(), fh)
 
         if state.failure_info:
             try:
