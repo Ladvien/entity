@@ -27,8 +27,7 @@ Welcome to the Entity Pipeline framework. These pages explain how to configure a
 - [Troubleshooting](troubleshooting.md)
 
 ### Deployment
-- [AWS deployment](aws_deployment.md)
-- [Terraform guide](deploy_aws.md)
+- [AWS deployment](deploy_aws.md)
 - [Local](deploy_local.md)
 - [Docker](deploy_docker.md)
 - [Cloud](deploy_cloud.md)
@@ -48,7 +47,6 @@ advanced_usage
 module_map
 grpc_services
 troubleshooting
-aws_deployment
 deploy_aws
 deploy_local
 deploy_docker
