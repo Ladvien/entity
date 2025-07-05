@@ -93,6 +93,7 @@ Several example pipelines in the `examples/` directory showcase more advanced pa
 
 ### MemoryResource
 
+<<<<<< codex/update-plugin-guide-and-split-storageresource-section
 `MemoryResource` is the default in‑memory backend for conversation data. It keeps
 history, vectors, and files in RAM so is best suited for short‑lived runs. The
 composition pipeline at `examples/pipelines/memory_composition_pipeline.py`
@@ -107,6 +108,9 @@ memory = MemoryResource()
 `StorageResource` composes `DatabaseResource`, `VectorStoreResource`, and
 `FileSystemResource` behind one interface for persistent storage. See
 `config/dev.yaml` for an example configuration.
+======
+`StorageResource` composes `DatabaseResource`, `VectorStoreResource`, and `FileSystemResource` behind one interface. The pipeline at `examples/pipelines/memory_composition_pipeline.py` demonstrates the same pattern using the older `MemoryResource`. `MemoryResource` remains the framework's default ephemeral memory, configured in [config/dev.yaml](../../config/dev.yaml). For persistent deployments, prefer `StorageResource` so history, vectors, and files survive restarts. With the new plugin the code looks like:
+>>>>>> main
 
 ```python
 storage = StorageResource(
