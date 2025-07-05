@@ -4,7 +4,12 @@ When instantiated without a configuration file, ``Agent`` loads a basic set of
 plugins so the pipeline can run out of the box:
 
 - ``EchoLLMResource`` – minimal LLM resource that simply echoes prompts.
+<<<<<< codex/update-docs-for-storageresource-plugin
 - ``StorageResource`` – unified interface that composes database, vector store, and file system backends.
+======
+- ``MemoryResource`` – unified interface that delegates to an in-memory backend by default.
+- ``StorageResource`` – composite layer combining database, vectors and files.
+>>>>>> main
 - ``SearchTool`` – wrapper around DuckDuckGo's search API.
 - ``CalculatorTool`` – safe evaluator for arithmetic expressions.
 
@@ -283,6 +288,21 @@ storage = StorageResource(
 ### S3 File Storage
 The `S3FileSystem` backend persists files in Amazon S3. Configure the
 `bucket` and optional `region` keys under `filesystem`.
+
+### StorageResource Example
+Combine chat history storage with local file persistence:
+```yaml
+plugins:
+  resources:
+    storage:
+      type: storage
+      database:
+        type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
+        path: ./agent.db
+      filesystem:
+        type: plugins.builtin.resources.local_filesystem:LocalFileSystemResource
+        base_path: ./files
+```
 
 ## Implementation Recommendations
 

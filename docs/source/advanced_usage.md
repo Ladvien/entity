@@ -44,6 +44,21 @@ plugins:
         path: ./agent.db
 ```
 
+You can also use `StorageResource` for a lighter setup:
+
+```yaml
+plugins:
+  resources:
+    storage:
+      type: storage
+      database:
+        type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
+        path: ./agent.db
+      filesystem:
+        type: plugins.builtin.resources.local_filesystem:LocalFileSystemResource
+        base_path: ./files
+```
+
 These configurations illustrate **Preserve All Power (7)** by enabling
 advanced storage without sacrificing the simple default setup.
 
