@@ -22,10 +22,16 @@ poetry run python src/cli.py --config config.yaml
 ```
 This project relies on `httpx==0.27.*`, which Poetry will install automatically.
 <!-- end quick_start -->
+<<<<<< codex/add-links-to-components-overview
 
 For a deeper look at how the core pieces fit together, see the
 [components overview](docs/source/components_overview.md).
+======
+For a high-level look at how the pieces connect, see [components_overview.md](components_overview.md).
+
+>>>>>> main
 ## Environment Setup
+
 
 1. Install Python 3.11+ and [Poetry](https://python-poetry.org/).
 2. Run `poetry install` to create the virtual environment. This installs all
