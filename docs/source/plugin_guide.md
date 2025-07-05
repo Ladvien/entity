@@ -127,6 +127,9 @@ class VectorMemoryResource(ResourcePlugin):
 ```
 
 These scripts are great starting points when designing your own plugins.
+The `examples/tools/search_weather_example.py` script demonstrates
+registering built-in tools directly with an `Agent` and combining their
+results.
 
 ### Adapter and Failure Examples
 
