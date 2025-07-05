@@ -32,6 +32,8 @@ plugins:
         region: us-east-1
 ```
 
+`MemoryResource` persists conversation history and vectors. `StorageResource` extends it with file CRUD across the configured backends.
+
 For local experimentation you can swap the database section with SQLite:
 
 ```yaml
