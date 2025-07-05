@@ -24,5 +24,8 @@ class RedisCache(CacheBackend):
         ttl = ttl if ttl is not None else self._default_ttl
         await self._client.set(key, value, ex=ttl)
 
+    async def delete(self, key: str) -> None:
+        await self._client.delete(key)
+
     async def clear(self) -> None:
         await self._client.flushdb()

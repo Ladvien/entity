@@ -16,5 +16,9 @@ class CacheBackend(ABC):
         """Store ``value`` for ``key`` with optional ``ttl`` in seconds."""
 
     @abstractmethod
+    async def delete(self, key: str) -> None:
+        """Remove ``key`` from the cache."""
+
+    @abstractmethod
     async def clear(self) -> None:
         """Remove all cached values."""

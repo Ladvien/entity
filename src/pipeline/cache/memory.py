@@ -30,5 +30,8 @@ class InMemoryCache(CacheBackend):
             expire_at = time.time() + ttl
         self._store[key] = (value, expire_at)
 
+    async def delete(self, key: str) -> None:
+        self._store.pop(key, None)
+
     async def clear(self) -> None:
         self._store.clear()
