@@ -3,15 +3,9 @@ import asyncio
 import httpx
 from plugins.builtin.adapters import HTTPAdapter
 
-from pipeline import (
-    PipelineManager,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
+                      PromptPlugin, ResourceRegistry, SystemRegistries,
+                      ToolRegistry)
 
 
 class RespPlugin(PromptPlugin):

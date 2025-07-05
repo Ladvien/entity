@@ -3,13 +3,8 @@ from unittest.mock import AsyncMock, patch
 
 from plugins.builtin.resources.llm.unified import UnifiedLLMResource
 
-from pipeline import (
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    SystemInitializer,
-    SystemRegistries,
-)
+from pipeline import (MetricsCollector, PipelineState, PluginContext,
+                      SystemInitializer, SystemRegistries)
 
 
 class FakeResponse:

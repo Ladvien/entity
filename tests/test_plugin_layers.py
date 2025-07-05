@@ -1,15 +1,8 @@
 import asyncio
 
-from pipeline import (
-    PipelineStage,
-    PluginRegistry,
-    ResourcePlugin,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolPlugin,
-    ToolRegistry,
-    execute_pipeline,
-)
+from pipeline import (PipelineStage, PluginRegistry, ResourcePlugin,
+                      ResourceRegistry, SystemRegistries, ToolPlugin,
+                      ToolRegistry, execute_pipeline)
 from pipeline.base_plugins import PluginAutoClassifier
 from pipeline.context import PluginContext
 

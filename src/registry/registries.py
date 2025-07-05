@@ -1,19 +1,12 @@
 from __future__ import annotations
 
+import asyncio
 from collections import defaultdict
 from dataclasses import dataclass
-<<<<<<< HEAD
-from typing import Any, Dict, List, Optional, TypeVar, cast
-=======
 from typing import Any, Dict, List
-import asyncio
->>>>>>> c43ef0c5ea6ac8f5728552a9386d6e348575c75f
 
-from pipeline.base_plugins import BasePlugin
 from pipeline.stages import PipelineStage
-
-
-T = TypeVar("T")
+from pipeline.user_plugins import BasePlugin
 
 
 class ResourceRegistry:
@@ -38,10 +31,10 @@ class ResourceRegistry:
             instance = cls(config)
         await self.add(getattr(instance, "name", name), instance)
 
-    def get(self, name: str) -> Optional[T]:
+    def get(self, name: str) -> Any | None:
         """Return the resource registered as ``name`` if present."""
 
-        return cast(Optional[T], self._resources.get(name))
+        return self._resources.get(name)
 
     async def remove(self, name: str) -> None:
         async with self._lock:
@@ -61,10 +54,10 @@ class ToolRegistry:
         async with self._lock:
             self._tools[name] = tool
 
-    def get(self, name: str) -> Optional[T]:
+    def get(self, name: str) -> Any | None:
         """Return the tool registered as ``name`` if present."""
 
-        return cast(Optional[T], self._tools.get(name))
+        return self._tools.get(name)
 
 
 class PluginRegistry:

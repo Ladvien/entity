@@ -4,16 +4,16 @@
 :end-before: <!-- end advanced_usage -->
 ```
 
-### Composing Memory Backends
+### Composing Storage Backends
 
 PostgreSQL's `pgvector` extension allows vector similarity search for embeddings.
-Use `MemoryResource` with a Postgres database and optional S3 file storage:
+Use `StorageResource` with a Postgres database and optional S3 file storage:
 
 ```yaml
 plugins:
   resources:
-    memory:
-      type: memory
+    storage:
+      type: storage
       database:
         type: plugins.builtin.resources.postgres:PostgresResource
         host: localhost
@@ -37,11 +37,26 @@ For local experimentation you can swap the database section with SQLite:
 ```yaml
 plugins:
   resources:
-    memory:
-      type: memory
+    storage:
+      type: storage
       database:
         type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
         path: ./agent.db
+```
+
+You can also use `StorageResource` for a lighter setup:
+
+```yaml
+plugins:
+  resources:
+    storage:
+      type: storage
+      database:
+        type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
+        path: ./agent.db
+      filesystem:
+        type: plugins.builtin.resources.local_filesystem:LocalFileSystemResource
+        base_path: ./files
 ```
 
 These configurations illustrate **Preserve All Power (7)** by enabling
@@ -58,6 +73,12 @@ python -m src.cli reload-config updated.yaml
 The command waits for active pipelines to finish, then applies the new YAML
 configuration. This demonstrates **Dynamic Configuration Updates**, letting you
 tweak resources or tools at runtime while keeping the system responsive.
+
+For a hands-on demonstration, run `examples/config_reload_example.py`:
+
+```bash
+python examples/config_reload_example.py
+```
 
 ### Streaming and Function Calling
 
@@ -91,3 +112,7 @@ store backed by DuckDB:
 ```bash
 python examples/pipelines/duckdb_pipeline.py
 ```
+
+### Caching Pipeline Data
+
+`CacheResource` lets plugins store intermediate results between stages. Configure it with `InMemoryCache` or your own backend. Run `examples/cache_example.py` for a minimal setup.

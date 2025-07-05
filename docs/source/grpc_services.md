@@ -44,3 +44,15 @@ if __name__ == "__main__":
 
 ``src/grpc_services/llm.proto`` and ``llm_service.py`` act as references for
 future model services.
+
+### Demo Script
+
+Run the example server implemented with ``LLMGRPCAdapter`` and stream a short
+response:
+
+```bash
+python examples/servers/grpc_server.py
+```
+
+The adapter launches ``LLMService`` locally and prints each token generated for
+the sample prompt.

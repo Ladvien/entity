@@ -7,16 +7,9 @@ from unittest.mock import AsyncMock, patch
 from plugins.contrib.tools.weather_api_tool import WeatherApiTool
 
 from config.environment import load_env
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginContext, PluginRegistry, ResourceRegistry,
+                      SystemRegistries, ToolRegistry)
 from pipeline.pipeline import execute_pending_tools
 
 load_env(Path(__file__).resolve().parents[1] / ".env")

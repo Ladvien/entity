@@ -4,7 +4,6 @@ import shutil
 from pathlib import Path
 
 import yaml
-from plugins.builtin.resources.base import Resource
 
 from entity import Agent, AgentServer
 from interfaces import import_plugin_class

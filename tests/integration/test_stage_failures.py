@@ -4,7 +4,8 @@ from pathlib import Path
 import pytest
 
 from pipeline import PipelineStage, execute_pipeline
-from registry import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
+from registry import (PluginRegistry, ResourceRegistry, SystemRegistries,
+                      ToolRegistry)
 
 
 class RespondPlugin:
