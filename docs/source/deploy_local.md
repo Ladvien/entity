@@ -2,9 +2,9 @@
 
 Run the agent directly on your machine during development.
 
-1. Install dependencies:
+1. Install dependencies with Poetry (ensures `httpx==0.27.*`):
    ```bash
-   pip install -e .
+   poetry install
    ```
 2. Start the HTTP adapter:
    ```bash
