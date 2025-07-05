@@ -43,6 +43,10 @@ def main() -> None:
 
     database = SQLiteDatabaseResource({"path": "./agent.db"})
     vector_store = PgVectorStore({"table": "embeddings"})
+<<<<<<< HEAD
+=======
+
+>>>>>>> ff38e02a16bc4c5714c4df24a08ca8a808fad97d
     memory = MemoryResource(
         database=database,
         vector_store=vector_store,

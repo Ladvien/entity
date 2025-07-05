@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Memory resource combining storage and vector store plugins."""
+"""Memory resource supporting in-memory, SQL/NoSQL, and vector store backends."""
 
 
 from typing import Any, Dict, List
@@ -39,7 +39,7 @@ class SimpleMemoryResource(ResourcePlugin, Memory):
 
 
 class MemoryResource(ResourcePlugin, Memory):
-    """Composite memory resource composed of optional backends."""
+    """Combine in-memory storage with optional database and vector backends."""
 
     stages = [PipelineStage.PARSE]
     name = "memory"
