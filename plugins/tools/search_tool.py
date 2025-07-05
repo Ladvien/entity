@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Web search tool leveraging DuckDuckGo's API."""
+
 from typing import Any, Dict
 
 from pydantic import BaseModel

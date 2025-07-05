@@ -1,3 +1,5 @@
+"""Public resource wrappers for pipeline consumers."""
+
 from .llm.unified import UnifiedLLMResource
 from .memory_resource import MemoryResource, SimpleMemoryResource
 from .database import DatabaseResource

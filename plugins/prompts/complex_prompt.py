@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+"""Prompt plugin combining DB and vector memory."""
+
+
 from typing import List
 
 from pipeline.context import ConversationEntry, PluginContext

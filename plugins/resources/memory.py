@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+"""Memory resource interface."""
 from abc import ABC, abstractmethod
 from typing import Any, List
 

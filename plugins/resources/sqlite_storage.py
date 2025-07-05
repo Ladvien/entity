@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+"""SQLite-based conversation history storage."""
 import json
 from datetime import datetime
 from typing import Dict, List, Optional

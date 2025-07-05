@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+"""LLM resource for OpenAI's API."""
 from typing import Dict
 
 from pipeline.validation import ValidationResult

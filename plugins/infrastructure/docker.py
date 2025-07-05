@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+"""Helpers for containerizing agents with Docker."""
+
+
 from typing import Dict
 
 import docker

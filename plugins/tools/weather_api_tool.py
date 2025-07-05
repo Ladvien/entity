@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Fetch current weather data from an external API."""
+
 from typing import Any, Dict
 
 from pydantic import BaseModel

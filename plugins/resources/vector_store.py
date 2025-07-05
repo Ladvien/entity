@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+"""Interface for vector store backends."""
 from abc import ABC, abstractmethod
 from typing import Dict, List
 

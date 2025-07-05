@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+"""Adapter for Google's Gemini API."""
 from typing import Dict
 
 from pipeline.validation import ValidationResult

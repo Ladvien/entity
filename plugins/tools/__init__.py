@@ -1,3 +1,5 @@
+"""Convenience re-exports for built-in tool plugins."""
+
 from plugins.tools import (
     CalculatorTool,
     SearchTool,

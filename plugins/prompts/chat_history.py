@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+"""Legacy alias plugin exposing conversation history."""
+
+
 from .memory import MemoryPlugin
 
 

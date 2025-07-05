@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+"""Calculator tool for evaluating simple math expressions."""
+
+
 import ast
 from typing import Any, Dict
 

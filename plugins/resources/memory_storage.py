@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+"""Persistent memory storage implementation."""
 import json
 from collections import defaultdict
 from contextlib import asynccontextmanager

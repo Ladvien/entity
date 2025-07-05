@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+"""S3-backed file storage."""
 from typing import Dict
 
 import aioboto3

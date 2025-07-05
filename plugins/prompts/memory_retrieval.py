@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+"""Retrieve past conversation from memory for further prompts."""
+
+
 from typing import List
 
 from pipeline.context import ConversationEntry, PluginContext

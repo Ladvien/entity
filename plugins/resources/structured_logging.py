@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+"""Structured logging configuration resource."""
 import json
 import logging
 import os
