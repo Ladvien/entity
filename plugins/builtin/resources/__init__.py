@@ -16,6 +16,7 @@ from .memory import Memory
 from .pg_vector_store import PgVectorStore
 from .s3_filesystem import S3FileSystem
 from .structured_logging import StructuredLogging
+from .metrics import MetricsResource
 from .vector_store import VectorStore, VectorStoreResource
 
 __all__ = [
@@ -31,6 +32,7 @@ __all__ = [
     "LLMResource",
     "UnifiedLLMResource",
     "StructuredLogging",
+    "MetricsResource",
     "DuckDBDatabaseResource",
     "PgVectorStore",
     "DuckDBVectorStore",
