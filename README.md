@@ -4,8 +4,7 @@ When instantiated without a configuration file, ``Agent`` loads a basic set of
 plugins so the pipeline can run out of the box:
 
 - ``EchoLLMResource`` – minimal LLM resource that simply echoes prompts.
-- ``MemoryResource`` – composite in-memory store with optional database, vector,
-  and file backends.
+- ``MemoryResource`` – composite in-memory store with optional SQL/NoSQL and vector backends.
 - ``SearchTool`` – wrapper around DuckDuckGo's search API.
 - ``CalculatorTool`` – safe evaluator for arithmetic expressions.
 

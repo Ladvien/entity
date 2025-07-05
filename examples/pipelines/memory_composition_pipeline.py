@@ -13,7 +13,6 @@ from utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 
-from plugins.contrib.local_filesystem import LocalFileSystemResource  # noqa: E402
 from plugins.contrib.memory_resource import MemoryResource  # noqa: E402
 from plugins.contrib.pg_vector_store import PgVectorStore  # noqa: E402
 from plugins.contrib.sqlite_storage import (
@@ -44,12 +43,10 @@ def main() -> None:
 
     database = SQLiteDatabaseResource({"path": "./agent.db"})
     vector_store = PgVectorStore({"table": "embeddings"})
-    filesystem = LocalFileSystemResource({"base_path": "./files"})
 
     memory = MemoryResource(
         database=database,
         vector_store=vector_store,
-        filesystem=filesystem,
     )
 
     agent.builder.resource_registry.add("memory", memory)
