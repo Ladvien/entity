@@ -14,7 +14,8 @@ start_metrics_server(port=9001)
 ```
 
 The exporter provides LLM latency and failure counters along with CPU and memory
-usage. Point Prometheus at the server to scrape these metrics.
+usage. Point Prometheus at the server to scrape these metrics. See
+`examples/observability_metrics.py` for a minimal example.
 
 ## Grafana Dashboard
 
