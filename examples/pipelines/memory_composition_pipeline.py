@@ -14,6 +14,7 @@ from utilities import enable_plugins_namespace
 enable_plugins_namespace()
 
 from pipeline.resources import MemoryResource  # noqa: E402
+from plugins.contrib.memory_resource import MemoryResource  # noqa: E402
 from plugins.contrib.pg_vector_store import PgVectorStore  # noqa: E402
 from plugins.contrib.sqlite_storage import (
     SQLiteStorageResource as SQLiteDatabaseResource,
