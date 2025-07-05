@@ -1,5 +1,5 @@
+from pipeline.base_plugins import ResourcePlugin, ValidationResult
 from pipeline.stages import PipelineStage
-from pipeline.user_plugins import ResourcePlugin, ValidationResult
 
 
 class {class_name}(ResourcePlugin):

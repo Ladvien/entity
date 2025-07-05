@@ -1,4 +1,4 @@
-from plugins.resources.dsl import ResourceGraph
+from plugins.builtin.resources.dsl import ResourceGraph
 
 
 def test_parse_and_validate():

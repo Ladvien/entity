@@ -5,11 +5,12 @@ import json
 from contextlib import contextmanager
 from typing import Any, Dict, Iterable, List, Tuple
 
+from plugins.builtin.resources.base import Resource
+from plugins.builtin.resources.container import ResourceContainer
+
 from config.environment import load_env
 from pipeline.config.utils import interpolate_env_vars
 from pipeline.utils import DependencyGraph
-from plugins.resources.base import Resource
-from plugins.resources.container import ResourceContainer
 from registry import PluginRegistry, ToolRegistry
 
 from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin

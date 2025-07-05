@@ -7,7 +7,7 @@ server:
 plugins:
   resources:
     database:
-      type: plugins.resources.postgres:PostgresResource
+      type: plugins.builtin.resources.postgres:PostgresResource
       host: "${DB_HOST}"
       port: 5432
       name: "${DB_USERNAME}"
@@ -18,33 +18,33 @@ plugins:
       base_url: "${OLLAMA_BASE_URL}"
       model: "${OLLAMA_MODEL}"
     logging:
-      type: plugins.resources.structured_logging:StructuredLogging
+      type: plugins.builtin.resources.structured_logging:StructuredLogging
       level: "INFO"
       file_enabled: true
       file_path: "logs/entity.log"
     memory:
       type: pipeline.resources.memory_resource:MemoryResource
       database:
-        type: plugins.resources.sqlite_storage:SQLiteStorageResource
+        type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
         path: ./agent.db
       filesystem:
-        type: plugins.resources.s3_filesystem:S3FileSystem
+        type: plugins.builtin.resources.s3_filesystem:S3FileSystem
         bucket: agent-files
         region: us-east-1
     cache:
-      type: pipeline.user_plugins.resources.cache:CacheResource
+      type: plugins.contrib.resources.cache:CacheResource
       backend:
         type: pipeline.cache.memory:InMemoryCache
   tools:
     weather:
-      type: plugins.tools.weather_api_tool:WeatherApiTool
+      type: plugins.builtin.tools.weather_api_tool:WeatherApiTool
       api_key: "${WEATHER_API_KEY}"
       base_url: "https://api.weather.com"
     calculator:
-      type: plugins.tools.calculator_tool:CalculatorTool
+      type: plugins.builtin.tools.calculator_tool:CalculatorTool
   adapters:
     http:
-      type: plugins.adapters.http:HTTPAdapter
+      type: plugins.builtin.adapters.http:HTTPAdapter
       auth_tokens:
         - ${HTTP_TOKEN}
       rate_limit:
@@ -52,14 +52,14 @@ plugins:
         interval: 60
       audit_log_path: logs/audit.log
     cli:
-      type: plugins.adapters.cli:CLIAdapter
+      type: plugins.builtin.adapters.cli:CLIAdapter
   prompts:
     chain_of_thought:
-      type: user_plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
+      type: plugins.contrib.prompts.chain_of_thought:ChainOfThoughtPrompt
       enable_reasoning: true
     memory_retrieval:
-      type: plugins.prompts.memory_retrieval:MemoryRetrievalPrompt
+      type: plugins.builtin.prompts.memory_retrieval:MemoryRetrievalPrompt
       max_context_length: 4000
     intent_classifier:
-      type: user_plugins.prompts.intent_classifier:IntentClassifierPrompt
+      type: plugins.contrib.prompts.intent_classifier:IntentClassifierPrompt
       confidence_threshold: 0.8

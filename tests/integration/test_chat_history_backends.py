@@ -4,6 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
+from plugins.contrib.prompts.chat_history import ChatHistory
 
 from config.environment import load_env
 from pipeline import (
@@ -22,7 +23,6 @@ from pipeline.resources.in_memory_storage import InMemoryStorageResource
 from pipeline.resources.memory_resource import MemoryResource
 from pipeline.resources.postgres import PostgresResource
 from pipeline.resources.sqlite_storage import SQLiteStorageResource
-from user_plugins.prompts.chat_history import ChatHistory
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
 

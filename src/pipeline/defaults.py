@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 import httpx
 
 DEFAULT_LOGGING_CONFIG: Dict[str, Any] = {
-    "type": "plugins.resources.structured_logging:StructuredLogging",
+    "type": "plugins.builtin.resources.structured_logging:StructuredLogging",
     "level": "INFO",
     "json": True,
     "file_enabled": False,
@@ -26,23 +26,21 @@ DEFAULT_RESOURCES: Dict[str, Dict[str, Any]] = {
         "backend": {"type": "pipeline.resources.memory_resource:SimpleMemoryResource"},
     },
     "cache": {
-        "type": "pipeline.user_plugins.resources.cache:CacheResource",
+        "type": "plugins.contrib.resources.cache:CacheResource",
         "backend": {"type": "pipeline.cache.memory:InMemoryCache"},
     },
     "logging": DEFAULT_LOGGING_CONFIG,
 }
 
 DEFAULT_TOOLS: Dict[str, Dict[str, Any]] = {
-    "search": {"type": "pipeline.user_plugins.tools.search_tool:SearchTool"},
-    "calculator": {
-        "type": "pipeline.user_plugins.tools.calculator_tool:CalculatorTool"
-    },
+    "search": {"type": "plugins.contrib.tools.search_tool:SearchTool"},
+    "calculator": {"type": "plugins.contrib.tools.calculator_tool:CalculatorTool"},
 }
 
 DEFAULT_ADAPTERS: Dict[str, Dict[str, Any]] = {
-    "http": {"type": "plugins.adapters.http:HTTPAdapter"},
-    "websocket": {"type": "plugins.adapters.websocket:WebSocketAdapter"},
-    "cli": {"type": "plugins.adapters.cli:CLIAdapter"},
+    "http": {"type": "plugins.builtin.adapters.http:HTTPAdapter"},
+    "websocket": {"type": "plugins.builtin.adapters.websocket:WebSocketAdapter"},
+    "cli": {"type": "plugins.builtin.adapters.cli:CLIAdapter"},
 }
 
 DEFAULT_CONFIG: Dict[str, Any] = {

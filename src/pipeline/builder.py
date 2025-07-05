@@ -7,10 +7,10 @@ from typing import Callable, Optional
 
 from registry import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
 
+from .base_plugins import BasePlugin
 from .interfaces import PluginAutoClassifier
 from .logging import get_logger
 from .runtime import AgentRuntime
-from .user_plugins import BasePlugin
 
 logger = get_logger(__name__)
 

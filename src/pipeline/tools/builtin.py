@@ -5,8 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 import httpx
-
-from pipeline.user_plugins.tools.calculator_tool import SafeEvaluator
+from plugins.contrib.tools.calculator_tool import SafeEvaluator
 
 
 def calculator(expression: str) -> Any:

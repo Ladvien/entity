@@ -1,6 +1,8 @@
 import asyncio
 from unittest.mock import AsyncMock, patch
 
+from plugins.builtin.resources.llm.unified import UnifiedLLMResource
+
 from pipeline import (
     MetricsCollector,
     PipelineState,
@@ -8,7 +10,6 @@ from pipeline import (
     SystemInitializer,
     SystemRegistries,
 )
-from plugins.resources.llm.unified import UnifiedLLMResource
 
 
 class FakeResponse:
@@ -52,7 +53,7 @@ def test_context_get_llm_with_provider():
         "plugins": {
             "resources": {
                 "llm": {
-                    "type": "plugins.resources.llm.unified:UnifiedLLMResource",
+                    "type": "plugins.builtin.resources.llm.unified:UnifiedLLMResource",
                     "provider": "gemini",
                     "api_key": "key",
                     "model": "gemini-pro",

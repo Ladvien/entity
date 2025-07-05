@@ -14,9 +14,10 @@ enable_plugins_namespace()
 import asyncio
 from typing import Any
 
+from plugins.builtin.adapters.http import HTTPAdapter, MessageRequest
+
 from pipeline import ConversationManager, PipelineManager
 from pipeline.initializer import SystemInitializer
-from plugins.adapters.http import HTTPAdapter, MessageRequest
 
 
 async def main() -> None:

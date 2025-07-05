@@ -8,9 +8,9 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, cast
 
 if TYPE_CHECKING:  # pragma: no cover
-    from plugins.resources.llm_base import LLM
+    from plugins.builtin.resources.llm_base import LLM
 else:  # pragma: no cover - runtime type reference
-    from plugins.resources.llm_base import LLM
+    from plugins.builtin.resources.llm_base import LLM
 
 from registry import SystemRegistries
 
@@ -22,7 +22,7 @@ from .tools.execution import execute_tool
 
 
 class PluginContext:
-    """Object exposing pipeline state and utilities to user_plugins."""
+    """Object exposing pipeline state and utilities to plugins."""
 
     def __init__(self, state: PipelineState, registries: SystemRegistries) -> None:
         """Initialize context with immutable ``state`` and ``registries``."""

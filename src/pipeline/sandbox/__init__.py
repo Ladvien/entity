@@ -1,11 +1,11 @@
-"""Sandbox utilities for running and auditing user_plugins."""
+"""Sandbox utilities for running and auditing contrib plugins."""
 
 import warnings
 
-from user_plugins.infrastructure.sandbox import DockerSandboxRunner, PluginAuditor
+from plugins.contrib.infrastructure.sandbox import DockerSandboxRunner, PluginAuditor
 
 warnings.warn(
-    "pipeline.sandbox is deprecated; use user_plugins.infrastructure.sandbox instead",
+    "pipeline.sandbox is deprecated; use plugins.contrib.infrastructure.sandbox instead",
     DeprecationWarning,
     stacklevel=2,
 )

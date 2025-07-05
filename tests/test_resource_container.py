@@ -7,8 +7,8 @@ from types import ModuleType
 import pytest
 
 from pipeline import PipelineStage
+from pipeline.base_plugins import ResourcePlugin
 from pipeline.resources import ResourceContainer
-from pipeline.user_plugins import ResourcePlugin
 
 
 class BaseRes(ResourcePlugin):
@@ -56,18 +56,18 @@ def test_health_report():
 # Resource pool tests using dynamic import to avoid package path issues
 root = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location(
-    "plugins.resources.container",
-    root / "plugins/resources/container.py",
+    "plugins.builtin.resources.container",
+    root / "plugins.builtin.resources/container.py",
 )
 
 _orig_pipeline = sys.modules.get("pipeline")
-_orig_resources = sys.modules.get("plugins.resources")
+_orig_resources = sys.modules.get("plugins.builtin.resources")
 
 module = importlib.util.module_from_spec(spec)
-sys.modules["plugins.resources.container"] = module
+sys.modules["plugins.builtin.resources.container"] = module
 try:
     sys.modules["pipeline"] = ModuleType("pipeline")
-    sys.modules["plugins.resources"] = ModuleType("plugins.resources")
+    sys.modules["plugins.builtin.resources"] = ModuleType("plugins.builtin.resources")
     spec.loader.exec_module(module)  # type: ignore[arg-type]
 finally:
     if _orig_pipeline is not None:
@@ -76,9 +76,9 @@ finally:
         sys.modules.pop("pipeline", None)
 
     if _orig_resources is not None:
-        sys.modules["plugins.resources"] = _orig_resources
+        sys.modules["plugins.builtin.resources"] = _orig_resources
     else:
-        sys.modules.pop("plugins.resources", None)
+        sys.modules.pop("plugins.builtin.resources", None)
 
 ResourceContainerDynamic = module.ResourceContainer
 

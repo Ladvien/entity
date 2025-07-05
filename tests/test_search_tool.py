@@ -2,6 +2,8 @@ import asyncio
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
+from plugins.contrib.tools.search_tool import SearchTool
+
 from pipeline import (
     ConversationEntry,
     MetricsCollector,
@@ -13,7 +15,6 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.pipeline import execute_pending_tools
-from user_plugins.tools.search_tool import SearchTool
 
 
 class FakeResponse:

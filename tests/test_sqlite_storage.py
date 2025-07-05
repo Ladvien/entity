@@ -1,7 +1,7 @@
 import asyncio
 from unittest.mock import AsyncMock, patch
 
-from plugins.resources.sqlite_storage import SQLiteStorageResource
+from plugins.builtin.resources.sqlite_storage import SQLiteStorageResource
 
 
 async def init_resource():

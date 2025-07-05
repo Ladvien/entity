@@ -20,9 +20,10 @@ The framework's core value is **making agent behavior adjustable** without code 
 
 The codebase now consolidates the core engine under `src/pipeline`. This module
 contains the context system, execution logic and shared abstractions. Plugins
-reside in the new `plugins` package, grouped by type. The old
-`src/pipeline/user_plugins` directory provides thin wrappers re-exporting
-from `plugins`:
+now live under the `plugins` package with two subpackages:
+`plugins/builtin` for the framework plugins and `plugins/contrib` for example
+implementations. The previous `src/pipeline/user_plugins` wrappers were
+removed. Plugin modules are grouped by type:
 
 - `resources` for databases, LLM providers and storage backends
 - `tools` for user-facing functions
@@ -92,7 +93,7 @@ async def execute_stage(stage: PipelineStage, state: PipelineState, registries: 
     state.current_stage = stage
     
     # Execute plugins with appropriate context layer
-    stage_plugins = registries.user_plugins.get_for_stage(stage)
+    stage_plugins = registries.plugins.contrib.get_for_stage(stage)
     for plugin in stage_plugins:
         context = PluginContext(state, registries)
         await plugin.execute(context)
@@ -543,8 +544,8 @@ Because the name stays constant, plugins and configuration always refer to the s
 **Note**: Plugin use is discouraged in the error stage to maintain reliability. Keep error stage plugins minimal and ensure static fallback responses are available.
 
 Plugin implementations live in `plugins/<type>` directories. For example,
-error-handling plugins are located in `plugins/failure`. The
-`src/pipeline/user_plugins` paths are thin wrappers kept for backward
+error-handling plugins are located in `plugins.builtin.failure`. The
+`src/pipeline.base_plugins` paths are thin wrappers kept for backward
 compatibility during the transition.
 
 ### Plugin Stage Assignment System

@@ -1,3 +1,3 @@
-"""Compatibility layer for plugins.resources.container."""
+"""Compatibility layer for plugins.builtin.resources.container."""
 
-from plugins.resources.container import *  # noqa: F401,F403
+from plugins.builtin.resources.container import *  # noqa: F401,F403

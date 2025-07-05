@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from plugins.builtin.adapters import WebSocketAdapter
 
 from pipeline import (
     PipelineManager,
@@ -9,7 +10,6 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from plugins.adapters import WebSocketAdapter
 
 
 class RespPlugin(PromptPlugin):

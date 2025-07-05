@@ -7,14 +7,14 @@ import yaml
 def _write_config(path, value=True, tool=False):
     cfg = {
         "plugins": {
-            "prompts": {"reload": {"type": "user_plugins.test_plugins:ReloadPlugin"}}
+            "prompts": {"reload": {"type": "plugins.contrib.test_plugins:ReloadPlugin"}}
         }
     }
     if value is not False:
         cfg["plugins"]["prompts"]["reload"]["value"] = value
     if tool:
         cfg["plugins"].setdefault("tools", {})["echo"] = {
-            "type": "user_plugins.test_plugins:ReloadTool"
+            "type": "plugins.contrib.test_plugins:ReloadTool"
         }
     path.write_text(yaml.dump(cfg))
 

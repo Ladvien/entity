@@ -48,7 +48,7 @@ Lightweight deployments can use SQLite:
 plugins:
   resources:
     database:
-      type: plugins.resources.sqlite_storage:SQLiteStorageResource
+      type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
       path: ./entity.db
       pool_min_size: 1
       pool_max_size: 5
@@ -60,7 +60,7 @@ For ephemeral sessions, an in-memory backend is available:
 plugins:
   resources:
     database:
-      type: plugins.resources.memory_storage:MemoryStorage
+      type: plugins.builtin.resources.memory_storage:MemoryStorage
 ```
 
 HTTP adapter configuration with authentication and rate limiting:
@@ -69,7 +69,7 @@ HTTP adapter configuration with authentication and rate limiting:
 plugins:
   adapters:
     http:
-      type: plugins.adapters.http:HTTPAdapter
+      type: plugins.builtin.adapters.http:HTTPAdapter
       auth_tokens:
         - ${HTTP_TOKEN}
       rate_limit:
@@ -224,7 +224,7 @@ plugins:
     memory:
       type: memory
       database:
-        type: plugins.resources.sqlite_storage:SQLiteStorageResource
+        type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
         path: ./agent.db
 ```
 
@@ -235,7 +235,7 @@ plugins:
     memory:
       type: memory
       database:
-        type: plugins.resources.duckdb_database:DuckDBDatabaseResource
+        type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
         path: ./agent.duckdb
         history_table: chat_history
 ```
@@ -247,15 +247,15 @@ plugins:
     memory:
       type: memory
       database:
-        type: plugins.resources.postgres:PostgresResource
+        type: plugins.builtin.resources.postgres:PostgresResource
         host: localhost
         name: agent_db
       vector_store:
-        type: plugins.resources.pg_vector_store:PgVectorStore
+        type: plugins.builtin.resources.pg_vector_store:PgVectorStore
         dimensions: 768
         table: embeddings
       filesystem:
-        type: plugins.resources.s3_filesystem:S3FileSystem
+        type: plugins.builtin.resources.s3_filesystem:S3FileSystem
         bucket: agent-files
         region: us-east-1
 ```

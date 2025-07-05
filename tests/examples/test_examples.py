@@ -1,10 +1,11 @@
-from importlib import import_module
 import os
 import subprocess
 import sys
+from importlib import import_module
 from pathlib import Path
 
 import pytest
+
 from pipeline import SystemRegistries
 
 

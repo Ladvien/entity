@@ -2,6 +2,8 @@ import asyncio
 import logging
 from typing import Any
 
+from plugins.builtin.adapters.cli import CLIAdapter
+
 from pipeline import (
     PipelineManager,
     PipelineStage,
@@ -11,7 +13,6 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from plugins.adapters.cli import CLIAdapter
 
 
 class EchoPlugin(PromptPlugin):

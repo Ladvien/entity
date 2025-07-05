@@ -3,7 +3,7 @@ from unittest import mock
 import pytest
 
 pytest.importorskip("docker")
-infrastructure = pytest.importorskip("plugins.infrastructure")
+infrastructure = pytest.importorskip("plugins.builtin.infrastructure")
 DockerInfrastructure = infrastructure.DockerInfrastructure
 
 

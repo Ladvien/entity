@@ -13,15 +13,16 @@ from utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 
+from plugins.contrib.local_filesystem import LocalFileSystemResource  # noqa: E402
+from plugins.contrib.memory_resource import MemoryResource  # noqa: E402
+from plugins.contrib.pg_vector_store import PgVectorStore  # noqa: E402
+from plugins.contrib.sqlite_storage import (
+    SQLiteStorageResource as SQLiteDatabaseResource,
+)  # noqa: E402
+
 from entity import Agent  # noqa: E402
 from pipeline import PipelineStage, PromptPlugin  # noqa: E402
 from pipeline.context import PluginContext  # noqa: E402
-from user_plugins.local_filesystem import LocalFileSystemResource  # noqa: E402
-from user_plugins.memory_resource import MemoryResource  # noqa: E402
-from user_plugins.pg_vector_store import PgVectorStore  # noqa: E402
-from user_plugins.sqlite_storage import (
-    SQLiteStorageResource as SQLiteDatabaseResource,
-)  # noqa: E402
 
 
 class StorePrompt(PromptPlugin):
