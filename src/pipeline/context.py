@@ -185,6 +185,11 @@ class PluginContext:
         if key in state.stage_results:
             raise ValueError(f"Stage result '{key}' already set")
         state.stage_results[key] = value
+        max_results = state.max_stage_results
+        if max_results is not None and len(state.stage_results) > max_results:
+            oldest = next(iter(state.stage_results))
+            if oldest != key:
+                state.stage_results.pop(oldest, None)
 
     def get_stage_result(self, key: str) -> Any:
         """Retrieve a stage result stored with :meth:`set_stage_result`."""
@@ -283,7 +288,9 @@ class PluginContext:
                 self.set_stage_result(call.result_key, result)
                 self.record_tool_error(call.name, str(exc))
             state.pending_tool_calls.remove(call)
-        return self.get_stage_result(result_key)
+        result = self.get_stage_result(result_key)
+        state.stage_results.pop(result_key, None)
+        return result
 
     async def ask_llm(self, prompt: str) -> str:
         """Send ``prompt`` to the configured LLM and return its reply."""

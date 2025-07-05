@@ -100,6 +100,7 @@ class PipelineState:
     response: Any = None
     prompt: str = ""
     stage_results: Dict[str, Any] = field(default_factory=dict)
+    max_stage_results: int | None = 100
     pending_tool_calls: List[ToolCall] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
     pipeline_id: str = ""
@@ -137,6 +138,7 @@ class PipelineState:
             "last_completed_stage": (
                 str(self.last_completed_stage) if self.last_completed_stage else None
             ),
+            "max_stage_results": self.max_stage_results,
         }
 
     @classmethod
@@ -175,5 +177,6 @@ class PipelineState:
                 if data.get("last_completed_stage")
                 else None
             ),
+            max_stage_results=data.get("max_stage_results", 100),
         )
         return state

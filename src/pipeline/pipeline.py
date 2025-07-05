@@ -59,6 +59,7 @@ async def execute_stage(
                         role="system",
                         metadata={"tool_name": call.name, "stage": str(stage)},
                     )
+                    state.stage_results.pop(call.result_key, None)
                 state.pending_tool_calls.clear()
         except CircuitBreakerTripped as exc:
             state.failure_info = FailureInfo(
@@ -98,21 +99,23 @@ async def execute_pipeline(
     state_file: str | None = None,
     pipeline_manager: PipelineManager | None = None,
     return_metrics: bool = False,
+    state: PipelineState | None = None,
 ) -> Dict[str, Any] | tuple[Dict[str, Any], MetricsCollector]:
-    if state_file and os.path.exists(state_file):
-        with open(state_file, "r", encoding="utf-8") as fh:
-            data = json.load(fh)
-        state = PipelineState.from_dict(data)
-    else:
-        state = PipelineState(
-            conversation=[
-                ConversationEntry(
-                    content=user_message, role="user", timestamp=datetime.now()
-                )
-            ],
-            pipeline_id=generate_pipeline_id(),
-            metrics=MetricsCollector(),
-        )
+    if state is None:
+        if state_file and os.path.exists(state_file):
+            with open(state_file, "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+            state = PipelineState.from_dict(data)
+        else:
+            state = PipelineState(
+                conversation=[
+                    ConversationEntry(
+                        content=user_message, role="user", timestamp=datetime.now()
+                    )
+                ],
+                pipeline_id=generate_pipeline_id(),
+                metrics=MetricsCollector(),
+            )
     start = time.time()
     if pipeline_manager is not None:
         await pipeline_manager.register(state.pipeline_id)
