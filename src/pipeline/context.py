@@ -8,9 +8,9 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, cast
 
 if TYPE_CHECKING:  # pragma: no cover
-    from plugins.resources.llm_base import LLM
+    from interfaces.resources import LLM
 else:  # pragma: no cover - runtime type reference
-    from plugins.resources.llm_base import LLM
+    from interfaces.resources import LLM
 
 from registry import SystemRegistries
 

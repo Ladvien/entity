@@ -1,15 +1,16 @@
 """LLM resource utilities."""
 
-from pipeline.resources.llm.unified import UnifiedLLMResource
-
-from ..llm_base import LLM
-from .providers import (
+from plugins.llm.providers import (
     ClaudeProvider,
     EchoProvider,
     GeminiProvider,
     OllamaProvider,
     OpenAIProvider,
 )
+
+from pipeline.resources.llm.unified import UnifiedLLMResource
+
+from ..llm_base import LLM
 
 __all__ = [
     "LLM",

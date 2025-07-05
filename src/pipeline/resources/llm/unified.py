@@ -5,20 +5,10 @@ from __future__ import annotations
 
 from typing import Any, AsyncIterator, Dict, List, Type
 
+from interfaces import import_plugin_class
+from interfaces.resources import LLMResource
 from pipeline.state import LLMResponse
 from pipeline.user_plugins import ValidationResult
-
-# Import provider implementations from the public plugin package. Using the
-# fully qualified path avoids ambiguity if this module is restructured.
-from plugins.resources.llm.providers import (
-    BedrockProvider,
-    ClaudeProvider,
-    EchoProvider,
-    GeminiProvider,
-    OllamaProvider,
-    OpenAIProvider,
-)
-from plugins.resources.llm_resource import LLMResource
 
 
 class UnifiedLLMResource(LLMResource):
@@ -26,13 +16,13 @@ class UnifiedLLMResource(LLMResource):
 
     name = "llm"
 
-    PROVIDERS: Dict[str, Type[LLMResource]] = {
-        "openai": OpenAIProvider,
-        "ollama": OllamaProvider,
-        "gemini": GeminiProvider,
-        "claude": ClaudeProvider,
-        "bedrock": BedrockProvider,
-        "echo": EchoProvider,
+    PROVIDERS: Dict[str, str] = {
+        "openai": "plugins.llm.providers.openai:OpenAIProvider",
+        "ollama": "plugins.llm.providers.ollama:OllamaProvider",
+        "gemini": "plugins.llm.providers.gemini:GeminiProvider",
+        "claude": "plugins.llm.providers.claude:ClaudeProvider",
+        "bedrock": "plugins.llm.providers.bedrock:BedrockProvider",
+        "echo": "plugins.llm.providers.echo:EchoProvider",
     }
 
     def __init__(self, config: Dict | None = None) -> None:
@@ -55,13 +45,15 @@ class UnifiedLLMResource(LLMResource):
 
         self._providers: List[LLMResource] = []
         for name in provider_names:
-            cls = self.PROVIDERS.get(name, EchoProvider)
+            path = self.PROVIDERS.get(name, self.PROVIDERS["echo"])
+            cls = import_plugin_class(path)
             result = cls.validate_config(clean_config)
             if not result.success:
                 raise ValueError(result.error_message)
             self._providers.append(cls(clean_config))
         if not self._providers:
-            self._providers.append(EchoProvider(clean_config))
+            default_cls = import_plugin_class(self.PROVIDERS["echo"])
+            self._providers.append(default_cls(clean_config))
 
         self._model_map: Dict[str, str] = self.config.get("model_map", {})
 
@@ -79,7 +71,9 @@ class UnifiedLLMResource(LLMResource):
             first = str(config.get("provider", "echo")).lower()
             if first not in cls.PROVIDERS:
                 return ValidationResult.error_result(f"Unknown LLM provider '{first}'")
-        return cls.PROVIDERS[first].validate_config(config)
+        path = cls.PROVIDERS[first]
+        provider_cls = import_plugin_class(path)
+        return provider_cls.validate_config(config)
 
     def _select_model(self, prompt: str) -> None:
         for key, model in self._model_map.items():

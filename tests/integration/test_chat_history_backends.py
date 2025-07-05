@@ -20,7 +20,7 @@ from pipeline import (
 from pipeline.resources.duckdb_database import DuckDBDatabaseResource
 from pipeline.resources.in_memory_storage import InMemoryStorageResource
 from pipeline.resources.memory_resource import MemoryResource
-from pipeline.resources.postgres import PostgresResource
+from plugins.resources.postgres import PostgresResource
 from pipeline.resources.sqlite_storage import SQLiteStorageResource
 from user_plugins.prompts.chat_history import ChatHistory
 

@@ -1,5 +1,3 @@
-from plugins.adapters.server import AgentServer
-
 from .agent import Agent
 from .builder import AgentBuilder
 from .config_update import ConfigUpdateResult, update_plugin_configuration
@@ -34,11 +32,6 @@ from .user_plugins import (
     ToolPlugin,
     ValidationResult,
 )
-
-# isort: off
-from plugins.adapters import CLIAdapter, HTTPAdapter, WebSocketAdapter
-
-# isort: on
 
 __all__ = [
     "PipelineStage",
@@ -80,11 +73,7 @@ __all__ = [
     "Agent",
     "AgentBuilder",
     "AgentRuntime",
-    "AgentServer",
     "PipelineManager",
     "ConversationManager",
-    "HTTPAdapter",
-    "WebSocketAdapter",
-    "CLIAdapter",
     "execute_with_observability",
 ]
