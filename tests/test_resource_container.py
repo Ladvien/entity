@@ -63,22 +63,22 @@ spec = importlib.util.spec_from_file_location(
 _orig_pipeline = sys.modules.get("pipeline")
 _orig_resources = sys.modules.get("plugins.resources")
 
-sys.modules["pipeline"] = ModuleType("pipeline")
-sys.modules["plugins.resources"] = ModuleType("plugins.resources")
 module = importlib.util.module_from_spec(spec)
 sys.modules["plugins.resources.container"] = module
 try:
+    sys.modules["pipeline"] = ModuleType("pipeline")
+    sys.modules["plugins.resources"] = ModuleType("plugins.resources")
     spec.loader.exec_module(module)  # type: ignore[arg-type]
 finally:
     if _orig_pipeline is not None:
         sys.modules["pipeline"] = _orig_pipeline
     else:
-        del sys.modules["pipeline"]
+        sys.modules.pop("pipeline", None)
 
     if _orig_resources is not None:
         sys.modules["plugins.resources"] = _orig_resources
     else:
-        del sys.modules["plugins.resources"]
+        sys.modules.pop("plugins.resources", None)
 
 ResourceContainerDynamic = module.ResourceContainer
 
