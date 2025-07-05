@@ -15,6 +15,7 @@ from .memory_resource import MemoryResource, SimpleMemoryResource
 from .pg_vector_store import PgVectorStore
 from .postgres import PostgresResource
 from .sqlite_storage import SQLiteStorageResource
+from .storage_resource import StorageResource
 
 __all__ = [
     "MemoryResource",
@@ -28,6 +29,7 @@ __all__ = [
     "PgVectorStore",
     "PostgresResource",
     "SQLiteStorageResource",
+    "StorageResource",
     "ResourceContainer",
     "LLM",
     "LLMResource",

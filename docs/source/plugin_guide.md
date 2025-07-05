@@ -103,6 +103,15 @@ memory = MemoryResource(
 )
 ```
 
+`StorageResource` offers the same interface when you only need history and file storage:
+
+```python
+storage = StorageResource(
+    database=SQLiteDatabaseResource({"path": "./agent.db"}),
+    filesystem=LocalFileSystemResource({"base_path": "./files"}),
+)
+```
+
 ### Vector Memory
 
 `examples/pipelines/vector_memory_pipeline.py` shows a custom `ResourcePlugin` that stores vectors in memory. A prompt plugin retrieves vectors and interacts with the LLM:
