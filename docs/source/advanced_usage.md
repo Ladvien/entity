@@ -104,6 +104,18 @@ For a WebSocket server use the CLI:
 python src/cli.py serve-websocket --config config/dev.yaml
 ```
 
+Run the gRPC server:
+
+```bash
+python examples/servers/grpc_server.py
+```
+
+Start the CLI adapter for a basic text interface:
+
+```bash
+python examples/servers/cli_adapter.py
+```
+
 ### DuckDB Pipeline Example
 
 The `examples/pipelines/duckdb_pipeline.py` script demonstrates a local vector
