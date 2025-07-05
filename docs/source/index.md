@@ -17,6 +17,10 @@ Welcome to the Entity Pipeline framework. These pages explain how to configure a
 ### Plugin Development
 - [Plugin cheat sheet](plugin_cheatsheet.md)
 - [Detailed guide](plugin_guide.md)
+- [Naming conventions](plugins.md)
+
+### Architecture
+- [Architecture overview](architecture.md)
 
 ### Reference
 - [Context API](context.md)
@@ -54,4 +58,6 @@ deploy_cloud
 principle_checklist
 apidocs/index
 api_reference
+architecture
+plugins
 ```
