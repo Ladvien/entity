@@ -18,7 +18,8 @@ from pipeline import SystemInitializer  # noqa: E402
 from pipeline.config import ConfigLoader  # noqa: E402
 from pipeline.logging import configure_logging, get_logger  # noqa: E402
 
-from .validators import _validate_cache, _validate_memory, _validate_vector_memory
+from .validators import _validate_memory  # noqa: E402
+from .validators import _validate_cache, _validate_vector_memory
 
 logger = get_logger(__name__)
 
