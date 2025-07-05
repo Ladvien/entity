@@ -146,7 +146,11 @@ class BasePlugin(ABC):
         start = time.time()
 
         if hasattr(llm, "generate"):
-            response = await llm.generate(prompt, functions)
+            sig = inspect.signature(llm.generate)
+            if "functions" in sig.parameters:
+                response = await llm.generate(prompt, functions)
+            else:
+                response = await llm.generate(prompt)
         else:
             func = getattr(llm, "__call__", None)
             if func is None:
