@@ -5,9 +5,6 @@ import json
 from contextlib import contextmanager
 from typing import Any, Dict, Iterable, List, Tuple
 
-from plugins.builtin.resources.base import Resource
-from plugins.builtin.resources.container import ResourceContainer
-
 from config.environment import load_env
 from interfaces.resources import Resource
 from pipeline.config.utils import interpolate_env_vars
