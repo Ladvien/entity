@@ -91,9 +91,22 @@ methods, enabling a consistent storage interface across resources.
 
 Several example pipelines in the `examples/` directory showcase more advanced patterns.
 
-### StorageResource Composition
+### MemoryResource
 
-`StorageResource` composes `DatabaseResource`, `VectorStoreResource`, and `FileSystemResource` behind one interface. The pipeline at `examples/pipelines/memory_composition_pipeline.py` demonstrates the same pattern using the older `MemoryResource`. With the new plugin the code looks like:
+`MemoryResource` is the default in‑memory backend for conversation data. It keeps
+history, vectors, and files in RAM so is best suited for short‑lived runs. The
+composition pipeline at `examples/pipelines/memory_composition_pipeline.py`
+shows how to combine it with optional persistent backends.
+
+```python
+memory = MemoryResource()
+```
+
+### StorageResource
+
+`StorageResource` composes `DatabaseResource`, `VectorStoreResource`, and
+`FileSystemResource` behind one interface for persistent storage. See
+`config/dev.yaml` for an example configuration.
 
 ```python
 storage = StorageResource(
@@ -103,7 +116,8 @@ storage = StorageResource(
 )
 ```
 
-`StorageResource` offers the same interface when you only need history and file storage:
+`StorageResource` offers the same interface when you only need history and file
+storage:
 
 ```python
 storage = StorageResource(
