@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Dict, Optional, Set, cast
+from typing import Any, Dict, Generic, Optional, Set, TypeVar, cast
 
 from registry import SystemRegistries
 
 
-class PipelineManager:
+ResultT = TypeVar("ResultT")
+
+
+class PipelineManager(Generic[ResultT]):
     """Manage concurrent pipeline executions and track active pipelines.
 
     Ensures **Linear Pipeline Flow (23)** by coordinating stage execution
@@ -15,11 +18,11 @@ class PipelineManager:
 
     def __init__(self, registries: Optional[SystemRegistries] = None) -> None:
         self._registries = registries
-        self._tasks: Set[asyncio.Task] = set()
+        self._tasks: Set[asyncio.Task[ResultT]] = set()
         self._active: Set[str] = set()
         self._lock = asyncio.Lock()
 
-    def start_pipeline(self, message: str) -> asyncio.Task:
+    def start_pipeline(self, message: str) -> asyncio.Task[ResultT]:
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
@@ -37,7 +40,7 @@ class PipelineManager:
         async with self._lock:
             self._active.discard(pipeline_id)
 
-    async def _run_pipeline(self, message: str) -> Dict[str, Any]:
+    async def _run_pipeline(self, message: str) -> ResultT:
         if self._registries is None:
             raise ValueError("PipelineManager requires registries to run pipelines")
         from .pipeline import execute_pipeline
@@ -45,9 +48,9 @@ class PipelineManager:
         result = await execute_pipeline(
             message, self._registries, pipeline_manager=self
         )
-        return cast(Dict[str, Any], result)
+        return cast(ResultT, result)
 
-    async def run_pipeline(self, message: str) -> Dict[str, Any]:
+    async def run_pipeline(self, message: str) -> ResultT:
         return await self._run_pipeline(message)
 
     async def has_active_pipelines_async(self) -> bool:

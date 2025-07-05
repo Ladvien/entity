@@ -2,10 +2,13 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, TypeVar, cast
 
 from pipeline.stages import PipelineStage
 from pipeline.user_plugins import BasePlugin
+
+
+T = TypeVar("T")
 
 
 class ResourceRegistry:
@@ -28,10 +31,10 @@ class ResourceRegistry:
             instance = cls(config)
         self.add(getattr(instance, "name", name), instance)
 
-    def get(self, name: str) -> Any | None:
+    def get(self, name: str) -> Optional[T]:
         """Return the resource registered as ``name`` if present."""
 
-        return self._resources.get(name)
+        return cast(Optional[T], self._resources.get(name))
 
     def remove(self, name: str) -> None:
         self._resources.pop(name, None)
@@ -48,10 +51,10 @@ class ToolRegistry:
 
         self._tools[name] = tool
 
-    def get(self, name: str) -> Any | None:
+    def get(self, name: str) -> Optional[T]:
         """Return the tool registered as ``name`` if present."""
 
-        return self._tools.get(name)
+        return cast(Optional[T], self._tools.get(name))
 
 
 class PluginRegistry:
