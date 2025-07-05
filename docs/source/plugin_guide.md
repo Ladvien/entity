@@ -111,6 +111,7 @@ storage = StorageResource(
     filesystem=LocalFileSystemResource({"base_path": "./files"}),
 )
 ```
+The script at `examples/storage_resource_example.py` demonstrates this setup.
 
 ### Vector Memory
 
