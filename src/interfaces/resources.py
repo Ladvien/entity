@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import (TYPE_CHECKING, Any, AsyncIterator, Dict, Protocol,
+from typing import (TYPE_CHECKING, Any, AsyncIterator, Protocol,
                     runtime_checkable)
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -24,7 +24,7 @@ class Resource(Protocol):
 
 
 class BaseResource:
-    def __init__(self, config: Dict | None = None) -> None:
+    def __init__(self, config: dict[str, Any] | None = None) -> None:
         self.config = config or {}
         self.logger = get_logger(self.__class__.__name__)
 
@@ -41,7 +41,7 @@ class BaseResource:
         return {"status": "healthy"}
 
     @classmethod
-    def validate_config(cls, config: Dict) -> ValidationResult:
+    def validate_config(cls, config: dict[str, Any]) -> ValidationResult:
         return ValidationResult.success_result()
 
     @classmethod
@@ -56,7 +56,7 @@ class LLM(ABC):
     ) -> LLMResponse: ...
 
     async def __call__(self, prompt: str) -> str:
-        return (await self.generate(prompt)).content
+        return str((await self.generate(prompt)).content)
 
     async def stream(
         self, prompt: str, functions: list[dict[str, Any]] | None = None
@@ -72,20 +72,26 @@ class LLMResource(BaseResource, LLM):
     ) -> LLMResponse:
         raise NotImplementedError
 
-    async def stream(self, prompt: str) -> AsyncIterator[str]:
+    async def stream(
+        self, prompt: str, functions: list[dict[str, Any]] | None = None
+    ) -> AsyncIterator[str]:
         raise NotImplementedError
 
-    __call__ = generate
+    async def __call__(self, prompt: str) -> str:
+        return str((await self.generate(prompt)).content)
 
     async def call_llm(self, prompt: str, sanitize: bool = False) -> str:
         if sanitize:
             from html import escape
 
             prompt = escape(prompt)
-        return await self.generate(prompt)
+        response = await self.generate(prompt)
+        return str(response.content)
 
     @staticmethod
-    def validate_required_fields(config: Dict, fields: list[str]) -> ValidationResult:
+    def validate_required_fields(
+        config: dict[str, Any], fields: list[str]
+    ) -> ValidationResult:
         missing = [field for field in fields if not config.get(field)]
         if missing:
             joined = ", ".join(missing)
@@ -93,7 +99,7 @@ class LLMResource(BaseResource, LLM):
         return ValidationResult.success_result()
 
     @staticmethod
-    def extract_params(config: Dict, required: list[str]) -> Dict[str, Any]:
+    def extract_params(config: dict[str, Any], required: list[str]) -> dict[str, Any]:
         return {k: v for k, v in config.items() if k not in required}
 
 

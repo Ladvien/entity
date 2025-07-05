@@ -7,8 +7,9 @@ from datetime import datetime
 from pathlib import Path
 
 SRC_PATH = Path(__file__).resolve().parents[1]
-if str(SRC_PATH) not in sys.path:
-    sys.path.insert(0, str(SRC_PATH))
+if str(SRC_PATH) in sys.path:
+    sys.path.remove(str(SRC_PATH))
+sys.path.insert(0, str(SRC_PATH))
 
 import yaml  # noqa: E402
 from jsonschema import RefResolver, ValidationError, validate  # noqa: E402
@@ -19,7 +20,7 @@ from pipeline.config import ConfigLoader  # noqa: E402
 from pipeline.logging import configure_logging, get_logger  # noqa: E402
 
 from .validators import _validate_memory  # noqa: E402
-from .validators import _validate_cache, _validate_vector_memory
+from .validators import _validate_cache, _validate_vector_memory  # noqa: E402
 
 logger = get_logger(__name__)
 

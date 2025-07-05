@@ -2,6 +2,7 @@ from __future__ import annotations
 
 """Shared resource lifecycle protocol."""
 
+from types import TracebackType
 from typing import Any, Protocol, runtime_checkable
 
 
@@ -13,6 +14,11 @@ class ResourceLifecycle(Protocol):
         """Enter the resource context."""
         ...
 
-    async def __aexit__(self, exc_type, exc, tb) -> None:
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
         """Cleanup the resource on exit."""
         ...

@@ -15,7 +15,7 @@ def import_plugin_class(path: str) -> type[BasePlugin]:
     else:
         raise ValueError(f"Invalid plugin path: {path}")
     module = import_module(module_path)
-    return getattr(module, class_name)
+    return cast(type[BasePlugin], getattr(module, class_name))
 
 
 class PluginAutoClassifier:

@@ -3,7 +3,10 @@ from __future__ import annotations
 import warnings
 
 warnings.warn(
-    "pipeline.cache.redis is deprecated; use plugins.contrib.resources.cache_backends.redis instead",
+    (
+        "pipeline.cache.redis is deprecated; "
+        "use plugins.contrib.resources.cache_backends.redis instead"
+    ),
     DeprecationWarning,
     stacklevel=2,
 )
@@ -19,4 +22,4 @@ def __getattr__(name: str):
     raise AttributeError(f"module {__name__} has no attribute {name}")
 
 
-__all__ = ["RedisCache"]
+__all__ = ["RedisCache"]  # noqa: F822

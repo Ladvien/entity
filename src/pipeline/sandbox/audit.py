@@ -5,7 +5,10 @@ import warnings
 from plugins.contrib.infrastructure.sandbox.audit import PluginAuditor
 
 warnings.warn(
-    "pipeline.sandbox.audit is deprecated; use plugins.contrib.infrastructure.sandbox.audit instead",
+    (
+        "pipeline.sandbox.audit is deprecated; "
+        "use plugins.contrib.infrastructure.sandbox.audit instead"
+    ),
     DeprecationWarning,
     stacklevel=2,
 )

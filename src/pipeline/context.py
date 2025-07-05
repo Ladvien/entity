@@ -331,7 +331,7 @@ class PluginContext:
         llm = self.get_llm()
         self.record_llm_call("PluginContext", "stream_llm")
         start = asyncio.get_event_loop().time()
-        async for chunk in llm.stream(prompt):
+        async for chunk in await llm.stream(prompt):
             yield chunk
         self.record_llm_duration(
             "PluginContext", asyncio.get_event_loop().time() - start
