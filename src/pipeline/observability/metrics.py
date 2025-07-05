@@ -8,6 +8,8 @@ from prometheus_client import (CollectorRegistry, Counter, Gauge, Histogram,
 
 from pipeline.metrics import MetricsCollector
 
+__all__ = ["MetricsServer", "start_metrics_server", "get_metrics_server"]
+
 
 class MetricsServer:
     """Expose pipeline metrics via Prometheus."""
@@ -52,6 +54,11 @@ class MetricsServer:
 
 
 _metrics_server: MetricsServer | None = None
+
+
+def get_metrics_server() -> MetricsServer | None:
+    """Return the current metrics server instance if running."""
+    return _metrics_server
 
 
 def start_metrics_server(port: int = 9001) -> MetricsServer:
