@@ -13,9 +13,8 @@ from registry import SystemRegistries
 
 from .context import ConversationEntry, PluginContext, SimpleContext
 from .errors import create_static_error_response
-from .exceptions import (CircuitBreakerTripped, PluginExecutionError,
-                         ToolExecutionError)
-from .logging import reset_request_id, set_request_id
+from .exceptions import CircuitBreakerTripped, PluginExecutionError, ToolExecutionError
+from .logging import get_logger, reset_request_id, set_request_id
 from .manager import PipelineManager
 from .observability.metrics import _metrics_server
 from .observability.tracing import start_span
@@ -24,6 +23,8 @@ from .stages import PipelineStage
 from .state import FailureInfo, MetricsCollector, PipelineState, ToolCall
 from .tools.base import RetryOptions
 from .tools.execution import execute_tool
+
+logger = get_logger(__name__)
 
 
 def generate_pipeline_id() -> str:
@@ -92,7 +93,15 @@ async def execute_stage(
                     original_exception=exc.original_exception,
                 )
                 return
-            except Exception as exc:  # noqa: BLE001
+            except (RuntimeError, ValueError) as exc:
+                logger.error(
+                    "Plugin raised error",
+                    exc_info=exc,
+                    extra={
+                        "plugin": getattr(plugin, "name", plugin.__class__.__name__),
+                        "stage": str(stage),
+                    },
+                )
                 state.failure_info = FailureInfo(
                     stage=str(stage),
                     plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
@@ -101,6 +110,23 @@ async def execute_stage(
                     original_exception=exc,
                 )
                 return
+            except Exception as exc:  # noqa: BLE001
+                logger.exception(
+                    "Unexpected plugin exception",
+                    exc_info=exc,
+                    extra={
+                        "plugin": getattr(plugin, "name", plugin.__class__.__name__),
+                        "stage": str(stage),
+                    },
+                )
+                state.failure_info = FailureInfo(
+                    stage=str(stage),
+                    plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
+                    error_type=exc.__class__.__name__,
+                    error_message=str(exc),
+                    original_exception=exc,
+                )
+                raise
             finally:
                 reset_request_id(token)
 
