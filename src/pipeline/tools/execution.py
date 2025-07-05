@@ -4,8 +4,13 @@ from typing import Any, Awaitable, Callable, Dict, TypeVar, cast
 from interfaces import ToolPluginProtocol
 from registry import SystemRegistries
 
+<<<<<<< HEAD
 from ..errors import ToolExecutionError
 from ..state import PipelineState, ToolCall
+=======
+from ..exceptions import ToolExecutionError
+from ..state import FailureInfo, PipelineState, ToolCall
+>>>>>>> 4ec380612705baba64f57a30b7426c63c2c27181
 from .base import RetryOptions
 
 ResultT = TypeVar("ResultT")
@@ -101,6 +106,7 @@ async def execute_pending_tools(
                 call.source,
             )
         except Exception as exc:
+<<<<<<< HEAD
             err = f"Error: {exc}"
             state.stage_results[call.result_key] = err
             if (
@@ -111,12 +117,22 @@ async def execute_pending_tools(
                 if oldest != call.result_key:
                     state.stage_results.pop(oldest, None)
             results[call.result_key] = cast(ResultT, err)
+=======
+>>>>>>> 4ec380612705baba64f57a30b7426c63c2c27181
             state.metrics.record_tool_error(
                 call.name,
                 cast(str, state.current_stage and str(state.current_stage)),
                 state.pipeline_id,
                 str(exc),
             )
+            state.failure_info = FailureInfo(
+                stage=str(state.current_stage),
+                plugin_name=call.name,
+                error_type=exc.__class__.__name__,
+                error_message=str(exc),
+                original_exception=exc,
+            )
+            raise ToolExecutionError(call.name, exc, call.result_key) from exc
         finally:
             state.pending_tool_calls.remove(call)
     return results

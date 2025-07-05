@@ -21,6 +21,18 @@ class PluginExecutionError(PluginError):
         super().__init__(str(original_exception))
 
 
+class ToolExecutionError(PluginError):
+    """Exception raised when a tool fails during execution."""
+
+    def __init__(
+        self, tool_name: str, original_exception: Exception, result_key: str
+    ) -> None:
+        self.tool_name = tool_name
+        self.original_exception = original_exception
+        self.result_key = result_key
+        super().__init__(str(original_exception))
+
+
 class CircuitBreakerTripped(PluginError):
     """Raised when repeated plugin failures prevent execution.
 
