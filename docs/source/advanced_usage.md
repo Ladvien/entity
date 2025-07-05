@@ -106,3 +106,7 @@ store backed by DuckDB:
 ```bash
 python examples/pipelines/duckdb_pipeline.py
 ```
+
+### Caching Pipeline Data
+
+`CacheResource` lets plugins store intermediate results between stages. Configure it with `InMemoryCache` or your own backend. Run `examples/cache_example.py` for a minimal setup.
