@@ -4,10 +4,11 @@ When instantiated without a configuration file, ``Agent`` loads a basic set of
 plugins so the pipeline can run out of the box:
 
 - ``EchoLLMResource`` – minimal LLM resource that simply echoes prompts.
-- ``StorageResource`` – unified interface that composes database, vector store, and file system backends.
+- ``MemoryResource`` – composite memory combining optional database, vector store, and filesystem backends.
 - ``SearchTool`` – wrapper around DuckDuckGo's search API.
 - ``CalculatorTool`` – safe evaluator for arithmetic expressions.
 
+StorageResource is an advanced plugin for persistent storage. See [docs/source/plugin_guide.md](docs/source/plugin_guide.md) for details.
 These defaults allow ``Agent()`` to process messages without any external
 configuration.
 
@@ -21,7 +22,10 @@ poetry run python src/cli.py --config config.yaml
 ```
 This project relies on `httpx==0.27.*`, which Poetry will install automatically.
 <!-- end quick_start -->
+For a high-level look at how the pieces connect, see [components_overview.md](components_overview.md).
+
 ## Environment Setup
+
 
 1. Install Python 3.11+ and [Poetry](https://python-poetry.org/).
 2. Run `poetry install` to create the virtual environment. This installs all
