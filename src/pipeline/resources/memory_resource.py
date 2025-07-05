@@ -12,7 +12,6 @@ from pipeline.context import ConversationEntry
 from pipeline.stages import PipelineStage
 
 from .database import DatabaseResource
-from .filesystem import FileSystemResource
 from .memory import Memory
 
 
@@ -44,19 +43,17 @@ class MemoryResource(ResourcePlugin, Memory):
 
     stages = [PipelineStage.PARSE]
     name = "memory"
-    dependencies = ["database", "vector_store", "filesystem"]
+    dependencies = ["database", "vector_store"]
 
     def __init__(
         self,
         database: DatabaseResource | None = None,
         vector_store: VectorStoreResource | None = None,
-        filesystem: FileSystemResource | None = None,
         config: Dict | None = None,
     ) -> None:
         super().__init__(config or {})
         self.database = database
         self.vector_store = vector_store
-        self.filesystem = filesystem
         self._kv: Dict[str, Any] = {}
 
     @classmethod
@@ -91,14 +88,9 @@ class MemoryResource(ResourcePlugin, Memory):
             return await self.vector_store.query_similar(query, k)
         return []
 
-    async def store_file(self, key: str, content: bytes) -> str:
-        if not self.filesystem:
-            raise ValueError("No filesystem backend configured")
-        return await self.filesystem.store(key, content)
-
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
-        for name in ("database", "vector_store", "filesystem"):
+        for name in ("database", "vector_store"):
             sub = config.get(name)
             if sub is not None and not isinstance(sub, dict):
                 return ValidationResult.error_result(f"'{name}' must be a mapping")

@@ -37,6 +37,8 @@ plugins:
         name: "${DB_NAME}"
         username: "${DB_USERNAME}"
         password: "${DB_PASSWORD}"
+    storage:
+      type: pipeline.resources.storage_resource:StorageResource
       filesystem:
         type: plugins.builtin.resources.s3_filesystem:S3FileSystem
         bucket: agent-files
