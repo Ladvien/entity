@@ -1,5 +1,7 @@
 import asyncio
 
+from plugins.contrib.failure.basic_logger import BasicLogger
+
 from pipeline import (
     FailurePlugin,
     PipelineStage,
@@ -11,7 +13,6 @@ from pipeline import (
     execute_pipeline,
 )
 from pipeline.errors import create_static_error_response
-from user_plugins.failure.basic_logger import BasicLogger
 
 
 class BoomPlugin(PromptPlugin):

@@ -4,9 +4,9 @@ from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from pgvector import Vector
+from plugins.builtin.resources.pg_vector_store import PgVectorStore
 
 from config.environment import load_env
-from plugins.resources.pg_vector_store import PgVectorStore
 
 load_env(Path(__file__).resolve().parents[1] / ".env")
 
@@ -27,7 +27,7 @@ async def init_resource():
             "asyncpg.create_pool", new=AsyncMock(return_value=pool)
         ) as mock_create_pool,
         patch(
-            "plugins.resources.pg_vector_store.register_vector",
+            "plugins.builtin.resources.pg_vector_store.register_vector",
             new=AsyncMock(),
         ) as mock_register,
     ):

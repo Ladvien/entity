@@ -1,6 +1,8 @@
 import asyncio
 from datetime import datetime
 
+from plugins.contrib.prompts.pii_scrubber import PIIScrubberPrompt
+
 from pipeline import (
     ConversationEntry,
     MetricsCollector,
@@ -11,7 +13,6 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from user_plugins.prompts.pii_scrubber import PIIScrubberPrompt
 
 
 def make_context():

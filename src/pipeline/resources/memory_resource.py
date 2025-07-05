@@ -5,10 +5,11 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
+from plugins.builtin.resources.vector_store import VectorStoreResource
+
+from pipeline.base_plugins import ResourcePlugin, ValidationResult
 from pipeline.context import ConversationEntry
 from pipeline.stages import PipelineStage
-from pipeline.user_plugins import ResourcePlugin, ValidationResult
-from plugins.resources.vector_store import VectorStoreResource
 
 from .database import DatabaseResource
 from .filesystem import FileSystemResource

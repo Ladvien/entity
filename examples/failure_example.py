@@ -14,10 +14,11 @@ from utilities import enable_plugins_namespace
 # Expose the local ``plugins`` namespace
 enable_plugins_namespace()
 
+from plugins.contrib.failure import BasicLogger, ErrorFormatter
+
 from entity import Agent
 from pipeline import PipelineStage, PromptPlugin
 from pipeline.context import PluginContext
-from user_plugins.failure import BasicLogger, ErrorFormatter
 
 
 class FailingPrompt(PromptPlugin):

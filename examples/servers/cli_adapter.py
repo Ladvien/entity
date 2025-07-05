@@ -13,9 +13,10 @@ enable_plugins_namespace()
 
 import asyncio
 
+from plugins.builtin.adapters.cli import CLIAdapter
+
 from pipeline import PipelineManager
 from pipeline.initializer import SystemInitializer
-from plugins.adapters.cli import CLIAdapter
 
 
 async def main() -> None:

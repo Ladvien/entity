@@ -49,7 +49,7 @@ class BasePlugin(ABC):
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
 
-        if cls.__module__ in {__name__, "pipeline.user_plugins.base"}:
+        if cls.__module__ in {__name__, "pipeline.base_plugins.base"}:
             return
 
         if "ToolPlugin" in [base.__name__ for base in cls.__mro__]:

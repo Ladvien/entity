@@ -13,9 +13,10 @@ from utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 
+from plugins.builtin.adapters.websocket import WebSocketAdapter
+
 from pipeline import PipelineManager
 from pipeline.initializer import SystemInitializer
-from plugins.adapters.websocket import WebSocketAdapter
 
 
 async def send_test_message() -> None:

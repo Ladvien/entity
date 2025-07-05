@@ -41,7 +41,7 @@ def test_memory_persists_between_runs():
 
 
 def test_memory_resource_name_constant():
-    from plugins.resources.memory_resource import MemoryResource
+    from plugins.builtin.resources.memory_resource import MemoryResource
 
     assert MemoryResource.name == "memory"
     assert not hasattr(MemoryResource, "aliases")

@@ -89,7 +89,7 @@ class PipelineState:
         prompt: Prompt text currently being processed.
         stage_results: Values produced during stage execution.
         pending_tool_calls: Tool calls awaiting execution.
-        metadata: Arbitrary per-run metadata for user_plugins.
+        metadata: Arbitrary per-run metadata for plugins.
         pipeline_id: Unique identifier for this run.
         current_stage: Stage that is currently executing.
         metrics: Collector used to record runtime metrics.

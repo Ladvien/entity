@@ -6,8 +6,6 @@ import inspect
 from pathlib import Path
 from typing import Any, Dict, List, Type
 
-from pipeline.logging import get_logger
-
 from pipeline.base_plugins import (
     AdapterPlugin,
     BasePlugin,
@@ -17,6 +15,7 @@ from pipeline.base_plugins import (
     ToolPlugin,
     ValidationResult,
 )
+from pipeline.logging import get_logger
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 
@@ -32,7 +31,7 @@ logger = get_logger(__name__)
 
 
 class PluginToolCLI:
-    """CLI utility for working with Entity user_plugins."""
+    """CLI utility for working with Entity plugins."""
 
     def __init__(self) -> None:
         self.args = self._parse_args()

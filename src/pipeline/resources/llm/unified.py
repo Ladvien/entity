@@ -5,10 +5,27 @@ from __future__ import annotations
 
 from typing import Any, AsyncIterator, Dict, List, Type
 
+<<<<<<< HEAD
 from interfaces import import_plugin_class
 from interfaces.resources import LLMResource
 from pipeline.state import LLMResponse
 from pipeline.user_plugins import ValidationResult
+=======
+# Import provider implementations from the public plugin package. Using the
+# fully qualified path avoids ambiguity if this module is restructured.
+from plugins.builtin.resources.llm.providers import (
+    BedrockProvider,
+    ClaudeProvider,
+    EchoProvider,
+    GeminiProvider,
+    OllamaProvider,
+    OpenAIProvider,
+)
+from plugins.builtin.resources.llm_resource import LLMResource
+
+from pipeline.base_plugins import ValidationResult
+from pipeline.state import LLMResponse
+>>>>>>> 94729e2a932fa4b63abaf4976b85727defa173ae
 
 
 class UnifiedLLMResource(LLMResource):

@@ -1,8 +1,7 @@
 import asyncio
 
 import pytest
-
-from user_plugins.tools.calculator_tool import CalculatorTool
+from plugins.contrib.tools.calculator_tool import CalculatorTool
 
 
 @pytest.mark.unit

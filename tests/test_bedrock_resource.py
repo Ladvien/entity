@@ -4,7 +4,7 @@ import asyncio
 import io
 from unittest.mock import patch
 
-from plugins.resources.llm.unified import UnifiedLLMResource
+from plugins.builtin.resources.llm.unified import UnifiedLLMResource
 
 
 class FakeClient:

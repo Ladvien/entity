@@ -1,5 +1,5 @@
+from pipeline.base_plugins import FailurePlugin
 from pipeline.stages import PipelineStage
-from pipeline.user_plugins import FailurePlugin
 
 
 class {class_name}(FailurePlugin):

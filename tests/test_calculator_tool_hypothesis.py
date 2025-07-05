@@ -2,8 +2,7 @@ import asyncio
 
 from hypothesis import given
 from hypothesis import strategies as st
-
-from user_plugins.tools.calculator_tool import CalculatorTool
+from plugins.contrib.tools.calculator_tool import CalculatorTool
 
 
 def _eval(expr: str) -> int | float:

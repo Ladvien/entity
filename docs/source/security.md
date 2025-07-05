@@ -2,10 +2,10 @@
 
 This project can run plugins inside isolated Docker containers. Each plugin must
 provide a `plugin.toml` manifest defining required resources and runtime limits.
-The :class:`plugins.infrastructure.sandbox.DockerSandboxRunner` applies CPU and memory limits
+The :class:`plugins.builtin.infrastructure.sandbox.DockerSandboxRunner` applies CPU and memory limits
 based on the manifest and verifies the plugin signature before execution. The
 runner uses :class:`infrastructure.DockerInfrastructure` so you can also build
 a Docker image for your agent.
 
-To validate manifests outside of runtime, use :class:`plugins.infrastructure.sandbox.PluginAuditor`.
+To validate manifests outside of runtime, use :class:`plugins.builtin.infrastructure.sandbox.PluginAuditor`.
 It checks requested resources against a whitelist and reports any violations.

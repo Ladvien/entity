@@ -1,7 +1,8 @@
 import sys
 
+from plugins.builtin.adapters.websocket import WebSocketAdapter
+
 from cli import CLI
-from plugins.adapters.websocket import WebSocketAdapter
 
 
 def test_cli_websocket(monkeypatch, tmp_path):

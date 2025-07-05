@@ -124,7 +124,7 @@ def test_vector_memory_requires_postgres(tmp_path):
     plugins = {
         "resources": {
             "vector_memory": {
-                "type": "plugins.resources.pg_vector_store:PgVectorStore"
+                "type": "plugins.builtin.resources.pg_vector_store:PgVectorStore"
             },
             "database": {"type": "tests.test_registry_validator:A"},
         }
@@ -138,9 +138,9 @@ def test_vector_memory_with_postgres(tmp_path):
     plugins = {
         "resources": {
             "vector_memory": {
-                "type": "plugins.resources.pg_vector_store:PgVectorStore"
+                "type": "plugins.builtin.resources.pg_vector_store:PgVectorStore"
             },
-            "database": {"type": "plugins.resources.postgres:PostgresResource"},
+            "database": {"type": "plugins.builtin.resources.postgres:PostgresResource"},
         }
     }
     path = _write_config(tmp_path, plugins)

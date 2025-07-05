@@ -11,8 +11,9 @@ from utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 
+from plugins.builtin.adapters.server import AgentServer  # noqa: E402
+
 from entity import Agent  # noqa: E402
-from plugins.adapters.server import AgentServer  # noqa: E402
 
 
 def main() -> None:

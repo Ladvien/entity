@@ -1,5 +1,8 @@
 import asyncio
 
+from plugins.contrib.failure.basic_logger import BasicLogger
+from plugins.contrib.failure.error_formatter import ErrorFormatter
+
 from pipeline import (
     PipelineStage,
     PluginRegistry,
@@ -9,8 +12,6 @@ from pipeline import (
     ToolRegistry,
     execute_pipeline,
 )
-from user_plugins.failure.basic_logger import BasicLogger
-from user_plugins.failure.error_formatter import ErrorFormatter
 
 
 class UnstablePlugin(PromptPlugin):
