@@ -4,16 +4,16 @@
 :end-before: <!-- end advanced_usage -->
 ```
 
-### Composing Memory Backends
+### Composing Storage Backends
 
 PostgreSQL's `pgvector` extension allows vector similarity search for embeddings.
-Use `MemoryResource` with a Postgres database and optional S3 file storage:
+Use `StorageResource` with a Postgres database and optional S3 file storage:
 
 ```yaml
 plugins:
   resources:
-    memory:
-      type: memory
+    storage:
+      type: storage
       database:
         type: plugins.builtin.resources.postgres:PostgresResource
         host: localhost
@@ -37,8 +37,8 @@ For local experimentation you can swap the database section with SQLite:
 ```yaml
 plugins:
   resources:
-    memory:
-      type: memory
+    storage:
+      type: storage
       database:
         type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
         path: ./agent.db

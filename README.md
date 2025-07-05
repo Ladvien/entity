@@ -4,7 +4,7 @@ When instantiated without a configuration file, ``Agent`` loads a basic set of
 plugins so the pipeline can run out of the box:
 
 - ``EchoLLMResource`` – minimal LLM resource that simply echoes prompts.
-- ``MemoryResource`` – unified interface that delegates to an in-memory backend by default.
+- ``StorageResource`` – unified interface that composes database, vector store, and file system backends.
 - ``SearchTool`` – wrapper around DuckDuckGo's search API.
 - ``CalculatorTool`` – safe evaluator for arithmetic expressions.
 
@@ -150,7 +150,7 @@ This is an excellent mental model! The composition pattern you're proposing alig
    - Supports gradual complexity (start with just DB, add vector store later)
 
 3. **Intuitive Mental Model**
-   - Memory = Database + Vector Store + File System
+   - Storage = Database + Vector Store + File System
    - Matches how developers think about storage layers
    - Clear upgrade path from simple to complex
 
@@ -160,11 +160,11 @@ This is an excellent mental model! The composition pattern you're proposing alig
 from abc import ABC, abstractmethod
 from typing import Optional, List, Dict, Any
 
-class MemoryResource(ResourcePlugin):
-    """Unified memory interface composing multiple storage backends."""
+class StorageResource(ResourcePlugin):
+    """Unified storage interface composing multiple backends."""
     
     stages = [PipelineStage.PARSE]
-    name = "memory"
+    name = "storage"
     
     def __init__(
         self,
@@ -179,8 +179,8 @@ class MemoryResource(ResourcePlugin):
         self.filesystem = filesystem
         
     @classmethod
-    def from_config(cls, config: Dict) -> "MemoryResource":
-        """Create MemoryResource from YAML configuration."""
+    def from_config(cls, config: Dict) -> "StorageResource":
+        """Create StorageResource from YAML configuration."""
         # Allow both programmatic and config-based initialization
         db_config = config.get("database")
         if db_config:
@@ -221,8 +221,8 @@ class MemoryResource(ResourcePlugin):
 ```yaml
 plugins:
   resources:
-    memory:
-      type: memory
+    storage:
+      type: storage
       database:
         type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
         path: ./agent.db
@@ -232,8 +232,8 @@ plugins:
 ```yaml
 plugins:
   resources:
-    memory:
-      type: memory
+    storage:
+      type: storage
       database:
         type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
         path: ./agent.duckdb
@@ -244,8 +244,8 @@ plugins:
 ```yaml
 plugins:
   resources:
-    memory:
-      type: memory
+    storage:
+      type: storage
       database:
         type: plugins.builtin.resources.postgres:PostgresResource
         host: localhost
@@ -263,17 +263,17 @@ plugins:
 ### Programmatic Configuration
 ```python
 # Start simple
-memory = MemoryResource(
+storage = StorageResource(
     database=SQLiteDatabaseResource("./agent.db")
 )
 
 # Use DuckDB
 duckdb_resource = DuckDBDatabaseResource({"path": "./agent.duckdb"})
-memory_duckdb = MemoryResource(database=duckdb_resource)
+storage_duckdb = StorageResource(database=duckdb_resource)
 
 # Evolve to complex
 postgres = PostgresResource(connection_str)
-memory = MemoryResource(
+storage = StorageResource(
     database=postgres,
     vector_store=PgVectorStore(postgres, dimensions=768),
     filesystem=S3FileSystem(bucket="agent-files")
@@ -313,25 +313,25 @@ The `S3FileSystem` backend persists files in Amazon S3. Configure the
 3. **Provide Sensible Defaults**
    ```python
    # If no config provided, use SQLite + local filesystem
-   memory = MemoryResource()  # Works out of the box
+   storage = StorageResource()  # Works out of the box
    ```
 
 4. **Clear Migration Path**
    ```python
    # Easy to migrate data between backends
-   await memory.migrate_to(new_memory)
+   await storage.migrate_to(new_storage)
    ```
 
 ## Benefits for Users
 
 1. **Progressive Complexity**
-   - Start with just `MemoryResource()` 
+   - Start with just `StorageResource()` 
    - Add database when needed
    - Add vector search when ready
    - Add file storage for multimodal
 
 2. **Clear Mental Model**
-   - Memory = persistent storage for agent
+   - Storage = persistent storage for agent
    - Composed of familiar components
    - Each component optional
 

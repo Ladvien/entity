@@ -202,7 +202,7 @@ This is an excellent mental model! The composition pattern you're proposing alig
    - Supports gradual complexity (start with just DB, add vector store later)
 
 3. **Intuitive Mental Model**
-   - Memory = Database + Vector Store + File System
+   - Storage = Database + Vector Store + File System
    - Matches how developers think about storage layers
    - Clear upgrade path from simple to complex
 
@@ -215,13 +215,13 @@ Here’s a more expanded, agent-focused version for your `AGENTS.md`, written to
 
 Agents in this framework are powered by *resources*—pluggable components like databases, vector stores, and file systems—that provide persistent capability. Rather than tightly coupling functionality to a specific backend, we follow a **composition pattern**: each resource is composed of smaller, interchangeable parts that work together to deliver the desired behavior. This design makes agents easier to extend, test, and deploy across environments.
 
-Take the `MemoryResource` as a canonical example. It doesn’t “store memory” in one specific place. Instead, it acts as an orchestration layer that can delegate persistence to a relational database, semantic search to a vector store, and file handling to an object store. You might start with a basic setup using SQLite and a local folder. Later, without rewriting your agent logic, you can swap in PostgreSQL, PGVector, and S3—just by changing the YAML config or passing different objects programmatically.
+Take the `StorageResource` as a canonical example. It doesn’t store data in one specific place. Instead, it acts as an orchestration layer that can delegate persistence to a relational database, semantic search to a vector store, and file handling to an object store. You might start with a basic setup using SQLite and a local folder. Later, without rewriting your agent logic, you can swap in PostgreSQL, PGVector, and S3—just by changing the YAML config or passing different objects programmatically.
 
 ```yaml
 plugins:
   resources:
-    memory:
-      type: memory
+    storage:
+      type: storage
       database:
         type: sqlite
         path: ./agent.db
@@ -232,8 +232,8 @@ Later:
 ```yaml
 plugins:
   resources:
-    memory:
-      type: memory
+    storage:
+      type: storage
       database:
         type: postgres
         host: db.internal
@@ -246,7 +246,7 @@ plugins:
         bucket: agent-files
 ```
 
-This approach isn’t limited to memory. It applies to *any* agent capability—logging, configuration, tools, adapters. You can compose a `VectorMemorySystem` that reuses a shared `PostgresResource` connection pool, or build a `KnowledgeBaseResource` that pulls from both local files and cloud APIs.
+This approach isn’t limited to storage. It applies to *any* agent capability—logging, configuration, tools, adapters. You can compose a `VectorMemorySystem` that reuses a shared `PostgresResource` connection pool, or build a `KnowledgeBaseResource` that pulls from both local files and cloud APIs.
 
 ### 🧠 Why It Matters
 
@@ -268,11 +268,11 @@ Let me know if you'd like a Mermaid diagram or resource registry pattern callout
 from abc import ABC, abstractmethod
 from typing import Optional, List, Dict, Any
 
-class MemoryResource(ResourcePlugin):
-    """Unified memory interface composing multiple storage backends."""
+class StorageResource(ResourcePlugin):
+    """Unified storage interface composing multiple backends."""
     
     stages = [PipelineStage.PARSE]
-    name = "memory"
+    name = "storage"
     
     def __init__(
         self,
@@ -287,8 +287,8 @@ class MemoryResource(ResourcePlugin):
         self.filesystem = filesystem
         
     @classmethod
-    def from_config(cls, config: Dict) -> "MemoryResource":
-        """Create MemoryResource from YAML configuration."""
+    def from_config(cls, config: Dict) -> "StorageResource":
+        """Create StorageResource from YAML configuration."""
         # Allow both programmatic and config-based initialization
         db_config = config.get("database")
         if db_config:
@@ -329,8 +329,8 @@ class MemoryResource(ResourcePlugin):
 ```yaml
 plugins:
   resources:
-    memory:
-      type: memory
+    storage:
+      type: storage
       database:
         type: sqlite
         path: ./agent.db
@@ -340,8 +340,8 @@ plugins:
 ```yaml
 plugins:
   resources:
-    memory:
-      type: memory
+    storage:
+      type: storage
       database:
         type: postgres
         host: localhost
@@ -359,13 +359,13 @@ plugins:
 ### Programmatic Configuration
 ```python
 # Start simple
-memory = MemoryResource(
+storage = StorageResource(
     database=SQLiteDatabaseResource("./agent.db")
 )
 
 # Evolve to complex
 postgres = PostgresResource(connection_str)
-memory = MemoryResource(
+storage = StorageResource(
     database=postgres,
     vector_store=PgVectorStore(postgres, dimensions=768),
     filesystem=S3FileSystem(bucket="agent-files")
@@ -401,13 +401,13 @@ memory = MemoryResource(
 3. **Provide Sensible Defaults**
    ```python
    # If no config provided, use SQLite + local filesystem
-   memory = MemoryResource()  # Works out of the box
+   storage = StorageResource()  # Works out of the box
    ```
 
 4. **Clear Migration Path**
    ```python
    # Easy to migrate data between backends
-   await memory.migrate_to(new_memory)
+   await storage.migrate_to(new_storage)
    ```
 
 
