@@ -7,6 +7,7 @@ import pytest
 from plugins.builtin.resources.postgres import PostgresResource
 
 from config.environment import load_env
+from pipeline.resources.memory_resource import MemoryResource
 from pipeline.state import ConversationEntry
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
@@ -26,12 +27,13 @@ CONN = {
 @pytest.mark.integration
 def test_save_and_load_history():
     async def run():
-        resource = PostgresResource(CONN)
+        db = PostgresResource(CONN)
+        memory = MemoryResource(database=db)
         try:
-            await resource.initialize()
+            await db.initialize()
         except OSError as exc:
             pytest.skip(f"PostgreSQL not available: {exc}")
-        async with resource.connection() as conn:
+        async with db.connection() as conn:
             await conn.execute("DROP TABLE IF EXISTS test_history")
             await conn.execute(
                 "CREATE TABLE test_history ("
@@ -41,9 +43,9 @@ def test_save_and_load_history():
         entries = [
             ConversationEntry(content="hello", role="user", timestamp=datetime.now())
         ]
-        await resource.save_history("conv1", entries)
-        loaded = await resource.load_history("conv1")
-        await resource._pool.close()
+        await memory.save_conversation("conv1", entries)
+        loaded = await memory.load_conversation("conv1")
+        await db._pool.close()
         return loaded
 
     history = asyncio.run(run())

@@ -1,10 +1,20 @@
 import asyncio
+from datetime import datetime
 
-from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      ResourceRegistry, SystemRegistries, ToolRegistry,
-                      execute_pipeline)
+from plugins.builtin.resources.in_memory_storage import InMemoryStorageResource
+
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    ResourceRegistry,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
+from pipeline.context import ConversationEntry
 from pipeline.resources.memory import Memory
-from pipeline.resources.memory_resource import SimpleMemoryResource
+from pipeline.resources.memory_resource import MemoryResource, SimpleMemoryResource
 
 
 class IncrementPlugin(PromptPlugin):
@@ -34,6 +44,21 @@ def test_memory_persists_between_runs():
     second = asyncio.run(execute_pipeline("again", registries))
     assert first == 1
     assert second == 2
+
+
+def test_save_and_load_history():
+    async def run():
+        db = InMemoryStorageResource({})
+        memory = MemoryResource(database=db)
+        history = [
+            ConversationEntry(content="hi", role="user", timestamp=datetime.now())
+        ]
+        await memory.save_conversation("1", history)
+        loaded = await memory.load_conversation("1")
+        return loaded
+
+    loaded = asyncio.run(run())
+    assert loaded and loaded[0].content == "hi"
 
 
 def test_memory_resource_name_constant():
