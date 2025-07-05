@@ -58,13 +58,13 @@ plugins:
       pool_max_size: 5
 ```
 
-For quick tests you can use an in-memory backend:
+For quick tests you can use DuckDB's default in-memory mode:
 
 ```yaml
 plugins:
   resources:
     database:
-      type: plugins.builtin.resources.memory_storage:MemoryStorage
+      type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
 ```
 
 HTTP adapter configuration with authentication and rate limiting:
