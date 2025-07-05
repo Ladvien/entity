@@ -22,3 +22,13 @@ Example log output:
 ```
 
 Use the ID to trace a single request across plugins and stages.
+
+### Example Script
+
+The `examples/structured_logging_example.py` script configures the `StructuredLogging` resource and writes a single log entry.
+Run it with:
+
+```bash
+python examples/structured_logging_example.py
+```
+
