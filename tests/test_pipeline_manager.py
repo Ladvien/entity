@@ -21,7 +21,7 @@ class WaitPlugin(PromptPlugin):
 
 def make_manager():
     plugins = PluginRegistry()
-    plugins.register_plugin_for_stage(WaitPlugin({}), PipelineStage.DO)
+    asyncio.run(plugins.register_plugin_for_stage(WaitPlugin({}), PipelineStage.DO))
     registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
     return PipelineManager(registries)
 

@@ -26,9 +26,11 @@ class IncrementPlugin(PromptPlugin):
 
 def make_registries():
     plugins = PluginRegistry()
-    plugins.register_plugin_for_stage(IncrementPlugin({}), PipelineStage.DO)
+    asyncio.run(
+        plugins.register_plugin_for_stage(IncrementPlugin({}), PipelineStage.DO)
+    )
     resources = ResourceRegistry()
-    resources.add("memory", SimpleMemoryResource())
+    asyncio.run(resources.add("memory", SimpleMemoryResource()))
     return SystemRegistries(resources, ToolRegistry(), plugins)
 
 

@@ -37,7 +37,7 @@ def make_context(memory: MemoryResource | None = None):
     memory = memory or SimpleMemoryResource()
     asyncio.run(memory.save_conversation("1", past))
     resources = ResourceRegistry()
-    resources.add("memory", memory)
+    asyncio.run(resources.add("memory", memory))
 
     state = PipelineState(
         conversation=[

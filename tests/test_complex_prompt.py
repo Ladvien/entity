@@ -48,8 +48,8 @@ def make_context(llm, memory):
         metrics=MetricsCollector(),
     )
     resources = ResourceRegistry()
-    resources.add("llm", llm)
-    resources.add("memory", memory)
+    asyncio.run(resources.add("llm", llm))
+    asyncio.run(resources.add("memory", memory))
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
     return state, PluginContext(state, registries)
 

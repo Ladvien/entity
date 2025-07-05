@@ -111,7 +111,7 @@ class ResourceContainer(ResourceRegistry):
                         f"Resource '{name}' requires '{dep}' which is missing"
                     )
                 setattr(instance, dep, dep_obj)
-            self.add(getattr(instance, "name", name), instance)
+            await self.add(getattr(instance, "name", name), instance)
             init = getattr(instance, "initialize", None)
             if callable(init):
                 await init()
@@ -151,7 +151,7 @@ class ResourceContainer(ResourceRegistry):
         pool = ResourcePool(factory, cfg)
         await pool.initialize()
         self._pools[name] = pool
-        super().add(name, pool)
+        await super().add(name, pool)
 
     async def acquire(self, name: str) -> Any:
         pool = self._pools.get(name)

@@ -32,7 +32,7 @@ def make_context(llm=None) -> PluginContext:
     )
     resources = ResourceRegistry()
     if llm is not None:
-        resources.add("llm", llm)
+        asyncio.run(resources.add("llm", llm))
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
     return PluginContext(state, registries)
 

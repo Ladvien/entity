@@ -75,9 +75,9 @@ def test_vector_memory_integration():
         await db.save_history("conv1", [history_entry])
         await vm.add_embedding("previous")
         resources = ResourceRegistry()
-        resources.add("database", db)
-        resources.add("vector_memory", vm)
-        resources.add("llm", llm)
+        await resources.add("database", db)
+        await resources.add("vector_memory", vm)
+        await resources.add("llm", llm)
         registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
         state = PipelineState(
             conversation=[

@@ -20,8 +20,8 @@ class Agent:
     # ------------------------------------------------------------------
     # Delegated plugin helpers
     # ------------------------------------------------------------------
-    def add_plugin(self, plugin: Any) -> None:  # pragma: no cover - delegation
-        self.builder.add_plugin(plugin)
+    async def add_plugin(self, plugin: Any) -> None:  # pragma: no cover - delegation
+        await self.builder.add_plugin(plugin)
 
     def plugin(
         self, func: Optional[Callable] = None, **hints

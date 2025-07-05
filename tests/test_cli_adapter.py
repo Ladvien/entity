@@ -25,7 +25,7 @@ class EchoPlugin(PromptPlugin):
 
 def make_adapter() -> tuple[CLIAdapter, SystemRegistries]:
     plugins = PluginRegistry()
-    plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.DO)
+    asyncio.run(plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.DO))
     registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
     manager = PipelineManager(registries)
     return CLIAdapter(manager), registries

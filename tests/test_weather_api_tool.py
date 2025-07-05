@@ -44,7 +44,7 @@ async def run_weather():
     tool = WeatherApiTool(
         {"base_url": "http://test/weather", "api_key": os.environ["WEATHER_API_KEY"]}
     )
-    tools.add("weather", tool)
+    await tools.add("weather", tool)
     registries = SystemRegistries(ResourceRegistry(), tools, PluginRegistry())
     ctx = PluginContext(state, registries)
     with patch(

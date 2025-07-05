@@ -46,7 +46,7 @@ async def run_history_test(resource):
 
     memory = MemoryResource(resource)
     resources = ResourceRegistry()
-    resources.add("memory", memory)
+    await resources.add("memory", memory)
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
     state = PipelineState(
         conversation=[

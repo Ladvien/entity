@@ -41,9 +41,9 @@ class SlowPlugin(PromptPlugin):
 def make_registry(add_slow: bool = False):
     reg = PluginRegistry()
     plugin = TestReconfigPlugin({"value": "one"})
-    reg.register_plugin_for_stage(plugin, PipelineStage.THINK)
+    asyncio.run(reg.register_plugin_for_stage(plugin, PipelineStage.THINK))
     if add_slow:
-        reg.register_plugin_for_stage(SlowPlugin(), PipelineStage.THINK)
+        asyncio.run(reg.register_plugin_for_stage(SlowPlugin(), PipelineStage.THINK))
     return reg, plugin
 
 
@@ -64,7 +64,7 @@ def test_update_plugin_configuration_restart_required():
 
     reg = PluginRegistry()
     p = NRPlugin({"value": "x"})
-    reg.register_plugin_for_stage(p, PipelineStage.THINK)
+    asyncio.run(reg.register_plugin_for_stage(p, PipelineStage.THINK))
     result = asyncio.run(
         update_plugin_configuration(reg, "test_plugin", {"value": "y"})
     )

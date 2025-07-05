@@ -22,7 +22,7 @@ class NoOpPlugin(PromptPlugin):
 
 def _make_manager():
     plugins = PluginRegistry()
-    plugins.register_plugin_for_stage(NoOpPlugin({}), PipelineStage.DO)
+    asyncio.run(plugins.register_plugin_for_stage(NoOpPlugin({}), PipelineStage.DO))
     registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
     return PipelineManager(registries)
 

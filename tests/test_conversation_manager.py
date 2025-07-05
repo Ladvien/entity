@@ -30,8 +30,8 @@ class RespondPlugin(PromptPlugin):
 
 def make_manager():
     plugins = PluginRegistry()
-    plugins.register_plugin_for_stage(ContinuePlugin({}), PipelineStage.DO)
-    plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.DO)
+    asyncio.run(plugins.register_plugin_for_stage(ContinuePlugin({}), PipelineStage.DO))
+    asyncio.run(plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.DO))
     registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
     manager = PipelineManager(registries)
     conv = ConversationManager(registries, manager)
