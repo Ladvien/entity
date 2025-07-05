@@ -133,14 +133,16 @@ results.
 
 ### Adapter and Failure Examples
 
-The repository also includes short examples for different adapters and basic
-failure handling. Use `src/cli.py` to run the agent interactively or over a
-WebSocket connection:
+The repository also includes short examples for adapter usage and basic
+failure handling. See [`examples/servers/cli_adapter.py`](../../examples/servers/cli_adapter.py)
+for how to expose an `Agent` through a command line interface. Use `src/cli.py`
+to run the agent interactively or over a WebSocket connection:
 
 ```bash
 python src/cli.py --config config/dev.yaml
 python src/cli.py serve-websocket --config config/dev.yaml
 ```
 
-When implementing custom error handling, refer to the failure plugin template at
-`src/cli/templates/failure.py`.
+When implementing custom error handling, refer to
+[`examples/failure_example.py`](../../examples/failure_example.py) and the
+failure plugin template at `src/cli/templates/failure.py`.
