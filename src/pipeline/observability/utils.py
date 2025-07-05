@@ -5,6 +5,7 @@ import time
 from typing import Any, Awaitable, Callable
 
 from ..metrics import MetricsCollector
+from .tracing import start_span
 
 
 async def execute_with_observability(
@@ -23,7 +24,8 @@ async def execute_with_observability(
     )
     start = time.perf_counter()
     try:
-        result = await func(*args, **kwargs)
+        async with start_span(f"{stage}.{plugin}"):
+            result = await func(*args, **kwargs)
         duration = time.perf_counter() - start
         metrics.record_plugin_duration(plugin, stage, duration)
         logger.info(
