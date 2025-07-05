@@ -81,6 +81,12 @@ from infrastructure.aws_bedrock import deploy
 deploy()
 ```
 
+For a hands-on demonstration, run `examples/bedrock_deploy.py`:
+
+```bash
+python examples/bedrock_deploy.py
+```
+
 ## Deployment Mental Model
 
 Infrastructure setup mirrors the plugin configuration approach. Define your environment in an `Infrastructure` class, then let it run Terraform to provision the resources before starting the agent service.
