@@ -3,6 +3,12 @@
 This repository contains a plugin based framework for building AI agents.
 Use this document when preparing changes or reviewing pull requests.
 
+## IMPORTANT!
+Before commit, please pull changes from main and resolve any conflicts.
+```sh
+git pull https://github.com/Ladvien/entity.git main
+```
+
 ## Project Structure
 - `/src/pipeline` – core engine and shared abstractions
 - `/plugins` – concrete plugin implementations grouped by type
