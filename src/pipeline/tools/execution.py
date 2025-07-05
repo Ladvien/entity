@@ -70,12 +70,30 @@ async def execute_pending_tools(
             cached = await cache.get(cache_key)
             if cached is not None:
                 state.stage_results[call.result_key] = cached
+<<<<<<< HEAD
                 results[call.result_key] = cast(ResultT, cached)
+=======
+                if (
+                    state.max_stage_results is not None
+                    and len(state.stage_results) > state.max_stage_results
+                ):
+                    oldest = next(iter(state.stage_results))
+                    if oldest != call.result_key:
+                        state.stage_results.pop(oldest, None)
+                results[call.result_key] = cached
+>>>>>>> 93259a478868993762c31219e1dbcbf67c762673
                 state.pending_tool_calls.remove(call)
                 continue
         try:
             result = await execute_tool(tool, call, state, options)
             state.stage_results[call.result_key] = result
+            if (
+                state.max_stage_results is not None
+                and len(state.stage_results) > state.max_stage_results
+            ):
+                oldest = next(iter(state.stage_results))
+                if oldest != call.result_key:
+                    state.stage_results.pop(oldest, None)
             results[call.result_key] = result
             if cache and cache_key:
                 await cache.set(cache_key, result)
@@ -87,6 +105,19 @@ async def execute_pending_tools(
                 call.source,
             )
         except Exception as exc:
+<<<<<<< HEAD
+=======
+            err = f"Error: {exc}"
+            state.stage_results[call.result_key] = err
+            if (
+                state.max_stage_results is not None
+                and len(state.stage_results) > state.max_stage_results
+            ):
+                oldest = next(iter(state.stage_results))
+                if oldest != call.result_key:
+                    state.stage_results.pop(oldest, None)
+            results[call.result_key] = err
+>>>>>>> 93259a478868993762c31219e1dbcbf67c762673
             state.metrics.record_tool_error(
                 call.name,
                 cast(str, state.current_stage and str(state.current_stage)),
