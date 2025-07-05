@@ -9,6 +9,8 @@ from typing import Any, Dict
 import yaml
 
 from config.environment import load_env
+from config.models import validate_config
+
 from .utils import interpolate_env_vars
 
 
@@ -19,15 +21,21 @@ class ConfigLoader:
     def from_yaml(path: str | Path, env_file: str = ".env") -> Dict[str, Any]:
         load_env(env_file)
         data = yaml.safe_load(Path(path).read_text()) or {}
-        return interpolate_env_vars(data)
+        data = interpolate_env_vars(data)
+        validate_config(data)
+        return data
 
     @staticmethod
     def from_json(path: str | Path, env_file: str = ".env") -> Dict[str, Any]:
         load_env(env_file)
         data = json.loads(Path(path).read_text() or "{}")
-        return interpolate_env_vars(data)
+        data = interpolate_env_vars(data)
+        validate_config(data)
+        return data
 
     @staticmethod
     def from_dict(cfg: Dict[str, Any], env_file: str = ".env") -> Dict[str, Any]:
         load_env(env_file)
-        return interpolate_env_vars(dict(cfg))
+        data = interpolate_env_vars(dict(cfg))
+        validate_config(data)
+        return data
