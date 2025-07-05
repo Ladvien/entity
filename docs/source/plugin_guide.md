@@ -93,7 +93,7 @@ Several example pipelines in the `examples/` directory showcase more advanced pa
 
 ### StorageResource Composition
 
-`StorageResource` composes `DatabaseResource`, `VectorStoreResource`, and `FileSystemResource` behind one interface. The pipeline at `examples/pipelines/memory_composition_pipeline.py` demonstrates the same pattern using the older `MemoryResource`. With the new plugin the code looks like:
+`StorageResource` composes `DatabaseResource`, `VectorStoreResource`, and `FileSystemResource` behind one interface. The pipeline at `examples/pipelines/memory_composition_pipeline.py` demonstrates the same pattern using the older `MemoryResource`. `MemoryResource` remains the framework's default ephemeral memory, configured in [config/dev.yaml](../../config/dev.yaml). For persistent deployments, prefer `StorageResource` so history, vectors, and files survive restarts. With the new plugin the code looks like:
 
 ```python
 storage = StorageResource(
