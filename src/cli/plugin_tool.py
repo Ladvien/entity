@@ -6,6 +6,8 @@ import inspect
 from pathlib import Path
 from typing import Any, Dict, List, Type
 
+from pipeline.logging import get_logger
+
 from pipeline.base_plugins import (
     AdapterPlugin,
     BasePlugin,
@@ -25,6 +27,8 @@ PLUGIN_TYPES = {
     "adapter": AdapterPlugin,
     "failure": FailurePlugin,
 }
+
+logger = get_logger(__name__)
 
 
 class PluginToolCLI:
@@ -102,35 +106,35 @@ class PluginToolCLI:
         docs_path.write_text(
             f"## {class_name}\n\n.. automodule:: {name}\n    :members:\n"
         )
-        print(f"Created {module_path}")
-        print(f"Created {docs_path}")
+        logger.info("Created %s", module_path)
+        logger.info("Created %s", docs_path)
         return 0
 
     def _validate(self) -> int:
         plugin_cls = self._load_plugin(self.args.path)
         if not issubclass(plugin_cls, BasePlugin):
-            print("Not a plugin class")
+            logger.error("Not a plugin class")
             return 1
         if not getattr(plugin_cls, "stages", None):
-            print("Plugin does not define stages")
+            logger.error("Plugin does not define stages")
             return 1
         result = plugin_cls.validate_config(getattr(plugin_cls, "config", {}))
         if not isinstance(result, ValidationResult) or not result.success:
-            print(f"Config validation failed: {result.error_message}")
+            logger.error("Config validation failed: %s", result.error_message)
             return 1
-        print("Validation succeeded")
+        logger.info("Validation succeeded")
         return 0
 
     def _test(self) -> int:
         plugin_cls = self._load_plugin(self.args.path)
         instance = plugin_cls(getattr(plugin_cls, "config", {}))
         if hasattr(instance, "initialize") and callable(instance.initialize):
-            print("Initializing plugin...")
+            logger.info("Initializing plugin...")
             import asyncio
 
             asyncio.run(instance.initialize())
         if hasattr(instance, "_execute_impl"):
-            print("Executing plugin...")
+            logger.info("Executing plugin...")
 
             class DummyContext:
                 async def __getattr__(self, _):
@@ -148,16 +152,16 @@ class PluginToolCLI:
                 else:
                     instance._execute_impl(ctx)
             except Exception as exc:  # pragma: no cover - manual testing
-                print(f"Execution failed: {exc}")
+                logger.error("Execution failed: %s", exc)
                 return 1
-        print("Plugin executed successfully")
+        logger.info("Plugin executed successfully")
         return 0
 
     def _config(self) -> int:
         name = self.args.name
         plugin_type = self.args.type
         cfg: Dict[str, Any] = {}
-        print(f"Building configuration for {name} ({plugin_type})")
+        logger.info("Building configuration for %s (%s)", name, plugin_type)
         while True:
             key = input("key (blank to finish): ").strip()
             if not key:
@@ -168,7 +172,7 @@ class PluginToolCLI:
         import yaml
 
         output = yaml.dump({"plugins": {section: {name: cfg}}})
-        print("\n" + output)
+        logger.info("\n%s", output)
         return 0
 
     def _deps(self) -> int:
@@ -177,7 +181,11 @@ class PluginToolCLI:
             cls = self._load_plugin(p)
             deps = getattr(cls, "dependencies", [])
             name = cls.__name__
-            print(f"{name}: {', '.join(deps) if deps else 'no dependencies'}")
+            logger.info(
+                "%s: %s",
+                name,
+                ", ".join(deps) if deps else "no dependencies",
+            )
         return 0
 
     def _docs(self) -> int:
@@ -188,7 +196,7 @@ class PluginToolCLI:
         doc_path = out_dir / f"{name}.md"
         doc = inspect.getdoc(cls) or cls.__name__
         doc_path.write_text(f"# {cls.__name__}\n\n{doc}\n")
-        print(f"Documentation written to {doc_path}")
+        logger.info("Documentation written to %s", doc_path)
         return 0
 
     # -----------------------------------------------------
