@@ -91,12 +91,12 @@ methods, enabling a consistent storage interface across resources.
 
 Several example pipelines in the `examples/` directory showcase more advanced patterns.
 
-### Memory Composition
+### StorageResource Composition
 
-`examples/pipelines/memory_composition_pipeline.py` demonstrates how to combine SQLite, PGVector and a local file system into a single `MemoryResource`:
+`StorageResource` composes `DatabaseResource`, `VectorStoreResource`, and `FileSystemResource` behind one interface. The pipeline at `examples/pipelines/memory_composition_pipeline.py` demonstrates the same pattern using the older `MemoryResource`. With the new plugin the code looks like:
 
 ```python
-memory = MemoryResource(
+storage = StorageResource(
     database=SQLiteDatabaseResource({"path": "./agent.db"}),
     vector_store=PgVectorStore({"table": "embeddings"}),
     filesystem=LocalFileSystemResource({"base_path": "./files"}),
