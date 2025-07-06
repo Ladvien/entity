@@ -7,7 +7,7 @@ from typing import Dict, List, Optional
 import duckdb
 from plugins.builtin.resources.database import DatabaseResource
 
-from pipeline.context import ConversationEntry
+from pipeline.state import ConversationEntry
 
 
 class DuckDBDatabaseResource(DatabaseResource):

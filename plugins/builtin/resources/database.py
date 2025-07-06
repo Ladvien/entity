@@ -7,7 +7,7 @@ from typing import Any, AsyncIterator, List, Optional, Protocol
 
 from plugins.builtin.resources.base import BaseResource
 
-from pipeline.context import ConversationEntry
+from pipeline.state import ConversationEntry
 
 
 class StorageBackend(Protocol):
