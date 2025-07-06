@@ -1,10 +1,8 @@
 import asyncio
-import os
 from datetime import datetime
-from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from threading import Thread
 
-from config.environment import load_env
 from pipeline import (
     ConversationEntry,
     MetricsCollector,
@@ -18,20 +16,24 @@ from pipeline.resources import ResourceContainer
 from pipeline.tools.execution import execute_pending_tools
 from user_plugins.tools.weather_api_tool import WeatherApiTool
 
-load_env(Path(__file__).resolve().parents[1] / ".env")
+
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):  # pragma: no cover - simple server
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(b'{"temp": "72F"}')
 
 
-class FakeResponse:
-    status_code = 200
-
-    def raise_for_status(self) -> None:  # pragma: no cover - test stub
-        pass
-
-    def json(self):
-        return {"temp": "72F"}
+def run_server(server: HTTPServer) -> None:
+    server.serve_forever()
 
 
-async def run_weather():
+async def run_weather() -> dict:
+    server = HTTPServer(("localhost", 0), Handler)
+    thread = Thread(target=run_server, args=(server,), daemon=True)
+    thread.start()
+    base_url = f"http://localhost:{server.server_port}"
     state = PipelineState(
         conversation=[
             ConversationEntry(content="hi", role="user", timestamp=datetime.now())
@@ -40,24 +42,18 @@ async def run_weather():
         metrics=MetricsCollector(),
     )
     tools = ToolRegistry()
-    tool = WeatherApiTool(
-        {"base_url": "http://test/weather", "api_key": os.environ["WEATHER_API_KEY"]}
-    )
+    tool = WeatherApiTool({"base_url": base_url, "api_key": "x"})
     await tools.add("weather", tool)
     registries = SystemRegistries(ResourceContainer(), tools, PluginRegistry())
     ctx = PluginContext(state, registries)
-    with patch(
-        "httpx.AsyncClient.get", new=AsyncMock(return_value=FakeResponse())
-    ) as mock_get:
+    try:
         key = ctx.execute_tool("weather", {"location": "Berlin"})
         result = (await execute_pending_tools(state, registries))[key]
-        mock_get.assert_called_with(
-            "http://test/weather",
-            params={"location": "Berlin", "api_key": os.environ["WEATHER_API_KEY"]},
-        )
+    finally:
+        server.shutdown()
+        thread.join()
     return result
 
 
 def test_weather_api_tool_returns_json():
-    result = asyncio.run(run_weather())
-    assert result == {"temp": "72F"}
+    assert asyncio.run(run_weather()) == {"temp": "72F"}

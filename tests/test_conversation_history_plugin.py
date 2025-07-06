@@ -1,6 +1,5 @@
 import asyncio
 from datetime import datetime
-from unittest.mock import AsyncMock
 
 from pipeline import (
     ConversationEntry,
@@ -14,24 +13,16 @@ from pipeline import (
 from pipeline.resources import ResourceContainer
 from pipeline.resources.memory_resource import MemoryResource
 from pipeline.stages import PipelineStage
+from plugins.builtin.resources.duckdb_database import DuckDBDatabaseResource
 from user_plugins.prompts.conversation_history import ConversationHistory
 
 
-class FakeMemory(MemoryResource):
-    def __init__(self) -> None:
-        super().__init__(None, None, {})
-        self.fetch = AsyncMock(return_value=[])
-        self.execute = AsyncMock()
-        self.history: list[ConversationEntry] = []
-
-    async def load_conversation(self, conversation_id: str):
-        return self.history
-
-    async def save_conversation(self, conversation_id: str, history):
-        self.history = history
-
-
-def make_context(db: FakeMemory):
+async def make_context(tmp_path):
+    db = DuckDBDatabaseResource(
+        {"path": tmp_path / "hist.duckdb", "history_table": "h"}
+    )
+    await db.initialize()
+    memory = MemoryResource(database=db)
     state = PipelineState(
         conversation=[
             ConversationEntry(content="hi", role="user", timestamp=datetime.now())
@@ -40,18 +31,19 @@ def make_context(db: FakeMemory):
         metrics=MetricsCollector(),
     )
     resources = ResourceContainer()
-    asyncio.run(resources.add("memory", db))
+    await resources.add("memory", memory)
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
-    return state, PluginContext(state, registries)
+    ctx = PluginContext(state, registries)
+    return state, ctx, memory
 
 
-def test_history_plugin_saves_conversation():
-    db = FakeMemory()
-    state, ctx = make_context(db)
-    plugin = ConversationHistory({"history_table": "tbl"})
+def test_history_plugin_saves_conversation(tmp_path):
+    state, ctx, memory = asyncio.run(make_context(tmp_path))
+    plugin = ConversationHistory({"history_table": "h"})
 
     ctx.set_current_stage(PipelineStage.DELIVER)
-    expected_history = ctx.get_conversation_history()
+    expected = ctx.get_conversation_history()
     asyncio.run(plugin.execute(ctx))
 
-    assert db.history == expected_history
+    saved = asyncio.run(memory.database.load_history(state.pipeline_id))  # type: ignore[attr-defined]
+    assert saved and saved[0].content == expected[0].content

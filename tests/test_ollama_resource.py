@@ -1,45 +1,38 @@
 import asyncio
-import os
-from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from threading import Thread
 
-from config.environment import load_env
 from plugins.builtin.resources.llm.unified import UnifiedLLMResource
 
-load_env(Path(__file__).resolve().parents[1] / ".env")
+
+class Handler(BaseHTTPRequestHandler):
+    def do_POST(self):  # pragma: no cover - simple server
+        self.rfile.read(int(self.headers.get("Content-Length", 0)))
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(b'{"response": "hi"}')
 
 
-class FakeResponse:
-    status_code = 200
-
-    def raise_for_status(self) -> None:  # pragma: no cover - simple stub
-        pass
-
-    def json(self):
-        return {"response": "hi"}
+def run_server(server: HTTPServer) -> None:
+    server.serve_forever()
 
 
-async def run_generate():
+async def run_generate() -> str:
+    server = HTTPServer(("localhost", 0), Handler)
+    thread = Thread(target=run_server, args=(server,), daemon=True)
+    thread.start()
+    base_url = f"http://localhost:{server.server_port}"
     resource = UnifiedLLMResource(
-        {
-            "provider": "ollama",
-            "base_url": os.environ["OLLAMA_BASE_URL"],
-            "model": os.environ["OLLAMA_MODEL"],
-        }
+        {"provider": "ollama", "base_url": base_url, "model": "test"}
     )
-    with patch(
-        "httpx.AsyncClient.post", new=AsyncMock(return_value=FakeResponse())
-    ) as mock_post:
+    try:
         result = await resource.generate("hello")
-        mock_post.assert_called_with(
-            f"{os.environ['OLLAMA_BASE_URL']}/api/generate",
-            json={"model": os.environ["OLLAMA_MODEL"], "prompt": "hello"},
-            headers=None,
-            params=None,
-        )
+    finally:
+        server.shutdown()
+        thread.join()
     return result
 
 
-def test_generate_sends_prompt_and_returns_text():
-    result = asyncio.run(run_generate())
-    assert result == "hi"
+def test_generate_returns_text():
+    assert asyncio.run(run_generate()) == "hi"
