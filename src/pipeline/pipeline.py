@@ -1,4 +1,8 @@
-"""Compatibility wrapper for renamed execution module."""
+"""Pipeline execution utilities.
+
+This module delegates tool execution to
+``pipeline.tools.execution`` to keep logic centralized.
+"""
 
 from __future__ import annotations
 
@@ -12,7 +16,8 @@ from registry import SystemRegistries
 
 from .context import ConversationEntry, PluginContext, SimpleContext
 from .errors import create_static_error_response
-from .exceptions import CircuitBreakerTripped, PluginExecutionError, ToolExecutionError
+from .exceptions import (CircuitBreakerTripped, PluginExecutionError,
+                         ToolExecutionError)
 from .logging import get_logger, reset_request_id, set_request_id
 from .manager import PipelineManager
 from .observability.metrics import get_metrics_server
