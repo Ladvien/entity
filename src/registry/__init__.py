@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from .registries import (PluginRegistry, ResourceRegistry, SystemRegistries,
-                         ToolRegistry)
+from pipeline.resources import ResourceContainer
+
+from .registries import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
 from .validator import RegistryValidator
 
 __all__ = [
     "PluginRegistry",
-    "ResourceRegistry",
+    "ResourceContainer",
     "ToolRegistry",
     "SystemRegistries",
     "RegistryValidator",
