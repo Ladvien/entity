@@ -5,10 +5,13 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
+<<<<<<< HEAD
 from plugins.builtin.resources.memory_filesystem import MemoryFileSystem
 from plugins.builtin.resources.memory_storage import MemoryStorage
 from plugins.builtin.resources.memory_vector_store import MemoryVectorStore
 
+=======
+>>>>>>> c72003e014c664863289e303211be6661160fdc6
 from pipeline.base_plugins import ResourcePlugin, ValidationResult
 from pipeline.context import ConversationEntry
 from pipeline.stages import PipelineStage
@@ -48,9 +51,14 @@ class MemoryResource(ResourcePlugin, Memory):
 
     def __init__(
         self,
+<<<<<<< HEAD
         storage: MemoryStorage | None = None,
         vector: MemoryVectorStore | None = None,
         filesystem: MemoryFileSystem | None = None,
+=======
+        database: DatabaseResource | None = None,
+        vector_store: Any | None = None,
+>>>>>>> c72003e014c664863289e303211be6661160fdc6
         config: Dict | None = None,
     ) -> None:
         super().__init__(config or {})

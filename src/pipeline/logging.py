@@ -12,6 +12,7 @@ from logging.handlers import RotatingFileHandler
 from typing import Any, Optional
 ======
 from importlib import import_module
+<<<<<<< HEAD
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
@@ -21,6 +22,8 @@ if TYPE_CHECKING:  # pragma: no cover - type hints only
     from plugins.builtin.adapters.logging_adapter import (
         RequestIdFilter as _RequestIdFilter,
     )  # noqa: F401,E501
+=======
+>>>>>>> c72003e014c664863289e303211be6661160fdc6
 
 
 def _adapter():

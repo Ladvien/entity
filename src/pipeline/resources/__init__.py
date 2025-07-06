@@ -1,8 +1,21 @@
 """Public resource wrappers for pipeline consumers."""
 
-from plugins.builtin.resources.base import BaseResource, Resource
-from plugins.builtin.resources.llm_base import LLM
-from plugins.builtin.resources.llm_resource import LLMResource
+
+def __getattr__(name: str):
+    if name in {"BaseResource", "Resource"}:
+        from plugins.builtin.resources.base import BaseResource, Resource
+
+        return {"BaseResource": BaseResource, "Resource": Resource}[name]
+    if name == "LLM":
+        from plugins.builtin.resources.llm_base import LLM
+
+        return LLM
+    if name == "LLMResource":
+        from plugins.builtin.resources.llm_resource import LLMResource
+
+        return LLMResource
+    raise AttributeError(f"module {__name__} has no attribute {name}")
+
 
 from .container import ResourceContainer
 from .database import DatabaseResource
