@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
-from plugins.contrib.prompts.complex_prompt import ComplexPrompt
+from user_plugins.prompts.complex_prompt import ComplexPrompt
 
 from config.environment import load_env
 from pipeline import (ConversationEntry, MetricsCollector, PipelineState,

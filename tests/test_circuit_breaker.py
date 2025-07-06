@@ -1,7 +1,7 @@
 import asyncio
 
-from plugins.contrib.failure.basic_logger import BasicLogger
-from plugins.contrib.failure.error_formatter import ErrorFormatter
+from user_plugins.failure.basic_logger import BasicLogger
+from user_plugins.failure.error_formatter import ErrorFormatter
 
 from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
                       SystemRegistries, ToolRegistry, execute_pipeline)

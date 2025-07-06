@@ -1,7 +1,7 @@
 import asyncio
 
 import pytest
-from plugins.contrib.tools.calculator_tool import CalculatorTool
+from user_plugins.tools.calculator_tool import CalculatorTool
 
 from pipeline.resources.llm_resource import LLMResource
 

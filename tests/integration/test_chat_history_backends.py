@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
-from plugins.contrib.prompts.chat_history import ChatHistory
+from user_plugins.prompts.chat_history import ChatHistory
 
 from config.environment import load_env
 from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,

@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime
 
-from plugins.contrib.prompts.chain_of_thought import ChainOfThoughtPrompt
+from user_plugins.prompts.chain_of_thought import ChainOfThoughtPrompt
 
 from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
                       PluginContext, PluginRegistry, SystemRegistries,

@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime
 
-from plugins.contrib.prompts.intent_classifier import IntentClassifierPrompt
+from user_plugins.prompts.intent_classifier import IntentClassifierPrompt
 
 from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
                       PluginContext, PluginRegistry, SystemRegistries,

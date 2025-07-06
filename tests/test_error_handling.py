@@ -1,6 +1,6 @@
 import asyncio
 
-from plugins.contrib.failure.basic_logger import BasicLogger
+from user_plugins.failure.basic_logger import BasicLogger
 
 from pipeline import (FailurePlugin, PipelineStage, PluginRegistry,
                       PromptPlugin, SystemRegistries, ToolRegistry,

@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
-from plugins.contrib.tools.weather_api_tool import WeatherApiTool
+from user_plugins.tools.weather_api_tool import WeatherApiTool
 
 from config.environment import load_env
 from pipeline import (ConversationEntry, MetricsCollector, PipelineState,

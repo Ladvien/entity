@@ -20,7 +20,7 @@ plugins:
       type: plugins.builtin.tools.search:SearchTool
   prompts:
     main:
-      type: plugins.contrib.prompts.simple:SimplePrompt
+      type: user_plugins.prompts.simple:SimplePrompt
   adapters:
     http:
       type: plugins.builtin.adapters.http:HTTPAdapter

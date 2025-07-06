@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime
 
-from plugins.contrib.prompts.memory_retrieval import MemoryRetrievalPrompt
+from user_plugins.prompts.memory_retrieval import MemoryRetrievalPrompt
 
 from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
                       PluginContext, PluginRegistry, SystemRegistries,

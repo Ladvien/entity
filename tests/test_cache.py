@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from plugins.contrib.resources.cache import CacheResource
+from user_plugins.resources.cache import CacheResource
 
 import pipeline.context as context_module
 from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,

@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime
 
-from plugins.contrib.prompts.pii_scrubber import PIIScrubberPrompt
+from user_plugins.prompts.pii_scrubber import PIIScrubberPrompt
 
 from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
                       PluginContext, PluginRegistry, SystemRegistries,

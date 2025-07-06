@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime
 from unittest.mock import AsyncMock
 
-from plugins.contrib.prompts.conversation_history import ConversationHistory
+from user_plugins.prompts.conversation_history import ConversationHistory
 
 from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
                       PluginContext, PluginRegistry, SystemRegistries,

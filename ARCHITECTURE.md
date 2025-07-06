@@ -94,7 +94,7 @@ async def execute_stage(stage: PipelineStage, state: PipelineState, registries: 
     state.current_stage = stage
     
     # Execute plugins with appropriate context layer
-    stage_plugins = registries.plugins.contrib.get_for_stage(stage)
+    stage_plugins = registries.user_plugins.get_for_stage(stage)
     for plugin in stage_plugins:
         context = PluginContext(state, registries)
         await plugin.execute(context)
