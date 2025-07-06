@@ -43,7 +43,15 @@ if __name__ == "__main__":
 ```
 
 ``src/grpc_services/llm.proto`` and ``llm_service.py`` act as references for
-future model services.
+future model services. The repository also includes the generated stubs
+``llm_pb2.py`` and ``llm_pb2_grpc.py`` so example scripts work out of the box.
+If ``llm.proto`` changes, regenerate these files with:
+
+```bash
+poetry run python -m grpc_tools.protoc -I src/grpc_services \
+    --python_out=src/grpc_services --grpc_python_out=src/grpc_services \
+    src/grpc_services/llm.proto
+```
 
 ### Demo Script
 
