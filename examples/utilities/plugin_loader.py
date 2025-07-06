@@ -11,13 +11,14 @@ from utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 
-from plugins.builtin.adapters.server import AgentServer  # noqa: E402
-
 from entity import Agent  # noqa: E402
+from plugins.builtin.adapters.server import AgentServer  # noqa: E402
 
 
 def main() -> None:
-    agent = Agent.from_directory("../plugins")
+    base_path = pathlib.Path(__file__).resolve().parents[2]
+    plugins_dir = base_path / "src" / "plugins"
+    agent = Agent.from_directory(str(plugins_dir))
     runtime = agent.builder.build_runtime()
     server = AgentServer(runtime)
     server.run_http()
