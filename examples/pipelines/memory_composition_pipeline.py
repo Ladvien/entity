@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import pathlib
 import sys
 
@@ -13,14 +14,17 @@ from utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 
+from plugins.contrib.duckdb_vector_store import DuckDBVectorStore  # noqa: E402
 from plugins.contrib.memory_resource import MemoryResource  # noqa: E402
 from plugins.contrib.pg_vector_store import PgVectorStore  # noqa: E402
-from plugins.contrib.sqlite_storage import (
+from plugins.contrib.postgres import PostgresResource  # noqa: E402
+from plugins.contrib.sqlite_storage import (  # noqa: E402
     SQLiteStorageResource as SQLiteDatabaseResource,
-)  # noqa: E402
+)
 
 from entity import Agent  # noqa: E402
 from pipeline import PipelineStage, PromptPlugin  # noqa: E402
+from pipeline.config import ConfigLoader
 from pipeline.context import PluginContext  # noqa: E402
 
 
@@ -38,15 +42,32 @@ class StorePrompt(PromptPlugin):
         context.add_conversation_entry("Conversation stored", role="assistant")
 
 
+def create_vector_store() -> PgVectorStore | DuckDBVectorStore:
+    """Return a vector store based on environment variables."""
+
+    host = os.getenv("DB_HOST")
+    user = os.getenv("DB_USERNAME")
+    password = os.getenv("DB_PASSWORD")
+    if host and user:
+        cfg = {
+            "host": host,
+            "port": 5432,
+            "name": user,
+            "username": user,
+            "password": password or "",
+            "table": "embeddings",
+        }
+        db = PostgresResource(ConfigLoader.from_dict(cfg))
+        return PgVectorStore(ConfigLoader.from_dict({"table": "embeddings"}), db)
+    return DuckDBVectorStore({"table": "embeddings"})
+
+
 def main() -> None:
     agent = Agent()
 
     database = SQLiteDatabaseResource({"path": "./agent.db"})
-    vector_store = PgVectorStore({"table": "embeddings"})
-    memory = MemoryResource(
-        database=database,
-        vector_store=vector_store,
-    )
+    vector_store = create_vector_store()
+    memory = MemoryResource(database=database, vector_store=vector_store)
 
     agent.builder.resource_registry.add("memory", memory)
     agent.builder.plugin_registry.register_plugin_for_stage(

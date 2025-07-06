@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import pathlib
 import sys
 
@@ -13,8 +14,18 @@ enable_plugins_namespace()
 
 from infrastructure.aws_bedrock import deploy
 
+
+def can_deploy() -> bool:
+    """Return ``True`` if required AWS credentials are present."""
+
+    return bool(os.getenv("AWS_ACCESS_KEY_ID") and os.getenv("AWS_SECRET_ACCESS_KEY"))
+
+
 if __name__ == "__main__":  # pragma: no cover - manual example
-    try:
-        deploy()
-    except FileNotFoundError as exc:
-        print(f"cdktf not available: {exc}")
+    if not can_deploy():
+        print("AWS credentials not configured")
+    else:
+        try:
+            deploy()
+        except FileNotFoundError as exc:
+            print(f"cdktf not available: {exc}")
