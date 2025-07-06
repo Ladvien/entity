@@ -4,6 +4,10 @@ server:
   reload: false
   log_level: "info"
 
+tool_registry:
+  concurrency_limit: 10
+  cache_ttl: 600
+
 plugins:
   resources:
     database:

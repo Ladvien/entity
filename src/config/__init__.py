@@ -8,7 +8,7 @@ if str(SRC_PATH) not in sys.path:
 
 from .builder import ConfigBuilder
 from .models import (CONFIG_SCHEMA, EntityConfig, PluginConfig, PluginsSection,
-                     ServerConfig, validate_config)
+                     ServerConfig, ToolRegistryConfig, validate_config)
 from .validators import (_validate_cache, _validate_memory,
                          _validate_vector_memory)
 
@@ -20,6 +20,7 @@ __all__ = [
     "PluginConfig",
     "PluginsSection",
     "ServerConfig",
+    "ToolRegistryConfig",
     "EntityConfig",
     "CONFIG_SCHEMA",
     "validate_config",
