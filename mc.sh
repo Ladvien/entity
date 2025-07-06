@@ -14,7 +14,7 @@ fi
 
 # --- Detect repo ---
 REMOTE_URL=$(git remote get-url origin)
-if [[ "$REMOTE_URL" =~ github\.com[:/](.+)/(.+)\.git ]]; then
+if [[ "$REMOTE_URL" =~ github\.com[:/]+([^/]+)/([^/]+?)(\.git)?$ ]]; then
   OWNER="${BASH_REMATCH[1]}"
   REPO="${BASH_REMATCH[2]}"
 else
