@@ -17,12 +17,16 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
 <<<<<<< HEAD
+<<<<<<< HEAD
     from plugins.builtin.adapters.logging_adapter import (
         JsonFormatter as _JsonFormatter,
     )  # noqa: F401,E501
 =======
 >>>>>>> 0698b3abdf6daf61c3f8486c12ceb9d0e4aab4b8
     from plugins.builtin.adapters.logging_adapter import (
+=======
+    from plugins.builtin.adapters.logging_adapter import (  # noqa: F401, isort: skip
+>>>>>>> 5deacc15635122134e3cadf8efd911fb333914c3
         JsonFormatter as _JsonFormatter,
         RequestIdFilter as _RequestIdFilter,
 <<<<<<< HEAD
