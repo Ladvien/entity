@@ -37,3 +37,24 @@ Web interfaces may use WebSockets, but model services must expose gRPC
 endpoints.
 
 For additional diagrams and examples see the ADRs in `docs/adr/`.
+
+## Framework Overview Diagram
+```mermaid
+flowchart LR
+    A[User Input] --> B[Input Adapter]
+    B --> C[Processing Pipeline]
+    C --> D[Resource Container]
+    C --> E[Tool Registry]
+    C --> F[Plugins]
+    C --> G[Response]
+```
+
+## Benchmark Results
+The performance suite currently fails to run due to circular import errors.
+Example output:
+```
+ImportError: cannot import name 'Resource' from partially initialized module 'common_interfaces.resources'
+```
+
+Once the imports are resolved, the `pytest-benchmark` plugin can capture
+timing metrics for each pipeline stage.
