@@ -19,6 +19,14 @@ git branch --set-upstream-to=origin/main work
 - `/tests` – unit and integration tests
 - `/docs` – documentation and architecture guides
 
+## Architecture Directory
+
+The `/architecture` folder contains the following documents:
+
+- `architecture/`
+  - `general.md`
+  - `models.md`
+
 ## Important Notes
 - The project is pre-alpha; remove unused code rather than keeping
   backward compatibility.
@@ -48,5 +56,5 @@ pytest
 4. Verify plugin stage assignments and error handling.
 
 ## Further Reading
-See `docs/source/architecture.md` for a full architecture overview and
+See the **Architecture Directory** section for a full architecture overview and
 `CONTRIBUTING.md` for detailed contribution instructions.
