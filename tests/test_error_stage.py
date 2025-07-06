@@ -1,5 +1,3 @@
-from pipeline.resources import ResourceContainer
-
 # isort: off
 import asyncio
 import logging
@@ -9,14 +7,11 @@ from pipeline import (
     PipelineStage,
     PluginRegistry,
     PromptPlugin,
-<<<<<<< HEAD
-    ResourceContainer,
-=======
->>>>>>> 842b365f2ee0307cf77e24d7bdb710602bc576a8
     SystemRegistries,
     ToolRegistry,
     execute_pipeline,
 )
+from pipeline.resources import ResourceContainer
 from plugins.contrib.failure.basic_logger import BasicLogger
 from plugins.contrib.failure.error_formatter import ErrorFormatter
 

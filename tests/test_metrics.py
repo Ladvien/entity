@@ -1,22 +1,9 @@
 import asyncio
 
-<<<<<<< HEAD
 from pipeline import (LLMResponse, PipelineStage, PluginRegistry, PromptPlugin,
-                      ResourceContainer, SystemRegistries, ToolPlugin,
-                      ToolRegistry, execute_pipeline)
-=======
-from pipeline import (
-    LLMResponse,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolPlugin,
-    ToolRegistry,
-    execute_pipeline,
-)
+                      SystemRegistries, ToolPlugin, ToolRegistry,
+                      execute_pipeline)
 from pipeline.resources import ResourceContainer
->>>>>>> 842b365f2ee0307cf77e24d7bdb710602bc576a8
 
 
 class EchoLLM:
