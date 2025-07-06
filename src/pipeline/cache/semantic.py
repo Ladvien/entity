@@ -22,4 +22,4 @@ def __getattr__(name: str):
     raise AttributeError(f"module {__name__} has no attribute {name}")
 
 
-__all__ = ["SemanticCache"]
+__all__ = ["SemanticCache"]  # noqa: F822 - imported dynamically
