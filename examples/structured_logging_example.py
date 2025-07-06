@@ -1,4 +1,4 @@
-"""Configure StructuredLogging and write a single log entry."""
+"""Demonstrate LoggingAdapter and structured logging."""
 
 from __future__ import annotations
 
@@ -12,18 +12,23 @@ from utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 
-from plugins.builtin.resources.structured_logging import StructuredLogging
+from plugins.builtin.adapters.logging import LoggingAdapter
 
-from pipeline.logging import get_logger
+from pipeline.logging import configure_logging, get_logger
 
 
 async def main() -> None:
-    logging_cfg = {"level": "INFO", "json": True}
-    plugin = StructuredLogging(logging_cfg)
-    await plugin.initialize()
+    configure_logging(level="INFO", json_enabled=True)
+    adapter = LoggingAdapter()
 
     logger = get_logger("structured_logging_example")
     logger.info("Logging configured successfully")
+
+    class FakeContext:
+        def get_response(self):
+            return {"message": "hello"}
+
+    await adapter.execute(FakeContext())
 
 
 if __name__ == "__main__":

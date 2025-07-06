@@ -24,6 +24,10 @@ plugins:
   adapters:
     http:
       type: plugins.builtin.adapters.http:HTTPAdapter
+    cli:
+      type: plugins.builtin.adapters.cli:CLIAdapter
+    logging:
+      type: plugins.builtin.adapters.logging:LoggingAdapter
 ```
 
 Use `entity src/cli.py --config config.yaml` to start the agent.
