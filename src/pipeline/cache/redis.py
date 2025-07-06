@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import warnings
 
-from plugins.contrib.resources.cache_backends.redis import RedisCache
-
 warnings.warn(
     (
         "pipeline.cache.redis is deprecated; use "

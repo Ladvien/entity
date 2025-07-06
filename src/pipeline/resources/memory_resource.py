@@ -5,8 +5,6 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from plugins.builtin.resources.vector_store import VectorStoreResource
-
 from pipeline.base_plugins import ResourcePlugin, ValidationResult
 from pipeline.context import ConversationEntry
 from pipeline.stages import PipelineStage
@@ -48,7 +46,7 @@ class MemoryResource(ResourcePlugin, Memory):
     def __init__(
         self,
         database: DatabaseResource | None = None,
-        vector_store: VectorStoreResource | None = None,
+        vector_store: Any | None = None,
         config: Dict | None = None,
     ) -> None:
         super().__init__(config or {})

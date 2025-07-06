@@ -3,9 +3,10 @@ from __future__ import annotations
 import copy
 import json
 from contextlib import contextmanager
-from typing import Any, Dict, Iterable, List, Tuple
+from typing import Any, Dict, Iterable, List, Tuple, Type
 
 from config.environment import load_env
+from interfaces.plugins import import_plugin_class
 from interfaces.resources import Resource
 from pipeline.config.utils import interpolate_env_vars
 from pipeline.resources.container import ResourceContainer
@@ -14,7 +15,6 @@ from registry import PluginRegistry, ToolRegistry
 
 from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
 from .defaults import DEFAULT_CONFIG
-from .interfaces import import_plugin_class
 from .logging import configure_logging
 
 
@@ -72,10 +72,21 @@ def initialization_cleanup_context():
 class SystemInitializer:
     """Initialize and validate all plugins for the pipeline."""
 
-    def __init__(self, config: Dict | None = None, env_file: str = ".env") -> None:
+    def __init__(
+        self,
+        config: Dict | None = None,
+        env_file: str = ".env",
+        *,
+        plugin_registry_cls: Type[PluginRegistry] = PluginRegistry,
+        tool_registry_cls: Type[ToolRegistry] = ToolRegistry,
+        resource_container_cls: Type[ResourceContainer] = ResourceContainer,
+    ) -> None:
         load_env(env_file)
         configure_logging()
         self.config = config or copy.deepcopy(DEFAULT_CONFIG)
+        self.plugin_registry_cls = plugin_registry_cls
+        self.tool_registry_cls = tool_registry_cls
+        self.resource_container_cls = resource_container_cls
 
     @classmethod
     def from_yaml(cls, yaml_path: str, env_file: str = ".env") -> "SystemInitializer":
@@ -163,7 +174,7 @@ class SystemInitializer:
                 )
 
         # Phase 3: initialize resources via container
-        resource_registry = ResourceContainer()
+        resource_registry = self.resource_container_cls()
         for cls, config in registry.resource_classes():
             primary_name = getattr(cls, "name", cls.__name__)
             resource_registry.register(primary_name, cls, config)
@@ -177,7 +188,7 @@ class SystemInitializer:
                 await resource_registry.remove(name)
 
         # Phase 3.5: register tools
-        tool_registry = ToolRegistry()
+        tool_registry = self.tool_registry_cls()
         for cls, config in registry.tool_classes():
             if any(dep in degraded for dep in getattr(cls, "dependencies", [])):
                 continue
@@ -185,7 +196,7 @@ class SystemInitializer:
             await tool_registry.add(getattr(instance, "name", cls.__name__), instance)
 
         # Phase 4: instantiate prompt and adapter plugins
-        plugin_registry = PluginRegistry()
+        plugin_registry = self.plugin_registry_cls()
         for cls, config in registry.non_resource_non_tool_classes():
             if any(dep in degraded for dep in getattr(cls, "dependencies", [])):
                 continue

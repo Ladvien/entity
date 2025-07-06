@@ -5,11 +5,12 @@ from __future__ import annotations
 from typing import Any
 
 import httpx
-from plugins.contrib.tools.calculator_tool import SafeEvaluator
 
 
 def calculator(expression: str) -> Any:
     """Evaluate an arithmetic expression."""
+    from plugins.contrib.tools.calculator_tool import SafeEvaluator
+
     evaluator = SafeEvaluator()
     return evaluator.evaluate(expression)
 
