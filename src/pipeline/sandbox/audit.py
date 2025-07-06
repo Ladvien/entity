@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import warnings
+from typing import TYPE_CHECKING
 
 warnings.warn(
     (
@@ -10,6 +11,9 @@ warnings.warn(
     DeprecationWarning,
     stacklevel=2,
 )
+
+if TYPE_CHECKING:  # pragma: no cover - used for type hints only
+    from plugins.contrib.infrastructure.sandbox.audit import PluginAuditor
 
 
 def __getattr__(name: str):
