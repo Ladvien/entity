@@ -10,10 +10,10 @@ adapter = LoggingAdapter()
 ```
 
 To configure logging globally, call ``configure_logging`` from
-``pipeline.logging``:
+``plugins.builtin.adapters.logging_adapter``:
 
 ```python
-from pipeline.logging import configure_logging, get_logger
+from plugins.builtin.adapters.logging_adapter import configure_logging, get_logger
 
 configure_logging(level="INFO", json_enabled=True)
 logger = get_logger(__name__)

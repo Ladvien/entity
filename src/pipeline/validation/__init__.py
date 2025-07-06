@@ -12,11 +12,6 @@ class ValidationResult:
     error_message: Optional[str] = None
     warnings: List[str] = field(default_factory=list)
 
-    @property
-    def valid(self) -> bool:
-        """Backwards compatibility alias for :attr:`success`."""
-        return self.success
-
     @classmethod
     def success_result(cls) -> "ValidationResult":
         """Create a successful validation result."""

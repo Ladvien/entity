@@ -44,11 +44,18 @@ if __name__ == "__main__":
     asyncio.run(serve())
 ```
 
+<<<<<< codex/remove-grpc-stub-link-and-update-description
 ``src/grpc_services/llm_service.py`` implements a full ``LLMService`` using
 ``UnifiedLLMResource``. The service streams tokens from any configured model and
 can serve as a template for additional gRPC endpoints. It requires the
 generated ``llm_pb2`` and ``llm_pb2_grpc`` modules; regenerate them if imports
 fail.
+======
+``src/grpc_services/llm.proto`` and ``llm_service.py`` serve as references for
+future model services. ``llm_service.py`` imports the generated modules
+``llm_pb2`` and ``llm_pb2_grpc`` directly. If those files are missing,
+rebuild them using the command below.
+>>>>>> main
 
 ### Demo Script
 

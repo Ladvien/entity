@@ -22,7 +22,7 @@ class ClaudeResource(LLMResource):
         return HttpLLMResource(config, require_api_key=True).validate_config()
 
     async def generate(self, prompt: str) -> str:
-        if not self.http.validate_config().valid:
+        if not self.http.validate_config().success:
             raise RuntimeError("Claude resource not properly configured")
 
         url = f"{self.http.base_url.rstrip('/')}/v1/messages"

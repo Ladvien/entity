@@ -27,7 +27,7 @@ class OllamaLLMResource(LLMResource):
         return HttpLLMResource(config).validate_config()
 
     async def generate(self, prompt: str) -> str:
-        if not self.http.validate_config().valid:
+        if not self.http.validate_config().success:
             raise ResourceError("Ollama resource not properly configured")
 
         url = f"{self.http.base_url.rstrip('/')}/api/generate"

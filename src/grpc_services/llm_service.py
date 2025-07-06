@@ -1,36 +1,24 @@
-"""Minimal gRPC service for model components."""
-
-# mypy: ignore-errors
+"""Simple gRPC service exposing :class:`UnifiedLLMResource`."""
 
 from __future__ import annotations
 
 import asyncio
 import os
-from typing import Any
 
-import grpc  # type: ignore
+import grpc
 
 from config.environment import load_env
 from pipeline.resources.llm.unified import UnifiedLLMResource
 
-# These modules are generated from ``llm.proto`` using ``grpcio-tools``.
-# They are intentionally excluded from version control and should be
-# regenerated when the protocol changes.
-try:
-    from . import llm_pb2, llm_pb2_grpc  # type: ignore
-except ImportError as exc:  # pragma: no cover - manual repair
-    raise ImportError(
-        "Generated gRPC modules not found. Run 'python -m grpc_tools.protoc' "
-        "from the project root to create llm_pb2.py and llm_pb2_grpc.py."
-    ) from exc
+from . import llm_pb2, llm_pb2_grpc
 
 
-class LLMService(llm_pb2_grpc.LLMServiceServicer):  # type: ignore[misc]
+class LLMService(llm_pb2_grpc.LLMServiceServicer):
     """Text generation service using :class:`UnifiedLLMResource`."""
 
-    def __init__(self, llm: Any | None = None) -> None:
+    def __init__(self, llm: UnifiedLLMResource | None = None) -> None:
         load_env()
-        self.llm = llm or UnifiedLLMResource(
+        self._llm = llm or UnifiedLLMResource(
             {
                 "provider": os.getenv("LLM_PROVIDER", "ollama"),
                 "base_url": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
@@ -39,12 +27,12 @@ class LLMService(llm_pb2_grpc.LLMServiceServicer):  # type: ignore[misc]
         )
 
     async def Generate(
-        self, request: "llm_pb2.GenerateRequest", context: grpc.aio.ServicerContext
-    ) -> "llm_pb2.GenerateResponse":  # type: ignore[name-defined]
+        self, request: llm_pb2.GenerateRequest, context: grpc.aio.ServicerContext
+    ) -> llm_pb2.GenerateResponse:
         """Stream generated tokens for ``request.prompt``."""
 
         try:
-            async for token in self.llm.stream(request.prompt):
+            async for token in self._llm.stream(request.prompt):
                 yield llm_pb2.GenerateResponse(token=str(token))
         except Exception as exc:  # noqa: BLE001
             await context.abort(grpc.StatusCode.INTERNAL, str(exc))
