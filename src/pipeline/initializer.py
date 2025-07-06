@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import copy
 import json
+import tomllib
 from contextlib import contextmanager
+from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple
 
 from config.environment import load_env
@@ -105,6 +107,49 @@ class SystemInitializer:
         config = interpolate_env_vars(dict(cfg))
         return cls(config, env_file)
 
+    # --------------------------- plugin discovery ---------------------------
+    def _discover_plugins(self) -> None:
+        """Update configuration with plugins found in ``plugin_dirs``."""
+
+        plugin_dirs = self.config.get("plugin_dirs", [])
+        for directory in plugin_dirs:
+            for pyproject in Path(directory).rglob("pyproject.toml"):
+                try:
+                    with open(pyproject, "rb") as fh:
+                        data = tomllib.load(fh)
+                except Exception:  # pragma: no cover - invalid files skipped
+                    continue
+
+                tool_section = data.get("tool", {})
+                entity = tool_section.get("entity", {})
+                plugins = entity.get("plugins", {})
+                for section in ["resources", "tools", "adapters", "prompts"]:
+                    entries = plugins.get(section, {})
+                    if not isinstance(entries, dict):
+                        continue
+                    cfg_section = self.config.setdefault("plugins", {}).setdefault(
+                        section, {}
+                    )
+                    for name, meta in entries.items():
+                        if name in cfg_section:
+                            continue
+                        if isinstance(meta, str):
+                            cfg_section[name] = {"type": meta}
+                            continue
+                        if not isinstance(meta, dict):
+                            continue
+                        cls_path = meta.get("class") or meta.get("type")
+                        if not cls_path:
+                            continue
+                        cfg = {"type": cls_path}
+                        deps = meta.get("dependencies")
+                        if deps:
+                            cfg["dependencies"] = list(deps)
+                        for k, v in meta.items():
+                            if k not in {"class", "type", "dependencies"}:
+                                cfg[k] = v
+                        cfg_section[name] = cfg
+
     def get_resource_config(self, name: str) -> Dict:
         return self.config["plugins"]["resources"][name]
 
@@ -118,6 +163,8 @@ class SystemInitializer:
         return self.config["plugins"]["prompts"][name]
 
     async def initialize(self):
+        self._discover_plugins()
+
         registry = ClassRegistry()
         dep_graph: Dict[str, List[str]] = {}
 
