@@ -79,7 +79,6 @@ class CalculatorTool(ToolPlugin):
     any stage.
     """
 
-    stages = [PipelineStage.DO]
     _evaluator = SafeEvaluator()
 
     class Params(BaseModel):

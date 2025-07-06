@@ -16,14 +16,22 @@ from importlib import import_module
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
+<<<<<<< HEAD
     from plugins.builtin.adapters.logging_adapter import (
         JsonFormatter as _JsonFormatter,
     )  # noqa: F401,E501
+=======
+>>>>>>> 0698b3abdf6daf61c3f8486c12ceb9d0e4aab4b8
     from plugins.builtin.adapters.logging_adapter import (
+        JsonFormatter as _JsonFormatter,
         RequestIdFilter as _RequestIdFilter,
+<<<<<<< HEAD
     )  # noqa: F401,E501
 =======
 >>>>>>> c72003e014c664863289e303211be6661160fdc6
+=======
+    )  # noqa: F401
+>>>>>>> 0698b3abdf6daf61c3f8486c12ceb9d0e4aab4b8
 
 
 def _adapter():

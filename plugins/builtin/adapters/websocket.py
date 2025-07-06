@@ -16,14 +16,11 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from pipeline.base_plugins import AdapterPlugin
 from pipeline.manager import PipelineManager
 from pipeline.pipeline import execute_pipeline
-from pipeline.stages import PipelineStage
 from registry import SystemRegistries
 
 
 class WebSocketAdapter(AdapterPlugin):
     """WebSocket adapter using FastAPI."""
-
-    stages = [PipelineStage.DELIVER]
 
     def __init__(
         self, manager: PipelineManager | None = None, config: dict | None = None

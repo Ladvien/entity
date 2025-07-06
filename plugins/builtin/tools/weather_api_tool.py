@@ -19,7 +19,6 @@ class WeatherApiTool(ToolPlugin):
     needed and results are logged centrally.
     """
 
-    stages = [PipelineStage.DO]
     required_params = ["location"]
 
     def __init__(self, config: Dict | None = None) -> None:

@@ -12,11 +12,12 @@ class GoodPlugin(PromptPlugin):
         pass
 
 
-def test_plugin_requires_stages():
-    with pytest.raises(ValueError):
-
-        class NoStages(PromptPlugin):
+def test_plugin_without_stages_allowed():
+    class NoStages(PromptPlugin):
+        async def _execute_impl(self, context):
             pass
+
+    NoStages()
 
 
 def test_plugin_invalid_stage():

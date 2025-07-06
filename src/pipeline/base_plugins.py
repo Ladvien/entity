@@ -20,11 +20,14 @@ if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .initializer import ClassRegistry
 
 from .exceptions import CircuitBreakerTripped, PluginError, PluginExecutionError
+<<<<<<< HEAD
 =======
 from .context import PluginContext
 from .exceptions import CircuitBreakerTripped, PluginError, PluginExecutionError
 from .initializer import ClassRegistry
 >>>>>>> c72003e014c664863289e303211be6661160fdc6
+=======
+>>>>>>> 0698b3abdf6daf61c3f8486c12ceb9d0e4aab4b8
 from .logging import get_logger
 from .observability.utils import execute_with_observability
 from .stages import PipelineStage
@@ -54,7 +57,7 @@ class ConfigurationError(Exception):
 
 
 class BasePlugin(ABC):
-    stages: List[PipelineStage]
+    stages: List[PipelineStage] | None = None
     priority: int = 50
     dependencies: List[str] = []
 
@@ -68,13 +71,16 @@ class BasePlugin(ABC):
             return
 
         stages = getattr(cls, "stages", None)
-        if not stages:
-            raise ValueError(f"{cls.__name__} must define a non-empty 'stages' list")
+        if stages is not None:
+            if not isinstance(stages, list) or not stages:
+                raise ValueError(
+                    f"{cls.__name__}.stages must be a non-empty list of PipelineStage values"
+                )
 
-        if any(not isinstance(stage, PipelineStage) for stage in stages):
-            raise ValueError(
-                f"All items in {cls.__name__}.stages must be PipelineStage instances"
-            )
+            if any(not isinstance(stage, PipelineStage) for stage in stages):
+                raise ValueError(
+                    f"All items in {cls.__name__}.stages must be PipelineStage instances"
+                )
 
     def __init__(self, config: Dict | None = None) -> None:
         self.config = config or {}

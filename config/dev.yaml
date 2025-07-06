@@ -66,8 +66,9 @@ plugins:
     calculator:
       type: plugins.builtin.tools.calculator_tool:CalculatorTool
   adapters:
-    http:
-      type: plugins.builtin.adapters.http:HTTPAdapter
+  http:
+    type: plugins.builtin.adapters.http:HTTPAdapter
+    stages: [parse, deliver]
       auth_tokens:
         - dev-secret
       rate_limit:
@@ -75,20 +76,24 @@ plugins:
         interval: 60
       audit_log_path: logs/audit.log
       dashboard: true
-    cli:
-      type: plugins.builtin.adapters.cli:CLIAdapter
-    logging:
-      type: plugins.builtin.adapters.logging:LoggingAdapter
+  cli:
+    type: plugins.builtin.adapters.cli:CLIAdapter
+    stages: [deliver]
+  logging:
+    type: plugins.builtin.adapters.logging:LoggingAdapter
+    stages: [deliver]
   prompts:
     chain_of_thought:
       type: plugins.contrib.prompts.chain_of_thought:ChainOfThoughtPrompt
       enable_reasoning: true
-    conversation_history:
-      type: plugins.builtin.prompts.conversation_history:ConversationHistory
-      history_table: chat_history
-    memory_retrieval:
-      type: plugins.builtin.prompts.memory_retrieval:MemoryRetrievalPrompt
-      max_context_length: 4000
-    intent_classifier:
-      type: plugins.contrib.prompts.intent_classifier:IntentClassifierPrompt
-      confidence_threshold: 0.8
+  conversation_history:
+    type: plugins.builtin.prompts.conversation_history:ConversationHistory
+    history_table: chat_history
+    stages: [parse, deliver]
+  memory_retrieval:
+    type: plugins.builtin.prompts.memory_retrieval:MemoryRetrievalPrompt
+    max_context_length: 4000
+    stages: [think]
+  intent_classifier:
+    type: plugins.contrib.prompts.intent_classifier:IntentClassifierPrompt
+    confidence_threshold: 0.8
