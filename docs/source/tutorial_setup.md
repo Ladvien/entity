@@ -3,8 +3,8 @@
 Follow these steps to install dependencies and scaffold a new project.
 
 1. Install Python 3.11+ and [Poetry](https://python-poetry.org/).
-2. Run `poetry install` to create the virtual environment. This installs
-   all dependencies, including the required `httpx==0.27.*`.
+2. Run `poetry install --with dev` to create the virtual environment with all
+   development tools.
 3. Copy `.env.example` to `.env` and provide any required credentials.
 4. Generate a starter project:
 
