@@ -55,6 +55,8 @@ plugins:
       audit_log_path: logs/audit.log
     cli:
       type: plugins.builtin.adapters.cli:CLIAdapter
+    logging:
+      type: plugins.builtin.adapters.logging_adapter:LoggingAdapter
   prompts:
     chain_of_thought:
       type: plugins.contrib.prompts.chain_of_thought:ChainOfThoughtPrompt

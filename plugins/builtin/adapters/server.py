@@ -6,9 +6,11 @@ from __future__ import annotations
 import asyncio
 
 from plugins.builtin.adapters.http import HTTPAdapter
+from plugins.builtin.adapters.logging_adapter import LoggingAdapter
 from plugins.builtin.adapters.websocket import WebSocketAdapter
 
 from pipeline.runtime import AgentRuntime
+from pipeline.stages import PipelineStage
 
 
 class AgentServer:
@@ -16,6 +18,21 @@ class AgentServer:
 
     def __init__(self, runtime: AgentRuntime) -> None:
         self.runtime = runtime
+        try:
+            asyncio.run(
+                runtime.registries.plugins.register_plugin_for_stage(
+                    LoggingAdapter({}),
+                    PipelineStage.DELIVER,
+                )
+            )
+        except RuntimeError:
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(
+                runtime.registries.plugins.register_plugin_for_stage(
+                    LoggingAdapter({}),
+                    PipelineStage.DELIVER,
+                )
+            )
 
     def create_http_adapter(
         self, host: str = "127.0.0.1", port: int = 8000
