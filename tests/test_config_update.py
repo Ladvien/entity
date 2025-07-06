@@ -1,9 +1,17 @@
 import asyncio
 
-from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
-                      PromptPlugin, ResourceRegistry, SystemRegistries,
-                      ToolRegistry, ValidationResult, execute_pipeline,
-                      update_plugin_configuration)
+from pipeline import (
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+    ValidationResult,
+    execute_pipeline,
+    update_plugin_configuration,
+)
+from pipeline.resources import ResourceContainer
 
 
 class TestReconfigPlugin(PromptPlugin):
@@ -66,7 +74,7 @@ def test_update_plugin_configuration_restart_required():
 def test_update_waits_for_running_pipeline():
     async def run_test():
         reg, plugin = make_registry(add_slow=True)
-        registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), reg)
+        registries = SystemRegistries(ResourceContainer(), ToolRegistry(), reg)
         manager = PipelineManager()
         task = asyncio.create_task(
             execute_pipeline("hello", registries, pipeline_manager=manager)

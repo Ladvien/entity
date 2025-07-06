@@ -3,9 +3,16 @@ from datetime import datetime
 
 from plugins.contrib.prompts.intent_classifier import IntentClassifierPrompt
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, ResourceRegistry,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
+from pipeline.resources import ResourceContainer
 
 
 class FakeLLM:
@@ -21,7 +28,7 @@ def make_context(llm: FakeLLM):
         pipeline_id="1",
         metrics=MetricsCollector(),
     )
-    resources = ResourceRegistry()
+    resources = ResourceContainer()
     asyncio.run(resources.add("llm", llm))
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
     return state, PluginContext(state, registries)

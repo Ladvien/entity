@@ -7,7 +7,6 @@ from pipeline import (
     PipelineStage,
     PluginRegistry,
     PromptPlugin,
-    ResourceRegistry,
     SystemRegistries,
     ToolRegistry,
     execute_pipeline,
@@ -19,6 +18,7 @@ from pipeline.errors import (
     ToolExecutionError,
     create_static_error_response,
 )
+from pipeline.resources import ResourceContainer
 
 
 class BoomPlugin(PromptPlugin):
@@ -50,7 +50,7 @@ def make_registries(error_plugin, main_plugin=BoomPlugin):
     asyncio.run(
         plugins.register_plugin_for_stage(error_plugin({}), PipelineStage.ERROR)
     )
-    return SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
+    return SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 
 
 def test_error_plugin_runs():

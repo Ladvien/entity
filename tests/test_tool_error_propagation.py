@@ -3,9 +3,16 @@ import asyncio
 from user_plugins.failure.basic_logger import BasicLogger
 from user_plugins.failure.error_formatter import ErrorFormatter
 
-from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      ResourceRegistry, SystemRegistries, ToolPlugin,
-                      ToolRegistry, execute_pipeline)
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolPlugin,
+    ToolRegistry,
+    execute_pipeline,
+)
+from pipeline.resources import ResourceContainer
 
 
 class FailingTool(ToolPlugin):
@@ -29,7 +36,7 @@ def make_registries():
     tools = ToolRegistry()
     tools.add("fail", FailingTool({"max_retries": 0}))
 
-    return SystemRegistries(ResourceRegistry(), tools, plugins)
+    return SystemRegistries(ResourceContainer(), tools, plugins)
 
 
 def test_tool_failure_propagates_to_error_stage():

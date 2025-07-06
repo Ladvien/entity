@@ -4,9 +4,16 @@ from datetime import datetime
 from plugins.contrib.prompts.react_prompt import ReActPrompt
 from plugins.contrib.tools.calculator_tool import CalculatorTool
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, ResourceRegistry,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
+from pipeline.resources import ResourceContainer
 
 
 class FakeLLM:
@@ -29,7 +36,7 @@ def make_context(llm: FakeLLM):
         pipeline_id="1",
         metrics=MetricsCollector(),
     )
-    resources = ResourceRegistry()
+    resources = ResourceContainer()
     tools = ToolRegistry()
     plugins = PluginRegistry()
     asyncio.run(resources.add("llm", llm))

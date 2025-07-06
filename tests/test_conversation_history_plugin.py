@@ -4,9 +4,16 @@ from unittest.mock import AsyncMock
 
 from plugins.contrib.prompts.conversation_history import ConversationHistory
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, ResourceRegistry,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
+from pipeline.resources import ResourceContainer
 from pipeline.resources.memory_resource import MemoryResource
 from pipeline.stages import PipelineStage
 
@@ -33,7 +40,7 @@ def make_context(db: FakeMemory):
         pipeline_id="1",
         metrics=MetricsCollector(),
     )
-    resources = ResourceRegistry()
+    resources = ResourceContainer()
     asyncio.run(resources.add("memory", db))
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
     return state, PluginContext(state, registries)

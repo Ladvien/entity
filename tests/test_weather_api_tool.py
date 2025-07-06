@@ -7,9 +7,16 @@ from unittest.mock import AsyncMock, patch
 from plugins.contrib.tools.weather_api_tool import WeatherApiTool
 
 from config.environment import load_env
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, ResourceRegistry,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
+from pipeline.resources import ResourceContainer
 from pipeline.tools.execution import execute_pending_tools
 
 load_env(Path(__file__).resolve().parents[1] / ".env")
@@ -38,7 +45,7 @@ async def run_weather():
         {"base_url": "http://test/weather", "api_key": os.environ["WEATHER_API_KEY"]}
     )
     await tools.add("weather", tool)
-    registries = SystemRegistries(ResourceRegistry(), tools, PluginRegistry())
+    registries = SystemRegistries(ResourceContainer(), tools, PluginRegistry())
     ctx = PluginContext(state, registries)
     with patch(
         "httpx.AsyncClient.get", new=AsyncMock(return_value=FakeResponse())

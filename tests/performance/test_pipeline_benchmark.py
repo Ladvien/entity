@@ -2,9 +2,15 @@ import asyncio
 
 import pytest
 
-from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
-                      PromptPlugin, ResourceRegistry, SystemRegistries,
-                      ToolRegistry)
+from pipeline import (
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
+from pipeline.resources import ResourceContainer
 
 
 class NoOpPlugin(PromptPlugin):
@@ -17,7 +23,7 @@ class NoOpPlugin(PromptPlugin):
 def _make_manager():
     plugins = PluginRegistry()
     asyncio.run(plugins.register_plugin_for_stage(NoOpPlugin({}), PipelineStage.DO))
-    registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
+    registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     return PipelineManager(registries)
 
 

@@ -1,8 +1,16 @@
 import asyncio
 
-from pipeline import (LLMResponse, PipelineStage, PluginRegistry, PromptPlugin,
-                      ResourceRegistry, SystemRegistries, ToolPlugin,
-                      ToolRegistry, execute_pipeline)
+from pipeline import (
+    LLMResponse,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolPlugin,
+    ToolRegistry,
+    execute_pipeline,
+)
+from pipeline.resources import ResourceContainer
 
 
 class EchoLLM:
@@ -29,7 +37,7 @@ class MetricsPlugin(PromptPlugin):
 def make_registries():
     plugins = PluginRegistry()
     asyncio.run(plugins.register_plugin_for_stage(MetricsPlugin({}), PipelineStage.DO))
-    resources = ResourceRegistry()
+    resources = ResourceContainer()
     asyncio.run(resources.add("llm", EchoLLM()))
     tools = ToolRegistry()
     asyncio.run(tools.add("echo", EchoTool({})))

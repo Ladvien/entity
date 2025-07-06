@@ -7,9 +7,16 @@ import pytest
 from plugins.contrib.prompts.complex_prompt import ComplexPrompt
 
 from config.environment import load_env
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, ResourceRegistry,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
+from pipeline.resources import ResourceContainer
 from pipeline.resources.llm import UnifiedLLMResource
 from pipeline.resources.memory_resource import MemoryResource
 from pipeline.resources.pg_vector_store import PgVectorStore
@@ -69,7 +76,7 @@ def test_vector_memory_integration():
         )
         await memory.save_conversation("conv1", [history_entry])
         await vm.add_embedding("previous")
-        resources = ResourceRegistry()
+        resources = ResourceContainer()
         await resources.add("memory", memory)
         await resources.add("llm", llm)
         registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())

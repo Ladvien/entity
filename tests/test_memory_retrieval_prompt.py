@@ -3,11 +3,17 @@ from datetime import datetime
 
 from plugins.contrib.prompts.memory_retrieval import MemoryRetrievalPrompt
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, ResourceRegistry,
-                      SystemRegistries, ToolRegistry)
-from pipeline.resources.memory_resource import (MemoryResource,
-                                                SimpleMemoryResource)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
+from pipeline.resources import ResourceContainer
+from pipeline.resources.memory_resource import MemoryResource, SimpleMemoryResource
 
 
 class DummyMemory(MemoryResource):
@@ -30,7 +36,7 @@ def make_context(memory: MemoryResource | None = None):
     ]
     memory = memory or SimpleMemoryResource()
     asyncio.run(memory.save_conversation("1", past))
-    resources = ResourceRegistry()
+    resources = ResourceContainer()
     asyncio.run(resources.add("memory", memory))
 
     state = PipelineState(

@@ -1,3 +1,5 @@
+from pipeline.resources import ResourceContainer
+
 # isort: off
 import asyncio
 import logging
@@ -7,7 +9,6 @@ from pipeline import (
     PipelineStage,
     PluginRegistry,
     PromptPlugin,
-    ResourceRegistry,
     SystemRegistries,
     ToolRegistry,
     execute_pipeline,
@@ -48,7 +49,7 @@ def make_registries(error_plugin):
     asyncio.run(
         plugins.register_plugin_for_stage(error_plugin({}), PipelineStage.ERROR)
     )
-    return SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
+    return SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 
 
 def test_error_stage_execution(caplog):

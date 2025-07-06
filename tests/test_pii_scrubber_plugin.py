@@ -3,9 +3,16 @@ from datetime import datetime
 
 from plugins.contrib.prompts.pii_scrubber import PIIScrubberPrompt
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, ResourceRegistry,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
+from pipeline.resources import ResourceContainer
 
 
 def make_context():
@@ -21,7 +28,7 @@ def make_context():
         metrics=MetricsCollector(),
     )
     state.response = "Contact admin@example.com at (123) 456-7890"
-    registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), PluginRegistry())
+    registries = SystemRegistries(ResourceContainer(), ToolRegistry(), PluginRegistry())
     return state, PluginContext(state, registries)
 
 

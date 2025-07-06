@@ -3,10 +3,18 @@ from datetime import datetime
 
 import pytest
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
-                      PipelineState, PluginContext, PluginRegistry,
-                      PromptPlugin, ResourceRegistry, SystemRegistries,
-                      ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineStage,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
+from pipeline.resources import ResourceContainer
 
 
 class StubLLM:
@@ -22,7 +30,7 @@ def make_context(llm=None) -> PluginContext:
         pipeline_id="1",
         metrics=MetricsCollector(),
     )
-    resources = ResourceRegistry()
+    resources = ResourceContainer()
     if llm is not None:
         asyncio.run(resources.add("llm", llm))
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())

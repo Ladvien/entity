@@ -4,9 +4,16 @@ from unittest.mock import AsyncMock, patch
 
 from plugins.contrib.tools.search_tool import SearchTool
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, ResourceRegistry,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
+from pipeline.resources import ResourceContainer
 from pipeline.tools.execution import execute_pending_tools
 
 
@@ -30,7 +37,7 @@ async def run_search():
     )
     tools = ToolRegistry()
     await tools.add("search", SearchTool())
-    registries = SystemRegistries(ResourceRegistry(), tools, PluginRegistry())
+    registries = SystemRegistries(ResourceContainer(), tools, PluginRegistry())
     ctx = PluginContext(state, registries)
     with patch("httpx.AsyncClient.get", new=AsyncMock(return_value=FakeResponse())):
         key = ctx.execute_tool("search", {"query": "test"})

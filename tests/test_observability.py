@@ -1,9 +1,15 @@
 import asyncio
 import time
 
-from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      ResourceRegistry, SystemRegistries, ToolRegistry,
-                      execute_pipeline)
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
+from pipeline.resources import ResourceContainer
 
 
 class TimedPlugin(PromptPlugin):
@@ -17,7 +23,7 @@ class TimedPlugin(PromptPlugin):
 def make_registries():
     plugins = PluginRegistry()
     asyncio.run(plugins.register_plugin_for_stage(TimedPlugin({}), PipelineStage.DO))
-    return SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
+    return SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 
 
 def test_metrics_overhead():

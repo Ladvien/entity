@@ -1,10 +1,18 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
-                      PipelineState, PluginContext, PluginRegistry,
-                      PromptPlugin, ResourceRegistry, SystemRegistries,
-                      ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineStage,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
+from pipeline.resources import ResourceContainer
 
 
 class FakeLLM:
@@ -30,7 +38,7 @@ def make_context(llm: FakeLLM) -> PluginContext:
         metrics=MetricsCollector(),
         current_stage=PipelineStage.THINK,
     )
-    resources = ResourceRegistry()
+    resources = ResourceContainer()
     asyncio.run(resources.add("llm", llm))
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
     return PluginContext(state, registries)

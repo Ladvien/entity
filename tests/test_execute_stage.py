@@ -3,10 +3,17 @@ from datetime import datetime
 
 import pytest
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
-                      PipelineState, PluginRegistry, ResourceRegistry,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineStage,
+    PipelineState,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.pipeline import execute_stage
+from pipeline.resources import ResourceContainer
 
 
 class GenericFailPlugin:
@@ -36,7 +43,7 @@ def make_state():
 def make_registries(plugin):
     plugins = PluginRegistry()
     asyncio.run(plugins.register_plugin_for_stage(plugin, PipelineStage.DO))
-    return SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
+    return SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 
 
 def test_generic_error_sets_failure_info():

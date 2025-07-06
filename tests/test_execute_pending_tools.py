@@ -1,9 +1,16 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginRegistry, ResourceRegistry, SystemRegistries,
-                      ToolCall, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginRegistry,
+    SystemRegistries,
+    ToolCall,
+    ToolRegistry,
+)
+from pipeline.resources import ResourceContainer
 from pipeline.tools.execution import execute_pending_tools
 
 
@@ -28,7 +35,7 @@ def make_state():
 
 def test_execute_pending_tools_returns_mapping_by_result_key():
     state = make_state()
-    registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), PluginRegistry())
+    registries = SystemRegistries(ResourceContainer(), ToolRegistry(), PluginRegistry())
     asyncio.run(registries.tools.add("echo", EchoTool()))
 
     results = asyncio.run(execute_pending_tools(state, registries))

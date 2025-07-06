@@ -5,8 +5,8 @@ import pytest
 
 from pipeline import PipelineStage, execute_pipeline
 from pipeline.reliability.queue import PersistentQueue
-from registry import (PluginRegistry, ResourceRegistry, SystemRegistries,
-                      ToolRegistry)
+from pipeline.resources import ResourceContainer
+from registry import PluginRegistry, SystemRegistries, ToolRegistry
 
 
 class CrashPlugin:
@@ -25,7 +25,7 @@ def test_pipeline_resume_after_crash(tmp_path: Path):
         state_file = tmp_path / "state.json"
         plugins = PluginRegistry()
         await plugins.register_plugin_for_stage(CrashPlugin(), PipelineStage.PARSE)
-        registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
+        registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
         try:
             await execute_pipeline("hi", registries, state_file=str(state_file))
         except RuntimeError:

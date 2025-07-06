@@ -8,10 +8,10 @@ from pipeline import (
     PipelineStage,
     PluginRegistry,
     PromptPlugin,
-    ResourceRegistry,
     SystemRegistries,
     ToolRegistry,
 )
+from pipeline.resources import ResourceContainer
 
 
 class EchoPlugin(PromptPlugin):
@@ -28,7 +28,7 @@ def make_manager() -> PipelineManager:
     asyncio.run(
         plugins.register_plugin_for_stage(LoggingAdapter({}), PipelineStage.DELIVER)
     )
-    registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
+    registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     return PipelineManager(registries)
 
 
