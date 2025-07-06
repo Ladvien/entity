@@ -1,32 +1,35 @@
 import asyncio
-from unittest.mock import AsyncMock, patch
+from datetime import datetime
+from pathlib import Path
 
+from pipeline.context import ConversationEntry
 from plugins.builtin.resources.sqlite_storage import SQLiteStorageResource
 
 
-async def init_resource():
-    cfg = {"path": "./db.sqlite"}
-    conn = AsyncMock()
-    conn.execute = AsyncMock()
-    conn.commit = AsyncMock()
-    with patch("aiosqlite.connect", new=AsyncMock(return_value=conn)) as mock_connect:
-        plugin = SQLiteStorageResource(cfg)
-        await plugin.initialize()
-        mock_connect.assert_awaited()
-    return plugin, conn
+async def history_roundtrip(tmp_path: Path) -> list[ConversationEntry]:
+    cfg = {"path": tmp_path / "db.sqlite", "history_table": "history"}
+    storage = SQLiteStorageResource(cfg)
+    await storage.initialize()
+    entry = ConversationEntry(content="hi", role="user", timestamp=datetime.now())
+    await storage.save_history("conv1", [entry])
+    rows = await storage.load_history("conv1")
+    await storage.shutdown()
+    return rows
 
 
-def test_initialize_opens_pool():
-    plugin, _ = asyncio.run(init_resource())
-    assert plugin._size >= 1
+def test_history_roundtrip(tmp_path):
+    history = asyncio.run(history_roundtrip(tmp_path))
+    assert history and history[0].content == "hi"
 
 
-def test_health_check_runs_query():
-    async def run():
-        plugin = SQLiteStorageResource({})
-        plugin.fetch = AsyncMock(return_value=[(1,)])
-        result = await plugin.health_check()
-        plugin.fetch.assert_awaited_with("SELECT 1")
-        return result
+async def run_health_check(tmp_path: Path) -> bool:
+    cfg = {"path": tmp_path / "hc.sqlite"}
+    storage = SQLiteStorageResource(cfg)
+    await storage.initialize()
+    result = await storage.health_check()
+    await storage.shutdown()
+    return result
 
-    assert asyncio.run(run())
+
+def test_health_check(tmp_path):
+    assert asyncio.run(run_health_check(tmp_path))

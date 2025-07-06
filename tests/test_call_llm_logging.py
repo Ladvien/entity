@@ -13,23 +13,17 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.resources import ResourceContainer
-
-
-class FakeLLM:
-    async def generate(self, prompt: str) -> str:
-        return "pong"
+from plugins.builtin.resources.echo_llm import EchoLLMResource
 
 
 class DummyPlugin(PromptPlugin):
     stages = [PipelineStage.THINK]
 
-    async def _execute_impl(
-        self, context: PluginContext
-    ) -> None:  # pragma: no cover - not used
+    async def _execute_impl(self, context: PluginContext) -> None:  # pragma: no cover
         pass
 
 
-def make_context(llm: FakeLLM) -> PluginContext:
+def make_context(llm) -> PluginContext:
     state = PipelineState(
         conversation=[
             ConversationEntry(content="hi", role="user", timestamp=datetime.now())
@@ -45,11 +39,11 @@ def make_context(llm: FakeLLM) -> PluginContext:
 
 
 def test_call_llm_logs_info(monkeypatch):
-    llm = FakeLLM()
+    llm = EchoLLMResource()
     ctx = make_context(llm)
     plugin = DummyPlugin({})
 
-    recorded = {}
+    recorded: dict[str, object] = {}
 
     def fake_info(message: str, *, extra=None, **kwargs):
         recorded["message"] = message
@@ -60,12 +54,12 @@ def test_call_llm_logs_info(monkeypatch):
 
     result = asyncio.run(plugin.call_llm(ctx, "hello", "test"))
 
-    assert result.content == "pong"
+    assert result.content == "hello"
     assert recorded["message"] == "LLM call completed"
     assert recorded["plugin"] == "DummyPlugin"
     assert recorded["stage"] == str(PipelineStage.THINK)
     assert recorded["purpose"] == "test"
     assert recorded["prompt_length"] == len("hello")
-    assert recorded["response_length"] == len("pong")
+    assert recorded["response_length"] == len("hello")
     assert recorded["pipeline_id"] == "123"
     assert isinstance(recorded["duration"], float)
