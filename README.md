@@ -126,7 +126,7 @@ Update plugin settings without restarting the agent.
 python src/cli.py reload-config updated.yaml
 ```
 
-See [ARCHITECTURE.md](ARCHITECTURE.md#%F0%9F%94%84-reconfigurable-agent-infrastructure) for details on dynamic reconfiguration.
+See [the architecture overview](architecture/general.md#%F0%9F%94%84-reconfigurable-agent-infrastructure) for details on dynamic reconfiguration.
 
 ### Using the "llm" Resource Key
 Define your LLM once and share it across plugins:
