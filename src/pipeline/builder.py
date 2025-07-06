@@ -5,7 +5,8 @@ from pathlib import Path
 from types import ModuleType
 from typing import Callable, Optional
 
-from registry import PluginRegistry, ResourceContainer, SystemRegistries, ToolRegistry
+from registry import (PluginRegistry, ResourceContainer, SystemRegistries,
+                      ToolRegistry)
 
 from .interfaces import PluginAutoClassifier
 from .logging import get_logger

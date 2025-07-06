@@ -5,12 +5,14 @@ from typing import TYPE_CHECKING
 """Wrapper for DuckDBDatabaseResource."""
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
-    from plugins.builtin.resources.duckdb_database import DuckDBDatabaseResource
+    from plugins.builtin.resources.duckdb_database import \
+        DuckDBDatabaseResource
 
 
 def __getattr__(name: str):
     if name == "DuckDBDatabaseResource":
-        from plugins.builtin.resources.duckdb_database import DuckDBDatabaseResource
+        from plugins.builtin.resources.duckdb_database import \
+            DuckDBDatabaseResource
 
         return DuckDBDatabaseResource
     raise AttributeError(f"module {__name__} has no attribute {name}")

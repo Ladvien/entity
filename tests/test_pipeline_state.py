@@ -2,16 +2,9 @@ import asyncio
 from datetime import datetime
 from pathlib import Path
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineStage,
-    PipelineState,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
+                      PipelineState, PluginRegistry, PromptPlugin,
+                      SystemRegistries, ToolRegistry)
 from pipeline.pipeline import execute_pipeline
 from pipeline.resources import ResourceContainer
 

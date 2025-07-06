@@ -5,7 +5,8 @@ import asyncio
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Dict, List, Optional
 
-from pipeline.resources.container import ResourceContainer as BaseResourceContainer
+from pipeline.resources.container import \
+    ResourceContainer as BaseResourceContainer
 from pipeline.utils import DependencyGraph
 
 

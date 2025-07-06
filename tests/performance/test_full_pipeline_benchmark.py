@@ -2,13 +2,8 @@ import asyncio
 
 import pytest
 
-from pipeline import (
-    PipelineManager,
-    PipelineStage,
-    PluginRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
+                      SystemRegistries, ToolRegistry)
 from pipeline.resources import ResourceContainer
 
 

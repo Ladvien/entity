@@ -10,7 +10,8 @@ if TYPE_CHECKING:  # pragma: no cover - used for type hints only
 
 def __getattr__(name: str):
     if name == "SQLiteStorageResource":
-        from plugins.builtin.resources.sqlite_storage import SQLiteStorageResource
+        from plugins.builtin.resources.sqlite_storage import \
+            SQLiteStorageResource
 
         return SQLiteStorageResource
     raise AttributeError(f"module {__name__} has no attribute {name}")

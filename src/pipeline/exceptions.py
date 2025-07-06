@@ -2,12 +2,8 @@ from __future__ import annotations
 
 """Compatibility exceptions for pipeline modules."""
 
-from .errors import (
-    PipelineError,
-    PluginExecutionError,
-    ResourceError,
-    ToolExecutionError,
-)
+from .errors import (PipelineError, PluginExecutionError, ResourceError,
+                     ToolExecutionError)
 
 
 class CircuitBreakerTripped(PipelineError):
