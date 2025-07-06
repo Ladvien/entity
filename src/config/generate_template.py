@@ -5,8 +5,8 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from plugins.builtin.adapters.logging_adapter import (configure_logging,
-                                                      get_logger)
+from pipeline.logging import get_logger
+from plugins.builtin.adapters.logging_adapter import configure_logging
 
 logger = get_logger(__name__)
 

@@ -1,15 +1,14 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import (TYPE_CHECKING, Any, AsyncIterator, Dict, Protocol,
-                    runtime_checkable)
+from typing import TYPE_CHECKING, Any, AsyncIterator, Dict, Protocol, runtime_checkable
 
 if TYPE_CHECKING:  # pragma: no cover
     from registry import ClassRegistry
 
+from pipeline.logging import get_logger
 from pipeline.state import LLMResponse
 from pipeline.validation import ValidationResult
-from plugins.builtin.adapters.logging_adapter import get_logger
 
 
 @runtime_checkable
