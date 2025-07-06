@@ -16,8 +16,8 @@ from jsonschema import RefResolver, ValidationError, validate  # noqa: E402
 from config.environment import load_env  # noqa: E402
 from pipeline import SystemInitializer  # noqa: E402
 from pipeline.config import ConfigLoader  # noqa: E402
-from plugins.builtin.adapters.logging_adapter import (  # noqa: E402
-    configure_logging, get_logger)
+from pipeline.logging import get_logger  # noqa: E402
+from plugins.builtin.adapters.logging_adapter import configure_logging  # noqa: E402
 
 from .validators import _validate_memory  # noqa: E402
 from .validators import _validate_cache, _validate_vector_memory  # noqa: E402
