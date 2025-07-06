@@ -17,6 +17,21 @@ The exporter provides LLM latency and failure counters along with CPU and memory
 usage. Point Prometheus at the server to scrape these metrics. See
 `examples/observability_metrics.py` for a minimal example.
 
+## OpenTelemetry Tracing
+
+Wrap tasks with `start_span()` to emit traces. When the
+`OTEL_EXPORTER_OTLP_ENDPOINT` environment variable is set, spans are exported to
+that OTLP endpoint; otherwise they are printed to the console.
+
+```python
+from pipeline.observability import start_span
+
+async with start_span("my_task"):
+    await do_work()
+```
+
+See `examples/observability_tracing.py` for a minimal demonstration.
+
 ## Grafana Dashboard
 
 Below is a minimal dashboard JSON you can import into Grafana:
