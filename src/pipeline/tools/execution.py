@@ -27,7 +27,11 @@ async def execute_tool(
                 return await tool.execute_function(call.params)
             func = getattr(tool, "run", None)
             if func is None:
-                raise RuntimeError("Tool lacks execution method")
+                raise ToolExecutionError(
+                    call.name,
+                    RuntimeError("Tool lacks execution method"),
+                    call.result_key,
+                )
             if asyncio.iscoroutinefunction(func):
                 async_func = cast(Callable[[Dict[str, Any]], Awaitable[ResultT]], func)
                 return await async_func(call.params)
@@ -37,7 +41,9 @@ async def execute_tool(
             if attempt == options.max_retries:
                 raise
             await asyncio.sleep(options.delay)
-    raise RuntimeError("Tool execution failed")
+    raise ToolExecutionError(
+        call.name, RuntimeError("Tool execution failed"), call.result_key
+    )
 
 
 async def execute_pending_tools(

@@ -16,8 +16,13 @@ from registry import SystemRegistries
 
 from .context import ConversationEntry, PluginContext, SimpleContext
 from .errors import create_static_error_response
-from .exceptions import (CircuitBreakerTripped, PluginExecutionError,
-                         ToolExecutionError)
+from .exceptions import (
+    CircuitBreakerTripped,
+    PipelineError,
+    PluginExecutionError,
+    ResourceError,
+    ToolExecutionError,
+)
 from .logging import get_logger, reset_request_id, set_request_id
 from .manager import PipelineManager
 from .observability.metrics import get_metrics_server
@@ -96,15 +101,16 @@ async def execute_stage(
                     original_exception=exc.original_exception,
                 )
                 return
-            except (RuntimeError, ValueError) as exc:
-                logger.error(
-                    "Plugin raised error",
-                    exc_info=exc,
-                    extra={
-                        "plugin": getattr(plugin, "name", plugin.__class__.__name__),
-                        "stage": str(stage),
-                    },
+            except ResourceError as exc:
+                state.failure_info = FailureInfo(
+                    stage=str(stage),
+                    plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
+                    error_type=exc.__class__.__name__,
+                    error_message=str(exc),
+                    original_exception=exc,
                 )
+                return
+            except PipelineError as exc:
                 state.failure_info = FailureInfo(
                     stage=str(stage),
                     plugin_name=getattr(plugin, "name", plugin.__class__.__name__),

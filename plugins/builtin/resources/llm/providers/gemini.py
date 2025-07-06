@@ -3,6 +3,7 @@ from __future__ import annotations
 """Adapter for Google's Gemini API."""
 from typing import Any, AsyncIterator, Dict, List
 
+from pipeline.exceptions import ResourceError
 from pipeline.state import LLMResponse
 
 from .base import BaseProvider
@@ -18,7 +19,7 @@ class GeminiProvider(BaseProvider):
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
     ) -> LLMResponse:
         if not self.http.validate_config().valid:
-            raise RuntimeError("Gemini provider not properly configured")
+            raise ResourceError("Gemini provider not properly configured")
 
         url = f"{self.http.base_url.rstrip('/')}/v1beta/models/{self.http.model}:generateContent"
         headers = {"Content-Type": "application/json"}
@@ -39,7 +40,7 @@ class GeminiProvider(BaseProvider):
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
     ) -> AsyncIterator[str]:
         if not self.http.validate_config().valid:
-            raise RuntimeError("Gemini provider not properly configured")
+            raise ResourceError("Gemini provider not properly configured")
 
         url = f"{self.http.base_url.rstrip('/')}/v1beta/models/{self.http.model}:generateContent"
         headers = {"Content-Type": "application/json"}

@@ -5,8 +5,17 @@ from __future__ import annotations
 import asyncio
 from copy import deepcopy
 from datetime import datetime
-from typing import (TYPE_CHECKING, Any, AsyncIterator, Callable, Dict, List,
-                    Optional, TypeVar, cast)
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    AsyncIterator,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    TypeVar,
+    cast,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from interfaces.resources import LLM
@@ -17,8 +26,7 @@ from registry import SystemRegistries
 
 from .metrics import MetricsCollector
 from .stages import PipelineStage
-from .state import (ConversationEntry, FailureInfo, LLMResponse, PipelineState,
-                    ToolCall)
+from .state import ConversationEntry, FailureInfo, LLMResponse, PipelineState, ToolCall
 from .tools.base import RetryOptions
 from .tools.execution import execute_tool
 
@@ -108,11 +116,11 @@ class PluginContext:
         """Return the configured LLM resource.
 
         Raises:
-            RuntimeError: If no ``"llm"`` resource is found.
+            ResourceError: If no ``"llm"`` resource is found.
         """
         llm = self.get_resource("llm")
         if llm is None:
-            raise RuntimeError(
+            raise ResourceError(
                 "No LLM resource configured. Add 'llm' to resources section."
             )
         return cast(LLM, llm)
@@ -302,7 +310,7 @@ class PluginContext:
         """Send ``prompt`` to the configured LLM and return its reply."""
         llm = self.get_llm()
         if llm is None:
-            raise RuntimeError("LLM resource not available")
+            raise ResourceError("LLM resource not available")
 
         self.record_llm_call("PluginContext", "ask_llm")
         start = asyncio.get_event_loop().time()
@@ -312,7 +320,7 @@ class PluginContext:
         else:
             func = getattr(llm, "__call__", None)
             if func is None:
-                raise RuntimeError("LLM resource is not callable")
+                raise ResourceError("LLM resource is not callable")
             if asyncio.iscoroutinefunction(func):
                 response = await func(prompt)
             else:

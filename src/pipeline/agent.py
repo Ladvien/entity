@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, Optional
 from registry import SystemRegistries
 
 from .builder import AgentBuilder
+from .exceptions import PipelineError
 from .runtime import AgentRuntime
 
 
@@ -65,7 +66,7 @@ class Agent:
     @property
     def runtime(self) -> AgentRuntime:
         if self._runtime is None:
-            raise RuntimeError("Agent not initialized; call an async method")
+            raise PipelineError("Agent not initialized; call an async method")
         return self._runtime
 
     async def run_message(self, message: str) -> Dict[str, Any]:
@@ -78,7 +79,7 @@ class Agent:
 
     def get_registries(self) -> SystemRegistries:
         if self._runtime is None:
-            raise RuntimeError("Agent not initialized")
+            raise PipelineError("Agent not initialized")
         return self._runtime.registries
 
     # ------------------------------------------------------------------

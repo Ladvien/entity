@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Dict
 
 from pipeline.base_plugins import ResourcePlugin, ValidationResult
+from pipeline.exceptions import ResourceError
 from pipeline.stages import PipelineStage
 
 from .filesystem import FileSystemResource
@@ -31,12 +32,12 @@ class StorageResource(ResourcePlugin):
 
     async def store_file(self, key: str, content: bytes) -> str:
         if not self.filesystem:
-            raise ValueError("No filesystem backend configured")
+            raise ResourceError("No filesystem backend configured")
         return await self.filesystem.store(key, content)
 
     async def load_file(self, key: str) -> bytes:
         if not self.filesystem:
-            raise ValueError("No filesystem backend configured")
+            raise ResourceError("No filesystem backend configured")
         return await self.filesystem.load(key)
 
     @classmethod

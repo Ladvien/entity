@@ -3,6 +3,7 @@ from __future__ import annotations
 """Adapter for Anthropic Claude API."""
 from typing import Any, AsyncIterator, Dict, List
 
+from pipeline.exceptions import ResourceError
 from pipeline.state import LLMResponse
 
 from .base import BaseProvider
@@ -18,7 +19,7 @@ class ClaudeProvider(BaseProvider):
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
     ) -> LLMResponse:
         if not self.http.validate_config().valid:
-            raise RuntimeError("Claude provider not properly configured")
+            raise ResourceError("Claude provider not properly configured")
 
         url = f"{self.http.base_url.rstrip('/')}/v1/messages"
         headers = {
@@ -40,7 +41,7 @@ class ClaudeProvider(BaseProvider):
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
     ) -> AsyncIterator[str]:
         if not self.http.validate_config().valid:
-            raise RuntimeError("Claude provider not properly configured")
+            raise ResourceError("Claude provider not properly configured")
 
         url = f"{self.http.base_url.rstrip('/')}/v1/messages"
         headers = {

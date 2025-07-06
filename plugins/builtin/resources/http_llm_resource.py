@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional
 import httpx
 
 from pipeline.base_plugins import ValidationResult
+from pipeline.exceptions import ResourceError
 from pipeline.reliability import CircuitBreaker, RetryPolicy
 
 
@@ -54,4 +55,4 @@ class HttpLLMResource:
         try:
             return await self._breaker.call(send)
         except Exception as exc:  # pragma: no cover
-            raise RuntimeError(f"HTTP request failed: {exc}") from exc
+            raise ResourceError(f"HTTP request failed: {exc}") from exc

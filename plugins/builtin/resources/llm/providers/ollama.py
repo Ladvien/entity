@@ -3,6 +3,7 @@ from __future__ import annotations
 """Adapter for a running Ollama server."""
 from typing import Any, AsyncIterator, Dict, List
 
+from pipeline.exceptions import ResourceError
 from pipeline.state import LLMResponse
 
 from .base import BaseProvider
@@ -17,7 +18,7 @@ class OllamaProvider(BaseProvider):
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
     ) -> LLMResponse:
         if not self.http.validate_config().valid:
-            raise RuntimeError("Ollama provider not properly configured")
+            raise ResourceError("Ollama provider not properly configured")
 
         url = f"{self.http.base_url.rstrip('/')}/api/generate"
         payload = {"model": self.http.model, "prompt": prompt, **self.http.params}
@@ -31,7 +32,7 @@ class OllamaProvider(BaseProvider):
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
     ) -> AsyncIterator[str]:
         if not self.http.validate_config().valid:
-            raise RuntimeError("Ollama provider not properly configured")
+            raise ResourceError("Ollama provider not properly configured")
 
         url = f"{self.http.base_url.rstrip('/')}/api/generate"
         payload = {

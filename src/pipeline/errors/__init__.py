@@ -3,11 +3,17 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict
 
-from .exceptions import PipelineError, ResourceError, ToolExecutionError
+from .exceptions import (
+    PipelineError,
+    PluginExecutionError,
+    ResourceError,
+    ToolExecutionError,
+)
 
 __all__ = [
     "create_static_error_response",
     "PipelineError",
+    "PluginExecutionError",
     "ResourceError",
     "ToolExecutionError",
 ]

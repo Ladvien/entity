@@ -8,6 +8,7 @@ import httpx
 from pydantic import BaseModel
 
 from pipeline.base_plugins import ToolPlugin
+from pipeline.exceptions import ResourceError
 from pipeline.stages import PipelineStage
 from pipeline.validation.input import validate_params
 
@@ -43,7 +44,7 @@ class SearchTool(ToolPlugin):
                 )
                 response.raise_for_status()
         except httpx.HTTPError as exc:  # pragma: no cover - network error path
-            raise RuntimeError(f"Search request failed: {exc}") from exc
+            raise ResourceError(f"Search request failed: {exc}") from exc
 
         data = response.json()
         topics = data.get("RelatedTopics")
