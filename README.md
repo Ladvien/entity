@@ -32,6 +32,7 @@ For a high-level look at how the pieces connect, see [components_overview.md](co
 2. Run `poetry install --with dev` to create the virtual environment and install
    development tools.
 3. Start the agent with your desired configuration file.
+4. Copy `.env.example` to `.env` and fill in the values if you want to run the example scripts. See [examples/README.md](examples/README.md) for what each example expects.
 
 For an infrastructure walkthrough on Amazon Web Services, see the [AWS deployment guide](docs/source/deploy_aws.md).
 

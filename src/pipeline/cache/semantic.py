@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import warnings
+<<<<<<< HEAD
 from typing import TYPE_CHECKING
+=======
+from typing import Any
+>>>>>>> b74897eb07f4cc9a44a89de1546f06369e530ba2
 
 warnings.warn(
     (
@@ -28,9 +32,13 @@ def __getattr__(name: str):
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 if TYPE_CHECKING:  # pragma: no cover - used for type checkers only
     from plugins.contrib.resources.cache_backends.semantic import SemanticCache
 
+=======
+SemanticCache: Any
+>>>>>>> b74897eb07f4cc9a44a89de1546f06369e530ba2
 __all__ = ["SemanticCache"]
 =======
 __all__ = ["SemanticCache"]  # noqa: F822
