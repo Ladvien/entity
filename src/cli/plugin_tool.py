@@ -15,7 +15,7 @@ from pipeline.base_plugins import (
     ToolPlugin,
     ValidationResult,
 )
-from pipeline.logging import get_logger
+from plugins.builtin.adapters.logging_adapter import get_logger
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 

@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING, Any, Dict, Protocol, runtime_checkable
 if TYPE_CHECKING:  # pragma: no cover
     from registry import ClassRegistry
 
-from pipeline.logging import get_logger
 from pipeline.validation import ValidationResult
+from plugins.builtin.adapters.logging_adapter import get_logger
 
 
 @runtime_checkable

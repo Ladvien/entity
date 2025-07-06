@@ -14,7 +14,7 @@ enable_plugins_namespace()
 
 from plugins.builtin.adapters.logging import LoggingAdapter
 
-from pipeline.logging import configure_logging, get_logger
+from plugins.builtin.adapters.logging_adapter import configure_logging, get_logger
 
 
 async def main() -> None:
