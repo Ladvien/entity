@@ -11,6 +11,7 @@ from pipeline.config.utils import interpolate_env_vars
 from pipeline.resources.container import ResourceContainer
 from pipeline.utils import DependencyGraph
 from registry import PluginRegistry, ToolRegistry
+from .stages import PipelineStage
 
 from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
 from .defaults import DEFAULT_CONFIG
@@ -190,8 +191,17 @@ class SystemInitializer:
             if any(dep in degraded for dep in getattr(cls, "dependencies", [])):
                 continue
             instance = cls(config)
-            for stage in getattr(cls, "stages", []):
-                await plugin_registry.register_plugin_for_stage(instance, stage)
+            stages_cfg = config.get("stages") or config.get("stage")
+            if stages_cfg is None:
+                stages = getattr(cls, "stages", []) or []
+            else:
+                stages = stages_cfg if isinstance(stages_cfg, list) else [stages_cfg]
+            if not stages:
+                raise SystemError(f"No stage specified for {cls.__name__}")
+            for stage in stages:
+                await plugin_registry.register_plugin_for_stage(
+                    instance, PipelineStage.ensure(stage)
+                )
 
         if degraded:
             self.config.setdefault("_disabled_resources", degraded)

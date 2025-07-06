@@ -19,7 +19,6 @@ class SearchTool(ToolPlugin):
     stage.
     """
 
-    stages = [PipelineStage.DO]
     required_params = ["query"]
 
     class Params(BaseModel):

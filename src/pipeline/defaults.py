@@ -9,6 +9,7 @@ import httpx
 
 DEFAULT_LOGGING_CONFIG: Dict[str, Any] = {
     "type": "plugins.builtin.adapters.logging:LoggingAdapter",
+    "stages": ["deliver"],
 }
 
 DEFAULT_LLM_CONFIG: Dict[str, Any] = {
@@ -45,9 +46,15 @@ DEFAULT_TOOLS: Dict[str, Dict[str, Any]] = {
 }
 
 DEFAULT_ADAPTERS: Dict[str, Dict[str, Any]] = {
-    "http": {"type": "plugins.builtin.adapters.http:HTTPAdapter"},
-    "websocket": {"type": "plugins.builtin.adapters.websocket:WebSocketAdapter"},
-    "cli": {"type": "plugins.builtin.adapters.cli:CLIAdapter"},
+    "http": {
+        "type": "plugins.builtin.adapters.http:HTTPAdapter",
+        "stages": ["parse", "deliver"],
+    },
+    "websocket": {
+        "type": "plugins.builtin.adapters.websocket:WebSocketAdapter",
+        "stages": ["deliver"],
+    },
+    "cli": {"type": "plugins.builtin.adapters.cli:CLIAdapter", "stages": ["deliver"]},
     "logging": DEFAULT_LOGGING_CONFIG,
 }
 

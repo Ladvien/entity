@@ -10,7 +10,6 @@ from logging.handlers import RotatingFileHandler
 from typing import Optional
 
 from pipeline.base_plugins import AdapterPlugin
-from pipeline.stages import PipelineStage
 
 _request_id_var: contextvars.ContextVar[str | None] = contextvars.ContextVar(
     "request_id", default=None
@@ -121,8 +120,6 @@ def get_logger(name: str) -> logging.Logger:
 
 class LoggingAdapter(AdapterPlugin):
     """Adapter placeholder for logging setup."""
-
-    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context) -> None:  # pragma: no cover - adapter
         pass

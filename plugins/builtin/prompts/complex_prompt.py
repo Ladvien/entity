@@ -19,7 +19,6 @@ class ComplexPrompt(PromptPlugin):
     """
 
     dependencies = ["llm", "memory"]
-    stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context: PluginContext) -> None:
         """Compose a context-aware reply.

@@ -15,7 +15,6 @@ class MemoryRetrievalPrompt(PromptPlugin):
     """Fetch past conversation from memory and append it to the context."""
 
     dependencies = ["memory", "llm"]
-    stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context: PluginContext) -> None:
         memory: MemoryResource = context.get_resource("memory")

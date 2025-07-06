@@ -14,14 +14,11 @@ from typing import Any, cast
 from pipeline.base_plugins import AdapterPlugin
 from pipeline.manager import PipelineManager
 from pipeline.pipeline import execute_pipeline
-from pipeline.stages import PipelineStage
 from registry import SystemRegistries
 
 
 class CLIAdapter(AdapterPlugin):
     """Interactive command line adapter."""
-
-    stages = [PipelineStage.DELIVER]
 
     def __init__(
         self,
