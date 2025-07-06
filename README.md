@@ -309,6 +309,18 @@ plugins:
 ```
 For a runnable demonstration see `examples/storage_resource_example.py`.
 
+## Server Examples
+
+A set of demo servers lives in `examples/servers`. The WebSocket example
+requires the `websockets` package, which is now listed in `pyproject.toml`.
+
+```bash
+python examples/servers/http_server.py
+python src/cli.py serve-websocket --config config/dev.yaml
+python examples/servers/grpc_server.py
+python examples/servers/cli_adapter.py
+```
+
 ## Implementation Recommendations
 
 1. **Create Abstract Base Classes**
