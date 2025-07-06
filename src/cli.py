@@ -11,7 +11,7 @@ from entity import Agent, AgentServer
 from pipeline import update_plugin_configuration
 from pipeline.base_plugins import ResourcePlugin, ToolPlugin
 from pipeline.initializer import ClassRegistry
-from plugins.builtin.adapters.logging_adapter import get_logger
+from pipeline.logging import get_logger
 
 logger = get_logger(__name__)
 
