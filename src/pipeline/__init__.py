@@ -91,5 +91,6 @@ __all__ = [
     "WebSocketAdapter",
     "LoggingAdapter",
     "CLIAdapter",
+    "LoggingAdapter",
     "execute_with_observability",
 ]

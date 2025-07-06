@@ -1,16 +1,16 @@
 # Structured Logging
 
-The framework exposes a simple helper to enable JSON logs for any deployment.
-Enable logging at startup:
+The easiest way to capture structured logs is using ``LoggingAdapter``. Add it
+to your ``adapters`` configuration or initialize it directly:
 
 ```python
-from pipeline.logging import configure_logging
+from plugins.builtin.adapters.logging import LoggingAdapter
 
-configure_logging(level="INFO", json_enabled=True)
+adapter = LoggingAdapter()
 ```
 
 Every pipeline run generates a unique *request ID*. When using
-`configure_logging` or the `StructuredLogging` resource plugin, this ID is
+``LoggingAdapter`` this ID is
 attached to each log entry under the `request_id` field.
 
 Plugins can access the same value via `context.request_id`.
@@ -25,7 +25,7 @@ Use the ID to trace a single request across plugins and stages.
 
 ### Example Script
 
-The `examples/structured_logging_example.py` script configures the `StructuredLogging` resource and writes a single log entry.
+The `examples/structured_logging_example.py` script initializes ``LoggingAdapter`` and writes a single log entry.
 Run it with:
 
 ```bash

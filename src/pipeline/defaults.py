@@ -52,6 +52,7 @@ DEFAULT_ADAPTERS: Dict[str, Dict[str, Any]] = {
     "http": {"type": "plugins.builtin.adapters.http:HTTPAdapter"},
     "websocket": {"type": "plugins.builtin.adapters.websocket:WebSocketAdapter"},
     "cli": {"type": "plugins.builtin.adapters.cli:CLIAdapter"},
+    "logging": {"type": "plugins.builtin.adapters.logging:LoggingAdapter"},
 }
 
 DEFAULT_CONFIG: Dict[str, Any] = {

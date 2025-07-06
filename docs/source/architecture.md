@@ -29,7 +29,7 @@ and mental models stay easy to grasp.
 5. One canonical name per resource
 
 A small example of structured logging lives in `examples/structured_logging_example.py`.
-It configures the `StructuredLogging` resource and emits one log entry.
+It initializes ``LoggingAdapter`` and emits one log entry.
 
 ## Network Architecture
 All backend services communicate using gRPC streaming with Protobuf schemas.
