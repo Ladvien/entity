@@ -31,3 +31,5 @@ plugins:
 ```
 
 Use `entity src/cli.py --config config.yaml` to start the agent.
+This example references a plugin under the `user_plugins` package to
+demonstrate how custom modules can be loaded.
