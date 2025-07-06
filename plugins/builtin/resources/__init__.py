@@ -13,10 +13,13 @@ from .llm_base import LLM
 from .llm_resource import LLMResource
 from .local_filesystem import LocalFileSystemResource
 from .memory import Memory
+from .memory_filesystem import MemoryFileSystem
+from .memory_storage import MemoryStorage
+from .memory_vector_store import MemoryVectorStore
+from .metrics import MetricsResource
 from .pg_vector_store import PgVectorStore
 from .s3_filesystem import S3FileSystem
 from .structured_logging import StructuredLogging
-from .metrics import MetricsResource
 from .vector_store import VectorStore, VectorStoreResource
 
 __all__ = [
@@ -35,6 +38,9 @@ __all__ = [
     "MetricsResource",
     "DuckDBDatabaseResource",
     "PgVectorStore",
+    "MemoryStorage",
+    "MemoryVectorStore",
+    "MemoryFileSystem",
     "DuckDBVectorStore",
     "LocalFileSystemResource",
     "S3FileSystem",

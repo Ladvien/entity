@@ -24,7 +24,7 @@ plugins:
       backoff: 1.0
     memory:
       type: pipeline.resources.memory_resource:MemoryResource
-      database:
+      storage:
         type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
         path: ./dev.db
     storage:

@@ -11,8 +11,8 @@ from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
                       PipelineState, PluginContext, PluginRegistry,
                       ResourceRegistry, SystemRegistries, ToolRegistry)
 from pipeline.resources.duckdb_database import DuckDBDatabaseResource
-from pipeline.resources.in_memory_storage import InMemoryStorageResource
 from pipeline.resources.memory_resource import MemoryResource
+from pipeline.resources.memory_storage import MemoryStorage
 from pipeline.resources.postgres import PostgresResource
 from pipeline.resources.sqlite_storage import SQLiteStorageResource
 
@@ -36,7 +36,7 @@ async def run_history_test(resource):
         resource._history_table = "test_history"
         await resource.initialize()
 
-    memory = MemoryResource(resource)
+    memory = MemoryResource(storage=resource)
     resources = ResourceRegistry()
     await resources.add("memory", memory)
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
@@ -64,7 +64,7 @@ async def run_history_test(resource):
 
 @pytest.mark.integration
 def test_in_memory_history():
-    history = asyncio.run(run_history_test(InMemoryStorageResource({})))
+    history = asyncio.run(run_history_test(MemoryStorage({})))
     assert history and history[0].content == "hi"
 
 

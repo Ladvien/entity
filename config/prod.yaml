@@ -25,7 +25,7 @@ plugins:
       backoff: 2.0
     memory:
       type: pipeline.resources.memory_resource:MemoryResource
-      database:
+      storage:
         type: plugins.builtin.resources.postgres:PostgresResource
         host: "${DB_HOST}"
         port: 5432

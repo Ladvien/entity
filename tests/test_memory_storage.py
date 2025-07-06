@@ -8,7 +8,7 @@ from pipeline.context import ConversationEntry
 
 def test_save_and_load_history():
     async def run():
-        storage = MemoryStorage({"history_table": "tbl"})
+        storage = MemoryStorage({})
         await storage.initialize()
         history = [
             ConversationEntry(
