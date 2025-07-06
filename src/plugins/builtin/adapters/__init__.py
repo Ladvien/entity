@@ -6,7 +6,7 @@ from .cli import CLIAdapter
 from .grpc import LLMGRPCAdapter
 from .http import HTTPAdapter
 from .logging import LoggingAdapter
-from .logging_adapter import LoggingAdapter
+from .logging_adapter import LoggingAdapter as FileLoggingAdapter
 from .websocket import WebSocketAdapter
 
 __all__ = [
@@ -15,4 +15,5 @@ __all__ = [
     "WebSocketAdapter",
     "LLMGRPCAdapter",
     "LoggingAdapter",
+    "FileLoggingAdapter",
 ]

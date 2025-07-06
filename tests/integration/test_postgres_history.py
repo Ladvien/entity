@@ -13,10 +13,10 @@ from plugins.builtin.resources.postgres import PostgresResource
 load_env(Path(__file__).resolve().parents[2] / ".env")
 
 CONN = {
-    "host": os.environ["DB_HOST"],
+    "host": os.environ.get("DB_HOST", ""),
     "port": 5432,
-    "name": os.environ["DB_NAME"],
-    "username": os.environ["DB_USERNAME"],
+    "name": os.environ.get("DB_NAME", ""),
+    "username": os.environ.get("DB_USERNAME", ""),
     "password": os.environ.get("DB_PASSWORD", ""),
     "pool_min_size": 1,
     "pool_max_size": 2,
@@ -25,7 +25,7 @@ CONN = {
 
 
 @pytest.mark.integration
-def test_save_and_load_history():
+def test_save_and_load_history(pg_env):
     async def run():
         db = PostgresResource(CONN)
         memory = MemoryResource(storage=db)

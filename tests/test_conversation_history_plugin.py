@@ -1,15 +1,9 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginContext, PluginRegistry, SystemRegistries,
+                      ToolRegistry)
 from pipeline.resources import ResourceContainer
 from pipeline.resources.memory_resource import MemoryResource
 from pipeline.stages import PipelineStage
@@ -45,5 +39,7 @@ def test_history_plugin_saves_conversation(tmp_path):
     expected = ctx.get_conversation_history()
     asyncio.run(plugin.execute(ctx))
 
-    saved = asyncio.run(memory.database.load_history(state.pipeline_id))  # type: ignore[attr-defined]
+    saved = asyncio.run(
+        memory.database.load_history(state.pipeline_id)  # type: ignore[attr-defined]
+    )
     assert saved and saved[0].content == expected[0].content

@@ -9,7 +9,6 @@ from typing import Any, Dict
 from pydantic import BaseModel
 
 from pipeline.base_plugins import ToolPlugin
-from pipeline.stages import PipelineStage
 from pipeline.validation.input import validate_params
 
 

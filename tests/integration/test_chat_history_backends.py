@@ -97,7 +97,7 @@ def test_duckdb_history(tmp_path):
 
 
 @pytest.mark.integration
-def test_postgres_history():
+def test_postgres_history(pg_env):
     cfg = {
         "host": os.environ.get("DB_HOST", "localhost"),
         "port": 5432,

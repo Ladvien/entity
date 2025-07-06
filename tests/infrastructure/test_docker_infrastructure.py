@@ -1,27 +1,26 @@
-from unittest import mock
+import shutil
 
 import pytest
 
-pytest.importorskip("docker")
+docker = pytest.importorskip("docker")
 infrastructure = pytest.importorskip("plugins.builtin.infrastructure")
 DockerInfrastructure = infrastructure.DockerInfrastructure
 
 
-@mock.patch("docker.from_env")
-def test_build_image(from_env):
-    client = mock.Mock()
-    from_env.return_value = client
-    infra = DockerInfrastructure()
-    infra.build_image(".", tag="agent:test")
-    client.images.build.assert_called_with(
-        path=".", tag="agent:test", dockerfile="Dockerfile"
-    )
+@pytest.fixture()
+def infra():
+    if shutil.which("docker") is None:
+        pytest.skip("Docker not installed")
+    return DockerInfrastructure()
 
 
-@mock.patch("docker.from_env")
-def test_run_container(from_env):
-    client = mock.Mock()
-    from_env.return_value = client
-    infra = DockerInfrastructure()
-    infra.run_container("image", ["echo", "hi"])
-    client.containers.run.assert_called()
+def test_build_image(infra, tmp_path):
+    dockerfile = tmp_path / "Dockerfile"
+    dockerfile.write_text("FROM scratch")
+    infra.build_image(str(tmp_path), tag="agent:test", dockerfile="Dockerfile")
+    images = [img.tags for img in docker.from_env().images.list()]
+    assert any("agent:test" in tags for tags in images)
+
+
+def test_run_container(infra):
+    infra.run_container("alpine", ["echo", "hi"])

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 """Postgres-backed vector store resource."""
 
+from typing import Dict, List
+
 from pgvector import Vector
 from pgvector.asyncpg import register_vector
 

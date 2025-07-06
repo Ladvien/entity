@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 """DuckDB-based conversation history storage."""
+import asyncio
 import json
 from typing import Dict, List, Optional
 

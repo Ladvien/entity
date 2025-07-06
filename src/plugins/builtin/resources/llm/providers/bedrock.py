@@ -46,9 +46,11 @@ class BedrockProvider(BaseProvider):
         payload = {"prompt": prompt, **self.params}
 
         async def call() -> str:
-            async with aioboto3.client(
-                "bedrock-runtime", region_name=self.region
-            ) as client:
+            client_kwargs = {"region_name": self.region}
+            endpoint_url = self.params.get("endpoint_url")
+            if endpoint_url:
+                client_kwargs["endpoint_url"] = endpoint_url
+            async with aioboto3.client("bedrock-runtime", **client_kwargs) as client:
                 response = await client.invoke_model(
                     modelId=self.model_id,
                     body=json.dumps(payload),

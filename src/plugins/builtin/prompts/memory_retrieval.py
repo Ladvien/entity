@@ -8,7 +8,6 @@ from typing import List
 from pipeline.base_plugins import PromptPlugin
 from pipeline.context import ConversationEntry, PluginContext
 from pipeline.resources.memory_resource import MemoryResource
-from pipeline.stages import PipelineStage
 
 
 class MemoryRetrievalPrompt(PromptPlugin):

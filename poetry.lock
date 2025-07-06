@@ -3814,9 +3814,9 @@ test = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more_it
 type = ["pytest-mypy"]
 
 [extras]
-examples = []
+examples = ["websockets"]
 
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "d63f0f28777bd5e02a8f50843b75fe9b0c49ff0aa1f54f1ddc6370993f46195f"
+content-hash = "6bdffef297ab66d10d0d9955c97952a195132ca9f05de2217f888ede6a6e7d5c"

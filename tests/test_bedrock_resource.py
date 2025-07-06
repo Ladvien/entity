@@ -1,32 +1,24 @@
 from __future__ import annotations
 
 import asyncio
-import io
-from unittest.mock import patch
+import json
 
 from plugins.builtin.resources.llm.unified import UnifiedLLMResource
 
 
-class FakeClient:
-    async def __aenter__(self):
-        return self
-
-    async def __aexit__(self, exc_type, exc, tb):
-        pass
-
-    async def invoke_model(self, **kwargs):
-        self.kwargs = kwargs
-        return {"body": io.BytesIO(b'{"outputText":"hi"}')}
-
-
-async def run_generate():
-    resource = UnifiedLLMResource({"provider": "bedrock", "model_id": "mi"})
-    with patch("aioboto3.client", return_value=FakeClient()) as mock_client:
-        result = await resource.generate("hello")
-        mock_client.assert_called_with("bedrock-runtime", region_name="us-east-1")
-        assert mock_client.return_value.kwargs["modelId"] == "mi"
+async def run_generate(server, handler):
+    base_url = f"http://localhost:{server.server_port}"
+    resource = UnifiedLLMResource(
+        {"provider": "bedrock", "model_id": "mi", "endpoint_url": base_url}
+    )
+    handler.response = {"outputText": "hi"}
+    result = await resource.generate("hello")
+    body = json.loads(handler.request_body.decode())
+    assert body == {"prompt": "hello"}
+    assert handler.request_path == "/model/mi/invoke"
     return result
 
 
-def test_generate_sends_prompt_and_returns_text():
-    assert asyncio.run(run_generate()) == "hi"
+def test_generate_sends_prompt_and_returns_text(mock_llm_server):
+    server, handler = mock_llm_server
+    assert asyncio.run(run_generate(server, handler)) == "hi"
