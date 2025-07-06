@@ -11,3 +11,5 @@ Containerize the system to run anywhere Docker is available.
    docker run -p 8000:8000 entity-agent
    ```
 3. Connect to `http://localhost:8000` just as you would locally.
+4. *(Optional)* Install **Node.js** in the container if you plan to use the
+   Terraform CDK-based infrastructure plugin.
