@@ -1,6 +1,6 @@
 # Writing Plugins
 
-The Entity framework is built around extensible plugins. Plugins run during specific pipeline stages and interact with the system through `PluginContext`.
+The Entity framework is built around extensible plugins. Plugins run during specific pipeline stages and interact with the system through `PluginContext`. Built-in plugin modules live under the `src/plugins` directory.
 
 ## Basic Class Plugin
 
