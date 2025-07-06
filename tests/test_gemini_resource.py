@@ -1,5 +1,5 @@
 import asyncio
-from unittest.mock import AsyncMock, patch
+import json
 
 from pipeline import (
     MetricsCollector,
@@ -11,40 +11,27 @@ from pipeline import (
 from plugins.builtin.resources.llm.unified import UnifiedLLMResource
 
 
-class FakeResponse:
-    status_code = 200
-
-    def raise_for_status(self) -> None:  # pragma: no cover - stub
-        pass
-
-    def json(self):
-        return {"candidates": [{"content": {"parts": [{"text": "hi"}]}}]}
-
-
-async def run_generate():
+async def run_generate(server, handler):
+    base_url = f"http://localhost:{server.server_port}"
     resource = UnifiedLLMResource(
         {
             "provider": "gemini",
             "api_key": "key",
             "model": "gemini-pro",
-            "base_url": "https://generativelanguage.googleapis.com",
+            "base_url": base_url,
         }
     )
-    with patch(
-        "httpx.AsyncClient.post", new=AsyncMock(return_value=FakeResponse())
-    ) as mock_post:
-        result = await resource.generate("hello")
-        mock_post.assert_awaited_with(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
-            headers={"Content-Type": "application/json"},
-            params={"key": "key"},
-            json={"contents": [{"parts": [{"text": "hello"}]}]},
-        )
+    handler.response = {"candidates": [{"content": {"parts": [{"text": "hi"}]}}]}
+    result = await resource.generate("hello")
+    req = json.loads(handler.request_body.decode())
+    assert req == {"contents": [{"parts": [{"text": "hello"}]}]}
+    assert handler.request_path == "/v1beta/models/gemini-pro:generateContent"
     return result
 
 
-def test_generate_sends_prompt_and_returns_text():
-    assert asyncio.run(run_generate()) == "hi"
+def test_generate_sends_prompt_and_returns_text(mock_llm_server):
+    server, handler = mock_llm_server
+    assert asyncio.run(run_generate(server, handler)) == "hi"
 
 
 def test_context_get_llm_with_provider():

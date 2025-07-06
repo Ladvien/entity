@@ -26,7 +26,7 @@ load_env(Path(__file__).resolve().parents[2] / ".env")
 
 
 @pytest.mark.integration
-def test_vector_memory_integration():
+def test_vector_memory_integration(pg_env):
     async def run():
         db_cfg = {
             "host": os.environ.get("DB_HOST", "localhost"),

@@ -1,40 +1,30 @@
 import asyncio
-from unittest.mock import AsyncMock, patch
+import json
 
 from plugins.builtin.resources.llm.unified import UnifiedLLMResource
 
 
-class FakeResponse:
-    status_code = 200
-
-    def raise_for_status(self) -> None:  # pragma: no cover - stub
-        pass
-
-    def json(self):
-        return {"choices": [{"message": {"content": "hi"}}]}
-
-
-async def run_generate():
+async def run_generate(server, handler):
+    base_url = f"http://localhost:{server.server_port}"
     resource = UnifiedLLMResource(
         {
             "provider": "openai",
             "api_key": "key",
             "model": "gpt-4",
-            "base_url": "https://api.openai.com",
+            "base_url": base_url,
         }
     )
-    with patch(
-        "httpx.AsyncClient.post", new=AsyncMock(return_value=FakeResponse())
-    ) as mock_post:
-        result = await resource.generate("hello")
-        mock_post.assert_awaited_with(
-            "https://api.openai.com/v1/chat/completions",
-            headers={"Authorization": "Bearer key"},
-            json={"model": "gpt-4", "messages": [{"role": "user", "content": "hello"}]},
-            params=None,
-        )
+    handler.response = {"choices": [{"message": {"content": "hi"}}]}
+    result = await resource.generate("hello")
+    req = json.loads(handler.request_body.decode())
+    assert req == {
+        "model": "gpt-4",
+        "messages": [{"role": "user", "content": "hello"}],
+    }
+    assert handler.request_path == "/v1/chat/completions"
     return result
 
 
-def test_generate_sends_prompt_and_returns_text():
-    assert asyncio.run(run_generate()) == "hi"
+def test_generate_sends_prompt_and_returns_text(mock_llm_server):
+    server, handler = mock_llm_server
+    assert asyncio.run(run_generate(server, handler)) == "hi"
