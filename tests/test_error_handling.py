@@ -1,11 +1,23 @@
 import asyncio
 
-from pipeline import (FailurePlugin, PipelineStage, PluginRegistry,
-                      PromptPlugin, SystemRegistries, ToolRegistry,
-                      execute_pipeline)
-from pipeline.errors import (PipelineError, PluginExecutionError,
-                             ResourceError, ToolExecutionError,
-                             create_static_error_response)
+from pipeline import (
+    FailurePlugin,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
+from pipeline.errors import (
+    PipelineError,
+    PluginContextError,
+    PluginExecutionError,
+    ResourceError,
+    StageExecutionError,
+    ToolExecutionError,
+    create_static_error_response,
+)
 from pipeline.resources import ResourceContainer
 from user_plugins.failure.basic_logger import BasicLogger
 
@@ -65,3 +77,14 @@ def test_resource_error_propagation():
     registries = make_registries(FallbackPlugin, main_plugin=ResourceFailPlugin)
     result = asyncio.run(execute_pipeline("hi", registries))
     assert result == {"error": "missing resource"}
+
+
+def test_contextual_errors():
+    err = StageExecutionError(PipelineStage.DO, "boom", {"step": "run"})
+    assert err.stage == PipelineStage.DO
+    assert err.context["step"] == "run"
+
+    perr = PluginContextError(PipelineStage.DO, "BoomPlugin", "crashed", {"id": 1})
+    assert perr.stage == PipelineStage.DO
+    assert perr.plugin_name == "BoomPlugin"
+    assert perr.context["id"] == 1
