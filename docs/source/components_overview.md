@@ -47,6 +47,10 @@ An LLM resource wraps a language model provider. Plugins can call `context.ask_l
 
 Adapters expose the agent to the outside world. The HTTP adapter provides REST endpoints while the CLI adapter runs the agent interactively. Adapters typically run during the `deliver` stage.
 
+### Deliver-stage adapters
+
+Multiple adapters may run during the `deliver` stage. Each adapter receives the pipeline response sequentially, which allows combining behaviors. A common pattern is to send an HTTP reply while also logging the request using `LoggingAdapter`. Register every adapter in the configuration and they will be invoked one after another.
+
 ## Putting It Together
 
 Pipelines, plugins, and adapters form the execution engine. Resources supply capabilities like LLMs, memory, and storage. The [architecture document](architecture.md) shows how these pieces fit together.
