@@ -2,13 +2,18 @@ import asyncio
 from datetime import datetime
 from unittest.mock import AsyncMock
 
-from plugins.contrib.prompts.complex_prompt import ComplexPrompt
-
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, SystemRegistries,
-                      ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources import ResourceContainer
 from pipeline.resources.memory_resource import MemoryResource
+from user_plugins.prompts.complex_prompt import ComplexPrompt
 
 
 class FakeLLM:

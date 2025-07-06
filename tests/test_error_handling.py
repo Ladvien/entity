@@ -1,14 +1,23 @@
 import asyncio
 
-from plugins.contrib.failure.basic_logger import BasicLogger
-
-from pipeline import (FailurePlugin, PipelineStage, PluginRegistry,
-                      PromptPlugin, SystemRegistries, ToolRegistry,
-                      execute_pipeline)
-from pipeline.errors import (PipelineError, PluginExecutionError,
-                             ResourceError, ToolExecutionError,
-                             create_static_error_response)
+from pipeline import (
+    FailurePlugin,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
+from pipeline.errors import (
+    PipelineError,
+    PluginExecutionError,
+    ResourceError,
+    ToolExecutionError,
+    create_static_error_response,
+)
 from pipeline.resources import ResourceContainer
+from user_plugins.failure.basic_logger import BasicLogger
 
 
 class BoomPlugin(PromptPlugin):

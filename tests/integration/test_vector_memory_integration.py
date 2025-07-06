@@ -4,17 +4,23 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
-from plugins.contrib.prompts.complex_prompt import ComplexPrompt
 
 from config.environment import load_env
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, SystemRegistries,
-                      ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources import ResourceContainer
 from pipeline.resources.llm import UnifiedLLMResource
 from pipeline.resources.memory_resource import MemoryResource
 from pipeline.resources.pg_vector_store import PgVectorStore
 from pipeline.resources.postgres import PostgresResource
+from user_plugins.prompts.complex_prompt import ComplexPrompt
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
 

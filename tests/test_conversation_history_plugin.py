@@ -2,14 +2,19 @@ import asyncio
 from datetime import datetime
 from unittest.mock import AsyncMock
 
-from plugins.contrib.prompts.conversation_history import ConversationHistory
-
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, SystemRegistries,
-                      ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources import ResourceContainer
 from pipeline.resources.memory_resource import MemoryResource
 from pipeline.stages import PipelineStage
+from user_plugins.prompts.conversation_history import ConversationHistory
 
 
 class FakeMemory(MemoryResource):

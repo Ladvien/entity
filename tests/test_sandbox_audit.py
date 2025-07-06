@@ -1,4 +1,4 @@
-from plugins.contrib.infrastructure.sandbox import PluginAuditor
+from user_plugins.infrastructure.sandbox import PluginAuditor
 
 
 def test_audit_detects_invalid_resources(tmp_path):
