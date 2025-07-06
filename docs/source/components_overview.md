@@ -1,6 +1,6 @@
 # Component Overview
 
-This page explains the main building blocks of the Entity Pipeline framework. Use it alongside the [architecture overview](architecture.md), [plugin guide](plugin_guide.md) and [plugin cheat sheet](plugin_cheatsheet.md). A working configuration is available in [`config/dev.yaml`](../../config/dev.yaml).
+This page explains the main building blocks of the Entity Pipeline framework. Use it alongside the [architecture overview](../../architecture/overview.md), [plugin guide](plugin_guide.md) and [plugin cheat sheet](plugin_cheatsheet.md). A working configuration is available in [`config/dev.yaml`](../../config/dev.yaml).
 
 ## Pipelines and Stages
 
@@ -53,4 +53,4 @@ Multiple adapters may run during the `deliver` stage. Each adapter receives the 
 
 ## Putting It Together
 
-Pipelines, plugins, and adapters form the execution engine. Resources supply capabilities like LLMs, memory, and storage. The [architecture document](architecture.md) shows how these pieces fit together.
+Pipelines, plugins, and adapters form the execution engine. Resources supply capabilities like LLMs, memory, and storage. The [architecture document](../../architecture/overview.md) shows how these pieces fit together.
