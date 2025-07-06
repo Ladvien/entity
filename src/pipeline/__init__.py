@@ -15,12 +15,10 @@ from .manager import PipelineManager
 from .metrics import MetricsCollector
 from .observability import execute_with_observability
 from .pipeline import create_default_response, execute_pipeline
-from .registries import (
-    PluginRegistry,
-    ResourceContainer,
-    SystemRegistries,
-    ToolRegistry,
-)
+
+# Registry classes are no longer imported eagerly.
+# Access ``PluginRegistry`` and related classes via ``registry`` or
+# rely on this module's ``__getattr__`` for lazy loading.
 from .resources import LLM, BaseResource, Resource
 from .runtime import AgentRuntime
 from .stages import PipelineStage
@@ -66,14 +64,10 @@ __all__ = [
     "ValidationResult",
     "ReconfigResult",
     "ConfigurationError",
-    "PluginRegistry",
-    "ResourceContainer",
-    "ToolRegistry",
     "ClassRegistry",
     "SystemInitializer",
     "import_plugin_class",
     "initialization_cleanup_context",
-    "SystemRegistries",
     "execute_pipeline",
     "create_default_response",
     "create_static_error_response",
@@ -86,3 +80,28 @@ __all__ = [
     "ConversationManager",
     "execute_with_observability",
 ]
+
+
+def __getattr__(name: str):
+    """Lazily expose registry classes."""
+
+    if name in {
+        "PluginRegistry",
+        "ResourceContainer",
+        "SystemRegistries",
+        "ToolRegistry",
+    }:
+        from registry import (
+            PluginRegistry,
+            ResourceContainer,
+            SystemRegistries,
+            ToolRegistry,
+        )
+
+        return {
+            "PluginRegistry": PluginRegistry,
+            "ResourceContainer": ResourceContainer,
+            "SystemRegistries": SystemRegistries,
+            "ToolRegistry": ToolRegistry,
+        }[name]
+    raise AttributeError(f"module {__name__} has no attribute {name}")

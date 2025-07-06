@@ -2,15 +2,22 @@
 
 from __future__ import annotations
 
-from pipeline.resources import ResourceContainer
-
 from .registries import PluginRegistry, SystemRegistries, ToolRegistry
 from .validator import RegistryValidator
 
 __all__ = [
     "PluginRegistry",
-    "ResourceContainer",
     "ToolRegistry",
     "SystemRegistries",
     "RegistryValidator",
 ]
+
+
+def __getattr__(name: str):
+    """Lazily load pipeline dependencies."""
+
+    if name == "ResourceContainer":
+        from pipeline.resources import ResourceContainer
+
+        return ResourceContainer
+    raise AttributeError(f"module {__name__} has no attribute {name}")
