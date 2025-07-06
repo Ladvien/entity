@@ -49,15 +49,25 @@ class ServerConfig:
 
 
 @dataclass
+class ToolRegistryConfig:
+    """Options controlling tool execution."""
+
+    concurrency_limit: int = 5
+    cache_ttl: int | None = None
+
+
+@dataclass
 class EntityConfig:
     server: ServerConfig
     plugins: PluginsSection = field(default_factory=PluginsSection)
+    tool_registry: ToolRegistryConfig = field(default_factory=ToolRegistryConfig)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "EntityConfig":
         server = ServerConfig(**data.get("server", {}))
         plugins = PluginsSection.from_dict(data.get("plugins", {}))
-        return cls(server, plugins)
+        tool_reg_cfg = ToolRegistryConfig(**data.get("tool_registry", {}))
+        return cls(server, plugins, tool_reg_cfg)
 
 
 # ---------------------------------------------------------------------------
@@ -112,6 +122,7 @@ __all__ = [
     "PluginConfig",
     "PluginsSection",
     "ServerConfig",
+    "ToolRegistryConfig",
     "EntityConfig",
     "CONFIG_SCHEMA",
     "validate_config",

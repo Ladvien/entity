@@ -4,6 +4,10 @@ server:
   reload: true
   log_level: "debug"
 
+tool_registry:
+  concurrency_limit: 5
+  cache_ttl: 300
+
 plugins:
   resources:
     database:

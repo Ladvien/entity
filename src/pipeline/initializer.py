@@ -177,7 +177,11 @@ class SystemInitializer:
                 await resource_registry.remove(name)
 
         # Phase 3.5: register tools
-        tool_registry = ToolRegistry()
+        tr_cfg = self.config.get("tool_registry", {})
+        tool_registry = ToolRegistry(
+            concurrency_limit=tr_cfg.get("concurrency_limit", 5),
+            cache_ttl=tr_cfg.get("cache_ttl"),
+        )
         for cls, config in registry.tool_classes():
             if any(dep in degraded for dep in getattr(cls, "dependencies", [])):
                 continue

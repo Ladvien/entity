@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any, Dict, List
@@ -55,10 +56,18 @@ class ResourceRegistry:
 
 
 class ToolRegistry:
-    """Registry for tool plugins."""
+    """Registry for tool plugins with optional result caching."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        concurrency_limit: int = 5,
+        cache_ttl: int | None = None,
+    ) -> None:
+        self.concurrency_limit = concurrency_limit
+        self._cache_ttl = cache_ttl
         self._tools: Dict[str, Any] = {}
+        self._cache: Dict[str, tuple[Any, float | None]] = {}
         self._lock = asyncio.Lock()
 
     async def add(self, name: str, tool: Any) -> None:
@@ -71,6 +80,40 @@ class ToolRegistry:
         """Return the tool registered as ``name`` if present."""
 
         return self._tools.get(name)
+
+    async def get_cached_result(self, name: str, params: Dict[str, Any]) -> Any | None:
+        if self._cache_ttl is None:
+            return None
+        key = self._make_cache_key(name, params)
+        async with self._lock:
+            item = self._cache.get(key)
+            if not item:
+                return None
+            value, expires = item
+            if expires and expires < time.time():
+                del self._cache[key]
+                return None
+            return value
+
+    async def cache_result(
+        self, name: str, params: Dict[str, Any], result: Any
+    ) -> None:
+        if self._cache_ttl is None:
+            return
+        key = self._make_cache_key(name, params)
+        expire_at = None
+        if self._cache_ttl > 0:
+            expire_at = time.time() + self._cache_ttl
+        async with self._lock:
+            self._cache[key] = (result, expire_at)
+
+    @staticmethod
+    def _make_cache_key(name: str, params: Dict[str, Any]) -> str:
+        import hashlib
+        import json
+
+        params_repr = json.dumps(params, sort_keys=True)
+        return hashlib.sha256(f"{name}:{params_repr}".encode()).hexdigest()
 
 
 class PluginRegistry:

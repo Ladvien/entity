@@ -1,4 +1,7 @@
 import asyncio
+import hashlib
+import json
+import time
 from typing import Any, Awaitable, Callable, Dict, TypeVar, cast
 
 from interfaces import ToolPluginProtocol
@@ -47,7 +50,11 @@ async def execute_pending_tools(
 
     results: Dict[str, ResultT] = {}
     cache = registries.resources.get("cache")
-    for call in list(state.pending_tool_calls):
+    calls = list(state.pending_tool_calls)
+    concurrency = getattr(registries.tools, "concurrency_limit", None)
+    semaphore = asyncio.Semaphore(concurrency) if concurrency else None
+
+    async def run_call(call: ToolCall) -> None:
         tool = registries.tools.get(call.name)
         if not tool:
             raise ToolExecutionError(call.name)
@@ -57,17 +64,17 @@ async def execute_pending_tools(
             max_retries=getattr(tool, "max_retries", 1),
             delay=getattr(tool, "retry_delay", 1.0),
         )
-        cache_key = None
-        if cache:
-            import hashlib
-            import json
 
-            params_repr = json.dumps(call.params, sort_keys=True)
-            cache_key = (
-                "tool:"
-                + hashlib.sha256(f"{call.name}:{params_repr}".encode()).hexdigest()
-            )
-            cached = await cache.get(cache_key)
+        async def _execute() -> None:
+            cache_key: str | None = None
+            cached = await registries.tools.get_cached_result(call.name, call.params)
+            if cached is None and cache:
+                params_repr = json.dumps(call.params, sort_keys=True)
+                cache_key = (
+                    "tool:"
+                    + hashlib.sha256(f"{call.name}:{params_repr}".encode()).hexdigest()
+                )
+                cached = await cache.get(cache_key)
             if cached is not None:
                 state.stage_results[call.result_key] = cached
                 if (
@@ -78,55 +85,80 @@ async def execute_pending_tools(
                     if oldest != call.result_key:
                         state.stage_results.pop(oldest, None)
                 results[call.result_key] = cast(ResultT, cached)
-                state.pending_tool_calls.remove(call)
-                continue
-        try:
-            result = await execute_tool(tool, call, state, options)
-            state.stage_results[call.result_key] = result
-            if (
-                state.max_stage_results is not None
-                and len(state.stage_results) > state.max_stage_results
-            ):
-                oldest = next(iter(state.stage_results))
-                if oldest != call.result_key:
-                    state.stage_results.pop(oldest, None)
-            results[call.result_key] = result
-            if cache and cache_key:
-                await cache.set(cache_key, result)
-            state.metrics.record_tool_execution(
-                call.name,
-                cast(str, state.current_stage and str(state.current_stage)),
-                state.pipeline_id,
-                call.result_key,
-                call.source,
-            )
-        except Exception as exc:
-            err = f"Error: {exc}"
-            state.stage_results[call.result_key] = err
-            if (
-                state.max_stage_results is not None
-                and len(state.stage_results) > state.max_stage_results
-            ):
-                oldest = next(iter(state.stage_results))
-                if oldest != call.result_key:
-                    state.stage_results.pop(oldest, None)
-            results[call.result_key] = cast(ResultT, err)
-            state.metrics.record_tool_error(
-                call.name,
-                cast(str, state.current_stage and str(state.current_stage)),
-                state.pipeline_id,
-                str(exc),
-            )
-            state.failure_info = FailureInfo(
-                stage=str(state.current_stage),
-                plugin_name=call.name,
-                error_type=exc.__class__.__name__,
-                error_message=str(exc),
-                original_exception=exc,
-            )
-            raise ToolExecutionError(call.name, exc, call.result_key) from exc
-        finally:
-            state.pending_tool_calls.remove(call)
+                state.metrics.record_tool_execution(
+                    call.name,
+                    cast(str, state.current_stage and str(state.current_stage)),
+                    state.pipeline_id,
+                    call.result_key,
+                    call.source,
+                )
+                return
+
+            start = time.time()
+            try:
+                result = await execute_tool(tool, call, state, options)
+            except Exception as exc:
+                err = f"Error: {exc}"
+                state.stage_results[call.result_key] = err
+                if (
+                    state.max_stage_results is not None
+                    and len(state.stage_results) > state.max_stage_results
+                ):
+                    oldest = next(iter(state.stage_results))
+                    if oldest != call.result_key:
+                        state.stage_results.pop(oldest, None)
+                results[call.result_key] = cast(ResultT, err)
+                state.metrics.record_tool_error(
+                    call.name,
+                    cast(str, state.current_stage and str(state.current_stage)),
+                    state.pipeline_id,
+                    str(exc),
+                )
+                state.failure_info = FailureInfo(
+                    stage=str(state.current_stage),
+                    plugin_name=call.name,
+                    error_type=exc.__class__.__name__,
+                    error_message=str(exc),
+                    original_exception=exc,
+                )
+                raise ToolExecutionError(call.name, exc, call.result_key) from exc
+            else:
+                state.stage_results[call.result_key] = result
+                if (
+                    state.max_stage_results is not None
+                    and len(state.stage_results) > state.max_stage_results
+                ):
+                    oldest = next(iter(state.stage_results))
+                    if oldest != call.result_key:
+                        state.stage_results.pop(oldest, None)
+                results[call.result_key] = result
+                if cache and cache_key:
+                    await cache.set(cache_key, result)
+                await registries.tools.cache_result(call.name, call.params, result)
+                duration = time.time() - start
+                state.metrics.record_tool_execution(
+                    call.name,
+                    cast(str, state.current_stage and str(state.current_stage)),
+                    state.pipeline_id,
+                    call.result_key,
+                    call.source,
+                )
+                state.metrics.record_tool_duration(
+                    call.name,
+                    cast(str, state.current_stage and str(state.current_stage)),
+                    duration,
+                )
+
+        if semaphore:
+            async with semaphore:
+                await _execute()
+        else:
+            await _execute()
+        state.pending_tool_calls.remove(call)
+
+    tasks = [asyncio.create_task(run_call(c)) for c in calls]
+    if tasks:
+        await asyncio.gather(*tasks)
     return results
 
 

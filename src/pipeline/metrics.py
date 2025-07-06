@@ -12,6 +12,7 @@ class MetricsCollector:
     plugin_durations: dict[str, list[float]] = field(default_factory=dict)
     tool_execution_count: dict[str, int] = field(default_factory=dict)
     tool_error_count: dict[str, int] = field(default_factory=dict)
+    tool_durations: dict[str, list[float]] = field(default_factory=dict)
     llm_call_count: dict[str, int] = field(default_factory=dict)
     llm_durations: dict[str, list[float]] = field(default_factory=dict)
     llm_token_count: dict[str, int] = field(default_factory=dict)
@@ -36,6 +37,10 @@ class MetricsCollector:
         key = f"{stage}:{tool_name}"
         self.tool_error_count[key] = self.tool_error_count.get(key, 0) + 1
 
+    def record_tool_duration(self, tool_name: str, stage: str, duration: float) -> None:
+        key = f"{stage}:{tool_name}"
+        self.tool_durations.setdefault(key, []).append(duration)
+
     def record_llm_call(self, plugin: str, stage: str, purpose: str) -> None:
         key = f"{stage}:{plugin}:{purpose}"
         self.llm_call_count[key] = self.llm_call_count.get(key, 0) + 1
@@ -58,6 +63,7 @@ class MetricsCollector:
             "plugin_durations": self.plugin_durations,
             "tool_execution_count": self.tool_execution_count,
             "tool_error_count": self.tool_error_count,
+            "tool_durations": self.tool_durations,
             "llm_call_count": self.llm_call_count,
             "llm_durations": self.llm_durations,
             "llm_token_count": self.llm_token_count,
