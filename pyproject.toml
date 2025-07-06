@@ -83,6 +83,27 @@ release = ["docs", "patch", "_publish"]
 test = "pytest"
 test-verbose = "pytest -v"
 test-coverage = "pytest --cov=src --cov-report=html --cov-report=term-missing"
+setup-dev = "poetry install --with dev"
+[tool.poe.tasks.lint]
+sequence = [
+    "poetry run black src tests",
+    "poetry run isort src tests",
+    "poetry run flake8 src tests",
+]
+[tool.poe.tasks.validate]
+sequence = [
+    "python -m src.config.validator --config config/dev.yaml",
+    "python -m src.config.validator --config config/prod.yaml",
+    "python -m src.registry.validator",
+]
+[tool.poe.tasks.check]
+sequence = [
+    "poe lint",
+    "poetry run mypy src",
+    "bandit -r src",
+    "poe validate",
+    "pytest",
+]
 
 
 [tool.pytest.ini_options]

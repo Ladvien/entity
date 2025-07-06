@@ -4,7 +4,7 @@ Run the agent directly on your machine during development.
 
 1. Install dependencies with Poetry (ensures `httpx==0.27.*`):
    ```bash
-   poetry install
+   poetry install --with dev
    ```
 2. Start the HTTP adapter:
    ```bash

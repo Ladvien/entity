@@ -18,7 +18,7 @@ Get started quickly by installing dependencies with Poetry and running an agent
 with a YAML file:
 
 ```bash
-poetry install
+poetry install --with dev
 poetry run python src/cli.py --config config.yaml
 ```
 This project relies on `httpx==0.27.*`, which Poetry will install automatically.
@@ -29,8 +29,8 @@ For a high-level look at how the pieces connect, see [components_overview.md](co
 
 
 1. Install Python 3.11+ and [Poetry](https://python-poetry.org/).
-2. Run `poetry install` to create the virtual environment. This installs all
-   dependencies, including `httpx==0.27.*`.
+2. Run `poetry install --with dev` to create the virtual environment and install
+   development tools.
 3. Start the agent with your desired configuration file.
 
 For an infrastructure walkthrough on Amazon Web Services, see the [AWS deployment guide](docs/source/deploy_aws.md).
