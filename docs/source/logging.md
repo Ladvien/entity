@@ -9,6 +9,19 @@ from plugins.builtin.adapters.logging import LoggingAdapter
 adapter = LoggingAdapter()
 ```
 
+To configure logging globally, call ``configure_logging`` from
+``pipeline.logging``:
+
+```python
+from pipeline.logging import configure_logging, get_logger
+
+configure_logging(level="INFO", json_enabled=True)
+logger = get_logger(__name__)
+logger.info("Logging configured")
+```
+
+Set the ``ENTITY_LOG_PATH`` environment variable to route logs to a file.
+
 Every pipeline run generates a unique *request ID*. When using
 ``LoggingAdapter`` this ID is
 attached to each log entry under the `request_id` field.
