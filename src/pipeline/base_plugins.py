@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar
 
 import yaml
+from pydantic import BaseModel, ValidationError
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .context import PluginContext
@@ -18,12 +19,15 @@ if TYPE_CHECKING:  # pragma: no cover - used for type hints only
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .initializer import ClassRegistry
 
-from .exceptions import (CircuitBreakerTripped, PluginError,
-                         PluginExecutionError)
+# isort: off
+from .errors import ToolExecutionError
+from .exceptions import CircuitBreakerTripped, PluginError, PluginExecutionError
 from .logging import get_logger
 from .observability.utils import execute_with_observability
 from .stages import PipelineStage
 from .validation import ValidationResult
+
+# isort: on
 
 logger = logging.getLogger(__name__)
 
@@ -313,11 +317,21 @@ class ToolPlugin(BasePlugin):
         """Ensure all :attr:`required_params` are present in ``params``."""
         missing = [p for p in self.required_params if params.get(p) is None]
         if missing:
-            raise ValueError(f"Missing required parameters: {', '.join(missing)}")
+            raise ToolExecutionError(
+                self.__class__.__name__,
+                ValueError(f"Missing required parameters: {', '.join(missing)}"),
+            )
         return True
 
     def validate_tool_params(self, params: Dict[str, Any]) -> bool:
-        """Public hook for validating tool parameters."""
+        """Validate ``params`` using a :class:`pydantic.BaseModel` if provided."""
+        model_cls: Type[BaseModel] | None = getattr(self, "Params", None)
+        if model_cls is not None and issubclass(model_cls, BaseModel):
+            try:
+                model_cls(**params)
+            except ValidationError as exc:
+                raise ToolExecutionError(self.__class__.__name__, exc) from exc
+            return True
         return self._validate_required_params(params)
 
     def __init__(self, config: Dict | None = None) -> None:

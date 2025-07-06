@@ -3,6 +3,7 @@ import asyncio
 import pytest
 
 from pipeline.base_plugins import ToolPlugin
+from pipeline.errors import ToolExecutionError
 
 
 class EchoTool(ToolPlugin):
@@ -24,5 +25,5 @@ def test_tool_plugin_valid_params():
 
 def test_tool_plugin_missing_param():
     tool = EchoTool({})
-    with pytest.raises(ValueError):
+    with pytest.raises(ToolExecutionError):
         asyncio.run(run_tool(tool, {}))
