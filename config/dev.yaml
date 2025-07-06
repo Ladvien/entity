@@ -22,11 +22,6 @@ plugins:
       model: "${OLLAMA_MODEL}"
       retries: 3
       backoff: 1.0
-    logging:
-      type: plugins.builtin.resources.structured_logging:StructuredLogging
-      level: "DEBUG"
-      file_enabled: true
-      file_path: "logs/entity.log"
     memory:
       type: pipeline.resources.memory_resource:MemoryResource
       database:
@@ -78,6 +73,8 @@ plugins:
       dashboard: true
     cli:
       type: plugins.builtin.adapters.cli:CLIAdapter
+    logging:
+      type: plugins.builtin.adapters.logging:LoggingAdapter
   prompts:
     chain_of_thought:
       type: plugins.contrib.prompts.chain_of_thought:ChainOfThoughtPrompt

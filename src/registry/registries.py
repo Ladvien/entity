@@ -5,8 +5,8 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
+from pipeline.base_plugins import BasePlugin
 from pipeline.stages import PipelineStage
-from pipeline.user_plugins import BasePlugin
 
 
 class ResourceRegistry:
