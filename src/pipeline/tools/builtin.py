@@ -6,6 +6,8 @@ from typing import Any
 
 import httpx
 
+from ..exceptions import ResourceError
+
 
 def calculator(expression: str) -> Any:
     """Evaluate an arithmetic expression."""
@@ -24,7 +26,7 @@ def search(query: str) -> str:
         resp.raise_for_status()
         data = resp.json()
     except Exception as exc:  # noqa: BLE001 - network errors
-        raise RuntimeError(f"Search request failed: {exc}") from exc
+        raise ResourceError(f"Search request failed: {exc}") from exc
 
     topics = data.get("RelatedTopics")
     if topics and isinstance(topics, list):

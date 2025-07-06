@@ -19,6 +19,7 @@ if TYPE_CHECKING:  # pragma: no cover - used for type hints only
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .initializer import ClassRegistry
 
+<<<<<<< HEAD
 from .exceptions import CircuitBreakerTripped, PluginError, PluginExecutionError
 <<<<<<< HEAD
 =======
@@ -28,6 +29,9 @@ from .initializer import ClassRegistry
 >>>>>>> c72003e014c664863289e303211be6661160fdc6
 =======
 >>>>>>> 0698b3abdf6daf61c3f8486c12ceb9d0e4aab4b8
+=======
+from .exceptions import CircuitBreakerTripped, PipelineError, PluginExecutionError
+>>>>>>> 428c6a52dd9d5805e7d3025916c9e4edfc100182
 from .logging import get_logger
 from .observability.utils import execute_with_observability
 from .stages import PipelineStage
@@ -119,7 +123,7 @@ class BasePlugin(ABC):
             )
             self._failure_count = 0
             return result
-        except PluginError:
+        except PipelineError:
             self._failure_count += 1
             self._last_failure = time.time()
             raise

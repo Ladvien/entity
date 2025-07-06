@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 from typing import Any
 
+from ..exceptions import ResourceError
+
 
 def interpolate_env_vars(config: Any) -> Any:
     """Recursively replace ``${VAR}`` strings with environment variables."""
@@ -14,6 +16,6 @@ def interpolate_env_vars(config: Any) -> Any:
         key = config[2:-1]
         value = os.environ.get(key)
         if value is None:
-            raise EnvironmentError(f"Required environment variable {key} not found")
+            raise ResourceError(f"Required environment variable {key} not found")
         return value
     return config

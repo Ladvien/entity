@@ -6,6 +6,7 @@ from typing import Dict
 from plugins.builtin.resources.http_llm_resource import HttpLLMResource
 from plugins.builtin.resources.llm_resource import LLMResource
 
+from pipeline.exceptions import ResourceError
 from pipeline.validation import ValidationResult
 
 
@@ -28,7 +29,7 @@ class OllamaLLMResource(LLMResource):
 
     async def generate(self, prompt: str) -> str:
         if not self.http.validate_config().valid:
-            raise RuntimeError("Ollama resource not properly configured")
+            raise ResourceError("Ollama resource not properly configured")
 
         url = f"{self.http.base_url.rstrip('/')}/api/generate"
         payload = {"model": self.http.model, "prompt": prompt, **self.http.params}

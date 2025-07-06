@@ -7,6 +7,8 @@ import duckdb
 from plugins.builtin.resources.duckdb_database import DuckDBDatabaseResource
 from plugins.builtin.resources.vector_store import VectorStoreResource
 
+from pipeline.exceptions import ResourceError
+
 
 class DuckDBVectorStore(VectorStoreResource):
     """Simple DuckDB-backed vector store."""
@@ -45,7 +47,7 @@ class DuckDBVectorStore(VectorStoreResource):
     async def add_embedding(self, text: str, metadata: Dict | None = None) -> None:
         embedding = self._embed(text)
         if self._connection is None:
-            raise RuntimeError("Resource not initialized")
+            raise ResourceError("Resource not initialized")
         await asyncio.to_thread(
             self._connection.execute,
             f"INSERT INTO {self._table} (text, embedding) VALUES (?, ?)",

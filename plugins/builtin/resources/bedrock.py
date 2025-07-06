@@ -7,6 +7,7 @@ from typing import Dict
 import aioboto3
 from plugins.builtin.resources.llm_resource import LLMResource
 
+from pipeline.exceptions import ResourceError
 from pipeline.validation import ValidationResult
 
 
@@ -29,7 +30,7 @@ class BedrockResource(LLMResource):
 
     async def generate(self, prompt: str) -> str:
         if not self.validate_config(self.config).valid:
-            raise RuntimeError("Bedrock resource not properly configured")
+            raise ResourceError("Bedrock resource not properly configured")
         payload = {"prompt": prompt, **self.params}
         async with aioboto3.client(
             "bedrock-runtime", region_name=self.region

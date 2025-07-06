@@ -3,6 +3,7 @@ from __future__ import annotations
 """LLM resource for OpenAI's API."""
 from typing import Any, AsyncIterator, Dict, List
 
+from pipeline.exceptions import ResourceError
 from pipeline.state import LLMResponse
 
 from .base import BaseProvider
@@ -18,7 +19,7 @@ class OpenAIProvider(BaseProvider):
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
     ) -> LLMResponse:
         if not self.http.validate_config().valid:
-            raise RuntimeError("OpenAI provider not properly configured")
+            raise ResourceError("OpenAI provider not properly configured")
 
         url = f"{self.http.base_url.rstrip('/')}/v1/chat/completions"
         headers = {"Authorization": f"Bearer {self.http.api_key}"}
@@ -43,7 +44,7 @@ class OpenAIProvider(BaseProvider):
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
     ) -> AsyncIterator[str]:
         if not self.http.validate_config().valid:
-            raise RuntimeError("OpenAI provider not properly configured")
+            raise ResourceError("OpenAI provider not properly configured")
 
         url = f"{self.http.base_url.rstrip('/')}/v1/chat/completions"
         headers = {"Authorization": f"Bearer {self.http.api_key}"}

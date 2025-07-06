@@ -8,6 +8,7 @@ import httpx
 from pydantic import BaseModel
 
 from pipeline.base_plugins import ToolPlugin
+from pipeline.exceptions import ResourceError
 from pipeline.stages import PipelineStage
 from pipeline.validation.input import validate_params
 
@@ -42,7 +43,7 @@ class WeatherApiTool(ToolPlugin):
                 )
                 response.raise_for_status()
         except httpx.HTTPError as exc:  # pragma: no cover - network error path
-            raise RuntimeError(f"Weather request failed: {exc}") from exc
+            raise ResourceError(f"Weather request failed: {exc}") from exc
 
         return response.json()
 

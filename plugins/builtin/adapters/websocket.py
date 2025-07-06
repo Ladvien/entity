@@ -14,6 +14,7 @@ import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
 from pipeline.base_plugins import AdapterPlugin
+from pipeline.exceptions import ResourceError
 from pipeline.manager import PipelineManager
 from pipeline.pipeline import execute_pipeline
 from registry import SystemRegistries
@@ -35,7 +36,7 @@ class WebSocketAdapter(AdapterPlugin):
         if self.manager is not None:
             return await self.manager.run_pipeline(message)
         if self._registries is None:
-            raise RuntimeError("Adapter not initialized")
+            raise ResourceError("Adapter not initialized")
         return cast(dict[str, Any], await execute_pipeline(message, self._registries))
 
     async def _connection_handler(self, websocket: WebSocket) -> None:

@@ -116,11 +116,11 @@ class PluginContext:
         """Return the configured LLM resource.
 
         Raises:
-            RuntimeError: If no ``"llm"`` resource is found.
+            ResourceError: If no ``"llm"`` resource is found.
         """
         llm = self.get_resource("llm")
         if llm is None:
-            raise RuntimeError(
+            raise ResourceError(
                 "No LLM resource configured. Add 'llm' to resources section."
             )
         return cast(LLM, llm)
@@ -317,7 +317,7 @@ class PluginContext:
         """
         llm = self.get_llm()
         if llm is None:
-            raise RuntimeError("LLM resource not available")
+            raise ResourceError("LLM resource not available")
 
         self.record_llm_call("PluginContext", "ask_llm")
         start = asyncio.get_event_loop().time()
@@ -327,7 +327,7 @@ class PluginContext:
         else:
             func = getattr(llm, "__call__", None)
             if func is None:
-                raise RuntimeError("LLM resource is not callable")
+                raise ResourceError("LLM resource is not callable")
             if asyncio.iscoroutinefunction(func):
                 response = await func(prompt)
             else:

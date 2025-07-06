@@ -19,6 +19,7 @@ from pydantic import BaseModel
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from pipeline.base_plugins import AdapterPlugin
+from pipeline.exceptions import ResourceError
 from pipeline.manager import PipelineManager
 from pipeline.pipeline import execute_pipeline
 from registry import SystemRegistries
@@ -149,7 +150,7 @@ class HTTPAdapter(AdapterPlugin):
                 result = await self.manager.run_pipeline(message)
             else:
                 if self._registries is None:
-                    raise RuntimeError("Adapter not initialized")
+                    raise ResourceError("Adapter not initialized")
                 result = cast(
                     dict[str, Any],
                     await execute_pipeline(message, self._registries),

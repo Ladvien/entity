@@ -12,6 +12,7 @@ import asyncio
 from typing import Any, cast
 
 from pipeline.base_plugins import AdapterPlugin
+from pipeline.exceptions import ResourceError
 from pipeline.manager import PipelineManager
 from pipeline.pipeline import execute_pipeline
 from registry import SystemRegistries
@@ -52,7 +53,7 @@ class CLIAdapter(AdapterPlugin):
                 response = await self.manager.run_pipeline(message)
             else:
                 if self._registries is None:
-                    raise RuntimeError("Adapter not initialized")
+                    raise ResourceError("Adapter not initialized")
                 response = cast(
                     dict[str, Any],
                     await execute_pipeline(message, self._registries),

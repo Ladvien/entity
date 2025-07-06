@@ -9,6 +9,7 @@ import httpx
 from plugins.builtin.resources.http_llm_resource import HttpLLMResource
 from plugins.builtin.resources.llm_base import LLM
 
+from pipeline.exceptions import ResourceError
 from pipeline.validation import ValidationResult
 
 
@@ -64,4 +65,4 @@ class BaseProvider(LLM):
             except Exception as exc:  # noqa: BLE001 - retry
                 last_exc = exc
                 await asyncio.sleep(2**attempt)
-        raise RuntimeError(f"{self.name} provider request failed") from last_exc
+        raise ResourceError(f"{self.name} provider request failed") from last_exc

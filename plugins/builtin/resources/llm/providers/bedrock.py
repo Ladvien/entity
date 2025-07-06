@@ -6,6 +6,7 @@ from typing import Any, AsyncIterator, Dict, List
 
 import aioboto3
 
+from pipeline.exceptions import ResourceError
 from pipeline.state import LLMResponse
 from pipeline.validation import ValidationResult
 
@@ -60,7 +61,7 @@ class BedrockProvider(BaseProvider):
         try:
             return await self.http._breaker.call(call)
         except Exception as exc:  # pragma: no cover - bubble up
-            raise RuntimeError("bedrock provider request failed") from exc
+            raise ResourceError("bedrock provider request failed") from exc
 
     async def generate(
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
