@@ -28,6 +28,7 @@ class ResourcePool:
         self._pool: asyncio.Queue[Any] = asyncio.Queue()
         self._total_size = 0
         self._lock = asyncio.Lock()
+        self._ctx_resource: Any | None = None
 
     async def initialize(self) -> None:
         for _ in range(self._cfg.min_size):
@@ -72,6 +73,15 @@ class ResourcePool:
             "available": self._pool.qsize(),
         }
 
+    async def __aenter__(self) -> Any:
+        self._ctx_resource = await self.acquire()
+        return self._ctx_resource
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        if self._ctx_resource is not None:
+            await self.release(self._ctx_resource)
+            self._ctx_resource = None
+
 
 class ResourceContainer(ResourceRegistry):
     """Instantiate resources with dependency injection and optional pools."""
@@ -102,7 +112,7 @@ class ResourceContainer(ResourceRegistry):
                         f"Resource '{name}' requires '{dep}' which is missing"
                     )
                 setattr(instance, dep, dep_obj)
-            self.add(getattr(instance, "name", name), instance)
+            await self.add(getattr(instance, "name", name), instance)
             init = getattr(instance, "initialize", None)
             if callable(init):
                 await init()
@@ -142,7 +152,7 @@ class ResourceContainer(ResourceRegistry):
         pool = ResourcePool(factory, cfg)
         await pool.initialize()
         self._pools[name] = pool
-        super().add(name, pool)
+        await super().add(name, pool)
 
     async def acquire(self, name: str) -> Any:
         pool = self._pools.get(name)
@@ -157,6 +167,12 @@ class ResourceContainer(ResourceRegistry):
 
     def get_metrics(self) -> Dict[str, Dict[str, int]]:
         return {name: pool.metrics() for name, pool in self._pools.items()}
+
+    async def __aenter__(self) -> "ResourceContainer":
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        await self.shutdown_all()
 
     def _instantiate(self, cls: type, cfg: Dict) -> Any:
         if hasattr(cls, "from_config"):
