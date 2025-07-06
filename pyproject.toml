@@ -51,6 +51,8 @@ psutil = "^5.9.8"
 opentelemetry-api = "^1.24.0"
 opentelemetry-sdk = "^1.24.0"
 tenacity = "^8.2.3"
+msgpack = "^1.0.5"
+protobuf = "^5.26.1"
 websockets = "^15.0"
 
 [tool.poetry.extras]
