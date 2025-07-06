@@ -18,7 +18,7 @@ class OpenAIProvider(BaseProvider):
     async def generate(
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
     ) -> LLMResponse:
-        if not self.http.validate_config().valid:
+        if not self.http.validate_config().success:
             raise ResourceError("OpenAI provider not properly configured")
 
         url = f"{self.http.base_url.rstrip('/')}/v1/chat/completions"
@@ -43,7 +43,7 @@ class OpenAIProvider(BaseProvider):
     async def stream(
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
     ) -> AsyncIterator[str]:
-        if not self.http.validate_config().valid:
+        if not self.http.validate_config().success:
             raise ResourceError("OpenAI provider not properly configured")
 
         url = f"{self.http.base_url.rstrip('/')}/v1/chat/completions"

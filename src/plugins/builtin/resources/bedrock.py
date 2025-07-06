@@ -29,7 +29,7 @@ class BedrockResource(LLMResource):
         return ValidationResult.success_result()
 
     async def generate(self, prompt: str) -> str:
-        if not self.validate_config(self.config).valid:
+        if not self.validate_config(self.config).success:
             raise ResourceError("Bedrock resource not properly configured")
         payload = {"prompt": prompt, **self.params}
         async with aioboto3.client(

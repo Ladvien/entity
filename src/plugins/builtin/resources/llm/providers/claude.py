@@ -18,7 +18,7 @@ class ClaudeProvider(BaseProvider):
     async def generate(
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
     ) -> LLMResponse:
-        if not self.http.validate_config().valid:
+        if not self.http.validate_config().success:
             raise ResourceError("Claude provider not properly configured")
 
         url = f"{self.http.base_url.rstrip('/')}/v1/messages"
@@ -40,7 +40,7 @@ class ClaudeProvider(BaseProvider):
     async def stream(
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
     ) -> AsyncIterator[str]:
-        if not self.http.validate_config().valid:
+        if not self.http.validate_config().success:
             raise ResourceError("Claude provider not properly configured")
 
         url = f"{self.http.base_url.rstrip('/')}/v1/messages"
