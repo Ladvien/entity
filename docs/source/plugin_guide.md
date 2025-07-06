@@ -48,6 +48,31 @@ agent = Agent.from_directory("./plugins")
 
 Any import errors are logged and the remaining plugins continue to load.
 
+## Discovering Plugins from `pyproject.toml`
+
+`SystemInitializer` can scan arbitrary directories for `pyproject.toml` files
+containing plugin definitions. Add paths to the `plugin_dirs` list in your
+configuration:
+
+```yaml
+plugin_dirs:
+  - ./third_party_plugins
+```
+
+Each `pyproject.toml` should define plugins under `[tool.entity.plugins]`:
+
+```toml
+[tool.entity.plugins.prompts.example]
+class = "my_pkg.example:ExamplePrompt"
+dependencies = ["memory"]
+
+[tool.entity.plugins.tools.calc]
+class = "my_pkg.calc:CalculatorTool"
+```
+
+During initialization the discovered entries are merged into the config and
+their dependencies validated automatically.
+
 ## Implementing Storage Backends
 
 Storage resources persist conversation history and other agent data. To add a
