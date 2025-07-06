@@ -56,3 +56,16 @@ python examples/servers/grpc_server.py
 
 The adapter launches ``LLMService`` locally and prints each token generated for
 the sample prompt.
+
+### Generating Python Stubs
+
+Regenerate ``llm_pb2.py`` and ``llm_pb2_grpc.py`` whenever ``llm.proto``
+changes. Execute the following command from the project root:
+
+```bash
+python -m grpc_tools.protoc \
+    -I src/grpc_services \
+    --python_out=src/grpc_services \
+    --grpc_python_out=src/grpc_services \
+    src/grpc_services/llm.proto
+```
