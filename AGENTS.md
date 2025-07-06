@@ -11,8 +11,8 @@ git pull origin main
 git branch --set-upstream-to=origin/main work
 ```
 
-## Project Structure
-- `/architecture/*` – architecture overview and design documents
+- `/architecture/*` – architecture overview and design documents. Start with
+  [`architecture/overview.md`](architecture/overview.md).
 - `/src/pipeline` – core engine and shared abstractions
 - `/plugins` – concrete plugin implementations grouped by type
 - `/config` – YAML configuration files
