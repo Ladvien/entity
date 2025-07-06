@@ -18,6 +18,7 @@ class MemoryPlugin(PromptPlugin):
     """Persist conversation history using the ``memory`` resource."""
 
     dependencies = ["memory"]
+    stages = [PipelineStage.PARSE, PipelineStage.DELIVER]
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
