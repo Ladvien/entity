@@ -222,18 +222,18 @@ class SystemInitializer:
                 )
 
         # Phase 3: initialize resources via container
-        resource_registry = self.resource_container_cls()
+        resource_container = self.resource_container_cls()
         for cls, config in registry.resource_classes():
             primary_name = getattr(cls, "name", cls.__name__)
-            resource_registry.register(primary_name, cls, config)
-        await resource_registry.build_all()
+            resource_container.register(primary_name, cls, config)
+        await resource_container.build_all()
 
         degraded: List[str] = []
-        report = await resource_registry.health_report()
+        report = await resource_container.health_report()
         for name, healthy in report.items():
             if not healthy:
                 degraded.append(name)
-                await resource_registry.remove(name)
+                await resource_container.remove(name)
 
         # Phase 3.5: register tools
         tr_cfg = self.config.get("tool_registry", {})
@@ -268,7 +268,7 @@ class SystemInitializer:
         if degraded:
             self.config.setdefault("_disabled_resources", degraded)
 
-        return plugin_registry, resource_registry, tool_registry
+        return plugin_registry, resource_container, tool_registry
 
     def _validate_dependency_graph(
         self, registry: ClassRegistry, dep_graph: Dict[str, List[str]]
