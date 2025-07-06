@@ -7,6 +7,9 @@ import yaml
 
 from config.models import EntityConfig, asdict
 from pipeline.config import ConfigLoader
+from plugins.builtin.adapters.logging_adapter import configure_logging, get_logger
+
+logger = get_logger(__name__)
 
 
 class ConfigMigrator:
@@ -29,15 +32,17 @@ class ConfigMigrator:
         return parser.parse_args()
 
     def run(self) -> int:
+        configure_logging()
+
         data = ConfigLoader.from_yaml(self.args.src)
         config = EntityConfig.from_dict(data)
         text = yaml.safe_dump(asdict(config), sort_keys=False)
         if self.args.dest == "-":
-            print(text)
+            logger.info(text)
         else:
             out = Path(self.args.dest)
             out.write_text(text)
-            print(f"Wrote migrated config to {out}")
+            logger.info("Wrote migrated config to %s", out)
         return 0
 
 

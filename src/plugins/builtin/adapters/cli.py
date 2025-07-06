@@ -59,7 +59,6 @@ class CLIAdapter(AdapterPlugin):
                     await execute_pipeline(message, self._registries),
                 )
             self.logger.info("%s", response)
-            print(response)
 
     async def _execute_impl(self, context) -> None:  # pragma: no cover - adapter
         pass

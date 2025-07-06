@@ -117,7 +117,7 @@ class CLI:
             "    main()\n"
         )
 
-        print(f"Created project at {target}")
+        logger.info("Created project at %s", target)
         return 0
 
     def _reload_config(self, agent: Agent, file_path: str) -> int:
