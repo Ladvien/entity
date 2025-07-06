@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 from plugins.builtin.adapters import WebSocketAdapter
 
 from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
-                      PromptPlugin, ResourceRegistry, SystemRegistries,
+                      PromptPlugin, ResourceContainer, SystemRegistries,
                       ToolRegistry)
 
 
@@ -19,7 +19,7 @@ class RespPlugin(PromptPlugin):
 def make_adapter():
     plugins = PluginRegistry()
     asyncio.run(plugins.register_plugin_for_stage(RespPlugin({}), PipelineStage.DO))
-    registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
+    registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     manager = PipelineManager(registries)
     return WebSocketAdapter(manager)
 

@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from .registries import (PluginRegistry, ResourceRegistry, SystemRegistries,
+from .registries import (PluginRegistry, ResourceContainer, SystemRegistries,
                          ToolRegistry)
 from .validator import RegistryValidator
 
 __all__ = [
     "PluginRegistry",
-    "ResourceRegistry",
+    "ResourceContainer",
     "ToolRegistry",
     "SystemRegistries",
     "RegistryValidator",

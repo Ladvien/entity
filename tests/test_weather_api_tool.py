@@ -8,7 +8,7 @@ from plugins.contrib.tools.weather_api_tool import WeatherApiTool
 
 from config.environment import load_env
 from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, ResourceRegistry,
+                      PluginContext, PluginRegistry, ResourceContainer,
                       SystemRegistries, ToolRegistry)
 from pipeline.tools.execution import execute_pending_tools
 
@@ -38,7 +38,7 @@ async def run_weather():
         {"base_url": "http://test/weather", "api_key": os.environ["WEATHER_API_KEY"]}
     )
     await tools.add("weather", tool)
-    registries = SystemRegistries(ResourceRegistry(), tools, PluginRegistry())
+    registries = SystemRegistries(ResourceContainer(), tools, PluginRegistry())
     ctx = PluginContext(state, registries)
     with patch(
         "httpx.AsyncClient.get", new=AsyncMock(return_value=FakeResponse())

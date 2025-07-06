@@ -3,7 +3,7 @@ from datetime import datetime
 
 from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
                       PipelineState, PluginContext, PluginRegistry,
-                      PromptPlugin, ResourceRegistry, SystemRegistries,
+                      PromptPlugin, ResourceContainer, SystemRegistries,
                       ToolRegistry)
 
 
@@ -30,7 +30,7 @@ def make_context(llm: FakeLLM) -> PluginContext:
         metrics=MetricsCollector(),
         current_stage=PipelineStage.THINK,
     )
-    resources = ResourceRegistry()
+    resources = ResourceContainer()
     asyncio.run(resources.add("llm", llm))
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
     return PluginContext(state, registries)

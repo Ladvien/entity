@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 from plugins.contrib.prompts.complex_prompt import ComplexPrompt
 
 from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, ResourceRegistry,
+                      PluginContext, PluginRegistry, ResourceContainer,
                       SystemRegistries, ToolRegistry)
 from pipeline.resources.memory_resource import MemoryResource
 
@@ -40,7 +40,7 @@ def make_context(llm, memory):
         pipeline_id="1",
         metrics=MetricsCollector(),
     )
-    resources = ResourceRegistry()
+    resources = ResourceContainer()
     asyncio.run(resources.add("llm", llm))
     asyncio.run(resources.add("memory", memory))
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())

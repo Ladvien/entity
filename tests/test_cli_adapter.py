@@ -5,7 +5,7 @@ from typing import Any
 from plugins.builtin.adapters.cli import CLIAdapter
 
 from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
-                      PromptPlugin, ResourceRegistry, SystemRegistries,
+                      PromptPlugin, ResourceContainer, SystemRegistries,
                       ToolRegistry)
 
 
@@ -20,7 +20,7 @@ class EchoPlugin(PromptPlugin):
 def make_adapter() -> tuple[CLIAdapter, SystemRegistries]:
     plugins = PluginRegistry()
     asyncio.run(plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.DO))
-    registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
+    registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     manager = PipelineManager(registries)
     return CLIAdapter(manager), registries
 

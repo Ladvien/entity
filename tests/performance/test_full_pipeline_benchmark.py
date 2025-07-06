@@ -3,7 +3,7 @@ import asyncio
 import pytest
 
 from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
-                      ResourceRegistry, SystemRegistries, ToolRegistry)
+                      ResourceContainer, SystemRegistries, ToolRegistry)
 
 
 class RespondPlugin:
@@ -17,7 +17,7 @@ class RespondPlugin:
 def test_full_pipeline_benchmark(benchmark):
     plugins = PluginRegistry()
     plugins.register_plugin_for_stage(RespondPlugin(), PipelineStage.DO)
-    registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
+    registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     manager = PipelineManager(registries)
 
     def run():

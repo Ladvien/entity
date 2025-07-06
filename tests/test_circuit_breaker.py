@@ -4,7 +4,7 @@ from plugins.contrib.failure.basic_logger import BasicLogger
 from plugins.contrib.failure.error_formatter import ErrorFormatter
 
 from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      ResourceRegistry, SystemRegistries, ToolRegistry,
+                      ResourceContainer, SystemRegistries, ToolRegistry,
                       execute_pipeline)
 
 
@@ -27,7 +27,7 @@ def make_registries():
     asyncio.run(
         plugins.register_plugin_for_stage(ErrorFormatter({}), PipelineStage.ERROR)
     )
-    return SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
+    return SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 
 
 def test_circuit_breaker_trips():

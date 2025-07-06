@@ -4,8 +4,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Dict, List, Optional
 
+from pipeline.resources.container import \
+    ResourceContainer as BaseResourceContainer
 from pipeline.utils import DependencyGraph
-from registry.registries import ResourceRegistry
 
 
 @dataclass
@@ -82,7 +83,7 @@ class ResourcePool:
             self._ctx_resource = None
 
 
-class ResourceContainer(ResourceRegistry):
+class ResourceContainer(BaseResourceContainer):
     """Instantiate resources with dependency injection and optional pools."""
 
     def __init__(self) -> None:

@@ -9,7 +9,7 @@ from plugins.contrib.prompts.chat_history import ChatHistory
 from config.environment import load_env
 from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
                       PipelineState, PluginContext, PluginRegistry,
-                      ResourceRegistry, SystemRegistries, ToolRegistry)
+                      ResourceContainer, SystemRegistries, ToolRegistry)
 from pipeline.resources.duckdb_database import DuckDBDatabaseResource
 from pipeline.resources.memory_resource import MemoryResource
 from pipeline.resources.memory_storage import MemoryStorage
@@ -37,7 +37,7 @@ async def run_history_test(resource):
         await resource.initialize()
 
     memory = MemoryResource(storage=resource)
-    resources = ResourceRegistry()
+    resources = ResourceContainer()
     await resources.add("memory", memory)
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
     state = PipelineState(

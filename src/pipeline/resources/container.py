@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Dict, List, Optional
 
 from pipeline.utils import DependencyGraph
-from registry.registries import ResourceRegistry
 
 
 @dataclass
@@ -83,16 +82,48 @@ class ResourcePool:
             self._ctx_resource = None
 
 
-class ResourceContainer(ResourceRegistry):
+class ResourceContainer:
     """Instantiate resources with dependency injection and optional pools."""
 
     def __init__(self) -> None:
-        super().__init__()
+        self._resources: Dict[str, Any] = {}
+        self._lock = asyncio.Lock()
         self._classes: Dict[str, type] = {}
         self._configs: Dict[str, Dict] = {}
         self._deps: Dict[str, List[str]] = {}
         self._order: List[str] = []
         self._pools: Dict[str, ResourcePool] = {}
+
+    async def add(self, name: str, resource: Any) -> None:
+        async with self._lock:
+            self._resources[name] = resource
+
+    async def add_from_config(self, name: str, cls: type, config: Dict) -> None:
+        if hasattr(cls, "from_config"):
+            instance = cls.from_config(config)
+        else:
+            instance = cls(config)
+        await self.add(getattr(instance, "name", name), instance)
+
+    def get(self, name: str) -> Any | None:
+        return self._resources.get(name)
+
+    async def remove(self, name: str) -> None:
+        async with self._lock:
+            self._resources.pop(name, None)
+
+    async def __aenter__(self) -> "ResourceContainer":
+        for resource in self._resources.values():
+            init = getattr(resource, "initialize", None)
+            if callable(init):
+                await init()
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        for resource in self._resources.values():
+            shutdown = getattr(resource, "shutdown", None)
+            if callable(shutdown):
+                await shutdown()
 
     def register(self, name: str, cls: type, config: Dict) -> None:
         self._classes[name] = cls
@@ -152,7 +183,7 @@ class ResourceContainer(ResourceRegistry):
         pool = ResourcePool(factory, cfg)
         await pool.initialize()
         self._pools[name] = pool
-        await super().add(name, pool)
+        await self.add(name, pool)
 
     async def acquire(self, name: str) -> Any:
         pool = self._pools.get(name)
@@ -167,12 +198,6 @@ class ResourceContainer(ResourceRegistry):
 
     def get_metrics(self) -> Dict[str, Dict[str, int]]:
         return {name: pool.metrics() for name, pool in self._pools.items()}
-
-    async def __aenter__(self) -> "ResourceContainer":
-        return self
-
-    async def __aexit__(self, exc_type, exc, tb) -> None:
-        await self.shutdown_all()
 
     def _instantiate(self, cls: type, cfg: Dict) -> Any:
         if hasattr(cls, "from_config"):

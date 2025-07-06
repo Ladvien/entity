@@ -4,7 +4,7 @@ from datetime import datetime
 from plugins.builtin.resources.memory_storage import MemoryStorage
 
 from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      ResourceRegistry, SystemRegistries, ToolRegistry,
+                      ResourceContainer, SystemRegistries, ToolRegistry,
                       execute_pipeline)
 from pipeline.context import ConversationEntry
 from pipeline.resources.memory import Memory
@@ -28,7 +28,7 @@ def make_registries():
     asyncio.run(
         plugins.register_plugin_for_stage(IncrementPlugin({}), PipelineStage.DO)
     )
-    resources = ResourceRegistry()
+    resources = ResourceContainer()
     asyncio.run(resources.add("memory", SimpleMemoryResource()))
     return SystemRegistries(resources, ToolRegistry(), plugins)
 

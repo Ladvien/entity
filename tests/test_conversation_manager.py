@@ -1,7 +1,7 @@
 import asyncio
 
 from pipeline import (ConversationManager, PipelineManager, PipelineStage,
-                      PluginRegistry, PromptPlugin, ResourceRegistry,
+                      PluginRegistry, PromptPlugin, ResourceContainer,
                       SystemRegistries, ToolRegistry)
 
 
@@ -25,7 +25,7 @@ def make_manager():
     plugins = PluginRegistry()
     asyncio.run(plugins.register_plugin_for_stage(ContinuePlugin({}), PipelineStage.DO))
     asyncio.run(plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.DO))
-    registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
+    registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     manager = PipelineManager(registries)
     conv = ConversationManager(registries, manager)
     return conv, manager

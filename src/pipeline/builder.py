@@ -5,7 +5,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Callable, Optional
 
-from registry import (PluginRegistry, ResourceRegistry, SystemRegistries,
+from registry import (PluginRegistry, ResourceContainer, SystemRegistries,
                       ToolRegistry)
 
 from .interfaces import PluginAutoClassifier
@@ -21,7 +21,7 @@ class AgentBuilder:
     """Collect plugins and build :class:`AgentRuntime`."""
 
     plugin_registry: PluginRegistry = field(default_factory=PluginRegistry)
-    resource_registry: ResourceRegistry = field(default_factory=ResourceRegistry)
+    resource_registry: ResourceContainer = field(default_factory=ResourceContainer)
     tool_registry: ToolRegistry = field(default_factory=ToolRegistry)
 
     # ------------------------------ plugin utils ------------------------------

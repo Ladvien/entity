@@ -7,52 +7,8 @@ from dataclasses import dataclass
 from typing import Any, Dict, List
 
 from pipeline.base_plugins import BasePlugin
+from pipeline.resources.container import ResourceContainer
 from pipeline.stages import PipelineStage
-
-
-class ResourceRegistry:
-    """Registry for instantiated resource plugins."""
-
-    def __init__(self) -> None:
-        self._resources: Dict[str, Any] = {}
-        self._lock = asyncio.Lock()
-
-    async def add(self, name: str, resource: Any) -> None:
-        """Register ``resource`` under ``name``."""
-
-        async with self._lock:
-            self._resources[name] = resource
-
-    async def add_from_config(self, name: str, cls: type, config: Dict) -> None:
-        """Instantiate ``cls`` from ``config`` and register it."""
-
-        if hasattr(cls, "from_config"):
-            instance = cls.from_config(config)
-        else:
-            instance = cls(config)
-        await self.add(getattr(instance, "name", name), instance)
-
-    def get(self, name: str) -> Any | None:
-        """Return the resource registered as ``name`` if present."""
-
-        return self._resources.get(name)
-
-    async def remove(self, name: str) -> None:
-        async with self._lock:
-            self._resources.pop(name, None)
-
-    async def __aenter__(self) -> "ResourceRegistry":
-        for resource in self._resources.values():
-            init = getattr(resource, "initialize", None)
-            if callable(init):
-                await init()
-        return self
-
-    async def __aexit__(self, exc_type, exc, tb) -> None:
-        for resource in self._resources.values():
-            shutdown = getattr(resource, "shutdown", None)
-            if callable(shutdown):
-                await shutdown()
 
 
 class ToolRegistry:
@@ -175,6 +131,6 @@ class PluginRegistry:
 
 @dataclass
 class SystemRegistries:
-    resources: ResourceRegistry
+    resources: ResourceContainer
     tools: ToolRegistry
     plugins: PluginRegistry

@@ -2,23 +2,12 @@ import asyncio
 
 from plugins.contrib.failure.basic_logger import BasicLogger
 
-from pipeline import (
-    FailurePlugin,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    ResourceRegistry,
-    SystemRegistries,
-    ToolRegistry,
-    execute_pipeline,
-)
-from pipeline.errors import (
-    PipelineError,
-    PluginExecutionError,
-    ResourceError,
-    ToolExecutionError,
-    create_static_error_response,
-)
+from pipeline import (FailurePlugin, PipelineStage, PluginRegistry,
+                      PromptPlugin, ResourceContainer, SystemRegistries,
+                      ToolRegistry, execute_pipeline)
+from pipeline.errors import (PipelineError, PluginExecutionError,
+                             ResourceError, ToolExecutionError,
+                             create_static_error_response)
 
 
 class BoomPlugin(PromptPlugin):
@@ -50,7 +39,7 @@ def make_registries(error_plugin, main_plugin=BoomPlugin):
     asyncio.run(
         plugins.register_plugin_for_stage(error_plugin({}), PipelineStage.ERROR)
     )
-    return SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
+    return SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 
 
 def test_error_plugin_runs():

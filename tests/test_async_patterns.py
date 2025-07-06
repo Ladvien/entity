@@ -1,7 +1,7 @@
 import asyncio
 import time
 
-from pipeline import (PipelineStage, PluginRegistry, ResourceRegistry,
+from pipeline import (PipelineStage, PluginRegistry, ResourceContainer,
                       SystemRegistries, ToolPlugin, ToolRegistry,
                       execute_pipeline)
 from pipeline.base_plugins import PluginAutoClassifier
@@ -20,7 +20,7 @@ async def use_tool_plugin(ctx: PluginContext) -> None:
 
 
 def make_registries() -> SystemRegistries:
-    resources = ResourceRegistry()
+    resources = ResourceContainer()
     tools = ToolRegistry()
     asyncio.run(tools.add("sleep", SleepTool({})))
     plugins = PluginRegistry()

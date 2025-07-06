@@ -2,7 +2,7 @@ import asyncio
 
 from pipeline.stages import PipelineStage
 from pipeline.user_plugins import PromptPlugin
-from registry.registries import PluginRegistry, ResourceRegistry, ToolRegistry
+from registry.registries import PluginRegistry, ResourceContainer, ToolRegistry
 
 
 class DummyPlugin(PromptPlugin):
@@ -24,7 +24,7 @@ async def test_plugin_registry_thread_safety():
 
 
 async def test_resource_and_tool_registry_thread_safety():
-    resources = ResourceRegistry()
+    resources = ResourceContainer()
     tools = ToolRegistry()
 
     async def add_resource(i):

@@ -3,7 +3,7 @@ import time
 from datetime import datetime
 
 from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
-                      PipelineState, PluginRegistry, ResourceRegistry,
+                      PipelineState, PluginRegistry, ResourceContainer,
                       SystemRegistries, ToolCall, ToolRegistry)
 from pipeline.tools.execution import execute_pending_tools
 
@@ -34,7 +34,7 @@ def test_concurrency_limit():
     tool = SleepTool()
     tools = ToolRegistry(concurrency_limit=2)
     asyncio.run(tools.add("sleep", tool))
-    registries = SystemRegistries(ResourceRegistry(), tools, PluginRegistry())
+    registries = SystemRegistries(ResourceContainer(), tools, PluginRegistry())
     for i in range(4):
         state.pending_tool_calls.append(
             ToolCall(name="sleep", params={"delay": 0.1}, result_key=f"r{i}")
@@ -51,7 +51,7 @@ def test_cache_ttl():
     tool = SleepTool()
     tools = ToolRegistry(cache_ttl=5)
     asyncio.run(tools.add("sleep", tool))
-    registries = SystemRegistries(ResourceRegistry(), tools, PluginRegistry())
+    registries = SystemRegistries(ResourceContainer(), tools, PluginRegistry())
     state.pending_tool_calls.append(
         ToolCall(name="sleep", params={"delay": 0}, result_key="a")
     )

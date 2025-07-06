@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from pipeline import PipelineStage, execute_pipeline
-from registry import (PluginRegistry, ResourceRegistry, SystemRegistries,
+from registry import (PluginRegistry, ResourceContainer, SystemRegistries,
                       ToolRegistry)
 
 
@@ -47,7 +47,7 @@ def test_pipeline_recovers_from_stage_failure(
         plugins = PluginRegistry()
         plugins.register_plugin_for_stage(make_failing_plugin(stage), stage)
         plugins.register_plugin_for_stage(RespondPlugin(), PipelineStage.DO)
-        registries = SystemRegistries(ResourceRegistry(), ToolRegistry(), plugins)
+        registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
         try:
             await execute_pipeline("hi", registries, state_file=str(state_file))
         except RuntimeError:

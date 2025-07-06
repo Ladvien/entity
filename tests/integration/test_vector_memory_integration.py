@@ -8,7 +8,7 @@ from plugins.contrib.prompts.complex_prompt import ComplexPrompt
 
 from config.environment import load_env
 from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, ResourceRegistry,
+                      PluginContext, PluginRegistry, ResourceContainer,
                       SystemRegistries, ToolRegistry)
 from pipeline.resources.llm import UnifiedLLMResource
 from pipeline.resources.memory_resource import MemoryResource
@@ -69,7 +69,7 @@ def test_vector_memory_integration():
         )
         await memory.save_conversation("conv1", [history_entry])
         await vm.add_embedding("previous")
-        resources = ResourceRegistry()
+        resources = ResourceContainer()
         await resources.add("memory", memory)
         await resources.add("llm", llm)
         registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())

@@ -5,7 +5,7 @@ from plugins.contrib.prompts.react_prompt import ReActPrompt
 from plugins.contrib.tools.calculator_tool import CalculatorTool
 
 from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, ResourceRegistry,
+                      PluginContext, PluginRegistry, ResourceContainer,
                       SystemRegistries, ToolRegistry)
 
 
@@ -29,7 +29,7 @@ def make_context(llm: FakeLLM):
         pipeline_id="1",
         metrics=MetricsCollector(),
     )
-    resources = ResourceRegistry()
+    resources = ResourceContainer()
     tools = ToolRegistry()
     plugins = PluginRegistry()
     asyncio.run(resources.add("llm", llm))

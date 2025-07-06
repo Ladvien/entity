@@ -1,7 +1,7 @@
 import asyncio
 
-from pipeline import (PipelineStage, PluginRegistry, ResourcePlugin,
-                      ResourceRegistry, SystemRegistries, ToolPlugin,
+from pipeline import (PipelineStage, PluginRegistry, ResourceContainer,
+                      ResourcePlugin, SystemRegistries, ToolPlugin,
                       ToolRegistry, execute_pipeline)
 from pipeline.base_plugins import PluginAutoClassifier
 from pipeline.context import PluginContext
@@ -27,7 +27,7 @@ async def my_prompt(ctx: PluginContext) -> None:
 
 
 def make_registries() -> SystemRegistries:
-    resources = ResourceRegistry()
+    resources = ResourceContainer()
     asyncio.run(resources.add("resource", MyResource({})))
     tools = ToolRegistry()
     asyncio.run(tools.add("tool", MyTool({})))
