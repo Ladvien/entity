@@ -1,14 +1,14 @@
 # SPIKE-CFG-001: Config Model Framework Comparison
 
 ## Summary
-This spike compares three frameworks for defining configuration models in `src/config`.
+This spike compares three frameworks for defining configuration models in `src/entity_config`.
 The current implementation uses Python `dataclasses` with custom JSON Schema generation.
 We evaluate `dataclasses`, `pydantic`, and `attrs` in terms of features, JSON Schema support, and IDE compatibility.
 
 ## 1. Dataclasses (Current)
 - Built into the standard library with minimal dependencies.
 - Simple classes with type hints make mental models easy to grasp.
-- JSON Schema is produced via custom helpers in `src/config/models.py`.
+- JSON Schema is produced via custom helpers in `src/entity_config/models.py`.
 - IDEs recognize fields thanks to type hints, but validation must be written manually.
 
 ## 2. Pydantic

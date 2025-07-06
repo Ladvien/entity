@@ -9,7 +9,7 @@ from typing import Any, Dict, Iterable, List, Tuple, Type
 
 from common_interfaces.plugins import import_plugin_class
 from common_interfaces.resources import Resource
-from config.environment import load_env
+from entity_config.environment import load_env
 from pipeline.config.utils import interpolate_env_vars
 from pipeline.resources.container import ResourceContainer
 from pipeline.utils import DependencyGraph

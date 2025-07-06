@@ -8,8 +8,8 @@ from typing import Any, Dict
 
 import yaml
 
-from config.environment import load_env
-from config.models import validate_config
+from entity_config.environment import load_env
+from entity_config.models import validate_config
 
 from .utils import interpolate_env_vars
 

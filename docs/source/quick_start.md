@@ -72,7 +72,7 @@ plugins:
 Instead of YAML, you can create a configuration programmatically:
 
 ```python
-from config import ConfigBuilder
+from entity_config import ConfigBuilder
 from pipeline import SystemInitializer
 
 builder = (

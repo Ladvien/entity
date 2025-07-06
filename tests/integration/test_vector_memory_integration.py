@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from config.environment import load_env
+from entity_config.environment import load_env
 from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
                       PluginContext, PluginRegistry, SystemRegistries,
                       ToolRegistry)

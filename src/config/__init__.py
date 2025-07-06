@@ -1,27 +1,23 @@
-# flake8: noqa
+"""Compatibility shim for renamed package."""
+
 import sys
-from pathlib import Path
+from importlib import import_module
 
-SRC_PATH = Path(__file__).resolve().parents[1]
-if str(SRC_PATH) not in sys.path:
-    sys.path.insert(0, str(SRC_PATH))
+module = import_module("src.entity_config")
 
-from .builder import ConfigBuilder
-from .models import (CONFIG_SCHEMA, EntityConfig, PluginConfig, PluginsSection,
-                     ServerConfig, ToolRegistryConfig, validate_config)
-from .validators import (_validate_cache, _validate_memory,
-                         _validate_vector_memory)
+# re-export attributes
+__all__ = getattr(module, "__all__", [])
+for attr in __all__:
+    globals()[attr] = getattr(module, attr)
 
-__all__ = [
-    "ConfigBuilder",
-    "_validate_memory",
-    "_validate_vector_memory",
-    "_validate_cache",
-    "PluginConfig",
-    "PluginsSection",
-    "ServerConfig",
-    "ToolRegistryConfig",
-    "EntityConfig",
-    "CONFIG_SCHEMA",
-    "validate_config",
-]
+# expose submodules
+for name in (
+    "builder",
+    "environment",
+    "generate_template",
+    "migrate",
+    "models",
+    "validator",
+    "validators",
+):
+    sys.modules[f"{__name__}.{name}"] = import_module(f"src.entity_config.{name}")
