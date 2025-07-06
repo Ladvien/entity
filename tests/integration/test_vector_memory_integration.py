@@ -4,10 +4,6 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
-<<<<<<< HEAD
-=======
-from user_plugins.prompts.complex_prompt import ComplexPrompt
->>>>>>> 9c565435c8c98d3dd664501aa929f40fe2e70c3f
 
 from config.environment import load_env
 from pipeline import (

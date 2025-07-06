@@ -1,10 +1,6 @@
 import asyncio
 
 import pytest
-<<<<<<< HEAD
-=======
-from user_plugins.tools.calculator_tool import CalculatorTool
->>>>>>> 9c565435c8c98d3dd664501aa929f40fe2e70c3f
 
 from pipeline.resources.llm_resource import LLMResource
 from user_plugins.tools.calculator_tool import CalculatorTool

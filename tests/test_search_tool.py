@@ -2,7 +2,6 @@ import asyncio
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
-<<<<<<< HEAD
 from pipeline import (
     ConversationEntry,
     MetricsCollector,
@@ -12,13 +11,6 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-=======
-from user_plugins.tools.search_tool import SearchTool
-
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, SystemRegistries,
-                      ToolRegistry)
->>>>>>> 9c565435c8c98d3dd664501aa929f40fe2e70c3f
 from pipeline.resources import ResourceContainer
 from pipeline.tools.execution import execute_pending_tools
 from user_plugins.tools.search_tool import SearchTool

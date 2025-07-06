@@ -3819,8 +3819,4 @@ examples = []
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-<<<<<<< HEAD
 content-hash = "d63f0f28777bd5e02a8f50843b75fe9b0c49ff0aa1f54f1ddc6370993f46195f"
-=======
-content-hash = "806ad399402d034cb925526b281da708f8fe478f533d310f5f25fad933e6027d"
->>>>>>> da816a7a3dbe69257c5bbcbb38bb088649439bb0

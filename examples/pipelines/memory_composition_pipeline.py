@@ -14,23 +14,11 @@ from utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-from plugins.contrib.duckdb_vector_store import DuckDBVectorStore  # noqa: E402
-from plugins.contrib.memory_resource import MemoryResource  # noqa: E402
-from plugins.contrib.pg_vector_store import PgVectorStore  # noqa: E402
-from plugins.contrib.postgres import PostgresResource  # noqa: E402
-from plugins.contrib.sqlite_storage import (  # noqa: E402
-=======
+from user_plugins.duckdb_vector_store import DuckDBVectorStore  # noqa: E402
 from user_plugins.memory_resource import MemoryResource  # noqa: E402
 from user_plugins.pg_vector_store import PgVectorStore  # noqa: E402
+from user_plugins.postgres import PostgresResource  # noqa: E402
 from user_plugins.sqlite_storage import (
->>>>>>> da816a7a3dbe69257c5bbcbb38bb088649439bb0
-=======
-from user_plugins.memory_resource import MemoryResource  # noqa: E402
-from user_plugins.pg_vector_store import PgVectorStore  # noqa: E402
-from user_plugins.sqlite_storage import (
->>>>>>> 9c565435c8c98d3dd664501aa929f40fe2e70c3f
     SQLiteStorageResource as SQLiteDatabaseResource,
 )
 

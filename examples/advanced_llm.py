@@ -17,7 +17,6 @@ from utilities import enable_plugins_namespace
 enable_plugins_namespace()
 
 from user_plugins.llm.unified import UnifiedLLMResource
-<<<<<<< HEAD
 
 
 def create_llm() -> UnifiedLLMResource:
@@ -34,8 +33,6 @@ def create_llm() -> UnifiedLLMResource:
     else:
         cfg = {"provider": "echo"}
     return UnifiedLLMResource(cfg)
-=======
->>>>>>> 9c565435c8c98d3dd664501aa929f40fe2e70c3f
 
 
 async def main() -> None:
