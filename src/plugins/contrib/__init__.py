@@ -1,4 +1,4 @@
-"""Exports for community contributed plugins."""
+"""Convenience exports for plugin base classes."""
 
 from pipeline.base_plugins import (
     AdapterPlugin,

@@ -1,9 +1,9 @@
-"""Plugin package for the Entity pipeline.
+"""Plugins package for the Entity pipeline.
 
-The :mod:`pipeline.plugins.contrib` module was moved to
-``plugins.contrib``. The base classes previously available under
-``pipeline.plugins.contrib`` are re-exported here for backwards
-compatibility.
+This module re-exports the core plugin base classes from
+``plugins.contrib`` for convenience::
+
+    from plugins import BasePlugin, ToolPlugin
 """
 
 from .contrib import (
