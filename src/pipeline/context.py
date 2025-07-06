@@ -24,6 +24,8 @@ else:  # pragma: no cover - runtime type reference
 
 from registry import SystemRegistries
 
+__all__ = ["PluginContext", "ConversationEntry", "ToolCall"]
+
 from .errors import ResourceError
 from .metrics import MetricsCollector
 from .stages import PipelineStage
