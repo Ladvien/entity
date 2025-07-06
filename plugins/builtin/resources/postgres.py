@@ -8,9 +8,9 @@ from typing import AsyncIterator, Dict, List, Optional
 import asyncpg
 from plugins.builtin.resources.database import DatabaseResource
 
-from pipeline.context import ConversationEntry
 from pipeline.observability.tracing import start_span
 from pipeline.reliability import CircuitBreaker, RetryPolicy
+from pipeline.state import ConversationEntry
 
 
 class PostgresResource(DatabaseResource):

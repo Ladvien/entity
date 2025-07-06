@@ -5,7 +5,8 @@ from __future__ import annotations
 from typing import Dict, List
 
 from plugins.builtin.resources.database import DatabaseResource
-from pipeline.context import ConversationEntry
+
+from pipeline.state import ConversationEntry
 
 
 class MemoryStorage(DatabaseResource):

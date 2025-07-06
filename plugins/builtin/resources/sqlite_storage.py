@@ -8,8 +8,8 @@ from typing import Dict, List, Optional
 import aiosqlite
 from plugins.builtin.resources.database import DatabaseResource
 
-from pipeline.context import ConversationEntry
 from pipeline.observability.tracing import start_span
+from pipeline.state import ConversationEntry
 
 
 class SQLiteStorageResource(DatabaseResource):

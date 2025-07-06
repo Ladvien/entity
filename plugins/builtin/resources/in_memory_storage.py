@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from plugins.builtin.resources.database import DatabaseResource
 
-from pipeline.context import ConversationEntry
+from pipeline.state import ConversationEntry
 
 
 class InMemoryStorageResource(DatabaseResource):
