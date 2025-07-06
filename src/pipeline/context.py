@@ -24,6 +24,8 @@ else:  # pragma: no cover - runtime type reference
 
 from registry import SystemRegistries
 
+from .errors import ResourceError
+
 from .metrics import MetricsCollector
 from .stages import PipelineStage
 from .state import ConversationEntry, FailureInfo, LLMResponse, PipelineState, ToolCall
