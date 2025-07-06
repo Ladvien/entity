@@ -3,8 +3,13 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict
 
-from .exceptions import (PipelineError, PluginExecutionError, ResourceError,
-                         ToolExecutionError)
+from .context import PipelineContextError, PluginContextError, StageExecutionError
+from .exceptions import (
+    PipelineError,
+    PluginExecutionError,
+    ResourceError,
+    ToolExecutionError,
+)
 
 __all__ = [
     "create_static_error_response",
@@ -12,6 +17,9 @@ __all__ = [
     "PluginExecutionError",
     "ResourceError",
     "ToolExecutionError",
+    "PipelineContextError",
+    "StageExecutionError",
+    "PluginContextError",
 ]
 
 # Generic fallback returned when even error handling fails
