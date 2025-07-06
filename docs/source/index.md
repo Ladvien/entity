@@ -30,6 +30,7 @@ Welcome to the Entity Pipeline framework. These pages explain how to configure a
 - [Advanced usage](advanced_usage.md)
 - [Module map](module_map.md)
 - [gRPC services](grpc_services.md)
+- [LLM gRPC audit](llm_grpc_audit.md)
 - [Troubleshooting](troubleshooting.md)
 
 ### Deployment
@@ -52,6 +53,7 @@ logging
 advanced_usage
 module_map
 grpc_services
+llm_grpc_audit
 troubleshooting
 deploy_aws
 deploy_local
