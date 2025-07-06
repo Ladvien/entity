@@ -4,7 +4,7 @@ Plugins provide all extendable behavior in the framework. They are grouped by
 function and registered through configuration or the `Agent` API.
 
 ## Naming Conventions
-- Built-in plugins live under the `src/plugins` package
+- Built-in plugins live in the `src/plugins` directory
 - Class names end with `Plugin`, e.g. `WeatherToolPlugin`
 - Each resource exposes one canonical registry name
 - Keep names short and descriptive

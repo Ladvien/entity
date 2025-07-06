@@ -10,9 +10,9 @@ This split caused confusion about where base classes were defined and how
 framework code should be imported.
 
 ## Decision
-All engine functionality now resides under `src/pipeline` while concrete plugins
-live in the top-level `plugins` package. The `user_plugins` directory remains but
-only re-exports symbols from `plugins` for backward compatibility. This layout
+All engine functionality now resides under `src/pipeline` while built-in plugins
+live in `src/plugins`. The `user_plugins` directory remains but only re-exports
+symbols from `plugins` for backward compatibility. This layout
 clarifies imports and keeps plugin code clearly separated from the core engine.
 
 ## Consequences
