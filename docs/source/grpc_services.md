@@ -42,10 +42,10 @@ if __name__ == "__main__":
     asyncio.run(serve())
 ```
 
-``src/grpc_services/llm.proto`` and ``llm_service.py`` act as references for
-future model services. The service requires the generated modules
-``llm_pb2`` and ``llm_pb2_grpc`` to be present. If they are missing the import
-will fail with an error directing you to regenerate them.
+``src/grpc_services/llm.proto`` and ``llm_service.py`` serve as references for
+future model services. ``llm_service.py`` imports the generated modules
+``llm_pb2`` and ``llm_pb2_grpc`` directly. If those files are missing,
+rebuild them using the command below.
 
 ### Demo Script
 
