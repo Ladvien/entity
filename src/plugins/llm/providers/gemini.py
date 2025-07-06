@@ -17,7 +17,7 @@ class GeminiProvider(BaseProvider):
     async def generate(
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
     ) -> LLMResponse:
-        if not self.http.validate_config().valid:
+        if not self.http.validate_config().success:
             raise RuntimeError("Gemini provider not properly configured")
 
         url = f"{self.http.base_url.rstrip('/')}/v1beta/models/{self.http.model}:generateContent"
@@ -38,7 +38,7 @@ class GeminiProvider(BaseProvider):
     async def stream(
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
     ) -> AsyncIterator[str]:
-        if not self.http.validate_config().valid:
+        if not self.http.validate_config().success:
             raise RuntimeError("Gemini provider not properly configured")
 
         url = f"{self.http.base_url.rstrip('/')}/v1beta/models/{self.http.model}:generateContent"

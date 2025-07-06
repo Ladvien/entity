@@ -22,7 +22,7 @@ class GeminiResource(LLMResource):
         return HttpLLMResource(config, require_api_key=True).validate_config()
 
     async def generate(self, prompt: str) -> str:
-        if not self.http.validate_config().valid:
+        if not self.http.validate_config().success:
             raise RuntimeError("Gemini resource not properly configured")
 
         url = f"{self.http.base_url.rstrip('/')}/v1beta/models/{self.http.model}:generateContent"
