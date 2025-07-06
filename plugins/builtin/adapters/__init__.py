@@ -5,6 +5,13 @@ from __future__ import annotations
 from .cli import CLIAdapter
 from .grpc import LLMGRPCAdapter
 from .http import HTTPAdapter
+from .logging import LoggingAdapter
 from .websocket import WebSocketAdapter
 
-__all__ = ["HTTPAdapter", "CLIAdapter", "WebSocketAdapter", "LLMGRPCAdapter"]
+__all__ = [
+    "HTTPAdapter",
+    "CLIAdapter",
+    "WebSocketAdapter",
+    "LLMGRPCAdapter",
+    "LoggingAdapter",
+]

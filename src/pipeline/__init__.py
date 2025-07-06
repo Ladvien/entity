@@ -26,7 +26,12 @@ from .stages import PipelineStage
 from .state import FailureInfo, LLMResponse, PipelineState
 
 # isort: off
-from plugins.builtin.adapters import CLIAdapter, HTTPAdapter, WebSocketAdapter
+from plugins.builtin.adapters import (
+    CLIAdapter,
+    HTTPAdapter,
+    LoggingAdapter,
+    WebSocketAdapter,
+)
 
 # isort: on
 __all__ = [
@@ -75,5 +80,6 @@ __all__ = [
     "HTTPAdapter",
     "WebSocketAdapter",
     "CLIAdapter",
+    "LoggingAdapter",
     "execute_with_observability",
 ]
