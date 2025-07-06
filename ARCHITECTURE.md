@@ -53,10 +53,11 @@ The pipeline follows a **single-execution pattern** optimized for reconfigurable
 **Why Single Execution for Agents**: Predictable execution patterns make behavior changes more reliable and easier to debug. Plugin swaps produce consistent results because the execution flow remains stable.
 
 ```python
-from enum import Enum, auto
 from dataclasses import dataclass, field
-from typing import Dict, List, Any, Optional
 from datetime import datetime
+from enum import Enum, auto
+from typing import Any, Dict, List, Optional
+
 
 async def execute_pipeline(request):
     """Main pipeline execution with layered context"""
@@ -73,7 +74,7 @@ async def execute_pipeline(request):
     )
     
     registries = SystemRegistries(
-        resources=resource_registry,
+        resources=resource_container,
         tools=tool_registry,
         plugins=plugin_registry
     )
@@ -959,7 +960,7 @@ class PluginContext:
 @dataclass
 class SystemRegistries:
     """Container for all system registries"""
-    resources: ResourceRegistry
+    resources: ResourceContainer
     tools: ToolRegistry
     plugins: PluginRegistry
 ```
@@ -1183,13 +1184,13 @@ class SystemInitializer:
                     raise SystemError(f"Config validation failed for {plugin_class.__name__}: {config_result.error_message}")
             
             # Phase 3: Initialize resources and tools
-            resource_registry = ResourceRegistry()
+            resource_container = ResourceContainer()
             tool_registry = ToolRegistry()
             
             for resource_class, config in registry.resource_classes():
                 instance = resource_class(config)
                 await instance.initialize()
-                resource_registry.add_resource(instance)
+                resource_container.add_resource(instance)
             
             for tool_class, config in registry.tool_classes():
                 instance = tool_class(config)
@@ -1201,7 +1202,7 @@ class SystemInitializer:
                 instance = plugin_class(config)
                 plugin_registry.add_plugin(instance)
             
-            return plugin_registry, resource_registry, tool_registry
+            return plugin_registry, resource_container, tool_registry
 
     def _validate_dependency_graph(self, registry, dep_graph: Dict[str, List[str]]):
         """Validate dependency graph: check existence and detect circular dependencies"""

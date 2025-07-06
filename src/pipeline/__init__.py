@@ -28,7 +28,7 @@ from .plugins.contrib import (
     ValidationResult,
 )
 from .registries import PluginRegistry, ResourceRegistry, SystemRegistries, ToolRegistry
-from .resources import LLM, BaseResource, Resource
+from .resources import LLM, BaseResource, Resource, ResourceContainer
 from .runtime import AgentRuntime
 from .stages import PipelineStage
 from .state import FailureInfo, LLMResponse, PipelineState
@@ -62,7 +62,7 @@ __all__ = [
     "ReconfigResult",
     "ConfigurationError",
     "PluginRegistry",
-    "ResourceRegistry",
+    "ResourceContainer",
     "ToolRegistry",
     "ClassRegistry",
     "SystemInitializer",
