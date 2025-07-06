@@ -29,7 +29,6 @@ Welcome to the Entity Pipeline framework. These pages explain how to configure a
 - [API reference](api_reference.md)
 - [Advanced usage](advanced_usage.md)
 - [Module map](module_map.md)
-- [gRPC services](grpc_services.md)
 - [Troubleshooting](troubleshooting.md)
 
 ### Deployment

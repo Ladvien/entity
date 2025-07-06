@@ -1,8 +1,9 @@
 # gRPC Services
 
 Entity uses gRPC for all backend model communication. The `src/grpc_services`
-package contains protocol definitions and service implementations. Below is a
-minimal example for text generation services.
+package contains both the protocol definitions and a working implementation of
+``LLMService`` for text generation. The excerpt below shows the protocol used by
+this service.
 
 ```proto
 syntax = "proto3";
@@ -21,8 +22,9 @@ message GenerateResponse {
 }
 ```
 
-Generate the Python bindings with `grpcio-tools` and implement the server using
-`grpc.aio`:
+Generate the Python bindings with `grpcio-tools` and use them with the
+``LLMService`` implementation found in ``src/grpc_services/llm_service.py``.
+The server leverages ``grpc.aio`` for async handling:
 
 ```python
 import asyncio
@@ -42,10 +44,11 @@ if __name__ == "__main__":
     asyncio.run(serve())
 ```
 
-``src/grpc_services/llm.proto`` and ``llm_service.py`` act as references for
-future model services. The service requires the generated modules
-``llm_pb2`` and ``llm_pb2_grpc`` to be present. If they are missing the import
-will fail with an error directing you to regenerate them.
+``src/grpc_services/llm_service.py`` implements a full ``LLMService`` using
+``UnifiedLLMResource``. The service streams tokens from any configured model and
+can serve as a template for additional gRPC endpoints. It requires the
+generated ``llm_pb2`` and ``llm_pb2_grpc`` modules; regenerate them if imports
+fail.
 
 ### Demo Script
 
