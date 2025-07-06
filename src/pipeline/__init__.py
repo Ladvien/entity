@@ -89,6 +89,7 @@ __all__ = [
     "ConversationManager",
     "HTTPAdapter",
     "WebSocketAdapter",
+    "LoggingAdapter",
     "CLIAdapter",
     "LoggingAdapter",
     "execute_with_observability",
