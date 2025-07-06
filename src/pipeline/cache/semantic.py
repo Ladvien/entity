@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import warnings
+from typing import Any
 
 warnings.warn(
     (
@@ -16,10 +17,12 @@ def __getattr__(name: str):
     """Lazily import :class:`SemanticCache` when requested."""
 
     if name == "SemanticCache":
-        from plugins.contrib.resources.cache_backends.semantic import SemanticCache
+        from plugins.contrib.resources.cache_backends.semantic import \
+            SemanticCache
 
         return SemanticCache
     raise AttributeError(f"module {__name__} has no attribute {name}")
 
 
+SemanticCache: Any
 __all__ = ["SemanticCache"]
