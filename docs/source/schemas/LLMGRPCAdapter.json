@@ -1,0 +1,14 @@
+{
+  "title": "LLMGRPCAdapterConfig",
+  "type": "object",
+  "properties": {
+    "host": {
+      "title": "Host",
+      "type": "string"
+    },
+    "port": {
+      "title": "Port",
+      "type": "integer"
+    }
+  }
+}

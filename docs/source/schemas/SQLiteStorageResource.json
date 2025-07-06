@@ -1,0 +1,14 @@
+{
+  "title": "SQLiteStorageResourceConfig",
+  "type": "object",
+  "properties": {
+    "path": {
+      "title": "Path",
+      "type": "string"
+    },
+    "history_table": {
+      "title": "History Table",
+      "type": "string"
+    }
+  }
+}

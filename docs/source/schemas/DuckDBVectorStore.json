@@ -1,0 +1,10 @@
+{
+  "title": "DuckDBVectorStoreConfig",
+  "type": "object",
+  "properties": {
+    "path": {
+      "title": "Path",
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "title": "InMemoryStorageResourceConfig",
+  "type": "object",
+  "properties": {
+    "history_table": {
+      "title": "History Table",
+      "type": "string"
+    }
+  }
+}

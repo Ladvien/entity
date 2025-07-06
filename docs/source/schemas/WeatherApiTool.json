@@ -1,0 +1,18 @@
+{
+  "title": "WeatherApiToolConfig",
+  "type": "object",
+  "properties": {
+    "base_url": {
+      "title": "Base Url",
+      "type": "string"
+    },
+    "api_key": {
+      "title": "Api Key",
+      "type": "string"
+    },
+    "timeout": {
+      "title": "Timeout",
+      "type": "integer"
+    }
+  }
+}

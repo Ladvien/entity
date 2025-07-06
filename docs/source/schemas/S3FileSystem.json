@@ -1,0 +1,14 @@
+{
+  "title": "S3FileSystemConfig",
+  "type": "object",
+  "properties": {
+    "bucket": {
+      "title": "Bucket",
+      "type": "string"
+    },
+    "base_path": {
+      "title": "Base Path",
+      "type": "string"
+    }
+  }
+}
