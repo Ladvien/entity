@@ -6,7 +6,12 @@ from __future__ import annotations
 import subprocess
 from typing import Type
 
-from cdktf import App, TerraformStack
+try:
+    from cdktf import App, TerraformStack
+except (ImportError, FileNotFoundError) as exc:  # noqa: WPS440
+    raise ImportError(
+        "cdktf and Node.js are required for infrastructure features"
+    ) from exc
 
 
 class Infrastructure:
