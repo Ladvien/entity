@@ -1,0 +1,10 @@
+{
+  "title": "ComplexPromptConfig",
+  "type": "object",
+  "properties": {
+    "k": {
+      "title": "K",
+      "type": "integer"
+    }
+  }
+}

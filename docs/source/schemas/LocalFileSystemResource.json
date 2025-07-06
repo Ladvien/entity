@@ -1,0 +1,10 @@
+{
+  "title": "LocalFileSystemResourceConfig",
+  "type": "object",
+  "properties": {
+    "base_path": {
+      "title": "Base Path",
+      "type": "string"
+    }
+  }
+}

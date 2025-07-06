@@ -1,0 +1,18 @@
+{
+  "title": "HTTPAdapterConfig",
+  "type": "object",
+  "properties": {
+    "host": {
+      "title": "Host",
+      "type": "string"
+    },
+    "port": {
+      "title": "Port",
+      "type": "integer"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "type": "boolean"
+    }
+  }
+}

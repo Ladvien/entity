@@ -1,0 +1,26 @@
+{
+  "title": "StructuredLoggingConfig",
+  "type": "object",
+  "properties": {
+    "level": {
+      "title": "Level",
+      "type": "string"
+    },
+    "file_enabled": {
+      "title": "File Enabled",
+      "type": "boolean"
+    },
+    "file_path": {
+      "title": "File Path",
+      "type": "string"
+    },
+    "max_file_size": {
+      "title": "Max File Size",
+      "type": "integer"
+    },
+    "backup_count": {
+      "title": "Backup Count",
+      "type": "integer"
+    }
+  }
+}

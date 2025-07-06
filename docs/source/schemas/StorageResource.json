@@ -1,0 +1,10 @@
+{
+  "title": "StorageResourceConfig",
+  "type": "object",
+  "properties": {
+    "filesystem": {
+      "title": "Filesystem",
+      "type": "object"
+    }
+  }
+}

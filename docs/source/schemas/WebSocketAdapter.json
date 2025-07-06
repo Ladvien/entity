@@ -1,0 +1,14 @@
+{
+  "title": "WebSocketAdapterConfig",
+  "type": "object",
+  "properties": {
+    "host": {
+      "title": "Host",
+      "type": "string"
+    },
+    "port": {
+      "title": "Port",
+      "type": "integer"
+    }
+  }
+}

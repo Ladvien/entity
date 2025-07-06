@@ -18,12 +18,16 @@ if TYPE_CHECKING:  # pragma: no cover - used for type hints only
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .initializer import ClassRegistry
 
-from .exceptions import (CircuitBreakerTripped, PluginError,
-                         PluginExecutionError)
+from .exceptions import CircuitBreakerTripped, PluginError, PluginExecutionError
 from .logging import get_logger
 from .observability.utils import execute_with_observability
 from .stages import PipelineStage
 from .validation import ValidationResult
+from plugins.builtin.config_models import (
+    DefaultConfigModel,
+    PLUGIN_CONFIG_MODELS,
+)
+from pydantic import ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -204,6 +208,11 @@ class BasePlugin(ABC):
     # --- Validation & Reconfiguration ---
     @classmethod
     def validate_config(cls: Type[Self], config: Dict) -> ValidationResult:
+        model_cls = PLUGIN_CONFIG_MODELS.get(cls.__name__, DefaultConfigModel)
+        try:
+            model_cls(**config)
+        except ValidationError as exc:
+            return ValidationResult.error_result(str(exc))
         return ValidationResult.success_result()
 
     @classmethod

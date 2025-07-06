@@ -1,0 +1,14 @@
+{
+  "title": "BedrockResourceConfig",
+  "type": "object",
+  "properties": {
+    "region": {
+      "title": "Region",
+      "type": "string"
+    },
+    "model_id": {
+      "title": "Model Id",
+      "type": "string"
+    }
+  }
+}

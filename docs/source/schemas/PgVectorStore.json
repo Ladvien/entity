@@ -1,0 +1,10 @@
+{
+  "title": "PgVectorStoreConfig",
+  "type": "object",
+  "properties": {
+    "table_name": {
+      "title": "Table Name",
+      "type": "string"
+    }
+  }
+}
