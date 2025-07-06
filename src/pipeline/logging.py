@@ -1,4 +1,4 @@
-"""Re-export logging helpers from :class:`LoggingAdapter`."""
+"""Expose logging helpers from the builtin ``LoggingAdapter`` plugin."""
 
 import contextvars
 import logging
@@ -40,10 +40,6 @@ def JsonFormatter(*args, **kwargs):  # type: ignore[override]
     return _adapter().JsonFormatter(*args, **kwargs)
 
 
-class LoggingAdapter:  # pragma: no cover - compatibility stub
-    pass
-
-
 __all__ = [
     "RequestIdFilter",
     "JsonFormatter",
@@ -51,5 +47,4 @@ __all__ = [
     "get_logger",
     "set_request_id",
     "reset_request_id",
-    "LoggingAdapter",
 ]
