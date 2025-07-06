@@ -25,11 +25,16 @@ def __getattr__(name: str):
 
     if name == "SemanticCache":
 <<<<<<< HEAD
+<<<<<<< HEAD
         from plugins.contrib.resources.cache_backends.semantic import \
             SemanticCache
 =======
         from user_plugins.resources.cache_backends.semantic import SemanticCache
 >>>>>>> da816a7a3dbe69257c5bbcbb38bb088649439bb0
+=======
+        from user_plugins.resources.cache_backends.semantic import \
+            SemanticCache
+>>>>>>> 9c565435c8c98d3dd664501aa929f40fe2e70c3f
 
         return SemanticCache
     raise AttributeError(f"module {__name__} has no attribute {name}")

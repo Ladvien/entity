@@ -2,7 +2,10 @@ import asyncio
 
 from hypothesis import given
 from hypothesis import strategies as st
+<<<<<<< HEAD
 
+=======
+>>>>>>> 9c565435c8c98d3dd664501aa929f40fe2e70c3f
 from user_plugins.tools.calculator_tool import CalculatorTool
 
 

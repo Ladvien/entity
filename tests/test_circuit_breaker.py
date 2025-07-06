@@ -1,5 +1,6 @@
 import asyncio
 
+<<<<<<< HEAD
 from pipeline import (
     PipelineStage,
     PluginRegistry,
@@ -8,6 +9,13 @@ from pipeline import (
     ToolRegistry,
     execute_pipeline,
 )
+=======
+from user_plugins.failure.basic_logger import BasicLogger
+from user_plugins.failure.error_formatter import ErrorFormatter
+
+from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
+                      SystemRegistries, ToolRegistry, execute_pipeline)
+>>>>>>> 9c565435c8c98d3dd664501aa929f40fe2e70c3f
 from pipeline.resources import ResourceContainer
 from user_plugins.failure.basic_logger import BasicLogger
 from user_plugins.failure.error_formatter import ErrorFormatter

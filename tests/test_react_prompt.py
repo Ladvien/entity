@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime
 
+<<<<<<< HEAD
 from pipeline import (
     ConversationEntry,
     MetricsCollector,
@@ -10,6 +11,14 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
+=======
+from user_plugins.prompts.react_prompt import ReActPrompt
+from user_plugins.tools.calculator_tool import CalculatorTool
+
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginContext, PluginRegistry, SystemRegistries,
+                      ToolRegistry)
+>>>>>>> 9c565435c8c98d3dd664501aa929f40fe2e70c3f
 from pipeline.resources import ResourceContainer
 from user_plugins.prompts.react_prompt import ReActPrompt
 from user_plugins.tools.calculator_tool import CalculatorTool

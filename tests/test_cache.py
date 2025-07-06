@@ -1,5 +1,10 @@
 from datetime import datetime
 
+<<<<<<< HEAD
+=======
+from user_plugins.resources.cache import CacheResource
+
+>>>>>>> 9c565435c8c98d3dd664501aa929f40fe2e70c3f
 import pipeline.context as context_module
 from pipeline import (
     ConversationEntry,
