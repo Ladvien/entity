@@ -4,7 +4,7 @@ import json
 import time
 from typing import Any, Awaitable, Callable, Dict, TypeVar, cast
 
-from interfaces import ToolPluginProtocol
+from common_interfaces import ToolPluginProtocol
 from registry import SystemRegistries
 
 from ..exceptions import ToolExecutionError

@@ -1,3 +1,3 @@
-from interfaces.resources import LLMResource
+from common_interfaces.resources import LLMResource
 
 __all__ = ["LLMResource"]

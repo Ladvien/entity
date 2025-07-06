@@ -3,12 +3,15 @@ from __future__ import annotations
 """SQLite-based conversation history storage."""
 import json
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 import aiosqlite
 
 from pipeline.observability.tracing import start_span
-from pipeline.state import ConversationEntry
+
+if TYPE_CHECKING:  # pragma: no cover - type hints only
+    from pipeline.state import ConversationEntry
+
 from plugins.builtin.resources.database import DatabaseResource
 
 

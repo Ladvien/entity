@@ -14,6 +14,7 @@ packages = [
     { include = "config", from = "src" },
     { include = "registry", from = "src" },
     { include = "plugins", from = "src" },
+    { include = "common_interfaces", from = "src" },
     { include = "user_plugins" },
 ]
 

@@ -2,9 +2,11 @@ from __future__ import annotations
 
 """In-memory database resource for conversation history."""
 
-from typing import Dict, List
+from typing import TYPE_CHECKING, Dict, List
 
-from pipeline.state import ConversationEntry
+if TYPE_CHECKING:  # pragma: no cover - type hints only
+    from pipeline.state import ConversationEntry
+
 from plugins.builtin.resources.database import DatabaseResource
 
 

@@ -3,11 +3,13 @@ from __future__ import annotations
 """Retrieve past conversation from memory for further prompts."""
 
 
-from typing import List
+from typing import TYPE_CHECKING, List
 
 from pipeline.base_plugins import PromptPlugin
-from pipeline.context import ConversationEntry, PluginContext
-from pipeline.resources.memory_resource import MemoryResource
+
+if TYPE_CHECKING:  # pragma: no cover - type hints only
+    from pipeline.context import ConversationEntry, PluginContext
+    from pipeline.resources.memory_resource import MemoryResource
 
 
 class MemoryRetrievalPrompt(PromptPlugin):

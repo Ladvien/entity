@@ -3,11 +3,14 @@ from __future__ import annotations
 """Synchronize conversation history using the memory resource."""
 
 
-from typing import Dict, List
+from typing import TYPE_CHECKING, Dict, List
 
 from pipeline.base_plugins import PromptPlugin
-from pipeline.context import ConversationEntry, PluginContext
-from pipeline.resources.memory_resource import MemoryResource
+
+if TYPE_CHECKING:  # pragma: no cover - type hints only
+    from pipeline.context import ConversationEntry, PluginContext
+    from pipeline.resources.memory_resource import MemoryResource
+
 from pipeline.stages import PipelineStage
 
 

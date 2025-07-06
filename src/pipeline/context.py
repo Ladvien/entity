@@ -9,9 +9,9 @@ from typing import (TYPE_CHECKING, Any, AsyncIterator, Callable, Dict, List,
                     Optional, TypeVar, cast)
 
 if TYPE_CHECKING:  # pragma: no cover
-    from interfaces.resources import LLM
+    from common_interfaces.resources import LLM
 else:  # pragma: no cover - runtime type reference
-    from interfaces.resources import LLM
+    from common_interfaces.resources import LLM
 
 from registry import SystemRegistries
 

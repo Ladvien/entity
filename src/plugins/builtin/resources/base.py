@@ -1,3 +1,3 @@
-from interfaces.resources import BaseResource, Resource
+from common_interfaces.resources import BaseResource, Resource
 
 __all__ = ["Resource", "BaseResource"]

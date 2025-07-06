@@ -3,9 +3,11 @@ from __future__ import annotations
 """Database-backed conversation storage."""
 from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
-from typing import Any, AsyncIterator, List, Optional, Protocol
+from typing import TYPE_CHECKING, Any, AsyncIterator, List, Optional, Protocol
 
-from pipeline.state import ConversationEntry
+if TYPE_CHECKING:  # pragma: no cover - type hints only
+    from pipeline.state import ConversationEntry
+
 from plugins.builtin.resources.base import BaseResource
 
 

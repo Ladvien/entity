@@ -3,13 +3,16 @@ from __future__ import annotations
 """PostgreSQL database resource."""
 import json
 from contextlib import asynccontextmanager
-from typing import AsyncIterator, Dict, List, Optional
+from typing import TYPE_CHECKING, AsyncIterator, Dict, List, Optional
 
 import asyncpg
 
 from pipeline.observability.tracing import start_span
 from pipeline.reliability import CircuitBreaker, RetryPolicy
-from pipeline.state import ConversationEntry
+
+if TYPE_CHECKING:  # pragma: no cover - type hints only
+    from pipeline.state import ConversationEntry
+
 from plugins.builtin.resources.database import DatabaseResource
 
 

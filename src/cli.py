@@ -5,9 +5,9 @@ from pathlib import Path
 
 import yaml
 
+from common_interfaces import import_plugin_class
+from common_interfaces.resources import Resource
 from entity import Agent, AgentServer
-from interfaces import import_plugin_class
-from interfaces.resources import Resource
 from pipeline import update_plugin_configuration
 from pipeline.base_plugins import ResourcePlugin, ToolPlugin
 from pipeline.initializer import ClassRegistry
@@ -50,6 +50,7 @@ class CLI:
 
         subparsers.add_parser("run", help="Start the agent")
         subparsers.add_parser("serve-websocket", help="Start the agent via WebSocket")
+        subparsers.add_parser("verify", help="Load plugins and exit")
         reload_parser = subparsers.add_parser(
             "reload-config",
             help="Reload plugin configuration from a YAML file",
@@ -71,6 +72,9 @@ class CLI:
         """
         if self.args.command == "new":
             return self._create_project(self.args.path)
+
+        if self.args.command == "verify":
+            return self._verify_plugins(self.args.config)
 
         agent = Agent(self.args.config)
         if self.args.command == "reload-config":
@@ -119,6 +123,21 @@ class CLI:
 
         logger.info("Created project at %s", target)
         return 0
+
+    def _verify_plugins(self, config_path: str) -> int:
+        """Load plugins defined in ``config_path`` and exit."""
+
+        async def _run() -> int:
+            try:
+                agent = Agent(config_path)
+                await agent._ensure_runtime()
+            except Exception as exc:
+                logger.error("Plugin loading failed: %s", exc)
+                return 1
+            logger.info("All plugins loaded successfully")
+            return 0
+
+        return asyncio.run(_run())
 
     def _reload_config(self, agent: Agent, file_path: str) -> int:
         """Reload plugin configuration for a running agent.

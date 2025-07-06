@@ -3,11 +3,13 @@ from __future__ import annotations
 """DuckDB-based conversation history storage."""
 import asyncio
 import json
-from typing import Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 import duckdb
 
-from pipeline.state import ConversationEntry
+if TYPE_CHECKING:  # pragma: no cover - type hints only
+    from pipeline.state import ConversationEntry
+
 from plugins.builtin.resources.database import DatabaseResource
 
 

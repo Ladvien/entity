@@ -2,9 +2,10 @@ from __future__ import annotations
 
 """Memory resource interface."""
 from abc import ABC, abstractmethod
-from typing import Any, List
+from typing import TYPE_CHECKING, Any, List
 
-from pipeline.state import ConversationEntry
+if TYPE_CHECKING:  # pragma: no cover - type hints only
+    from pipeline.state import ConversationEntry
 
 
 class Memory(ABC):
