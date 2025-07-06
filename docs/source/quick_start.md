@@ -54,7 +54,7 @@ Reload plugin definitions while the agent is running:
 python src/cli.py reload-config updated.yaml
 ```
 
-For more on dynamic configuration, see [ARCHITECTURE.md](../../ARCHITECTURE.md#%F0%9F%94%84-reconfigurable-agent-infrastructure).
+For more on dynamic configuration, see [the architecture overview](../../architecture/general.md#%F0%9F%94%84-reconfigurable-agent-infrastructure).
 
 ### Using the "llm" Resource Key
 Configure a shared LLM resource in YAML:
