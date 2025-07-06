@@ -40,7 +40,7 @@ async def weather_plugin(ctx):
 
 ## Loading Plugins Automatically
 
-Built-in plugins ship with the framework under `src/plugins`. Place your own plugin modules inside a directory and load them with `Agent.from_directory(path)` or `Agent.from_package(package)`.
+Built-in plugin modules live in `src/plugins`. Place your own plugins inside any directory and load them with `Agent.from_directory(path)` or `Agent.from_package(package)`.
 
 ```
 agent = Agent.from_directory("./user_plugins")
