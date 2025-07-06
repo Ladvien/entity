@@ -45,3 +45,15 @@ Run it with:
 python examples/structured_logging_example.py
 ```
 
+## Plugin and Tool Observability
+
+Each plugin executed by the pipeline automatically logs start and finish events.
+Messages include the plugin name, stage and request ID so entries can be
+correlated across stages. Tool executions follow the same pattern. When a tool
+starts, finishes or fails, a structured log entry is emitted describing the
+result.
+
+Metrics are recorded alongside these logs. Duration and error counts are stored
+in ``context.metrics`` and can be exported to Prometheus using
+``pipeline.observability.start_metrics_server()``.
+

@@ -8,8 +8,11 @@ from common_interfaces import ToolPluginProtocol
 from registry import SystemRegistries
 
 from ..exceptions import ToolExecutionError
+from ..logging import get_logger
 from ..state import FailureInfo, PipelineState, ToolCall
 from .base import RetryOptions
+
+logger = get_logger(__name__)
 
 ResultT = TypeVar("ResultT")
 
@@ -82,6 +85,15 @@ async def execute_pending_tools(
                 )
                 cached = await cache.get(cache_key)
             if cached is not None:
+                logger.info(
+                    "Tool execution cached",
+                    extra={
+                        "tool": call.name,
+                        "stage": str(state.current_stage),
+                        "pipeline_id": state.pipeline_id,
+                        "result_key": call.result_key,
+                    },
+                )
                 state.stage_results[call.result_key] = cached
                 if (
                     state.max_stage_results is not None
@@ -101,6 +113,15 @@ async def execute_pending_tools(
                 return
 
             start = time.time()
+            logger.info(
+                "Tool execution started",
+                extra={
+                    "tool": call.name,
+                    "stage": str(state.current_stage),
+                    "pipeline_id": state.pipeline_id,
+                    "result_key": call.result_key,
+                },
+            )
             try:
                 result = await execute_tool(tool, call, state, options)
             except Exception as exc:
@@ -126,6 +147,16 @@ async def execute_pending_tools(
                     error_type=exc.__class__.__name__,
                     error_message=str(exc),
                     original_exception=exc,
+                )
+                logger.exception(
+                    "Tool execution failed",
+                    exc_info=exc,
+                    extra={
+                        "tool": call.name,
+                        "stage": str(state.current_stage),
+                        "pipeline_id": state.pipeline_id,
+                        "result_key": call.result_key,
+                    },
                 )
                 raise ToolExecutionError(call.name, exc, call.result_key) from exc
             else:
@@ -153,6 +184,16 @@ async def execute_pending_tools(
                     call.name,
                     cast(str, state.current_stage and str(state.current_stage)),
                     duration,
+                )
+                logger.info(
+                    "Tool execution finished",
+                    extra={
+                        "tool": call.name,
+                        "stage": str(state.current_stage),
+                        "pipeline_id": state.pipeline_id,
+                        "result_key": call.result_key,
+                        "duration": duration,
+                    },
                 )
 
         if semaphore:
