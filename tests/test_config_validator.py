@@ -10,7 +10,7 @@ def test_config_validator_success(tmp_path):
     path.write_text(yaml.dump(config))
 
     result = subprocess.run(
-        [sys.executable, "-m", "src.config.validator", "--config", str(path)],
+        [sys.executable, "-m", "src.entity_config.validator", "--config", str(path)],
         capture_output=True,
         text=True,
     )
@@ -24,7 +24,7 @@ def test_config_validator_failure(tmp_path):
     path.write_text(yaml.dump(config))
 
     result = subprocess.run(
-        [sys.executable, "-m", "src.config.validator", "--config", str(path)],
+        [sys.executable, "-m", "src.entity_config.validator", "--config", str(path)],
         capture_output=True,
         text=True,
     )
@@ -38,7 +38,7 @@ def test_config_validator_schema_error(tmp_path):
     path.write_text(yaml.dump(config))
 
     result = subprocess.run(
-        [sys.executable, "-m", "src.config.validator", "--config", str(path)],
+        [sys.executable, "-m", "src.entity_config.validator", "--config", str(path)],
         capture_output=True,
         text=True,
     )

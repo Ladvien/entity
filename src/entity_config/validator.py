@@ -13,7 +13,7 @@ if str(SRC_PATH) not in sys.path:
 import yaml  # noqa: E402
 from jsonschema import RefResolver, ValidationError, validate  # noqa: E402
 
-from config.environment import load_env  # noqa: E402
+from entity_config.environment import load_env  # noqa: E402
 from pipeline import SystemInitializer  # noqa: E402
 from pipeline.config import ConfigLoader  # noqa: E402
 from plugins.builtin.adapters.logging_adapter import (  # noqa: E402

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import yaml
 
-from config.models import EntityConfig, asdict
+from entity_config.models import EntityConfig, asdict
 from pipeline.config import ConfigLoader
 from plugins.builtin.adapters.logging_adapter import (configure_logging,
                                                       get_logger)

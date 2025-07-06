@@ -7,7 +7,7 @@ import os
 
 import grpc
 
-from config.environment import load_env
+from entity_config.environment import load_env
 from pipeline.resources.llm.unified import UnifiedLLMResource
 
 from . import llm_pb2, llm_pb2_grpc

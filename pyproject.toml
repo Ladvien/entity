@@ -11,7 +11,7 @@ packages = [
     { include = "entity", from = "src" },
     { include = "pipeline", from = "src" },
     { include = "cli", from = "src" },
-    { include = "config", from = "src" },
+    { include = "entity_config", from = "src" },
     { include = "registry", from = "src" },
     { include = "plugins", from = "src" },
     { include = "common_interfaces", from = "src" },
@@ -20,8 +20,8 @@ packages = [
 
 [tool.poetry.scripts]
 entity-cli = "src.cli:main"
-entity-config-validate = "src.config.validator:main"
-entity-config-migrate = "src.config.migrate:main"
+entity-config-validate = "src.entity_config.validator:main"
+entity-config-migrate = "src.entity_config.migrate:main"
 
 
 [tool.poetry.urls]
@@ -105,8 +105,8 @@ sequence = [
 ]
 [tool.poe.tasks.validate]
 sequence = [
-    "python -m src.config.validator --config config/dev.yaml",
-    "python -m src.config.validator --config config/prod.yaml",
+    "python -m src.entity_config.validator --config config/dev.yaml",
+    "python -m src.entity_config.validator --config config/prod.yaml",
     "python -m src.registry.validator",
 ]
 [tool.poe.tasks.check]
