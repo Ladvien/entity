@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import dataclasses
+from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -180,3 +182,13 @@ class PipelineState:
             max_stage_results=data.get("max_stage_results", 100),
         )
         return state
+
+    def snapshot(self) -> "PipelineState":
+        """Return a deep copy of the current pipeline state."""
+        return deepcopy(self)
+
+    def restore(self, other: "PipelineState") -> "PipelineState":
+        """Replace all attributes with those from ``other`` and return a copy."""
+        for field_obj in dataclasses.fields(self):
+            setattr(self, field_obj.name, deepcopy(getattr(other, field_obj.name)))
+        return self.snapshot()
