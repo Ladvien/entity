@@ -22,6 +22,7 @@ Welcome to the Entity Pipeline framework. These pages explain how to configure a
 ### Architecture
 - [Architecture overview](architecture.md)
 - [Components overview](components_overview.md)
+- [Deliver-stage adapters](components_overview.md#deliver-stage-adapters)
 
 ### Reference
 - [Context API](context.md)
