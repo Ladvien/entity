@@ -2,10 +2,24 @@ import asyncio
 from datetime import datetime
 from pathlib import Path
 
+<<<<<<< HEAD
 from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
                       PipelineState, PluginRegistry, PromptPlugin,
                       ResourceContainer, SystemRegistries, ToolRegistry)
+=======
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineStage,
+    PipelineState,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
+>>>>>>> 842b365f2ee0307cf77e24d7bdb710602bc576a8
 from pipeline.pipeline import execute_pipeline
+from pipeline.resources import ResourceContainer
 
 
 class RespondPlugin(PromptPlugin):

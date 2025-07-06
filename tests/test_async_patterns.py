@@ -1,11 +1,23 @@
 import asyncio
 import time
 
+<<<<<<< HEAD
 from pipeline import (PipelineStage, PluginRegistry, ResourceContainer,
                       SystemRegistries, ToolPlugin, ToolRegistry,
                       execute_pipeline)
+=======
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    SystemRegistries,
+    ToolPlugin,
+    ToolRegistry,
+    execute_pipeline,
+)
+>>>>>>> 842b365f2ee0307cf77e24d7bdb710602bc576a8
 from pipeline.base_plugins import PluginAutoClassifier
 from pipeline.context import PluginContext
+from pipeline.resources import ResourceContainer
 
 
 class SleepTool(ToolPlugin):

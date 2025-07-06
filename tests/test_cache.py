@@ -3,11 +3,25 @@ from datetime import datetime
 from plugins.contrib.resources.cache import CacheResource
 
 import pipeline.context as context_module
+<<<<<<< HEAD
 from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
                       PipelineState, PluginContext, PluginRegistry,
                       ResourceContainer, SystemRegistries, ToolRegistry)
+=======
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineStage,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
+>>>>>>> 842b365f2ee0307cf77e24d7bdb710602bc576a8
 from pipeline.base_plugins import PromptPlugin
 from pipeline.cache import InMemoryCache
+from pipeline.resources import ResourceContainer
 from pipeline.resources.llm_base import LLM
 from pipeline.state import ToolCall
 from pipeline.tools.execution import execute_pending_tools

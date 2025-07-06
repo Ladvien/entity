@@ -3,13 +3,24 @@ from datetime import datetime
 
 from plugins.builtin.resources.memory_storage import MemoryStorage
 
+<<<<<<< HEAD
 from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
                       ResourceContainer, SystemRegistries, ToolRegistry,
                       execute_pipeline)
+=======
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
+>>>>>>> 842b365f2ee0307cf77e24d7bdb710602bc576a8
 from pipeline.context import ConversationEntry
+from pipeline.resources import ResourceContainer
 from pipeline.resources.memory import Memory
-from pipeline.resources.memory_resource import (MemoryResource,
-                                                SimpleMemoryResource)
+from pipeline.resources.memory_resource import MemoryResource, SimpleMemoryResource
 
 
 class IncrementPlugin(PromptPlugin):

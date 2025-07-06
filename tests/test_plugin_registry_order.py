@@ -2,9 +2,22 @@ import asyncio
 
 import yaml
 
+<<<<<<< HEAD
 from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
                       ResourceContainer, SystemInitializer, SystemRegistries,
                       ToolRegistry, execute_pipeline)
+=======
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemInitializer,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
+from pipeline.resources import ResourceContainer
+>>>>>>> 842b365f2ee0307cf77e24d7bdb710602bc576a8
 
 
 class First(PromptPlugin):

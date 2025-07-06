@@ -3,10 +3,23 @@ from datetime import datetime
 
 import pytest
 
+<<<<<<< HEAD
 from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
                       PipelineState, PluginRegistry, ResourceContainer,
                       SystemRegistries, ToolRegistry)
+=======
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineStage,
+    PipelineState,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
+>>>>>>> 842b365f2ee0307cf77e24d7bdb710602bc576a8
 from pipeline.pipeline import execute_stage
+from pipeline.resources import ResourceContainer
 
 
 class GenericFailPlugin:

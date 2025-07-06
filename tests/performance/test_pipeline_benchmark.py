@@ -2,9 +2,21 @@ import asyncio
 
 import pytest
 
+<<<<<<< HEAD
 from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
                       PromptPlugin, ResourceContainer, SystemRegistries,
                       ToolRegistry)
+=======
+from pipeline import (
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
+from pipeline.resources import ResourceContainer
+>>>>>>> 842b365f2ee0307cf77e24d7bdb710602bc576a8
 
 
 class NoOpPlugin(PromptPlugin):

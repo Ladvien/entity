@@ -1,8 +1,13 @@
 import asyncio
 
+from pipeline.resources import ResourceContainer
 from pipeline.stages import PipelineStage
 from pipeline.user_plugins import PromptPlugin
+<<<<<<< HEAD
 from registry.registries import PluginRegistry, ResourceContainer, ToolRegistry
+=======
+from registry.registries import PluginRegistry, ToolRegistry
+>>>>>>> 842b365f2ee0307cf77e24d7bdb710602bc576a8
 
 
 class DummyPlugin(PromptPlugin):

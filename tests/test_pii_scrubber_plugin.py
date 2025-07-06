@@ -3,9 +3,22 @@ from datetime import datetime
 
 from plugins.contrib.prompts.pii_scrubber import PIIScrubberPrompt
 
+<<<<<<< HEAD
 from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
                       PluginContext, PluginRegistry, ResourceContainer,
                       SystemRegistries, ToolRegistry)
+=======
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
+from pipeline.resources import ResourceContainer
+>>>>>>> 842b365f2ee0307cf77e24d7bdb710602bc576a8
 
 
 def make_context():

@@ -3,10 +3,25 @@ from datetime import datetime
 
 import pytest
 
+<<<<<<< HEAD
 from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
                       PipelineState, PluginContext, PluginRegistry,
                       PromptPlugin, ResourceContainer, SystemRegistries,
                       ToolRegistry)
+=======
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineStage,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
+from pipeline.resources import ResourceContainer
+>>>>>>> 842b365f2ee0307cf77e24d7bdb710602bc576a8
 
 
 class StubLLM:
