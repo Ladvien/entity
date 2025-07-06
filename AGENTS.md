@@ -12,6 +12,7 @@ git branch --set-upstream-to=origin/main work
 ```
 
 ## Project Structure
+- `/architecture/*` – architecture overview and design documents
 - `/src/pipeline` – core engine and shared abstractions
 - `/plugins` – concrete plugin implementations grouped by type
 - `/config` – YAML configuration files
