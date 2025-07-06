@@ -80,10 +80,8 @@ class ConfigValidator:
                 initializer = SystemInitializer(config)
                 asyncio.run(initializer.initialize())
             except (ValidationError, Exception) as exc:  # pragma: no cover - error path
-                print(f"Configuration invalid: {exc}")
                 logger.error("Configuration invalid: %s", exc)
                 return False
-            print("Configuration valid")
             logger.info("Configuration valid.")
             return True
 
@@ -125,7 +123,7 @@ class ConfigValidator:
             else:
                 if last_good is not None:
                     cfg_path.write_text(last_good)
-                    print("Rolled back to last valid configuration")
+                    logger.error("Rolled back to last valid configuration")
 
         return 0
 

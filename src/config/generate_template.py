@@ -5,8 +5,14 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from plugins.builtin.adapters.logging_adapter import configure_logging, get_logger
+
+logger = get_logger(__name__)
+
 
 def main() -> int:
+    configure_logging()
+
     parser = argparse.ArgumentParser(description="Generate a starter configuration")
     parser.add_argument(
         "path", nargs="?", default="-", help="Output path or '-' for stdout"
@@ -17,12 +23,12 @@ def main() -> int:
     content = template.read_text()
 
     if args.path == "-":
-        print(content)
+        logger.info(content)
     else:
         dest = Path(args.path)
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(content)
-        print(f"Wrote template to {dest}")
+        logger.info("Wrote template to %s", dest)
     return 0
 
 
