@@ -1,5 +1,5 @@
-"""Public re-export of :class:`BasicLogger`."""
+"""Public re-export of :class:`BasicLogger` from :mod:`user_plugins`."""
 
-from plugins.builtin.failure.basic_logger import BasicLogger
+from user_plugins.failure.basic_logger import BasicLogger
 
 __all__ = ["BasicLogger"]
