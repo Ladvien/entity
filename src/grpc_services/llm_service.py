@@ -1,4 +1,4 @@
-"""Minimal gRPC service stub for model components."""
+"""Minimal gRPC service for model components."""
 
 # mypy: ignore-errors
 
@@ -16,16 +16,16 @@ from pipeline.resources.llm.unified import UnifiedLLMResource
 # These modules are generated from ``llm.proto`` using ``grpcio-tools``.
 # They are intentionally excluded from version control and should be
 # regenerated when the protocol changes.
-try:  # pragma: no cover - stubs for illustration
+try:
     from . import llm_pb2, llm_pb2_grpc  # type: ignore
-except Exception:  # pragma: no cover - stub fallback
-    llm_pb2 = None
-    llm_pb2_grpc = None
+except ImportError as exc:  # pragma: no cover - manual repair
+    raise ImportError(
+        "Generated gRPC modules not found. Run 'python -m grpc_tools.protoc' "
+        "from the project root to create llm_pb2.py and llm_pb2_grpc.py."
+    ) from exc
 
 
-class LLMService(
-    llm_pb2_grpc.LLMServiceServicer if llm_pb2_grpc else object
-):  # type: ignore[misc]
+class LLMService(llm_pb2_grpc.LLMServiceServicer):  # type: ignore[misc]
     """Text generation service using :class:`UnifiedLLMResource`."""
 
     def __init__(self, llm: Any | None = None) -> None:
@@ -53,8 +53,7 @@ class LLMService(
 async def serve(port: int = 50051) -> None:
     """Run the example service."""
     server = grpc.aio.server()
-    if llm_pb2_grpc:
-        llm_pb2_grpc.add_LLMServiceServicer_to_server(LLMService(), server)
+    llm_pb2_grpc.add_LLMServiceServicer_to_server(LLMService(), server)
     server.add_insecure_port(f"[::]:{port}")
     await server.start()
     await server.wait_for_termination()
