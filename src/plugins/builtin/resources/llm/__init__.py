@@ -1,5 +1,6 @@
 """LLM resource utilities."""
 
+from pipeline.resources.llm.unified import UnifiedLLMResource
 from plugins.llm.providers import (
     ClaudeProvider,
     EchoProvider,
@@ -7,8 +8,6 @@ from plugins.llm.providers import (
     OllamaProvider,
     OpenAIProvider,
 )
-
-from pipeline.resources.llm.unified import UnifiedLLMResource
 
 from ..llm_base import LLM
 

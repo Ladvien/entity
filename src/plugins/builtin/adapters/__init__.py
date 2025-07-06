@@ -5,8 +5,8 @@ from __future__ import annotations
 from .cli import CLIAdapter
 from .grpc import LLMGRPCAdapter
 from .http import HTTPAdapter
-from .logging_adapter import LoggingAdapter
 from .logging import LoggingAdapter
+from .logging_adapter import LoggingAdapter
 from .websocket import WebSocketAdapter
 
 __all__ = [

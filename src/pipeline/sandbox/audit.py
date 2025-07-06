@@ -6,19 +6,19 @@ from typing import TYPE_CHECKING
 warnings.warn(
     (
         "pipeline.sandbox.audit is deprecated; "
-        "use plugins.contrib.infrastructure.sandbox.audit instead"
+        "use user_plugins.infrastructure.sandbox.audit instead"
     ),
     DeprecationWarning,
     stacklevel=2,
 )
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
-    from plugins.contrib.infrastructure.sandbox.audit import PluginAuditor
+    from user_plugins.infrastructure.sandbox.audit import PluginAuditor
 
 
 def __getattr__(name: str):
     if name == "PluginAuditor":
-        from plugins.contrib.infrastructure.sandbox.audit import PluginAuditor
+        from user_plugins.infrastructure.sandbox.audit import PluginAuditor
 
         return PluginAuditor
     raise AttributeError(f"module {__name__} has no attribute {name}")

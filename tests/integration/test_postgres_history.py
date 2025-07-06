@@ -4,11 +4,11 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
-from plugins.builtin.resources.postgres import PostgresResource
 
 from config.environment import load_env
 from pipeline.resources.memory_resource import MemoryResource
 from pipeline.state import ConversationEntry
+from plugins.builtin.resources.postgres import PostgresResource
 
 load_env(Path(__file__).resolve().parents[2] / ".env")
 

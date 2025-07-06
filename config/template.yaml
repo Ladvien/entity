@@ -29,7 +29,7 @@ plugins:
         bucket: agent-files
         region: us-east-1
     cache:
-      type: plugins.contrib.resources.cache:CacheResource
+      type: user_plugins.resources.cache:CacheResource
       backend:
         type: pipeline.cache.memory:InMemoryCache
   tools:
@@ -54,11 +54,11 @@ plugins:
       type: plugins.builtin.adapters.logging:LoggingAdapter
   prompts:
     chain_of_thought:
-      type: plugins.contrib.prompts.chain_of_thought:ChainOfThoughtPrompt
+      type: user_plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
       enable_reasoning: true
     memory_retrieval:
       type: plugins.builtin.prompts.memory_retrieval:MemoryRetrievalPrompt
       max_context_length: 4000
     intent_classifier:
-      type: plugins.contrib.prompts.intent_classifier:IntentClassifierPrompt
+      type: user_plugins.prompts.intent_classifier:IntentClassifierPrompt
       confidence_threshold: 0.8

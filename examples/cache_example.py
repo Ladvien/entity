@@ -12,7 +12,7 @@ from utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 
-from plugins.contrib.resources.cache import CacheResource
+from user_plugins.resources.cache import CacheResource
 from pipeline.cache import InMemoryCache
 
 

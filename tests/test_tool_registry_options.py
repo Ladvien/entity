@@ -2,9 +2,16 @@ import asyncio
 import time
 from datetime import datetime
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
-                      PipelineState, PluginRegistry, SystemRegistries,
-                      ToolCall, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineStage,
+    PipelineState,
+    PluginRegistry,
+    SystemRegistries,
+    ToolCall,
+    ToolRegistry,
+)
 from pipeline.resources import ResourceContainer
 from pipeline.tools.execution import execute_pending_tools
 

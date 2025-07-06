@@ -60,9 +60,9 @@ plugins:
 #       bucket: agent-files
 #       region: us-east-1
     cache:
-      type: plugins.contrib.resources.cache:CacheResource
+      type: user_plugins.resources.cache:CacheResource
       backend:
-        type: plugins.contrib.resources.cache_backends.redis:RedisCache
+        type: user_plugins.resources.cache_backends.redis:RedisCache
   tools:
     weather:
       type: plugins.builtin.tools.weather_api_tool:WeatherApiTool
@@ -91,7 +91,7 @@ plugins:
     stages: [deliver]
   prompts:
     chain_of_thought:
-      type: plugins.contrib.prompts.chain_of_thought:ChainOfThoughtPrompt
+      type: user_plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
       enable_reasoning: true
       max_steps: 5
   conversation_history:
@@ -105,5 +105,5 @@ plugins:
     similarity_threshold: 0.7
     stages: [think]
   intent_classifier:
-    type: plugins.contrib.prompts.intent_classifier:IntentClassifierPrompt
+    type: user_plugins.prompts.intent_classifier:IntentClassifierPrompt
     confidence_threshold: 0.8

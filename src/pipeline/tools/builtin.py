@@ -11,7 +11,7 @@ from ..exceptions import ResourceError
 
 def calculator(expression: str) -> Any:
     """Evaluate an arithmetic expression."""
-    from plugins.contrib.tools.calculator_tool import SafeEvaluator
+    from user_plugins.tools.calculator_tool import SafeEvaluator
 
     evaluator = SafeEvaluator()
     return evaluator.evaluate(expression)

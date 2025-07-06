@@ -3,9 +3,8 @@ import os
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
-from plugins.builtin.resources.llm.unified import UnifiedLLMResource
-
 from config.environment import load_env
+from plugins.builtin.resources.llm.unified import UnifiedLLMResource
 
 load_env(Path(__file__).resolve().parents[1] / ".env")
 

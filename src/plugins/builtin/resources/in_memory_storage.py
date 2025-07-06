@@ -2,9 +2,8 @@ from __future__ import annotations
 
 """In-memory conversation history storage."""
 
-from plugins.builtin.resources.database import DatabaseResource
-
 from pipeline.state import ConversationEntry
+from plugins.builtin.resources.database import DatabaseResource
 
 
 class InMemoryStorageResource(DatabaseResource):
