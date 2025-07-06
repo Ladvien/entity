@@ -1,4 +1,9 @@
-"""Demo gRPC server using :class:`LLMGRPCAdapter`."""
+"""Demo gRPC server using :class:`LLMGRPCAdapter`.
+
+Refer to the "Generating Python Stubs" section in
+``docs/source/grpc_services.md`` for instructions on rebuilding the gRPC
+stubs.
+"""
 
 from __future__ import annotations
 
