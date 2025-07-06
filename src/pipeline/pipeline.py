@@ -16,9 +16,6 @@ from registry import SystemRegistries
 
 from .context import ConversationEntry, PluginContext
 from .errors import create_static_error_response
-<<<<<<< HEAD
-from .exceptions import CircuitBreakerTripped, PluginExecutionError, ToolExecutionError
-=======
 from .exceptions import (
     CircuitBreakerTripped,
     PipelineError,
@@ -26,7 +23,6 @@ from .exceptions import (
     ResourceError,
     ToolExecutionError,
 )
->>>>>>> 428c6a52dd9d5805e7d3025916c9e4edfc100182
 from .logging import get_logger, reset_request_id, set_request_id
 from .manager import PipelineManager
 from .metrics import MetricsCollector
