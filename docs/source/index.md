@@ -19,8 +19,8 @@ Welcome to the Entity Pipeline framework. These pages explain how to configure a
 - [Detailed guide](plugin_guide.md)
 - [Naming conventions](plugins.md)
 
-### Architecture
-- [Architecture overview](architecture.md)
+-### Architecture
+- [Architecture overview](../../architecture/overview.md)
 - [Components overview](components_overview.md)
 - [Deliver-stage adapters](components_overview.md#deliver-stage-adapters)
 

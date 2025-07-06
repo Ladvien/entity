@@ -11,8 +11,8 @@ git pull origin main
 git branch --set-upstream-to=origin/main work
 ```
 
-## Project Structure
-- `/architecture/*` – architecture overview and design documents
+- `/architecture/*` – architecture overview and design documents. Start with
+  [`architecture/overview.md`](architecture/overview.md).
 - `/src/pipeline` – core engine and shared abstractions
 - `/plugins` – concrete plugin implementations grouped by type
 - `/config` – YAML configuration files
@@ -48,5 +48,5 @@ pytest
 4. Verify plugin stage assignments and error handling.
 
 ## Further Reading
-See `docs/source/architecture.md` for a full architecture overview and
+See `architecture/overview.md` for a full architecture overview and
 `CONTRIBUTING.md` for detailed contribution instructions.
