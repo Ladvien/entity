@@ -8,10 +8,12 @@ from importlib import import_module
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
-    from plugins.builtin.adapters.logging_adapter import JsonFormatter as _JsonFormatter
+    from plugins.builtin.adapters.logging_adapter import (
+        JsonFormatter as _JsonFormatter,
+    )  # noqa: F401,E501
     from plugins.builtin.adapters.logging_adapter import (
         RequestIdFilter as _RequestIdFilter,
-    )
+    )  # noqa: F401,E501
 
 
 def _adapter():
