@@ -108,3 +108,10 @@ async def test_pool_scales_and_metrics():
     await container.release("dummy", r2)
     metrics = container.get_metrics()["dummy"]
     assert metrics["available"] == 2
+
+
+@pytest.mark.asyncio
+async def test_container_async_context_shutdown():
+    container = await build_container()
+    async with container:
+        assert container.get("base") is not None

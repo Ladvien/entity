@@ -40,6 +40,19 @@ class ResourceRegistry:
         async with self._lock:
             self._resources.pop(name, None)
 
+    async def __aenter__(self) -> "ResourceRegistry":
+        for resource in self._resources.values():
+            init = getattr(resource, "initialize", None)
+            if callable(init):
+                await init()
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        for resource in self._resources.values():
+            shutdown = getattr(resource, "shutdown", None)
+            if callable(shutdown):
+                await shutdown()
+
 
 class ToolRegistry:
     """Registry for tool plugins."""
