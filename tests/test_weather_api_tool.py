@@ -4,11 +4,6 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
-<<<<<<< HEAD
-=======
-from user_plugins.tools.weather_api_tool import WeatherApiTool
-
->>>>>>> 9c565435c8c98d3dd664501aa929f40fe2e70c3f
 from config.environment import load_env
 from pipeline import (
     ConversationEntry,

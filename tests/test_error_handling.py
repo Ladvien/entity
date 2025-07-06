@@ -1,6 +1,5 @@
 import asyncio
 
-<<<<<<< HEAD
 from pipeline import (
     FailurePlugin,
     PipelineStage,
@@ -17,16 +16,6 @@ from pipeline.errors import (
     ToolExecutionError,
     create_static_error_response,
 )
-=======
-from user_plugins.failure.basic_logger import BasicLogger
-
-from pipeline import (FailurePlugin, PipelineStage, PluginRegistry,
-                      PromptPlugin, SystemRegistries, ToolRegistry,
-                      execute_pipeline)
-from pipeline.errors import (PipelineError, PluginExecutionError,
-                             ResourceError, ToolExecutionError,
-                             create_static_error_response)
->>>>>>> 9c565435c8c98d3dd664501aa929f40fe2e70c3f
 from pipeline.resources import ResourceContainer
 from user_plugins.failure.basic_logger import BasicLogger
 
