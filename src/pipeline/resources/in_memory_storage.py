@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 """Wrapper for InMemoryStorageResource."""
+
+if TYPE_CHECKING:  # pragma: no cover - used for type hints only
+    from plugins.builtin.resources.in_memory_storage import InMemoryStorageResource
 
 
 def __getattr__(name: str):

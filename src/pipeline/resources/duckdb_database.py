@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 """Wrapper for DuckDBDatabaseResource."""
+
+if TYPE_CHECKING:  # pragma: no cover - used for type hints only
+    from plugins.builtin.resources.duckdb_database import DuckDBDatabaseResource
 
 
 def __getattr__(name: str):

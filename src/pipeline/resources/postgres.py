@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 """Wrapper for PostgresResource."""
+
+if TYPE_CHECKING:  # pragma: no cover - used for type hints only
+    from plugins.builtin.resources.postgres import PostgresResource
 
 
 def __getattr__(name: str):

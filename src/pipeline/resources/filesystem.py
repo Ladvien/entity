@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 """Filesystem resource wrapper used by pipeline components."""
+
+if TYPE_CHECKING:  # pragma: no cover - used for type hints only
+    from plugins.builtin.resources.filesystem import FileSystemResource
 
 
 def __getattr__(name: str):

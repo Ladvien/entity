@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 """Wrapper for PgVectorStore."""
+
+if TYPE_CHECKING:  # pragma: no cover - used for type hints only
+    from plugins.builtin.resources.pg_vector_store import PgVectorStore
 
 
 def __getattr__(name: str):
