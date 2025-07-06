@@ -1,7 +1,5 @@
 from experiments.unified_registry.resource_manager import (
-    AsyncResourceManager,
-    BaseResource,
-)
+    AsyncResourceManager, BaseResource)
 
 
 class DummyResource(BaseResource):
