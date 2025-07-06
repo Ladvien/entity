@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import ModuleType
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 from registry import (PluginRegistry, ResourceContainer, SystemRegistries,
                       ToolRegistry)
@@ -26,6 +26,8 @@ class AgentBuilder:
 
     # ------------------------------ plugin utils ------------------------------
     def add_plugin(self, plugin: BasePlugin) -> None:
+        """Validate and register ``plugin`` for its declared stages."""
+
         if not hasattr(plugin, "_execute_impl") or not callable(
             getattr(plugin, "_execute_impl")
         ):
@@ -35,10 +37,14 @@ class AgentBuilder:
             name = getattr(plugin, "name", plugin.__class__.__name__)
             self.plugin_registry.register_plugin_for_stage(plugin, stage, name)
 
-    def plugin(self, func: Optional[Callable] = None, **hints):
+    def plugin(
+        self,
+        func: Optional[Callable[..., Any]] = None,
+        **hints: Any,
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]] | Callable[..., Any]:
         """Decorator registering ``func`` as a plugin."""
 
-        def decorator(f: Callable) -> Callable:
+        def decorator(f: Callable[..., Any]) -> Callable[..., Any]:
             plugin = PluginAutoClassifier.classify(f, hints)
             self.add_plugin(plugin)
             return f
