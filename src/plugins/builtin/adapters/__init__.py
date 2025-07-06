@@ -6,11 +6,7 @@ from .cli import CLIAdapter
 from .grpc import LLMGRPCAdapter
 from .http import HTTPAdapter
 from .logging import LoggingAdapter
-<<<<<< codex/refactor-test-modules-and-improve-fixtures
-from .logging_adapter import LoggingAdapter as FileLoggingAdapter
-======
 from .logging_adapter import LoggingAdapter as LoggingAdapterWrapper
->>>>>> main
 from .websocket import WebSocketAdapter
 
 __all__ = [
@@ -19,9 +15,5 @@ __all__ = [
     "WebSocketAdapter",
     "LLMGRPCAdapter",
     "LoggingAdapter",
-<<<<<< codex/refactor-test-modules-and-improve-fixtures
-    "FileLoggingAdapter",
-======
     "LoggingAdapterWrapper",
->>>>>> main
 ]
