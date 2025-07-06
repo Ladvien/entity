@@ -2,19 +2,15 @@ from __future__ import annotations
 
 """Adapter wrapper exposing logging configuration helpers."""
 
+import contextvars
+import json
+import logging
+import os
+from logging.handlers import RotatingFileHandler
+from typing import Optional
+
 from pipeline.base_plugins import AdapterPlugin
-<<<<<<< HEAD
-from pipeline.logging import (
-    JsonFormatter,
-    LoggingConfigurator,
-    RequestIdFilter,
-    configure_logging,
-    get_logger,
-    reset_request_id,
-    set_request_id,
-)
 from pipeline.stages import PipelineStage
-=======
 
 _request_id_var: contextvars.ContextVar[str | None] = contextvars.ContextVar(
     "request_id", default=None
@@ -126,10 +122,11 @@ def get_logger(name: str) -> logging.Logger:
 class LoggingAdapter(AdapterPlugin):
     """Adapter placeholder for logging setup."""
 
+    stages = [PipelineStage.DELIVER]
+
     async def _execute_impl(self, context) -> None:  # pragma: no cover - adapter
         pass
 
->>>>>>> 0698b3abdf6daf61c3f8486c12ceb9d0e4aab4b8
 
 __all__ = [
     "LoggingAdapter",
@@ -139,14 +136,4 @@ __all__ = [
     "get_logger",
     "set_request_id",
     "reset_request_id",
-    "LoggingConfigurator",
 ]
-
-
-class LoggingAdapter(AdapterPlugin):
-    """Adapter placeholder for logging setup."""
-
-    stages = [PipelineStage.DELIVER]
-
-    async def _execute_impl(self, context) -> None:  # pragma: no cover - adapter
-        pass
