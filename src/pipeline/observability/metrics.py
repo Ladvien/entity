@@ -3,8 +3,13 @@ from __future__ import annotations
 """Prometheus metrics integration for the Entity pipeline."""
 
 import psutil
-from prometheus_client import (CollectorRegistry, Counter, Gauge, Histogram,
-                               start_http_server)
+from prometheus_client import (
+    CollectorRegistry,
+    Counter,
+    Gauge,
+    Histogram,
+    start_http_server,
+)
 
 from pipeline.metrics import MetricsCollector
 

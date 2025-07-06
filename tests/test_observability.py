@@ -1,8 +1,14 @@
 import asyncio
 import time
 
-from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      SystemRegistries, ToolRegistry, execute_pipeline)
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
 from pipeline.resources import ResourceContainer
 
 

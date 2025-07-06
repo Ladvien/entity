@@ -5,9 +5,9 @@ import json
 from typing import Dict, List, Optional
 
 import duckdb
-from plugins.builtin.resources.database import DatabaseResource
 
 from pipeline.state import ConversationEntry
+from plugins.builtin.resources.database import DatabaseResource
 
 
 class DuckDBDatabaseResource(DatabaseResource):

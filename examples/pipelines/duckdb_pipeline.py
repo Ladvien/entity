@@ -14,9 +14,9 @@ from utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 
-from plugins.contrib.duckdb_database import DuckDBDatabaseResource
-from plugins.contrib.duckdb_vector_store import DuckDBVectorStore
-from plugins.contrib.memory_resource import MemoryResource
+from user_plugins.duckdb_database import DuckDBDatabaseResource
+from user_plugins.duckdb_vector_store import DuckDBVectorStore
+from user_plugins.memory_resource import MemoryResource
 
 from entity import Agent
 from pipeline import PipelineStage, PromptPlugin

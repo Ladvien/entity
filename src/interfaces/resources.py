@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import (TYPE_CHECKING, Any, AsyncIterator, Dict, Protocol,
-                    runtime_checkable)
+from typing import TYPE_CHECKING, Any, AsyncIterator, Dict, Protocol, runtime_checkable
 
 if TYPE_CHECKING:  # pragma: no cover
     from registry import ClassRegistry

@@ -6,9 +6,15 @@ import inspect
 from pathlib import Path
 from typing import Any, Dict, List, Type
 
-from pipeline.base_plugins import (AdapterPlugin, BasePlugin, FailurePlugin,
-                                   PromptPlugin, ResourcePlugin, ToolPlugin,
-                                   ValidationResult)
+from pipeline.base_plugins import (
+    AdapterPlugin,
+    BasePlugin,
+    FailurePlugin,
+    PromptPlugin,
+    ResourcePlugin,
+    ToolPlugin,
+    ValidationResult,
+)
 from pipeline.logging import get_logger
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"

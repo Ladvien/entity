@@ -6,11 +6,11 @@ from contextlib import asynccontextmanager
 from typing import AsyncIterator, Dict, List, Optional
 
 import asyncpg
-from plugins.builtin.resources.database import DatabaseResource
 
 from pipeline.observability.tracing import start_span
 from pipeline.reliability import CircuitBreaker, RetryPolicy
 from pipeline.state import ConversationEntry
+from plugins.builtin.resources.database import DatabaseResource
 
 
 class PostgresResource(DatabaseResource):

@@ -5,8 +5,8 @@ from __future__ import annotations
 from typing import Dict
 
 from pipeline.observability import start_metrics_server
-from plugins.resources.base import BaseResource
 from pipeline.validation import ValidationResult
+from plugins.resources.base import BaseResource
 
 
 class MetricsResource(BaseResource):

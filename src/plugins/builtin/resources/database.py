@@ -5,9 +5,8 @@ from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator, List, Optional, Protocol
 
-from plugins.builtin.resources.base import BaseResource
-
 from pipeline.state import ConversationEntry
+from plugins.builtin.resources.base import BaseResource
 
 
 class StorageBackend(Protocol):

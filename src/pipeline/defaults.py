@@ -35,14 +35,14 @@ DEFAULT_RESOURCES: Dict[str, Dict[str, Any]] = {
         },
     },
     "cache": {
-        "type": "plugins.contrib.resources.cache:CacheResource",
+        "type": "user_plugins.resources.cache:CacheResource",
         "backend": {"type": "pipeline.cache.memory:InMemoryCache"},
     },
 }
 
 DEFAULT_TOOLS: Dict[str, Dict[str, Any]] = {
-    "search": {"type": "plugins.contrib.tools.search_tool:SearchTool"},
-    "calculator": {"type": "plugins.contrib.tools.calculator_tool:CalculatorTool"},
+    "search": {"type": "user_plugins.tools.search_tool:SearchTool"},
+    "calculator": {"type": "user_plugins.tools.calculator_tool:CalculatorTool"},
 }
 
 DEFAULT_ADAPTERS: Dict[str, Dict[str, Any]] = {

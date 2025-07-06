@@ -10,7 +10,7 @@ from typing import Any
 warnings.warn(
     (
         "pipeline.cache.semantic is deprecated; "
-        "use plugins.contrib.resources.cache_backends.semantic instead"
+        "use user_plugins.resources.cache_backends.semantic instead"
     ),
     DeprecationWarning,
     stacklevel=2,
@@ -24,8 +24,12 @@ def __getattr__(name: str):
     """Lazily import :class:`SemanticCache` when requested."""
 
     if name == "SemanticCache":
+<<<<<<< HEAD
         from plugins.contrib.resources.cache_backends.semantic import \
             SemanticCache
+=======
+        from user_plugins.resources.cache_backends.semantic import SemanticCache
+>>>>>>> da816a7a3dbe69257c5bbcbb38bb088649439bb0
 
         return SemanticCache
     raise AttributeError(f"module {__name__} has no attribute {name}")

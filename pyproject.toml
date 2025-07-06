@@ -13,7 +13,8 @@ packages = [
     { include = "cli", from = "src" },
     { include = "config", from = "src" },
     { include = "registry", from = "src" },
-    { include = "plugins" },
+    { include = "plugins", from = "src" },
+    { include = "user_plugins" },
 ]
 
 [tool.poetry.scripts]
@@ -73,7 +74,7 @@ pytest-asyncio = "^0.25.0"
 pytest-cov = "^6.1.0"
 hypothesis = "^6.100"
 pytest-benchmark = "^4.0.0"
-flake8 = "^7.3.0"
+flake8 = "7.0.0"
 bandit = "^1.8.5"
 
 

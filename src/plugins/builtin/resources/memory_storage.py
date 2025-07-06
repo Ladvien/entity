@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from typing import Dict, List
 
-from plugins.builtin.resources.database import DatabaseResource
-
 from pipeline.state import ConversationEntry
+from plugins.builtin.resources.database import DatabaseResource
 
 
 class MemoryStorage(DatabaseResource):

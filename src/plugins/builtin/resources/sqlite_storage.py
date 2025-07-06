@@ -6,10 +6,10 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 import aiosqlite
-from plugins.builtin.resources.database import DatabaseResource
 
 from pipeline.observability.tracing import start_span
 from pipeline.state import ConversationEntry
+from plugins.builtin.resources.database import DatabaseResource
 
 
 class SQLiteStorageResource(DatabaseResource):

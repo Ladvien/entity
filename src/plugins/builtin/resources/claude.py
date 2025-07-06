@@ -3,10 +3,9 @@ from __future__ import annotations
 """Adapter for Anthropic Claude API."""
 from typing import Dict
 
+from pipeline.validation import ValidationResult
 from plugins.builtin.resources.http_llm_resource import HttpLLMResource
 from plugins.builtin.resources.llm_resource import LLMResource
-
-from pipeline.validation import ValidationResult
 
 
 class ClaudeResource(LLMResource):

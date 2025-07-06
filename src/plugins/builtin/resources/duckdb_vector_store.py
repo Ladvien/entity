@@ -4,10 +4,10 @@ from __future__ import annotations
 from typing import Dict, List, Optional
 
 import duckdb
-from plugins.builtin.resources.duckdb_database import DuckDBDatabaseResource
-from plugins.builtin.resources.vector_store import VectorStoreResource
 
 from pipeline.exceptions import ResourceError
+from plugins.builtin.resources.duckdb_database import DuckDBDatabaseResource
+from plugins.builtin.resources.vector_store import VectorStoreResource
 
 
 class DuckDBVectorStore(VectorStoreResource):

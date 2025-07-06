@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pgvector import Vector
 from pgvector.asyncpg import register_vector
+
 from plugins.builtin.resources.postgres import PostgresResource
 from plugins.builtin.resources.vector_store import VectorStoreResource
 

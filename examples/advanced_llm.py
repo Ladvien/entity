@@ -16,7 +16,7 @@ from utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 
-from plugins.contrib.llm.unified import UnifiedLLMResource
+from user_plugins.llm.unified import UnifiedLLMResource
 
 
 def create_llm() -> UnifiedLLMResource:

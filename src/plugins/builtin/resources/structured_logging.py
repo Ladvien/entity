@@ -7,9 +7,8 @@ import os
 from logging.handlers import RotatingFileHandler
 from typing import Dict
 
-from plugins.builtin.resources.base import BaseResource
-
 from pipeline.validation import ValidationResult
+from plugins.builtin.resources.base import BaseResource
 
 
 class StructuredLogging(BaseResource):

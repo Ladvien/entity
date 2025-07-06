@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 warnings.warn(
     (
         "pipeline.cache.redis is deprecated; use "
-        "plugins.contrib.resources.cache_backends.redis instead"
+        "user_plugins.resources.cache_backends.redis instead"
     ),
     DeprecationWarning,
     stacklevel=2,
@@ -14,14 +14,14 @@ warnings.warn(
 
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
-    from plugins.contrib.resources.cache_backends.redis import RedisCache
+    from user_plugins.resources.cache_backends.redis import RedisCache
 
 
 def __getattr__(name: str):
     """Lazily import :class:`RedisCache` when requested."""
 
     if name == "RedisCache":
-        from plugins.contrib.resources.cache_backends.redis import RedisCache
+        from user_plugins.resources.cache_backends.redis import RedisCache
 
         return RedisCache
     raise AttributeError(f"module {__name__} has no attribute {name}")

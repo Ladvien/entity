@@ -5,6 +5,9 @@ from __future__ import annotations
 
 from typing import Any, AsyncIterator, Dict, List, Type
 
+from pipeline.base_plugins import ValidationResult
+from pipeline.state import LLMResponse
+
 # Import provider implementations from the public plugin package. Using the
 # fully qualified path avoids ambiguity if this module is restructured.
 from plugins.builtin.resources.llm.providers import (
@@ -16,9 +19,6 @@ from plugins.builtin.resources.llm.providers import (
     OpenAIProvider,
 )
 from plugins.builtin.resources.llm_resource import LLMResource
-
-from pipeline.base_plugins import ValidationResult
-from pipeline.state import LLMResponse
 
 from ...exceptions import ResourceError
 

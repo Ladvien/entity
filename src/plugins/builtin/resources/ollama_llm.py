@@ -3,11 +3,10 @@ from __future__ import annotations
 """LLM resource backed by Ollama."""
 from typing import Dict
 
-from plugins.builtin.resources.http_llm_resource import HttpLLMResource
-from plugins.builtin.resources.llm_resource import LLMResource
-
 from pipeline.exceptions import ResourceError
 from pipeline.validation import ValidationResult
+from plugins.builtin.resources.http_llm_resource import HttpLLMResource
+from plugins.builtin.resources.llm_resource import LLMResource
 
 
 class OllamaLLMResource(LLMResource):
