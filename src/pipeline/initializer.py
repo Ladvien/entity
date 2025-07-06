@@ -4,12 +4,8 @@ import copy
 import json
 import tomllib
 from contextlib import contextmanager
-<<<<<<< HEAD
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Tuple
-=======
 from typing import Any, Dict, Iterable, List, Tuple, Type
->>>>>>> c72003e014c664863289e303211be6661160fdc6
 
 from config.environment import load_env
 from interfaces.plugins import import_plugin_class
@@ -18,11 +14,11 @@ from pipeline.config.utils import interpolate_env_vars
 from pipeline.resources.container import ResourceContainer
 from pipeline.utils import DependencyGraph
 from registry import PluginRegistry, ToolRegistry
-from .stages import PipelineStage
 
 from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
 from .defaults import DEFAULT_CONFIG
 from .logging import configure_logging
+from .stages import PipelineStage
 
 
 class ClassRegistry:
@@ -240,15 +236,11 @@ class SystemInitializer:
                 await resource_registry.remove(name)
 
         # Phase 3.5: register tools
-<<<<<<< HEAD
         tr_cfg = self.config.get("tool_registry", {})
-        tool_registry = ToolRegistry(
+        tool_registry = self.tool_registry_cls(
             concurrency_limit=tr_cfg.get("concurrency_limit", 5),
             cache_ttl=tr_cfg.get("cache_ttl"),
         )
-=======
-        tool_registry = self.tool_registry_cls()
->>>>>>> c72003e014c664863289e303211be6661160fdc6
         for cls, config in registry.tool_classes():
             if any(dep in degraded for dep in getattr(cls, "dependencies", [])):
                 continue

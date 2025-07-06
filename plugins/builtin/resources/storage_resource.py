@@ -5,11 +5,8 @@ from __future__ import annotations
 from typing import Dict
 
 from pipeline.base_plugins import ResourcePlugin, ValidationResult
-<<<<<<< HEAD
-=======
 from pipeline.exceptions import ResourceError
 from pipeline.stages import PipelineStage
->>>>>>> 428c6a52dd9d5805e7d3025916c9e4edfc100182
 
 from .filesystem import FileSystemResource
 
@@ -17,6 +14,7 @@ from .filesystem import FileSystemResource
 class StorageResource(ResourcePlugin):
     """Provide simple file CRUD operations through a filesystem backend."""
 
+    stages = [PipelineStage.PARSE]
     name = "storage"
     dependencies = ["filesystem"]
 
