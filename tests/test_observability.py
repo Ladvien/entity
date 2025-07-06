@@ -1,21 +1,9 @@
 import asyncio
 import time
 
-<<<<<<< HEAD
 from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      ResourceContainer, SystemRegistries, ToolRegistry,
-                      execute_pipeline)
-=======
-from pipeline import (
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolRegistry,
-    execute_pipeline,
-)
+                      SystemRegistries, ToolRegistry, execute_pipeline)
 from pipeline.resources import ResourceContainer
->>>>>>> 842b365f2ee0307cf77e24d7bdb710602bc576a8
 
 
 class TimedPlugin(PromptPlugin):

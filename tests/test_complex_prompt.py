@@ -4,22 +4,10 @@ from unittest.mock import AsyncMock
 
 from plugins.contrib.prompts.complex_prompt import ComplexPrompt
 
-<<<<<<< HEAD
 from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, ResourceContainer,
-                      SystemRegistries, ToolRegistry)
-=======
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+                      PluginContext, PluginRegistry, SystemRegistries,
+                      ToolRegistry)
 from pipeline.resources import ResourceContainer
->>>>>>> 842b365f2ee0307cf77e24d7bdb710602bc576a8
 from pipeline.resources.memory_resource import MemoryResource
 
 

@@ -3,22 +3,10 @@ import asyncio
 from user_plugins.failure.basic_logger import BasicLogger
 from user_plugins.failure.error_formatter import ErrorFormatter
 
-<<<<<<< HEAD
 from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      ResourceContainer, SystemRegistries, ToolPlugin,
-                      ToolRegistry, execute_pipeline)
-=======
-from pipeline import (
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolPlugin,
-    ToolRegistry,
-    execute_pipeline,
-)
+                      SystemRegistries, ToolPlugin, ToolRegistry,
+                      execute_pipeline)
 from pipeline.resources import ResourceContainer
->>>>>>> 842b365f2ee0307cf77e24d7bdb710602bc576a8
 
 
 class FailingTool(ToolPlugin):

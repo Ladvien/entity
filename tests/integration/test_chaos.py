@@ -5,13 +5,8 @@ import pytest
 
 from pipeline import PipelineStage, execute_pipeline
 from pipeline.reliability.queue import PersistentQueue
-<<<<<<< HEAD
-from registry import (PluginRegistry, ResourceContainer, SystemRegistries,
-                      ToolRegistry)
-=======
 from pipeline.resources import ResourceContainer
 from registry import PluginRegistry, SystemRegistries, ToolRegistry
->>>>>>> 842b365f2ee0307cf77e24d7bdb710602bc576a8
 
 
 class CrashPlugin:
