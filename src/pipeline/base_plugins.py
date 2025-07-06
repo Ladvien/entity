@@ -5,12 +5,14 @@ import inspect
 import json
 import logging
 import time
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar
 
 import yaml
 from pydantic import BaseModel, ValidationError
+
+from interfaces.base_plugin import BasePlugin as BasePluginInterface
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .context import PluginContext
@@ -50,7 +52,7 @@ class ConfigurationError(Exception):
     pass
 
 
-class BasePlugin(ABC):
+class BasePlugin(BasePluginInterface):
     stages: List[PipelineStage]
     priority: int = 50
     dependencies: List[str] = []

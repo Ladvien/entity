@@ -6,7 +6,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
-from pipeline.base_plugins import BasePlugin
+from interfaces.base_plugin import BasePlugin
 from pipeline.resources.container import ResourceContainer
 from pipeline.stages import PipelineStage
 
