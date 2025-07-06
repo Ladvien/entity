@@ -1,8 +1,8 @@
 """Demo gRPC server using :class:`LLMGRPCAdapter`.
 
-Refer to the "Generating Python Stubs" section in
+Refer to the "Regenerating gRPC Code" section in
 ``docs/source/grpc_services.md`` for instructions on rebuilding the gRPC
-stubs.
+bindings.
 """
 
 from __future__ import annotations
@@ -19,10 +19,10 @@ from utilities import enable_plugins_namespace
 enable_plugins_namespace()
 
 import grpc
-from plugins.builtin.adapters.grpc import LLMGRPCAdapter
 
 from grpc_services import llm_pb2, llm_pb2_grpc
 from pipeline.initializer import SystemInitializer
+from plugins.builtin.adapters.grpc import LLMGRPCAdapter
 
 
 async def stream_prompt() -> None:
