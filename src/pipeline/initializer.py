@@ -15,6 +15,7 @@ from registry import PluginRegistry, ToolRegistry
 from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
 from .defaults import DEFAULT_CONFIG
 from .interfaces import import_plugin_class
+from .logging import configure_logging
 
 
 class ClassRegistry:
@@ -73,6 +74,7 @@ class SystemInitializer:
 
     def __init__(self, config: Dict | None = None, env_file: str = ".env") -> None:
         load_env(env_file)
+        configure_logging()
         self.config = config or copy.deepcopy(DEFAULT_CONFIG)
 
     @classmethod

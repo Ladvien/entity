@@ -8,10 +8,7 @@ from typing import Any, Dict, Optional
 import httpx
 
 DEFAULT_LOGGING_CONFIG: Dict[str, Any] = {
-    "type": "plugins.builtin.resources.structured_logging:StructuredLogging",
-    "level": "INFO",
-    "json": True,
-    "file_enabled": False,
+    "type": "plugins.builtin.adapters.logging:LoggingAdapter",
 }
 
 DEFAULT_LLM_CONFIG: Dict[str, Any] = {
@@ -40,7 +37,6 @@ DEFAULT_RESOURCES: Dict[str, Dict[str, Any]] = {
         "type": "plugins.contrib.resources.cache:CacheResource",
         "backend": {"type": "pipeline.cache.memory:InMemoryCache"},
     },
-    "logging": DEFAULT_LOGGING_CONFIG,
 }
 
 DEFAULT_TOOLS: Dict[str, Dict[str, Any]] = {
@@ -52,7 +48,7 @@ DEFAULT_ADAPTERS: Dict[str, Dict[str, Any]] = {
     "http": {"type": "plugins.builtin.adapters.http:HTTPAdapter"},
     "websocket": {"type": "plugins.builtin.adapters.websocket:WebSocketAdapter"},
     "cli": {"type": "plugins.builtin.adapters.cli:CLIAdapter"},
-    "logging": {"type": "plugins.builtin.adapters.logging:LoggingAdapter"},
+    "logging": DEFAULT_LOGGING_CONFIG,
 }
 
 DEFAULT_CONFIG: Dict[str, Any] = {

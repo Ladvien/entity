@@ -23,11 +23,6 @@ plugins:
       temperature: 0.7
       retries: 5
       backoff: 2.0
-    logging:
-      type: plugins.builtin.resources.structured_logging:StructuredLogging
-      level: "INFO"
-      file_enabled: true
-      file_path: "logs/entity.log"
     memory:
       type: pipeline.resources.memory_resource:MemoryResource
       database:
@@ -85,6 +80,8 @@ plugins:
       dashboard: false
     cli:
       type: plugins.builtin.adapters.cli:CLIAdapter
+    logging:
+      type: plugins.builtin.adapters.logging:LoggingAdapter
   prompts:
     chain_of_thought:
       type: plugins.contrib.prompts.chain_of_thought:ChainOfThoughtPrompt
