@@ -1,9 +1,8 @@
 import asyncio
 from datetime import datetime
 
-from plugins.builtin.resources.memory_storage import MemoryStorage
-
 from pipeline.context import ConversationEntry
+from plugins.builtin.resources.memory_storage import MemoryStorage
 
 
 def test_save_and_load_history():

@@ -18,7 +18,7 @@ Get started quickly by installing dependencies with Poetry and running an agent
 with a YAML file:
 
 ```bash
-poetry install
+poetry install --with dev
 poetry run python src/cli.py --config config.yaml
 ```
 This project relies on `httpx==0.27.*`, which Poetry will install automatically.
@@ -29,9 +29,10 @@ For a high-level look at how the pieces connect, see [components_overview.md](co
 
 
 1. Install Python 3.11+ and [Poetry](https://python-poetry.org/).
-2. Run `poetry install` to create the virtual environment. This installs all
-   dependencies, including `httpx==0.27.*`.
+2. Run `poetry install --with dev` to create the virtual environment and install
+   development tools.
 3. Start the agent with your desired configuration file.
+4. Copy `.env.example` to `.env` and fill in the values if you want to run the example scripts. See [examples/README.md](examples/README.md) for what each example expects.
 
 For an infrastructure walkthrough on Amazon Web Services, see the [AWS deployment guide](docs/source/deploy_aws.md).
 
@@ -308,6 +309,18 @@ plugins:
         base_path: ./files
 ```
 For a runnable demonstration see `examples/storage_resource_example.py`.
+
+## Server Examples
+
+A set of demo servers lives in `examples/servers`. The WebSocket example
+requires the `websockets` package, which is now listed in `pyproject.toml`.
+
+```bash
+python examples/servers/http_server.py
+python src/cli.py serve-websocket --config config/dev.yaml
+python examples/servers/grpc_server.py
+python examples/servers/cli_adapter.py
+```
 
 ## Implementation Recommendations
 

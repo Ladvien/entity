@@ -1,8 +1,15 @@
 import asyncio
 
-from pipeline import (LLMResponse, PipelineStage, PluginRegistry, PromptPlugin,
-                      SystemRegistries, ToolPlugin, ToolRegistry,
-                      execute_pipeline)
+from pipeline import (
+    LLMResponse,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolPlugin,
+    ToolRegistry,
+    execute_pipeline,
+)
 from pipeline.resources import ResourceContainer
 
 

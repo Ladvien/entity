@@ -20,7 +20,7 @@ plugins:
       type: plugins.builtin.tools.search:SearchTool
   prompts:
     main:
-      type: plugins.contrib.prompts.simple:SimplePrompt
+      type: user_plugins.prompts.simple:SimplePrompt
   adapters:
     http:
       type: plugins.builtin.adapters.http:HTTPAdapter
@@ -31,3 +31,5 @@ plugins:
 ```
 
 Use `entity src/cli.py --config config.yaml` to start the agent.
+This example references a plugin under the `user_plugins` package to
+demonstrate how custom modules can be loaded.

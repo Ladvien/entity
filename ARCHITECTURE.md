@@ -20,10 +20,9 @@ The framework's core value is **making agent behavior adjustable** without code 
 
 The codebase now consolidates the core engine under `src/pipeline`. This module
 contains the context system, execution logic and shared abstractions. Plugins
-now live under the `plugins` package with two subpackages:
-`plugins/builtin` for the framework plugins and `plugins/contrib` for example
-implementations. The previous `src/pipeline/user_plugins` wrappers were
-removed. Plugin modules are grouped by type:
+live under `src/plugins` for built-in functionality. Optional example
+implementations reside in the `user_plugins` package. Plugin modules are grouped
+by type:
 
 - `resources` for databases, LLM providers and storage backends
 - `tools` for user-facing functions
@@ -94,7 +93,7 @@ async def execute_stage(stage: PipelineStage, state: PipelineState, registries: 
     state.current_stage = stage
     
     # Execute plugins with appropriate context layer
-    stage_plugins = registries.plugins.contrib.get_for_stage(stage)
+    stage_plugins = registries.user_plugins.get_for_stage(stage)
     for plugin in stage_plugins:
         context = PluginContext(state, registries)
         await plugin.execute(context)

@@ -23,6 +23,7 @@ git branch --set-upstream-to=origin/main work
   backward compatibility.
 - Prefer adding `TODO:` comments when scope is unclear.
 - Always use the Poetry environment for development.
+- Run `poetry install` before executing any quality checks.
 
 ## Programmatic Checks
 Run the following commands before opening a pull request:

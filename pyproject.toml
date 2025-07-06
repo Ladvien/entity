@@ -13,7 +13,8 @@ packages = [
     { include = "cli", from = "src" },
     { include = "config", from = "src" },
     { include = "registry", from = "src" },
-    { include = "plugins" },
+    { include = "plugins", from = "src" },
+    { include = "user_plugins" },
 ]
 
 [tool.poetry.scripts]
@@ -49,6 +50,14 @@ psutil = "^5.9.8"
 opentelemetry-api = "^1.24.0"
 opentelemetry-sdk = "^1.24.0"
 tenacity = "^8.2.3"
+websockets = "^15.0"
+
+[tool.poetry.extras]
+examples = [
+    "websockets",
+    "grpcio",
+    "grpcio-tools",
+]
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
@@ -65,7 +74,7 @@ pytest-asyncio = "^0.25.0"
 pytest-cov = "^6.1.0"
 hypothesis = "^6.100"
 pytest-benchmark = "^4.0.0"
-flake8 = "^7.3.0"
+flake8 = "7.0.0"
 bandit = "^1.8.5"
 
 
@@ -82,6 +91,27 @@ release = ["docs", "patch", "_publish"]
 test = "pytest"
 test-verbose = "pytest -v"
 test-coverage = "pytest --cov=src --cov-report=html --cov-report=term-missing"
+setup-dev = "poetry install --with dev"
+[tool.poe.tasks.lint]
+sequence = [
+    "poetry run black src tests",
+    "poetry run isort src tests",
+    "poetry run flake8 src tests",
+]
+[tool.poe.tasks.validate]
+sequence = [
+    "python -m src.config.validator --config config/dev.yaml",
+    "python -m src.config.validator --config config/prod.yaml",
+    "python -m src.registry.validator",
+]
+[tool.poe.tasks.check]
+sequence = [
+    "poe lint",
+    "poetry run mypy src",
+    "bandit -r src",
+    "poe validate",
+    "pytest",
+]
 
 
 [tool.pytest.ini_options]

@@ -6,8 +6,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from tenacity import (AsyncRetrying, RetryError, stop_after_attempt,
-                      wait_exponential)
+from tenacity import AsyncRetrying, RetryError, stop_after_attempt, wait_exponential
 
 
 @dataclass

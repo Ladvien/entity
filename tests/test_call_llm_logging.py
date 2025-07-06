@@ -1,9 +1,17 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
-                      PipelineState, PluginContext, PluginRegistry,
-                      PromptPlugin, SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineStage,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources import ResourceContainer
 
 

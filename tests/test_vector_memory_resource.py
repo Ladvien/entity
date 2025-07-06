@@ -4,9 +4,9 @@ from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from pgvector import Vector
-from plugins.builtin.resources.pg_vector_store import PgVectorStore
 
 from config.environment import load_env
+from plugins.builtin.resources.pg_vector_store import PgVectorStore
 
 load_env(Path(__file__).resolve().parents[1] / ".env")
 

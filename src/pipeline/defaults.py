@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 import httpx
 
 DEFAULT_LOGGING_CONFIG: Dict[str, Any] = {
-    "type": "plugins.builtin.adapters.logging:LoggingAdapter",
+    "type": "user_plugins.adapters.logging:LoggingAdapter",
     "stages": ["deliver"],
 }
 
@@ -25,36 +25,36 @@ DEFAULT_RESOURCES: Dict[str, Dict[str, Any]] = {
             "type": "pipeline.resources.duckdb_database:DuckDBDatabaseResource"
         },
         "vector_store": {
-            "type": "plugins.builtin.resources.duckdb_vector_store:DuckDBVectorStore"
+            "type": "user_plugins.resources.duckdb_vector_store:DuckDBVectorStore"
         },
     },
     "storage": {
         "type": "pipeline.resources.storage_resource:StorageResource",
         "filesystem": {
-            "type": "plugins.builtin.resources.local_filesystem:LocalFileSystemResource"
+            "type": "user_plugins.resources.local_filesystem:LocalFileSystemResource"
         },
     },
     "cache": {
-        "type": "plugins.contrib.resources.cache:CacheResource",
+        "type": "user_plugins.resources.cache:CacheResource",
         "backend": {"type": "pipeline.cache.memory:InMemoryCache"},
     },
 }
 
 DEFAULT_TOOLS: Dict[str, Dict[str, Any]] = {
-    "search": {"type": "plugins.contrib.tools.search_tool:SearchTool"},
-    "calculator": {"type": "plugins.contrib.tools.calculator_tool:CalculatorTool"},
+    "search": {"type": "user_plugins.tools.search_tool:SearchTool"},
+    "calculator": {"type": "user_plugins.tools.calculator_tool:CalculatorTool"},
 }
 
 DEFAULT_ADAPTERS: Dict[str, Dict[str, Any]] = {
     "http": {
-        "type": "plugins.builtin.adapters.http:HTTPAdapter",
+        "type": "user_plugins.adapters.http:HTTPAdapter",
         "stages": ["parse", "deliver"],
     },
     "websocket": {
-        "type": "plugins.builtin.adapters.websocket:WebSocketAdapter",
+        "type": "user_plugins.adapters.websocket:WebSocketAdapter",
         "stages": ["deliver"],
     },
-    "cli": {"type": "plugins.builtin.adapters.cli:CLIAdapter", "stages": ["deliver"]},
+    "cli": {"type": "user_plugins.adapters.cli:CLIAdapter", "stages": ["deliver"]},
     "logging": DEFAULT_LOGGING_CONFIG,
 }
 

@@ -1,7 +1,7 @@
-# gRPC Service Stubs
+# gRPC Services
 
 Entity uses gRPC for all backend model communication. The `src/grpc_services`
-package contains protocol definitions and stub implementations. Below is a
+package contains protocol definitions and service implementations. Below is a
 minimal example for text generation services.
 
 ```proto
@@ -43,7 +43,9 @@ if __name__ == "__main__":
 ```
 
 ``src/grpc_services/llm.proto`` and ``llm_service.py`` act as references for
-future model services.
+future model services. The service requires the generated modules
+``llm_pb2`` and ``llm_pb2_grpc`` to be present. If they are missing the import
+will fail with an error directing you to regenerate them.
 
 ### Demo Script
 
@@ -56,3 +58,16 @@ python examples/servers/grpc_server.py
 
 The adapter launches ``LLMService`` locally and prints each token generated for
 the sample prompt.
+
+### Regenerating gRPC Code
+
+Regenerate ``llm_pb2.py`` and ``llm_pb2_grpc.py`` whenever ``llm.proto``
+changes. Execute the following command from the project root:
+
+```bash
+python -m grpc_tools.protoc \
+    -I src/grpc_services \
+    --python_out=src/grpc_services \
+    --grpc_python_out=src/grpc_services \
+    src/grpc_services/llm.proto
+```

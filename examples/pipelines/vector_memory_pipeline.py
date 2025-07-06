@@ -7,6 +7,7 @@ Usage:
 from __future__ import annotations
 
 import asyncio
+import os
 import pathlib
 import sys
 from typing import Dict, List
@@ -17,9 +18,9 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))  # noq
 from utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
-from plugins.contrib.llm.unified import UnifiedLLMResource  # noqa: E402
-from plugins.contrib.pg_vector_store import PgVectorStore  # noqa: E402
-from plugins.contrib.postgres import PostgresResource  # noqa: E402
+from user_plugins.llm.unified import UnifiedLLMResource  # noqa: E402
+from user_plugins.pg_vector_store import PgVectorStore  # noqa: E402
+from user_plugins.postgres import PostgresResource  # noqa: E402
 
 from config.environment import load_env
 from entity import Agent  # noqa: E402
@@ -62,35 +63,43 @@ class ComplexPrompt(PromptPlugin):
         context.add_conversation_entry(response, role="assistant")
 
 
+def create_database() -> PostgresResource | DuckDBDatabaseResource:
+    """Return a database resource based on environment variables."""
+
+    host = os.getenv("DB_HOST")
+    user = os.getenv("DB_USERNAME")
+    password = os.getenv("DB_PASSWORD")
+    if host and user:
+        cfg = {
+            "host": host,
+            "port": 5432,
+            "name": user,
+            "username": user,
+            "password": password or "",
+        }
+        return PostgresResource(ConfigLoader.from_dict(cfg))
+    return DuckDBDatabaseResource(
+        {"path": "./agent.duckdb", "history_table": "history"}
+    )
+
+
+def create_llm() -> UnifiedLLMResource:
+    """Return a configured LLM resource."""
+
+    base_url = os.getenv("OLLAMA_BASE_URL")
+    model = os.getenv("OLLAMA_MODEL")
+    if base_url and model:
+        cfg = {"provider": "ollama", "base_url": base_url, "model": model}
+    else:
+        cfg = {"provider": "echo"}
+    return UnifiedLLMResource(ConfigLoader.from_dict(cfg))
+
+
 def main() -> None:
     load_env()
     agent = Agent()
-    agent.builder.resource_registry.add(
-        "database",
-        PostgresResource(
-            ConfigLoader.from_dict(
-                {
-                    "host": "${DB_HOST}",
-                    "port": 5432,
-                    "name": "${DB_USERNAME}",
-                    "username": "${DB_USERNAME}",
-                    "password": "${DB_PASSWORD}",
-                }
-            )
-        ),
-    )
-    agent.builder.resource_registry.add(
-        "llm",
-        UnifiedLLMResource(
-            ConfigLoader.from_dict(
-                {
-                    "provider": "ollama",
-                    "base_url": "${OLLAMA_BASE_URL}",
-                    "model": "${OLLAMA_MODEL}",
-                }
-            )
-        ),
-    )
+    agent.builder.resource_registry.add("database", create_database())
+    agent.builder.resource_registry.add("llm", create_llm())
     agent.builder.resource_registry.add("vector_memory", VectorMemoryResource())
     agent.builder.plugin_registry.register_plugin_for_stage(
         ComplexPrompt(), PipelineStage.THINK

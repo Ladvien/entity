@@ -17,7 +17,7 @@ def enable_plugins_namespace() -> None:
     installed package. This helper inserts that directory into ``sys.modules``
     so imports like ``from plugins.my_plugin import MyPlugin`` work without
     additional configuration. It also maps built-in pipeline resources under
-    ``plugins.contrib.*`` for convenience.
+    ``user_plugins.*`` for convenience.
     """
 
     plugins_mod = types.ModuleType("plugins")
@@ -37,14 +37,14 @@ def enable_plugins_namespace() -> None:
     # isort: on
 
     plugins_mod.__dict__.update(vars(pipeline.base_plugins))
-    sys.modules["plugins.contrib.resources"] = plugin_resources
+    sys.modules["user_plugins.resources"] = plugin_resources
     plugins_mod.resources = plugin_resources
 
     for _, name, _ in pkgutil.walk_packages(
         pipeline.resources.__path__, prefix="pipeline.resources."
     ):
         module = importlib.import_module(name)
-        alias = name.replace("pipeline.resources.", "plugins.contrib.")
+        alias = name.replace("pipeline.resources.", "user_plugins.")
         sys.modules[alias] = module
         parent_alias = alias.rsplit(".", 1)[0]
         if parent_alias == "plugins":

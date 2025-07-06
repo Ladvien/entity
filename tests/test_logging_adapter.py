@@ -1,11 +1,16 @@
 import asyncio
 import logging
 
-from plugins.builtin.adapters.logging import LoggingAdapter
-
-from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
-                      PromptPlugin, SystemRegistries, ToolRegistry)
+from pipeline import (
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources import ResourceContainer
+from plugins.builtin.adapters.logging import LoggingAdapter
 
 
 class EchoPlugin(PromptPlugin):
