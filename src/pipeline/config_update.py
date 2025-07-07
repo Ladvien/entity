@@ -10,6 +10,19 @@ from registry import PluginRegistry
 from .manager import PipelineManager
 
 
+async def _restart_plugin(plugin, new_config: Dict) -> None:
+    shutdown = getattr(plugin, "shutdown", None)
+    if callable(shutdown):
+        await shutdown()
+    plugin.config = new_config
+    initialize = getattr(plugin, "initialize", None)
+    if callable(initialize):
+        await initialize()
+    if hasattr(plugin, "_config_history"):
+        plugin._config_history.append(new_config.copy())
+        plugin.config_version += 1
+
+
 @dataclass
 class ConfigUpdateResult:
     success: bool
@@ -51,14 +64,7 @@ async def update_plugin_configuration(
     pipeline_manager: PipelineManager | None = None,
 ) -> ConfigUpdateResult:
     await wait_for_pipeline_completion(pipeline_manager)
-    plugin_instance = next(
-        (
-            p
-            for p in plugin_registry.list_plugins()
-            if getattr(p, "name", p.__class__.__name__) == plugin_name
-        ),
-        None,
-    )
+    plugin_instance = plugin_registry.get_plugin(plugin_name)
     if not plugin_instance:
         return ConfigUpdateResult.failure_result(f"Plugin {plugin_name} not found")
 
@@ -68,30 +74,47 @@ async def update_plugin_configuration(
             f"Validation failed: {validation_result.error_message}"
         )
 
+    dep_check = plugin_instance.validate_dependencies(plugin_registry)
+    if not dep_check.success:
+        return ConfigUpdateResult.failure_result(
+            f"Dependency validation failed: {dep_check.error_message}"
+        )
+
     old_config = getattr(plugin_instance, "config", {})
+    old_version = getattr(plugin_instance, "config_version", 1)
     reconfig_result = await plugin_instance.reconfigure(new_config)
     if not reconfig_result.success:
         if reconfig_result.requires_restart:
-            return ConfigUpdateResult.restart_required(
+            try:
+                await _restart_plugin(plugin_instance, new_config)
+            except Exception as exc:  # noqa: BLE001
+                await plugin_instance.rollback_config(old_version)
+                return ConfigUpdateResult.failure_result(str(exc))
+        else:
+            return ConfigUpdateResult.failure_result(
                 reconfig_result.error_message or ""
             )
-        return ConfigUpdateResult.failure_result(reconfig_result.error_message or "")
 
     updated = [plugin_name]
 
     for dependent in plugin_registry.get_dependents(plugin_name):
         try:
+            dep_val = dependent.validate_dependencies(plugin_registry)
+            if not dep_val.success:
+                raise RuntimeError(
+                    dep_val.error_message or "dependency validation failed"
+                )
             handled = await dependent.on_dependency_reconfigured(
                 plugin_name, old_config, new_config
             )
             if not handled:
-                plugin_name_str = getattr(
-                    dependent, "name", dependent.__class__.__name__
+                plugin_name_str = plugin_registry.get_plugin_name(dependent)
+                raise RuntimeError(
+                    f"Dependency cascade failed for plugin: {plugin_name_str}"
                 )
-                msg = f"Dependency cascade failed for plugin: {plugin_name_str}"
-                return ConfigUpdateResult.failure_result(msg)
             updated.append(plugin_registry.get_plugin_name(dependent))
         except Exception as e:
+            await plugin_instance.rollback_config(old_version)
             return ConfigUpdateResult.failure_result(str(e))
 
     return ConfigUpdateResult.success_result(updated)

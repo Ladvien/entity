@@ -82,17 +82,19 @@ For a hands-on demonstration, run `examples/config_reload_example.py`:
 python examples/config_reload_example.py
 ```
 
-### Hot Reloading Plugins
+### Runtime Reconfiguration and Rollback
 
-During development you can watch plugin directories for changes and replace
-plugins on the fly. Use the CLI `--watch-dir` option:
+`update_plugin_configuration()` restarts plugins when necessary and validates
+their dependencies before applying new settings. If a dependent plugin rejects a
+change the framework rolls back to the previous configuration. Plugins expose a
+`config_version` and `rollback_config()` helper:
 
-```bash
-poetry run python src/cli.py run --config config/dev.yaml --watch-dir user_plugins
+```python
+result = await update_plugin_configuration(reg.plugins, "my_plugin", {"value": 2})
+if not result.success:
+    print(result.error_message)
+await reg.get_plugin("my_plugin").rollback_config()
 ```
-
-The reloader waits for running pipelines to finish before swapping in the
-updated plugin implementations.
 
 ### Streaming and Function Calling
 
