@@ -26,7 +26,7 @@ class RespPlugin(PromptPlugin):
 
 def make_adapter(tmp_path: Path) -> DashboardAdapter:
     plugins = PluginRegistry()
-    asyncio.run(plugins.register_plugin_for_stage(RespPlugin({}), PipelineStage.DO))
+    plugins.register_plugin_for_stage(RespPlugin({}), PipelineStage.DO)
     registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     manager = PipelineManager(registries)
     log_path = tmp_path / "state.log"

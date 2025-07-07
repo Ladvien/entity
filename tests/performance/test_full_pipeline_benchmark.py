@@ -2,8 +2,13 @@ import asyncio
 
 import pytest
 
-from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources import ResourceContainer
 
 
@@ -17,7 +22,7 @@ class RespondPlugin:
 @pytest.mark.benchmark
 def test_full_pipeline_benchmark(benchmark):
     plugins = PluginRegistry()
-    asyncio.run(plugins.register_plugin_for_stage(RespondPlugin(), PipelineStage.DO))
+    plugins.register_plugin_for_stage(RespondPlugin(), PipelineStage.DO)
     registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     manager = PipelineManager(registries)
 

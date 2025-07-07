@@ -1,5 +1,3 @@
-import asyncio
-
 import pytest
 
 from pipeline import PipelineStage, PluginRegistry, PromptPlugin
@@ -34,4 +32,4 @@ def test_registry_rejects_invalid_stage():
     reg = PluginRegistry()
     plugin = GoodPlugin({})
     with pytest.raises(ValueError):
-        asyncio.run(reg.register_plugin_for_stage(plugin, "bogus"))
+        reg.register_plugin_for_stage(plugin, "bogus")

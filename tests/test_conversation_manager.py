@@ -1,8 +1,14 @@
 import asyncio
 
-from pipeline import (ConversationManager, PipelineManager, PipelineStage,
-                      PluginRegistry, PromptPlugin, SystemRegistries,
-                      ToolRegistry)
+from pipeline import (
+    ConversationManager,
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources import ResourceContainer
 
 
@@ -24,8 +30,8 @@ class RespondPlugin(PromptPlugin):
 
 def make_manager():
     plugins = PluginRegistry()
-    asyncio.run(plugins.register_plugin_for_stage(ContinuePlugin({}), PipelineStage.DO))
-    asyncio.run(plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.DO))
+    plugins.register_plugin_for_stage(ContinuePlugin({}), PipelineStage.DO)
+    plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.DO)
     registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     manager = PipelineManager(registries)
     conv = ConversationManager(registries, manager)

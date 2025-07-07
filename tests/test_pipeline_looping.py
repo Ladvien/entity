@@ -1,9 +1,15 @@
 import asyncio
 from typing import Optional
 
-from pipeline import (FailurePlugin, PipelineStage, PluginRegistry,
-                      PromptPlugin, SystemRegistries, ToolRegistry,
-                      execute_pipeline)
+from pipeline import (
+    FailurePlugin,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
 from pipeline.resources import ResourceContainer
 from pipeline.state import FailureInfo, PipelineState
 

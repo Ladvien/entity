@@ -1,7 +1,13 @@
 import asyncio
 
-from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
-                      PromptPlugin, SystemRegistries, ToolRegistry)
+from pipeline import (
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.debug import StateManager
 from pipeline.resources import ResourceContainer
 

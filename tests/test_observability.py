@@ -1,8 +1,14 @@
 import asyncio
 import time
 
-from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      SystemRegistries, ToolRegistry, execute_pipeline)
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
 from pipeline.resources import ResourceContainer
 
 
@@ -16,7 +22,7 @@ class TimedPlugin(PromptPlugin):
 
 def make_registries():
     plugins = PluginRegistry()
-    asyncio.run(plugins.register_plugin_for_stage(TimedPlugin({}), PipelineStage.DO))
+    plugins.register_plugin_for_stage(TimedPlugin({}), PipelineStage.DO)
     return SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 
 

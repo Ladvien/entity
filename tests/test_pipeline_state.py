@@ -2,9 +2,16 @@ import asyncio
 from datetime import datetime
 from pathlib import Path
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
-                      PipelineState, PluginRegistry, PromptPlugin,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineStage,
+    PipelineState,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.pipeline import execute_pipeline
 from pipeline.resources import ResourceContainer
 
@@ -44,7 +51,7 @@ def test_restore_replaces_state():
 
 def test_execute_pipeline_persists_snapshots(tmp_path: Path):
     plugins = PluginRegistry()
-    asyncio.run(plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.DO))
+    plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.DO)
     registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     snap_dir = tmp_path / "snaps"
     result = asyncio.run(
