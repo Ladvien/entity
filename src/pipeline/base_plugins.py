@@ -381,14 +381,21 @@ class ToolPlugin(BasePlugin):
             )
         return True
 
-    def validate_tool_params(self, params: Dict[str, Any]) -> Any:
-        """Validate ``params`` using a :class:`pydantic.BaseModel` if provided."""
+    def validate_tool_params(
+        self, params: BaseModel | Dict[str, Any]
+    ) -> BaseModel | Dict[str, Any]:
+        """Validate ``params`` using ``Params`` model when provided."""
+
+        if isinstance(params, BaseModel):
+            return params
+
         model_cls: Type[BaseModel] | None = getattr(self, "Params", None)
         if model_cls is not None and issubclass(model_cls, BaseModel):
             try:
                 return model_cls(**params)
-            except ValidationError as exc:
+            except ValidationError as exc:  # pragma: no cover - re-raise
                 raise ToolExecutionError(self.__class__.__name__, exc) from exc
+
         self._validate_required_params(params)
         return params
 
