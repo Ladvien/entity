@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import (TYPE_CHECKING, Any, AsyncIterator, Dict, Protocol,
-                    runtime_checkable)
+from typing import TYPE_CHECKING, Any, AsyncIterator, Dict, Protocol, runtime_checkable
 
 if TYPE_CHECKING:  # pragma: no cover
     from registry import ClassRegistry
 
-from pipeline.logging import get_logger
-from pipeline.state import LLMResponse
-from pipeline.validation import ValidationResult
+import logging
+
+if TYPE_CHECKING:  # pragma: no cover
+    from pipeline.state import LLMResponse
+    from pipeline.validation import ValidationResult
 
 
 @runtime_checkable
@@ -26,7 +27,7 @@ class Resource(Protocol):
 class BaseResource:
     def __init__(self, config: Dict | None = None) -> None:
         self.config = config or {}
-        self.logger = get_logger(self.__class__.__name__)
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     async def initialize(self) -> None:
         return None

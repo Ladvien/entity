@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, List
+from typing import TYPE_CHECKING, Any, List
 
-from pipeline.stages import PipelineStage
+if TYPE_CHECKING:  # pragma: no cover - used for type hints only
+    from pipeline.stages import PipelineStage
 
 
 class BasePlugin(ABC):
     """Minimal interface implemented by all pipeline plugins."""
 
-    stages: List[PipelineStage]
+    stages: List["PipelineStage"]
     priority: int = 50
     dependencies: List[str] = []
 
