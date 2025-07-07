@@ -6,8 +6,8 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Callable, Optional
 
-from registry import (PluginRegistry, ResourceContainer, SystemRegistries,
-                      ToolRegistry)
+from common_interfaces.base_plugin import BasePlugin as BasePluginInterface
+from registry import PluginRegistry, ResourceContainer, SystemRegistries, ToolRegistry
 
 from .interfaces import PluginAutoClassifier
 from .logging import get_logger
@@ -127,10 +127,16 @@ class AgentBuilder:
             try:
                 if (
                     inspect.isclass(obj)
-                    and issubclass(obj, BasePlugin)
-                    and obj is not BasePlugin
+                    and (
+                        issubclass(obj, BasePlugin)
+                        or issubclass(obj, BasePluginInterface)
+                    )
+                    and obj not in {BasePlugin, BasePluginInterface}
                 ):
-                    self.add_plugin(obj({}))
+                    try:
+                        self.add_plugin(obj())
+                    except TypeError:
+                        self.add_plugin(obj({}))
                 elif callable(obj) and name.endswith("_plugin"):
                     self.plugin(obj)
             except Exception as exc:  # noqa: BLE001
