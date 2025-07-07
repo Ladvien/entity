@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import MISSING, asdict, dataclass, field, is_dataclass
-from typing import Any, Dict, get_args, get_origin
+from typing import Any, Dict, get_args, get_origin, get_type_hints
 
 from jsonschema import validate
 
@@ -98,14 +98,22 @@ def _type_to_schema(tp: Any) -> Dict[str, Any]:
 
 
 def _class_to_schema(cls: type) -> Dict[str, Any]:
+    """Generate a JSON schema for ``cls`` dataclass."""
+
     schema = {"type": "object", "properties": {}, "additionalProperties": False}
     required = []
+
+    hints = get_type_hints(cls)
+
     for field_obj in cls.__dataclass_fields__.values():
-        schema["properties"][field_obj.name] = _type_to_schema(field_obj.type)
+        field_type = hints.get(field_obj.name, field_obj.type)
+        schema["properties"][field_obj.name] = _type_to_schema(field_type)
         if field_obj.default is MISSING and field_obj.default_factory is MISSING:
             required.append(field_obj.name)
+
     if required:
         schema["required"] = required
+
     return schema
 
 
