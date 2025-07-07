@@ -1,9 +1,15 @@
 import asyncio
 
-from pipeline import (ConversationManager, PipelineManager, PipelineStage,
-                      PluginRegistry, PromptPlugin, SystemRegistries,
-                      ToolRegistry)
+from pipeline import (
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources import ResourceContainer
+from pipeline.resources.memory_resource import SimpleMemoryResource
 
 
 class ContinuePlugin(PromptPlugin):
@@ -26,9 +32,12 @@ def make_manager():
     plugins = PluginRegistry()
     asyncio.run(plugins.register_plugin_for_stage(ContinuePlugin({}), PipelineStage.DO))
     asyncio.run(plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.DO))
-    registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
+    resources = ResourceContainer()
+    asyncio.run(resources.add("memory", SimpleMemoryResource()))
+    registries = SystemRegistries(resources, ToolRegistry(), plugins)
     manager = PipelineManager(registries)
-    conv = ConversationManager(registries, manager)
+    memory = resources.get("memory")
+    conv = memory.get_conversation_manager(registries, manager)  # type: ignore[arg-type]
     return conv, manager
 
 
