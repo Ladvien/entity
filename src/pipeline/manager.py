@@ -25,7 +25,7 @@ class PipelineManager(Generic[ResultT]):
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.new_event_loop()
         task = loop.create_task(self._run_pipeline(message))
         self._tasks.add(task)
         task.add_done_callback(self._tasks.discard)

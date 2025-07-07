@@ -1,7 +1,13 @@
 import asyncio
 
-from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
-                      PromptPlugin, SystemRegistries, ToolRegistry)
+from pipeline import (
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources import ResourceContainer
 
 
@@ -46,3 +52,27 @@ def test_pipeline_manager_active_count():
     result = asyncio.run(run_task())
     assert result == "ok"
     assert manager.active_pipeline_count() == 0
+
+
+def test_start_pipeline_uses_new_event_loop(monkeypatch):
+    manager = make_manager()
+
+    real_new_event_loop = asyncio.new_event_loop
+    called: dict[str, bool] = {}
+
+    def fake_new_event_loop() -> asyncio.AbstractEventLoop:
+        called["new_loop"] = True
+        return real_new_event_loop()
+
+    monkeypatch.setattr(
+        asyncio, "get_running_loop", lambda: (_ for _ in ()).throw(RuntimeError)
+    )
+    monkeypatch.setattr(asyncio, "new_event_loop", fake_new_event_loop)
+
+    task = manager.start_pipeline("hi")
+    loop = task.get_loop()
+    result = loop.run_until_complete(task)
+    loop.close()
+
+    assert result == "ok"
+    assert called.get("new_loop") is True

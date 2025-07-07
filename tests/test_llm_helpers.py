@@ -3,9 +3,17 @@ from datetime import datetime
 
 import pytest
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
-                      PipelineState, PluginContext, PluginRegistry,
-                      PromptPlugin, SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineStage,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.errors import ResourceError
 from pipeline.resources import ResourceContainer
 
@@ -56,3 +64,25 @@ def test_base_plugin_call_llm():
     plugin = DummyPlugin({})
     response = asyncio.run(plugin.call_llm(ctx, "test", "testing"))
     assert response.content == "test"
+
+
+def test_ask_llm_uses_running_loop(monkeypatch):
+    ctx = make_context(StubLLM())
+
+    class DummyLoop:
+        def time(self) -> float:  # pragma: no cover - helper
+            called["time"] = True
+            return 0.0
+
+    called: dict[str, bool] = {}
+
+    monkeypatch.setattr(asyncio, "get_running_loop", lambda: DummyLoop())
+    monkeypatch.setattr(
+        asyncio,
+        "get_event_loop",
+        lambda: (_ for _ in ()).throw(AssertionError("deprecated")),
+    )
+
+    result = asyncio.run(ctx.ask_llm("hello"))
+    assert result == "hello"
+    assert called.get("time") is True
