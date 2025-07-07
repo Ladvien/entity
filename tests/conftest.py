@@ -35,8 +35,17 @@ def postgres_service(postgresql_proc):
 
 
 @pytest.fixture()
-def pg_env(postgres_service, postgresql):
+def pg_env(request):
     """Provide environment variables for the temporary PostgreSQL server."""
+    if shutil.which("pg_ctl") is None:
+        pytest.skip("PostgreSQL server not installed")
+
+    try:
+        request.getfixturevalue("postgres_service")
+        postgresql = request.getfixturevalue("postgresql")
+    except Exception as exc:  # pragma: no cover - environment dependent
+        pytest.skip(f"PostgreSQL service cannot start: {exc}")
+
     os.environ.update(
         {
             "DB_HOST": postgresql.info.host,
