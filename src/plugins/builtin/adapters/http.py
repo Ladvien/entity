@@ -26,7 +26,6 @@ from pipeline.metrics import MetricsCollector
 from pipeline.observability import get_metrics_server, start_metrics_server
 from pipeline.pipeline import execute_pipeline
 from pipeline.security import AdapterAuthenticator
-from pipeline.stages import PipelineStage
 from registry import SystemRegistries
 
 
@@ -100,8 +99,6 @@ class MessageRequest(BaseModel):
 
 class HTTPAdapter(AdapterPlugin):
     """FastAPI based HTTP adapter for request/response handling."""
-
-    stages = [PipelineStage.PARSE, PipelineStage.DELIVER]
 
     def __init__(
         self,

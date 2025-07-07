@@ -6,7 +6,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List
 
 from pipeline.base_plugins import PromptPlugin
-from pipeline.stages import PipelineStage
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
     from pipeline.context import ConversationEntry, PluginContext
@@ -17,7 +16,6 @@ class MemoryRetrievalPrompt(PromptPlugin):
     """Fetch past conversation from memory and append it to the context."""
 
     dependencies = ["memory", "llm"]
-    stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context: PluginContext) -> None:
         memory: MemoryResource = context.get_resource("memory")

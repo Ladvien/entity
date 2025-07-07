@@ -66,8 +66,14 @@ class BasePlugin(BasePluginInterface):
         if cls.__module__ in {__name__, "pipeline.base_plugins.base"}:
             return
 
-        if "ToolPlugin" in [base.__name__ for base in cls.__mro__]:
-            return
+        mro_names = {base.__name__ for base in cls.__mro__}
+
+        if "ToolPlugin" in mro_names and "stages" not in cls.__dict__:
+            cls.stages = [PipelineStage.DO]
+        elif "PromptPlugin" in mro_names and "stages" not in cls.__dict__:
+            cls.stages = [PipelineStage.THINK]
+        elif "AdapterPlugin" in mro_names and "stages" not in cls.__dict__:
+            cls.stages = [PipelineStage.PARSE, PipelineStage.DELIVER]
 
         stages = getattr(cls, "stages", None)
         if stages is None:
