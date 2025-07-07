@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Base class for HTTP LLM providers."""
+"""Common base implementation for asynchronous resources."""
 from typing import TYPE_CHECKING, Any, Dict, Protocol, runtime_checkable
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -63,3 +63,6 @@ class BaseResource:
     @classmethod
     def validate_dependencies(cls, registry: "ClassRegistry") -> ValidationResult:
         return ValidationResult.success_result()
+
+
+__all__ = ["Resource", "BaseResource"]

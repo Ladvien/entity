@@ -5,6 +5,8 @@ import time
 from dataclasses import dataclass, field
 from typing import Dict
 
+from plugins.resources.base import BaseResource
+
 
 @dataclass
 class ManagerMetrics:
@@ -15,19 +17,6 @@ class ManagerMetrics:
     health_checks: int = 0
     health_failures: int = 0
     init_durations: Dict[str, float] = field(default_factory=dict)
-
-
-class BaseResource:
-    """Base class for managed resources."""
-
-    async def initialize(self) -> None:  # pragma: no cover - optional
-        pass
-
-    async def shutdown(self) -> None:  # pragma: no cover - optional
-        pass
-
-    async def health_check(self) -> bool:  # pragma: no cover - optional
-        return True
 
 
 class AsyncResourceManager:
@@ -70,3 +59,6 @@ class AsyncResourceManager:
             self.metrics.health_checks += 1
             report[name] = healthy
         return report
+
+
+__all__ = ["AsyncResourceManager", "BaseResource", "ManagerMetrics"]
