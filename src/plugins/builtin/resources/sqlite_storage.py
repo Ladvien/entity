@@ -92,5 +92,14 @@ class SQLiteStorageResource(DatabaseResource):
             await self._conn.close()
             self._conn = None
 
+    async def health_check(self) -> bool:
+        if self._conn is None:
+            return False
+        try:
+            await self._conn.execute("SELECT 1")
+            return True
+        except Exception:
+            return False
+
     async def _do_health_check(self, connection: aiosqlite.Connection) -> None:
         await connection.execute("SELECT 1")
