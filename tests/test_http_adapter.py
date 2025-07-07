@@ -2,8 +2,14 @@ import asyncio
 
 import httpx
 
-from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
-                      PromptPlugin, SystemRegistries, ToolRegistry)
+from pipeline import (
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources import ResourceContainer
 from plugins.builtin.adapters import HTTPAdapter
 
@@ -98,7 +104,9 @@ def test_http_adapter_dashboard():
             await client.post("/", json={"message": "hi"})
             resp = await client.get("/dashboard")
             assert resp.status_code == 200
-            assert resp.json() == {"active_pipelines": 0}
+            assert "Entity Dashboard" in resp.text
+            metrics = await client.get("/metrics")
+            assert metrics.status_code == 200
 
     asyncio.run(_requests())
 

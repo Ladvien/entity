@@ -15,13 +15,15 @@ from typing import Any, cast
 
 import uvicorn
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from pipeline.base_plugins import AdapterPlugin
 from pipeline.exceptions import ResourceError
 from pipeline.manager import PipelineManager
+from pipeline.metrics import MetricsCollector
+from pipeline.observability import get_metrics_server, start_metrics_server
 from pipeline.pipeline import execute_pipeline
 from pipeline.stages import PipelineStage
 from registry import SystemRegistries
@@ -106,6 +108,8 @@ class HTTPAdapter(AdapterPlugin):
         self._setup_audit_logger()
         self._setup_middleware()
         self.dashboard_enabled = bool(self.config.get("dashboard", False))
+        if self.dashboard_enabled:
+            start_metrics_server()
         self._server: uvicorn.Server | None = None
         self._registries: SystemRegistries | None = None
         self._setup_routes()
@@ -163,11 +167,38 @@ class HTTPAdapter(AdapterPlugin):
         if self.dashboard_enabled:
 
             @self.app.get("/dashboard")
-            async def dashboard() -> dict[str, Any]:
+            async def dashboard() -> HTMLResponse:
+                metrics = MetricsCollector()
+                metrics.record_dashboard_request()
+                server = get_metrics_server()
+                if server is not None:
+                    server.update(metrics)
                 count = 0
                 if self.manager is not None:
                     count = self.manager.active_pipeline_count()
-                return {"active_pipelines": count}
+                html = (
+                    "<!DOCTYPE html>"
+                    "<html><head><title>Entity Dashboard</title>"
+                    "<script src='https://cdn.jsdelivr.net/npm/chart.js'></script>"
+                    "</head><body>"
+                    f"<h1>Active pipelines: {count}</h1>"
+                    "<canvas id='latency'></canvas>"
+                    "<canvas id='failures'></canvas>"
+                    "<script>async function load(){const res=await fetch('/metrics');"
+                    "const text=await res.text();let lat=0;let fail=0;"
+                    "for(const line of text.split('\\n')){if(line.startsWith('llm_latency_seconds_sum')){lat=parseFloat(line.split(' ')[1]);}if(line.startsWith('llm_failures_total')){fail=parseFloat(line.split(' ')[1]);}}"
+                    "new Chart(document.getElementById('latency'),{type:'bar',data:{labels:['latency'],datasets:[{data:[lat]}]}});"
+                    "new Chart(document.getElementById('failures'),{type:'bar',data:{labels:['failures'],datasets:[{data:[fail]}]}});}</script>"
+                    "<script>load();</script></body></html>"
+                )
+                return HTMLResponse(html)
+
+            @self.app.get("/metrics")
+            async def metrics() -> HTMLResponse:
+                server = get_metrics_server()
+                if server is None:
+                    return HTMLResponse(status_code=404)
+                return HTMLResponse(server.render(), media_type="text/plain")
 
     async def _handle_message(self, message: str) -> dict[str, Any]:
         """Send a message through the pipeline and return the response."""
