@@ -227,6 +227,11 @@ class PluginContext:
         """Return arbitrary metadata value previously stored."""
         return self.__state.metadata.get(key, default)
 
+    @property
+    def metadata(self) -> Dict[str, Any]:
+        """Direct access to the pipeline metadata."""
+        return cast(Dict[str, Any], self.__state.metadata)
+
     def set_metadata(self, key: str, value: Any) -> None:
         """Store arbitrary metadata associated with the pipeline."""
         self.__state.metadata[key] = value
