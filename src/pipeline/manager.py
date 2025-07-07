@@ -29,12 +29,16 @@ class PipelineManager(Generic[ResultT]):
         self._active: Set[str] = set()
         self._lock = asyncio.Lock()
 
-    def start_pipeline(self, message: str) -> asyncio.Task[ResultT]:
+    def start_pipeline(
+        self, message: str, *, max_iterations: int = 5
+    ) -> asyncio.Task[ResultT]:
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
             loop = asyncio.new_event_loop()
-        task = loop.create_task(self._run_pipeline(message))
+        task = loop.create_task(
+            self._run_pipeline(message, max_iterations=max_iterations)
+        )
         self._tasks.add(task)
         task.add_done_callback(self._tasks.discard)
         return task
@@ -47,7 +51,7 @@ class PipelineManager(Generic[ResultT]):
         async with self._lock:
             self._active.discard(pipeline_id)
 
-    async def _run_pipeline(self, message: str) -> ResultT:
+    async def _run_pipeline(self, message: str, *, max_iterations: int = 5) -> ResultT:
         if self._registries is None:
             raise ValueError("PipelineManager requires registries to run pipelines")
         from .pipeline import execute_pipeline
@@ -57,11 +61,12 @@ class PipelineManager(Generic[ResultT]):
             self._registries,
             pipeline_manager=self,
             state_logger=self.state_logger,
+            max_iterations=max_iterations,
         )
         return cast(ResultT, result)
 
-    async def run_pipeline(self, message: str) -> ResultT:
-        return await self._run_pipeline(message)
+    async def run_pipeline(self, message: str, *, max_iterations: int = 5) -> ResultT:
+        return await self._run_pipeline(message, max_iterations=max_iterations)
 
     async def has_active_pipelines_async(self) -> bool:
         async with self._lock:
