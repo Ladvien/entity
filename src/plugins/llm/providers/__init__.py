@@ -1,17 +1,6 @@
 """LLM provider implementations."""
 
-from .bedrock import BedrockProvider
-from .claude import ClaudeProvider
-from .echo import EchoProvider
-from .gemini import GeminiProvider
-from .ollama import OllamaProvider
-from .openai import OpenAIProvider
+from plugins.builtin.resources.llm.providers import *  # noqa: F401,F403
+from plugins.builtin.resources.llm.providers import __all__ as _ALL
 
-__all__ = [
-    "OpenAIProvider",
-    "OllamaProvider",
-    "GeminiProvider",
-    "ClaudeProvider",
-    "EchoProvider",
-    "BedrockProvider",
-]
+__all__ = list(_ALL)
