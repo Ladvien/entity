@@ -22,4 +22,4 @@ class SecureToolWrapper(ToolPlugin):
     async def execute_function(self, params: Dict[str, Any]) -> Any:
         validated = self._validator(params)
         sanitized = validated.model_dump()
-        return await self._plugin.execute(sanitized)
+        return await self._plugin.execute_function_with_retry(sanitized)
