@@ -16,13 +16,9 @@ from registry import SystemRegistries
 
 from .context import ConversationEntry, PluginContext
 from .errors import create_static_error_response
-from .exceptions import (
-    CircuitBreakerTripped,
-    PipelineError,
-    PluginExecutionError,
-    ResourceError,
-    ToolExecutionError,
-)
+from .exceptions import (CircuitBreakerTripped, PipelineError,
+                         PluginExecutionError, ResourceError,
+                         ToolExecutionError)
 from .logging import get_logger, reset_request_id, set_request_id
 from .manager import PipelineManager
 from .metrics import MetricsCollector
