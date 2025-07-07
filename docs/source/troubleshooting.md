@@ -7,7 +7,7 @@
 
 ## Dependency validation errors
 - **Plugin requires a resource not registered** – confirm that all names in `dependencies` exist under `plugins:` in the config file.
-- **Config validation failed** – run `python -m src.entity_config.validator --config your.yaml` to see detailed messages.
+- **Config validation failed** – run `python -m src.config.validator --config your.yaml` to see detailed messages.
 
 If initialization still fails, enable debug logging with `LOG_LEVEL=DEBUG` when running the validator for verbose output.
 

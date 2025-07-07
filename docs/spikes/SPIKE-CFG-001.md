@@ -5,7 +5,7 @@ This document summarizes how the Entity Pipeline handles configuration validatio
 
 ## Validation Strategy
 - **Fail-fast validation** ensures initialization stops if any plugin dependencies are missing. Each plugin class implements `validate_config` and `validate_dependencies`, returning `ValidationResult` objects.
-- Configuration files can be checked with `python -m src.entity_config.validator --config your.yaml` to see detailed messages before starting the agent.
+- Configuration files can be checked with `python -m src.config.validator --config your.yaml` to see detailed messages before starting the agent.
 - Plugins declare required stages and dependencies, and the initializer verifies them up front so execution order is safe.
 
 ## Security Considerations
