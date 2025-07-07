@@ -24,6 +24,7 @@ class LoggingAdapter(AdapterPlugin):
         pass
 
     async def _execute_impl(self, context) -> None:
-        response = context.get_response()
+        """Log the pipeline response if one has been produced."""
+        response = context.response
         if response is not None:
             self.logger.info("response delivered", extra={"response": response})
