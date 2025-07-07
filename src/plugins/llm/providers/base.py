@@ -1,13 +1,5 @@
-from __future__ import annotations
+"""Compatibility shim for the base LLM provider implementation."""
 
-"""Base class for HTTP LLM providers."""
+from plugins.builtin.resources.llm.providers.base import BaseProvider
 
-from typing import Dict
-
-from plugins.builtin.resources.http_provider_resource import HTTPProviderResource
-
-
-class BaseProvider(HTTPProviderResource):
-    """Base class for HTTP LLM providers."""
-
-    name = "base"
+__all__ = ["BaseProvider"]
