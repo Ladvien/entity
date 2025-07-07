@@ -28,6 +28,8 @@ def postgres_service(postgresql_proc):
     """Start a temporary PostgreSQL instance if available."""
     if shutil.which("pg_ctl") is None:
         pytest.skip("PostgreSQL server not installed")
+    if hasattr(os, "geteuid") and os.geteuid() == 0:
+        pytest.skip("PostgreSQL server cannot run as root")
     return postgresql_proc
 
 
