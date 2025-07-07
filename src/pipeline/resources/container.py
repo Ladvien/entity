@@ -103,7 +103,7 @@ class ResourceContainer:
             instance = cls.from_config(config)
         else:
             instance = cls(config)
-        await self.add(getattr(instance, "name", name), instance)
+        await self.add(name, instance)
 
     def get(self, name: str) -> Any | None:
         return self._resources.get(name)
@@ -143,7 +143,7 @@ class ResourceContainer:
                         f"Resource '{name}' requires '{dep}' which is missing"
                     )
                 setattr(instance, dep, dep_obj)
-            await self.add(getattr(instance, "name", name), instance)
+            await self.add(name, instance)
             init = getattr(instance, "initialize", None)
             if callable(init):
                 await init()
