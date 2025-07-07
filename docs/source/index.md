@@ -53,6 +53,7 @@ plugin_cheatsheet
 plugin_guide
 developer_examples
 context
+security_config
 logging
 advanced_usage
 module_map
