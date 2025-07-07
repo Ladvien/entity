@@ -119,7 +119,7 @@ def get_logger(name: str) -> logging.Logger:
     return logger
 
 
-class LoggingAdapter(AdapterPlugin):
+class StructuredLoggingAdapter(AdapterPlugin):
     """Adapter placeholder for logging setup."""
 
     stages = [PipelineStage.DELIVER]
@@ -129,7 +129,7 @@ class LoggingAdapter(AdapterPlugin):
 
 
 __all__ = [
-    "LoggingAdapter",
+    "StructuredLoggingAdapter",
     "RequestIdFilter",
     "JsonFormatter",
     "configure_logging",

@@ -7,7 +7,7 @@ from .dashboard import DashboardAdapter
 from .grpc import LLMGRPCAdapter
 from .http import HTTPAdapter
 from .logging import LoggingAdapter
-from .logging_adapter import LoggingAdapter as LoggingAdapterWrapper
+from .logging_adapter import StructuredLoggingAdapter
 from .websocket import WebSocketAdapter
 
 __all__ = [
@@ -17,5 +17,5 @@ __all__ = [
     "WebSocketAdapter",
     "LLMGRPCAdapter",
     "LoggingAdapter",
-    "LoggingAdapterWrapper",
+    "StructuredLoggingAdapter",
 ]
