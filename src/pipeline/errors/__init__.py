@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import replace
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Any, Dict
 
@@ -12,6 +12,7 @@ from .exceptions import (PipelineError, PluginExecutionError, ResourceError,
 from .models import ErrorResponse
 
 __all__ = [
+    "ErrorResponse",
     "create_static_error_response",
     "create_error_response",
     "ErrorResponse",
@@ -25,6 +26,26 @@ __all__ = [
     "ErrorResponse",
 ]
 
+
+@dataclass(slots=True)
+class ErrorResponse:
+    """Structured error information returned to the caller."""
+
+    error: str
+    message: str | None = None
+    error_id: str | None = None
+    timestamp: str | None = None
+    error_type: str | None = None
+    stage: str | None = None
+    plugin: str | None = None
+    pipeline_id: str | None = None
+    type: str = "error"
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Return a plain ``dict`` representation."""
+        return {k: v for k, v in asdict(self).items() if v is not None}
+
+
 # Generic fallback returned when even error handling fails
 STATIC_ERROR_RESPONSE = ErrorResponse(
     error="System error occurred",
@@ -34,11 +55,14 @@ STATIC_ERROR_RESPONSE = ErrorResponse(
 
 
 def create_static_error_response(pipeline_id: str) -> ErrorResponse:
-    """Return a copy of :data:`STATIC_ERROR_RESPONSE` populated with runtime info."""
-    return replace(
-        STATIC_ERROR_RESPONSE,
+    """Return a fallback :class:`ErrorResponse` populated with runtime info."""
+
+    return ErrorResponse(
+        error=STATIC_ERROR_RESPONSE["error"],
+        message=STATIC_ERROR_RESPONSE["message"],
         error_id=pipeline_id,
         timestamp=datetime.now().isoformat(),
+        type="static_fallback",
     )
 
 
