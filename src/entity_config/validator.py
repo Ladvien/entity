@@ -112,6 +112,8 @@ class ConfigValidator:
         if validate_once():
             backup(None, text)
             last_good = text
+        else:
+            return 1
         while True:
             time.sleep(1)
             mtime = cfg_path.stat().st_mtime

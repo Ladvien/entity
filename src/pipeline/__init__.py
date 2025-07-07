@@ -1,5 +1,9 @@
-from typing import Any
+# flake8: noqa
 
+from importlib import import_module
+from typing import TYPE_CHECKING, Any
+
+# Expose plugin configuration API used by the pipeline package
 from common_interfaces import plugins as plugin_utils
 
 from .agent import Agent
@@ -38,13 +42,6 @@ from .pipeline import create_default_response, execute_pipeline
 from .resources import LLM, BaseResource, Resource
 from .runtime import AgentRuntime
 from .stages import PipelineStage
-from .user_plugins import BasePlugin
-
-from importlib import import_module
-from typing import TYPE_CHECKING, Any
-
-# Expose plugin configuration API used by the pipeline package
-from common_interfaces import plugins as plugin_utils
 
 if TYPE_CHECKING:  # pragma: no cover - imported for type checking only
     from .agent import Agent
