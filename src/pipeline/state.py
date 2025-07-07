@@ -106,6 +106,7 @@ class PipelineState:
     pending_tool_calls: List[ToolCall] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
     pipeline_id: str = ""
+    iteration: int = 0
     current_stage: Optional[PipelineStage] = None
     last_completed_stage: Optional[PipelineStage] = None
     metrics: MetricsCollector = field(default_factory=MetricsCollector)
@@ -136,6 +137,7 @@ class PipelineState:
             ],
             "metadata": self.metadata,
             "pipeline_id": self.pipeline_id,
+            "iteration": self.iteration,
             "current_stage": str(self.current_stage) if self.current_stage else None,
             "last_completed_stage": (
                 str(self.last_completed_stage) if self.last_completed_stage else None
@@ -169,6 +171,7 @@ class PipelineState:
             ],
             metadata=data.get("metadata", {}),
             pipeline_id=data.get("pipeline_id", ""),
+            iteration=data.get("iteration", 0),
             current_stage=(
                 PipelineStage.from_str(data["current_stage"])
                 if data.get("current_stage")
