@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from dataclasses import asdict, is_dataclass
 from datetime import datetime
+from typing import Type, TypeVar
 
 import msgpack
 
@@ -36,8 +37,28 @@ def dumps_json(obj: object) -> str:
     return json.dumps(obj, default=_json_default)
 
 
-def loads_json(data: str) -> object:
-    """Deserialize ``data`` from JSON."""
+T = TypeVar("T")
+
+
+def loads_json(data: str, cls: Type[T] | None = None) -> T | object:
+    """Deserialize ``data`` from JSON.
+
+    Parameters
+    ----------
+    data:
+        JSON string to deserialize.
+    cls:
+        Optional dataclass type to instantiate from the JSON payload.
+
+    Returns
+    -------
+    T | object
+        Instance of ``cls`` if provided and a dataclass, otherwise a plain
+        ``dict`` or other deserialized object.
+    """
+
+    if cls is not None and is_dataclass(cls):
+        return cls(**json.loads(data))
     return json.loads(data)
 
 
