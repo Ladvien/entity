@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import ModuleType
@@ -35,7 +36,9 @@ class AgentBuilder:
             raise TypeError(f"Plugin '{name}' must implement async '_execute_impl'")
         for stage in getattr(plugin, "stages", []):
             name = getattr(plugin, "name", plugin.__class__.__name__)
-            self.plugin_registry.register_plugin_for_stage(plugin, stage, name)
+            result = self.plugin_registry.register_plugin_for_stage(plugin, stage, name)
+            if asyncio.iscoroutine(result):
+                asyncio.run(result)
 
     def plugin(
         self,
