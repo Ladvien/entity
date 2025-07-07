@@ -8,7 +8,7 @@
 Run an agent from a YAML configuration file:
 
 ```bash
-python src/cli.py --config config.yml
+poetry run python src/cli.py --config config.yml
 ```
 
 ### Using the SearchTool

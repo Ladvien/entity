@@ -325,7 +325,7 @@ requires the `websockets` package, which is now listed in `pyproject.toml`.
 
 ```bash
 python examples/servers/http_server.py
-python src/cli.py serve-websocket --config config/dev.yaml
+poetry run python src/cli.py serve-websocket --config config/dev.yaml
 python examples/servers/grpc_server.py
 python examples/servers/cli_adapter.py
 ```

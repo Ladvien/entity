@@ -164,8 +164,8 @@ for how to expose an `Agent` through a command line interface. Use `src/cli.py`
 to run the agent interactively or over a WebSocket connection:
 
 ```bash
-python src/cli.py --config config/dev.yaml
-python src/cli.py serve-websocket --config config/dev.yaml
+poetry run python src/cli.py --config config/dev.yaml
+poetry run python src/cli.py serve-websocket --config config/dev.yaml
 ```
 
 When implementing custom error handling, refer to

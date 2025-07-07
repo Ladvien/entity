@@ -103,7 +103,7 @@ python examples/servers/http_server.py
 For a WebSocket server use the CLI:
 
 ```bash
-python src/cli.py serve-websocket --config config/dev.yaml
+poetry run python src/cli.py serve-websocket --config config/dev.yaml
 ```
 
 Run the gRPC server:
