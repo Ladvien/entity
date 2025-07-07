@@ -10,7 +10,7 @@ from .metrics import MetricsCollector
 from .stages import PipelineStage
 
 
-@dataclass
+@dataclass(slots=True)
 class LLMResponse:
     """Result returned by an LLM call."""
 
@@ -21,7 +21,7 @@ class LLMResponse:
     cost: float | None = None
 
 
-@dataclass
+@dataclass(slots=True)
 class ConversationEntry:
     """Single message stored in the conversation history.
 
@@ -38,7 +38,7 @@ class ConversationEntry:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
-@dataclass(eq=False)
+@dataclass(eq=False, slots=True)
 class ToolCall:
     """Description of a tool execution request.
 
@@ -55,7 +55,7 @@ class ToolCall:
     source: str = "direct_execution"
 
 
-@dataclass
+@dataclass(slots=True)
 class FailureInfo:
     """Captured information about a pipeline failure.
 
@@ -78,7 +78,7 @@ class FailureInfo:
     timestamp: datetime = field(default_factory=datetime.now)
 
 
-@dataclass
+@dataclass(slots=True)
 class PipelineState:
     """Mutable state shared across pipeline stages.
 

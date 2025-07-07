@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional
 import httpx
 
 from pipeline.base_plugins import ValidationResult
+from pipeline.cache import CacheBackend, InMemoryCache
 from pipeline.exceptions import ResourceError
 from pipeline.reliability import CircuitBreaker, RetryPolicy
 
@@ -27,6 +28,9 @@ class HttpLLMResource:
         self._breaker = CircuitBreaker(
             retry_policy=RetryPolicy(attempts=attempts, backoff=backoff)
         )
+        self._client = httpx.AsyncClient(timeout=30)
+        ttl = int(config.get("cache_ttl", 0))
+        self._cache: CacheBackend | None = InMemoryCache(ttl) if ttl else None
 
     def validate_config(self) -> ValidationResult:
         if not self.base_url:
@@ -45,14 +49,31 @@ class HttpLLMResource:
         params: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         async def send() -> Dict[str, Any]:
-            async with httpx.AsyncClient(timeout=30) as client:
-                response = await client.post(
-                    url, json=payload, headers=headers, params=params
-                )
-                response.raise_for_status()
-                return response.json()
+            response = await self._client.post(
+                url, json=payload, headers=headers, params=params
+            )
+            response.raise_for_status()
+            return response.json()
+
+        key = None
+        if self._cache is not None:
+            import hashlib
+            import json as _json
+
+            key = hashlib.sha256(
+                _json.dumps([url, payload, headers, params], sort_keys=True).encode()
+            ).hexdigest()
+            cached = await self._cache.get(key)
+            if cached is not None:
+                return cached
 
         try:
-            return await self._breaker.call(send)
+            result = await self._breaker.call(send)
+            if self._cache is not None and key is not None:
+                await self._cache.set(key, result)
+            return result
         except Exception as exc:  # pragma: no cover
             raise ResourceError(f"HTTP request failed: {exc}") from exc
+
+    async def close(self) -> None:
+        await self._client.aclose()
