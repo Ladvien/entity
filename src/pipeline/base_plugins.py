@@ -431,6 +431,8 @@ class ToolPlugin(BasePlugin):
         delay: float | None = None,
     ):
         validated = self.validate_tool_params(params)
+        if isinstance(validated, BaseModel):
+            validated = validated.model_dump()
         max_retry_count = self.max_retries if max_retries is None else max_retries
         retry_delay_seconds = self.retry_delay if delay is None else delay
         for attempt in range(max_retry_count + 1):

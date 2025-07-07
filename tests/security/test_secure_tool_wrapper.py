@@ -13,7 +13,12 @@ class EchoTool(ToolPlugin):
     class Params(BaseModel):
         text: str
 
+    def __init__(self, config=None) -> None:
+        super().__init__(config)
+        self.last_params: dict | None = None
+
     async def execute_function(self, params: dict) -> str:  # type: ignore[override]
+        self.last_params = params
         return params["text"]
 
 
@@ -25,6 +30,8 @@ async def test_secure_wrapper_validates_and_sanitizes():
 
     result = await secure.execute({"text": "hello"})
     assert result == "hello"
+    assert plugin.last_params == {"text": "hello"}
+    assert isinstance(plugin.last_params, dict)
 
 
 @pytest.mark.asyncio
