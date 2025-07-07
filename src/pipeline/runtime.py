@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Dict
+from dataclasses import dataclass, field
+from typing import Any, Dict, cast
 
 from registry import SystemRegistries
 
@@ -13,7 +13,7 @@ class AgentRuntime:
     """Execute messages through the pipeline."""
 
     registries: SystemRegistries
-    manager: PipelineManager[Dict[str, Any]]
+    manager: PipelineManager[Dict[str, Any]] = field(init=False)
 
     def __post_init__(self) -> None:
         self.manager = PipelineManager[Dict[str, Any]](self.registries)

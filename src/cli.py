@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import shutil
+import sys
 from pathlib import Path
 
 import yaml
@@ -25,6 +26,9 @@ class CLI:
 
     def __init__(self) -> None:
         """Initialize and parse command-line arguments."""
+        ROOT = Path(__file__).resolve().parent.parent
+        if str(ROOT) not in sys.path:
+            sys.path.insert(0, str(ROOT))
 
         self.args = self._parse_args()
 
