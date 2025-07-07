@@ -5,7 +5,7 @@ import importlib.util
 from contextlib import suppress
 from pathlib import Path
 from types import ModuleType
-from typing import Iterable, List
+from typing import Iterable
 
 from watchfiles import awatch
 

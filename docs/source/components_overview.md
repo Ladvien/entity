@@ -15,6 +15,11 @@ A pipeline is a fixed sequence of stages that an agent runs on each request:
 
 Each stage is independent, making the agent's behavior easier to reason about.
 
+After a full pass, the pipeline checks `state.response`. If it is still empty,
+the stages run again until a response is produced or `max_iterations` is
+reached. Five iterations are allowed by default; exceeding this limit invokes
+the `error` stage.
+
 ## Plugins
 
 Plugins implement the work at each stage. They interact with the system through `PluginContext` and may use resources or tools. See the [Plugin Guide](plugin_guide.md) for implementation details.
