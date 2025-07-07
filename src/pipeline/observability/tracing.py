@@ -9,21 +9,29 @@ from typing import Any, Awaitable, Callable
 from opentelemetry import trace
 
 try:  # Optional dependency
-    from opentelemetry.exporter.otlp.proto.http.trace_exporter import \
-        OTLPSpanExporter
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 except Exception:  # pragma: no cover - optional
     OTLPSpanExporter = None  # type: ignore
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import (BatchSpanProcessor,
-                                            ConsoleSpanExporter)
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+
+
+class _NullWriter:
+    """A writer that silently drops all data."""
+
+    def write(self, _: str) -> None:  # pragma: no cover - simple pass-through
+        pass
+
+    def flush(self) -> None:  # pragma: no cover - simple pass-through
+        pass
 
 
 def _get_exporter():
     endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
     if endpoint and OTLPSpanExporter is not None:
         return OTLPSpanExporter(endpoint=endpoint)
-    return ConsoleSpanExporter()
+    return ConsoleSpanExporter(out=_NullWriter())
 
 
 _tracer_provider = TracerProvider(resource=Resource.create({"service.name": "entity"}))

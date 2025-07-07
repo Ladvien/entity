@@ -34,6 +34,13 @@ For a high-level look at how the pieces connect, see [components_overview.md](co
 3. Start the agent with your desired configuration file.
 4. Copy `.env.example` to `.env` and fill in the values if you want to run the example scripts. See [examples/README.md](examples/README.md) for what each example expects.
 
+### Testing Setup
+
+Running the full test suite requires a local PostgreSQL server. The tests rely
+on `pytest-postgresql` which starts a temporary instance using `pg_ctl`. Install
+PostgreSQL and ensure `pg_ctl` is available in your `PATH`; otherwise the
+integration tests will be skipped or fail.
+
 For an infrastructure walkthrough on Amazon Web Services, see the [AWS deployment guide](docs/source/deploy_aws.md).
 
 <!-- start config -->

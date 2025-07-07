@@ -43,7 +43,7 @@ def test_memory_persists_between_runs():
 def test_save_and_load_history():
     async def run():
         storage = MemoryStorage({})
-        memory = MemoryResource(storage=storage)
+        memory = MemoryResource(database=storage)
         history = [
             ConversationEntry(content="hi", role="user", timestamp=datetime.now())
         ]

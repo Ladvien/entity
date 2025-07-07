@@ -37,6 +37,10 @@ class StorageResource(ResourcePlugin):
     def from_config(cls, config: Dict) -> "StorageResource":
         return cls(config=config)
 
+    async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
+        """Resource plugins are not executed directly."""
+        return None
+
     async def initialize(self) -> None:  # pragma: no cover - simple passthrough
         for backend in (self.database, self.vector_store, self.filesystem):
             if hasattr(backend, "initialize") and callable(backend.initialize):

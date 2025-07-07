@@ -6,9 +6,15 @@ from pathlib import Path
 import pytest
 
 from entity_config.environment import load_env
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, SystemRegistries,
-                      ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources import ResourceContainer
 from pipeline.resources.llm import UnifiedLLMResource
 from pipeline.resources.memory_resource import MemoryResource
@@ -16,11 +22,19 @@ from pipeline.resources.pg_vector_store import PgVectorStore
 from pipeline.resources.postgres import PostgresResource
 from user_plugins.prompts.complex_prompt import ComplexPrompt
 
+if hasattr(os, "geteuid") and os.geteuid() == 0:
+    pytest.skip(
+        "PostgreSQL integration test cannot run as root", allow_module_level=True
+    )
+
 load_env(Path(__file__).resolve().parents[2] / ".env")
 
 
 @pytest.mark.integration
 def test_vector_memory_integration(pg_env):
+    if hasattr(os, "geteuid") and os.geteuid() == 0:
+        pytest.skip("PostgreSQL integration test cannot run as root")
+
     async def run():
         db_cfg = {
             "host": os.environ.get("DB_HOST", "localhost"),
@@ -43,7 +57,7 @@ def test_vector_memory_integration(pg_env):
         }
         db = PostgresResource(db_cfg)
         vm = PgVectorStore(vm_cfg)
-        memory = MemoryResource(storage=db, vector=vm)
+        memory = MemoryResource(database=db, vector_store=vm)
         llm = UnifiedLLMResource(
             {"provider": "echo", "base_url": "http://localhost", "model": "none"}
         )
