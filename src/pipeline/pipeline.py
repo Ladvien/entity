@@ -184,7 +184,8 @@ async def execute_stage(
             finally:
                 reset_request_id(token)
     duration = time.perf_counter() - start
-    state.metrics.record_stage_duration(str(stage), duration)
+    if state.metrics:
+        state.metrics.record_stage_duration(str(stage), duration)
 
     if stage == PipelineStage.ERROR and state.response is None:
         fallback = FallbackErrorPlugin({})
@@ -311,11 +312,12 @@ async def execute_pipeline(
     finally:
         if pipeline_manager is not None:
             await pipeline_manager.deregister(state.pipeline_id)
-        state.metrics.record_pipeline_duration(time.time() - start)
+        if state.metrics:
+            state.metrics.record_pipeline_duration(time.time() - start)
         if state_file and os.path.exists(state_file) and state.failure_info is None:
             os.remove(state_file)
         server = get_metrics_server()
-        if server is not None:
+        if server is not None and state.metrics:
             server.update(state.metrics)
 
 
