@@ -20,7 +20,7 @@ def _validate_memory(config: Mapping[str, Any]) -> None:
 
 def _validate_vector_memory(config: Mapping[str, Any]) -> None:
     """Ensure vector memory configuration contains required fields."""
-    vm_cfg = config.get("plugins", {}).get("resources", {}).get("vector_memory")
+    vm_cfg = config.get("plugins", {}).get("resources", {}).get("vector_store")
     if not vm_cfg:
         return
     table = vm_cfg.get("table")

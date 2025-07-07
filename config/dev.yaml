@@ -11,14 +11,8 @@ tool_registry:
 plugins:
   resources:
     database:
-      type: plugins.builtin.resources.postgres:PostgresResource
-      host: "${DB_HOST}"
-      port: 5432
-      name: "${DB_USERNAME}"
-      username: "${DB_USERNAME}"
-      password: "${DB_PASSWORD}"
-      retries: 3
-      backoff: 1.0
+      type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
+      path: ./dev.db
     llm:
       type: plugins.builtin.resources.llm.unified:UnifiedLLMResource
       provider: ollama
@@ -31,12 +25,18 @@ plugins:
       storage:
         type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
         path: ./dev.db
+    vector_store:
+      type: plugins.builtin.resources.memory_vector_store:MemoryVectorStore
+      table: vector_mem
+      embedding_model:
+        name: dummy
+        dimensions: 3
+    filesystem:
+      type: plugins.builtin.resources.s3_filesystem:S3FileSystem
+      bucket: agent-files
+      region: us-east-1
     storage:
       type: pipeline.resources.storage_resource:StorageResource
-      filesystem:
-        type: plugins.builtin.resources.s3_filesystem:S3FileSystem
-        bucket: agent-files
-        region: us-east-1
 #   storage:
 #     type: pipeline.resources.storage_resource:StorageResource
 #     database:
@@ -66,9 +66,9 @@ plugins:
     calculator:
       type: plugins.builtin.tools.calculator_tool:CalculatorTool
   adapters:
-  http:
-    type: plugins.builtin.adapters.http:HTTPAdapter
-    stages: [parse, deliver]
+    http:
+      type: plugins.builtin.adapters.http:HTTPAdapter
+      stages: [parse, deliver]
       auth_tokens:
         - dev-secret
       rate_limit:
@@ -76,24 +76,24 @@ plugins:
         interval: 60
       audit_log_path: logs/audit.log
       dashboard: true
-  cli:
-    type: plugins.builtin.adapters.cli:CLIAdapter
-    stages: [deliver]
-  logging:
-    type: plugins.builtin.adapters.logging:LoggingAdapter
-    stages: [deliver]
+    cli:
+      type: plugins.builtin.adapters.cli:CLIAdapter
+      stages: [deliver]
+    logging:
+      type: plugins.builtin.adapters.logging:LoggingAdapter
+      stages: [deliver]
   prompts:
     chain_of_thought:
       type: user_plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
       enable_reasoning: true
-  conversation_history:
-    type: plugins.builtin.prompts.conversation_history:ConversationHistory
-    history_table: chat_history
-    stages: [parse, deliver]
-  memory_retrieval:
-    type: plugins.builtin.prompts.memory_retrieval:MemoryRetrievalPrompt
-    max_context_length: 4000
-    stages: [think]
-  intent_classifier:
-    type: user_plugins.prompts.intent_classifier:IntentClassifierPrompt
-    confidence_threshold: 0.8
+    conversation_history:
+      type: plugins.builtin.prompts.conversation_history:ConversationHistory
+      history_table: chat_history
+      stages: [parse, deliver]
+    memory_retrieval:
+      type: plugins.builtin.prompts.memory_retrieval:MemoryRetrievalPrompt
+      max_context_length: 4000
+      stages: [think]
+    intent_classifier:
+      type: user_plugins.prompts.intent_classifier:IntentClassifierPrompt
+      confidence_threshold: 0.8
