@@ -17,6 +17,8 @@ class LoggingAdapter(AdapterPlugin):
     def __init__(self, config: dict[str, Any] | None = None) -> None:
         super().__init__(config)
         self.logger = logging.getLogger("pipeline.output")
+        if self.logger.getEffectiveLevel() > logging.INFO:
+            self.logger.setLevel(logging.INFO)
 
     async def serve(self, registries) -> None:  # pragma: no cover - no server
         pass
