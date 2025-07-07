@@ -82,6 +82,20 @@ For a hands-on demonstration, run `examples/config_reload_example.py`:
 python examples/config_reload_example.py
 ```
 
+### Runtime Reconfiguration and Rollback
+
+`update_plugin_configuration()` restarts plugins when necessary and validates
+their dependencies before applying new settings. If a dependent plugin rejects a
+change the framework rolls back to the previous configuration. Plugins expose a
+`config_version` and `rollback_config()` helper:
+
+```python
+result = await update_plugin_configuration(reg.plugins, "my_plugin", {"value": 2})
+if not result.success:
+    print(result.error_message)
+await reg.get_plugin("my_plugin").rollback_config()
+```
+
 ### Streaming and Function Calling
 
 UnifiedLLMResource now exposes streaming via Server-Sent Events and optional

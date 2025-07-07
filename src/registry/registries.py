@@ -117,6 +117,11 @@ class PluginRegistry:
             plugins.extend(plist)
         return plugins
 
+    def get_plugin(self, name: str) -> BasePlugin | None:
+        """Return plugin instance registered under ``name``."""
+
+        return self._plugins_by_name.get(name)
+
     def get_plugin_name(self, plugin: BasePlugin) -> str:
         return self._names.get(plugin, plugin.__class__.__name__)
 

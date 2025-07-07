@@ -107,6 +107,8 @@ class BasePlugin(BasePluginInterface):
         )
         self._failure_count = 0
         self._last_failure = 0.0
+        self.config_version = 1
+        self._config_history: List[Dict] = [self.config.copy()]
 
     async def execute(self, context: PluginContext) -> Any:
         """Execute plugin with logging, metrics and circuit breaker."""
@@ -272,6 +274,8 @@ class BasePlugin(BasePluginInterface):
         try:
             self.config = new_config
             await self._handle_reconfiguration(old_config, new_config)
+            self._config_history.append(new_config.copy())
+            self.config_version += 1
             return ReconfigResult(success=True)
         except Exception as e:  # noqa: BLE001
             self.config = old_config
@@ -283,6 +287,25 @@ class BasePlugin(BasePluginInterface):
         self, dependency_name: str, old_config: Dict, new_config: Dict
     ) -> bool:
         return True
+
+    async def rollback_config(self, version: int | None = None) -> ReconfigResult:
+        """Revert to a previous configuration version."""
+
+        if version is None:
+            version = self.config_version - 1
+        if version < 1 or version >= self.config_version:
+            return ReconfigResult(False, error_message="Invalid version")
+        target = self._config_history[version - 1]
+        old = self.config
+        try:
+            self.config = target.copy()
+            await self._handle_reconfiguration(old, self.config)
+            self.config_version = version
+            self._config_history = self._config_history[:version]
+            return ReconfigResult(True)
+        except Exception as exc:  # noqa: BLE001
+            self.config = old
+            return ReconfigResult(False, error_message=str(exc))
 
     async def _handle_reconfiguration(self, old_config: Dict, new_config: Dict):
         """Override this method to handle configuration changes.
