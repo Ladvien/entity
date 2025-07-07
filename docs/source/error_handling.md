@@ -87,7 +87,7 @@ Use `BasicLogger` and `ErrorFormatter` from `user_plugins.failure` as templates 
 
 ## Error Recovery Strategies
 
-Plugins can retry failures by specifying `retry_attempts` and `retry_backoff` in their configuration. `BasePlugin` applies a `RetryPolicy` so `_execute_impl` is re-run before a failure is reported.
+Plugins can retry failures by specifying `max_retries` and `retry_delay` in their configuration. `BasePlugin` applies a `RetryPolicy` so `_execute_impl` is re-run before a failure is reported.
 
 ```python
 class MyPlugin(PromptPlugin):
@@ -96,7 +96,7 @@ class MyPlugin(PromptPlugin):
     async def _execute_impl(self, ctx: PluginContext) -> None:
         ...
 
-plugin = MyPlugin({"retry_attempts": 3, "retry_backoff": 0.5})
+plugin = MyPlugin({"max_retries": 3, "retry_delay": 0.5})
 ```
 
 If all retries fail the `DefaultResponder` plugin converts the captured `FailureInfo` into a JSON response using `create_error_response`.
