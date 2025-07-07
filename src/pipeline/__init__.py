@@ -1,3 +1,7 @@
+# isort: skip_file
+from common_interfaces import plugins as _plugin_api
+from common_interfaces.base_plugin import BasePlugin
+
 from .agent import Agent
 from .base_plugins import (
     AdapterPlugin,
