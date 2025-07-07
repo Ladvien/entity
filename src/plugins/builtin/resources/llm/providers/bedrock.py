@@ -7,7 +7,6 @@ from typing import Any, AsyncIterator, Dict, List
 import aioboto3
 
 from pipeline.exceptions import ResourceError
-from pipeline.state import LLMResponse
 from pipeline.validation import ValidationResult
 
 from .base import BaseProvider
