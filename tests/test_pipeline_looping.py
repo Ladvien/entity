@@ -84,5 +84,6 @@ def test_max_iterations_triggers_error():
         return state
 
     state = asyncio.run(run())
-    assert state.iteration == 2  # type: ignore[attr-defined]
+    assert state.iteration == 3  # type: ignore[attr-defined]
     assert failures
+    assert failures[0].error_type == "MaxIterationsExceeded"
