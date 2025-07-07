@@ -14,11 +14,9 @@ stages. Plugins implement each stage and provide reusable behavior.
 After each pass through these stages, the pipeline examines `state.response`.
 If the response is still empty, the stages repeat until a response exists or
 `max_iterations` is hit. By default the framework allows five iterations. Once
-this limit is exceeded, the pipeline jumps to the `error` stage. The
-`execute_pipeline` function exposes this limit via a ``max_iterations``
-argument so callers can adjust it per request. When the limit is reached a
-``MaxIterationsExceeded`` failure is recorded and handled by error-stage
-plugins.
+this limit is exceeded, the pipeline jumps to the `error` stage. The limit can
+be overridden by passing a different value for `max_iterations` to
+`execute_pipeline`.
 
 ## Plugin Layers
 1. **Resource plugins** – databases, LLMs and storage backends

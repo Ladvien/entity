@@ -13,4 +13,5 @@ The Entity Pipeline Framework executes a single pass through a series of stages.
 After completing these stages, the pipeline checks `state.response`. If no
 response has been produced, the same stages run again until a response exists or
 `max_iterations` is reached. The default limit is five iterations. When the
-limit is exceeded the pipeline triggers the `error` stage.
+limit is exceeded the pipeline triggers the `error` stage. Pass a different
+`max_iterations` value to `execute_pipeline` to adjust this limit.

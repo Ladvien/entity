@@ -231,7 +231,6 @@ async def execute_pipeline(
         async with registries.resources:
             async with start_span("pipeline.execute"):
                 while True:
-                    state.last_completed_stage = None
                     for stage in [
                         PipelineStage.PARSE,
                         PipelineStage.THINK,
@@ -239,6 +238,11 @@ async def execute_pipeline(
                         PipelineStage.REVIEW,
                         PipelineStage.DELIVER,
                     ]:
+                        if (
+                            state.last_completed_stage is not None
+                            and stage.value <= state.last_completed_stage.value
+                        ):
+                            continue
                         try:
                             await execute_stage(stage, state, registries)
                         finally:
@@ -263,19 +267,29 @@ async def execute_pipeline(
                             break
                         state.last_completed_stage = stage
 
-                    if state.failure_info or state.response is not None:
-                        break
                     state.iteration += 1
-                    if state.iteration >= max_iterations:
-                        state.failure_info = FailureInfo(
-                            stage="pipeline",
-                            plugin_name="execute_pipeline",
-                            error_type="MaxIterationsExceeded",
-                            error_message=f"Exceeded {max_iterations} iterations",
-                            original_exception=RuntimeError("MaxIterationsExceeded"),
-                        )
+                    if (
+                        state.response is not None
+                        or state.failure_info is not None
+                        or state.iteration >= max_iterations
+                    ):
+                        if (
+                            state.response is None
+                            and state.failure_info is None
+                            and state.iteration >= max_iterations
+                        ):
+                            state.failure_info = FailureInfo(
+                                stage="iteration_guard",
+                                plugin_name="pipeline",
+                                error_type="max_iterations",
+                                error_message=f"Reached {max_iterations} iterations",
+                                original_exception=RuntimeError(
+                                    "max iteration limit reached"
+                                ),
+                            )
                         break
-                # end while
+
+                    state.last_completed_stage = None
 
         if state.failure_info:
             try:

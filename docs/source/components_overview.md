@@ -18,10 +18,8 @@ Each stage is independent, making the agent's behavior easier to reason about.
 After a full pass, the pipeline checks `state.response`. If it is still empty,
 the stages run again until a response is produced or `max_iterations` is
 reached. Five iterations are allowed by default; exceeding this limit invokes
-the `error` stage. You can override this behavior by passing a
-``max_iterations`` argument to ``execute_pipeline``. When the limit is hit a
-``MaxIterationsExceeded`` failure is raised, triggering the error-stage
-plugins.
+the `error` stage. You may supply a custom limit with the `max_iterations`
+argument of `execute_pipeline`.
 
 ## Plugins
 
