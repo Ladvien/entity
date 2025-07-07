@@ -76,4 +76,6 @@ def test_error_formatter_produces_message():
     """Ensure ErrorFormatter creates a user-facing error message."""
     registries = make_registries(ErrorFormatter)
     result = asyncio.run(execute_pipeline("hi", registries))
-    assert result == {"error": "FailPlugin failed (RuntimeError): boom"}
+    assert result["message"] == "FailPlugin failed (RuntimeError): boom"
+    assert result["error"] == "boom"
+    assert result["type"] == "formatted_error"

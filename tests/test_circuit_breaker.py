@@ -1,7 +1,13 @@
 import asyncio
 
-from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      SystemRegistries, ToolRegistry, execute_pipeline)
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
 from pipeline.resources import ResourceContainer
 from user_plugins.failure.basic_logger import BasicLogger
 from user_plugins.failure.error_formatter import ErrorFormatter
@@ -34,4 +40,5 @@ def test_circuit_breaker_trips():
     asyncio.run(execute_pipeline("hi", registries))
     asyncio.run(execute_pipeline("hi", registries))
     result = asyncio.run(execute_pipeline("hi", registries))
-    assert "circuit breaker" in result["error"].lower()
+    assert "circuit breaker" in result["message"].lower()
+    assert result["type"] == "formatted_error"
