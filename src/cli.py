@@ -1,18 +1,26 @@
-import argparse
-import asyncio
-import shutil
+from __future__ import annotations
+
 import sys
 from pathlib import Path
 
-import yaml
+# Resolve repository root and ensure it's on ``sys.path`` before other imports
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
-from entity import Agent, AgentServer
-from pipeline import update_plugin_configuration
-from pipeline.base_plugins import ResourcePlugin, ToolPlugin
-from pipeline.initializer import ClassRegistry
-from pipeline.interfaces import import_plugin_class
-from pipeline.logging import get_logger
-from pipeline.resources import Resource
+import argparse  # noqa: E402
+import asyncio  # noqa: E402
+import shutil  # noqa: E402
+
+import yaml  # noqa: E402
+
+from entity import Agent, AgentServer  # noqa: E402
+from pipeline import update_plugin_configuration  # noqa: E402
+from pipeline.base_plugins import ResourcePlugin, ToolPlugin  # noqa: E402
+from pipeline.initializer import ClassRegistry  # noqa: E402
+from pipeline.interfaces import import_plugin_class  # noqa: E402
+from pipeline.logging import get_logger  # noqa: E402
+from pipeline.resources import Resource  # noqa: E402
 
 logger = get_logger(__name__)
 
