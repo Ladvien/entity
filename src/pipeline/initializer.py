@@ -244,6 +244,16 @@ class SystemInitializer:
                 degraded.append(name)
                 await resource_container.remove(name)
 
+        for name, resource in list(resource_container._resources.items()):
+            if name in degraded:
+                continue
+            validate = getattr(resource, "validate_runtime", None)
+            if callable(validate):
+                result = await validate()
+                if not result.success:
+                    degraded.append(name)
+                    await resource_container.remove(name)
+
         # Phase 3.5: register tools
         tr_cfg = self.config.get("tool_registry", {})
         tool_registry = self.tool_registry_cls(

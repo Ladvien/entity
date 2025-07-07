@@ -5,6 +5,8 @@ import asyncio
 import json
 from typing import Any, AsyncIterator, Dict, Optional
 
+import httpx
+
 from pipeline.exceptions import ResourceError
 from pipeline.validation import ValidationResult
 from plugins.builtin.resources.http_llm_resource import HttpLLMResource
@@ -21,12 +23,28 @@ class BaseProvider(LLM):
         self.http = HttpLLMResource(config, require_api_key=self.requires_api_key)
         self.retry_attempts = int(config.get("retries", 3))
         self.timeout = float(config.get("timeout", 30))
+        self._client: httpx.AsyncClient | None = None
 
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
         return HttpLLMResource(
             config, require_api_key=cls.requires_api_key
         ).validate_config()
+
+    async def validate_runtime(self) -> ValidationResult:
+        if not self.http.base_url:
+            return ValidationResult.error_result("'base_url' is required")
+        client = self._client or httpx.AsyncClient(timeout=self.timeout)
+        close_client = self._client is None
+        try:
+            resp = await client.get(self.http.base_url)
+            resp.raise_for_status()
+            return ValidationResult.success_result()
+        except Exception as exc:  # noqa: BLE001 - network issues
+            return ValidationResult.error_result(str(exc))
+        finally:
+            if close_client:
+                await client.aclose()
 
     async def _post_with_retry(
         self,
