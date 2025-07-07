@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional
 import aiosqlite
 
 from pipeline.observability.tracing import start_span
+from pipeline.stages import PipelineStage
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
     from pipeline.state import ConversationEntry
@@ -20,6 +21,7 @@ from plugins.builtin.resources.database import DatabaseResource
 class SQLiteStorageResource(DatabaseResource):
     """SQLite-based conversation history storage."""
 
+    stages = [PipelineStage.PARSE]
     name = "database"
 
     def __init__(self, config: Dict | None = None) -> None:
@@ -91,6 +93,15 @@ class SQLiteStorageResource(DatabaseResource):
         if self._conn is not None:
             await self._conn.close()
             self._conn = None
+
+    async def health_check(self) -> bool:
+        if self._conn is None:
+            return False
+        try:
+            await self._do_health_check(self._conn)
+            return True
+        except Exception:
+            return False
 
     async def _do_health_check(self, connection: aiosqlite.Connection) -> None:
         await connection.execute("SELECT 1")

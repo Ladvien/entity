@@ -67,6 +67,8 @@ class BasePlugin(BasePluginInterface):
             return
 
         stages = getattr(cls, "stages", None)
+        if stages is None:
+            return
         if not stages:
             raise ValueError(f"{cls.__name__} must define a non-empty 'stages' list")
 

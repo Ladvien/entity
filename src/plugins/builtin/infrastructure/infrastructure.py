@@ -12,10 +12,11 @@ from typing import Any, Dict, Type
 
 try:
     from cdktf import App, TerraformStack
-except (ImportError, FileNotFoundError) as exc:  # noqa: WPS440
-    raise ImportError(
-        "cdktf and Node.js are required for infrastructure features"
-    ) from exc
+
+    CDKTF_AVAILABLE = True
+except (ImportError, FileNotFoundError):  # noqa: WPS440
+    App = TerraformStack = None
+    CDKTF_AVAILABLE = False
 
 ENV_PATTERN = re.compile(r"\$\{([^}]+)\}")
 
@@ -40,24 +41,33 @@ class Infrastructure:
     """Simple wrapper around the Terraform CDK app."""
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
-        self.app = App()
+        self.app = App() if CDKTF_AVAILABLE else None
         self._stack_count = 0
         self.config: Dict[str, Any] = _interpolate(config or {})
+
+    def _require_cdktf(self) -> None:
+        if not CDKTF_AVAILABLE:
+            raise RuntimeError(
+                "cdktf and Node.js are required for infrastructure features"
+            )
 
     def add_stack(
         self, stack_cls: Type[TerraformStack], name: str | None = None
     ) -> TerraformStack:
         """Instantiate and register a stack with the app."""
+        self._require_cdktf()
         stack_name = name or f"stack{self._stack_count}"
         self._stack_count += 1
         return stack_cls(self.app, stack_name)
 
     def synth(self) -> None:
         """Generate Terraform configuration."""
+        self._require_cdktf()
         self.app.synth()
 
     def deploy(self) -> None:
         """Synthesize and deploy using the ``cdktf`` CLI."""
+        self._require_cdktf()
         self.synth()
         command = shutil.which("cdktf")
         if command is None:
@@ -66,6 +76,7 @@ class Infrastructure:
 
     def plan(self) -> None:
         """Run ``terraform plan`` in the configured working directory."""
+        self._require_cdktf()
         command = shutil.which("terraform")
         if command is None:
             raise FileNotFoundError("Terraform CLI not found")

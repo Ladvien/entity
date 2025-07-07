@@ -14,7 +14,7 @@ from .memory import Memory
 
 
 class SimpleMemoryResource(ResourcePlugin, Memory):
-    """Basic in-memory key/value store."""
+    """Basic in-memory key/value store with conversation support."""
 
     stages = [PipelineStage.PARSE]
     name = "memory"
@@ -22,6 +22,7 @@ class SimpleMemoryResource(ResourcePlugin, Memory):
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
         self._store: Dict[str, Any] = {}
+        self._conversations: Dict[str, List[ConversationEntry]] = {}
 
     async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
         return None
@@ -35,6 +36,14 @@ class SimpleMemoryResource(ResourcePlugin, Memory):
     def clear(self) -> None:
         self._store.clear()
 
+    async def save_conversation(
+        self, conversation_id: str, history: List[ConversationEntry]
+    ) -> None:
+        self._conversations[conversation_id] = list(history)
+
+    async def load_conversation(self, conversation_id: str) -> List[ConversationEntry]:
+        return list(self._conversations.get(conversation_id, []))
+
 
 class MemoryResource(ResourcePlugin, Memory):
     """Combine in-memory storage with optional database and vector backends."""
@@ -47,10 +56,25 @@ class MemoryResource(ResourcePlugin, Memory):
         self,
         database: DatabaseResource | None = None,
         vector_store: VectorStoreResource | None = None,
+        config: Dict | None = None,
         *,
         storage: DatabaseResource | None = None,
-        config: Dict | None = None,
     ) -> None:
+        """Initialize the resource.
+
+        Parameters
+        ----------
+        database:
+            Backend used to persist conversation history.
+        vector_store:
+            Backend used for similarity search.
+        config:
+            Optional configuration mapping.
+        storage:
+            Keyword-only alias for ``database`` kept for backward
+            compatibility.
+        """
+
         super().__init__(config or {})
         if storage is not None and database is None:
             database = storage
@@ -62,7 +86,7 @@ class MemoryResource(ResourcePlugin, Memory):
 
     @classmethod
     def from_config(cls, config: Dict) -> "MemoryResource":
-        return cls(config=config)
+        return cls(None, None, config=config)
 
     async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
         return None
