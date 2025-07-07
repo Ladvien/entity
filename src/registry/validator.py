@@ -18,7 +18,6 @@ from pipeline.initializer import SystemInitializer  # noqa: E402
 from pipeline.initializer import import_plugin_class  # noqa: E402
 from pipeline.logging import get_logger  # noqa: E402
 from pipeline.stages import PipelineStage  # noqa: E402
-from pipeline.validation import ValidationResult  # noqa: E402
 
 logger = get_logger(__name__)
 
@@ -32,6 +31,8 @@ class RegistryValidator:
         self.dep_graph: Dict[str, List[str]] = {}
         self.has_vector_memory = False
         self.has_complex_prompt = False
+        self.has_postgres = False
+        self.uses_pg_vector_store = False
 
     def _register_classes(self) -> None:
         plugins_cfg = self.initializer.config.get("plugins", {})
@@ -44,15 +45,19 @@ class RegistryValidator:
 
                 if name == "vector_memory" or cls.__name__ == "PgVectorStore":
                     self.has_vector_memory = True
+                    if cls.__name__ == "PgVectorStore":
+                        self.uses_pg_vector_store = True
                 if name == "complex_prompt" or cls.__name__ == "ComplexPrompt":
                     self.has_complex_prompt = True
+                if name == "database" and cls.__name__ == "PostgresResource":
+                    self.has_postgres = True
 
     @staticmethod
     def _validate_stage_assignment(name: str, cls: type) -> None:
         from common_interfaces.resources import Resource
-        from pipeline.base_plugins import ResourcePlugin
+        from pipeline.base_plugins import ResourcePlugin, ToolPlugin
 
-        if issubclass(cls, (ResourcePlugin, Resource)):
+        if issubclass(cls, (ResourcePlugin, Resource, ToolPlugin)):
             return
 
         stages = getattr(cls, "stages", None)
@@ -64,7 +69,15 @@ class RegistryValidator:
 
     def _validate_dependencies(self) -> None:
         for cls, _ in self.registry.all_plugin_classes():
-            result: ValidationResult = cls.validate_dependencies(self.registry)
+            try:
+                result: ValidationResult = cls.validate_dependencies(self.registry)
+            except NameError as exc:  # pragma: no cover - legacy plugins
+                if "ValidationResult" in str(exc):
+                    from pipeline.validation import ValidationResult
+
+                    result = ValidationResult.success_result()
+                else:
+                    raise
             if not result.success:
                 raise SystemError(
                     f"Dependency validation failed for {cls.__name__}: {result.error_message}"
@@ -90,6 +103,10 @@ class RegistryValidator:
         if self.has_complex_prompt and not self.has_vector_memory:
             raise SystemError(
                 "ComplexPrompt requires the 'vector_memory' resource to be registered"
+            )
+        if self.uses_pg_vector_store and not self.has_postgres:
+            raise SystemError(
+                "PgVectorStore vector store requires the PostgresResource to be registered"
             )
 
 

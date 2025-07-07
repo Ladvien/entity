@@ -9,6 +9,7 @@ import asyncpg
 
 from pipeline.observability.tracing import start_span
 from pipeline.reliability import CircuitBreaker, RetryPolicy
+from pipeline.stages import PipelineStage
 from pipeline.state import ConversationEntry
 from plugins.builtin.resources.database import DatabaseResource
 
@@ -16,6 +17,7 @@ from plugins.builtin.resources.database import DatabaseResource
 class PostgresResource(DatabaseResource):
     """PostgreSQL database resource with built-in connection pooling."""
 
+    stages = [PipelineStage.PARSE]
     name = "database"
 
     def __init__(self, config: Dict | None = None) -> None:

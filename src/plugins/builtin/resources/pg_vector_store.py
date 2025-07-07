@@ -8,6 +8,7 @@ from typing import Dict, List
 from pgvector import Vector
 from pgvector.asyncpg import register_vector
 
+from pipeline.stages import PipelineStage
 from plugins.builtin.resources.postgres import PostgresResource
 from plugins.builtin.resources.vector_store import VectorStoreResource
 
@@ -15,6 +16,7 @@ from plugins.builtin.resources.vector_store import VectorStoreResource
 class PgVectorStore(VectorStoreResource):
     """Postgres-backed vector store using pgvector."""
 
+    stages = [PipelineStage.PARSE]
     name = "vector_memory"
 
     def __init__(
