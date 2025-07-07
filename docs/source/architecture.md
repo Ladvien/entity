@@ -11,6 +11,11 @@ stages. Plugins implement each stage and provide reusable behavior.
 - **deliver** – send output to the user
 - **error** – handle failures gracefully
 
+After each pass through these stages, the pipeline examines `state.response`.
+If the response is still empty, the stages repeat until a response exists or
+`max_iterations` is hit. By default the framework allows five iterations. Once
+this limit is exceeded, the pipeline jumps to the `error` stage.
+
 ## Plugin Layers
 1. **Resource plugins** – databases, LLMs and storage backends
 2. **Tool plugins** – execute tasks such as search or math
