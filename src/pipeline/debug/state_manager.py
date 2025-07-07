@@ -4,7 +4,7 @@ import asyncio
 from dataclasses import dataclass
 from typing import Dict, List
 
-from pipeline.state import PipelineState
+from ..state import PipelineState
 
 
 @dataclass
