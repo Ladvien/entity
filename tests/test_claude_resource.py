@@ -1,8 +1,13 @@
 import asyncio
 import json
 
-from pipeline import (MetricsCollector, PipelineState, PluginContext,
-                      SystemInitializer, SystemRegistries)
+from pipeline import (
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    SystemInitializer,
+    SystemRegistries,
+)
 from plugins.builtin.resources.llm.unified import UnifiedLLMResource
 
 
@@ -24,7 +29,7 @@ async def run_generate(server, handler):
         "messages": [{"role": "user", "content": "hello"}],
     }
     assert handler.request_path == "/v1/messages"
-    return result
+    return result.content
 
 
 def test_generate_sends_prompt_and_returns_text(mock_llm_server):
