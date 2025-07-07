@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict
 
@@ -12,7 +13,20 @@ from .exceptions import (
     ToolExecutionError,
 )
 
+
+@dataclass(slots=True)
+class ErrorResponse:
+    """Simple wrapper for error payloads."""
+
+    data: Dict[str, Any]
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Return a copy of the payload as a plain dictionary."""
+        return self.data.copy()
+
+
 __all__ = [
+    "ErrorResponse",
     "create_static_error_response",
     "create_error_response",
     "PipelineError",
@@ -34,12 +48,12 @@ STATIC_ERROR_RESPONSE: Dict[str, Any] = {
 }
 
 
-def create_static_error_response(pipeline_id: str) -> Dict[str, Any]:
+def create_static_error_response(pipeline_id: str) -> ErrorResponse:
     """Return a copy of :data:`STATIC_ERROR_RESPONSE` populated with runtime info."""
     response = STATIC_ERROR_RESPONSE.copy()
     response["error_id"] = pipeline_id
     response["timestamp"] = datetime.now().isoformat()
-    return response
+    return ErrorResponse(response)
 
 
 def create_error_response(pipeline_id: str, failure: FailureInfo) -> Dict[str, Any]:
