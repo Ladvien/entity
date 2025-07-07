@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for helping improve Entity Pipeline Framework! Always start with `poetry install` to create the virtual environment and install dependencies. After that, follow the project guidelines and run all checks before opening a pull request.
+Thank you for helping improve Entity Pipeline Framework! Always start with `poetry install --with dev` to create the virtual environment and install dependencies. After that, follow the project guidelines and run all checks before opening a pull request.
 
 ## Code Review Expectations
 

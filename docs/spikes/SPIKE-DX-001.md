@@ -14,7 +14,7 @@ This spike captures recommended approaches for plugin discovery and runtime hot 
 - For iterative development, enable `watchfiles` to trigger reloads when code or configuration changes.
 
 ## Developer Workflow Tips
-1. Install dependencies with `poetry install`.
+1. Install dependencies with `poetry install --with dev`.
 2. Run formatters and linters before committing:
    ```bash
    poetry run black src tests

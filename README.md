@@ -35,6 +35,7 @@ For a high-level look at how the pieces connect, see [components_overview.md](co
 4. Copy `.env.example` to `.env` and fill in the values if you want to run the example scripts. See [examples/README.md](examples/README.md) for what each example expects.
 
 ### Testing Setup
+Run `poetry install --with dev` before executing tests or quality checks.
 
 Running the full test suite requires a local PostgreSQL server. The tests rely
 on `pytest-postgresql` which starts a temporary instance using `pg_ctl`. Install

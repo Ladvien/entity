@@ -38,7 +38,7 @@ The `/architecture` folder contains the following documents:
   backward compatibility.
 - Prefer adding `TODO:` comments when scope is unclear.
 - Always use the Poetry environment for development.
-- Run `poetry install` before executing any quality checks.
+- Run `poetry install --with dev` before executing any quality checks or tests.
 
 ## Programmatic Checks
 Run the following commands before opening a pull request:
