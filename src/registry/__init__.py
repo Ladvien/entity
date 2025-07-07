@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 from .registries import PluginRegistry, SystemRegistries, ToolRegistry
-from .validator import RegistryValidator
 
 __all__ = [
     "PluginRegistry",
     "ToolRegistry",
     "SystemRegistries",
-    "RegistryValidator",
 ]
 
 
