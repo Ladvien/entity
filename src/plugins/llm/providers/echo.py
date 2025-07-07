@@ -1,4 +1,4 @@
-"""Echo provider module re-export."""
+"""Compatibility shim for :class:`EchoProvider`."""
 
 from plugins.builtin.resources.llm.providers.echo import EchoProvider
 
