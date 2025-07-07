@@ -98,7 +98,7 @@ class SQLiteStorageResource(DatabaseResource):
         if self._conn is None:
             return False
         try:
-            await self._do_health_check(self._conn)
+            await self._conn.execute("SELECT 1")
             return True
         except Exception:
             return False
