@@ -6,14 +6,20 @@ from pathlib import Path
 import pytest
 
 from entity_config.environment import load_env
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, SystemRegistries,
-                      ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources import ResourceContainer
 from pipeline.resources.llm import UnifiedLLMResource
 from pipeline.resources.memory_resource import MemoryResource
-from pipeline.resources.pg_vector_store import PgVectorStore
-from pipeline.resources.postgres import PostgresResource
+from plugins.builtin.resources.pg_vector_store import PgVectorStore
+from plugins.builtin.resources.postgres import PostgresResource
 from user_plugins.prompts.complex_prompt import ComplexPrompt
 
 if hasattr(os, "geteuid") and os.geteuid() == 0:

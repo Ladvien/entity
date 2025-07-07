@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from pipeline.resources.llm_resource import LLMResource
+from plugins.builtin.resources.llm_resource import LLMResource
 from user_plugins.tools.calculator_tool import CalculatorTool
 
 
