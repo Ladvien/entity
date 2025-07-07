@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 import httpx
 
 DEFAULT_LOGGING_CONFIG: Dict[str, Any] = {
-    "type": "user_plugins.adapters.logging:LoggingAdapter",
+    "type": "plugins.builtin.adapters.logging:LoggingAdapter",
     "stages": ["deliver"],
 }
 
@@ -47,14 +47,14 @@ DEFAULT_TOOLS: Dict[str, Dict[str, Any]] = {
 
 DEFAULT_ADAPTERS: Dict[str, Dict[str, Any]] = {
     "http": {
-        "type": "user_plugins.adapters.http:HTTPAdapter",
+        "type": "plugins.builtin.adapters.http:HTTPAdapter",
         "stages": ["parse", "deliver"],
     },
     "websocket": {
-        "type": "user_plugins.adapters.websocket:WebSocketAdapter",
+        "type": "plugins.builtin.adapters.websocket:WebSocketAdapter",
         "stages": ["deliver"],
     },
-    "cli": {"type": "user_plugins.adapters.cli:CLIAdapter", "stages": ["deliver"]},
+    "cli": {"type": "plugins.builtin.adapters.cli:CLIAdapter", "stages": ["deliver"]},
     "logging": DEFAULT_LOGGING_CONFIG,
 }
 
