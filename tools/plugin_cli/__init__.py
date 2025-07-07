@@ -3,15 +3,32 @@ from __future__ import annotations
 """CLI wrapper around :class:`PluginToolCLI` for quick scaffolding."""
 
 import argparse
+import importlib.util
 import sys
 from pathlib import Path
+from types import ModuleType
+from typing import Any, Dict, Type, cast
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from cli.plugin_tool import PLUGIN_TYPES, PluginToolCLI  # type: ignore
+
+def _load_plugin_tool() -> ModuleType:
+    """Load ``plugin_tool.py`` without relying on package imports."""
+    path = ROOT / "src" / "cli" / "plugin_tool.py"
+    spec = importlib.util.spec_from_file_location("plugin_tool", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Cannot import {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+_plugin_tool = _load_plugin_tool()
+PluginToolCLI = cast(Type[Any], getattr(_plugin_tool, "PluginToolCLI"))
+PLUGIN_TYPES = cast(Dict[str, Type[Any]], getattr(_plugin_tool, "PLUGIN_TYPES"))
 
 
 class PluginCLI:
@@ -29,7 +46,7 @@ class PluginCLI:
         return parser.parse_args()
 
     def run(self) -> int:
-        tool_cli = PluginToolCLI.__new__(PluginToolCLI)
+        tool_cli = cast(Any, PluginToolCLI).__new__(PluginToolCLI)
         tool_cli.args = argparse.Namespace(
             name=self.args.name,
             type=self.args.type,
@@ -37,7 +54,7 @@ class PluginCLI:
             docs_dir=self.args.docs_dir,
         )
         try:
-            return tool_cli._generate()
+            return cast(int, tool_cli._generate())
         except Exception as exc:  # pragma: no cover - CLI error path
             print(f"Error: {exc}")
             return 1
