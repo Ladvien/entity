@@ -1,3 +1,3 @@
-from plugins.contrib.tools.search_tool import SearchTool
+from plugins.builtin.tools.search_tool import SearchTool
 
 __all__ = ["SearchTool"]

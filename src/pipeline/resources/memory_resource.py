@@ -41,7 +41,7 @@ class MemoryResource(ResourcePlugin, Memory):
 
     stages = [PipelineStage.PARSE]
     name = "memory"
-    dependencies = ["database", "vector_store"]
+    dependencies: list[str] = []
 
     def __init__(
         self,

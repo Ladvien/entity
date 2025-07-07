@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 import httpx
 
 DEFAULT_LOGGING_CONFIG: Dict[str, Any] = {
-    "type": "user_plugins.adapters.logging:LoggingAdapter",
+    "type": "pipeline.user_plugins.adapters.logging:LoggingAdapter",
     "stages": ["deliver"],
 }
 
@@ -19,42 +19,44 @@ DEFAULT_LLM_CONFIG: Dict[str, Any] = {
 
 DEFAULT_RESOURCES: Dict[str, Dict[str, Any]] = {
     "llm": DEFAULT_LLM_CONFIG,
+    "database": {
+        "type": "pipeline.resources.duckdb_database:DuckDBDatabaseResource",
+    },
+    "vector_store": {
+        "type": "pipeline.user_plugins.resources.duckdb_vector_store:DuckDBVectorStore",
+    },
+    "filesystem": {
+        "type": "pipeline.user_plugins.resources.local_filesystem:LocalFileSystemResource",
+    },
     "memory": {
         "type": "pipeline.resources.memory_resource:MemoryResource",
-        "database": {
-            "type": "pipeline.resources.duckdb_database:DuckDBDatabaseResource"
-        },
-        "vector_store": {
-            "type": "user_plugins.resources.duckdb_vector_store:DuckDBVectorStore"
-        },
-    },
-    "storage": {
-        "type": "pipeline.resources.storage_resource:StorageResource",
-        "filesystem": {
-            "type": "user_plugins.resources.local_filesystem:LocalFileSystemResource"
-        },
     },
     "cache": {
-        "type": "user_plugins.resources.cache:CacheResource",
+        "type": "pipeline.user_plugins.resources.cache:CacheResource",
         "backend": {"type": "pipeline.cache.memory:InMemoryCache"},
     },
 }
 
 DEFAULT_TOOLS: Dict[str, Dict[str, Any]] = {
-    "search": {"type": "user_plugins.tools.search_tool:SearchTool"},
-    "calculator": {"type": "user_plugins.tools.calculator_tool:CalculatorTool"},
+    "search": {"type": "pipeline.user_plugins.tools.search_tool:SearchTool"},
+    "calculator": {
+        "type": "pipeline.user_plugins.tools.calculator_tool:CalculatorTool",
+    },
 }
 
 DEFAULT_ADAPTERS: Dict[str, Dict[str, Any]] = {
     "http": {
-        "type": "user_plugins.adapters.http:HTTPAdapter",
+        "type": "pipeline.user_plugins.adapters.http:HTTPAdapter",
         "stages": ["parse", "deliver"],
     },
     "websocket": {
-        "type": "user_plugins.adapters.websocket:WebSocketAdapter",
+        "type": "pipeline.user_plugins.adapters.websocket:WebSocketAdapter",
         "stages": ["deliver"],
     },
-    "cli": {"type": "user_plugins.adapters.cli:CLIAdapter", "stages": ["deliver"]},
+    "cli": {
+        "type": "pipeline.user_plugins.adapters.cli:CLIAdapter",
+        "stages": ["deliver"],
+    },
     "logging": DEFAULT_LOGGING_CONFIG,
 }
 
