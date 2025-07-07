@@ -1,4 +1,5 @@
 # Expose plugin configuration API used by the pipeline package
+from typing import Any
 from common_interfaces import plugins as _plugin_api
 
 from .agent import Agent
@@ -20,13 +21,17 @@ from .context import ConversationEntry, PluginContext, ToolCall
 from .conversation_manager import ConversationManager
 from .decorators import plugin
 from .errors import create_static_error_response
-from .initializer import (ClassRegistry, SystemInitializer,
-                          initialization_cleanup_context)
+from .initializer import (
+    ClassRegistry,
+    SystemInitializer,
+    initialization_cleanup_context,
+)
 from .interfaces import PluginAutoClassifier, import_plugin_class
 from .manager import PipelineManager
 from .metrics import MetricsCollector
 from .observability import execute_with_observability
 from .pipeline import create_default_response, execute_pipeline
+
 # Registry classes are no longer imported eagerly.
 # Access ``PluginRegistry`` and related classes via ``registry`` or
 # rely on this module's ``__getattr__`` for lazy loading.
@@ -94,8 +99,12 @@ def __getattr__(name: str) -> Any:
         "SystemRegistries",
         "ToolRegistry",
     }:
-        from registry import (PluginRegistry, ResourceContainer,
-                              SystemRegistries, ToolRegistry)
+        from registry import (
+            PluginRegistry,
+            ResourceContainer,
+            SystemRegistries,
+            ToolRegistry,
+        )
 
         return {
             "PluginRegistry": PluginRegistry,
