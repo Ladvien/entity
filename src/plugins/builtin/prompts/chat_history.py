@@ -1,17 +1,5 @@
-from __future__ import annotations
+"""Compatibility wrapper for :class:`ChatHistory`."""
 
-"""Legacy alias plugin exposing conversation history."""
-
-
-from pipeline.stages import PipelineStage
-
-from .memory import MemoryPlugin
-
-
-class ChatHistory(MemoryPlugin):
-    """Alias for ``MemoryPlugin`` for backward compatibility."""
-
-    stages = [PipelineStage.PARSE, PipelineStage.DELIVER]
-
+from user_plugins.prompts.chat_history import ChatHistory
 
 __all__ = ["ChatHistory"]

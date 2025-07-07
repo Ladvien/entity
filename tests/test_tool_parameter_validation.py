@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from pipeline.base_plugins import ToolPlugin
 from pipeline.errors import ToolExecutionError
-from plugins.builtin.tools.search_tool import SearchTool
+from user_plugins.tools.search_tool import SearchTool
 
 
 class EchoTool(ToolPlugin):
