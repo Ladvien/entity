@@ -336,16 +336,16 @@ class ToolPlugin(BasePlugin):
             )
         return True
 
-    def validate_tool_params(self, params: Dict[str, Any]) -> bool:
+    def validate_tool_params(self, params: Dict[str, Any]) -> Any:
         """Validate ``params`` using a :class:`pydantic.BaseModel` if provided."""
         model_cls: Type[BaseModel] | None = getattr(self, "Params", None)
         if model_cls is not None and issubclass(model_cls, BaseModel):
             try:
-                model_cls(**params)
+                return model_cls(**params)
             except ValidationError as exc:
                 raise ToolExecutionError(self.__class__.__name__, exc) from exc
-            return True
-        return self._validate_required_params(params)
+        self._validate_required_params(params)
+        return params
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
@@ -365,12 +365,12 @@ class ToolPlugin(BasePlugin):
         max_retries: int | None = None,
         delay: float | None = None,
     ):
-        self.validate_tool_params(params)
+        validated = self.validate_tool_params(params)
         max_retry_count = self.max_retries if max_retries is None else max_retries
         retry_delay_seconds = self.retry_delay if delay is None else delay
         for attempt in range(max_retry_count + 1):
             try:
-                return await self.execute_function(params)
+                return await self.execute_function(validated)
             except Exception:  # noqa: BLE001
                 if attempt == max_retry_count:
                     raise
