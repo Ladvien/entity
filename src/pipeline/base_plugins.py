@@ -57,6 +57,8 @@ class BasePlugin(BasePluginInterface):
     stages: List[PipelineStage]
     priority: int = 50
     dependencies: List[str] = []
+    max_retries: int = 1
+    retry_delay: float = 0.0
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
@@ -106,8 +108,8 @@ class BasePlugin(BasePluginInterface):
         self.failure_reset_timeout = float(
             self.config.get("failure_reset_timeout", 60.0)
         )
-        self.retry_attempts = int(self.config.get("retry_attempts", 1))
-        self.retry_backoff = float(self.config.get("retry_backoff", 1.0))
+        self.max_retries = int(self.config.get("max_retries", self.max_retries))
+        self.retry_delay = float(self.config.get("retry_delay", self.retry_delay))
         self._failure_count = 0
         self._last_failure = 0.0
         self.config_version = 1
@@ -128,7 +130,10 @@ class BasePlugin(BasePluginInterface):
             raise CircuitBreakerTripped(self.__class__.__name__)
 
         async def run() -> Any:
-            return await self._execute_impl(context)
+            policy = RetryPolicy(
+                attempts=self.max_retries + 1, backoff=self.retry_delay
+            )
+            return await policy.execute(self._execute_impl, context)
 
         policy = RetryPolicy(attempts=self.retry_attempts, backoff=self.retry_backoff)
 
