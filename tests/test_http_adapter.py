@@ -2,8 +2,14 @@ import asyncio
 
 import httpx
 
-from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
-                      PromptPlugin, SystemRegistries, ToolRegistry)
+from pipeline import (
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources import ResourceContainer
 from plugins.builtin.adapters import HTTPAdapter
 
@@ -58,7 +64,9 @@ def test_http_adapter_token_auth(tmp_path):
             assert resp.status_code == 401
 
     asyncio.run(_request())
-    assert "invalid token" in (tmp_path / "audit.log").read_text().lower()
+    log_file = tmp_path / "audit.log"
+    assert log_file.exists()
+    assert "invalid token" in log_file.read_text().lower()
 
 
 def test_http_adapter_rate_limit(tmp_path):
@@ -80,7 +88,9 @@ def test_http_adapter_rate_limit(tmp_path):
             assert resp.status_code == 429
 
     asyncio.run(_requests())
-    assert "rate limit" in (tmp_path / "audit.log").read_text().lower()
+    log_file = tmp_path / "audit.log"
+    assert log_file.exists()
+    assert "rate limit" in log_file.read_text().lower()
 
 
 def test_http_adapter_dashboard():

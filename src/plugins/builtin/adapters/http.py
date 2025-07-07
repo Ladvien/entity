@@ -78,6 +78,8 @@ class ThrottleMiddleware(BaseHTTPMiddleware):
             record.popleft()
         if len(record) > self.requests:
             self.audit_logger.info("rate limit exceeded for %s", key)
+            if self.audit_logger.handlers:
+                self.audit_logger.handlers[0].flush()
             return JSONResponse({"detail": "Too Many Requests"}, status_code=429)
         return await call_next(request)
 
@@ -109,10 +111,13 @@ class HTTPAdapter(AdapterPlugin):
     def _setup_audit_logger(self) -> None:
         path = str(self.config.get("audit_log_path", "audit.log"))
         self.audit_logger = logging.getLogger("audit")
-        if not self.audit_logger.handlers:
-            handler = RotatingFileHandler(path, maxBytes=1_048_576, backupCount=5)
-            handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
-            self.audit_logger.addHandler(handler)
+        if self.audit_logger.handlers:
+            for handler in list(self.audit_logger.handlers):
+                self.audit_logger.removeHandler(handler)
+                handler.close()
+        handler = RotatingFileHandler(path, maxBytes=1_048_576, backupCount=5)
+        handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
+        self.audit_logger.addHandler(handler)
         self.audit_logger.setLevel(logging.INFO)
 
     def _setup_middleware(self) -> None:
