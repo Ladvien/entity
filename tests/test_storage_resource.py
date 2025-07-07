@@ -1,8 +1,8 @@
 import asyncio
 from pathlib import Path
 
-from pipeline.resources.storage_resource import StorageResource
 from plugins.builtin.resources.local_filesystem import LocalFileSystemResource
+from plugins.builtin.resources.storage_resource import StorageResource
 
 
 async def make_resource(tmp_path: Path) -> StorageResource:

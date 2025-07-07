@@ -22,14 +22,14 @@ DEFAULT_RESOURCES: Dict[str, Dict[str, Any]] = {
     "memory": {
         "type": "pipeline.resources.memory_resource:MemoryResource",
         "database": {
-            "type": "pipeline.resources.duckdb_database:DuckDBDatabaseResource"
+            "type": "plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource"
         },
         "vector_store": {
             "type": "user_plugins.resources.duckdb_vector_store:DuckDBVectorStore"
         },
     },
     "storage": {
-        "type": "pipeline.resources.storage_resource:StorageResource",
+        "type": "plugins.builtin.resources.storage_resource:StorageResource",
         "filesystem": {
             "type": "user_plugins.resources.local_filesystem:LocalFileSystemResource"
         },
