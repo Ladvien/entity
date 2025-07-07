@@ -4,26 +4,27 @@ import pytest
 
 from entity import Agent
 from pipeline import PipelineStage
+from pipeline.base_plugins import BasePlugin
 
 
-class ParsePlugin:
+class ParsePlugin(BasePlugin):
     stages = [PipelineStage.PARSE]
 
-    async def execute(self, context):
+    async def _execute_impl(self, context):
         context.set_stage_result("parsed", True)
 
 
-class ThinkPlugin:
+class ThinkPlugin(BasePlugin):
     stages = [PipelineStage.THINK]
 
-    async def execute(self, context):
+    async def _execute_impl(self, context):
         context.set_stage_result("thought", True)
 
 
-class RespondPlugin:
+class RespondPlugin(BasePlugin):
     stages = [PipelineStage.DO]
 
-    async def execute(self, context):
+    async def _execute_impl(self, context):
         context.set_response("ok")
 
 
