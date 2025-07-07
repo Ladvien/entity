@@ -118,7 +118,7 @@ def test_initializer_from_json_and_dict(tmp_path):
         == len(pj.get_plugins_for_stage(PipelineStage.THINK))
         == len(pd.get_plugins_for_stage(PipelineStage.THINK))
     )
-    assert ry.get("A") and rj.get("A") and rd.get("A")
+    assert ry.get("a") and rj.get("a") and rd.get("a")
 
 
 def test_llm_resource_registration(tmp_path):
