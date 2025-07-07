@@ -14,7 +14,8 @@ from logging.handlers import RotatingFileHandler
 from typing import Any, cast
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -43,7 +44,7 @@ class TokenAuthMiddleware(BaseHTTPMiddleware):
             if token not in self.tokens:
                 client = request.client.host if request.client else "unknown"
                 self.audit_logger.info("invalid token from %s", client)
-                raise HTTPException(status_code=401, detail="Unauthorized")
+                return JSONResponse({"detail": "Unauthorized"}, status_code=401)
         return await call_next(request)
 
 
@@ -77,7 +78,7 @@ class ThrottleMiddleware(BaseHTTPMiddleware):
             record.popleft()
         if len(record) > self.requests:
             self.audit_logger.info("rate limit exceeded for %s", key)
-            raise HTTPException(status_code=429, detail="Too Many Requests")
+            return JSONResponse({"detail": "Too Many Requests"}, status_code=429)
         return await call_next(request)
 
 
@@ -88,7 +89,7 @@ class MessageRequest(BaseModel):
 class HTTPAdapter(AdapterPlugin):
     """FastAPI based HTTP adapter for request/response handling."""
 
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.PARSE, PipelineStage.DELIVER]
 
     def __init__(
         self,
