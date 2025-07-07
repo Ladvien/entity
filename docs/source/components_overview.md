@@ -41,11 +41,10 @@ An LLM resource wraps a language model provider. Plugins can call `context.ask_l
 
 ### Memory vs Storage
 
-`MemoryResource` stores conversation history and vectors persistently. It defaults to a
-DuckDB-backed database in memory and supports optional SQL/NoSQL and vector backends.
-Because this default uses an in-memory DuckDB database, there is no separate
-`InMemoryResource`. `StorageResource` handles file CRUD across databases, vector
-stores, and file systems.
+`MemoryResource` \u2013 composite store that defaults to a DuckDB-backed database in
+memory and supports optional SQL/NoSQL and vector backends. MemoryResource uses an
+in-memory DuckDB database by default, so there is no separate `InMemoryResource`.
+`StorageResource` handles file CRUD across databases, vector stores, and file systems.
 
 ## Adapters
 
