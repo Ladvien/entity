@@ -1,13 +1,7 @@
 import asyncio
 
-from pipeline import (
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolRegistry,
-    execute_pipeline,
-)
+from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
+                      SystemRegistries, ToolRegistry, execute_pipeline)
 from pipeline.resources import ResourceContainer
 from user_plugins.failure.basic_logger import BasicLogger
 
@@ -29,4 +23,4 @@ def make_registries():
 def test_fallback_error_plugin_sets_response():
     registries = make_registries()
     result = asyncio.run(execute_pipeline("hi", registries))
-    assert result["type"] == "static_fallback"
+    assert result.type == "static_fallback"
