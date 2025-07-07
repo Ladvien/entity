@@ -47,9 +47,15 @@ class MemoryResource(ResourcePlugin, Memory):
         self,
         database: DatabaseResource | None = None,
         vector_store: VectorStoreResource | None = None,
+        *,
+        storage: DatabaseResource | None = None,
         config: Dict | None = None,
     ) -> None:
         super().__init__(config or {})
+        if storage is not None and database is None:
+            database = storage
+        elif storage is not None and storage is not database:
+            raise ValueError("'database' and 'storage' refer to different objects")
         self.database = database
         self.vector_store = vector_store
         self._kv: Dict[str, Any] = {}
@@ -88,7 +94,7 @@ class MemoryResource(ResourcePlugin, Memory):
 
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
-        for name in ("database", "vector_store"):
+        for name in ("database", "storage", "vector_store"):
             sub = config.get(name)
             if sub is not None and not isinstance(sub, dict):
                 return ValidationResult.error_result(f"'{name}' must be a mapping")

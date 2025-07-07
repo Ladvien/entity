@@ -10,6 +10,8 @@ import duckdb
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
     from pipeline.state import ConversationEntry
+else:
+    from pipeline.state import ConversationEntry
 
 from plugins.builtin.resources.database import DatabaseResource
 
