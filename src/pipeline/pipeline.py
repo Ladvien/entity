@@ -17,6 +17,7 @@ from registry import SystemRegistries
 
 from .context import ConversationEntry, PluginContext
 from .errors import create_static_error_response
+from .exceptions import MaxIterationsExceeded  # noqa: F401 - reserved for future use
 from .exceptions import (
     CircuitBreakerTripped,
     PipelineError,
