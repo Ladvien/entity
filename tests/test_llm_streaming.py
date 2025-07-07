@@ -1,7 +1,7 @@
 import httpx
 import pytest
 
-from plugins.resources.llm.providers.openai import OpenAIProvider
+from plugins.llm.providers.openai import OpenAIProvider
 
 
 class DummyStreamResponse:

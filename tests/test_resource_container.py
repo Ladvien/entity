@@ -57,7 +57,7 @@ def test_health_report():
 root = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location(
     "plugins.builtin.resources.container",
-    root / "plugins.builtin.resources/container.py",
+    root / "src" / "plugins" / "builtin" / "resources" / "container.py",
 )
 
 _orig_pipeline = sys.modules.get("pipeline")

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 """DuckDB-backed vector store resource."""
 import asyncio
+import re
 from typing import Dict, List, Optional
 
 import duckdb
@@ -22,12 +23,19 @@ class DuckDBVectorStore(VectorStoreResource):
         connection: DuckDBDatabaseResource | None = None,
     ) -> None:
         super().__init__(config)
-        self._table = self.config.get("table", "vector_memory")
+        table = self.config.get("table", "vector_memory")
+        self._table = self._sanitize_identifier(table)
         self._dim = int(self.config.get("dimensions", 3))
         self._external = connection
         self._connection: Optional[duckdb.DuckDBPyConnection] = None
         if isinstance(connection, DuckDBDatabaseResource):
             self._connection = connection._connection
+
+    @staticmethod
+    def _sanitize_identifier(name: str) -> str:
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name):
+            raise ValueError(f"Invalid identifier: {name}")
+        return name
 
     async def initialize(self) -> None:
         if self._connection is None:

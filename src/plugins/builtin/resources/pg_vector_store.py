@@ -2,6 +2,7 @@ from __future__ import annotations
 
 """Postgres-backed vector store resource."""
 
+import re
 from typing import Dict, List
 
 from pgvector import Vector
@@ -20,9 +21,16 @@ class PgVectorStore(VectorStoreResource):
         self, config: Dict | None = None, database: PostgresResource | None = None
     ) -> None:
         super().__init__(config)
-        self._table = self.config.get("table", "vector_memory")
+        table = self.config.get("table", "vector_memory")
+        self._table = self._sanitize_identifier(table)
         self._dim = int(self.config.get("dimensions", 3))
         self._db = database or PostgresResource(config)
+
+    @staticmethod
+    def _sanitize_identifier(name: str) -> str:
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name):
+            raise ValueError(f"Invalid identifier: {name}")
+        return name
 
     async def initialize(self) -> None:
         if self._db._pool is None:
