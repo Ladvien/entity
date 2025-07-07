@@ -3,11 +3,16 @@ from datetime import datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from threading import Thread
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, SystemRegistries,
-                      ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources import ResourceContainer
-from pipeline.tools.execution import execute_pending_tools
 from user_plugins.tools.weather_api_tool import WeatherApiTool
 
 
@@ -41,8 +46,7 @@ async def run_weather() -> dict:
     registries = SystemRegistries(ResourceContainer(), tools, PluginRegistry())
     ctx = PluginContext(state, registries)
     try:
-        key = ctx.execute_tool("weather", {"location": "Berlin"})
-        result = (await execute_pending_tools(state, registries))[key]
+        result = await ctx.use_tool("weather", location="Berlin")
     finally:
         server.shutdown()
         thread.join()

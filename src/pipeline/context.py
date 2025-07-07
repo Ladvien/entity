@@ -337,7 +337,50 @@ class PluginContext:
         then returns whatever value the tool produced.
         """
         result_key = self.execute_tool(tool_name, params)
-        return await self.advanced._wait_for_tool_result(result_key)
+        return await self._wait_for_tool_result(result_key)
+
+    async def _wait_for_tool_result(self, result_key: str) -> Any:
+        """Wait for a queued tool call to finish and return its result."""
+        state = self.__state
+        if result_key not in state.stage_results:
+            call = next(
+                (c for c in state.pending_tool_calls if c.result_key == result_key),
+                None,
+            )
+            if call is None:
+                raise KeyError(result_key)
+            tool = self._registries.tools.get(call.name)
+            if not tool:
+                result = f"Error: tool {call.name} not found"
+                self.set_stage_result(call.result_key, result)
+                state.pending_tool_calls.remove(call)
+                return result
+            tool = cast(Any, tool)
+            options = RetryOptions(
+                max_retries=getattr(tool, "max_retries", 1),
+                delay=getattr(tool, "retry_delay", 1.0),
+            )
+            try:
+                result = await execute_tool(tool, call, state, options)
+                self.set_stage_result(call.result_key, result)
+                self.record_tool_execution(call.name, call.result_key, call.source)
+            except Exception as exc:  # noqa: BLE001
+                result = f"Error: {exc}"
+                self.set_stage_result(call.result_key, result)
+                self.record_tool_error(call.name, str(exc))
+                self.add_failure(
+                    FailureInfo(
+                        stage=str(state.current_stage),
+                        plugin_name=call.name,
+                        error_type=exc.__class__.__name__,
+                        error_message=str(exc),
+                        original_exception=exc,
+                    )
+                )
+            state.pending_tool_calls.remove(call)
+        result = self.get_stage_result(result_key)
+        state.stage_results.pop(result_key, None)
+        return result
 
     async def ask_llm(self, prompt: str) -> str:
         """Send ``prompt`` to the configured LLM and return its textual reply.
