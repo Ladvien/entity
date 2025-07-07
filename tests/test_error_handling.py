@@ -10,6 +10,7 @@ from pipeline import (
     execute_pipeline,
 )
 from pipeline.errors import (
+    ErrorResponse,
     PipelineError,
     PluginContextError,
     PluginExecutionError,
@@ -65,8 +66,10 @@ def test_error_plugin_runs():
 def test_static_error_response():
     pipeline_id = "123"
     resp = create_static_error_response(pipeline_id)
-    assert resp["error_id"] == pipeline_id
-    assert resp["type"] == "static_fallback"
+    assert isinstance(resp, ErrorResponse)
+    data = resp.to_dict()
+    assert data["error_id"] == pipeline_id
+    assert data["type"] == "static_fallback"
 
 
 def test_create_error_response():
@@ -78,9 +81,11 @@ def test_create_error_response():
         original_exception=RuntimeError("bad"),
     )
     resp = create_error_response("id", info)
-    assert resp["plugin"] == "Boom"
-    assert resp["stage"] == "do"
-    assert resp["type"] == "plugin_error"
+    assert isinstance(resp, ErrorResponse)
+    data = resp.to_dict()
+    assert data["plugin"] == "Boom"
+    assert data["stage"] == "do"
+    assert data["type"] == "plugin_error"
 
 
 def test_error_hierarchy():

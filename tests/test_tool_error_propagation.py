@@ -1,8 +1,15 @@
 import asyncio
 
-from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      SystemRegistries, ToolPlugin, ToolRegistry,
-                      execute_pipeline)
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolPlugin,
+    ToolRegistry,
+    execute_pipeline,
+)
+from pipeline.errors import ErrorResponse
 from pipeline.resources import ResourceContainer
 from user_plugins.failure.basic_logger import BasicLogger
 from user_plugins.failure.error_formatter import ErrorFormatter
@@ -35,4 +42,9 @@ def make_registries():
 def test_tool_failure_propagates_to_error_stage():
     registries = make_registries()
     result = asyncio.run(execute_pipeline("hi", registries))
-    assert result == {"error": "fail failed (RuntimeError): tool boom"}
+    assert isinstance(result, ErrorResponse)
+    data = result.to_dict()
+    assert data["error"] == "tool boom"
+    assert data["plugin"] == "fail"
+    assert data["stage"] == "do"
+    assert data["type"] == "plugin_error"
