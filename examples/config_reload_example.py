@@ -12,7 +12,7 @@ import yaml
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
 # Expose local plugins namespace
-from utilities import enable_plugins_namespace
+from .utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 

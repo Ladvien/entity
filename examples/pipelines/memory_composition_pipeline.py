@@ -10,17 +10,17 @@ import sys
 # Ensure project source is available for imports
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))  # noqa: E402
 
-from utilities import enable_plugins_namespace
+from ..utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 
-from user_plugins.duckdb_vector_store import DuckDBVectorStore  # noqa: E402
-from user_plugins.memory_resource import MemoryResource  # noqa: E402
-from user_plugins.pg_vector_store import PgVectorStore  # noqa: E402
-from user_plugins.postgres import PostgresResource  # noqa: E402
-from user_plugins.sqlite_storage import (
+from plugins.builtin.resources.postgres import PostgresResource
+from plugins.builtin.resources.pg_vector_store import PgVectorStore
+from plugins.builtin.resources.sqlite_storage import (
     SQLiteStorageResource as SQLiteDatabaseResource,
 )
+from user_plugins.resources import DuckDBVectorStore
+from user_plugins.memory_resource import MemoryResource
 
 from entity import Agent  # noqa: E402
 from pipeline import PipelineStage, PromptPlugin  # noqa: E402
