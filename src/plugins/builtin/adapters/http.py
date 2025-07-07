@@ -44,6 +44,8 @@ class TokenAuthMiddleware(BaseHTTPMiddleware):
             if token not in self.tokens:
                 client = request.client.host if request.client else "unknown"
                 self.audit_logger.info("invalid token from %s", client)
+                for h in self.audit_logger.handlers:
+                    h.flush()
                 return JSONResponse({"detail": "Unauthorized"}, status_code=401)
         return await call_next(request)
 
@@ -78,6 +80,8 @@ class ThrottleMiddleware(BaseHTTPMiddleware):
             record.popleft()
         if len(record) > self.requests:
             self.audit_logger.info("rate limit exceeded for %s", key)
+            for h in self.audit_logger.handlers:
+                h.flush()
             return JSONResponse({"detail": "Too Many Requests"}, status_code=429)
         return await call_next(request)
 
@@ -105,6 +109,10 @@ class HTTPAdapter(AdapterPlugin):
         self._server: uvicorn.Server | None = None
         self._registries: SystemRegistries | None = None
         self._setup_routes()
+
+    def _flush_audit_log(self) -> None:
+        for handler in self.audit_logger.handlers:
+            handler.flush()
 
     def _setup_audit_logger(self) -> None:
         path = str(self.config.get("audit_log_path", "audit.log"))
@@ -160,11 +168,13 @@ class HTTPAdapter(AdapterPlugin):
                     await execute_pipeline(message, self._registries),
                 )
             self.audit_logger.info("request handled", extra={"status": "ok"})
+            self._flush_audit_log()
             return result
         except Exception as exc:  # pragma: no cover - adapter error path
             self.audit_logger.error(
                 "pipeline error", extra={"error": str(exc)}, exc_info=True
             )
+            self._flush_audit_log()
             raise
 
     async def serve(self, registries: SystemRegistries) -> None:
