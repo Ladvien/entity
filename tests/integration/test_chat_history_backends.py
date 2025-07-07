@@ -6,9 +6,16 @@ from pathlib import Path
 import pytest
 
 from entity_config.environment import load_env
-from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
-                      PipelineState, PluginContext, PluginRegistry,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineStage,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources import ResourceContainer
 from pipeline.resources.duckdb_database import DuckDBDatabaseResource
 from pipeline.resources.memory_resource import MemoryResource
@@ -90,6 +97,7 @@ def test_duckdb_history(tmp_path):
 
 
 @pytest.mark.integration
+@pytest.mark.skipif(os.geteuid() == 0, reason="PostgreSQL cannot run as root")
 def test_postgres_history(pg_env):
     cfg = {
         "host": os.environ.get("DB_HOST", "localhost"),
