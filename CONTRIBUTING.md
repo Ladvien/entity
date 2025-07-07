@@ -20,8 +20,8 @@ poetry run isort src tests
 poetry run flake8 src tests
 poetry run mypy src
 bandit -r src
-python -m src.entity_config.validator --config config/dev.yaml
-python -m src.entity_config.validator --config config/prod.yaml
+poetry run python -m src.entity_config.validator --config config/dev.yaml
+poetry run python -m src.entity_config.validator --config config/prod.yaml
 python -m src.registry.validator
 pytest tests/integration/ -v
 pytest tests/infrastructure/ -v
