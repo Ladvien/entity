@@ -79,9 +79,9 @@ plugins:
     cli:
       type: plugins.builtin.adapters.cli:CLIAdapter
       stages: [deliver]
-  logging:
-    type: plugins.builtin.adapters.logging:LoggingAdapter
-    stages: [deliver]
+    logging:
+      type: plugins.builtin.adapters.logging:LoggingAdapter
+      stages: [deliver]
   prompts:
     chain_of_thought:
       type: user_plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
