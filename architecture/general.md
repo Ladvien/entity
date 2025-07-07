@@ -1,502 +1,322 @@
-# Entity Pipeline Framework - Architecture Document
+# Entity Pipeline Framework - Complete Architecture
 
-## 🎯 Vision
-A **reconfigurable pipeline framework** that makes AI agent behavior easily adjustable through plugins and configuration, inspired by Bevy's plugin architecture. **Progressive disclosure design**: approachable for beginners, infinitely powerful for experts. Change agent behavior through configuration, not code rewrites.
+## Executive Summary
 
-**Requires Python 3.11 or higher.**
+The Entity Pipeline Framework is a **hybrid pipeline-state machine architecture** for building AI agents that combines the predictability of linear processing with the adaptability of intelligent looping. The framework enables developers to build sophisticated AI agents through a **three-layer plugin system** with **runtime reconfiguration** capabilities.
 
-## 🔄 Reconfigurable Agent Infrastructure
+**Key Innovation**: Automatic pipeline iteration when no response is generated, creating state machine behavior within a pipeline mental model.
 
-The framework's core value is **making agent behavior adjustable** without code changes:
+## Core Architecture Principles
 
-- **Swap reasoning strategies**: Change from ReAct to Chain-of-Thought by replacing a single plugin
-- **Modify tool combinations**: Add weather tools to a research agent through configuration
-- **Adjust personality**: Switch from professional to casual tone with prompt plugin changes
-- **Runtime reconfiguration**: Update agent behavior while the system is running
+### 1. Hybrid Pipeline-State Machine Design
 
-**Example**: Transform a basic Q&A agent into a research assistant by adding memory plugins, search tools, and citation formatting - all through configuration changes.
+The framework operates as a **linear pipeline with intelligent looping**:
 
-### Module Structure
+```
+PARSE → THINK → DO → REVIEW → DELIVER
+  ↑                                ↓
+  └── Loop if context.response is None
+```
 
-The codebase now consolidates the core engine under `src/pipeline`. This module
-contains the context system, execution logic and shared abstractions. Plugins
-live under `src/plugins` for built-in functionality. Optional example
-implementations reside in the `user_plugins` package. Plugin modules are grouped
-by type:
+**Pipeline Stages:**
+- **PARSE**: Input validation, context setup, memory retrieval (first pass)
+- **THINK**: Intent classification, reasoning, planning, memory retrieval (second pass)
+- **DO**: Tool execution, action taking
+- **REVIEW**: Response generation, safety checks, formatting
+- **DELIVER**: Output transmission, logging
+- **ERROR**: Failure handling with user-friendly messages
 
-- `resources` for databases, LLM providers and storage backends
-- `tools` for user-facing functions
-- `prompts` for reasoning strategies
-- `adapters` for input/output interfaces
-- `failure` for error formatting and logging
+**State Machine Behavior:**
+- If `context.response` is `None` at pipeline end, automatically loops back to PARSE
+- Maximum iterations prevented by `max_iterations` limit (defaults to 5)
+- Exceeding limit triggers ERROR stage with failure response
+- Each iteration builds upon previous context and conversation history
 
-Common interfaces such as `LLM` live in `src/pipeline/resources`. Storage
-resources optionally expose `save_history` and `load_history` so plugins can
-persist conversations independently of the concrete backend.
+### 2. Three-Layer Plugin System
 
-## 🏗️ Core Architecture
+**Layer 1: Function-Based (Adoption)**
+```python
+@agent.plugin
+async def weather_check(context):
+    """Auto-classified as ToolPlugin, auto-routed to DO stage"""
+    return await get_weather(context.location)
+```
 
-### Pipeline Execution Model
+**Layer 2: Class-Based (Primary Usage)**  
+```python
+class WeatherToolPlugin(ToolPlugin):
+    stages = [PipelineStage.DO]
+    
+    async def execute_function(self, params):
+        return await self.get_weather(params['location'])
+```
 
-The pipeline follows a **single-execution pattern** optimized for reconfigurable agent behavior:
+**Layer 3: Advanced (Sophisticated Control)**
+```python
+class ChainOfThoughtPlugin(PromptPlugin):
+    stages = [PipelineStage.THINK]
+    dependencies = ["database", "llm"]
+    
+    async def _execute_impl(self, context):
+        # Full pipeline access with iteration control
+        for step in range(self.config.get("max_steps", 5)):
+            reasoning = await self.call_llm(context, prompt)
+            if "final answer" in reasoning.content.lower():
+                break
+        context.set_response(final_answer)
+```
 
-1. **Single Pipeline Execution**: Each request runs through the pipeline once with a guaranteed response
-2. **Structured LLM Access**: Any stage can call the LLM when needed with automatic observability
-3. **Distributed Tool System**: Any stage can execute tools immediately when needed
-4. **Standardized Results**: Explicit result keys with no fallback chains
-5. **Plugin-Level Iteration**: Complex reasoning patterns handle iteration internally within plugins
-6. **Dynamic Configuration Updates**: Runtime configuration changes without application restart via plugin reconfiguration
-7. **Fail-Fast Error Handling**: Plugin failures route to dedicated error stage for user communication
-8. **Explicit Multi-Turn Support**: Multi-iteration scenarios handled explicitly through delegation or conversation management
+### 3. Canonical Resource Architecture
 
-**Why Single Execution for Agents**: Predictable execution patterns make behavior changes more reliable and easier to debug. Plugin swaps produce consistent results because the execution flow remains stable.
+Every pipeline has access to three core resource types:
+
+#### LLM Resource
+```python
+# Unified provider interface
+llm = context.get_resource("llm")
+response = await llm.generate("What is 2+2?")
+
+# Supports: OpenAI, Ollama, Claude, Gemini, Bedrock, Echo
+```
+
+#### Memory Resource  
+```python
+# Cognition-like interface with conversation management
+memory = context.get_resource("memory")
+
+# Conversation persistence
+await memory.save_conversation(context.pipeline_id, history)
+history = await memory.load_conversation(context.pipeline_id)
+
+# Semantic search
+similar = await memory.search_similar("user question", k=5)
+
+# Contextual memory (short-term within pipeline)
+memory.remember("user_preference", "concise")
+preference = memory.recall("user_preference")
+
+# ConversationManager is part of Memory resource
+conversation_manager = memory.get_conversation_manager()
+```
+
+#### Storage Resource
+```python
+# File operations
+storage = context.get_resource("storage")
+path = await storage.store_file("data.json", content)
+content = await storage.load_file("data.json")
+```
+
+### 4. Resource Composition Pattern
+
+Resources are composed from simpler backends:
 
 ```python
-from dataclasses import dataclass, field
-from datetime import datetime
-from enum import Enum, auto
-from typing import Any, Dict, List, Optional
-
-
-async def execute_pipeline(request):
-    """Main pipeline execution with layered context"""
-    state = PipelineState(
-        conversation=[ConversationEntry(content=str(request), role="user", timestamp=datetime.now())],
-        response=None,
-        prompt="",
-        stage_results={},
-        pending_tool_calls=[],
-        metadata={},
-        pipeline_id=generate_pipeline_id(),
-        current_stage=None,
-        metrics=MetricsCollector()
-    )
-    
-    registries = SystemRegistries(
-        resources=resource_container,
-        tools=tool_registry,
-        plugins=plugin_registry
-    )
-    
-    # Single pipeline execution - always produces a response
-    await execute_stage(PipelineStage.PARSE, state, registries)
-    await execute_stage(PipelineStage.THINK, state, registries)
-    await execute_stage(PipelineStage.DO, state, registries)
-    await execute_stage(PipelineStage.REVIEW, state, registries)
-    await execute_stage(PipelineStage.DELIVER, state, registries)
-    
-    # Guaranteed response - error stage provides fallback if needed
-    return state.response or create_default_response("No response generated", state.pipeline_id)
-
-async def execute_stage(stage: PipelineStage, state: PipelineState, registries: SystemRegistries):
-    """Execute a pipeline stage with controlled plugin access"""
-    state.current_stage = stage
-    
-    # Execute plugins with appropriate context layer
-    stage_plugins = registries.user_plugins.get_for_stage(stage)
-    for plugin in stage_plugins:
-        context = PluginContext(state, registries)
-        await plugin.execute(context)
-        
-        # Execute pending tools (framework handles this)
-        if state.pending_tool_calls:
-            tool_results = await execute_pending_tools(state, registries)
-            
-            # Add tool results to conversation
-            for tool_call, result in tool_results.items():
-                if isinstance(plugin, AutoGeneratedPlugin):
-                    # Simple context handles this automatically
-                    pass
-                else:
-                    # Advanced context gets explicit control
-                    plugin_context.add_conversation_entry(
-                        content=f"Tool result: {result}",
-                        role="system",
-                        metadata={"tool_name": tool_call.name, "stage": str(stage)}
-                    )
-            
-            state.pending_tool_calls.clear()
-
-def create_default_response(message: str, pipeline_id: str) -> Dict[str, Any]:
-    """Create default response when no plugin sets a response"""
-    return {
-        "message": message,
-        "pipeline_id": pipeline_id,
-        "timestamp": datetime.now().isoformat(),
-        "type": "default_response"
-    }
-```
-
-```mermaid
-flowchart TD
-    Users[👤 Users] --> API[🌐 API]
-    API --> IA[📥 Input Adapter]
-    IA --> Pipeline[🔄 Processing Pipeline]
-    
-    Pipeline --> Stage1[🔄 Parse]
-    Stage1 --> Stage2[🧠 Think] 
-    Stage2 --> Stage3[⚡ Do]
-    Stage3 --> Stage4[🔍 Review]
-    Stage4 --> Stage5[📤 Deliver]
-    
-    Stage5 --> OA[📮 Output Adapter]
-    OA --> Response[📱 Response]
-    
-    %% Error handling flow
-    Stage1 -.-> ErrorStage[❌ Error]
-    Stage2 -.-> ErrorStage
-    Stage3 -.-> ErrorStage
-    Stage4 -.-> ErrorStage
-    Stage5 -.-> ErrorStage
-    ErrorStage --> OA
-    
-    %% LLM / DB / Misc. Resources Available Throughout Pipeline
-    LLM[🧠 LLM / DB / Misc. Resources] -.-> Stage1
-    LLM -.-> Stage2
-    LLM -.-> Stage3
-    LLM -.-> Stage4
-    LLM -.-> Stage5
-    LLM -.-> ErrorStage
-    
-    %% Simple plugins auto-route to appropriate stages
-    SimplePlugins[🔌 Simple Plugins] --> AutoRouter[🤖 Auto Router]
-    AutoRouter -.-> Stage1
-    AutoRouter -.-> Stage2
-    AutoRouter -.-> Stage3
-    AutoRouter -.-> Stage4
-    AutoRouter -.-> Stage5
-    
-    %% Styling
-    classDef input fill:#e3f2fd
-    classDef processing fill:#fff3e0
-    classDef llm fill:#f3e5f5
-    classDef output fill:#e8f5e8
-    classDef endpoints fill:#fce4ec
-    classDef tools fill:#e8f5f0
-    classDef error fill:#ffebee
-    classDef simple fill:#e8f8e8
-    
-    class Users,API,Response endpoints
-    class IA,Stage1 input
-    class Stage2 processing
-    class LLM llm
-    class Stage3 tools
-    class Stage4,Stage5,OA output
-    class ErrorStage error
-    class SimplePlugins,AutoRouter simple
-```
-
-### Resource Composition
-This is an excellent mental model! The composition pattern you're proposing aligns perfectly with the framework's design principles and would make memory management much more intuitive. Here are my thoughts:
-
-## Strengths of This Approach
-
-1. **Clear Separation of Concerns**
-   - Each resource has a single, well-defined responsibility
-   - Easy to understand what each component does
-   - Follows the Single Responsibility Principle
-
-2. **Flexible Composition**
-   - Users can mix and match backends
-   - Easy to swap implementations (Postgres → SQLite, S3 → local filesystem)
-   - Supports gradual complexity (start with just DB, add vector store later)
-
-3. **Intuitive Mental Model**
-   - Storage = Database + Vector Store + File System
-   - Matches how developers think about storage layers
-   - Clear upgrade path from simple to complex
-
-
-Here’s a more expanded, agent-focused version for your `AGENTS.md`, written to be both practical and opinionated, with a concrete example that reinforces the composability model:
-
----
-
-## 🧱 Composable Resources: Building Blocks for Agent Capability
-
-Agents in this framework are powered by *resources*—pluggable components like databases, vector stores, and file systems—that provide persistent capability. Rather than tightly coupling functionality to a specific backend, we follow a **composition pattern**: each resource is composed of smaller, interchangeable parts that work together to deliver the desired behavior. This design makes agents easier to extend, test, and deploy across environments.
-
-Take the `StorageResource` as a canonical example. It doesn’t store data in one specific place. Instead, it acts as an orchestration layer that can delegate persistence to a relational database, semantic search to a vector store, and file handling to an object store. You might start with a basic setup using SQLite and a local folder. Later, without rewriting your agent logic, you can swap in PostgreSQL, PGVector, and S3—just by changing the YAML config or passing different objects programmatically.
-
-```yaml
-plugins:
-  resources:
-    storage:
-      type: storage
-      database:
-        type: sqlite
-        path: ./agent.db
-```
-
-Later:
-
-```yaml
-plugins:
-  resources:
-    storage:
-      type: storage
-      database:
-        type: postgres
-        host: db.internal
-        name: agent_db
-      vector_store:
-        type: pgvector
-        table: embeddings
-      filesystem:
-        type: s3
-        bucket: agent-files
-```
-
-This approach isn’t limited to storage. It applies to *any* agent capability—logging, configuration, tools, adapters. You can compose a `VectorMemorySystem` that reuses a shared `PostgresResource` connection pool, or build a `KnowledgeBaseResource` that pulls from both local files and cloud APIs.
-
-### 🧠 Why It Matters
-
-* **Progressive adoption**: start simple, scale later
-* **Swappable backends**: move from SQLite to Postgres with zero code changes
-* **Shared dependencies**: vector store can piggyback off a DB connection
-* **Modular testing**: mock individual components cleanly
-* **Clear upgrade paths**: every resource supports layered enhancement
-
-This composition pattern is at the heart of agent development. Instead of hardwiring behavior into monoliths, you build capability from decoupled parts—each with a focused responsibility and predictable interface. The result is a framework where simple things stay simple, and complex things become possible *on your terms*.
-
----
-
-Let me know if you'd like a Mermaid diagram or resource registry pattern callout added.
-
-## Suggested Implementation
-
-```python
-from abc import ABC, abstractmethod
-from typing import Optional, List, Dict, Any
-
-class StorageResource(ResourcePlugin):
-    """Unified storage interface composing multiple backends."""
-    
-    stages = [PipelineStage.PARSE]
-    name = "storage"
-    
-    def __init__(
-        self,
-        database: Optional[DatabaseResource] = None,
-        vector_store: Optional[VectorStoreResource] = None,
-        filesystem: Optional[FileSystemResource] = None,
-        config: Optional[Dict] = None
-    ):
-        super().__init__(config or {})
-        self.database = database
-        self.vector_store = vector_store
-        self.filesystem = filesystem
-        
-    @classmethod
-    def from_config(cls, config: Dict) -> "StorageResource":
-        """Create StorageResource from YAML configuration."""
-        # Allow both programmatic and config-based initialization
-        db_config = config.get("database")
-        if db_config:
-            db_type = db_config.get("type", "postgres")
-            if db_type == "postgres":
-                db = PostgresResource(db_config)
-            elif db_type == "sqlite":
-                db = SQLiteDatabaseResource(db_config)
-            else:
-                db = None
-        else:
-            db = None
-            
-        # Similar for vector_store and filesystem
-        return cls(database=db, vector_store=vector_store, filesystem=filesystem)
-    
-    async def save_conversation(self, conversation_id: str, entries: List[ConversationEntry]):
-        """Save conversation history using the database backend."""
-        if self.database:
-            await self.database.save_history(conversation_id, entries)
-    
-    async def search_similar(self, query: str, k: int = 5) -> List[str]:
-        """Semantic search using the vector store."""
-        if self.vector_store:
-            return await self.vector_store.query_similar(query, k)
-        return []
-    
-    async def store_file(self, key: str, content: bytes) -> str:
-        """Store a file using the filesystem backend."""
-        if self.filesystem:
-            return await self.filesystem.store(key, content)
-        raise ValueError("No filesystem backend configured")
-```
-
-## Configuration Examples
-
-### Simple Configuration
-```yaml
-plugins:
-  resources:
-    storage:
-      type: storage
-      database:
-        type: sqlite
-        path: ./agent.db
-```
-
-### Advanced Configuration
-```yaml
-plugins:
-  resources:
-    storage:
-      type: storage
-      database:
-        type: postgres
-        host: localhost
-        name: agent_db
-      vector_store:
-        type: pgvector
-        dimensions: 768
-        table: embeddings
-      filesystem:
-        type: s3
-        bucket: agent-files
-        region: us-east-1
-```
-
-### Programmatic Configuration
-```python
-# Start simple
-storage = StorageResource(
+# Simple setup
+memory = MemoryResource(
     database=SQLiteDatabaseResource("./agent.db")
 )
 
-# Evolve to complex
-postgres = PostgresResource(connection_str)
+# Production setup  
+memory = MemoryResource(
+    database=PostgresResource(connection_str),
+    vector_store=PgVectorStore(postgres, dimensions=768)
+)
+
 storage = StorageResource(
-    database=postgres,
-    vector_store=PgVectorStore(postgres, dimensions=768),
     filesystem=S3FileSystem(bucket="agent-files")
 )
 ```
 
-## Implementation Recommendations
+## Plugin System Details
 
-1. **Create Abstract Base Classes**
-   ```python
-   class DatabaseResource(ABC):
-       @abstractmethod
-       async def save_history(self, conversation_id: str, entries: List[ConversationEntry]): ...
-       
-       @abstractmethod
-       async def load_history(self, conversation_id: str) -> List[ConversationEntry]: ...
-   
-   class VectorStoreResource(ABC):
-       @abstractmethod
-       async def add_embedding(self, text: str, metadata: Dict = None): ...
-       
-       @abstractmethod
-       async def query_similar(self, query: str, k: int) -> List[Dict]: ...
-   ```
+### Plugin Base Classes
 
-2. **Support Dependency Sharing**
-   ```python
-   # Vector store can reuse database connection
-   postgres = PostgresResource(config)
-   vector_store = PgVectorStore(postgres)  # Reuses connection pool
-   ```
-
-3. **Provide Sensible Defaults**
-   ```python
-   # If no config provided, use SQLite + local filesystem
-   storage = StorageResource()  # Works out of the box
-   ```
-
-4. **Clear Migration Path**
-   ```python
-   # Easy to migrate data between backends
-   await storage.migrate_to(new_storage)
-   ```
-
-
-### Agent-Focused Stage Definitions
-
-#### **parse** - "Get ready to think"
-- Input validation, format conversion
-- Initial context setup
-- Memory/context retrieval (first pass)
-- Basic input sanitization
-- **Agent Context**: Prepare the request for reasoning
-
-#### **think** - "Reason and plan"  
-- Intent classification and understanding
-- Multi-step reasoning (chain-of-thought, ReAct)
-- Planning tool usage and workflows
-- Memory retrieval during reasoning (second pass)
-- Decision making about actions
-- **Agent Context**: Core reasoning and planning stage
-
-#### **do** - "Execute actions"
-- Primary stage for complex tool orchestration
-- Handle tool failures and retries
-- Parse and validate tool results
-- Coordinate multiple tool interactions
-- **Agent Context**: Take actions in the world
-
-#### **review** - "Final processing and safety"
-- Generate responses and apply formatting
-- Privacy protection (PII scrubbing)
-- Content filtering and safety checks
-- Personality and tone adjustments
-- Response quality validation
-- Final security review
-- **Agent Context**: Ensure response quality and safety
-
-#### **deliver** - "Send the response"
-- Pure output delivery (HTTP response, TTS, file write)
-- No content modification - just transmission
-- Handle delivery failures
-- **Agent Context**: Communicate with the user
-
-#### **error** - "Handle failures gracefully"
-- Convert technical errors to user-friendly messages
-- Log errors for debugging
-- Recovery strategies
-- **Agent Context**: Maintain user experience during failures
-
-## 🔌 Plugin System Architecture
-
-### Five-Layer Reconfigurable Plugin System
-
-The framework maintains a sophisticated five-layer plugin architecture designed for easy agent behavior modification:
-
-#### **Resource Plugins** (Infrastructure - Enables Agent Function)
-- **Database**: PostgreSQL, SQLite connections
-- **Connection Pool**: `PostgresConnectionPool` shares asyncpg connections
-- **Conversation History**: Prompt plugin that persists chats
-- **LLM**: Ollama, OpenAI, Claude servers  
-- **Semantic Memory**: Vector databases, Redis cache
-- **Storage**: File systems, cloud storage
-- **Logging**: Structured logging, metrics, tracing
-- **Monitoring**: Health checks, performance metrics
-
-Resource plugins can depend on other resources. For example, a
-`StorageResource` typically requires a `DatabaseResource`, a
-`VectorStoreResource`, and a `FileSystemResource`. A `DatabaseResource` then
-selects a concrete implementation like `PostgresResource`. Each
-resource exposes a single canonical name to keep the mental model clear.
-
-**Reconfiguration Example**: Switch from OpenAI to local Ollama by changing one configuration line.
-
-
-### Single-Name Resources and Unified LLM
-
-Every resource registers under a single, unchanging name. The concrete implementation can vary or be composed of other resources, but callers always reference the same key. This keeps configuration small and mental models easy to grasp.
-
-The `UnifiedLLMResource` embodies this principle. Regardless of which provider you choose—OpenAI, Ollama, Claude or Gemini—the resource is simply named `llm`. Provider selection happens through the `provider` field:
-
-```yaml
-plugins:
-  resources:
-    llm:
-      type: pipeline.resources.llm.unified:UnifiedLLMResource
-      provider: openai
-      api_key: ${OPENAI_API_KEY}
+```python
+class ResourcePlugin(BasePlugin):
+    """Infrastructure: LLM, Memory, Storage"""
+    async def initialize(self) -> None
+    async def health_check(self) -> bool
+    
+class ToolPlugin(BasePlugin):  
+    """Functions: Calculator, Search, Weather"""
+    async def execute_function(self, params) -> Any
+    
+class PromptPlugin(BasePlugin):
+    """Processing: Reasoning, Memory, Formatting"""
+    stages = [PipelineStage.THINK]  # Usually
+    
+class AdapterPlugin(BasePlugin):
+    """I/O: HTTP, WebSocket, CLI"""
+    stages = [PipelineStage.PARSE, PipelineStage.DELIVER]
+    
+class FailurePlugin(BasePlugin):
+    """Error Handling: User-friendly error messages"""
+    stages = [PipelineStage.ERROR]
 ```
 
-Switching to a local Ollama server requires only a single line change:
+### Stage Assignment Rules
+
+- **PARSE**: Input adapters, memory loading, validation
+- **THINK**: Reasoning, planning, intent classification  
+- **DO**: Tool execution, action taking
+- **REVIEW**: Response formatting, safety checks
+- **DELIVER**: Output adapters, logging
+- **ERROR**: Failure handling (minimal plugins recommended)
+
+### Tool Execution Model
+
+**Immediate Execution (Best Practice)**:
+```python
+async def _execute_impl(self, context):
+    # Tools execute immediately with natural async/await
+    result = await context.use_tool("calculator", expression="2+2")
+    context.set_response(f"The answer is {result}")
+```
+
+**Benefits**:
+- Intuitive developer experience
+- Clear error handling  
+- Immediate feedback
+- Natural async/await patterns
+- No queuing complexity
+
+**Note**: `context.execute_tool()` is deprecated in favor of `context.use_tool()` for consistency.
+
+## State Management
+
+### Pipeline State (Per-Execution)
+```python
+@dataclass
+class PipelineState:
+    conversation: List[ConversationEntry]
+    response: Any = None  # If None at end, triggers loop
+    stage_results: Dict[str, Any]
+    metadata: Dict[str, Any]
+    pipeline_id: str
+    current_stage: PipelineStage
+    max_iterations: int = 5  # Prevents infinite loops
+    current_iteration: int = 0
+    failure_info: Optional[FailureInfo] = None
+```
+
+### Context Interface (Plugin Access)
+```python
+class PluginContext:
+    # Resource access
+    def get_resource(self, name: str) -> Resource
+    def get_llm(self) -> LLM
+    
+    # Tool execution (immediate)
+    async def use_tool(self, tool_name: str, **params) -> Any
+    
+    # Response control
+    def set_response(self, response: Any) -> None
+    def has_response(self) -> bool
+    
+    # Conversation
+    def add_conversation_entry(self, content: str, role: str)
+    def get_conversation_history(self) -> List[ConversationEntry]
+    
+    # Memory shortcuts (cognitive interface)
+    def remember(self, key: str, value: Any) -> None  
+    def recall(self, key: str, default=None) -> Any
+    def think(self, thought: str) -> None
+```
+
+### Memory Persistence Strategy
+
+- **PipelineState**: Cleared after each pipeline execution (ephemeral)
+- **ConversationHistory**: Persisted via Memory resource across interactions
+- **Resource State**: Managed by individual resource lifecycles
+- **ConversationManager**: Integrated into Memory resource, not separate component
+
+## Runtime Reconfiguration
+
+### Supported Changes
+- **LLM Provider Swapping**: OpenAI ↔ Ollama without restart (framework is LLM agnostic)
+- **Plugin Configuration**: Update parameters, retry settings at runtime
+- **Resource Backends**: SQLite → PostgreSQL migration while running
+- **Tool Addition**: Add new capabilities dynamically
+- **Memory Backends**: Switch from in-memory to persistent storage
+
+### Configuration Update Process
+```python
+# 1. Validation
+result = plugin.validate_config(new_config)
+
+# 2. Dependency Check  
+deps_ok = plugin.validate_dependencies(registry)
+
+# 3. Graceful Update (wait for pipeline completion)
+await wait_for_pipeline_completion()
+await plugin.reconfigure(new_config)
+
+# 4. Cascade to Dependents
+for dependent in registry.get_dependents(plugin_name):
+    await dependent.on_dependency_reconfigured(plugin_name, old, new)
+```
+
+### Restart Required Cases
+- Pipeline stage assignment changes (happens at instantiation/reconfiguration)
+- Core framework updates
+- Plugins that explicitly don't support runtime reconfiguration
+
+## Error Handling & Reliability
+
+### Failure Flow
+```
+Plugin Error → FailureInfo → ERROR Stage → User-Friendly Response
+```
+
+### Circuit Breaker Pattern
+```python
+class BasePlugin:
+    failure_threshold: int = 3
+    failure_reset_timeout: float = 60.0
+    
+    # Automatic circuit breaking on repeated failures
+```
+
+### Static Fallback
+```python
+# When ERROR stage plugins fail
+STATIC_ERROR_RESPONSE = {
+    "error": "System error occurred", 
+    "message": "An unexpected error prevented processing your request.",
+    "pipeline_id": pipeline_id,
+    "type": "static_fallback"
+}
+```
+
+## Developer Experience Features
+
+### Progressive Complexity
+1. **Start Simple**: Function decorators with auto-classification
+2. **Add Structure**: Class-based plugins with explicit control  
+3. **Full Power**: Advanced plugins with sophisticated capabilities
+
+### Cognitive Interface
+```python
+# Natural, cognition-like methods for intuitive development
+if context.is_question():
+    response = await context.ask_llm("Answer this question: " + context.message)
+    
+if context.contains("weather", "temperature"):
+    weather = await context.use_tool("weather", location=context.location)
+
+# Memory operations with semantic meaning
+memory = context.get_resource("memory")
+relevant_context = await memory.get_memory(context.message)  # Similarity search
+```
+
+### Observability Built-In
+- **Automatic Logging**: Request ID tracking, structured JSON logs
+- **Metrics Collection**: Plugin duration, LLM usage, tool execution
+- **Tracing Support**: OpenTelemetry integration
+- **Health Monitoring**: Resource health checks, circuit breaker status
+
+## Configuration Example
 
 ```yaml
 plugins:
@@ -504,857 +324,92 @@ plugins:
     llm:
       type: pipeline.resources.llm.unified:UnifiedLLMResource
       provider: ollama
-      base_url: http://localhost:11434
       model: llama3:8b
+      base_url: http://localhost:11434
+      
+    memory:
+      type: pipeline.resources.memory_resource:MemoryResource  
+      database:
+        type: plugins.builtin.resources.postgres:PostgresResource
+        host: localhost
+        name: agent_db
+      vector_store:
+        type: plugins.builtin.resources.pg_vector_store:PgVectorStore
+        dimensions: 768
+        
+    storage:
+      type: pipeline.resources.storage_resource:StorageResource
+      filesystem:
+        type: plugins.builtin.resources.s3_filesystem:S3FileSystem
+        bucket: agent-files
+        
+  tools:
+    calculator:
+      type: plugins.builtin.tools.calculator_tool:CalculatorTool
+      
+  prompts:
+    reasoning:
+      type: plugins.builtin.prompts.complex_prompt:ComplexPrompt
+      max_steps: 5
 ```
 
-Because the name stays constant, plugins and configuration always refer to the same key. This simplifies reasoning and reinforces the single-name resource principle across the entire framework.
-#### **Tool Plugins** (Functionality - Performs Tasks for Agents)
-- **Weather**: Get current conditions, forecasts
-- **Calculator**: Mathematical computations
-- **SearchTool**: Web search, document search
-- **File Operations**: Read, write, process files
-- **API Integrations**: Slack, email, custom APIs
+## Deployment Patterns
 
-**Tool Execution Model**: Tools are registered during system initialization as static capabilities and are available throughout all pipeline stages. Any plugin in any stage can execute tools immediately when needed, with results available to subsequent plugins in the same stage or later stages.
-
-**Reconfiguration Example**: Add web search capability to a math tutor agent by including search tool plugins in configuration.
-
-#### **Prompt Plugins** (Processing - Controls Agent Behavior)
-- **Strategies**: ReAct, Chain-of-Thought, Direct Response
-- **Personality**: Sarcasm, loyalty, wit injection
-- **Memory**: Context retrieval and storage
-- **Output**: Formatting, validation, filtering
-- **Tool Coordination**: Execute tools during processing with immediate access to results
-
-**Reconfiguration Example**: Change agent personality from formal to casual by swapping personality prompt plugins.
-
-#### **Adapter Plugins** (Input/Output - Interface Handling)
-- **Input Adapters**: HTTP, WebSocket, CLI interfaces
-- **Output Adapters**: HTTP responses, TTS, formatted output
-  - **TTS**: Text-to-speech services
-
-**Reconfiguration Example**: Add voice interface to a text-based agent by including TTS adapter plugins.
-
-#### **Failure Plugins** (Error Communication - User-Facing Error Handling)
-- **Error Formatters**: Convert technical errors to user-friendly messages
-- **Error Loggers**: Record failures for debugging and monitoring
-- **Notification Systems**: Alert administrators of critical failures
-
-**Note**: Plugin use is discouraged in the error stage to maintain reliability. Keep error stage plugins minimal and ensure static fallback responses are available.
-
-Plugin implementations live in `plugins/<type>` directories. For example,
-error-handling plugins are located in `plugins.builtin.failure`. The
-`src/pipeline.base_plugins` paths are thin wrappers kept for backward
-compatibility during the transition.
-
-### Plugin Stage Assignment System
-
-The framework uses **explicit stage assignment** for advanced plugins and **automatic stage assignment** for simple plugins, with base classes serving as organizational categories and framework extension points:
-
-#### **Progressive Stage Assignment**
+### Development
 ```python
-from abc import ABC, abstractmethod
-from enum import Enum, auto
-
-class PipelineStage(Enum):
-    PARSE = auto()
-    THINK = auto() 
-    DO = auto()
-    REVIEW = auto()
-    DELIVER = auto()
-    ERROR = auto()
-    
-    def __str__(self):
-        return self.name.lower()
-    
-    @classmethod
-    def from_str(cls, stage_name: str) -> 'PipelineStage':
-        """Convert string to enum with validation"""
-        try:
-            return cls[stage_name.upper()]
-        except KeyError:
-            valid_stages = [stage.name.lower() for stage in cls]
-            raise ValueError(f"Invalid stage '{stage_name}'. Valid stages: {valid_stages}")
-
-class BasePlugin(ABC):
-    stages: List[PipelineStage]  # Explicit for Layer 2-3, auto-assigned for Layer 1
-    
-    @abstractmethod
-    async def execute(self, context):
-        pass
-
-class ResourcePlugin(BasePlugin):
-    """Organizational category + framework extension point for infrastructure plugins"""
-    
-    async def health_check(self) -> bool:
-        """Framework-provided health monitoring for all resources"""
-        return True  # Override for custom health logic
-    
-    def get_metrics(self) -> Dict[str, Any]:
-        """Framework-provided metrics collection"""
-        return {"status": "healthy"}
-
-class ToolPlugin(BasePlugin):
-    """Organizational category + framework extension point for tool plugins"""
-    
-    def validate_tool_params(self, params: Dict) -> bool:
-        """Framework-provided validation for all tools"""
-        return self._validate_required_params(params)
-    
-    async def execute_with_timeout(self, context, timeout=30):
-        """Framework-provided timeout wrapper for all tools"""
-        return await asyncio.wait_for(self.execute(context), timeout=timeout)
-
-class PromptPlugin(BasePlugin):
-    """Organizational category + framework extension point for processing plugins"""
-    
-    def get_token_usage(self) -> int:
-        """Framework-provided token tracking for all prompt plugins"""
-        return getattr(self, '_token_count', 0)
-
-class AdapterPlugin(BasePlugin):
-    """Organizational category + framework extension point for input/output plugins"""
-    pass
-
-class FailurePlugin(BasePlugin):
-    """Organizational category + framework extension point for error handling plugins"""
-    pass
+# Simple setup
+agent = Agent("config/dev.yaml")
+await agent.serve_http(port=8000)
 ```
 
-#### **Layer 1: Function-Based Plugins (Auto-Classified)**
+### Production  
 ```python
-# Framework automatically determines plugin type and stage placement
-@agent.plugin
-async def weather_check(context):
-    """Auto-classified as ToolPlugin, auto-routed to DO stage"""
-    return await get_weather()
-
-@agent.plugin(stage="think")  # Optional explicit control
-async def reasoning_plugin(context):
-    """Auto-classified as PromptPlugin, explicit stage assignment"""
-    context.think("Analyzing the request...")
-
-@agent.plugin(priority=10)  # Optional execution order
-async def high_priority_plugin(context):
-    """Runs early in its stage"""
-    pass
-
-# Framework automatically generates appropriate plugin class:
-class AutoGeneratedWeatherPlugin(ToolPlugin):
-    stages = [PipelineStage.DO]  # Auto-determined
-    priority = 50  # Default
-    
-    async def execute(self, context):
-        return await weather_check(context)  # Wraps user function
+# With resource pools and monitoring
+agent = Agent("config/prod.yaml")
+server = AgentServer(agent.runtime)
+await server.serve_http(host="0.0.0.0", port=8000)
 ```
 
-#### **Layer 2: Class-Based Plugins (Explicit Control)**
-```python
-class WeatherToolPlugin(ToolPlugin):
-    stages = [PipelineStage.DO]  # Default to DO stage for tools
-    priority = 50  # Default execution order
-    dependencies = []  # Auto-detected from usage
-    
-    async def execute(self, context):
-        if "weather" in context.message:
-            weather = await self.get_weather(context.location)
-            context.set_response(f"Weather: {weather}")
-    
-    async def get_weather(self, location):
-        # Implementation details
-        pass
-
-class DatabaseResourcePlugin(ResourcePlugin):
-    stages = [PipelineStage.PARSE, PipelineStage.THINK, 
-             PipelineStage.DO, PipelineStage.REVIEW, 
-             PipelineStage.DELIVER, PipelineStage.ERROR]  # Available in all stages
-
-class ChainOfThoughtPromptPlugin(PromptPlugin):
-    stages = [PipelineStage.THINK]  # Main processing stage
-
-class HTTPAdapterPlugin(AdapterPlugin):
-    stages = [PipelineStage.PARSE, PipelineStage.DELIVER]  # Interface boundaries
-
-class ErrorFormatterFailurePlugin(FailurePlugin):
-    stages = [PipelineStage.ERROR]  # Dedicated error handling stage
+### Container Deployment
+```dockerfile
+FROM python:3.11-slim
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . /app
+WORKDIR /app
+CMD ["python", "-m", "entity", "--config", "config/prod.yaml", "serve-http"]
 ```
 
-#### **Layer 3: Advanced Plugins (Full Sophisticated Control)**
-```python
-class ChainOfThoughtPlugin(PromptPlugin):
-    # Full control over pipeline behavior
-    stages = [PipelineStage.THINK]
-    dependencies = ["database", "ollama"]
-    priority = 10
-    
-    async def execute(self, context):
-        # Full sophisticated pipeline access
-        conversation_text = self._get_conversation_text(context.get_conversation_history())
-        
-        # Step-by-step reasoning with full control
-        reasoning_steps = []
-        for step in range(self.config.get("max_steps", 5)):
-            reasoning_prompt = f"Reason through step {step + 1}: {conversation_text}"
-            reasoning = await self.call_llm(context, reasoning_prompt, purpose=f"reasoning_step_{step + 1}")
-            reasoning_steps.append(reasoning.content)
-            
-            context.add_conversation_entry(
-                content=f"Reasoning step {step + 1}: {reasoning.content}",
-                role="assistant",
-                metadata={"reasoning_step": step + 1}
-            )
-            
-            if self._needs_tools(reasoning.content):
-                result_key = context.execute_tool(
-                    "analysis_tool",
-                    {"data": conversation_text, "reasoning_step": reasoning.content}
-                )
-            
-            if "final answer" in reasoning.content.lower():
-                break
-        
-        context.set_stage_result("reasoning_complete", True)
-        context.set_stage_result("reasoning_steps", reasoning_steps)
-    
-    def _needs_tools(self, reasoning_text: str) -> bool:
-        tool_indicators = ["need to calculate", "should look up", "requires analysis"]
-        return any(indicator in reasoning_text.lower() for indicator in tool_indicators)
-    
-    def _get_conversation_text(self, conversation: List[ConversationEntry]) -> str:
-        user_entries = [entry.content for entry in conversation if entry.role == "user"]
-        return user_entries[-1] if user_entries else ""
-```
+## Architecture Benefits
 
-### Automatic Plugin Classification and Routing
+### For Developers
+- **Mental Model Clarity**: Pipeline stages are intuitive
+- **Progressive Disclosure**: Simple → Complex as needed
+- **Hot Reconfiguration**: Change behavior without restarts
+- **Rich Tooling**: Built-in observability and debugging
 
-The framework automatically classifies simple plugins and routes them appropriately:
+### For Operations  
+- **Reliable Execution**: Circuit breakers, automatic retry
+- **Observable by Design**: Comprehensive logging and metrics
+- **Scalable Architecture**: Stateless workers, external state
+- **Container Ready**: Docker/Kubernetes deployment patterns
 
-```python
-class PluginAutoClassifier:
-    @staticmethod
-    def classify_and_route(plugin_func, user_hints=None):
-        """Automatically determine plugin type and stage from function analysis"""
-        
-        # Ensure all plugin functions are async
-        if not asyncio.iscoroutinefunction(plugin_func):
-            raise ValueError(f"Plugin function {plugin_func.__name__} must be async. Use: async def {plugin_func.__name__}(context):")
-        
-        # Analyze function for automatic classification
-        source = inspect.getsource(plugin_func)
-        
-        # Smart defaults based on content analysis
-        if any(keyword in source for keyword in ["return", "response", "answer"]):
-            stage = PipelineStage.DO  # Likely produces output
-            plugin_type = ToolPlugin if "tool" in source or "use_tool" in source else PromptPlugin
-        elif any(keyword in source for keyword in ["think", "reason", "analyze"]):
-            stage = PipelineStage.THINK  # Likely reasoning
-            plugin_type = PromptPlugin
-        elif any(keyword in source for keyword in ["parse", "validate", "check"]):
-            stage = PipelineStage.PARSE  # Likely input processing
-            plugin_type = AdapterPlugin
-        else:
-            stage = PipelineStage.DO  # Safe default
-            plugin_type = ToolPlugin
-        
-        # User hints override automatic detection
-        if user_hints and "stage" in user_hints:
-            stage = PipelineStage.from_str(user_hints["stage"])
-        
-        # Generate full plugin class with appropriate base class
-        return AutoGeneratedPlugin(
-            func=plugin_func,
-            stages=[stage],
-            priority=user_hints.get("priority", 50),
-            name=plugin_func.__name__,
-            base_class=plugin_type
-        )
+### For AI Systems
+- **Hybrid Intelligence**: Predictable + Adaptive behavior  
+- **Multi-Turn Capable**: Automatic conversation management
+- **Tool Integration**: Immediate access to external capabilities
+- **Memory Persistence**: Context across conversations
 
-class AutoGeneratedPlugin(BasePlugin):
-    def __init__(self, func, stages, priority, name, base_class):
-        self.func = func
-        self.stages = stages
-        self.priority = priority
-        self.name = name
-        self.__class__.__bases__ = (base_class,)  # Dynamic inheritance
-    
-    async def execute(self, context):
-        # All plugin functions are async
-        result = await self.func(context)
-        
-        # Auto-set response if function returns a string
-        if isinstance(result, str) and not context.has_response():
-            context.set_response(result)
-```
+## Future Extensibility
 
-## 🧠 LLM Access and Usage Guidelines
+The architecture supports evolution through:
 
-### LLM Availability Throughout Pipeline
+- **Plugin Ecosystem**: Community-contributed capabilities
+- **Provider Diversity**: Multiple LLM/storage backends  
+- **Deployment Flexibility**: Local, cloud, edge environments
+- **Integration Patterns**: REST, GraphQL, gRPC, WebSocket
+- **Advanced Patterns**: Multi-agent, workflow orchestration
 
-The LLM resource is available in all pipeline stages to support flexible agent behavior, with usage guidelines for optimal performance:
+---
 
-**Available Everywhere**: Any plugin in any stage can access the LLM resource through `context.get_resource("llm")` or `self.call_llm(context, prompt, purpose)`.
-
-**Usage Guidelines by Stage**:
-- **Parse**: Minimal LLM use - only for complex input interpretation when necessary
-- **Think**: Primary LLM stage - reasoning, planning, decision making
-- **Do**: LLM for tool result interpretation and next-step decisions
-- **Review**: LLM for response formatting, safety checks, quality validation
-- **Deliver**: No LLM use - pure output transmission
-- **Error**: **Strongly discouraged** - keep error handling simple and reliable
-
-**Best Practices**:
-```python
-# Good: Structured LLM access with purpose tracking
-async def execute(self, context):
-    reasoning = await self.call_llm(
-        context, 
-        "Analyze this request: " + context.get_conversation_history()[-1].content,
-        purpose="intent_analysis"
-    )
-
-# Avoid: LLM calls in error stage
-class ErrorPlugin(FailurePlugin):
-    async def execute(self, context):
-        # Don't do this - keep error handling deterministic
-        # llm_response = await self.call_llm(context, "Explain this error...")
-        
-        # Do this instead
-        return self.format_static_error(context.failure_info)
-```
-
-## 🗃️ Data Structures and Context
-
-### Three-Layer Context System
-
-```python
-@dataclass
-class ConversationEntry:
-    content: str
-    role: str  # "user", "assistant", "system"
-    timestamp: datetime
-    metadata: Dict[str, Any] = field(default_factory=dict)
-
-@dataclass
-class ToolCall:
-    name: str
-    params: Dict[str, Any]
-    result_key: str
-    source: str  # "static" | "dynamic" | "llm_generated"
-
-# Layer 1: Internal Pipeline State (Framework Only)
-class PipelineState:
-    """Internal state - plugins never see this directly"""
-    conversation: List[ConversationEntry]
-    response: Any
-    prompt: str
-    stage_results: Dict[str, Any]
-    pending_tool_calls: List[ToolCall]
-    metadata: Dict[str, Any]  # Used for plugin state persistence within single pipeline execution
-    pipeline_id: str
-    current_stage: Optional[PipelineStage]
-    metrics: MetricsCollector
-    failure_info: Optional[FailureInfo] = None
-
-# Layer 2: Plugin Interface (What Plugins See)
-class PluginContext:
-    """Clean, controlled interface for plugins"""
-    
-    def __init__(self, state: PipelineState, registries: SystemRegistries):
-        self._state = state  # Private - plugins can't access directly
-        self._registries = registries
-    
-    # Read-only system info
-    @property
-    def pipeline_id(self) -> str:
-        return self._state.pipeline_id
-    
-    @property
-    def current_stage(self) -> PipelineStage:
-        return self._state.current_stage
-    
-    # Controlled resource access
-    def get_resource(self, name: str):
-        """Access system resources (LLM, database, etc.)"""
-        return self._registries.resources.get(name)
-    
-    def execute_tool(self, tool_name: str, params: Dict[str, Any], result_key: str = None) -> str:
-        """Execute a tool immediately and return result key"""
-        tool = self._registries.tools.get(tool_name)
-        if not tool:
-            raise ValueError(f"Tool '{tool_name}' not found")
-        
-        if result_key is None:
-            result_key = f"{tool_name}_result_{len(self._state.pending_tool_calls)}"
-        
-        tool_call = ToolCall(
-            name=tool_name,
-            params=params,
-            result_key=result_key,
-            source="direct_execution"
-        )
-        self._state.pending_tool_calls.append(tool_call)
-        return result_key
-    
-    # Controlled conversation access
-    def add_conversation_entry(self, content: str, role: str, metadata: Dict = None):
-        """Add entry to conversation history"""
-        entry = ConversationEntry(
-            content=content,
-            role=role,
-            timestamp=datetime.now(),
-            metadata=metadata or {}
-        )
-        self._state.conversation.append(entry)
-    
-    def get_conversation_history(self, last_n: int = None) -> List[ConversationEntry]:
-        """Get read-only access to conversation history"""
-        if last_n is None:
-            return self._state.conversation.copy()  # Defensive copy
-        return self._state.conversation[-last_n:].copy()
-    
-    # Response control - only one plugin can set
-    def set_response(self, response: Any):
-        """Set the final response (can only be set once)"""
-        if self._state.response is not None:
-            raise ValueError(f"Response already set by another plugin")
-        self._state.response = response
-    
-    def has_response(self) -> bool:
-        """Check if response has been set"""
-        return self._state.response is not None
-    
-    # Stage results with validation
-    def set_stage_result(self, key: str, value: Any):
-        """Set a stage result (can only be set once per key)"""
-        if key in self._state.stage_results:
-            raise ValueError(f"Stage result '{key}' already set by another plugin")
-        self._state.stage_results[key] = value
-    
-    def get_stage_result(self, key: str) -> Any:
-        """Get a stage result (raises if not available)"""
-        if key not in self._state.stage_results:
-            raise KeyError(f"Required result '{key}' not available")
-        return self._state.stage_results[key]
-    
-    def has_stage_result(self, key: str) -> bool:
-        """Check if stage result exists"""
-        return key in self._state.stage_results
-    
-    # Plugin metadata access
-    def get_metadata(self, key: str, default: Any = None) -> Any:
-        """Get plugin metadata for state persistence"""
-        return self._state.metadata.get(key, default)
-    
-    def set_metadata(self, key: str, value: Any):
-        """Set plugin metadata for state persistence"""
-        self._state.metadata[key] = value
-    
-    # Error handling
-    def add_failure(self, failure: FailureInfo):
-        """Add failure information for error stage routing"""
-        self._state.failure_info = failure
-
-# Layer 3: Framework Execution (Internal)
-@dataclass
-class SystemRegistries:
-    """Container for all system registries"""
-    resources: ResourceContainer
-    tools: ToolRegistry
-    plugins: PluginRegistry
-```
-
-## ⚠️ Error Handling and Failure Recovery
-
-The framework implements a **fail-fast error handling strategy** with dedicated failure communication:
-
-### Failure Information Structure
-```python
-@dataclass
-class FailureInfo:
-    stage: str                    # Stage where failure occurred
-    plugin_name: str              # Plugin that caused the failure
-    error_type: str               # "plugin_error", "tool_error", "system_error"
-    error_message: str            # Human-readable error description
-    original_exception: Exception # Original exception for debugging
-    context_snapshot: Dict[str, Any] = None  # Context state when failure occurred
-    timestamp: datetime = field(default_factory=datetime.now)
-```
-
-### Error Handling Flow
-1. **Plugin Failures**: Caught during stage execution, added to context, routed to error stage
-2. **Tool Failures**: Captured in tool results, detected after tool execution, routed to error stage  
-3. **System Failures**: Unexpected exceptions caught at pipeline level, routed to error stage
-4. **Error Stage**: Processes all failures through dedicated plugins for user communication
-5. **Static Fallback**: If error stage plugins fail, return static error response
-
-### Tool Retry Configuration
-```python
-class ToolPlugin(BasePlugin):
-    stages: List[PipelineStage]  # Must be explicitly defined
-    
-    def __init__(self, config: Dict):
-        self.max_retries = config.get("max_retries", 1)  # Default sensible retry count
-        self.retry_delay = config.get("retry_delay", 1.0)  # Seconds between retries
-    
-    async def execute_function_with_retry(self, params: Dict) -> str:
-        """Execute tool function with configured retry logic"""
-        for attempt in range(self.max_retries + 1):
-            try:
-                return await self.execute_function(params)
-            except Exception as e:
-                if attempt == self.max_retries:
-                    raise e  # Final attempt failed
-                await asyncio.sleep(self.retry_delay)
-        
-    async def execute_function(self, params: Dict) -> str:
-        """Override this method in tool implementations"""
-        raise NotImplementedError("Tool plugins must implement execute_function")
-```
-
-### Static Error Fallback
-```python
-# Used when error stage plugins themselves fail
-STATIC_ERROR_RESPONSE = {
-    "error": "System error occurred",
-    "message": "An unexpected error prevented processing your request. Please try again or contact support.",
-    "error_id": None,  # Will be populated with pipeline_id
-    "timestamp": None,  # Will be populated with current time
-    "type": "static_fallback"
-}
-
-def create_static_error_response(pipeline_id: str) -> Dict[str, Any]:
-    """Create fallback error response when error stage fails"""
-    response = STATIC_ERROR_RESPONSE.copy()
-    response["error_id"] = pipeline_id
-    response["timestamp"] = datetime.now().isoformat()
-    return response
-```
-
-## 🔧 Tool Execution System
-
-### Tool Execution (Available Throughout Pipeline)
-```python
-async def execute_pending_tools(state: PipelineState, registries: SystemRegistries) -> Dict[str, Any]:
-    """Execute tools immediately when requested by any plugin"""
-    results = {}
-    
-    for tool_call in state.pending_tool_calls:
-        try:
-            tool_plugin = registries.tools.get(tool_call.name)
-            
-            # Use retry logic if configured
-            if hasattr(tool_plugin, 'execute_function_with_retry'):
-                result = await tool_plugin.execute_function_with_retry(tool_call.params)
-            else:
-                result = await tool_plugin.execute_function(tool_call.params)
-            
-            results[tool_call.result_key] = result
-            
-            # Centralized logging for debugging regardless of execution location
-            state.metrics.record_tool_execution(
-                tool_name=tool_call.name,
-                stage=str(state.current_stage),
-                pipeline_id=state.pipeline_id,
-                result_key=tool_call.result_key,
-                source=tool_call.source
-            )
-            
-        except Exception as e:
-            results[tool_call.result_key] = f"Error: {e}"
-            state.metrics.record_tool_error(
-                tool_name=tool_call.name,
-                stage=str(state.current_stage),
-                pipeline_id=state.pipeline_id,
-                error=str(e)
-            )
-    
-    return results
-```
-
-## 📊 Observability & Monitoring
-
-### Plugin Observability & Logging
-```python
-class BasePlugin:
-    def __init__(self):
-        self.logger = None  # Injected during initialization
-        
-    async def execute(self, context):
-        # Automatic logging with pipeline ID and stage
-        self.logger.info(
-            "Plugin execution started",
-            plugin=self.__class__.__name__,
-            pipeline_id=context.pipeline_id,
-            stage=str(context.current_stage)
-        )
-        
-        start_time = time.time()
-        try:
-            result = await self._execute_impl(context)
-            
-            # Automatic metrics collection
-            if hasattr(context, '_state'):
-                context._state.metrics.record_plugin_duration(
-                    plugin=self.__class__.__name__,
-                    stage=str(context.current_stage),
-                    duration=time.time() - start_time
-                )
-            
-            return result
-        except Exception as e:
-            self.logger.error(
-                "Plugin execution failed",
-                plugin=self.__class__.__name__,
-                pipeline_id=context.pipeline_id,
-                stage=str(context.current_stage),
-                error=str(e),
-                exc_info=True
-            )
-            raise
-    
-    async def call_llm(self, context, prompt: str, purpose: str) -> LLMResponse:
-        """Structured LLM access with automatic logging and metrics"""
-        llm = context.get_llm()  # previously context.get_resource("ollama")
-        
-        # Enhanced observability
-        if hasattr(context, '_state'):
-            context._state.metrics.record_llm_call(
-                plugin=self.__class__.__name__,
-                stage=str(context.current_stage),
-                purpose=purpose
-            )
-        
-        start_time = time.time()
-        response = await llm.generate(prompt)
-        
-        # Log with purpose for better debugging
-        self.logger.info(
-            "LLM call completed",
-            plugin=self.__class__.__name__,
-            stage=str(context.current_stage),
-            purpose=purpose,
-            prompt_length=len(prompt),
-            response_length=len(response.content),
-            duration=time.time() - start_time,
-            pipeline_id=context.pipeline_id
-        )
-        
-        return response
-    
-    # Layer 1: Simple plugins get automatic implementation
-    async def _execute_impl(self, context):
-        """Override this method in plugin implementations"""
-        pass
-```
-
-## 🔄 System Initialization
-
-### Four-Phase System Initialization
-```python
-class SystemInitializer:
-    @classmethod
-    def from_yaml(cls, yaml_path: str) -> 'SystemInitializer':
-        """Load entire system configuration from single YAML file"""
-        with open(yaml_path, 'r') as file:
-            yaml_content = file.read()
-        
-        config = cls._interpolate_env_vars(yaml.safe_load(yaml_content))
-        return cls(config)
-
-    def initialize(self):
-        with initialization_cleanup_context():
-            # Phase 1: Register all plugin classes and extract dependency graph
-            registry = ClassRegistry()
-            dependency_graph = {}
-            
-            for plugin_type in ["resources", "tools", "adapters", "prompts"]:
-                for plugin_name, plugin_config in self.config["plugins"].get(plugin_type, {}).items():
-                    plugin_class = import_plugin_class(plugin_config.get("type", plugin_name))
-                    registry.register_class(plugin_class, plugin_config, plugin_name)
-                    dependency_graph[plugin_name] = plugin_class.dependencies
-            
-            # Phase 2: Validate dependencies and config
-            self._validate_dependency_graph(registry, dependency_graph)
-            
-            for plugin_class, config in registry.all_plugin_classes():
-                config_result = plugin_class.validate_config(config)
-                if not config_result.success:
-                    raise SystemError(f"Config validation failed for {plugin_class.__name__}: {config_result.error_message}")
-            
-            # Phase 3: Initialize resources and tools
-            resource_container = ResourceContainer()
-            tool_registry = ToolRegistry()
-            
-            for resource_class, config in registry.resource_classes():
-                instance = resource_class(config)
-                await instance.initialize()
-                resource_container.add_resource(instance)
-            
-            for tool_class, config in registry.tool_classes():
-                instance = tool_class(config)
-                tool_registry.add_tool(instance)
-            
-            # Phase 4: Instantiate remaining plugins
-            plugin_registry = PluginRegistry()
-            for plugin_class, config in registry.non_resource_non_tool_classes():
-                instance = plugin_class(config)
-                plugin_registry.add_plugin(instance)
-            
-            return plugin_registry, resource_container, tool_registry
-
-    def _validate_dependency_graph(self, registry, dep_graph: Dict[str, List[str]]):
-        """Validate dependency graph: check existence and detect circular dependencies"""
-        # Check all dependencies exist
-        for plugin_name, dependencies in dep_graph.items():
-            for dep in dependencies:
-                if not registry.has_plugin(dep):
-                    available = registry.list_plugins()
-                    raise SystemError(f"Plugin '{plugin_name}' requires '{dep}' but it's not registered. Available: {available}")
-        
-        # Detect circular dependencies using topological sort
-        in_degree = {node: 0 for node in dep_graph}
-        for node in dep_graph:
-            for neighbor in dep_graph[node]:
-                if neighbor in in_degree:
-                    in_degree[neighbor] += 1
-        
-        queue = [node for node, degree in in_degree.items() if degree == 0]
-        processed = []
-        
-        while queue:
-            current = queue.pop(0)
-            processed.append(current)
-            
-            for neighbor in dep_graph[current]:
-                if neighbor in in_degree:
-                    in_degree[neighbor] -= 1
-                    if in_degree[neighbor] == 0:
-                        queue.append(neighbor)
-        
-        if len(processed) != len(in_degree):
-            cycle_nodes = [node for node in in_degree if node not in processed]
-            raise SystemError(f"Circular dependency detected involving: {cycle_nodes}")
-    
-    @staticmethod
-    def _interpolate_env_vars(config: Any) -> Any:
-        """Recursively interpolate environment variables in configuration"""
-        if isinstance(config, dict):
-            return {k: SystemInitializer._interpolate_env_vars(v) for k, v in config.items()}
-        elif isinstance(config, list):
-            return [SystemInitializer._interpolate_env_vars(item) for item in config]
-        elif isinstance(config, str) and config.startswith("${") and config.endswith("}"):
-            env_var = config[2:-1]
-            value = os.environ.get(env_var)
-            if value is None:
-                raise EnvironmentError(f"Required environment variable {env_var} not found")
-            return value
-        else:
-            return config
-```
-
-## 🔍 Plugin Validation System
-
-```python
-class ValidationResult:
-    success: bool
-    error_message: str = None
-    warnings: List[str] = []
-
-@dataclass
-class ReconfigResult:
-    success: bool
-    error_message: str = None
-    requires_restart: bool = False
-    warnings: List[str] = []
-
-class BasePlugin:
-    dependencies = []  # List of registry keys that this plugin depends on
-    stages: List[PipelineStage]  # Always explicit, always required
-    
-    @classmethod
-    def validate_config(cls, config: Dict) -> ValidationResult:
-        """Pure configuration validation - no external dependencies"""
-        return ValidationResult(success=True)
-    
-    @classmethod
-    def validate_dependencies(cls, registry) -> ValidationResult:
-        """Dependency validation - checks that declared dependencies exist in registry"""
-        for dep in cls.dependencies:
-            if not registry.has_plugin(dep):
-                available = registry.list_plugins()
-                return ValidationResult(
-                    success=False,
-                    error_message=f"{cls.__name__} requires '{dep}' but it's not registered. Available: {available}"
-                )
-        
-        return ValidationResult(success=True)
-    
-    def supports_runtime_reconfiguration(self) -> bool:
-        """Can this plugin be reconfigured without restart?"""
-        return True  # Override in plugins that can't handle runtime reconfiguration
-    
-    async def reconfigure(self, new_config: Dict) -> ReconfigResult:
-        """Update plugin configuration at runtime"""
-        validation_result = self.validate_config(new_config)
-        if not validation_result.success:
-            return ReconfigResult(
-                success=False,
-                error_message=f"Configuration validation failed: {validation_result.error_message}"
-            )
-        
-        if not self.supports_runtime_reconfiguration():
-            return ReconfigResult(
-                success=False,
-                requires_restart=True,
-                error_message="This plugin requires application restart for configuration changes"
-            )
-        
-        try:
-            old_config = self.config
-            self.config = new_config
-            await self._handle_reconfiguration(old_config, new_config)
-            return ReconfigResult(success=True)
-        except Exception as e:
-            self.config = old_config
-            return ReconfigResult(
-                success=False,
-                error_message=f"Reconfiguration failed: {str(e)}"
-            )
-    
-    async def _handle_reconfiguration(self, old_config: Dict, new_config: Dict):
-        """Override this method to handle configuration changes"""
-        pass  # Default: no special handling needed
-```
-
-## 🚀 Plugin Capabilities Summary
-
-- **Read/Write Context**: Plugins can modify conversation and response through controlled interface
-- **Resource Access**: `context.get_resource("llm")` - request what you need with validation
-- **Tool Access**: `context.execute_tool("name", params)` - execute tools when needed with immediate results
-- **Short Circuit**: Skip remaining pipeline stages by setting `context.set_response()`
-- **Plugin-Level Iteration**: Handle complex reasoning patterns with internal loops
-- **Pipeline Delegation**: Explicitly request additional pipeline passes for multi-step workflows
-- **Dynamic Reconfiguration**: Update configuration at runtime via `reconfigure()` method with cascading dependency notifications
-- **Immediate Tool Execution**: Execute tools in any stage with immediate access to results
-- **Structured LLM Access**: Any plugin can call the LLM resource with automatic observability via `self.call_llm()`
-- **Standardized Results**: Set and get standardized results with explicit dependencies via controlled interface
-- **Error Signaling**: Add failure information with `context.add_failure()` to route to error stage
-- **Tool Retry Logic**: Configure retry behavior for individual tools with `max_retries` and `retry_delay`
-- **Stage Awareness**: Access current execution stage with `context.current_stage` property
-- **Controlled Access**: Clean interface prevents accidental system state corruption
-- **Metadata Persistence**: Store plugin state across single pipeline execution via `context.get_metadata()` and `context.set_metadata()`
-
-## 🎨 Bottom Line
-
-**Entity Pipeline Framework = Bevy for AI Agents + Amazing Developer Experience**
-
-- **Three Layers**: Async function decorators → Class plugins → Full pipeline control
-- **Async-First**: Consistent async patterns throughout with modern Python best practices
-- **Configuration Examples**: Comprehensive YAML configuration with environment variable interpolation
-- **Preserve All Power**: Advanced users get complete sophisticated pipeline
-- **Natural Progression**: Smooth path from beginner to expert
-- **Community-Friendly**: Easy to contribute and share async plugins
-- **Production-Ready**: Graduates seamlessly from prototype to enterprise
-
-**Result**: An async-first AI agent framework that's approachable for beginners while maintaining full sophistication for experts! 🚀
+*This architecture enables developers to build AI agents that are both simple to start with and capable of sophisticated behaviors, while maintaining production reliability and operational visibility.*

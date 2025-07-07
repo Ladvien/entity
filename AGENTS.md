@@ -23,9 +23,15 @@ git branch --set-upstream-to=origin/main work
 
 The `/architecture` folder contains the following documents:
 
-- `architecture/`
-  - `general.md`
-  - `models.md`
+```
+/architecture
+├── design_principles.md
+├── frameworks.md
+├── general.md
+├── models.md
+├── overview.md
+└── pipeline_overview.md
+```
 
 ## Important Notes
 - The project is pre-alpha; remove unused code rather than keeping
