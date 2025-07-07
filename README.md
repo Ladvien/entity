@@ -131,7 +131,7 @@ def hello(context):
 Update plugin settings without restarting the agent.
 
 ```bash
-python src/cli.py reload-config updated.yaml
+poetry run python src/cli.py reload-config updated.yaml
 ```
 
 See [the architecture overview](architecture/general.md#%F0%9F%94%84-reconfigurable-agent-infrastructure) for details on dynamic reconfiguration.
@@ -325,7 +325,7 @@ requires the `websockets` package, which is now listed in `pyproject.toml`.
 
 ```bash
 python examples/servers/http_server.py
-python src/cli.py serve-websocket --config config/dev.yaml
+poetry run python src/cli.py serve-websocket --config config/dev.yaml
 python examples/servers/grpc_server.py
 python examples/servers/cli_adapter.py
 ```

@@ -8,7 +8,7 @@
 Run an agent from a YAML configuration file:
 
 ```bash
-python src/cli.py --config config.yaml
+poetry run python src/cli.py --config config.yml
 ```
 
 ### Using the SearchTool
@@ -51,7 +51,7 @@ contributors a working agent almost immediately.
 Reload plugin definitions while the agent is running:
 
 ```bash
-python src/cli.py reload-config updated.yaml
+poetry run python src/cli.py reload-config updated.yaml
 ```
 
 For more on dynamic configuration, see [the architecture overview](../../architecture/general.md#%F0%9F%94%84-reconfigurable-agent-infrastructure).

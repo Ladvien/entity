@@ -69,7 +69,7 @@ advanced storage without sacrificing the simple default setup.
 Update plugin settings without restarting the agent:
 
 ```bash
-python -m src.cli reload-config updated.yaml
+poetry run python src/cli.py reload-config updated.yaml
 ```
 
 The command waits for active pipelines to finish, then applies the new YAML
@@ -103,7 +103,7 @@ python examples/servers/http_server.py
 For a WebSocket server use the CLI:
 
 ```bash
-python src/cli.py serve-websocket --config config/dev.yaml
+poetry run python src/cli.py serve-websocket --config config/dev.yaml
 ```
 
 Run the gRPC server:
