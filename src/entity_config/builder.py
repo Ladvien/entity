@@ -16,7 +16,7 @@ class ConfigBuilder:
     config: Dict[str, Any] = field(
         default_factory=lambda: {
             "server": {
-                "host": "0.0.0.0",
+                "host": "127.0.0.1",
                 "port": 8000,
                 "reload": False,
                 "log_level": "info",

@@ -3,6 +3,7 @@ from __future__ import annotations
 """Framework infrastructure helpers using Terraform CDK."""
 
 
+import shutil
 import subprocess
 from typing import Type
 
@@ -36,4 +37,7 @@ class Infrastructure:
     def deploy(self) -> None:
         """Synthesize and deploy using the ``cdktf`` CLI."""
         self.synth()
-        subprocess.run(["cdktf", "deploy", "--auto-approve"], check=True)
+        command = shutil.which("cdktf")
+        if command is None:
+            raise FileNotFoundError("cdktf CLI not found")
+        subprocess.run([command, "deploy", "--auto-approve"], check=True)

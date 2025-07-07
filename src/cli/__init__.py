@@ -6,7 +6,8 @@ from pathlib import Path
 _cli_path = Path(__file__).resolve().parent.parent / "cli.py"
 _spec = util.spec_from_file_location("_entity_cli", _cli_path)
 _module = util.module_from_spec(_spec)
-assert _spec.loader is not None
+if _spec.loader is None:  # pragma: no cover - sanity check
+    raise RuntimeError("Failed to load CLI module")
 _spec.loader.exec_module(_module)
 
 CLI = _module.CLI

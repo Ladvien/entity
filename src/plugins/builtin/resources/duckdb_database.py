@@ -3,6 +3,7 @@ from __future__ import annotations
 """DuckDB-based conversation history storage."""
 import asyncio
 import json
+import re
 from typing import TYPE_CHECKING, Dict, List, Optional
 
 import duckdb
@@ -21,8 +22,15 @@ class DuckDBDatabaseResource(DatabaseResource):
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
         self._path = self.config.get("path", ":memory:")
-        self._history_table = self.config.get("history_table")
+        table = self.config.get("history_table")
+        self._history_table = self._sanitize_identifier(table) if table else None
         self._connection: Optional[duckdb.DuckDBPyConnection] = None
+
+    @staticmethod
+    def _sanitize_identifier(name: str) -> str:
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name):
+            raise ValueError(f"Invalid identifier: {name}")
+        return name
 
     async def initialize(self) -> None:
         self._connection = await asyncio.to_thread(duckdb.connect, self._path)

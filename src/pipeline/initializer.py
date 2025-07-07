@@ -129,7 +129,7 @@ class SystemInitializer:
                 try:
                     with open(pyproject, "rb") as fh:
                         data = tomllib.load(fh)
-                except Exception:  # pragma: no cover - invalid files skipped
+                except (FileNotFoundError, tomllib.TOMLDecodeError):
                     continue
 
                 tool_section = data.get("tool", {})
