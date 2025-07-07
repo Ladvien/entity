@@ -137,6 +137,17 @@ poetry run python src/cli.py reload-config updated.yaml
 
 See [the architecture overview](architecture/general.md#%F0%9F%94%84-reconfigurable-agent-infrastructure) for details on dynamic reconfiguration.
 
+## Plugin Utilities
+Generate or analyze plugins using ``plugin_tool.py``:
+
+```bash
+poetry run python src/cli/plugin_tool.py generate my_plugin --type prompt
+poetry run python src/cli/plugin_tool.py analyze-plugin user_plugins/my_plugin.py
+```
+
+The analyze command loads async functions from the file and reports which pipeline
+stage the ``PluginAutoClassifier`` would assign.
+
 ### Using the "llm" Resource Key
 Define your LLM once and share it across plugins:
 
