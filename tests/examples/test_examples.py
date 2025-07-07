@@ -6,6 +6,11 @@ from pathlib import Path
 
 import pytest
 
+from plugins.builtin.infrastructure import infrastructure
+
+if not infrastructure.CDKTF_AVAILABLE:  # pragma: no cover - optional dependency
+    pytest.skip("cdktf not available", allow_module_level=True)
+
 from pipeline import SystemRegistries
 
 
