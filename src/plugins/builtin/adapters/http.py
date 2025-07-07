@@ -149,6 +149,17 @@ class HTTPAdapter(AdapterPlugin):
         async def handle(req: MessageRequest) -> dict[str, Any]:
             return await self._handle_message(req.message)
 
+        @self.app.get("/health")
+        async def health() -> dict[str, Any]:
+            registries = self._registries
+            if registries is None and self.manager is not None:
+                registries = self.manager._registries
+            if registries is None:
+                return {"status": "starting"}
+            report = await registries.resources.health_report()
+            status = "ok" if all(report.values()) else "degraded"
+            return {"status": status, "resources": report}
+
         if self.dashboard_enabled:
 
             @self.app.get("/dashboard")

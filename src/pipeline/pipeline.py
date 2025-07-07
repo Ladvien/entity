@@ -16,13 +16,9 @@ from registry import SystemRegistries
 
 from .context import ConversationEntry, PluginContext
 from .errors import create_static_error_response
-from .exceptions import (
-    CircuitBreakerTripped,
-    PipelineError,
-    PluginExecutionError,
-    ResourceError,
-    ToolExecutionError,
-)
+from .exceptions import (CircuitBreakerTripped, PipelineError,
+                         PluginExecutionError, ResourceError,
+                         ToolExecutionError)
 from .logging import get_logger, reset_request_id, set_request_id
 from .manager import PipelineManager
 from .metrics import MetricsCollector
@@ -53,6 +49,7 @@ async def execute_stage(
 ) -> None:
     state.current_stage = stage
     stage_plugins = registries.plugins.get_plugins_for_stage(stage)
+    start = time.perf_counter()
     async with start_span(f"stage.{stage.name.lower()}"):
         for plugin in stage_plugins:
             context = PluginContext(state, registries)
@@ -136,6 +133,8 @@ async def execute_stage(
                     raise
             finally:
                 reset_request_id(token)
+    duration = time.perf_counter() - start
+    state.metrics.record_stage_duration(str(stage), duration)
 
 
 async def execute_pipeline(

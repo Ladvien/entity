@@ -13,9 +13,9 @@ from pipeline.observability import start_metrics_server
 start_metrics_server(port=9001)
 ```
 
-The exporter provides LLM latency and failure counters along with CPU and memory
-usage. Point Prometheus at the server to scrape these metrics. See
-`examples/observability_metrics.py` for a minimal example.
+The exporter provides stage latency, LLM latency and failure counters along with
+CPU and memory usage. Point Prometheus at the server to scrape these metrics.
+See `examples/observability_metrics.py` for a minimal example.
 
 ## OpenTelemetry Tracing
 
@@ -69,3 +69,10 @@ Create alerts in Prometheus for high latency or failures:
   annotations:
     description: "LLM failures detected"
 ```
+
+## Health Checks
+
+HTTP services expose a `/health` endpoint that reports the status of every
+registered resource. The endpoint returns `{"status": "ok"}` when all resources
+report healthy and `{"status": "degraded"}` otherwise. Use this for container
+liveness probes and external monitoring.
