@@ -5,6 +5,8 @@ from typing import Generic, Optional, Set, TypeVar, cast
 
 from registry import SystemRegistries
 
+from .state_logger import StateLogger
+
 ResultT = TypeVar("ResultT")
 
 
@@ -15,8 +17,14 @@ class PipelineManager(Generic[ResultT]):
     across multiple requests.
     """
 
-    def __init__(self, registries: Optional[SystemRegistries] = None) -> None:
+    def __init__(
+        self,
+        registries: Optional[SystemRegistries] = None,
+        *,
+        state_logger: "StateLogger" | None = None,
+    ) -> None:
         self._registries = registries
+        self.state_logger = state_logger
         self._tasks: Set[asyncio.Task[ResultT]] = set()
         self._active: Set[str] = set()
         self._lock = asyncio.Lock()
@@ -45,7 +53,10 @@ class PipelineManager(Generic[ResultT]):
         from .pipeline import execute_pipeline
 
         result = await execute_pipeline(
-            message, self._registries, pipeline_manager=self
+            message,
+            self._registries,
+            pipeline_manager=self,
+            state_logger=self.state_logger,
         )
         return cast(ResultT, result)
 

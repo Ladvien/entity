@@ -16,9 +16,13 @@ from registry import SystemRegistries
 
 from .context import ConversationEntry, PluginContext
 from .errors import create_static_error_response
-from .exceptions import (CircuitBreakerTripped, PipelineError,
-                         PluginExecutionError, ResourceError,
-                         ToolExecutionError)
+from .exceptions import (
+    CircuitBreakerTripped,
+    PipelineError,
+    PluginExecutionError,
+    ResourceError,
+    ToolExecutionError,
+)
 from .logging import get_logger, reset_request_id, set_request_id
 from .manager import PipelineManager
 from .metrics import MetricsCollector
@@ -27,6 +31,7 @@ from .observability.tracing import start_span
 from .serialization import dumps_state, loads_state
 from .stages import PipelineStage
 from .state import FailureInfo, PipelineState
+from .state_logger import StateLogger
 from .tools.execution import execute_pending_tools
 
 logger = get_logger(__name__)
@@ -145,6 +150,7 @@ async def execute_pipeline(
     state_file: str | None = None,
     snapshots_dir: str | None = None,
     pipeline_manager: PipelineManager | None = None,
+    state_logger: "StateLogger" | None = None,
     return_metrics: bool = False,
     state: PipelineState | None = None,
 ) -> Dict[str, Any] | tuple[Dict[str, Any], MetricsCollector]:
@@ -204,6 +210,8 @@ async def execute_pipeline(
                             )
                             with open(snap_path, "w", encoding="utf-8") as fh:
                                 json.dump(state.to_dict(), fh)
+                        if state_logger is not None:
+                            state_logger.log(state, stage)
                     if state.failure_info:
                         break
                     state.last_completed_stage = stage
@@ -211,6 +219,8 @@ async def execute_pipeline(
         if state.failure_info:
             try:
                 await execute_stage(PipelineStage.ERROR, state, registries)
+                if state_logger is not None:
+                    state_logger.log(state, PipelineStage.ERROR)
             except Exception:
                 result = create_static_error_response(state.pipeline_id)
                 return (result, state.metrics) if return_metrics else result

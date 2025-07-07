@@ -1,5 +1,5 @@
 """Debug dashboard prototype."""
 
-from .logger import StateLogger, LogReplayer, StateTransition
+from pipeline.state_logger import LogReplayer, StateLogger, StateTransition
 
 __all__ = ["StateLogger", "LogReplayer", "StateTransition"]

@@ -7,10 +7,10 @@ import time
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Generator, Iterable
+from typing import Generator
 
-from pipeline.state import PipelineState
-from pipeline.stages import PipelineStage
+from .stages import PipelineStage
+from .state import PipelineState
 
 
 @dataclass
