@@ -12,6 +12,7 @@ import time
 from datetime import datetime
 from typing import Any, Dict
 
+from plugins.builtin.failure.fallback_error_plugin import FallbackErrorPlugin
 from registry import SystemRegistries
 
 from .context import ConversationEntry, PluginContext
@@ -142,6 +143,11 @@ async def execute_stage(
                 reset_request_id(token)
     duration = time.perf_counter() - start
     state.metrics.record_stage_duration(str(stage), duration)
+
+    if stage == PipelineStage.ERROR and state.response is None:
+        fallback = FallbackErrorPlugin({})
+        context = PluginContext(state, registries)
+        await fallback.execute(context)
 
 
 async def execute_pipeline(
