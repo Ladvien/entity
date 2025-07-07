@@ -30,6 +30,9 @@ class StorageResource(ResourcePlugin):
     def from_config(cls, config: Dict) -> "StorageResource":
         return cls(config=config)
 
+    async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
+        return None
+
     async def store_file(self, key: str, content: bytes) -> str:
         if not self.filesystem:
             raise ResourceError("No filesystem backend configured")

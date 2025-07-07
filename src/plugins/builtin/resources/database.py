@@ -113,12 +113,12 @@ class DatabaseResource(BaseResource, StorageBackend, ABC):
         raise NotImplementedError
 
     # Conversation history helpers -----------------------------------------
-    @abstractmethod
     async def save_history(
         self, conversation_id: str, history: List[ConversationEntry]
     ) -> None:
         """Persist conversation ``history``."""
+        raise NotImplementedError
 
-    @abstractmethod
     async def load_history(self, conversation_id: str) -> List[ConversationEntry]:
         """Retrieve stored history for ``conversation_id``."""
+        raise NotImplementedError
