@@ -54,6 +54,7 @@ plugin_guide
 developer_examples
 context
 logging
+state_logging
 advanced_usage
 module_map
 grpc_services

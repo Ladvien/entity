@@ -57,6 +57,11 @@ class CLI:
                 "Can be used multiple times."
             ),
         )
+        parser.add_argument(
+            "--state-log",
+            dest="state_log",
+            help="Write pipeline state transitions to this file",
+        )
 
         subparsers = parser.add_subparsers(dest="command")
         parser.set_defaults(command="run")
@@ -64,6 +69,10 @@ class CLI:
         subparsers.add_parser("run", help="Start the agent")
         subparsers.add_parser("serve-websocket", help="Start the agent via WebSocket")
         subparsers.add_parser("verify", help="Load plugins and exit")
+        replay_parser = subparsers.add_parser(
+            "replay-log", help="Replay a state log file"
+        )
+        replay_parser.add_argument("file", help="Log file to replay")
         reload_parser = subparsers.add_parser(
             "reload-config",
             help="Reload plugin configuration from a YAML file",
@@ -89,12 +98,24 @@ class CLI:
         if self.args.command == "verify":
             return self._verify_plugins(self.args.config)
 
+        if self.args.command == "replay-log":
+            from pipeline.state_logger import LogReplayer
+
+            LogReplayer(self.args.file).replay()
+            return 0
+
         agent = Agent(self.args.config)
         if self.args.command == "reload-config":
             return self._reload_config(agent, self.args.file)
 
         async def _serve() -> None:
             await agent._ensure_runtime()
+            state_logger = None
+            if self.args.state_log:
+                from pipeline.state_logger import StateLogger
+
+                state_logger = StateLogger(self.args.state_log)
+                agent.runtime.manager.state_logger = state_logger
             reloader = None
             if self.args.watch_dirs:
                 from pipeline.hot_reload import PluginReloader
@@ -114,6 +135,8 @@ class CLI:
             finally:
                 if reloader is not None:
                     await reloader.stop()
+                if state_logger is not None:
+                    state_logger.close()
 
         asyncio.run(_serve())
         return 0
