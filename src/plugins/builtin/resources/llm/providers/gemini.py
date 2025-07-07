@@ -5,6 +5,7 @@ from typing import Any, AsyncIterator, Dict, List
 
 from pipeline.exceptions import ResourceError
 from pipeline.state import LLMResponse
+from pipeline.validation import ValidationResult
 
 from .base import BaseProvider
 
@@ -14,6 +15,11 @@ class GeminiProvider(BaseProvider):
 
     name = "gemini"
     requires_api_key = True
+
+    @classmethod
+    def validate_config(cls, config: Dict) -> ValidationResult:
+        """Validate Gemini provider configuration."""
+        return super().validate_config(config)
 
     async def generate(
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
