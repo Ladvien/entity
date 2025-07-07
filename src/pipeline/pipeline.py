@@ -155,6 +155,7 @@ async def execute_pipeline(
     state_logger: "StateLogger" | None = None,
     return_metrics: bool = False,
     state: PipelineState | None = None,
+    max_iterations: int = 5,
 ) -> Dict[str, Any] | tuple[Dict[str, Any], MetricsCollector]:
     if state is None:
         if state_file and os.path.exists(state_file):
@@ -182,41 +183,66 @@ async def execute_pipeline(
     try:
         async with registries.resources:
             async with start_span("pipeline.execute"):
-                for stage in [
-                    PipelineStage.PARSE,
-                    PipelineStage.THINK,
-                    PipelineStage.DO,
-                    PipelineStage.REVIEW,
-                    PipelineStage.DELIVER,
-                ]:
-                    if (
-                        state.last_completed_stage is not None
-                        and stage.value <= state.last_completed_stage.value
-                    ):
-                        continue
-                    try:
-                        await execute_stage(stage, state, registries)
-                    finally:
-                        if state_file:
-                            if state_file.endswith((".mpk", ".msgpack")):
-                                with open(state_file, "wb") as fh:
-                                    fh.write(dumps_state(state))
-                            else:
-                                with open(state_file, "w", encoding="utf-8") as fh:
+                while True:
+                    for stage in [
+                        PipelineStage.PARSE,
+                        PipelineStage.THINK,
+                        PipelineStage.DO,
+                        PipelineStage.REVIEW,
+                        PipelineStage.DELIVER,
+                    ]:
+                        if (
+                            state.last_completed_stage is not None
+                            and stage.value <= state.last_completed_stage.value
+                        ):
+                            continue
+                        try:
+                            await execute_stage(stage, state, registries)
+                        finally:
+                            if state_file:
+                                if state_file.endswith((".mpk", ".msgpack")):
+                                    with open(state_file, "wb") as fh:
+                                        fh.write(dumps_state(state))
+                                else:
+                                    with open(state_file, "w", encoding="utf-8") as fh:
+                                        json.dump(state.to_dict(), fh)
+                            if snapshots_dir:
+                                os.makedirs(snapshots_dir, exist_ok=True)
+                                snap_path = os.path.join(
+                                    snapshots_dir,
+                                    f"{state.pipeline_id}_{stage.name.lower()}.json",
+                                )
+                                with open(snap_path, "w", encoding="utf-8") as fh:
                                     json.dump(state.to_dict(), fh)
-                        if snapshots_dir:
-                            os.makedirs(snapshots_dir, exist_ok=True)
-                            snap_path = os.path.join(
-                                snapshots_dir,
-                                f"{state.pipeline_id}_{stage.name.lower()}.json",
+                            if state_logger is not None:
+                                state_logger.log(state, stage)
+                        if state.failure_info:
+                            break
+                        state.last_completed_stage = stage
+
+                    state.iteration += 1
+                    if (
+                        state.response is not None
+                        or state.failure_info is not None
+                        or state.iteration >= max_iterations
+                    ):
+                        if (
+                            state.response is None
+                            and state.failure_info is None
+                            and state.iteration >= max_iterations
+                        ):
+                            state.failure_info = FailureInfo(
+                                stage="iteration_guard",
+                                plugin_name="pipeline",
+                                error_type="max_iterations",
+                                error_message=f"Reached {max_iterations} iterations",
+                                original_exception=RuntimeError(
+                                    "max iteration limit reached"
+                                ),
                             )
-                            with open(snap_path, "w", encoding="utf-8") as fh:
-                                json.dump(state.to_dict(), fh)
-                        if state_logger is not None:
-                            state_logger.log(state, stage)
-                    if state.failure_info:
                         break
-                    state.last_completed_stage = stage
+
+                    state.last_completed_stage = None
 
         if state.failure_info:
             try:
