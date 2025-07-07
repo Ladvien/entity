@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any, Dict
 
@@ -68,23 +68,45 @@ STATIC_ERROR_RESPONSE: Dict[str, Any] = {
 }
 
 
+@dataclass(slots=True)
+class ErrorResponse:
+    """Standard error response structure."""
+
+    error: str
+    message: str | None = None
+    error_type: str | None = None
+    stage: str | None = None
+    plugin: str | None = None
+    pipeline_id: str | None = None
+    error_id: str | None = None
+    timestamp: str | None = field(default_factory=lambda: datetime.now().isoformat())
+    type: str = "plugin_error"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+
 def create_static_error_response(pipeline_id: str) -> ErrorResponse:
     """Return a copy of :data:`STATIC_ERROR_RESPONSE` populated with runtime info."""
-    response = STATIC_ERROR_RESPONSE.copy()
-    response["error_id"] = pipeline_id
-    response["timestamp"] = datetime.now().isoformat()
-    return ErrorResponse(response)
+
+    return ErrorResponse(
+        error=STATIC_ERROR_RESPONSE["error"],
+        message=STATIC_ERROR_RESPONSE["message"],
+        error_id=pipeline_id,
+        timestamp=datetime.now().isoformat(),
+        type="static_fallback",
+    )
 
 
-def create_error_response(pipeline_id: str, failure: FailureInfo) -> Dict[str, Any]:
+def create_error_response(pipeline_id: str, failure: FailureInfo) -> ErrorResponse:
     """Return a standardized error payload for ``failure``."""
 
-    return {
-        "error": failure.error_message,
-        "error_type": failure.error_type,
-        "stage": failure.stage,
-        "plugin": failure.plugin_name,
-        "pipeline_id": pipeline_id,
-        "timestamp": datetime.now().isoformat(),
-        "type": "plugin_error",
-    }
+    return ErrorResponse(
+        error=failure.error_message,
+        error_type=failure.error_type,
+        stage=failure.stage,
+        plugin=failure.plugin_name,
+        pipeline_id=pipeline_id,
+        timestamp=datetime.now().isoformat(),
+        type="plugin_error",
+    )

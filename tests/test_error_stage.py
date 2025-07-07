@@ -11,6 +11,7 @@ from pipeline import (
     ToolRegistry,
     execute_pipeline,
 )
+from pipeline.errors import ErrorResponse
 from pipeline.resources import ResourceContainer
 from user_plugins.failure.basic_logger import BasicLogger
 from user_plugins.failure.error_formatter import ErrorFormatter
@@ -76,6 +77,9 @@ def test_error_formatter_produces_message():
     """Ensure ErrorFormatter creates a user-facing error message."""
     registries = make_registries(ErrorFormatter)
     result = asyncio.run(execute_pipeline("hi", registries))
-    assert result["message"] == "FailPlugin failed (RuntimeError): boom"
-    assert result["error"] == "boom"
-    assert result["type"] == "formatted_error"
+    assert isinstance(result, ErrorResponse)
+    data = result.to_dict()
+    assert data["error"] == "boom"
+    assert data["plugin"] == "FailPlugin"
+    assert data["stage"] == "do"
+    assert data["type"] == "plugin_error"
