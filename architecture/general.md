@@ -128,6 +128,10 @@ storage = StorageResource(
 )
 ```
 
+MemoryResource is a composite store that defaults to a DuckDB-backed database in
+memory and supports optional SQL/NoSQL and vector backends. Because this default
+uses an in-memory DuckDB database, there is no separate `InMemoryResource`.
+
 ## Plugin System Details
 
 ### Plugin Base Classes
