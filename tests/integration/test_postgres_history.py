@@ -28,7 +28,7 @@ CONN = {
 def test_save_and_load_history(pg_env):
     async def run():
         db = PostgresResource(CONN)
-        memory = MemoryResource(storage=db)
+        memory = MemoryResource(database=db)
         try:
             await db.initialize()
         except OSError as exc:

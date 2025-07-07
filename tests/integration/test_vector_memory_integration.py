@@ -43,7 +43,7 @@ def test_vector_memory_integration(pg_env):
         }
         db = PostgresResource(db_cfg)
         vm = PgVectorStore(vm_cfg)
-        memory = MemoryResource(storage=db, vector=vm)
+        memory = MemoryResource(database=db, vector_store=vm)
         llm = UnifiedLLMResource(
             {"provider": "echo", "base_url": "http://localhost", "model": "none"}
         )

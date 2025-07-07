@@ -37,7 +37,7 @@ async def run_history_test(resource):
         resource._history_table = "test_history"
         await resource.initialize()
 
-    memory = MemoryResource(storage=resource)
+    memory = MemoryResource(database=resource)
     resources = ResourceContainer()
     await resources.add("memory", memory)
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())

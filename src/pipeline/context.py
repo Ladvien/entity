@@ -5,8 +5,17 @@ from __future__ import annotations
 import asyncio
 from copy import deepcopy
 from datetime import datetime
-from typing import (TYPE_CHECKING, Any, AsyncIterator, Callable, Dict, List,
-                    Optional, TypeVar, cast)
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    AsyncIterator,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    TypeVar,
+    cast,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from common_interfaces.resources import LLM
@@ -20,8 +29,7 @@ __all__ = ["PluginContext", "ConversationEntry", "ToolCall"]
 from .errors import ResourceError
 from .metrics import MetricsCollector
 from .stages import PipelineStage
-from .state import (ConversationEntry, FailureInfo, LLMResponse, PipelineState,
-                    ToolCall)
+from .state import ConversationEntry, FailureInfo, LLMResponse, PipelineState, ToolCall
 from .tools.base import RetryOptions
 from .tools.execution import execute_tool
 
@@ -44,6 +52,11 @@ class PluginContext:
     @property
     def _state(self) -> PipelineState:  # pragma: no cover - defensive measure
         raise AttributeError("Direct PipelineState access is not allowed")
+
+    @property
+    def state(self) -> PipelineState:
+        """Return a snapshot of the current pipeline state."""
+        return self.__state.snapshot()
 
     # --- Metrics helpers -------------------------------------------------
     def record_plugin_duration(self, plugin: str, duration: float) -> None:

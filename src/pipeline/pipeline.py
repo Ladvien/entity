@@ -146,6 +146,7 @@ async def execute_pipeline(
             with open(state_file, "r", encoding="utf-8") as fh:
                 data = json.load(fh)
             state = PipelineState.from_dict(data)
+            state.failure_info = None
         else:
             state = PipelineState(
                 conversation=[
@@ -183,12 +184,12 @@ async def execute_pipeline(
                         )
                         with open(snap_path, "w", encoding="utf-8") as fh:
                             json.dump(state.to_dict(), fh)
-                    if state.failure_info:
-                        break
-                    state.last_completed_stage = stage
                     if state_file:
                         with open(state_file, "w", encoding="utf-8") as fh:
                             json.dump(state.to_dict(), fh)
+                    if state.failure_info:
+                        break
+                    state.last_completed_stage = stage
 
         if state.failure_info:
             try:
@@ -209,7 +210,7 @@ async def execute_pipeline(
         if pipeline_manager is not None:
             await pipeline_manager.deregister(state.pipeline_id)
         state.metrics.record_pipeline_duration(time.time() - start)
-        if state_file and os.path.exists(state_file):
+        if state_file and os.path.exists(state_file) and not state.failure_info:
             os.remove(state_file)
         server = get_metrics_server()
         if server is not None:
