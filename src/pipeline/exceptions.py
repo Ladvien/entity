@@ -2,8 +2,12 @@ from __future__ import annotations
 
 """Compatibility exceptions for pipeline modules."""
 
-from .errors import (PipelineError, PluginExecutionError, ResourceError,
-                     ToolExecutionError)
+from .errors import (
+    PipelineError,
+    PluginExecutionError,
+    ResourceError,
+    ToolExecutionError,
+)
 
 
 class CircuitBreakerTripped(PipelineError):
@@ -14,10 +18,19 @@ class CircuitBreakerTripped(PipelineError):
         super().__init__(f"Circuit breaker tripped for {plugin_name}")
 
 
+class MaxIterationsExceeded(PipelineError):
+    """Raised when the pipeline exceeds the configured iteration limit."""
+
+    def __init__(self, limit: int) -> None:
+        self.limit = limit
+        super().__init__(f"Maximum iterations of {limit} exceeded")
+
+
 __all__ = [
     "PipelineError",
     "PluginExecutionError",
     "ToolExecutionError",
     "ResourceError",
     "CircuitBreakerTripped",
+    "MaxIterationsExceeded",
 ]
