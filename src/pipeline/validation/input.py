@@ -60,9 +60,13 @@ def validate_params(
     validator = PluginInputValidator(model)
 
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        """Validate ``params`` before calling ``func``."""
+
         async def wrapper(
-            self: Any, params: Dict[str, Any], *args: Any, **kwargs: Any
+            self: Any, params: BaseModel | Dict[str, Any], *args: Any, **kwargs: Any
         ) -> Any:
+            if isinstance(params, model):
+                return await func(self, params, *args, **kwargs)
             try:
                 validated = validator(params)
             except ValidationError as exc:
