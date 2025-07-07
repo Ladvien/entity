@@ -63,7 +63,7 @@ def test_initializer_env_and_dependencies(tmp_path):
             },
         }
     }
-    path = tmp_path / "config.yml"
+    path = tmp_path / "config.yaml"
     path.write_text(yaml.dump(config))
 
     initializer = SystemInitializer.from_yaml(str(path))
@@ -78,7 +78,7 @@ def test_initializer_env_and_dependencies(tmp_path):
 
 def test_validate_dependencies_missing(tmp_path):
     config = {"plugins": {"prompts": {"d": {"type": "tests.test_initializer:D"}}}}
-    path = tmp_path / "config.yml"
+    path = tmp_path / "config.yaml"
     path.write_text(yaml.dump(config))
 
     initializer = SystemInitializer.from_yaml(str(path))
