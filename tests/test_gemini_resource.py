@@ -1,8 +1,13 @@
 import asyncio
 import json
 
-from pipeline import (MetricsCollector, PipelineState, PluginContext,
-                      SystemInitializer, SystemRegistries)
+from pipeline import (
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    SystemInitializer,
+    SystemRegistries,
+)
 from plugins.builtin.resources.llm.unified import UnifiedLLMResource
 
 
@@ -20,7 +25,7 @@ async def run_generate(server, handler):
     result = await resource.generate("hello")
     req = json.loads(handler.request_body.decode())
     assert req == {"contents": [{"parts": [{"text": "hello"}]}]}
-    assert handler.request_path == "/v1beta/models/gemini-pro:generateContent"
+    assert handler.request_path == "/v1beta/models/gemini-pro:generateContent?key=key"
     return result
 
 
