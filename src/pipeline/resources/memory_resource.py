@@ -47,10 +47,25 @@ class MemoryResource(ResourcePlugin, Memory):
         self,
         database: DatabaseResource | None = None,
         vector_store: VectorStoreResource | None = None,
+        config: Dict | None = None,
         *,
         storage: DatabaseResource | None = None,
-        config: Dict | None = None,
     ) -> None:
+        """Initialize the resource.
+
+        Parameters
+        ----------
+        database:
+            Backend used to persist conversation history.
+        vector_store:
+            Backend used for similarity search.
+        config:
+            Optional configuration mapping.
+        storage:
+            Keyword-only alias for ``database`` kept for backward
+            compatibility.
+        """
+
         super().__init__(config or {})
         if storage is not None and database is None:
             database = storage
@@ -62,7 +77,7 @@ class MemoryResource(ResourcePlugin, Memory):
 
     @classmethod
     def from_config(cls, config: Dict) -> "MemoryResource":
-        return cls(config=config)
+        return cls(None, None, config=config)
 
     async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
         return None
