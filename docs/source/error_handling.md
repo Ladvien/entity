@@ -49,7 +49,8 @@ breaker = CircuitBreaker(failure_threshold=3, recovery_timeout=30)
 await breaker.call(do_work)
 ```
 
-Tool plugins can define `max_retries` and `retry_delay` attributes:
+Tool plugins can define `max_retries` and `retry_delay` attributes (formerly
+called `retry_attempts` and `retry_backoff`):
 
 ```python
 class MyTool(ToolPlugin):
