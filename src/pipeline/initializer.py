@@ -54,6 +54,13 @@ class ClassRegistry:
             if issubclass(cls, ToolPlugin):
                 yield cls, self._configs[name]
 
+    def named_tool_classes(self) -> Iterable[Tuple[str, type[ToolPlugin], Dict]]:
+        """Return registered tool plugin classes with their names."""
+
+        for name, cls in self._classes.items():
+            if issubclass(cls, ToolPlugin):
+                yield name, cls, self._configs[name]
+
     def non_resource_non_tool_classes(self) -> Iterable[Tuple[type[BasePlugin], Dict]]:
         for name, cls in self._classes.items():
             if (
@@ -241,11 +248,11 @@ class SystemInitializer:
             concurrency_limit=tr_cfg.get("concurrency_limit", 5),
             cache_ttl=tr_cfg.get("cache_ttl"),
         )
-        for cls, config in registry.tool_classes():
+        for name, cls, config in registry.named_tool_classes():
             if any(dep in degraded for dep in getattr(cls, "dependencies", [])):
                 continue
             instance = cls(config)
-            await tool_registry.add(getattr(instance, "name", cls.__name__), instance)
+            await tool_registry.add(name, instance)
 
         # Phase 4: instantiate prompt and adapter plugins
         plugin_registry = self.plugin_registry_cls()

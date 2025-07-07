@@ -66,9 +66,9 @@ plugins:
     calculator:
       type: plugins.builtin.tools.calculator_tool:CalculatorTool
   adapters:
-  http:
-    type: plugins.builtin.adapters.http:HTTPAdapter
-    stages: [parse, deliver]
+    http:
+      type: plugins.builtin.adapters.http:HTTPAdapter
+      stages: [parse, deliver]
       auth_tokens:
         - dev-secret
       rate_limit:
@@ -76,12 +76,12 @@ plugins:
         interval: 60
       audit_log_path: logs/audit.log
       dashboard: true
-  cli:
-    type: plugins.builtin.adapters.cli:CLIAdapter
-    stages: [deliver]
-  logging:
-    type: plugins.builtin.adapters.logging:LoggingAdapter
-    stages: [deliver]
+    cli:
+      type: plugins.builtin.adapters.cli:CLIAdapter
+      stages: [deliver]
+    logging:
+      type: plugins.builtin.adapters.logging:LoggingAdapter
+      stages: [deliver]
   prompts:
     chain_of_thought:
       type: user_plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
