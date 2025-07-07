@@ -1,25 +1,13 @@
 import asyncio
 
-from pipeline import (
-    FailurePlugin,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolRegistry,
-    execute_pipeline,
-)
-from pipeline.errors import (
-    ErrorResponse,
-    PipelineError,
-    PluginContextError,
-    PluginExecutionError,
-    ResourceError,
-    StageExecutionError,
-    ToolExecutionError,
-    create_error_response,
-    create_static_error_response,
-)
+from pipeline import (FailurePlugin, PipelineStage, PluginRegistry,
+                      PromptPlugin, SystemRegistries, ToolRegistry,
+                      execute_pipeline)
+from pipeline.errors import (ErrorResponse, PipelineError, PluginContextError,
+                             PluginExecutionError, ResourceError,
+                             StageExecutionError, ToolExecutionError,
+                             create_error_response,
+                             create_static_error_response)
 from pipeline.resources import ResourceContainer
 from pipeline.state import FailureInfo
 from user_plugins.failure.basic_logger import BasicLogger
@@ -49,8 +37,8 @@ class FallbackPlugin(FailurePlugin):
 
 def make_registries(error_plugin, main_plugin=BoomPlugin):
     plugins = PluginRegistry()
-    plugins.register_plugin_for_stage(main_plugin({}), PipelineStage.DO)
-    plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR)
+    asyncio.run(plugins.register_plugin_for_stage(main_plugin({}), PipelineStage.DO))
+    asyncio.run(plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR))
     asyncio.run(
         plugins.register_plugin_for_stage(error_plugin({}), PipelineStage.ERROR)
     )

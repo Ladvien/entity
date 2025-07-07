@@ -3,15 +3,9 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineStage,
-    PipelineState,
-    PluginRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
+                      PipelineState, PluginRegistry, SystemRegistries,
+                      ToolRegistry)
 from pipeline.pipeline import execute_stage
 from pipeline.resources import ResourceContainer
 
@@ -32,7 +26,7 @@ def test_validator_runs_before_plugin():
         metrics=MetricsCollector(),
     )
     plugins = PluginRegistry()
-    plugins.register_plugin_for_stage(DummyPlugin(), PipelineStage.DO)
+    asyncio.run(plugins.register_plugin_for_stage(DummyPlugin(), PipelineStage.DO))
     registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     called = False
 

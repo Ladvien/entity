@@ -3,15 +3,9 @@ from datetime import datetime
 
 import pytest
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineStage,
-    PipelineState,
-    PluginRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
+                      PipelineState, PluginRegistry, SystemRegistries,
+                      ToolRegistry)
 from pipeline.pipeline import execute_stage
 from pipeline.resources import ResourceContainer
 
@@ -42,7 +36,7 @@ def make_state():
 
 def make_registries(plugin):
     plugins = PluginRegistry()
-    plugins.register_plugin_for_stage(plugin, PipelineStage.DO)
+    asyncio.run(plugins.register_plugin_for_stage(plugin, PipelineStage.DO))
     return SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 
 

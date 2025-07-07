@@ -1,16 +1,9 @@
 import asyncio
 
-from pipeline import (
-    PipelineManager,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolRegistry,
-    ValidationResult,
-    execute_pipeline,
-    update_plugin_configuration,
-)
+from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
+                      PromptPlugin, SystemRegistries, ToolRegistry,
+                      ValidationResult, execute_pipeline,
+                      update_plugin_configuration)
 from pipeline.resources import ResourceContainer
 
 
@@ -64,7 +57,7 @@ def test_update_plugin_configuration_restart_required():
 
     reg = PluginRegistry()
     p = NRPlugin({"value": "x"})
-    reg.register_plugin_for_stage(p, PipelineStage.THINK)
+    asyncio.run(reg.register_plugin_for_stage(p, PipelineStage.THINK))
     result = asyncio.run(
         update_plugin_configuration(reg, "test_plugin", {"value": "y"})
     )

@@ -1,14 +1,8 @@
 import asyncio
 
-from pipeline import (
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolPlugin,
-    ToolRegistry,
-    execute_pipeline,
-)
+from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
+                      SystemRegistries, ToolPlugin, ToolRegistry,
+                      execute_pipeline)
 from pipeline.resources import ResourceContainer
 from user_plugins.failure.basic_logger import BasicLogger
 from user_plugins.failure.error_formatter import ErrorFormatter
@@ -28,9 +22,11 @@ class CallToolPlugin(PromptPlugin):
 
 def make_registries():
     plugins = PluginRegistry()
-    plugins.register_plugin_for_stage(CallToolPlugin({}), PipelineStage.DO)
-    plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR)
-    plugins.register_plugin_for_stage(ErrorFormatter({}), PipelineStage.ERROR)
+    asyncio.run(plugins.register_plugin_for_stage(CallToolPlugin({}), PipelineStage.DO))
+    asyncio.run(plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR))
+    asyncio.run(
+        plugins.register_plugin_for_stage(ErrorFormatter({}), PipelineStage.ERROR)
+    )
 
     tools = ToolRegistry()
     tools.add("fail", FailingTool({"max_retries": 0}))

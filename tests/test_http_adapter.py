@@ -2,14 +2,8 @@ import asyncio
 
 import httpx
 
-from pipeline import (
-    PipelineManager,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
+                      PromptPlugin, SystemRegistries, ToolRegistry)
 from pipeline.resources import ResourceContainer
 from plugins.builtin.adapters import HTTPAdapter
 
@@ -24,7 +18,7 @@ class RespPlugin(PromptPlugin):
 
 def make_adapter(config=None):
     plugins = PluginRegistry()
-    plugins.register_plugin_for_stage(RespPlugin({}), PipelineStage.DO)
+    asyncio.run(plugins.register_plugin_for_stage(RespPlugin({}), PipelineStage.DO))
     registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     manager = PipelineManager(registries)
     return HTTPAdapter(manager, config)

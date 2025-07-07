@@ -2,15 +2,9 @@ import asyncio
 
 import yaml
 
-from pipeline import (
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemInitializer,
-    SystemRegistries,
-    ToolRegistry,
-    execute_pipeline,
-)
+from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
+                      SystemInitializer, SystemRegistries, ToolRegistry,
+                      execute_pipeline)
 from pipeline.resources import ResourceContainer
 
 
@@ -52,9 +46,9 @@ def _set_final_response(context):
 
 def test_plugin_priority_order_matches_execution():
     registry = PluginRegistry()
-    registry.register_plugin_for_stage(First({}), PipelineStage.DO)
-    registry.register_plugin_for_stage(Third({}), PipelineStage.DO)
-    registry.register_plugin_for_stage(Second({}), PipelineStage.DO)
+    asyncio.run(registry.register_plugin_for_stage(First({}), PipelineStage.DO))
+    asyncio.run(registry.register_plugin_for_stage(Third({}), PipelineStage.DO))
+    asyncio.run(registry.register_plugin_for_stage(Second({}), PipelineStage.DO))
     registries = SystemRegistries(ResourceContainer(), ToolRegistry(), registry)
     result = asyncio.run(execute_pipeline("hi", registries))
     assert result == ["third", "second", "first"]

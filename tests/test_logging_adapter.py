@@ -1,14 +1,8 @@
 import asyncio
 import logging
 
-from pipeline import (
-    PipelineManager,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
+                      PromptPlugin, SystemRegistries, ToolRegistry)
 from pipeline.resources import ResourceContainer
 from plugins.builtin.adapters.logging import LoggingAdapter
 
@@ -23,7 +17,7 @@ class EchoPlugin(PromptPlugin):
 
 def make_manager() -> PipelineManager:
     plugins = PluginRegistry()
-    plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.DO)
+    asyncio.run(plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.DO))
     asyncio.run(
         plugins.register_plugin_for_stage(LoggingAdapter({}), PipelineStage.DELIVER)
     )

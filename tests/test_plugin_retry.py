@@ -1,13 +1,7 @@
 import asyncio
 
-from pipeline import (
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolRegistry,
-    execute_pipeline,
-)
+from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
+                      SystemRegistries, ToolRegistry, execute_pipeline)
 from pipeline.resources import ResourceContainer
 from user_plugins.failure.basic_logger import BasicLogger
 
@@ -33,7 +27,7 @@ def make_registries():
             FlakyPlugin({"max_retries": 1, "retry_delay": 0}), PipelineStage.DO
         )
     )
-    plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR)
+    asyncio.run(plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR))
     return SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 
 

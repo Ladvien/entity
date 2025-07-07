@@ -2,14 +2,8 @@ import asyncio
 import logging
 from typing import Any
 
-from pipeline import (
-    PipelineManager,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
+                      PromptPlugin, SystemRegistries, ToolRegistry)
 from pipeline.resources import ResourceContainer
 from plugins.builtin.adapters.cli import CLIAdapter
 
@@ -24,7 +18,7 @@ class EchoPlugin(PromptPlugin):
 
 def make_adapter() -> tuple[CLIAdapter, SystemRegistries]:
     plugins = PluginRegistry()
-    plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.DO)
+    asyncio.run(plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.DO))
     registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     manager = PipelineManager(registries)
     return CLIAdapter(manager), registries
