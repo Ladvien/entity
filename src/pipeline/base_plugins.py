@@ -72,10 +72,31 @@ class BasePlugin(BasePluginInterface):
         if not stages:
             raise ValueError(f"{cls.__name__} must define a non-empty 'stages' list")
 
-        if any(not isinstance(stage, PipelineStage) for stage in stages):
+        skip_validation = getattr(cls, "skip_stage_validation", False)
+        normalized: List[PipelineStage | Any] = []
+        for stage in stages:
+            if isinstance(stage, PipelineStage):
+                normalized.append(stage)
+                continue
+            if isinstance(stage, str):
+                try:
+                    normalized.append(PipelineStage.from_str(stage))
+                except ValueError:
+                    if skip_validation:
+                        normalized.append(stage)
+                        continue
+                    raise ValueError(
+                        f"Invalid stage '{stage}' for {cls.__name__}"
+                    ) from None
+                continue
+            if skip_validation:
+                normalized.append(stage)
+                continue
             raise ValueError(
                 f"All items in {cls.__name__}.stages must be PipelineStage instances"
             )
+
+        cls.stages = normalized
 
     def __init__(self, config: Dict | None = None) -> None:
         self.config = config or {}

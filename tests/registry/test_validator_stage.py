@@ -1,7 +1,7 @@
-import yaml
 import pytest
+import yaml
 
-from pipeline import PromptPlugin, PipelineStage
+from pipeline import PipelineStage, PromptPlugin
 from registry.validator import RegistryValidator
 
 
@@ -14,6 +14,7 @@ class GoodPlugin(PromptPlugin):
 
 class BadPlugin(PromptPlugin):
     stages = ["BROKEN_STAGE"]
+    skip_stage_validation = True
 
     async def _execute_impl(self, context):
         return None
