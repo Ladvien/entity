@@ -26,6 +26,7 @@ from .errors import ToolExecutionError
 from .exceptions import CircuitBreakerTripped, PipelineError, PluginExecutionError
 from .logging import get_logger
 from .observability.utils import execute_with_observability
+from .reliability import RetryPolicy
 from .stages import PipelineStage
 from .validation import ValidationResult
 from plugins.builtin.config_models import (
@@ -105,6 +106,8 @@ class BasePlugin(BasePluginInterface):
         self.failure_reset_timeout = float(
             self.config.get("failure_reset_timeout", 60.0)
         )
+        self.retry_attempts = int(self.config.get("retry_attempts", 1))
+        self.retry_backoff = float(self.config.get("retry_backoff", 1.0))
         self._failure_count = 0
         self._last_failure = 0.0
         self.config_version = 1
@@ -127,9 +130,14 @@ class BasePlugin(BasePluginInterface):
         async def run() -> Any:
             return await self._execute_impl(context)
 
+        policy = RetryPolicy(attempts=self.retry_attempts, backoff=self.retry_backoff)
+
+        async def run_with_retry() -> Any:
+            return await policy.execute(run)
+
         try:
             result = await execute_with_observability(
-                run,
+                run_with_retry,
                 logger=self.logger,
                 metrics=context.metrics,
                 plugin=self.__class__.__name__,

@@ -7,15 +7,11 @@ This guide explains how the Entity pipeline surfaces errors and restores state.
 All pipeline exceptions inherit from `PipelineError`. The key subclasses are:
 
 ```python
-from pipeline.errors import (
-    PipelineError,
-    PluginExecutionError,
-    ResourceError,
-    ToolExecutionError,
-    PipelineContextError,
-    StageExecutionError,
-    PluginContextError,
-)
+from pipeline.errors import (PipelineContextError, PipelineError,
+                             PluginContextError, PluginExecutionError,
+                             ResourceError, StageExecutionError,
+                             ToolExecutionError)
+
 ```
 
 `PluginExecutionError`, `ResourceError`, and `ToolExecutionError` indicate failures in plugins, resources, and tools. The context-aware classes carry additional fields like the stage and plugin name.
@@ -88,3 +84,19 @@ If failure handling itself fails the framework returns a static response created
 ```
 
 Use `BasicLogger` and `ErrorFormatter` from `user_plugins.failure` as templates for custom failure handling.
+
+## Error Recovery Strategies
+
+Plugins can retry failures by specifying `retry_attempts` and `retry_backoff` in their configuration. `BasePlugin` applies a `RetryPolicy` so `_execute_impl` is re-run before a failure is reported.
+
+```python
+class MyPlugin(PromptPlugin):
+    stages = [PipelineStage.DO]
+
+    async def _execute_impl(self, ctx: PluginContext) -> None:
+        ...
+
+plugin = MyPlugin({"retry_attempts": 3, "retry_backoff": 0.5})
+```
+
+If all retries fail the `DefaultResponder` plugin converts the captured `FailureInfo` into a JSON response using `create_error_response`.
