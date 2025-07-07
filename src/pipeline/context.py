@@ -5,17 +5,8 @@ from __future__ import annotations
 import asyncio
 from copy import deepcopy
 from datetime import datetime
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    AsyncIterator,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    TypeVar,
-    cast,
-)
+from typing import (TYPE_CHECKING, Any, AsyncIterator, Callable, Dict, List,
+                    Optional, TypeVar, cast)
 
 if TYPE_CHECKING:  # pragma: no cover
     from common_interfaces.resources import LLM
@@ -24,16 +15,70 @@ else:  # pragma: no cover - runtime type reference
 
 from registry import SystemRegistries
 
-__all__ = ["PluginContext", "ConversationEntry", "ToolCall"]
+__all__ = [
+    "PluginContext",
+    "AdvancedContext",
+    "ConversationEntry",
+    "ToolCall",
+]
 
 from .errors import ResourceError
 from .metrics import MetricsCollector
 from .stages import PipelineStage
-from .state import ConversationEntry, FailureInfo, LLMResponse, PipelineState, ToolCall
+from .state import (ConversationEntry, FailureInfo, LLMResponse, PipelineState,
+                    ToolCall)
 from .tools.base import RetryOptions
 from .tools.execution import execute_tool
 
 ResourceT = TypeVar("ResourceT", covariant=True)
+
+
+class AdvancedContext:
+    """Advanced interface for ``PluginContext``."""
+
+    def __init__(self, ctx: "PluginContext") -> None:
+        self._ctx = ctx
+
+    # ------------------------------------------------------------------
+    def replace_conversation_history(
+        self, new_history: List[ConversationEntry]
+    ) -> None:
+        """Replace entire conversation history with ``new_history``."""
+        self._ctx._PluginContext__state.conversation = new_history  # type: ignore[attr-defined]
+
+    async def _wait_for_tool_result(self, result_key: str) -> Any:
+        """Wait for a queued tool call to finish and return its result."""
+        state = self._ctx._PluginContext__state  # type: ignore[attr-defined]
+        if result_key not in state.stage_results:
+            call = next(
+                (c for c in state.pending_tool_calls if c.result_key == result_key),
+                None,
+            )
+            if call is None:
+                raise KeyError(result_key)
+            tool = self._ctx._registries.tools.get(call.name)
+            if not tool:
+                result = f"Error: tool {call.name} not found"
+                self._ctx.set_stage_result(call.result_key, result)
+                state.pending_tool_calls.remove(call)
+                return result
+            tool = cast(Any, tool)
+            options = RetryOptions(
+                max_retries=getattr(tool, "max_retries", 1),
+                delay=getattr(tool, "retry_delay", 1.0),
+            )
+            try:
+                result = await execute_tool(tool, call, state, options)
+                self._ctx.set_stage_result(call.result_key, result)
+                self._ctx.record_tool_execution(call.name, call.result_key, call.source)
+            except Exception as exc:  # noqa: BLE001
+                result = f"Error: {exc}"
+                self._ctx.set_stage_result(call.result_key, result)
+                self._ctx.record_tool_error(call.name, str(exc))
+            state.pending_tool_calls.remove(call)
+        result = self._ctx.get_stage_result(result_key)
+        state.stage_results.pop(result_key, None)
+        return result
 
 
 class PluginContext:
@@ -47,11 +92,17 @@ class PluginContext:
         # store state privately to discourage direct access from plugins
         self.__state: PipelineState = state
         self._registries = registries
+        self._advanced = AdvancedContext(self)
 
     # do not allow external code to read _state
     @property
     def _state(self) -> PipelineState:  # pragma: no cover - defensive measure
         raise AttributeError("Direct PipelineState access is not allowed")
+
+    @property
+    def advanced(self) -> AdvancedContext:
+        """Return an object with advanced operations."""
+        return self._advanced
 
     @property
     def state(self) -> PipelineState:
@@ -179,12 +230,6 @@ class PluginContext:
         history = state.conversation if last_n is None else state.conversation[-last_n:]
         return [deepcopy(entry) for entry in history]
 
-    def replace_conversation_history(
-        self, new_history: List[ConversationEntry]
-    ) -> None:
-        """Replace entire conversation history with ``new_history``."""
-        self.__state.conversation = new_history
-
     def set_response(self, response: Any) -> None:
         """Set the pipeline's final ``response`` if not already set."""
         state = self.__state
@@ -292,41 +337,7 @@ class PluginContext:
         then returns whatever value the tool produced.
         """
         result_key = self.execute_tool(tool_name, params)
-        return await self._wait_for_tool_result(result_key)
-
-    async def _wait_for_tool_result(self, result_key: str) -> Any:
-        """Wait for a queued tool call to finish and return its result."""
-        state = self.__state
-        if result_key not in state.stage_results:
-            call = next(
-                (c for c in state.pending_tool_calls if c.result_key == result_key),
-                None,
-            )
-            if call is None:
-                raise KeyError(result_key)
-            tool = self._registries.tools.get(call.name)
-            if not tool:
-                result = f"Error: tool {call.name} not found"
-                self.set_stage_result(call.result_key, result)
-                state.pending_tool_calls.remove(call)
-                return result
-            tool = cast(Any, tool)
-            options = RetryOptions(
-                max_retries=getattr(tool, "max_retries", 1),
-                delay=getattr(tool, "retry_delay", 1.0),
-            )
-            try:
-                result = await execute_tool(tool, call, state, options)
-                self.set_stage_result(call.result_key, result)
-                self.record_tool_execution(call.name, call.result_key, call.source)
-            except Exception as exc:  # noqa: BLE001
-                result = f"Error: {exc}"
-                self.set_stage_result(call.result_key, result)
-                self.record_tool_error(call.name, str(exc))
-            state.pending_tool_calls.remove(call)
-        result = self.get_stage_result(result_key)
-        state.stage_results.pop(result_key, None)
-        return result
+        return await self.advanced._wait_for_tool_result(result_key)
 
     async def ask_llm(self, prompt: str) -> str:
         """Send ``prompt`` to the configured LLM and return its textual reply.

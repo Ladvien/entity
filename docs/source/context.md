@@ -30,6 +30,17 @@ class MyPrompt(PromptPlugin):
         context.say(reply)
 ```
 
+## Advanced API
+
+Some less common operations are exposed through `context.advanced`.
+Use this wrapper when you need direct control over the pipeline state.
+
+```python
+async def cleanup(context: PluginContext) -> None:
+    context.advanced.replace_conversation_history([])
+    await context.advanced._wait_for_tool_result("setup")
+```
+
 During stage execution the framework creates a `PluginContext` and passes it to each plugin:
 
 ```python
