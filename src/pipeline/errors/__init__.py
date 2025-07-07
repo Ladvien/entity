@@ -11,10 +11,12 @@ from .exceptions import (
     ResourceError,
     ToolExecutionError,
 )
+from .response import ErrorResponse
 
 __all__ = [
     "create_static_error_response",
     "create_error_response",
+    "ErrorResponse",
     "PipelineError",
     "PluginExecutionError",
     "ResourceError",
@@ -34,12 +36,15 @@ STATIC_ERROR_RESPONSE: Dict[str, Any] = {
 }
 
 
-def create_static_error_response(pipeline_id: str) -> Dict[str, Any]:
-    """Return a copy of :data:`STATIC_ERROR_RESPONSE` populated with runtime info."""
-    response = STATIC_ERROR_RESPONSE.copy()
-    response["error_id"] = pipeline_id
-    response["timestamp"] = datetime.now().isoformat()
-    return response
+def create_static_error_response(pipeline_id: str) -> ErrorResponse:
+    """Return a generic :class:`ErrorResponse` populated with runtime info."""
+    return ErrorResponse(
+        error=STATIC_ERROR_RESPONSE["error"],
+        message=STATIC_ERROR_RESPONSE["message"],
+        error_id=pipeline_id,
+        timestamp=datetime.now(),
+        type=STATIC_ERROR_RESPONSE["type"],
+    )
 
 
 def create_error_response(pipeline_id: str, failure: FailureInfo) -> Dict[str, Any]:
