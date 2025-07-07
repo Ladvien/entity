@@ -16,9 +16,13 @@ from registry import SystemRegistries
 
 from .context import ConversationEntry, PluginContext
 from .errors import create_static_error_response
-from .exceptions import (CircuitBreakerTripped, PipelineError,
-                         PluginExecutionError, ResourceError,
-                         ToolExecutionError)
+from .exceptions import (
+    CircuitBreakerTripped,
+    PipelineError,
+    PluginExecutionError,
+    ResourceError,
+    ToolExecutionError,
+)
 from .logging import get_logger, reset_request_id, set_request_id
 from .manager import PipelineManager
 from .metrics import MetricsCollector
@@ -119,14 +123,17 @@ async def execute_stage(
                         "stage": str(stage),
                     },
                 )
+
+                message = exc.args[0] if exc.args else str(exc)
                 state.failure_info = FailureInfo(
                     stage=str(stage),
                     plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
                     error_type=exc.__class__.__name__,
-                    error_message=str(exc),
+                    error_message=message,
                     original_exception=exc,
                 )
-                raise
+                if isinstance(exc, KeyError):
+                    raise
             finally:
                 reset_request_id(token)
 
