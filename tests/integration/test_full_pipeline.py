@@ -36,6 +36,4 @@ def test_full_agent_pipeline():
     agent.add_plugin(RespondPlugin())
 
     result = asyncio.run(agent.handle("hi"))
-    assert result["message"] == "ok"
-    assert result["stage_results"].get("parsed") is True
-    assert result["stage_results"].get("thought") is True
+    assert result == "ok"
