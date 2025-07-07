@@ -21,7 +21,7 @@ class AgentRuntime:
     async def run_pipeline(self, message: str) -> Dict[str, Any]:
         async with self.registries.resources:
             result = await self.manager.run_pipeline(message)
-        return cast(Dict[str, Any], result)
+        return result
 
     async def handle(self, message: str) -> Dict[str, Any]:
         """Alias for :meth:`run_pipeline`."""
