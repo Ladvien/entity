@@ -8,9 +8,10 @@ if TYPE_CHECKING:  # pragma: no cover
 
 import logging
 
+from pipeline.validation import ValidationResult
+
 if TYPE_CHECKING:  # pragma: no cover
     from pipeline.state import LLMResponse
-    from pipeline.validation import ValidationResult
 
 
 @runtime_checkable
