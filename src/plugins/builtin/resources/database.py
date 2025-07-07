@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, AsyncIterator, List, Optional, Protocol
 if TYPE_CHECKING:  # pragma: no cover - type hints only
     from pipeline.state import ConversationEntry
 
+from pipeline.validation import ValidationResult
 from plugins.builtin.resources.base import BaseResource
 
 
@@ -91,6 +92,15 @@ class DatabaseResource(BaseResource, StorageBackend, ABC):
                 return True
             except Exception:
                 return False
+
+    async def validate_runtime(self) -> ValidationResult:
+        """Validate runtime by checking database connectivity."""
+
+        return (
+            ValidationResult.success_result()
+            if await self.health_check()
+            else ValidationResult.error_result("database connectivity failed")
+        )
 
     @abstractmethod
     async def _do_health_check(self, connection: Any) -> None:

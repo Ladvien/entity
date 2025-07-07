@@ -91,6 +91,14 @@ class UnifiedLLMResource(LLMResource):
                         provider.http.model = model
                 break
 
+    async def validate_runtime(self) -> ValidationResult:
+        for provider in self._providers:
+            if hasattr(provider, "validate_runtime"):
+                result = await provider.validate_runtime()
+                if not result.success:
+                    return result
+        return ValidationResult.success_result()
+
     async def generate(
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
     ) -> str:

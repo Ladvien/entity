@@ -278,6 +278,11 @@ class BasePlugin(BasePluginInterface):
     def supports_runtime_reconfiguration(self) -> bool:
         return True
 
+    async def validate_runtime(self) -> "ValidationResult":
+        """Verify the plugin can operate in the current runtime environment."""
+
+        return ValidationResult.success_result()
+
     async def reconfigure(self, new_config: Dict) -> ReconfigResult:
         validation_result = self.validate_config(new_config)
         if not validation_result.success:
@@ -375,6 +380,19 @@ class ResourcePlugin(BasePlugin):
     async def health_check(self) -> bool:
         """Return ``True`` if the resource is healthy."""
         return True
+
+    async def validate_runtime(self) -> "ValidationResult":
+        """Validate runtime by performing a health check."""
+
+        try:
+            healthy = await self.health_check()
+        except Exception as exc:  # pragma: no cover - propagation
+            return ValidationResult.error_result(str(exc))
+        return (
+            ValidationResult.success_result()
+            if healthy
+            else ValidationResult.error_result("health check failed")
+        )
 
     def get_metrics(self) -> Dict[str, Any]:
         """Return metrics about this resource."""

@@ -5,8 +5,13 @@ import os
 import pytest
 import yaml
 
-from pipeline import (PipelineStage, PromptPlugin, ResourcePlugin,
-                      SystemInitializer, ValidationResult)
+from pipeline import (
+    PipelineStage,
+    PromptPlugin,
+    ResourcePlugin,
+    SystemInitializer,
+    ValidationResult,
+)
 
 
 class A(ResourcePlugin):
@@ -48,6 +53,16 @@ class D(PromptPlugin):
 
     async def _execute_impl(self, context):
         pass
+
+
+class BadRes(ResourcePlugin):
+    stages = [PipelineStage.PARSE]
+
+    async def _execute_impl(self, context):
+        pass
+
+    async def validate_runtime(self) -> ValidationResult:
+        return ValidationResult.error_result("no runtime")
 
 
 def test_initializer_env_and_dependencies(tmp_path):
@@ -143,3 +158,17 @@ def test_llm_resource_registration(tmp_path):
 
     assert resources.get("llm") is not None
     assert resources.get("ollama") is None
+
+
+def test_runtime_validation_failure(tmp_path):
+    config = {
+        "plugins": {"resources": {"bad": {"type": "tests.test_initializer:BadRes"}}}
+    }
+
+    path = tmp_path / "cfg.yml"
+    path.write_text(yaml.dump(config))
+
+    initializer = SystemInitializer.from_yaml(str(path))
+    _, resources, _ = asyncio.run(initializer.initialize())
+
+    assert resources.get("bad") is None
