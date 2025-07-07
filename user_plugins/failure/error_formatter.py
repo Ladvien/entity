@@ -14,10 +14,8 @@ class ErrorFormatter(FailurePlugin):
     async def _execute_impl(self, context: PluginContext) -> None:
         info = context.get_failure_info()
         if info is None:
-            response = ErrorResponse(error="Unknown error")
-            context.set_response(response.to_dict())
+            context.set_response(ErrorResponse({"error": "Unknown error"}).to_dict())
             return
 
         message = f"{info.plugin_name} failed ({info.error_type}): {info.error_message}"
-        response = ErrorResponse(error=message)
-        context.set_response(response.to_dict())
+        context.set_response(ErrorResponse({"error": message}).to_dict())
