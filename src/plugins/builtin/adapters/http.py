@@ -115,7 +115,7 @@ class HTTPAdapter(AdapterPlugin):
             mapping = {t: ["http"] for t in tokens_cfg}
         else:
             mapping = {str(k): v for k, v in dict(tokens_cfg).items()}
-        self.authenticator = AdapterAuthenticator(mapping)
+        self.authenticator = AdapterAuthenticator(mapping) if mapping else None
         self.app = FastAPI()
         self._setup_audit_logger()
         self._setup_middleware()
@@ -143,7 +143,7 @@ class HTTPAdapter(AdapterPlugin):
         self.audit_logger.setLevel(logging.INFO)
 
     def _setup_middleware(self) -> None:
-        if self.authenticator:
+        if self.authenticator is not None:
             self.app.add_middleware(
                 TokenAuthMiddleware,
                 authenticator=self.authenticator,
