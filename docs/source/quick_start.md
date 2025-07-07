@@ -8,7 +8,7 @@
 Run an agent from a YAML configuration file:
 
 ```bash
-python src/cli.py --config config.yml
+python src/cli.py --config config.yaml
 ```
 
 ### Using the SearchTool

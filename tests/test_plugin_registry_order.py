@@ -64,7 +64,7 @@ def test_initializer_orders_by_priority(tmp_path):
             }
         }
     }
-    path = tmp_path / "config.yml"
+    path = tmp_path / "config.yaml"
     path.write_text(yaml.dump(config))
 
     initializer = SystemInitializer.from_yaml(str(path))
