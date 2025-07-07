@@ -6,6 +6,7 @@ import pytest
 from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
                       PipelineState, PluginContext, PluginRegistry,
                       PromptPlugin, SystemRegistries, ToolRegistry)
+from pipeline.errors import ResourceError
 from pipeline.resources import ResourceContainer
 
 
@@ -37,7 +38,7 @@ def test_ask_llm_returns_text():
 
 def test_ask_llm_without_llm_resource_raises():
     ctx = make_context()
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ResourceError):
         asyncio.run(ctx.ask_llm("hi"))
 
 
