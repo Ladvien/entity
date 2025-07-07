@@ -4,24 +4,25 @@ from pathlib import Path
 import pytest
 
 from pipeline import PipelineStage, execute_pipeline
+from pipeline.base_plugins import BasePlugin
 from pipeline.resources import ResourceContainer
 from registry import PluginRegistry, SystemRegistries, ToolRegistry
 
 
-class RespondPlugin:
+class RespondPlugin(BasePlugin):
     stages = [PipelineStage.DO]
 
-    async def execute(self, context):
-        context.set_response("ok")
+    async def _execute_impl(self, context):
+        context.set_response({"message": "ok"})
 
 
 def make_failing_plugin(stage: PipelineStage):
-    class FailingPlugin:
+    class FailingPlugin(BasePlugin):
         stages = [stage]
 
-        async def execute(self, context):
-            if not context.metadata.get("failed"):
-                context.metadata["failed"] = True
+        async def _execute_impl(self, context):
+            if not context.get_metadata("failed"):
+                context.set_metadata("failed", True)
                 raise RuntimeError("boom")
             context.set_stage_result(str(stage), True)
 
@@ -45,8 +46,8 @@ def test_pipeline_recovers_from_stage_failure(
     async def run() -> str:
         state_file = tmp_path / "state.json"
         plugins = PluginRegistry()
-        plugins.register_plugin_for_stage(make_failing_plugin(stage), stage)
-        plugins.register_plugin_for_stage(RespondPlugin(), PipelineStage.DO)
+        await plugins.register_plugin_for_stage(make_failing_plugin(stage), stage)
+        await plugins.register_plugin_for_stage(RespondPlugin(), PipelineStage.DO)
         registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
         try:
             await execute_pipeline("hi", registries, state_file=str(state_file))
