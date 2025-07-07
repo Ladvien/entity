@@ -48,6 +48,15 @@ class CLI:
             required=True,
             help="Path to a YAML configuration file.",
         )
+        parser.add_argument(
+            "--watch-dir",
+            action="append",
+            dest="watch_dirs",
+            help=(
+                "Watch a directory for plugin changes (hot reload). "
+                "Can be used multiple times."
+            ),
+        )
 
         subparsers = parser.add_subparsers(dest="command")
         parser.set_defaults(command="run")
@@ -86,11 +95,25 @@ class CLI:
 
         async def _serve() -> None:
             await agent._ensure_runtime()
+            reloader = None
+            if self.args.watch_dirs:
+                from pipeline.hot_reload import PluginReloader
+
+                reloader = PluginReloader(
+                    agent.runtime.registries.plugins,
+                    self.args.watch_dirs,
+                    pipeline_manager=agent.runtime.manager,
+                )
+                await reloader.start()
             server = AgentServer(agent.runtime)
-            if self.args.command == "serve-websocket":
-                await server.serve_websocket()
-            else:
-                await server.serve_http()
+            try:
+                if self.args.command == "serve-websocket":
+                    await server.serve_websocket()
+                else:
+                    await server.serve_http()
+            finally:
+                if reloader is not None:
+                    await reloader.stop()
 
         asyncio.run(_serve())
         return 0

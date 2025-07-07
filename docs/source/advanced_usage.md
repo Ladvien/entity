@@ -82,6 +82,18 @@ For a hands-on demonstration, run `examples/config_reload_example.py`:
 python examples/config_reload_example.py
 ```
 
+### Hot Reloading Plugins
+
+During development you can watch plugin directories for changes and replace
+plugins on the fly. Use the CLI `--watch-dir` option:
+
+```bash
+poetry run python src/cli.py run --config config/dev.yaml --watch-dir user_plugins
+```
+
+The reloader waits for running pipelines to finish before swapping in the
+updated plugin implementations.
+
 ### Streaming and Function Calling
 
 UnifiedLLMResource now exposes streaming via Server-Sent Events and optional

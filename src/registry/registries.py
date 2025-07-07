@@ -128,6 +128,26 @@ class PluginRegistry:
 
         return self._names.get(plugin)
 
+    def get_by_name(self, name: str) -> BasePlugin | None:
+        """Return the plugin instance registered as ``name``."""
+
+        return self._plugins_by_name.get(name)
+
+    async def replace_plugin(self, name: str, plugin: BasePlugin) -> None:
+        """Atomically replace the plugin registered as ``name``."""
+
+        async with self._lock:
+            old = self._plugins_by_name.get(name)
+            if old is None:
+                raise KeyError(f"Plugin {name} not found")
+            for plist in self._stage_plugins.values():
+                for idx, existing in enumerate(plist):
+                    if existing is old:
+                        plist[idx] = plugin
+            del self._names[old]
+            self._names[plugin] = name
+            self._plugins_by_name[name] = plugin
+
 
 @dataclass
 class SystemRegistries:
