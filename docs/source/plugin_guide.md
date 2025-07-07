@@ -73,6 +73,12 @@ class = "my_pkg.calc:CalculatorTool"
 During initialization the discovered entries are merged into the config and
 their dependencies validated automatically.
 
+## Development Steps
+1. Create your plugin class and implement `_execute_impl`.
+2. Register the plugin with the `Agent` or include it in your YAML under `plugins:`.
+3. Run `python -m src.config.validator --config your.yaml` to verify configuration.
+4. Write unit tests and run `pytest` before committing changes.
+
 ## Implementing Storage Backends
 
 Storage resources persist conversation history and other agent data. To add a
@@ -171,3 +177,10 @@ poetry run python src/cli.py serve-websocket --config config/dev.yaml
 When implementing custom error handling, refer to
 [`examples/failure_example.py`](../../examples/failure_example.py) and the
 failure plugin template at `src/cli/templates/failure.py`.
+
+## Troubleshooting Plugins
+- **Plugin not executing** – confirm the `stages` list contains the desired pipeline stage.
+- **Missing dependency** – ensure the plugin name appears in `plugins.resources` or `plugins.tools`.
+- **Runtime errors** – run with `LOG_LEVEL=DEBUG` to see the full traceback.
+
+
