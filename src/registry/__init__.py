@@ -18,4 +18,8 @@ def __getattr__(name: str):
         from pipeline.resources import ResourceContainer
 
         return ResourceContainer
+    if name == "RegistryValidator":
+        from .validator import RegistryValidator
+
+        return RegistryValidator
     raise AttributeError(f"module {__name__} has no attribute {name}")
