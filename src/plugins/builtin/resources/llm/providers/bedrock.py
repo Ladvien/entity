@@ -7,7 +7,6 @@ from typing import Any, AsyncIterator, Dict, List
 import aioboto3
 
 from pipeline.exceptions import ResourceError
-from pipeline.state import LLMResponse
 from pipeline.validation import ValidationResult
 
 from .base import BaseProvider
@@ -22,6 +21,7 @@ class BedrockProvider(BaseProvider):
         super().__init__(config)
         self.model_id: str = str(config.get("model_id", ""))
         self.region: str = str(config.get("region", "us-east-1"))
+        self.endpoint_url: str | None = config.get("endpoint_url")
         self.params = {
             k: v
             for k, v in config.items()
@@ -33,6 +33,7 @@ class BedrockProvider(BaseProvider):
                 "base_url",
                 "model",
                 "api_key",
+                "endpoint_url",
             }
         }
 
@@ -45,11 +46,17 @@ class BedrockProvider(BaseProvider):
     async def _invoke(self, prompt: str) -> str:
         payload = {"prompt": prompt, **self.params}
 
+        endpoint_url = self.endpoint_url
+        if endpoint_url:
+            url = f"{endpoint_url}/model/{self.model_id}/invoke"
+            try:
+                body = await self._post_with_retry(url, payload)
+                return str(body.get("outputText") or body.get("completion", ""))
+            except Exception as exc:  # pragma: no cover - bubble up
+                raise ResourceError("bedrock provider request failed") from exc
+
         async def call() -> str:
             client_kwargs = {"region_name": self.region}
-            endpoint_url = self.params.get("endpoint_url")
-            if endpoint_url:
-                client_kwargs["endpoint_url"] = endpoint_url
             async with aioboto3.client("bedrock-runtime", **client_kwargs) as client:
                 response = await client.invoke_model(
                     modelId=self.model_id,
@@ -67,11 +74,10 @@ class BedrockProvider(BaseProvider):
 
     async def generate(
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
-    ) -> LLMResponse:
-        text = await self._invoke(prompt)
-        return LLMResponse(content=text)
+    ) -> str:
+        return await self._invoke(prompt)
 
     async def stream(
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
     ) -> AsyncIterator[str]:
-        yield await (await self.generate(prompt)).content
+        yield await self.generate(prompt)

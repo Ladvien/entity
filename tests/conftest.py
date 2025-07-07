@@ -30,6 +30,7 @@ def postgres_service(postgresql_proc):
         pytest.skip("PostgreSQL server not installed")
     if hasattr(os, "geteuid") and os.geteuid() == 0:
         pytest.skip("PostgreSQL server cannot run as root")
+
     return postgresql_proc
 
 
