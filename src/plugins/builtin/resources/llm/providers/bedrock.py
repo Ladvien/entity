@@ -7,6 +7,7 @@ from typing import Any, AsyncIterator, Dict, List
 import aioboto3
 
 from pipeline.exceptions import ResourceError
+from pipeline.state import LLMResponse
 from pipeline.validation import ValidationResult
 
 from .base import BaseProvider
@@ -74,10 +75,11 @@ class BedrockProvider(BaseProvider):
 
     async def generate(
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
-    ) -> str:
-        return await self._invoke(prompt)
+    ) -> LLMResponse:
+        text = await self._invoke(prompt)
+        return LLMResponse(content=text)
 
     async def stream(
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
     ) -> AsyncIterator[str]:
-        yield await self.generate(prompt)
+        yield (await self.generate(prompt)).content
