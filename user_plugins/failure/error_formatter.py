@@ -15,5 +15,5 @@ class ErrorFormatter(FailurePlugin):
         if info is None:
             context.set_response({"error": "Unknown error"})
             return
-        message = f"{info.plugin_name} failed: {info.error_message}"
+        message = f"{info.plugin_name} failed ({info.error_type}): {info.error_message}"
         context.set_response({"error": message})
