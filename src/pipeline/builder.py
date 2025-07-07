@@ -148,9 +148,12 @@ class AgentBuilder:
                     and obj not in {BasePlugin, BasePluginInterface}
                 ):
                     try:
-                        self.add_plugin(obj())
+                        instance = obj()
                     except TypeError:
-                        self.add_plugin(obj({}))
+                        instance = obj({})
+                    self.add_plugin(instance)
+                elif callable(obj) and hasattr(obj, "__entity_plugin__"):
+                    self.add_plugin(getattr(obj, "__entity_plugin__"))
                 elif callable(obj) and name.endswith("_plugin"):
                     self.plugin(obj)
             except Exception as exc:  # noqa: BLE001
