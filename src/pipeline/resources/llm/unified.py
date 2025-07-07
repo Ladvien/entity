@@ -7,14 +7,17 @@ from typing import Any, AsyncIterator, Dict, List, Type
 
 from pipeline.base_plugins import ValidationResult
 from pipeline.state import LLMResponse
+
 # Import provider implementations from the public plugin package. Using the
 # fully qualified path avoids ambiguity if this module is restructured.
-from plugins.builtin.resources.llm.providers import (BedrockProvider,
-                                                     ClaudeProvider,
-                                                     EchoProvider,
-                                                     GeminiProvider,
-                                                     OllamaProvider,
-                                                     OpenAIProvider)
+from plugins.builtin.resources.llm.providers import (
+    BedrockProvider,
+    ClaudeProvider,
+    EchoProvider,
+    GeminiProvider,
+    OllamaProvider,
+    OpenAIProvider,
+)
 from plugins.builtin.resources.llm_resource import LLMResource
 
 from ...exceptions import ResourceError
@@ -90,12 +93,13 @@ class UnifiedLLMResource(LLMResource):
 
     async def generate(
         self, prompt: str, functions: List[Dict[str, Any]] | None = None
-    ) -> LLMResponse:
+    ) -> str:
         self._select_model(prompt)
         last_exc: Exception | None = None
         for provider in self._providers:
             try:
-                return await provider.generate(prompt, functions)
+                response: LLMResponse = await provider.generate(prompt, functions)
+                return response.content
             except Exception as exc:  # noqa: BLE001
                 last_exc = exc
                 continue
