@@ -89,8 +89,8 @@ class ComplexPlugin(ToolPlugin):
 ```
 
 **2. Interactive Stage Discovery**:
-- CLI command: `poetry run python src/cli.py analyze-plugin my_plugin.py`
-- Framework analyzes plugin behavior and asks: "This plugin calls external APIs. Should it run in THINK (planning) or DO (execution)?"
+- CLI command: `poetry run python src/cli/plugin_tool.py analyze-plugin my_plugin.py`
+- The tool inspects async functions and suggests stages based on `PluginAutoClassifier` heuristics.
 - Provides stage recommendations with clear reasoning
 
 **3. Clear Stage Mental Model**:

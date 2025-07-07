@@ -6,9 +6,15 @@ import inspect
 from pathlib import Path
 from typing import Any, Dict, List, Type
 
-from pipeline.base_plugins import (AdapterPlugin, BasePlugin, FailurePlugin,
-                                   PromptPlugin, ResourcePlugin, ToolPlugin,
-                                   ValidationResult)
+from pipeline.base_plugins import (
+    AdapterPlugin,
+    BasePlugin,
+    FailurePlugin,
+    PromptPlugin,
+    ResourcePlugin,
+    ToolPlugin,
+    ValidationResult,
+)
 from pipeline.logging import get_logger
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
@@ -59,6 +65,11 @@ class PluginToolCLI:
         doc.add_argument("path", help="Plugin file path")
         doc.add_argument("--out", default="docs/source")
 
+        ana = sub.add_parser(
+            "analyze-plugin", help="Suggest pipeline stages for plugin functions"
+        )
+        ana.add_argument("path", help="Plugin file path")
+
         return parser.parse_args()
 
     # -----------------------------------------------------
@@ -78,6 +89,8 @@ class PluginToolCLI:
             return self._deps()
         if cmd == "docs":
             return self._docs()
+        if cmd == "analyze-plugin":
+            return self._analyze_plugin()
         return 0
 
     def _generate(self) -> int:
@@ -190,6 +203,32 @@ class PluginToolCLI:
         doc = inspect.getdoc(cls) or cls.__name__
         doc_path.write_text(f"# {cls.__name__}\n\n{doc}\n")
         logger.info("Documentation written to %s", doc_path)
+        return 0
+
+    def _analyze_plugin(self) -> int:
+        path = self.args.path
+        spec = importlib.util.spec_from_file_location(Path(path).stem, path)
+        if spec is None or spec.loader is None:
+            logger.error("Cannot import %s", path)
+            return 1
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        from pipeline.base_plugins import PluginAutoClassifier
+
+        found = False
+        for name, obj in module.__dict__.items():
+            if name.startswith("_"):
+                continue
+            if inspect.iscoroutinefunction(obj):
+                plugin = PluginAutoClassifier.classify(obj)
+                stages = ", ".join(str(s) for s in plugin.stages)
+                logger.info("%s -> %s", name, stages)
+                found = True
+
+        if not found:
+            logger.error("No async plugin functions found in %s", path)
+            return 1
         return 0
 
     # -----------------------------------------------------
