@@ -59,7 +59,9 @@ def test_error_stage_execution(caplog):
     result = asyncio.run(execute_pipeline("hi", registries))
     assert result == {"error": "boom"}
     assert any(
-        "Pipeline failure encountered" in record.message
+        record.message == "Pipeline failure encountered"
+        and getattr(record, "pipeline_id", None)
+        and getattr(record, "stage", None) == "do"
         for record in log_capture.records
     )
 
