@@ -1,33 +1,22 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Any, Dict
+from typing import Dict
 
 from ..state import FailureInfo
-from .context import (PipelineContextError, PluginContextError,
-                      StageExecutionError)
-from .exceptions import (PipelineError, PluginExecutionError, ResourceError,
-                         ToolExecutionError)
+from .context import PipelineContextError, PluginContextError, StageExecutionError
+from .exceptions import (
+    PipelineError,
+    PluginExecutionError,
+    ResourceError,
+    ToolExecutionError,
+)
 from .models import ErrorResponse
-
-
-@dataclass(slots=True)
-class ErrorResponse:
-    """Simple wrapper for error payloads."""
-
-    data: Dict[str, Any]
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Return a copy of the payload as a plain dictionary."""
-        return self.data.copy()
-
 
 __all__ = [
     "ErrorResponse",
     "create_static_error_response",
     "create_error_response",
-    "ErrorResponse",
     "PipelineError",
     "PluginExecutionError",
     "ResourceError",
@@ -35,55 +24,16 @@ __all__ = [
     "PipelineContextError",
     "StageExecutionError",
     "PluginContextError",
-    "ErrorResponse",
 ]
 
 
-@dataclass(slots=True)
-class ErrorResponse:
-    """Structured error information returned to the caller."""
-
-    error: str
-    message: str | None = None
-    error_id: str | None = None
-    timestamp: str | None = None
-    error_type: str | None = None
-    stage: str | None = None
-    plugin: str | None = None
-    pipeline_id: str | None = None
-    type: str = "error"
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Return a plain ``dict`` representation."""
-        return {k: v for k, v in asdict(self).items() if v is not None}
-
-
-# Generic fallback returned when even error handling fails
-STATIC_ERROR_RESPONSE: Dict[str, Any] = {
+STATIC_ERROR_RESPONSE: Dict[str, str | None] = {
     "error": "System error occurred",
     "message": "An unexpected error prevented processing your request.",
     "error_id": None,
     "timestamp": None,
     "type": "static_fallback",
 }
-
-
-@dataclass(slots=True)
-class ErrorResponse:
-    """Standard error response structure."""
-
-    error: str
-    message: str | None = None
-    error_type: str | None = None
-    stage: str | None = None
-    plugin: str | None = None
-    pipeline_id: str | None = None
-    error_id: str | None = None
-    timestamp: str | None = field(default_factory=lambda: datetime.now().isoformat())
-    type: str = "plugin_error"
-
-    def to_dict(self) -> Dict[str, Any]:
-        return asdict(self)
 
 
 def create_static_error_response(pipeline_id: str) -> ErrorResponse:
