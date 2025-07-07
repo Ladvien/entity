@@ -24,6 +24,7 @@ from .manager import PipelineManager
 from .metrics import MetricsCollector
 from .observability.metrics import get_metrics_server
 from .observability.tracing import start_span
+from .serialization import dumps_state, loads_state
 from .stages import PipelineStage
 from .state import FailureInfo, PipelineState
 from .tools.execution import execute_pending_tools
@@ -149,9 +150,13 @@ async def execute_pipeline(
 ) -> Dict[str, Any] | tuple[Dict[str, Any], MetricsCollector]:
     if state is None:
         if state_file and os.path.exists(state_file):
-            with open(state_file, "r", encoding="utf-8") as fh:
-                data = json.load(fh)
-            state = PipelineState.from_dict(data)
+            if state_file.endswith((".mpk", ".msgpack")):
+                with open(state_file, "rb") as fh:
+                    state = loads_state(fh.read())
+            else:
+                with open(state_file, "r", encoding="utf-8") as fh:
+                    data = json.load(fh)
+                state = PipelineState.from_dict(data)
             state.failure_info = None
         else:
             state = PipelineState(
@@ -185,8 +190,12 @@ async def execute_pipeline(
                         await execute_stage(stage, state, registries)
                     finally:
                         if state_file:
-                            with open(state_file, "w", encoding="utf-8") as fh:
-                                json.dump(state.to_dict(), fh)
+                            if state_file.endswith((".mpk", ".msgpack")):
+                                with open(state_file, "wb") as fh:
+                                    fh.write(dumps_state(state))
+                            else:
+                                with open(state_file, "w", encoding="utf-8") as fh:
+                                    json.dump(state.to_dict(), fh)
                         if snapshots_dir:
                             os.makedirs(snapshots_dir, exist_ok=True)
                             snap_path = os.path.join(
