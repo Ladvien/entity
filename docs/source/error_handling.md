@@ -64,11 +64,18 @@ Base plugins include a simple circuit breaker using `failure_threshold` and `fai
 When a stage fails the pipeline records a `FailureInfo` object and runs plugins assigned to the `ERROR` stage. A failure plugin can inspect the info and set a response:
 
 ```python
+from pipeline.errors.response import ErrorResponse
+
 class ErrorFormatter(FailurePlugin):
     stages = [PipelineStage.ERROR]
     async def _execute_impl(self, ctx: PluginContext) -> None:
         info = ctx.get_failure_info()
-        ctx.set_response({"error": info.error_message})
+        ctx.set_response(
+            ErrorResponse(
+                error=info.error_message,
+                message="Unable to process request",
+            ).to_dict()
+        )
 ```
 
 If failure handling itself fails the framework returns a static response created by `create_static_error_response`:
@@ -99,4 +106,5 @@ class MyPlugin(PromptPlugin):
 plugin = MyPlugin({"max_retries": 3, "retry_delay": 0.5})
 ```
 
-If all retries fail the `DefaultResponder` plugin converts the captured `FailureInfo` into a JSON response using `create_error_response`.
+If all retries fail the `DefaultResponder` plugin converts the captured `FailureInfo`
+into an `ErrorResponse` and returns its `to_dict()` form via `create_error_response`.

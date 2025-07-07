@@ -287,11 +287,23 @@ class BasePlugin:
 ```python
 # When ERROR stage plugins fail
 STATIC_ERROR_RESPONSE = {
-    "error": "System error occurred", 
+    "error": "System error occurred",
     "message": "An unexpected error prevented processing your request.",
     "pipeline_id": pipeline_id,
     "type": "static_fallback"
 }
+```
+
+### ErrorResponse Utility
+```python
+from pipeline.errors.response import ErrorResponse
+
+info = ctx.get_failure_info()
+payload = ErrorResponse(
+    error=info.error_message,
+    message="Unable to complete request",
+).to_dict()
+ctx.set_response(payload)
 ```
 
 ## Developer Experience Features
