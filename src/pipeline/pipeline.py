@@ -74,6 +74,14 @@ async def execute_stage(
                         )
                     state.pending_tool_calls.clear()
             except CircuitBreakerTripped as exc:
+                logger.exception(
+                    "Circuit breaker tripped",
+                    extra={
+                        "plugin": getattr(plugin, "name", plugin.__class__.__name__),
+                        "stage": str(stage),
+                        "pipeline_id": state.pipeline_id,
+                    },
+                )
                 state.failure_info = FailureInfo(
                     stage=str(stage),
                     plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
@@ -83,6 +91,14 @@ async def execute_stage(
                 )
                 return
             except PluginExecutionError as exc:
+                logger.exception(
+                    "Plugin execution failed",
+                    extra={
+                        "plugin": getattr(plugin, "name", plugin.__class__.__name__),
+                        "stage": str(stage),
+                        "pipeline_id": state.pipeline_id,
+                    },
+                )
                 state.failure_info = FailureInfo(
                     stage=str(stage),
                     plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
@@ -92,6 +108,14 @@ async def execute_stage(
                 )
                 return
             except ToolExecutionError as exc:
+                logger.exception(
+                    "Tool execution failed",
+                    extra={
+                        "plugin": exc.tool_name,
+                        "stage": str(stage),
+                        "pipeline_id": state.pipeline_id,
+                    },
+                )
                 state.failure_info = FailureInfo(
                     stage=str(stage),
                     plugin_name=exc.tool_name,
@@ -101,6 +125,14 @@ async def execute_stage(
                 )
                 return
             except ResourceError as exc:
+                logger.exception(
+                    "Resource error",
+                    extra={
+                        "plugin": getattr(plugin, "name", plugin.__class__.__name__),
+                        "stage": str(stage),
+                        "pipeline_id": state.pipeline_id,
+                    },
+                )
                 state.failure_info = FailureInfo(
                     stage=str(stage),
                     plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
@@ -110,6 +142,14 @@ async def execute_stage(
                 )
                 return
             except PipelineError as exc:
+                logger.exception(
+                    "Pipeline error",
+                    extra={
+                        "plugin": getattr(plugin, "name", plugin.__class__.__name__),
+                        "stage": str(stage),
+                        "pipeline_id": state.pipeline_id,
+                    },
+                )
                 state.failure_info = FailureInfo(
                     stage=str(stage),
                     plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
