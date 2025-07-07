@@ -64,7 +64,7 @@ def test_error_plugin_runs():
 
 def test_static_error_response():
     pipeline_id = "123"
-    resp = create_static_error_response(pipeline_id)
+    resp = create_static_error_response(pipeline_id).to_dict()
     assert resp["error_id"] == pipeline_id
     assert resp["type"] == "static_fallback"
 
