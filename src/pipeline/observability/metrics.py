@@ -3,8 +3,14 @@ from __future__ import annotations
 """Prometheus metrics integration for the Entity pipeline."""
 
 import psutil
-from prometheus_client import (CollectorRegistry, Counter, Gauge, Histogram,
-                               start_http_server)
+from prometheus_client import (
+    CollectorRegistry,
+    Counter,
+    Gauge,
+    Histogram,
+    generate_latest,
+    start_http_server,
+)
 
 from pipeline.metrics import MetricsCollector
 
@@ -44,6 +50,11 @@ class MetricsServer:
             "Process memory usage in bytes",
             registry=self.registry,
         )
+        self.dashboard_requests = Counter(
+            "dashboard_requests_total",
+            "Number of dashboard requests",
+            registry=self.registry,
+        )
         start_http_server(port, registry=self.registry)
 
     def update(self, metrics: MetricsCollector) -> None:
@@ -60,6 +71,11 @@ class MetricsServer:
                 self.stage_duration.labels(stage=stage).observe(d)
         self.cpu_usage.set(psutil.cpu_percent())
         self.mem_usage.set(psutil.Process().memory_info().rss)
+        self.dashboard_requests.inc(metrics.dashboard_requests)
+
+    def render(self) -> bytes:
+        """Return metrics in Prometheus text format."""
+        return generate_latest(self.registry)
 
 
 _metrics_server: MetricsServer | None = None

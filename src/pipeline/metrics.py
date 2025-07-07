@@ -18,6 +18,7 @@ class MetricsCollector:
     llm_durations: dict[str, list[float]] = field(default_factory=dict)
     llm_token_count: dict[str, int] = field(default_factory=dict)
     llm_cost: dict[str, float] = field(default_factory=dict)
+    dashboard_requests: int = 0
 
     def record_pipeline_duration(self, duration: float) -> None:
         self.pipeline_durations.append(duration)
@@ -61,6 +62,10 @@ class MetricsCollector:
         key = f"{stage}:{plugin}"
         self.llm_cost[key] = self.llm_cost.get(key, 0.0) + cost
 
+    def record_dashboard_request(self) -> None:
+        """Increment the dashboard request counter."""
+        self.dashboard_requests += 1
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "pipeline_durations": self.pipeline_durations,
@@ -73,4 +78,5 @@ class MetricsCollector:
             "llm_durations": self.llm_durations,
             "llm_token_count": self.llm_token_count,
             "llm_cost": self.llm_cost,
+            "dashboard_requests": self.dashboard_requests,
         }
