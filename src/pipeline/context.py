@@ -5,8 +5,17 @@ from __future__ import annotations
 import asyncio
 from copy import deepcopy
 from datetime import datetime
-from typing import (TYPE_CHECKING, Any, AsyncIterator, Callable, Dict, List,
-                    Optional, TypeVar, cast)
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    AsyncIterator,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    TypeVar,
+    cast,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from common_interfaces.resources import LLM
@@ -20,8 +29,7 @@ __all__ = ["PluginContext", "ConversationEntry", "ToolCall"]
 from .errors import ResourceError
 from .metrics import MetricsCollector
 from .stages import PipelineStage
-from .state import (ConversationEntry, FailureInfo, LLMResponse, PipelineState,
-                    ToolCall)
+from .state import ConversationEntry, FailureInfo, LLMResponse, PipelineState, ToolCall
 from .tools.base import RetryOptions
 from .tools.execution import execute_tool
 
@@ -213,6 +221,11 @@ class PluginContext:
     def get_metadata(self, key: str, default: Any = None) -> Any:
         """Return arbitrary metadata value previously stored."""
         return self.__state.metadata.get(key, default)
+
+    @property
+    def metadata(self) -> Dict[str, Any]:
+        """Direct access to the pipeline metadata."""
+        return cast(Dict[str, Any], self.__state.metadata)
 
     def set_metadata(self, key: str, value: Any) -> None:
         """Store arbitrary metadata associated with the pipeline."""

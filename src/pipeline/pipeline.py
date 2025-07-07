@@ -16,9 +16,13 @@ from registry import SystemRegistries
 
 from .context import ConversationEntry, PluginContext
 from .errors import create_static_error_response
-from .exceptions import (CircuitBreakerTripped, PipelineError,
-                         PluginExecutionError, ResourceError,
-                         ToolExecutionError)
+from .exceptions import (
+    CircuitBreakerTripped,
+    PipelineError,
+    PluginExecutionError,
+    ResourceError,
+    ToolExecutionError,
+)
 from .logging import get_logger, reset_request_id, set_request_id
 from .manager import PipelineManager
 from .metrics import MetricsCollector
@@ -174,21 +178,23 @@ async def execute_pipeline(
                         and stage.value <= state.last_completed_stage.value
                     ):
                         continue
-                    await execute_stage(stage, state, registries)
-                    if snapshots_dir:
-                        os.makedirs(snapshots_dir, exist_ok=True)
-                        snap_path = os.path.join(
-                            snapshots_dir,
-                            f"{state.pipeline_id}_{stage.name.lower()}.json",
-                        )
-                        with open(snap_path, "w", encoding="utf-8") as fh:
-                            json.dump(state.to_dict(), fh)
+                    try:
+                        await execute_stage(stage, state, registries)
+                    finally:
+                        if state_file:
+                            with open(state_file, "w", encoding="utf-8") as fh:
+                                json.dump(state.to_dict(), fh)
+                        if snapshots_dir:
+                            os.makedirs(snapshots_dir, exist_ok=True)
+                            snap_path = os.path.join(
+                                snapshots_dir,
+                                f"{state.pipeline_id}_{stage.name.lower()}.json",
+                            )
+                            with open(snap_path, "w", encoding="utf-8") as fh:
+                                json.dump(state.to_dict(), fh)
                     if state.failure_info:
                         break
                     state.last_completed_stage = stage
-                    if state_file:
-                        with open(state_file, "w", encoding="utf-8") as fh:
-                            json.dump(state.to_dict(), fh)
 
         if state.failure_info:
             try:
@@ -209,7 +215,7 @@ async def execute_pipeline(
         if pipeline_manager is not None:
             await pipeline_manager.deregister(state.pipeline_id)
         state.metrics.record_pipeline_duration(time.time() - start)
-        if state_file and os.path.exists(state_file):
+        if state_file and os.path.exists(state_file) and state.failure_info is None:
             os.remove(state_file)
         server = get_metrics_server()
         if server is not None:
