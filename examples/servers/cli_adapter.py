@@ -7,7 +7,7 @@ import sys
 
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))
 
-from utilities import enable_plugins_namespace
+from ..utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 

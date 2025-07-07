@@ -10,7 +10,7 @@ from typing import Any, Dict
 # Ensure the repository's ``src`` directory is available for imports
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))
 
-from utilities import enable_plugins_namespace
+from ..utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 from user_plugins.llm.unified import UnifiedLLMResource
@@ -81,7 +81,7 @@ def create_llm() -> UnifiedLLMResource:
         cfg = {"provider": "ollama", "base_url": base_url, "model": model}
     else:
         cfg = {"provider": "echo"}
-    return UnifiedLLMResource(ConfigLoader.from_dict(cfg))
+    return UnifiedLLMResource(cfg)
 
 
 def setup_registries() -> SystemRegistries:

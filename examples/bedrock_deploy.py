@@ -8,11 +8,11 @@ import sys
 
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
-from utilities import enable_plugins_namespace
+from .utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 
-from infrastructure.aws_bedrock import deploy
+from plugins.builtin.infrastructure.aws_bedrock import deploy
 
 
 def can_deploy() -> bool:

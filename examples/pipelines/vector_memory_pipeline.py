@@ -15,12 +15,12 @@ from typing import Dict, List
 # Ensure project source is available for imports
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))  # noqa: E402
 
-from utilities import enable_plugins_namespace
+from ..utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 from user_plugins.llm.unified import UnifiedLLMResource  # noqa: E402
-from user_plugins.pg_vector_store import PgVectorStore  # noqa: E402
-from user_plugins.postgres import PostgresResource  # noqa: E402
+from plugins.builtin.resources.pg_vector_store import PgVectorStore  # noqa: E402
+from plugins.builtin.resources.postgres import PostgresResource  # noqa: E402
 
 from entity_config.environment import load_env
 from entity import Agent  # noqa: E402

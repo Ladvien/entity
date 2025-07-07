@@ -10,7 +10,7 @@ from datetime import datetime
 # Make the repository's ``src`` directory importable
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
-from utilities import enable_plugins_namespace
+from .utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 

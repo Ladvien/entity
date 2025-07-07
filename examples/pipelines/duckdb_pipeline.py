@@ -10,12 +10,11 @@ from typing import Any
 # Ensure project source is available for imports
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))
 
-from utilities import enable_plugins_namespace
+from ..utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 
-from user_plugins.duckdb_database import DuckDBDatabaseResource
-from user_plugins.duckdb_vector_store import DuckDBVectorStore
+from user_plugins.resources import DuckDBDatabaseResource, DuckDBVectorStore
 from user_plugins.memory_resource import MemoryResource
 
 from entity import Agent
