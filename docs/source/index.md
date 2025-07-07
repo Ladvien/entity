@@ -30,6 +30,7 @@ Welcome to the Entity Pipeline framework. These pages explain how to configure a
 - [API reference](api_reference.md)
 - [Advanced usage](advanced_usage.md)
 - [Module map](module_map.md)
+- [Error handling](error_handling.md)
 - [gRPC services](grpc_services.md)
 - [LLM gRPC audit](llm_grpc_audit.md)
 - [Troubleshooting](troubleshooting.md)
@@ -58,6 +59,7 @@ logging
 state_logging
 advanced_usage
 module_map
+error_handling
 grpc_services
 llm_grpc_audit
 troubleshooting

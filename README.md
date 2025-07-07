@@ -24,6 +24,7 @@ poetry run python src/cli.py --config config.yaml
 This project relies on `httpx==0.27.*`, which Poetry will install automatically.
 <!-- end quick_start -->
 For a high-level look at how the pieces connect, see [components_overview.md](components_overview.md).
+For details on failures and recovery see [docs/source/error_handling.md](docs/source/error_handling.md).
 
 ## Environment Setup
 

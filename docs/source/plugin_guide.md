@@ -175,8 +175,9 @@ poetry run python src/cli.py serve-websocket --config config/dev.yaml
 ```
 
 When implementing custom error handling, refer to
-[`examples/failure_example.py`](../../examples/failure_example.py) and the
-failure plugin template at `src/cli/templates/failure.py`.
+[`examples/failure_example.py`](../../examples/failure_example.py),
+the failure plugin template at `src/cli/templates/failure.py`,
+and the [error handling guide](error_handling.md).
 
 ## Troubleshooting Plugins
 - **Plugin not executing** – confirm the `stages` list contains the desired pipeline stage.
