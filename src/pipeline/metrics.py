@@ -10,6 +10,7 @@ class MetricsCollector:
 
     pipeline_durations: list[float] = field(default_factory=list)
     plugin_durations: dict[str, list[float]] = field(default_factory=dict)
+    stage_durations: dict[str, list[float]] = field(default_factory=dict)
     tool_execution_count: dict[str, int] = field(default_factory=dict)
     tool_error_count: dict[str, int] = field(default_factory=dict)
     tool_durations: dict[str, list[float]] = field(default_factory=dict)
@@ -24,6 +25,9 @@ class MetricsCollector:
     def record_plugin_duration(self, plugin: str, stage: str, duration: float) -> None:
         key = f"{stage}:{plugin}"
         self.plugin_durations.setdefault(key, []).append(duration)
+
+    def record_stage_duration(self, stage: str, duration: float) -> None:
+        self.stage_durations.setdefault(stage, []).append(duration)
 
     def record_tool_execution(
         self, tool_name: str, stage: str, pipeline_id: str, result_key: str, source: str
@@ -61,6 +65,7 @@ class MetricsCollector:
         return {
             "pipeline_durations": self.pipeline_durations,
             "plugin_durations": self.plugin_durations,
+            "stage_durations": self.stage_durations,
             "tool_execution_count": self.tool_execution_count,
             "tool_error_count": self.tool_error_count,
             "tool_durations": self.tool_durations,

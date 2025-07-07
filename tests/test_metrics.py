@@ -53,3 +53,4 @@ def test_metrics_collected():
     assert data["tool_execution_count"][f"{stage}:echo"] == 1
     assert data["llm_call_count"][f"{stage}:{MetricsPlugin.__name__}:test"] == 1
     assert data["pipeline_durations"] and data["pipeline_durations"][0] > 0
+    assert stage in data["stage_durations"]

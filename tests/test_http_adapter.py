@@ -2,14 +2,8 @@ import asyncio
 
 import httpx
 
-from pipeline import (
-    PipelineManager,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
+                      PromptPlugin, SystemRegistries, ToolRegistry)
 from pipeline.resources import ResourceContainer
 from plugins.builtin.adapters import HTTPAdapter
 
@@ -107,3 +101,18 @@ def test_http_adapter_dashboard():
             assert resp.json() == {"active_pipelines": 0}
 
     asyncio.run(_requests())
+
+
+def test_http_adapter_health():
+    adapter = make_adapter()
+
+    async def _request():
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=adapter.app),
+            base_url="http://testserver",
+        ) as client:
+            resp = await client.get("/health")
+            assert resp.status_code == 200
+            assert resp.json()["status"] == "ok"
+
+    asyncio.run(_request())

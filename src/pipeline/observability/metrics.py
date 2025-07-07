@@ -28,6 +28,12 @@ class MetricsServer:
             ["plugin", "stage"],
             registry=self.registry,
         )
+        self.stage_duration = Histogram(
+            "stage_duration_seconds",
+            "Duration of each pipeline stage",
+            ["stage"],
+            registry=self.registry,
+        )
         self.cpu_usage = Gauge(
             "process_cpu_percent",
             "Process CPU utilization percent",
@@ -49,6 +55,9 @@ class MetricsServer:
         for key, count in metrics.tool_error_count.items():
             stage, plugin = key.split(":", 1)
             self.llm_failures.labels(plugin=plugin, stage=stage).inc(count)
+        for stage, durations in metrics.stage_durations.items():
+            for d in durations:
+                self.stage_duration.labels(stage=stage).observe(d)
         self.cpu_usage.set(psutil.cpu_percent())
         self.mem_usage.set(psutil.Process().memory_info().rss)
 
