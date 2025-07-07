@@ -18,8 +18,9 @@ Welcome to the Entity Pipeline framework. These pages explain how to configure a
 - [Plugin cheat sheet](plugin_cheatsheet.md)
 - [Detailed guide](plugin_guide.md)
 - [Naming conventions](plugins.md)
+- [Developer examples](developer_examples.md)
 
--### Architecture
+### Architecture
 - [Architecture overview](../../architecture/overview.md)
 - [Components overview](components_overview.md)
 - [Deliver-stage adapters](components_overview.md#deliver-stage-adapters)
@@ -38,6 +39,8 @@ Welcome to the Entity Pipeline framework. These pages explain how to configure a
 - [Local](deploy_local.md)
 - [Docker](deploy_docker.md)
 - [Cloud](deploy_cloud.md)
+- [Production guide](deploy_production.md)
+- [Migration guide](migration_guide.md)
 
 ```{toctree}
 :hidden:
@@ -48,6 +51,7 @@ config
 config_cheatsheet
 plugin_cheatsheet
 plugin_guide
+developer_examples
 context
 logging
 advanced_usage
@@ -59,6 +63,8 @@ deploy_aws
 deploy_local
 deploy_docker
 deploy_cloud
+deploy_production
+migration_guide
 principle_checklist
 apidocs/index
 api_reference

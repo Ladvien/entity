@@ -14,7 +14,9 @@ If initialization still fails, enable debug logging with `LOG_LEVEL=DEBUG` when 
 ## Runtime errors
 - **No response generated** – verify each stage sets the pipeline response or passes control to the next stage.
 - **Tool not found** – make sure the tool is registered in `tool_registry` and that the calling plugin uses the correct name.
+- **Plugin failed to import** – confirm the module path and that the file is in your `PYTHONPATH`.
 
 ## Docker issues
 - **Container exits immediately** – check the command in your `Dockerfile` and ensure the configuration file path is correct.
 - **Ports not exposed** – run the container with `-p 8000:8000` so the HTTP adapter is reachable from the host.
+
