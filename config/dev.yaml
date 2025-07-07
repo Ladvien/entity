@@ -35,8 +35,8 @@ plugins:
       type: plugins.builtin.resources.s3_filesystem:S3FileSystem
       bucket: agent-files
       region: us-east-1
-    storage:
-      type: pipeline.resources.storage_resource:StorageResource
+    # storage:
+    #   type: pipeline.resources.storage_resource:StorageResource
 #   storage:
 #     type: pipeline.resources.storage_resource:StorageResource
 #     database:

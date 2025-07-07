@@ -100,12 +100,20 @@ def _type_to_schema(tp: Any) -> Dict[str, Any]:
 def _class_to_schema(cls: type) -> Dict[str, Any]:
     """Generate a JSON schema for ``cls`` dataclass."""
 
-    schema = {"type": "object", "properties": {}, "additionalProperties": False}
+    additional_props = True if cls is PluginConfig else False
+    schema = {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": additional_props,
+    }
     required = []
 
     hints = get_type_hints(cls)
 
     for field_obj in cls.__dataclass_fields__.values():
+        if cls is PluginConfig and field_obj.name == "options":
+            continue
+
         field_type = hints.get(field_obj.name, field_obj.type)
         schema["properties"][field_obj.name] = _type_to_schema(field_type)
         if field_obj.default is MISSING and field_obj.default_factory is MISSING:

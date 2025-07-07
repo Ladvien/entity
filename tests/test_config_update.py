@@ -31,17 +31,17 @@ class SlowPlugin(PromptPlugin):
         await asyncio.sleep(0.2)
 
 
-def make_registry(add_slow: bool = False):
+async def make_registry(add_slow: bool = False):
     reg = PluginRegistry()
     plugin = TestReconfigPlugin({"value": "one"})
-    asyncio.run(reg.register_plugin_for_stage(plugin, PipelineStage.THINK))
+    await reg.register_plugin_for_stage(plugin, PipelineStage.THINK)
     if add_slow:
-        asyncio.run(reg.register_plugin_for_stage(SlowPlugin(), PipelineStage.THINK))
+        await reg.register_plugin_for_stage(SlowPlugin(), PipelineStage.THINK)
     return reg, plugin
 
 
 def test_update_plugin_configuration_success():
-    reg, plugin = make_registry()
+    reg, plugin = asyncio.run(make_registry())
     result = asyncio.run(
         update_plugin_configuration(reg, "test_plugin", {"value": "two"})
     )
@@ -66,7 +66,7 @@ def test_update_plugin_configuration_restart_required():
 
 def test_update_waits_for_running_pipeline():
     async def run_test():
-        reg, plugin = make_registry(add_slow=True)
+        reg, plugin = await make_registry(add_slow=True)
         registries = SystemRegistries(ResourceContainer(), ToolRegistry(), reg)
         manager = PipelineManager()
         task = asyncio.create_task(

@@ -49,6 +49,12 @@ class RegistryValidator:
 
     @staticmethod
     def _validate_stage_assignment(name: str, cls: type) -> None:
+        from common_interfaces.resources import Resource
+        from pipeline.base_plugins import ResourcePlugin
+
+        if issubclass(cls, (ResourcePlugin, Resource)):
+            return
+
         stages = getattr(cls, "stages", None)
         if not stages:
             raise SystemError(f"Plugin '{name}' does not specify any stages")

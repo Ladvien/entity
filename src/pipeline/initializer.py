@@ -44,10 +44,10 @@ class ClassRegistry:
         for name, cls in self._classes.items():
             yield cls, self._configs[name]
 
-    def resource_classes(self) -> Iterable[Tuple[type, Dict]]:
+    def resource_classes(self) -> Iterable[Tuple[str, type, Dict]]:
         for name, cls in self._classes.items():
             if issubclass(cls, ResourcePlugin) or issubclass(cls, Resource):
-                yield cls, self._configs[name]
+                yield name, cls, self._configs[name]
 
     def tool_classes(self) -> Iterable[Tuple[type[ToolPlugin], Dict]]:
         for name, cls in self._classes.items():
@@ -230,9 +230,8 @@ class SystemInitializer:
 
         # Phase 3: initialize resources via container
         resource_container = self.resource_container_cls()
-        for cls, config in registry.resource_classes():
-            primary_name = getattr(cls, "name", cls.__name__)
-            resource_container.register(primary_name, cls, config)
+        for name, cls, config in registry.resource_classes():
+            resource_container.register(name, cls, config)
         await resource_container.build_all()
 
         degraded: List[str] = []
