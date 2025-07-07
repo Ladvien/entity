@@ -3,8 +3,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime
 
-from pipeline import (PluginRegistry, PromptPlugin, SystemRegistries,
-                      ToolRegistry)
+from pipeline import PluginRegistry, PromptPlugin, SystemRegistries, ToolRegistry
 from pipeline.debug import LogReplayer, StateLogger
 from pipeline.pipeline import execute_pipeline
 from pipeline.resources import ResourceContainer
@@ -53,7 +52,7 @@ class RespondPlugin(PromptPlugin):
 
 def test_execute_pipeline_logs_states(tmp_path):
     plugins = PluginRegistry()
-    asyncio.run(plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.DO))
+    plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.DO)
     registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 
     log_file = tmp_path / "run.jsonl"

@@ -42,7 +42,7 @@ def make_state():
 
 def make_registries(plugin):
     plugins = PluginRegistry()
-    asyncio.run(plugins.register_plugin_for_stage(plugin, PipelineStage.DO))
+    plugins.register_plugin_for_stage(plugin, PipelineStage.DO)
     return SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 
 

@@ -83,29 +83,41 @@ class PluginRegistry:
         self._dependents: Dict[str, List[BasePlugin]] = defaultdict(list)
         self._lock = asyncio.Lock()
 
-    async def register_plugin_for_stage(
+    def register_plugin_for_stage(
         self, plugin: BasePlugin, stage: PipelineStage | str, name: str | None = None
-    ) -> None:
+    ) -> asyncio.Task | None:
         """Register ``plugin`` to execute during ``stage``."""
+
+        async def _register() -> None:
+            try:
+                stage_obj = PipelineStage(stage)
+            except ValueError as exc:  # pragma: no cover - defensive
+                raise ValueError(f"Invalid stage: {stage}") from exc
+            async with self._lock:
+                plugins = self._stage_plugins[stage_obj]
+                insert_at = len(plugins)
+                for idx, existing in enumerate(plugins):
+                    if plugin.priority < existing.priority:
+                        insert_at = idx
+                        break
+                plugins.insert(insert_at, plugin)
+
+                plugin_name = name or getattr(plugin, "name", plugin.__class__.__name__)
+                self._names[plugin] = plugin_name
+                self._plugins_by_name[plugin_name] = plugin
+
+                for dep in getattr(plugin, "dependencies", []):
+                    self._dependents.setdefault(dep, []).append(plugin)
+
         try:
-            stage = PipelineStage(stage)
-        except ValueError as exc:
-            raise ValueError(f"Invalid stage: {stage}") from exc
-        async with self._lock:
-            plugins = self._stage_plugins[stage]
-            insert_at = len(plugins)
-            for idx, existing in enumerate(plugins):
-                if plugin.priority < existing.priority:
-                    insert_at = idx
-                    break
-            plugins.insert(insert_at, plugin)
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
 
-            plugin_name = name or getattr(plugin, "name", plugin.__class__.__name__)
-            self._names[plugin] = plugin_name
-            self._plugins_by_name[plugin_name] = plugin
-
-            for dep in getattr(plugin, "dependencies", []):
-                self._dependents.setdefault(dep, []).append(plugin)
+        if loop is None:
+            asyncio.run(_register())
+            return None
+        return loop.create_task(_register())
 
     def get_plugins_for_stage(self, stage: PipelineStage) -> List[BasePlugin]:
         """Return list of plugins registered for ``stage``."""

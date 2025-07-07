@@ -64,7 +64,7 @@ def test_update_plugin_configuration_restart_required():
 
     reg = PluginRegistry()
     p = NRPlugin({"value": "x"})
-    asyncio.run(reg.register_plugin_for_stage(p, PipelineStage.THINK))
+    reg.register_plugin_for_stage(p, PipelineStage.THINK)
     result = asyncio.run(
         update_plugin_configuration(reg, "test_plugin", {"value": "y"})
     )

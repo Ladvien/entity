@@ -33,7 +33,7 @@ def make_registries():
             FlakyPlugin({"max_retries": 1, "retry_delay": 0}), PipelineStage.DO
         )
     )
-    asyncio.run(plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR))
+    plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR)
     return SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 
 

@@ -50,9 +50,9 @@ class AgentBuilder:
             raise TypeError(f"Plugin '{name}' must implement async '_execute_impl'")
         for stage in getattr(plugin, "stages", []):
             name = getattr(plugin, "name", plugin.__class__.__name__)
-            result = self.plugin_registry.register_plugin_for_stage(plugin, stage, name)
-            if asyncio.iscoroutine(result):
-                asyncio.run(result)
+            task = self.plugin_registry.register_plugin_for_stage(plugin, stage, name)
+            if task is not None:
+                asyncio.run(task)
 
     def plugin(
         self,

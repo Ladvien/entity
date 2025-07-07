@@ -1,7 +1,13 @@
 import asyncio
 
-from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      SystemRegistries, ToolRegistry, execute_pipeline)
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
 from pipeline.resources import ResourceContainer
 from user_plugins.failure.basic_logger import BasicLogger
 from user_plugins.failure.error_formatter import ErrorFormatter
@@ -22,7 +28,7 @@ def make_registries():
             PipelineStage.DO,
         )
     )
-    asyncio.run(plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR))
+    plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR)
     asyncio.run(
         plugins.register_plugin_for_stage(ErrorFormatter({}), PipelineStage.ERROR)
     )

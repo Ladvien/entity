@@ -21,8 +21,8 @@ class FailPlugin(PromptPlugin):
 
 def make_registries():
     plugins = PluginRegistry()
-    asyncio.run(plugins.register_plugin_for_stage(FailPlugin({}), PipelineStage.DO))
-    asyncio.run(plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR))
+    plugins.register_plugin_for_stage(FailPlugin({}), PipelineStage.DO)
+    plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR)
     return SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 
 
