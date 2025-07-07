@@ -5,8 +5,6 @@ import asyncio
 import json
 from typing import Any, AsyncIterator, Dict, Optional
 
-import httpx
-
 from pipeline.exceptions import ResourceError
 from pipeline.validation import ValidationResult
 from plugins.builtin.resources.http_llm_resource import HttpLLMResource
@@ -49,19 +47,18 @@ class BaseProvider(LLM):
         last_exc: Exception | None = None
         for attempt in range(self.retry_attempts):
             try:
-                async with httpx.AsyncClient(timeout=self.timeout) as client:
-                    async with client.stream(
-                        "POST", url, json=payload, headers=headers, params=params
-                    ) as response:
-                        response.raise_for_status()
-                        async for line in response.aiter_lines():
-                            if not line:
-                                continue
-                            if line.startswith("data: "):
-                                line = line[6:]
-                            if line == "[DONE]":
-                                break
-                            yield json.loads(line)
+                async with self.http._client.stream(
+                    "POST", url, json=payload, headers=headers, params=params
+                ) as response:
+                    response.raise_for_status()
+                    async for line in response.aiter_lines():
+                        if not line:
+                            continue
+                        if line.startswith("data: "):
+                            line = line[6:]
+                        if line == "[DONE]":
+                            break
+                        yield json.loads(line)
                 return
             except Exception as exc:  # noqa: BLE001 - retry
                 last_exc = exc
