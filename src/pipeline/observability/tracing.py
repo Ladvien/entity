@@ -9,12 +9,14 @@ from typing import Any, Awaitable, Callable
 from opentelemetry import trace
 
 try:  # Optional dependency
-    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import \
+        OTLPSpanExporter
 except Exception:  # pragma: no cover - optional
     OTLPSpanExporter = None  # type: ignore
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+from opentelemetry.sdk.trace.export import (BatchSpanProcessor,
+                                            ConsoleSpanExporter)
 
 
 class _NullWriter:

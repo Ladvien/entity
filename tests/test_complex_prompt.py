@@ -19,7 +19,7 @@ class FakeLLM:
 
 class FakeMemory(MemoryResource):
     def __init__(self, history):
-        super().__init__(None, None, {})
+        super().__init__(config={})
         self._history = history
 
     async def load_conversation(self, conversation_id: str):
