@@ -186,7 +186,7 @@ async def _execute_impl(self, context):
 - Natural async/await patterns
 - No queuing complexity
 
-**Note**: `context.execute_tool()` is deprecated in favor of `context.use_tool()` for consistency.
+**Tip**: Use `context.use_tool()` to run tools directly.
 
 ## State Management
 

@@ -1,9 +1,15 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, SystemRegistries,
-                      ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources import ResourceContainer
 from user_plugins.prompts.react_prompt import ReActPrompt
 from user_plugins.tools.calculator_tool import CalculatorTool
@@ -56,9 +62,6 @@ def test_react_prompt_multiple_steps_and_tool_call():
     asyncio.run(plugin.execute(ctx))
 
     assert state.response == "4"
-    assert len(state.pending_tool_calls) == 1
-    call = state.pending_tool_calls[0]
-    assert call.name == "calculator_tool"
-    assert call.params["expression"] == "2+2"
+    assert len(state.pending_tool_calls) == 0
     assistant_entries = [e for e in state.conversation if e.role == "assistant"]
     assert len(assistant_entries) == 3

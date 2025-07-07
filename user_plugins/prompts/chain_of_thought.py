@@ -48,9 +48,10 @@ class ChainOfThoughtPrompt(PromptPlugin):
             )
 
             if self._needs_tools(reasoning.content):
-                context.execute_tool(
+                await context.use_tool(
                     "analysis_tool",
-                    {"data": conversation_text, "reasoning_step": reasoning.content},
+                    data=conversation_text,
+                    reasoning_step=reasoning.content,
                 )
 
             if "final answer" in reasoning.content.lower():

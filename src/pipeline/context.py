@@ -323,6 +323,15 @@ class PluginContext:
                 result = f"Error: {exc}"
                 self.set_stage_result(call.result_key, result)
                 self.record_tool_error(call.name, str(exc))
+                self.add_failure(
+                    FailureInfo(
+                        stage=str(state.current_stage),
+                        plugin_name=call.name,
+                        error_type=exc.__class__.__name__,
+                        error_message=str(exc),
+                        original_exception=exc,
+                    )
+                )
             state.pending_tool_calls.remove(call)
         result = self.get_stage_result(result_key)
         state.stage_results.pop(result_key, None)

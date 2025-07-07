@@ -1,8 +1,15 @@
 import asyncio
 
-from pipeline import (LLMResponse, PipelineStage, PluginRegistry, PromptPlugin,
-                      SystemRegistries, ToolPlugin, ToolRegistry,
-                      execute_pipeline)
+from pipeline import (
+    LLMResponse,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolPlugin,
+    ToolRegistry,
+    execute_pipeline,
+)
 from pipeline.resources import ResourceContainer
 
 
@@ -22,7 +29,7 @@ class MetricsPlugin(PromptPlugin):
     stages = [PipelineStage.DO]
 
     async def _execute_impl(self, context):
-        context.execute_tool("echo", {"text": "hello"})
+        await context.use_tool("echo", text="hello")
         await self.call_llm(context, "hi", "test")
         context.set_response("ok")
 

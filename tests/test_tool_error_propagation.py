@@ -24,7 +24,7 @@ class CallToolPlugin(PromptPlugin):
     stages = [PipelineStage.DO]
 
     async def _execute_impl(self, context):
-        context.execute_tool("fail", {})
+        await context.use_tool("fail")
 
 
 def make_registries():
@@ -36,7 +36,7 @@ def make_registries():
     )
 
     tools = ToolRegistry()
-    tools.add("fail", FailingTool({"max_retries": 0}))
+    asyncio.run(tools.add("fail", FailingTool({"max_retries": 0})))
 
     return SystemRegistries(ResourceContainer(), tools, plugins)
 

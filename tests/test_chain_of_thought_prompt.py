@@ -1,9 +1,15 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, SystemRegistries,
-                      ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources import ResourceContainer
 from user_plugins.prompts.chain_of_thought import ChainOfThoughtPrompt
 
@@ -66,7 +72,4 @@ def test_chain_of_thought_records_steps_and_tool_call():
         "We need to calculate result",
         "Final answer is 42",
     ]
-    assert len(state.pending_tool_calls) == 1
-    call = state.pending_tool_calls[0]
-    assert call.name == "analysis_tool"
-    assert call.params["data"] == "How does this work?"
+    assert len(state.pending_tool_calls) == 0
