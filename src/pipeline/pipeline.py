@@ -297,10 +297,10 @@ async def execute_pipeline(
                 if state_logger is not None:
                     state_logger.log(state, PipelineStage.ERROR)
             except Exception:
-                result = create_static_error_response(state.pipeline_id)
+                result = create_static_error_response(state.pipeline_id).to_dict()
                 return (result, state.metrics) if return_metrics else result
             if state.response is None:
-                result = create_static_error_response(state.pipeline_id)
+                result = create_static_error_response(state.pipeline_id).to_dict()
                 return (result, state.metrics) if return_metrics else result
             result = state.response
         elif state.response is None:
