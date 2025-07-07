@@ -1,4 +1,4 @@
-from common_interfaces import plugins as _plugin_api
+from common_interfaces import plugins as plugin_utils
 
 from .agent import Agent
 from .base_plugins import (
@@ -103,7 +103,7 @@ def __getattr__(name: str) -> Any:
     raise AttributeError(f"module {__name__} has no attribute {name}")
 
 
-plugin_api.configure_plugins(
+plugin_utils.configure_plugins(
     base_plugin=BasePlugin,
     prompt_plugin=PromptPlugin,
     adapter_plugin=AdapterPlugin,
