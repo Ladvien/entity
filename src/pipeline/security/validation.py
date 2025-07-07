@@ -2,8 +2,8 @@ from __future__ import annotations
 
 """Simple input validation utilities for plugin security experiments."""
 
-from html import escape
 import re
+from html import escape
 from typing import Any, Dict, Type
 
 from pydantic import BaseModel, ValidationError

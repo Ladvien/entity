@@ -25,6 +25,7 @@ from pipeline.manager import PipelineManager
 from pipeline.metrics import MetricsCollector
 from pipeline.observability import get_metrics_server, start_metrics_server
 from pipeline.pipeline import execute_pipeline
+from pipeline.security import AdapterAuthenticator
 from pipeline.stages import PipelineStage
 from registry import SystemRegistries
 
@@ -33,17 +34,22 @@ class TokenAuthMiddleware(BaseHTTPMiddleware):
     """Validate bearer tokens on incoming requests."""
 
     def __init__(
-        self, app: FastAPI, tokens: list[str], audit_logger: logging.Logger
+        self,
+        app: FastAPI,
+        authenticator: AdapterAuthenticator,
+        audit_logger: logging.Logger,
     ) -> None:
         super().__init__(app)
-        self.tokens = set(tokens)
+        self.auth = authenticator
         self.audit_logger = audit_logger
 
     async def dispatch(self, request: Request, call_next):  # type: ignore[override]
-        if self.tokens:
+        if self.auth:
             auth = request.headers.get("authorization")
             token = auth.split(" ")[-1] if auth and " " in auth else None
-            if token not in self.tokens:
+            if not self.auth.authenticate(token) or not self.auth.authorize(
+                token, "http"
+            ):
                 client = request.client.host if request.client else "unknown"
                 self.audit_logger.info("invalid token from %s", client)
                 for h in self.audit_logger.handlers:
@@ -104,6 +110,12 @@ class HTTPAdapter(AdapterPlugin):
     ) -> None:
         super().__init__(config)
         self.manager = manager
+        tokens_cfg = self.config.get("auth_tokens", [])
+        if isinstance(tokens_cfg, list):
+            mapping = {t: ["http"] for t in tokens_cfg}
+        else:
+            mapping = {str(k): v for k, v in dict(tokens_cfg).items()}
+        self.authenticator = AdapterAuthenticator(mapping)
         self.app = FastAPI()
         self._setup_audit_logger()
         self._setup_middleware()
@@ -131,10 +143,11 @@ class HTTPAdapter(AdapterPlugin):
         self.audit_logger.setLevel(logging.INFO)
 
     def _setup_middleware(self) -> None:
-        tokens: list[str] = list(self.config.get("auth_tokens", []))
-        if tokens:
+        if self.authenticator:
             self.app.add_middleware(
-                TokenAuthMiddleware, tokens=tokens, audit_logger=self.audit_logger
+                TokenAuthMiddleware,
+                authenticator=self.authenticator,
+                audit_logger=self.audit_logger,
             )
 
         rl_cfg = self.config.get("rate_limit", {})

@@ -15,6 +15,7 @@ from pipeline.base_plugins import AdapterPlugin
 from pipeline.exceptions import ResourceError
 from pipeline.manager import PipelineManager
 from pipeline.pipeline import execute_pipeline
+from pipeline.security import AdapterAuthenticator
 from pipeline.stages import PipelineStage
 from registry import SystemRegistries
 
@@ -33,6 +34,12 @@ class CLIAdapter(AdapterPlugin):
     ) -> None:
         super().__init__(config)
         self.manager = manager
+        tokens_cfg = self.config.get("auth_tokens", [])
+        if isinstance(tokens_cfg, list):
+            mapping = {t: ["cli"] for t in tokens_cfg}
+        else:
+            mapping = {str(k): v for k, v in dict(tokens_cfg).items()}
+        self.authenticator = AdapterAuthenticator(mapping)
         self._registries: SystemRegistries | None = None
 
     async def serve(self, registries: SystemRegistries) -> None:
@@ -44,6 +51,13 @@ class CLIAdapter(AdapterPlugin):
             System registries containing all initialized plugins and resources.
         """
         self._registries = registries
+        if self.authenticator._tokens:
+            token = await asyncio.to_thread(input, "Token: ")
+            if not self.authenticator.authenticate(
+                token
+            ) or not self.authenticator.authorize(token, "cli"):
+                self.logger.error("Unauthorized")
+                return
         self.logger.info("Enter message (Ctrl-D to quit)")
         while True:
             try:
