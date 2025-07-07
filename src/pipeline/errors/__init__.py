@@ -26,8 +26,8 @@ __all__ = [
     "PluginContextError",
 ]
 
-
-STATIC_ERROR_RESPONSE: Dict[str, str | None] = {
+# Generic fallback returned when even error handling fails
+STATIC_ERROR_RESPONSE: Dict[str, Any] = {
     "error": "System error occurred",
     "message": "An unexpected error prevented processing your request.",
     "error_id": None,
