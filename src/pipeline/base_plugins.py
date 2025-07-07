@@ -135,7 +135,10 @@ class BasePlugin(BasePluginInterface):
             )
             return await policy.execute(self._execute_impl, context)
 
-        policy = RetryPolicy(attempts=self.retry_attempts, backoff=self.retry_backoff)
+        policy = RetryPolicy(
+            attempts=self.max_retries + 1,
+            backoff=self.retry_delay,
+        )
 
         async def run_with_retry() -> Any:
             return await policy.execute(run)
