@@ -20,7 +20,6 @@ from .base_plugins import (
 from .builder import AgentBuilder
 from .config_update import ConfigUpdateResult, update_plugin_configuration
 from .context import ConversationEntry, PluginContext, ToolCall
-from .conversation_manager import ConversationManager
 from .decorators import plugin
 from .errors import create_static_error_response
 from .initializer import (
@@ -83,7 +82,6 @@ __all__ = [
     "AgentBuilder",
     "AgentRuntime",
     "PipelineManager",
-    "ConversationManager",
     "execute_with_observability",
 ]
 
@@ -122,7 +120,6 @@ def __getattr__(name: str) -> Any:
         "AgentBuilder": "pipeline.builder",
         "AgentRuntime": "pipeline.runtime",
         "PipelineManager": "pipeline.manager",
-        "ConversationManager": "pipeline.conversation_manager",
         "execute_pipeline": "pipeline.pipeline",
         "create_default_response": "pipeline.pipeline",
         "create_static_error_response": "pipeline.errors",

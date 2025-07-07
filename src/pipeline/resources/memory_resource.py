@@ -8,7 +8,10 @@ from pipeline.base_plugins import ResourcePlugin, ValidationResult
 from pipeline.context import ConversationEntry
 from pipeline.stages import PipelineStage
 from plugins.builtin.resources.vector_store import VectorStoreResource
+from registry import SystemRegistries
 
+from ..conversation_manager import ConversationManager
+from ..manager import PipelineManager
 from .database import DatabaseResource
 from .memory import Memory
 
@@ -83,6 +86,7 @@ class MemoryResource(ResourcePlugin, Memory):
         self.database = database
         self.vector_store = vector_store
         self._kv: Dict[str, Any] = {}
+        self._conversation_manager: ConversationManager | None = None
 
     @classmethod
     def from_config(cls, config: Dict) -> "MemoryResource":
@@ -123,3 +127,20 @@ class MemoryResource(ResourcePlugin, Memory):
             if sub is not None and not isinstance(sub, dict):
                 return ValidationResult.error_result(f"'{name}' must be a mapping")
         return ValidationResult.success_result()
+
+    def get_conversation_manager(
+        self,
+        registries: SystemRegistries,
+        pipeline_manager: PipelineManager | None = None,
+        *,
+        history_limit: int | None = None,
+    ) -> ConversationManager:
+        """Return a lazily created :class:`ConversationManager`."""
+
+        if self._conversation_manager is None:
+            self._conversation_manager = ConversationManager(
+                registries,
+                pipeline_manager,
+                history_limit=history_limit,
+            )
+        return self._conversation_manager
