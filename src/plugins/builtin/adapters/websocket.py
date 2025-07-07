@@ -17,10 +17,12 @@ from pipeline.base_plugins import AdapterPlugin
 from pipeline.exceptions import ResourceError
 from pipeline.manager import PipelineManager
 from pipeline.pipeline import execute_pipeline
+from pipeline.stages import PipelineStage
 from registry import SystemRegistries
 
 
 class WebSocketAdapter(AdapterPlugin):
+    stages = [PipelineStage.DELIVER]
     """WebSocket adapter using FastAPI."""
 
     def __init__(

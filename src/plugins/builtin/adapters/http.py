@@ -22,6 +22,7 @@ from pipeline.base_plugins import AdapterPlugin
 from pipeline.exceptions import ResourceError
 from pipeline.manager import PipelineManager
 from pipeline.pipeline import execute_pipeline
+from pipeline.stages import PipelineStage
 from registry import SystemRegistries
 
 
@@ -86,6 +87,8 @@ class MessageRequest(BaseModel):
 
 class HTTPAdapter(AdapterPlugin):
     """FastAPI based HTTP adapter for request/response handling."""
+
+    stages = [PipelineStage.DELIVER]
 
     def __init__(
         self,

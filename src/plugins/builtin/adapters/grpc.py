@@ -7,11 +7,14 @@ import grpc
 from grpc_services import llm_pb2_grpc
 from grpc_services.llm_service import LLMService
 from pipeline.base_plugins import AdapterPlugin
+from pipeline.stages import PipelineStage
 from registry import SystemRegistries
 
 
 class LLMGRPCAdapter(AdapterPlugin):
     """Serve :class:`LLMService` over gRPC."""
+
+    stages = [PipelineStage.DELIVER]
 
     def __init__(self, config: dict | None = None) -> None:
         super().__init__(config)

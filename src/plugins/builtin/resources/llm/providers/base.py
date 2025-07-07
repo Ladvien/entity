@@ -22,6 +22,7 @@ class BaseProvider(LLM):
     def __init__(self, config: Dict) -> None:
         self.http = HttpLLMResource(config, require_api_key=self.requires_api_key)
         self.retry_attempts = int(config.get("retries", 3))
+        self.timeout = float(config.get("timeout", 30))
 
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
@@ -48,7 +49,7 @@ class BaseProvider(LLM):
         last_exc: Exception | None = None
         for attempt in range(self.retry_attempts):
             try:
-                async with httpx.AsyncClient(timeout=None) as client:
+                async with httpx.AsyncClient(timeout=self.timeout) as client:
                     async with client.stream(
                         "POST", url, json=payload, headers=headers, params=params
                     ) as response:

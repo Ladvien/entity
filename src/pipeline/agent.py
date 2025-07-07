@@ -83,7 +83,8 @@ class Agent:
         """Run ``message`` through the runtime pipeline and return results."""
 
         await self._ensure_runtime()
-        assert self._runtime is not None
+        if self._runtime is None:  # pragma: no cover - sanity check
+            raise RuntimeError("Runtime not initialized")
         runtime = cast(AgentRuntime, self._runtime)
         return cast(Dict[str, Any], await runtime.run_pipeline(message))
 

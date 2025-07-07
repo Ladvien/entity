@@ -53,9 +53,11 @@ opentelemetry-api = "^1.24.0"
 opentelemetry-sdk = "^1.24.0"
 tenacity = "^8.2.3"
 msgpack = "^1.0.5"
-protobuf = "^5.26.1"
+protobuf = "^6.31.0"
 cryptography = "^45.0.5"
 websockets = "^15.0"
+grpcio = "^1.62.2"
+grpcio-tools = "^1.62.2"
 
 [tool.poetry.extras]
 examples = [
@@ -82,6 +84,8 @@ pytest-benchmark = "^4.0.0"
 flake8 = "7.0.0"
 bandit = "^1.8.5"
 pydeps = "^3.0.1"
+types-protobuf = "^5.26.0.20240422"
+types-psutil = "^5.9.5.20240516"
 
 
 [build-system]
