@@ -1,4 +1,4 @@
-"""Convenience re-exports for built-in tool plugins."""
+"""Compatibility re-exports for tool plugins implemented in ``user_plugins``."""
 
 from .calculator_tool import CalculatorTool
 from .search_tool import SearchTool

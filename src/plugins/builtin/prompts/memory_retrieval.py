@@ -1,33 +1,5 @@
-from __future__ import annotations
+"""Compatibility wrapper for :class:`MemoryRetrievalPrompt`."""
 
-"""Retrieve past conversation from memory for further prompts."""
-
-
-from typing import TYPE_CHECKING, List
-
-from pipeline.base_plugins import PromptPlugin
-
-if TYPE_CHECKING:  # pragma: no cover - type hints only
-    from pipeline.context import ConversationEntry, PluginContext
-    from pipeline.resources.memory_resource import MemoryResource
-
-
-class MemoryRetrievalPrompt(PromptPlugin):
-    """Fetch past conversation from memory and append it to the context."""
-
-    dependencies = ["memory", "llm"]
-
-    async def _execute_impl(self, context: PluginContext) -> None:
-        memory: MemoryResource = context.get_resource("memory")
-        history: List[ConversationEntry] = await memory.load_conversation(
-            context.pipeline_id
-        )
-        for entry in history:
-            context.add_conversation_entry(
-                content=entry.content,
-                role=entry.role,
-                metadata=entry.metadata,
-            )
-
+from user_plugins.prompts.memory_retrieval import MemoryRetrievalPrompt
 
 __all__ = ["MemoryRetrievalPrompt"]
