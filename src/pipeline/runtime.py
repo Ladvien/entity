@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict
 
 from registry import SystemRegistries
@@ -13,7 +13,7 @@ class AgentRuntime:
     """Execute messages through the pipeline."""
 
     registries: SystemRegistries
-    manager: PipelineManager[Dict[str, Any]] = field(init=False)
+    manager: PipelineManager[Dict[str, Any]]
 
     def __post_init__(self) -> None:
         self.manager = PipelineManager[Dict[str, Any]](self.registries)
@@ -35,7 +35,7 @@ class AgentRuntime:
         self,
         exc_type: type[BaseException] | None,
         exc: BaseException | None,
-        tb: object | None,
+        tb: Any,
     ) -> None:
         if hasattr(self.registries.resources, "shutdown_all"):
             await self.registries.resources.shutdown_all()

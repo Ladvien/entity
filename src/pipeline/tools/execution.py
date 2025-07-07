@@ -26,14 +26,15 @@ async def execute_tool(
     for attempt in range(options.max_retries + 1):
         try:
             if hasattr(tool, "execute_function_with_retry"):
-                return cast(
-                    ResultT,
-                    await tool.execute_function_with_retry(
-                        call.params, options.max_retries, options.delay
-                    ),
+                result = await tool.execute_function_with_retry(
+                    call.params,
+                    options.max_retries,
+                    options.delay,
                 )
+                return cast(ResultT, result)
             if hasattr(tool, "execute_function"):
-                return cast(ResultT, await tool.execute_function(call.params))
+                result = await tool.execute_function(call.params)
+                return cast(ResultT, result)
             func = getattr(tool, "run", None)
             if func is None:
                 raise ToolExecutionError(
