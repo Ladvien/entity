@@ -26,11 +26,14 @@ async def execute_tool(
     for attempt in range(options.max_retries + 1):
         try:
             if hasattr(tool, "execute_function_with_retry"):
-                return await tool.execute_function_with_retry(
-                    call.params, options.max_retries, options.delay
+                return cast(
+                    ResultT,
+                    await tool.execute_function_with_retry(
+                        call.params, options.max_retries, options.delay
+                    ),
                 )
             if hasattr(tool, "execute_function"):
-                return await tool.execute_function(call.params)
+                return cast(ResultT, await tool.execute_function(call.params))
             func = getattr(tool, "run", None)
             if func is None:
                 raise ToolExecutionError(
@@ -123,7 +126,7 @@ async def execute_pending_tools(
                 },
             )
             try:
-                result = await execute_tool(tool, call, state, options)
+                result: ResultT = await execute_tool(tool, call, state, options)
             except Exception as exc:
                 err = f"Error: {exc}"
                 state.stage_results[call.result_key] = err
