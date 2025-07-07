@@ -125,6 +125,7 @@ async def execute_stage(
                     extra={
                         "plugin": getattr(plugin, "name", plugin.__class__.__name__),
                         "stage": str(stage),
+                        "pipeline_id": state.pipeline_id,
                     },
                 )
 

@@ -104,7 +104,12 @@ class AgentBuilder:
             try:
                 module = importlib.import_module(info.name)
             except Exception as exc:  # noqa: BLE001
-                logger.error("Failed to import plugin module %s: %s", info.name, exc)
+                logger.error(
+                    "Failed to import plugin module %s: %s",
+                    info.name,
+                    exc,
+                    extra={"pipeline_id": "builder", "stage": "initialization"},
+                )
                 continue
             self._register_module_plugins(module)
 
@@ -129,7 +134,12 @@ class AgentBuilder:
                 return module
             raise ImportError(f"Cannot load spec for {file}")
         except Exception as exc:  # noqa: BLE001
-            logger.error("Failed to import plugin module %s: %s", file, exc)
+            logger.error(
+                "Failed to import plugin module %s: %s",
+                file,
+                exc,
+                extra={"pipeline_id": "builder", "stage": "initialization"},
+            )
             return None
 
     def _register_module_plugins(self, module: ModuleType) -> None:
@@ -162,5 +172,6 @@ class AgentBuilder:
                     module.__name__,
                     name,
                     exc,
+                    extra={"pipeline_id": "builder", "stage": "initialization"},
                 )
                 continue

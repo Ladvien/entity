@@ -14,13 +14,14 @@ async def execute_with_observability(
     metrics: MetricsCollector,
     plugin: str,
     stage: str,
+    pipeline_id: str,
     *args: Any,
     **kwargs: Any,
 ) -> Any:
     """Run ``func`` while logging and recording metrics."""
     logger.info(
         "Plugin execution started",
-        extra={"plugin": plugin, "stage": stage},
+        extra={"plugin": plugin, "stage": stage, "pipeline_id": pipeline_id},
     )
     start = time.perf_counter()
     try:
@@ -30,12 +31,22 @@ async def execute_with_observability(
         metrics.record_plugin_duration(plugin, stage, duration)
         logger.info(
             "Plugin execution finished",
-            extra={"plugin": plugin, "stage": stage, "duration": duration},
+            extra={
+                "plugin": plugin,
+                "stage": stage,
+                "pipeline_id": pipeline_id,
+                "duration": duration,
+            },
         )
         return result
     except Exception as exc:
         logger.exception(
             "Plugin execution failed",
-            extra={"plugin": plugin, "stage": stage, "error": str(exc)},
+            extra={
+                "plugin": plugin,
+                "stage": stage,
+                "pipeline_id": pipeline_id,
+                "error": str(exc),
+            },
         )
         raise

@@ -60,3 +60,20 @@ in ``context.metrics`` and can be exported to Prometheus using
 For production deployments, `config/logging_prod.yaml` contains a recommended
 configuration enabling JSON formatted logs and file rotation.
 
+## Failure Logs
+
+When a pipeline encounters an error the ``BasicLogger`` plugin emits an ``ERROR``
+log entry. The message ``"Pipeline failure encountered"`` includes several extra
+fields:
+
+* ``stage`` – stage where the failure occurred
+* ``plugin`` – name of the plugin that raised the error
+* ``type`` – exception class name
+* ``error`` – human readable message
+* ``pipeline_id`` – unique identifier for the run
+* ``retry_count`` – current iteration count
+* ``context_snapshot`` – serialized pipeline state if available
+
+These fields provide enough information to correlate failures with pipeline
+state and retry attempts.
+

@@ -32,7 +32,11 @@ class PluginInputValidator:
         try:
             instance = self.model(**params)
         except ValidationError as exc:  # pragma: no cover - runtime error path
-            self.logger.error("parameter validation failed", exc_info=exc)
+            self.logger.error(
+                "parameter validation failed",
+                exc_info=exc,
+                extra={"pipeline_id": "n/a", "stage": "validation"},
+            )
             raise
 
         if hasattr(instance, "model_dump"):
