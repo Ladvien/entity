@@ -36,7 +36,7 @@ class WebSocketAdapter(AdapterPlugin):
             mapping = {t: ["websocket"] for t in tokens_cfg}
         else:
             mapping = {str(k): v for k, v in dict(tokens_cfg).items()}
-        self.authenticator = AdapterAuthenticator(mapping)
+        self.authenticator = AdapterAuthenticator(mapping) if mapping else None
         self.app = FastAPI()
         self._registries: SystemRegistries | None = None
         self._setup_routes()
@@ -56,14 +56,14 @@ class WebSocketAdapter(AdapterPlugin):
         websocket:
             The accepted WebSocket connection from FastAPI.
         """
-        token = websocket.headers.get("authorization")
-        token = token.split(" ")[-1] if token and " " in token else token
-        if self.authenticator and (
-            not self.authenticator.authenticate(token)
-            or not self.authenticator.authorize(token, "websocket")
-        ):
-            await websocket.close(code=1008)
-            return
+        if self.authenticator is not None:
+            token = websocket.headers.get("authorization")
+            token = token.split(" ")[-1] if token and " " in token else token
+            if not self.authenticator.authenticate(
+                token
+            ) or not self.authenticator.authorize(token, "websocket"):
+                await websocket.close(code=1008)
+                return
         await websocket.accept()
         try:
             while True:
