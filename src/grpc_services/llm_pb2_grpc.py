@@ -4,7 +4,8 @@
 import warnings
 
 import grpc
-import llm_pb2 as llm__pb2
+
+from . import llm_pb2 as llm__pb2
 
 GRPC_GENERATED_VERSION = "1.73.1"
 GRPC_VERSION = grpc.__version__
