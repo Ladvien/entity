@@ -134,6 +134,7 @@ class BasePlugin(BasePluginInterface):
                 metrics=context.metrics,
                 plugin=self.__class__.__name__,
                 stage=str(context.current_stage),
+                pipeline_id=context.pipeline_id,
             )
             self._failure_count = 0
             return result

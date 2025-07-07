@@ -197,11 +197,11 @@ class HTTPAdapter(AdapterPlugin):
                     f"<h1>Active pipelines: {count}</h1>"
                     "<canvas id='latency'></canvas>"
                     "<canvas id='failures'></canvas>"
-                    "<script>async function load(){const res=await fetch('/metrics');"
-                    "const text=await res.text();let lat=0;let fail=0;"
-                    "for(const line of text.split('\\n')){if(line.startsWith('llm_latency_seconds_sum')){lat=parseFloat(line.split(' ')[1]);}if(line.startsWith('llm_failures_total')){fail=parseFloat(line.split(' ')[1]);}}"
-                    "new Chart(document.getElementById('latency'),{type:'bar',data:{labels:['latency'],datasets:[{data:[lat]}]}});"
-                    "new Chart(document.getElementById('failures'),{type:'bar',data:{labels:['failures'],datasets:[{data:[fail]}]}});}</script>"
+                    "<script>async function load(){const res=await fetch('/metrics');"  # noqa: E501
+                    "const text=await res.text();let lat=0;let fail=0;"  # noqa: E501
+                    "for(const line of text.split('\\n')){if(line.startsWith('llm_latency_seconds_sum')){lat=parseFloat(line.split(' ')[1]);}if(line.startsWith('llm_failures_total')){fail=parseFloat(line.split(' ')[1]);}}"  # noqa: E501
+                    "new Chart(document.getElementById('latency'),{type:'bar',data:{labels:['latency'],datasets:[{data:[lat]}]}});"  # noqa: E501
+                    "new Chart(document.getElementById('failures'),{type:'bar',data:{labels:['failures'],datasets:[{data:[fail]}]}});}</script>"  # noqa: E501
                     "<script>load();</script></body></html>"
                 )
                 return HTMLResponse(html)

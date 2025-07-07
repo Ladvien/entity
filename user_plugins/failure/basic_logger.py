@@ -18,6 +18,7 @@ class BasicLogger(FailurePlugin):
         try:
             info = context.get_failure_info()
             if info is not None:
+                snapshot = info.context_snapshot
                 logger.error(
                     "Pipeline failure encountered",
                     extra={
@@ -26,10 +27,18 @@ class BasicLogger(FailurePlugin):
                         "error": info.error_message,
                         "type": info.error_type,
                         "pipeline_id": context.request_id,
+                        "retry_count": context.state.iteration,
+                        **({"context_snapshot": snapshot} if snapshot else {}),
                     },
                 )
             else:
-                logger.error("Pipeline failure encountered with no context")
+                logger.error(
+                    "Pipeline failure encountered with no context",
+                    extra={
+                        "pipeline_id": context.request_id,
+                        "stage": str(context.current_stage),
+                    },
+                )
         except Exception as exc:  # pragma: no cover - logging must not fail
             logging.getLogger(__name__).exception(
                 "BasicLogger failed while handling an error: %s", exc
