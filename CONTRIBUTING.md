@@ -11,7 +11,8 @@ Thank you for helping improve Entity Pipeline Framework! Always start with `poet
 
 ## Quality Checks
 
-Before pushing changes, run:
+Before running the commands below, execute `poetry install --with dev` so that
+all development dependencies are available. Then, before pushing changes, run:
 
 ```bash
 poetry run black src tests
