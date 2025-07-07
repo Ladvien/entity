@@ -1,14 +1,11 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, AsyncIterator, Dict, Protocol, runtime_checkable
+from typing import (TYPE_CHECKING, Any, AsyncIterator, Dict, Protocol,
+                    runtime_checkable)
 
 from pipeline.validation import ValidationResult
-
-if TYPE_CHECKING:  # pragma: no cover
-    from registry import ClassRegistry
-
-import logging
+from plugins.resources.base import BaseResource
 
 if TYPE_CHECKING:  # pragma: no cover
     from pipeline.state import LLMResponse
@@ -23,32 +20,6 @@ class Resource(Protocol):
     async def health_check(self) -> bool: ...
 
     def get_metrics(self) -> dict[str, Any]: ...
-
-
-class BaseResource:
-    def __init__(self, config: Dict | None = None) -> None:
-        self.config = config or {}
-        self.logger = logging.getLogger(self.__class__.__name__)
-
-    async def initialize(self) -> None:
-        return None
-
-    async def shutdown(self) -> None:
-        return None
-
-    async def health_check(self) -> bool:
-        return True
-
-    def get_metrics(self) -> dict[str, Any]:
-        return {"status": "healthy"}
-
-    @classmethod
-    def validate_config(cls, config: Dict) -> ValidationResult:
-        return ValidationResult.success_result()
-
-    @classmethod
-    def validate_dependencies(cls, registry: "ClassRegistry") -> ValidationResult:
-        return ValidationResult.success_result()
 
 
 class LLM(ABC):
