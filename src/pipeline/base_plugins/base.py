@@ -13,28 +13,20 @@ import yaml
 from pydantic import BaseModel, ValidationError
 
 from common_interfaces.base_plugin import BasePlugin as BasePluginInterface
+from plugins.builtin.config_models import PLUGIN_CONFIG_MODELS, DefaultConfigModel
+
+from ..errors import ToolExecutionError
+from ..exceptions import CircuitBreakerTripped, PipelineError, PluginExecutionError
+from ..logging import get_logger
+from ..observability.utils import execute_with_observability
+from ..reliability import RetryPolicy
+from ..stages import PipelineStage
+from ..validation import ValidationResult
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
-    from .context import PluginContext
-    from .state import LLMResponse
-
-if TYPE_CHECKING:  # pragma: no cover - used for type hints only
-    from .initializer import ClassRegistry
-
-# isort: off
-from .errors import ToolExecutionError
-from .exceptions import CircuitBreakerTripped, PipelineError, PluginExecutionError
-from .logging import get_logger
-from .observability.utils import execute_with_observability
-from .reliability import RetryPolicy
-from .stages import PipelineStage
-from .validation import ValidationResult
-from plugins.builtin.config_models import (
-    DefaultConfigModel,
-    PLUGIN_CONFIG_MODELS,
-)
-
-# isort: on
+    from ..context import PluginContext
+    from ..initializer import ClassRegistry
+    from ..state import LLMResponse
 
 logger = logging.getLogger(__name__)
 
@@ -121,7 +113,7 @@ class BasePlugin(BasePluginInterface):
         self.config_version = 1
         self._config_history: List[Dict] = [self.config.copy()]
 
-    async def execute(self, context: PluginContext) -> Any:
+    async def execute(self, context: "PluginContext") -> Any:
         """Execute plugin with logging, metrics and circuit breaker."""
 
         def circuit_open() -> bool:
@@ -180,7 +172,7 @@ class BasePlugin(BasePluginInterface):
         purpose: str,
         functions: list[dict[str, Any]] | None = None,
     ) -> "LLMResponse":
-        from .context import LLMResponse
+        from ..context import LLMResponse
 
         llm = context.get_llm()
         if llm is None:
@@ -345,13 +337,8 @@ class BasePlugin(BasePluginInterface):
     # --- Convenience constructors ---
     @classmethod
     def from_dict(cls: Type[Self], config: Dict) -> Self:
-        """Create plugin from ``config`` with CONFIG VALIDATION ONLY.
+        """Create plugin from ``config`` with CONFIG VALIDATION ONLY."""
 
-        .. warning::
-            This does **not** validate dependencies.  Use only for testing,
-            development or when dependencies are known to exist.  Production
-            systems should rely on four-phase initialization.
-        """
         result = cls.validate_config(config)
         if not result.success:
             raise ConfigurationError(
@@ -370,169 +357,3 @@ class BasePlugin(BasePluginInterface):
         """Parse JSON then delegate to :meth:`from_dict` (config validation only)."""
         config = json.loads(json_content)
         return cls.from_dict(config)
-
-
-class ResourcePlugin(BasePlugin):
-    async def initialize(self) -> None:
-        """Optional async initialization hook."""
-        return None
-
-    async def health_check(self) -> bool:
-        """Return ``True`` if the resource is healthy."""
-        return True
-
-    async def validate_runtime(self) -> "ValidationResult":
-        """Validate runtime by performing a health check."""
-
-        try:
-            healthy = await self.health_check()
-        except Exception as exc:  # pragma: no cover - propagation
-            return ValidationResult.error_result(str(exc))
-        return (
-            ValidationResult.success_result()
-            if healthy
-            else ValidationResult.error_result("health check failed")
-        )
-
-    def get_metrics(self) -> Dict[str, Any]:
-        """Return metrics about this resource."""
-        return {"status": "healthy"}
-
-    async def __aenter__(self) -> "ResourcePlugin":
-        await self.initialize()
-        return self
-
-    async def __aexit__(self, exc_type, exc, tb) -> None:
-        await self.shutdown()
-
-
-class ToolPlugin(BasePlugin):
-    """Base class for tool plugins executed outside the pipeline."""
-
-    required_params: List[str] = []
-
-    def _validate_required_params(self, params: Dict[str, Any]) -> bool:
-        """Ensure all :attr:`required_params` are present in ``params``."""
-        missing = [p for p in self.required_params if params.get(p) is None]
-        if missing:
-            raise ToolExecutionError(
-                self.__class__.__name__,
-                ValueError(f"Missing required parameters: {', '.join(missing)}"),
-            )
-        return True
-
-    def validate_tool_params(
-        self, params: BaseModel | Dict[str, Any]
-    ) -> BaseModel | Dict[str, Any]:
-        """Validate ``params`` using ``Params`` model when provided."""
-
-        if isinstance(params, BaseModel):
-            return params
-
-        model_cls: Type[BaseModel] | None = getattr(self, "Params", None)
-        if model_cls is not None and issubclass(model_cls, BaseModel):
-            try:
-                return model_cls(**params)
-            except ValidationError as exc:  # pragma: no cover - re-raise
-                raise ToolExecutionError(self.__class__.__name__, exc) from exc
-
-        self._validate_required_params(params)
-        return params
-
-    def __init__(self, config: Dict | None = None) -> None:
-        super().__init__(config)
-        self.max_retries = int(self.config.get("max_retries", 1))
-        self.retry_delay = float(self.config.get("retry_delay", 1.0))
-
-    async def execute(self, params: Dict[str, Any]) -> Any:  # type: ignore[override]
-        """Execute the tool and return its result."""
-        return await self.execute_function_with_retry(params)
-
-    async def execute_function(self, params: Dict[str, Any]):
-        raise NotImplementedError()
-
-    async def execute_function_with_retry(
-        self,
-        params: Dict[str, Any],
-        max_retries: int | None = None,
-        delay: float | None = None,
-    ):
-        validated = self.validate_tool_params(params)
-        max_retry_count = self.max_retries if max_retries is None else max_retries
-        retry_delay_seconds = self.retry_delay if delay is None else delay
-        for attempt in range(max_retry_count + 1):
-            try:
-                return await self.execute_function(validated)
-            except Exception:  # noqa: BLE001
-                if attempt == max_retry_count:
-                    raise
-                await asyncio.sleep(retry_delay_seconds)
-
-    async def execute_with_timeout(
-        self, params: Dict[str, Any], timeout: int = 30
-    ) -> Any:
-        """Execute the tool with a timeout."""
-        return await asyncio.wait_for(self.execute(params), timeout=timeout)
-
-    async def _execute_impl(self, context: "PluginContext"):
-        """Tools are not executed in the pipeline directly."""
-        pass
-
-
-class PromptPlugin(BasePlugin):
-    pass
-
-
-class AdapterPlugin(BasePlugin):
-    pass
-
-
-class FailurePlugin(BasePlugin):
-    pass
-
-
-class AutoGeneratedPlugin(BasePlugin):
-    def __init__(
-        self,
-        func,
-        stages: List[PipelineStage],
-        priority: int,
-        name: str,
-        base_class: Optional[type] = None,
-    ):
-        super().__init__()
-        self.func = func
-        self.stages = stages
-        self.priority = priority
-        self.name = name
-        if base_class and base_class is not BasePlugin:
-            self.__class__.__bases__ = (base_class,)
-
-    async def _execute_impl(self, context: "PluginContext") -> None:
-        if not inspect.iscoroutinefunction(self.func):
-            raise TypeError(
-                f"Plugin function '{getattr(self.func, '__name__', 'unknown')}' must be async"
-            )
-        result = await self.func(context)
-        if isinstance(result, str) and not context.has_response():
-            context.set_response(result)
-
-
-__all__ = [
-    "BasePlugin",
-    "ResourcePlugin",
-    "ToolPlugin",
-    "PromptPlugin",
-    "AdapterPlugin",
-    "FailurePlugin",
-    "AutoGeneratedPlugin",
-    "PluginAutoClassifier",
-    "ConfigurationError",
-    "ReconfigResult",
-    "ValidationResult",
-]
-
-if TYPE_CHECKING:  # pragma: no cover - used for type hints only
-    from .interfaces import PluginAutoClassifier
-else:  # pragma: no cover - runtime import for compatibility
-    from .interfaces import PluginAutoClassifier  # type: ignore  # noqa: E402
