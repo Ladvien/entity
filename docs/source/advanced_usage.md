@@ -34,7 +34,7 @@ plugins:
 
 `MemoryResource` persists conversation history and vectors. `StorageResource` extends it with file CRUD across the configured backends.
 
-For local experimentation you can swap the database section with DuckDB:
+For local experimentation you can use a file-backed DuckDB database:
 
 ```yaml
 plugins:

@@ -292,14 +292,10 @@ vector store, and filesystem settings.
 
 ### Programmatic Configuration
 ```python
-# Start simple
+# Start simple with DuckDB
 storage = StorageResource(
-    database=SQLiteDatabaseResource("./agent.db")
+    database=DuckDBDatabaseResource({"path": "./agent.duckdb"})
 )
-
-# Use DuckDB
-duckdb_resource = DuckDBDatabaseResource({"path": "./agent.duckdb"})
-storage_duckdb = StorageResource(database=duckdb_resource)
 
 # Evolve to complex
 postgres = PostgresResource(connection_str)
