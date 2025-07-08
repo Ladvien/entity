@@ -18,7 +18,8 @@ repos:
   - repo: local
     hooks:
       - id: check-empty-dirs
-        name: Detect directories without files
+        name: Check for empty directories
         entry: python tools/check_empty_dirs.py
         language: system
         pass_filenames: false
+        always_run: true

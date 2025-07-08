@@ -8,6 +8,8 @@ Thank you for helping improve Entity Pipeline Framework! Always start with `poet
 - Describe the purpose of the change and any new dependencies.
 - Ensure tests and documentation are updated when relevant.
 - Maintain readable, well-structured code. Favor object oriented design.
+- Pre-commit hooks run automatically. They will fail if the repository contains
+  empty directories; remove them before committing.
 
 ## Quality Checks
 
@@ -20,6 +22,7 @@ poetry run isort src tests
 poetry run flake8 src tests
 poetry run mypy src
 bandit -r src
+python tools/check_empty_dirs.py
 poetry run python -m src.entity_config.validator --config config/dev.yaml
 poetry run python -m src.entity_config.validator --config config/prod.yaml
 python -m src.registry.validator
