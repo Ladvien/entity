@@ -11,6 +11,23 @@ Thank you for helping improve Entity Pipeline Framework! Always start with `poet
 - Pre-commit hooks run automatically. They will fail if the repository contains
   empty directories; remove them before committing.
 
+## Development workflow
+
+Run these commands before creating a pull request:
+
+```bash
+poetry install --with dev
+poetry run black src tests
+poetry run isort src tests
+poetry run flake8 src tests
+poetry run mypy src
+bandit -r src
+python -m src.entity_config.validator --config config/dev.yaml
+python -m src.entity_config.validator --config config/prod.yaml
+python -m src.registry.validator
+pytest
+```
+
 ## Quality Checks
 
 Before running the commands below, execute `poetry install --with dev` so that
