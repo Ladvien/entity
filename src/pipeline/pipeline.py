@@ -17,18 +17,15 @@ from registry import SystemRegistries
 
 from .context import ConversationEntry, PluginContext
 from .errors import create_static_error_response
-from .exceptions import MaxIterationsExceeded  # noqa: F401 - reserved for future use
-from .exceptions import (
-    CircuitBreakerTripped,
-    PipelineError,
-    PluginExecutionError,
-    ResourceError,
-    ToolExecutionError,
-)
+from .exceptions import \
+    MaxIterationsExceeded  # noqa: F401 - reserved for future use
+from .exceptions import (CircuitBreakerTripped, PipelineError,
+                         PluginExecutionError, ResourceError,
+                         ToolExecutionError)
 from .logging import get_logger, reset_request_id, set_request_id
 from .manager import PipelineManager
 from .metrics import MetricsCollector
-from .observability.metrics import get_metrics_server
+from .observability.metrics import MetricsServerManager
 from .observability.tracing import start_span
 from .serialization import dumps_state, loads_state
 from .stages import PipelineStage
@@ -316,7 +313,7 @@ async def execute_pipeline(
             state.metrics.record_pipeline_duration(time.time() - start)
         if state_file and os.path.exists(state_file) and state.failure_info is None:
             os.remove(state_file)
-        server = get_metrics_server()
+        server = MetricsServerManager.get()
         if server is not None and state.metrics:
             server.update(state.metrics)
 

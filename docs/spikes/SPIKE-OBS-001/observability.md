@@ -12,7 +12,7 @@
 
 ## Prometheus Metrics
 - `pipeline.observability.metrics` exposes a `MetricsServer` that collects latency and failure counts.
-- Calling `start_metrics_server(port=9001)` starts an HTTP endpoint at `/metrics` for Prometheus to scrape.
+- Calling `MetricsServerManager.start(port=9001)` starts an HTTP endpoint at `/metrics` for Prometheus to scrape.
 - CPU and memory gauges help identify resource bottlenecks.
 
 ## State Machine Visualization

@@ -8,12 +8,11 @@ from __future__ import annotations
 
 import asyncio
 
-
 from .utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 
-from pipeline.observability import start_metrics_server, start_span
+from pipeline.observability import MetricsServerManager, start_span
 
 
 async def sample_task() -> None:
@@ -22,7 +21,7 @@ async def sample_task() -> None:
 
 
 async def main() -> None:
-    start_metrics_server(port=9001)
+    MetricsServerManager.start(port=9001)
     await sample_task()
 
 
