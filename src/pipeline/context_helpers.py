@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import Any, List, cast
 
-from .state import ConversationEntry
+from .errors import ToolExecutionError
+from .state import ConversationEntry, FailureInfo
 from .tools.base import RetryOptions
 from .tools.execution import execute_tool
 
@@ -49,6 +50,15 @@ class AdvancedContext:
                 result = f"Error: {exc}"
                 self._ctx.set_stage_result(call.result_key, result)
                 self._ctx.record_tool_error(call.name, str(exc))
+                state.failure_info = FailureInfo(
+                    stage=str(state.current_stage),
+                    plugin_name=call.name,
+                    error_type=exc.__class__.__name__,
+                    error_message=str(exc),
+                    original_exception=exc,
+                )
+                state.pending_tool_calls.remove(call)
+                raise ToolExecutionError(call.name, exc, call.result_key)
             state.pending_tool_calls.remove(call)
         result = self._ctx.get_stage_result(result_key)
         state.stage_results.pop(result_key, None)
