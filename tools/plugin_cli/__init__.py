@@ -22,6 +22,8 @@ def _load_plugin_tool() -> ModuleType:
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Cannot import {path}")
     module = importlib.util.module_from_spec(spec)
+    # Register module before execution to ensure imports resolve correctly
+    sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
 
