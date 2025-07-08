@@ -250,8 +250,8 @@ plugins:
     storage:
       type: storage
       database:
-        type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
-        path: ./agent.db
+        type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
+        path: ./agent.duckdb
 ```
 
 ### DuckDB Configuration
@@ -292,14 +292,10 @@ vector store, and filesystem settings.
 
 ### Programmatic Configuration
 ```python
-# Start simple
+# Start simple with DuckDB
 storage = StorageResource(
-    database=SQLiteDatabaseResource("./agent.db")
+    database=DuckDBDatabaseResource({"path": "./agent.duckdb"})
 )
-
-# Use DuckDB
-duckdb_resource = DuckDBDatabaseResource({"path": "./agent.duckdb"})
-storage_duckdb = StorageResource(database=duckdb_resource)
 
 # Evolve to complex
 postgres = PostgresResource(connection_str)
@@ -322,8 +318,8 @@ plugins:
     storage:
       type: storage
       database:
-        type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
-        path: ./agent.db
+        type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
+        path: ./agent.duckdb
       filesystem:
         type: plugins.builtin.resources.local_filesystem:LocalFileSystemResource
         base_path: ./files
@@ -370,7 +366,7 @@ python examples/servers/cli_adapter.py
 
 3. **Provide Sensible Defaults**
    ```python
-   # If no config provided, use SQLite + local filesystem
+   # If no config provided, use DuckDB + local filesystem
    storage = StorageResource()  # Works out of the box
    ```
 
