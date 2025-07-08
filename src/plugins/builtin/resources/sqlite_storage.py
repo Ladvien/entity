@@ -27,6 +27,13 @@ class SQLiteStorageResource(DatabaseResource):
     stages = [PipelineStage.PARSE]
     name = "database"
 
+    @classmethod
+    def validate_dependencies(cls, registry) -> ValidationResult:
+        """Ensure the ``aiosqlite`` package is available."""
+        if import_util.find_spec("aiosqlite") is None:
+            return ValidationResult.error_result("'aiosqlite' package not installed")
+        return ValidationResult.success_result()
+
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
         self._path = self.config.get("path", ":memory:")
