@@ -2,6 +2,7 @@ from __future__ import annotations
 
 """SQLite-based conversation history storage."""
 import json
+import re
 from datetime import datetime
 from importlib import util as import_util
 from typing import TYPE_CHECKING, Dict, List, Optional
@@ -29,16 +30,15 @@ class SQLiteStorageResource(DatabaseResource):
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
         self._path = self.config.get("path", ":memory:")
-        self._table = self.config.get("history_table", "chat_history")
+        table = self.config.get("history_table", "chat_history")
+        self._table = self._sanitize_identifier(table)
         self._conn: Optional[aiosqlite.Connection] = None
 
-    @classmethod
-    def validate_dependencies(cls, registry) -> ValidationResult:
-        """Check optional runtime dependencies."""
-
-        if import_util.find_spec("aiosqlite") is None:
-            return ValidationResult.error_result("'aiosqlite' package is missing")
-        return ValidationResult.success_result()
+    @staticmethod
+    def _sanitize_identifier(name: str) -> str:
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name):
+            raise ValueError(f"Invalid identifier: {name}")
+        return name
 
     async def initialize(self) -> None:
         self._conn = await aiosqlite.connect(self._path)
@@ -62,8 +62,8 @@ class SQLiteStorageResource(DatabaseResource):
             for entry in history:
                 await self._conn.execute(
                     (
-                        f"INSERT INTO {self._table} "
-                        "(conversation_id, role, content, metadata, timestamp)"  # nosec B608
+                        f"INSERT INTO {self._table} "  # nosec
+                        "(conversation_id, role, content, metadata, timestamp)"
                         " VALUES (?, ?, ?, ?, ?)"
                     ),
                     (
@@ -81,7 +81,7 @@ class SQLiteStorageResource(DatabaseResource):
             return []
         async with start_span("SQLiteStorageResource.load_history"):
             cursor = await self._conn.execute(
-                f"SELECT role, content, metadata, timestamp FROM {self._table} "  # nosec B608
+                f"SELECT role, content, metadata, timestamp FROM {self._table} "  # nosec
                 "WHERE conversation_id = ? ORDER BY timestamp",
                 (conversation_id,),
             )

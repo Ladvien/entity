@@ -6,7 +6,8 @@ from __future__ import annotations
 import os
 import re
 import shutil
-import subprocess
+# subprocess used for CLI invocation
+import subprocess  # nosec B404
 from pathlib import Path
 from typing import Any, Dict, Type
 
@@ -72,7 +73,10 @@ class Infrastructure:
         command = shutil.which("cdktf")
         if command is None:
             raise FileNotFoundError("cdktf CLI not found")
-        subprocess.run([command, "deploy", "--auto-approve"], check=True)
+        subprocess.run(
+            [command, "deploy", "--auto-approve"],
+            check=True,
+        )  # nosec B603
 
     def plan(self) -> None:
         """Run ``terraform plan`` in the configured working directory."""
@@ -83,5 +87,10 @@ class Infrastructure:
         working_dir = Path(self.config.get("terraform", {}).get("working_dir", "."))
         variables = self.config.get("terraform", {}).get("variables", {})
         var_args = [f"-var={k}={v}" for k, v in variables.items()]
-        subprocess.run([command, "init"], cwd=working_dir, check=True)
-        subprocess.run([command, "plan", *var_args], cwd=working_dir, check=True)
+        # initialization uses trusted command
+        subprocess.run([command, "init"], cwd=working_dir, check=True)  # nosec B603
+        subprocess.run(
+            [command, "plan", *var_args],
+            cwd=working_dir,
+            check=True,
+        )  # nosec B603

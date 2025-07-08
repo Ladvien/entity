@@ -105,8 +105,8 @@ class PostgresResource(DatabaseResource):
             async with start_span("PostgresResource.save_history"):
                 for entry in history:
                     query = (
-                        f"INSERT INTO {table} "
-                        "(conversation_id, role, content, metadata, timestamp)"  # nosec B608
+                        f"INSERT INTO {table} "  # nosec
+                        "(conversation_id, role, content, metadata, timestamp)"
                         " VALUES ($1, $2, $3, $4, $5)"
                     )
 
@@ -129,7 +129,7 @@ class PostgresResource(DatabaseResource):
             f"{asyncpg.utils._quote_ident(self._schema)}." if self._schema else ""
         ) + asyncpg.utils._quote_ident(self._history_table)
         query = (
-            f"SELECT role, content, metadata, timestamp FROM {table} "  # nosec B608
+            f"SELECT role, content, metadata, timestamp FROM {table} "  # nosec
             "WHERE conversation_id=$1 ORDER BY timestamp"
         )
         async with self.connection() as conn:

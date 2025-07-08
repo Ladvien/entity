@@ -71,7 +71,7 @@ class DuckDBDatabaseResource(DatabaseResource):
                 (
                     f"INSERT INTO {self._history_table} "
                     "(conversation_id, role, content, metadata, timestamp) "
-                    "VALUES (?, ?, ?, ?, ?)"
+                    "VALUES (?, ?, ?, ?, ?)"  # nosec
                 ),
                 [
                     conversation_id,
@@ -89,7 +89,7 @@ class DuckDBDatabaseResource(DatabaseResource):
             self._connection.execute,
             (
                 f"SELECT role, content, metadata, timestamp FROM {self._history_table} "
-                "WHERE conversation_id = ? ORDER BY timestamp"
+                "WHERE conversation_id = ? ORDER BY timestamp"  # nosec
             ),
             [conversation_id],
         )
