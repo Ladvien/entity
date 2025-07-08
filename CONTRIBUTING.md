@@ -28,6 +28,9 @@ pytest tests/infrastructure/ -v
 pytest tests/performance/ -m benchmark
 ```
 
+Pre-commit will also run `tools/check_empty_dirs.py` to ensure no directories
+exist without files. If such folders are found, the commit will fail.
+
 ## Optional Dependencies for Examples
 
 The examples under `examples/` rely on packages such as `websockets` and `grpcio-tools`.
