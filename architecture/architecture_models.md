@@ -243,3 +243,42 @@ class MemoryResource:
 - Maximum iteration limit (default 5) prevents infinite loops when no DELIVER plugin sets a response
 
 **Benefits**: Ensures consistent output processing, logging, and formatting while maintaining the hybrid pipeline-state machine mental model.
+
+## 7. Stage Results Accumulation Pattern
+
+**Decision**: Use stage results accumulation with `context.store()`, `context.load()`, and `context.has()` methods for inter-stage communication.
+
+**Rationale**:
+- Builds on existing stage results infrastructure with intuitive naming
+- Maintains pipeline mental model where each stage produces discrete outputs
+- Stage results persist across pipeline iterations, enabling context accumulation
+- Provides explicit traceability for debugging and observability
+- Allows flexible composition patterns in DELIVER plugins
+
+**Implementation**:
+- Earlier stages use `context.store(key, value)` to save intermediate outputs
+- DELIVER plugins use `context.load(key)` to access stored results for response composition
+- `context.has(key)` enables conditional logic based on available results
+- Stage results are cleared between separate pipeline executions but persist across iterations within the same execution
+
+**Benefits**: Clear data flow, debugging visibility, flexible response composition, and natural support for iterative pipeline execution.
+
+## 8. Tool Execution Patterns
+
+**Decision**: Support both immediate and queued tool execution with `context.tool_use()` and `context.queue_tool_use()` methods.
+
+**Rationale**:
+- Different mental models serve different use cases effectively
+- Immediate execution provides simple synchronous workflow for single tool calls
+- Queued execution enables parallel processing and batch optimization
+- Supports existing concurrency controls in ToolRegistry
+- Enables coordination patterns where multiple tool results need collective processing
+
+**Implementation**:
+- `context.tool_use(name, **params)` executes tools immediately and returns results
+- `context.queue_tool_use(name, **params)` queues tools for parallel execution at stage boundaries
+- Queued tools execute automatically between pipeline stages
+- Both patterns support the same tool interface and retry mechanisms
+
+**Usage Guidance**: Use `tool_use()` by default for simplicity. Use `queue_tool_use()` when you need multiple independent tool calls that can run in parallel or when processing results collectively.
+ 
