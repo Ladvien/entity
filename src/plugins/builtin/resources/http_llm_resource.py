@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 """HTTP helper for LLM resources."""
-from typing import Any, Dict, Optional
+import asyncio
+import json
+from typing import Any, AsyncIterator, Dict, Optional
 
 import httpx
 
@@ -74,6 +76,36 @@ class HttpLLMResource:
             return result
         except Exception as exc:  # pragma: no cover
             raise ResourceError(f"HTTP request failed: {exc}") from exc
+
+    async def stream_request(
+        self,
+        url: str,
+        payload: Dict[str, Any],
+        headers: Optional[Dict[str, str]] = None,
+        params: Optional[Dict[str, Any]] = None,
+    ) -> AsyncIterator[Dict[str, Any]]:
+        """Stream JSONL responses with retry and backoff."""
+        attempts = self._breaker.retry_policy.attempts
+        last_exc: Exception | None = None
+        for attempt in range(attempts):
+            try:
+                async with self._client.stream(
+                    "POST", url, json=payload, headers=headers, params=params
+                ) as response:
+                    response.raise_for_status()
+                    async for line in response.aiter_lines():
+                        if not line:
+                            continue
+                        if line.startswith("data: "):
+                            line = line[6:]
+                        if line == "[DONE]":
+                            break
+                        yield json.loads(line)
+                return
+            except Exception as exc:  # noqa: BLE001 - retry
+                last_exc = exc
+                await asyncio.sleep(2**attempt)
+        raise ResourceError("HTTP request failed") from last_exc
 
     async def close(self) -> None:
         await self._client.aclose()
