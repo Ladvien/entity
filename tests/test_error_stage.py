@@ -70,7 +70,7 @@ def test_error_stage_execution(caplog):
 def test_static_fallback_on_error_stage_failure():
     registries = make_registries(BadErrorPlugin)
     result = asyncio.run(execute_pipeline("hi", registries))
-    assert result.type == "static_fallback"
+    assert result["type"] == "static_fallback"
 
 
 def test_error_formatter_produces_message():

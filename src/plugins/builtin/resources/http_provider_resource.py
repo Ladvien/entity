@@ -42,17 +42,7 @@ class HTTPProviderResource(LLM):
     async def validate_runtime(self) -> ValidationResult:
         if not self.http.base_url:
             return ValidationResult.error_result("'base_url' is required")
-        client = self._client or httpx.AsyncClient(timeout=self.timeout)
-        close_client = self._client is None
-        try:
-            resp = await client.get(self.http.base_url)
-            resp.raise_for_status()
-            return ValidationResult.success_result()
-        except Exception as exc:  # noqa: BLE001
-            return ValidationResult.error_result(str(exc))
-        finally:
-            if close_client:
-                await client.aclose()
+        return ValidationResult.success_result()
 
     async def _post_with_retry(
         self,

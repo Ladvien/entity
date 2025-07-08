@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, AsyncIterator, Dict, Protocol, runtime_checkable
+from typing import Any, AsyncIterator, Dict, Protocol, runtime_checkable
 
+from pipeline.state import LLMResponse
 from pipeline.validation import ValidationResult
 
 
@@ -52,10 +53,6 @@ class BaseResource:
         await self.shutdown()
 
 
-if TYPE_CHECKING:  # pragma: no cover
-    from pipeline.state import LLMResponse
-
-
 @runtime_checkable
 class Resource(Protocol):
     async def initialize(self) -> None: ...
@@ -102,7 +99,10 @@ class LLMResource(BaseResource, LLM):
             from html import escape
 
             prompt = escape(prompt)
-        return (await self.generate(prompt)).content
+        response = await self.generate(prompt)
+        if isinstance(response, LLMResponse):
+            return response.content
+        return str(response)
 
     @staticmethod
     def validate_required_fields(

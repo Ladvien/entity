@@ -3,19 +3,21 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import inspect
+import sys
 from pathlib import Path
 from typing import Any, Awaitable, Callable, Type
 
-from pipeline.base_plugins import (
-    AdapterPlugin,
-    BasePlugin,
-    FailurePlugin,
-    PromptPlugin,
-    ResourcePlugin,
-    ToolPlugin,
-    ValidationResult,
-)
-from pipeline.logging import get_logger
+ROOT = Path(__file__).resolve().parent.parent  # noqa: E402
+if str(ROOT) not in sys.path:  # noqa: E402
+    sys.path.insert(0, str(ROOT))
+
+from pipeline.base_plugins import BasePlugin  # noqa: E402
+from pipeline.base_plugins import FailurePlugin  # noqa: E402
+from pipeline.base_plugins import PromptPlugin  # noqa: E402
+from pipeline.base_plugins import ResourcePlugin  # noqa: E402
+from pipeline.base_plugins import ToolPlugin  # noqa: E402
+from pipeline.base_plugins import AdapterPlugin, ValidationResult  # noqa: E402
+from pipeline.logging import get_logger  # noqa: E402
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 

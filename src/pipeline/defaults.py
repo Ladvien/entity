@@ -19,15 +19,7 @@ DEFAULT_LLM_CONFIG: Dict[str, Any] = {
 
 DEFAULT_RESOURCES: Dict[str, Dict[str, Any]] = {
     "llm": DEFAULT_LLM_CONFIG,
-    "memory": {
-        "type": "pipeline.resources.memory_resource:MemoryResource",
-        "database": {
-            "type": "plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource"
-        },
-        "vector_store": {
-            "type": "user_plugins.resources.duckdb_vector_store:DuckDBVectorStore"
-        },
-    },
+    "memory": {"type": "pipeline.resources.memory_resource:SimpleMemoryResource"},
     "storage": {
         "type": "plugins.builtin.resources.storage_resource:StorageResource",
         "filesystem": {

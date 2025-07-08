@@ -47,6 +47,21 @@ class SimpleMemoryResource(ResourcePlugin, Memory):
     async def load_conversation(self, conversation_id: str) -> List[ConversationEntry]:
         return list(self._conversations.get(conversation_id, []))
 
+    def get_conversation_manager(
+        self,
+        registries: SystemRegistries,
+        pipeline_manager: PipelineManager | None = None,
+        *,
+        history_limit: int | None = None,
+    ) -> ConversationManager:
+        """Return a conversation manager for this resource."""
+
+        return ConversationManager(
+            registries,
+            pipeline_manager,
+            history_limit=history_limit,
+        )
+
 
 class MemoryResource(ResourcePlugin, Memory):
     """Combine in-memory storage with optional database and vector backends."""
