@@ -14,6 +14,8 @@ class FallbackErrorPlugin(FailurePlugin):
     stages = [PipelineStage.ERROR]
 
     async def _execute_impl(self, context: PluginContext) -> None:
+        """Provide a static fallback response."""
+
         context.set_response(
             create_static_error_response(context.pipeline_id).to_dict()
         )

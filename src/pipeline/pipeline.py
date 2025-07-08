@@ -17,14 +17,11 @@ from registry import SystemRegistries
 
 from .context import ConversationEntry, PluginContext
 from .errors import create_static_error_response
-from .exceptions import MaxIterationsExceeded  # noqa: F401 - reserved for future use
-from .exceptions import (
-    CircuitBreakerTripped,
-    PipelineError,
-    PluginExecutionError,
-    ResourceError,
-    ToolExecutionError,
-)
+from .exceptions import \
+    MaxIterationsExceeded  # noqa: F401 - reserved for future use
+from .exceptions import (CircuitBreakerTripped, PipelineError,
+                         PluginExecutionError, ResourceError,
+                         ToolExecutionError)
 from .logging import get_logger, reset_request_id, set_request_id
 from .manager import PipelineManager
 from .metrics import MetricsCollector
@@ -232,6 +229,7 @@ async def execute_pipeline(
         async with registries.resources:
             async with start_span("pipeline.execute"):
                 while True:
+                    state.iteration += 1
                     for stage in [
                         PipelineStage.PARSE,
                         PipelineStage.THINK,
@@ -268,7 +266,6 @@ async def execute_pipeline(
                             break
                         state.last_completed_stage = stage
 
-                    state.iteration += 1
                     if (
                         state.response is not None
                         or state.failure_info is not None
