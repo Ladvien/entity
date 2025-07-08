@@ -10,3 +10,5 @@ attribute are used to compute an execution order with
 
 The `hot_reload.py` script watches the directory for changes and
 reloads plugins when files are added, removed or modified.
+
+This is experimental code and should not be used in production.

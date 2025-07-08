@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-"""Experimental StorageResource supporting composable backends."""
+"""Experimental StorageResource supporting composable backends.
+Not for production use."""
 
 from contextlib import asynccontextmanager
 from typing import Dict, List

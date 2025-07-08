@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Prototype async resource registry. Not production ready."""
+
 import asyncio
 import time
 from dataclasses import dataclass, field

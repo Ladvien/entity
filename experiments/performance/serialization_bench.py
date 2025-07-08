@@ -1,4 +1,4 @@
-"""Benchmark common serialization formats."""
+"""Benchmark common serialization formats. Experimental utility, not for production."""
 
 from __future__ import annotations
 

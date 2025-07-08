@@ -1,4 +1,5 @@
-"""Demonstrates using AsyncResourceManager with different DI frameworks."""
+"""Demonstrates using AsyncResourceManager with different DI frameworks.
+Prototype only, not for production."""
 
 from __future__ import annotations
 

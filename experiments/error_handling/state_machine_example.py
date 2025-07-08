@@ -1,4 +1,5 @@
-"""Demonstrate simple rollback logic using the new error classes."""
+"""Demonstrate simple rollback logic using the new error classes.
+Experimental example, not for production."""
 
 from __future__ import annotations
 
