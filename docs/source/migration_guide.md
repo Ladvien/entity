@@ -25,7 +25,7 @@ Experimental plugins used different keys and stage names. Use the sample
 Run the config validator to confirm:
 
 ```bash
-python -m src.config.validator --config your.yaml
+python -m src.entity_config.validator --config your.yaml
 ```
 
 ## 3. Validate Plugins

@@ -14,16 +14,14 @@ from .utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 
+from pipeline import Agent, PipelineStage, PromptPlugin
+from pipeline.context import ConversationEntry, PluginContext
+from pipeline.resources.memory_resource import MemoryResource
 from plugins.builtin.resources.local_filesystem import LocalFileSystemResource
 from plugins.builtin.resources.sqlite_storage import (
     SQLiteStorageResource as SQLiteDatabaseResource,
 )
 from plugins.builtin.resources.storage_resource import StorageResource
-
-from entity import Agent
-from pipeline import PipelineStage, PromptPlugin
-from pipeline.context import ConversationEntry, PluginContext
-from pipeline.resources.memory_resource import MemoryResource
 
 
 class StorePrompt(PromptPlugin):

@@ -11,7 +11,7 @@ from . import enable_plugins_namespace
 
 enable_plugins_namespace()
 
-from entity import Agent  # noqa: E402
+from pipeline import Agent  # noqa: E402
 from plugins.builtin.adapters.server import AgentServer  # noqa: E402
 
 

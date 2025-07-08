@@ -14,12 +14,10 @@ from ..utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 
-from user_plugins.resources import DuckDBDatabaseResource, DuckDBVectorStore
-from user_plugins.memory_resource import MemoryResource
-
-from entity import Agent
-from pipeline import PipelineStage, PromptPlugin
+from pipeline import Agent, PipelineStage, PromptPlugin
 from pipeline.context import PluginContext
+from user_plugins.memory_resource import MemoryResource
+from user_plugins.resources import DuckDBDatabaseResource, DuckDBVectorStore
 
 
 class SimilarityPrompt(PromptPlugin):

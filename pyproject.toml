@@ -8,13 +8,11 @@ readme = "README.md"
 package-mode = true
 
 packages = [
-    { include = "entity", from = "src" },
     { include = "pipeline", from = "src" },
     { include = "cli", from = "src" },
     { include = "entity_config", from = "src" },
     { include = "registry", from = "src" },
     { include = "plugins", from = "src" },
-    { include = "plugins.resources.llm.providers", from = "src" },
     { include = "common_interfaces", from = "src" },
     { include = "user_plugins" },
 ]

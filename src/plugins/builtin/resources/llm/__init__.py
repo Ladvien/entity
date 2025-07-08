@@ -1,11 +1,14 @@
 """LLM resource utilities."""
 
-from plugins.llm.providers import (ClaudeProvider, EchoProvider,
-                                   GeminiProvider, OllamaProvider,
-                                   OpenAIProvider)
-
 from ..llm_base import LLM
 from .provider_resource import ProviderResource
+from .providers import (
+    ClaudeProvider,
+    EchoProvider,
+    GeminiProvider,
+    OllamaProvider,
+    OpenAIProvider,
+)
 
 __all__ = [
     "LLM",
