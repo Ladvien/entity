@@ -2,18 +2,11 @@ from __future__ import annotations
 
 """CLI entry point for interacting with the Entity pipeline."""
 
-import sys
-from pathlib import Path
-
-# Resolve repository root and ensure it's on ``sys.path`` before other imports
-ROOT = Path(__file__).resolve().parent.parent
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
 import argparse  # noqa: E402
 import asyncio  # noqa: E402
 import shutil  # noqa: E402
 from dataclasses import dataclass  # noqa: E402
+from pathlib import Path
 from typing import Any, Optional  # noqa: E402
 
 import yaml  # noqa: E402
@@ -51,10 +44,6 @@ class CLI:
 
     def __init__(self) -> None:
         """Initialize and parse command-line arguments."""
-        ROOT = Path(__file__).resolve().parent.parent
-        if str(ROOT) not in sys.path:
-            sys.path.insert(0, str(ROOT))
-
         self.args: CLIArgs = self._parse_args()
 
     def _parse_args(self) -> CLIArgs:
