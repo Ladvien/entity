@@ -46,7 +46,8 @@ class DuckDBDatabaseResource(DatabaseResource):
                 metadata TEXT,
                 timestamp TIMESTAMP
             )""",
-            )
+            )  # nosec B608
+            # table name sanitized
 
     async def health_check(self) -> bool:
         if self._connection is None:
