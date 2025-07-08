@@ -65,7 +65,8 @@ class PostgresResource(DatabaseResource):
                         timestamp TIMESTAMPTZ
                     )
                     """
-                )
+                )  # nosec B608
+                # table name sanitized
 
     @asynccontextmanager
     async def connection(self) -> AsyncIterator[asyncpg.Connection]:

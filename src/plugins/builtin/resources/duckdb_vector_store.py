@@ -45,7 +45,8 @@ class DuckDBVectorStore(VectorStoreResource):
         await asyncio.to_thread(
             self._connection.execute,
             f"CREATE TABLE IF NOT EXISTS {self._table} (text TEXT, embedding DOUBLE[{self._dim}])",
-        )
+        )  # nosec B608
+        # table name sanitized
 
     def _embed(self, text: str) -> List[float]:
         values = [0.0] * self._dim

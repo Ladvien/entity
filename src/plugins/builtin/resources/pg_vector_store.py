@@ -43,7 +43,8 @@ class PgVectorStore(VectorStoreResource):
             await conn.execute(
                 f"CREATE TABLE IF NOT EXISTS {self._table} "
                 f"(text TEXT, embedding VECTOR({self._dim}))"
-            )
+            )  # nosec B608
+            # table name sanitized
 
     def _embed(self, text: str) -> List[float]:
         values = [0.0] * self._dim

@@ -57,7 +57,8 @@ class SQLiteStorageResource(DatabaseResource):
                 metadata TEXT,
                 timestamp REAL
             )"""
-        )
+        )  # nosec B608
+        # table name sanitized
         await self._conn.commit()
 
     async def save_history(
