@@ -165,3 +165,58 @@ class BasePlugin:
 - **Developer productivity**: Clear error messages and validation tooling
 
 **Rationale**: Research shows staged validation pipelines with fail-fast philosophy provide optimal balance of startup performance, system reliability, and developer experience. Aggressive circuit breakers prevent cascading failures while maintaining transparency about system health.
+
+
+```markdown
+## 6. Scalability Architecture: Stateless Workers with External State
+
+**Decision**: Framework implements stateless worker pattern where pipeline execution maintains no local state between requests.
+
+**Implementation Pattern**:
+```python
+# Pipeline workers are stateless - no instance variables for conversation data
+class PipelineWorker:
+    def __init__(self, registries: SystemRegistries):
+        self.registries = registries  # Shared resource pools only
+    
+    async def execute_pipeline(self, pipeline_id: str, message: str) -> Any:
+        # Load all context from external storage each request
+        memory = self.registries.resources.get("memory")
+        conversation = await memory.load_conversation(pipeline_id)
+        
+        # Execute pipeline with ephemeral state
+        state = PipelineState(conversation=conversation, pipeline_id=pipeline_id)
+        result = await self.run_stages(state)
+        
+        # Save updated context to external storage
+        await memory.save_conversation(pipeline_id, state.conversation)
+        return result
+```
+
+**Resource Implementation**:
+```python
+# Resources manage connection pooling, not conversation state
+class MemoryResource:
+    def __init__(self, database: DatabaseResource):
+        self.db_pool = database.get_connection_pool()  # Shared pool
+    
+    async def load_conversation(self, pipeline_id: str) -> List[ConversationEntry]:
+        # Load from external store each time
+        async with self.db_pool.acquire() as conn:
+            return await conn.fetch_conversation(pipeline_id)
+    
+    async def save_conversation(self, pipeline_id: str, conversation: List[ConversationEntry]):
+        # Persist to external store
+        async with self.db_pool.acquire() as conn:
+            await conn.store_conversation(pipeline_id, conversation)
+```
+
+**Key Requirements**:
+- Workers hold no conversation state between requests
+- All context loaded fresh from `MemoryResource` per pipeline execution
+- `PipelineState` cleared after each execution
+- Resources provide connection pooling, not data persistence
+- Any worker instance can process any conversation through external state loading
+
+**Benefits**: Linear horizontal scaling, worker processes are disposable, conversation continuity through external persistence, standard container orchestration patterns applicable.
+```
