@@ -82,7 +82,7 @@ def test_max_iterations_triggers_error():
             RecordFailurePlugin(failures), PipelineStage.ERROR
         )
         registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
-        state = PipelineState(conversation=[], pipeline_id="id", metrics=None)
+        state = PipelineState(conversation=[], pipeline_id="id")
         result = await execute_pipeline(
             "hi", registries, state=state, max_iterations=2  # type: ignore[arg-type]
         )
@@ -90,6 +90,6 @@ def test_max_iterations_triggers_error():
         return state
 
     state = asyncio.run(run())
-    assert state.iteration == 3  # type: ignore[attr-defined]
+    assert state.iteration == 2
     assert failures
-    assert failures[0].error_type == "MaxIterationsExceeded"
+    assert failures[0].error_type == "max_iterations"
