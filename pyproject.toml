@@ -14,7 +14,6 @@ packages = [
     { include = "entity_config", from = "src" },
     { include = "registry", from = "src" },
     { include = "plugins", from = "src" },
-    { include = "plugins.resources.llm.providers", from = "src" },
     { include = "common_interfaces", from = "src" },
     { include = "user_plugins" },
 ]

@@ -25,8 +25,8 @@ This spike captures recommended approaches for plugin discovery and runtime hot 
    ```bash
    poetry run mypy src
    bandit -r src
-   python -m src.config.validator --config config/dev.yaml
-   python -m src.config.validator --config config/prod.yaml
+   python -m src.entity_config.validator --config config/dev.yaml
+   python -m src.entity_config.validator --config config/prod.yaml
    python -m src.registry.validator
    pytest
    ```
