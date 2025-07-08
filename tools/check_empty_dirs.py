@@ -32,7 +32,7 @@ class EmptyDirectoryChecker:
 
 def main(argv: Iterable[str] | None = None) -> int:
     root = Path.cwd() if argv is None else Path(argv[0]).resolve()
-    scanner = DirectoryScanner(root)
+    scanner = EmptyDirectoryChecker(root)
     empty_dirs = scanner.find_dirs_without_files()
     if empty_dirs:
         print("Directories without files detected:")
