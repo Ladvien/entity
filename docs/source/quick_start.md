@@ -15,7 +15,7 @@ python src/cli.py --config config.yaml
 Register `SearchTool` and call it from your plugin:
 
 ```python
-from entity.tools import SearchTool
+from user_plugins.tools import SearchTool
 
 agent.tool_registry.add("search", SearchTool())
 

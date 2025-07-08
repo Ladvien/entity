@@ -1,8 +1,8 @@
 """LLM resource utilities."""
 
 from ..llm_base import LLM
+from .provider_resource import ProviderResource
 from .providers import (
-    BedrockProvider,
     ClaudeProvider,
     EchoProvider,
     GeminiProvider,

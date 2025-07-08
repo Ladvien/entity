@@ -8,7 +8,6 @@ readme = "README.md"
 package-mode = true
 
 packages = [
-    { include = "entity", from = "src" },
     { include = "pipeline", from = "src" },
     { include = "cli", from = "src" },
     { include = "entity_config", from = "src" },

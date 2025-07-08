@@ -20,7 +20,7 @@ class HelloPlugin(PromptPlugin):
 Register the plugin with an `Agent` instance:
 
 ```python
-from entity import Agent
+from pipeline import Agent
 
 agent = Agent()
 agent.add_plugin(HelloPlugin({}))

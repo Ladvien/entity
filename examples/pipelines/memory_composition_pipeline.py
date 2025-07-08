@@ -14,18 +14,17 @@ from ..utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 
-from plugins.builtin.resources.postgres import PostgresResource
-from plugins.builtin.resources.pg_vector_store import PgVectorStore
-from plugins.builtin.resources.sqlite_storage import (
-    SQLiteStorageResource as SQLiteDatabaseResource,
-)
-from user_plugins.resources import DuckDBVectorStore
-from user_plugins.memory_resource import MemoryResource
-
-from entity import Agent  # noqa: E402
+from pipeline import Agent  # noqa: E402
 from pipeline import PipelineStage, PromptPlugin  # noqa: E402
 from pipeline.config import ConfigLoader
 from pipeline.context import PluginContext  # noqa: E402
+from plugins.builtin.resources.pg_vector_store import PgVectorStore
+from plugins.builtin.resources.postgres import PostgresResource
+from plugins.builtin.resources.sqlite_storage import (
+    SQLiteStorageResource as SQLiteDatabaseResource,
+)
+from user_plugins.memory_resource import MemoryResource
+from user_plugins.resources import DuckDBVectorStore
 
 
 class StorePrompt(PromptPlugin):

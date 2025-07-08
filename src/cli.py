@@ -14,13 +14,14 @@ import shutil  # noqa: E402
 
 import yaml  # noqa: E402
 
-from entity import Agent, AgentServer  # noqa: E402
 from pipeline import update_plugin_configuration  # noqa: E402
+from pipeline import Agent
 from pipeline.base_plugins import ResourcePlugin, ToolPlugin  # noqa: E402
 from pipeline.initializer import ClassRegistry  # noqa: E402
 from pipeline.interfaces import import_plugin_class  # noqa: E402
 from pipeline.logging import get_logger  # noqa: E402
 from pipeline.resources import Resource  # noqa: E402
+from plugins.builtin.adapters.server import AgentServer  # noqa: E402
 
 logger = get_logger(__name__)
 
@@ -171,7 +172,7 @@ class CLI:
 
         main_path = target / "src" / "main.py"
         main_path.write_text(
-            """from entity import Agent\n\n\n"""
+            """from pipeline import Agent\n\n\n"""
             "def main() -> None:\n"
             "    agent = Agent('config/dev.yaml')\n"
             "    agent.run_http()\n\n\n"
