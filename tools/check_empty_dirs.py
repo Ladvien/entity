@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+"""Detect directories that contain no files at any depth."""
+
 from __future__ import annotations
 
 import sys
@@ -10,31 +13,34 @@ class EmptyDirectoryChecker:
     def __init__(self, root: Path) -> None:
         self.root = root
 
-    def find(self) -> list[Path]:
-        """Return a list of empty directories under the repository root."""
-        empty_dirs: list[Path] = []
-        for path in self.root.rglob("*"):
-            if ".git" in path.parts or not path.is_dir():
+    def _contains_file(self, path: Path) -> bool:
+        """Return ``True`` if ``path`` or any descendant directory contains a file."""
+        return any(p.is_file() for p in path.rglob("*"))
+
+    def find_dirs_without_files(self) -> List[Path]:
+        """Return directories that contain no files."""
+        directories: List[Path] = []
+        for p in self.root.rglob("*"):
+            if not p.is_dir():
                 continue
-            if not any(path.iterdir()):
-                empty_dirs.append(path)
-        return empty_dirs
-
-    def run(self) -> int:
-        """Print any empty directories found and return an exit code."""
-        empty = self.find()
-        if empty:
-            print("Empty directories found:")
-            for directory in empty:
-                print(directory.relative_to(self.root))
-            return 1
-        return 0
+            if ".git" in p.parts:
+                continue
+            if not self._contains_file(p):
+                directories.append(p)
+        return directories
 
 
-def main() -> int:
-    repo_root = Path(__file__).resolve().parents[1]
-    checker = EmptyDirectoryChecker(repo_root)
-    return checker.run()
+def main(argv: Iterable[str] | None = None) -> int:
+    root = Path.cwd() if argv is None else Path(argv[0]).resolve()
+    scanner = DirectoryScanner(root)
+    empty_dirs = scanner.find_dirs_without_files()
+    if empty_dirs:
+        print("Directories without files detected:")
+        for d in empty_dirs:
+            print(d)
+        return 1
+    print("No directories without files detected.")
+    return 0
 
 
 if __name__ == "__main__":
