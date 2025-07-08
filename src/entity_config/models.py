@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Configuration helpers for Entity."""
+
 from dataclasses import MISSING, asdict, dataclass, field, is_dataclass
 from typing import Any, Dict, get_args, get_origin, get_type_hints
 

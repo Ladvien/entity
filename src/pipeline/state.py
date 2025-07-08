@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component: state."""
+
 import dataclasses
 from copy import deepcopy
 from dataclasses import dataclass, field

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Built-in plugins and resources."""
+
 from typing import Any
 
 import redis.asyncio as redis

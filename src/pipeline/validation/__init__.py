@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component:   init  ."""
+
 from dataclasses import dataclass, field
 from typing import List, Optional
 

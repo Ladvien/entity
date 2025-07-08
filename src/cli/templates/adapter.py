@@ -1,3 +1,5 @@
+"""Template for adapter plugin."""
+
 from pipeline.base_plugins import AdapterPlugin
 from pipeline.stages import PipelineStage
 

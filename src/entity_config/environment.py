@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Configuration helpers for Entity."""
+
 from pathlib import Path
 
 from dotenv import load_dotenv

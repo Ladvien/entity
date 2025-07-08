@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Defines common plugin interfaces."""
+
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, List
 

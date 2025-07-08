@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component: cache."""
+
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only

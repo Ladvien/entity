@@ -1,3 +1,5 @@
+"""Defines common plugin interfaces."""
+
 from .base_plugin import BasePlugin
 from .plugin import ResourcePluginProtocol, ResourceT, ToolPluginProtocol, ToolResultT
 from .plugins import PluginAutoClassifier, import_plugin_class

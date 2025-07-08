@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+"""Command line utilities for plugin management."""
+
 import argparse
 import importlib.util
 import inspect
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Awaitable, Callable, Optional, Type
 

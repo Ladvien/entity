@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component: memory."""
+
 import time
 from typing import Any, Dict, Tuple
 

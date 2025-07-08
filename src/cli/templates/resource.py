@@ -1,3 +1,5 @@
+"""Template for resource plugin."""
+
 from pipeline.base_plugins import ResourcePlugin, ValidationResult
 from pipeline.stages import PipelineStage
 

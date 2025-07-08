@@ -1,3 +1,5 @@
+"""Built-in plugins and resources."""
+
 from pydantic import BaseModel
 
 

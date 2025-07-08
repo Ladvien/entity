@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component: conversation manager."""
+
 from datetime import datetime
 from typing import Any, Dict, List, Optional, cast
 

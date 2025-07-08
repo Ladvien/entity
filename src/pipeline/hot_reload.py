@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component: hot reload."""
+
 import asyncio
 import importlib.util
 from contextlib import suppress

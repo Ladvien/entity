@@ -1,3 +1,6 @@
+"""Pipeline component:   init  ."""
+
+
 def __getattr__(name: str):
     if name == "CacheResource":
         from user_plugins.resources import CacheResource

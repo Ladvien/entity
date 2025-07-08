@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component: utils."""
+
 import logging
 import time
 from typing import Any, Awaitable, Callable

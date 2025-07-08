@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Defines common plugin interfaces."""
+
 from typing import Any, Awaitable, Dict, Protocol, TypeVar
 
 ToolResultT = TypeVar("ToolResultT", covariant=True)

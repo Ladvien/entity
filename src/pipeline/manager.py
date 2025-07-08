@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component: manager."""
+
 import asyncio
 from typing import Generic, Optional, Set, TypeVar, cast
 

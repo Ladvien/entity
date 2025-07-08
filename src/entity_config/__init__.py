@@ -1,3 +1,5 @@
+"""Configuration helpers for Entity."""
+
 # flake8: noqa
 import sys
 from pathlib import Path

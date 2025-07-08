@@ -1,3 +1,5 @@
+"""Template for failure plugin."""
+
 from pipeline.base_plugins import FailurePlugin
 from pipeline.stages import PipelineStage
 

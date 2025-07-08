@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component: builder."""
+
 import asyncio
 from dataclasses import dataclass, field
 from pathlib import Path

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Built-in plugins and resources."""
+
 from typing import Any
 
 from pipeline.cache.base import CacheBackend

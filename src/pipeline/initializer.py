@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component: initializer."""
+
 import copy
 import json
 import tomllib
