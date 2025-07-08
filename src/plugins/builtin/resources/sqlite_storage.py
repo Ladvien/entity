@@ -3,12 +3,14 @@ from __future__ import annotations
 """SQLite-based conversation history storage."""
 import json
 from datetime import datetime
+from importlib import util as import_util
 from typing import TYPE_CHECKING, Dict, List, Optional
 
 import aiosqlite
 
 from pipeline.observability.tracing import start_span
 from pipeline.stages import PipelineStage
+from pipeline.validation import ValidationResult
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
     from pipeline.state import ConversationEntry
@@ -29,6 +31,14 @@ class SQLiteStorageResource(DatabaseResource):
         self._path = self.config.get("path", ":memory:")
         self._table = self.config.get("history_table", "chat_history")
         self._conn: Optional[aiosqlite.Connection] = None
+
+    @classmethod
+    def validate_dependencies(cls, registry) -> ValidationResult:
+        """Check optional runtime dependencies."""
+
+        if import_util.find_spec("aiosqlite") is None:
+            return ValidationResult.error_result("'aiosqlite' package is missing")
+        return ValidationResult.success_result()
 
     async def initialize(self) -> None:
         self._conn = await aiosqlite.connect(self._path)

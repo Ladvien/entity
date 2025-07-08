@@ -37,6 +37,10 @@ class UnifiedLLMResource(LLMResource):
         "echo": EchoProvider,
     }
 
+    @classmethod
+    def validate_dependencies(cls, registry) -> ValidationResult:
+        return ValidationResult.success_result()
+
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
         provider_names: List[str] = []
