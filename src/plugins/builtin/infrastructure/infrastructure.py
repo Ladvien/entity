@@ -6,6 +6,8 @@ from __future__ import annotations
 import os
 import re
 import shutil
+
+# subprocess used for CLI invocation
 import subprocess  # nosec B404
 from pathlib import Path
 from typing import Any, Dict, Type
