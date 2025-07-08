@@ -1,42 +1,24 @@
 from __future__ import annotations
 
-"""Adapter for Anthropic Claude API."""
-from typing import Dict
+"""LLM resource for Anthropic's Claude API."""
+
+from typing import Any, Dict
 
 from pipeline.validation import ValidationResult
-from plugins.builtin.resources.http_llm_resource import HttpLLMResource
-from plugins.builtin.resources.llm_resource import LLMResource
+
+from .llm.provider_resource import ProviderResource
+from .llm.providers.claude import ClaudeProvider
 
 
-class ClaudeResource(LLMResource):
-    """LLM resource for Anthropic's Claude API."""
+class ClaudeResource(ProviderResource):
+    """Resource backed by :class:`ClaudeProvider`."""
 
     name = "claude"
+    provider_cls = ClaudeProvider
 
-    def __init__(self, config: Dict | None = None) -> None:
-        super().__init__(config)
-        self.http = HttpLLMResource(self.config, require_api_key=True)
+    def __init__(self, config: Dict[str, Any] | None = None) -> None:
+        super().__init__(self.provider_cls(config or {}))
 
     @classmethod
-    def validate_config(cls, config: Dict) -> ValidationResult:
-        return HttpLLMResource(config, require_api_key=True).validate_config()
-
-    async def generate(self, prompt: str) -> str:
-        if not self.http.validate_config().success:
-            raise RuntimeError("Claude resource not properly configured")
-
-        url = f"{self.http.base_url.rstrip('/')}/v1/messages"
-        headers = {
-            "x-api-key": self.http.api_key,
-            "anthropic-version": "2023-06-01",
-        }
-        payload = {
-            "model": self.http.model,
-            "messages": [{"role": "user", "content": prompt}],
-            **self.http.params,
-        }
-        data = await self.http._post_request(url, payload, headers)
-        text = data.get("content", [{}])[0].get("text", "")
-        return str(text)
-
-    __call__ = generate
+    def validate_config(cls, config: Dict[str, Any]) -> ValidationResult:
+        return cls.provider_cls.validate_config(config)
