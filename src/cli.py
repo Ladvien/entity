@@ -11,12 +11,12 @@ if str(ROOT) not in sys.path:
 import argparse  # noqa: E402
 import asyncio  # noqa: E402
 import shutil  # noqa: E402
+from typing import Any  # noqa: E402
 
 import yaml  # noqa: E402
 
 from pipeline import Agent  # noqa: E402
 from pipeline import update_plugin_configuration  # noqa: E402
-from pipeline import Agent
 from pipeline.base_plugins import ResourcePlugin, ToolPlugin  # noqa: E402
 from pipeline.initializer import ClassRegistry  # noqa: E402
 from pipeline.interfaces import import_plugin_class  # noqa: E402
@@ -234,7 +234,9 @@ class CLI:
                         return True
                 return False
 
-            async def register_new_plugin(section: str, name: str, conf: dict) -> bool:
+            async def register_new_plugin(
+                section: str, name: str, conf: dict[str, Any]
+            ) -> bool:
                 cls = import_plugin_class(conf.get("type", name))
                 if not cls.validate_config(conf).success:
                     logger.error("Failed to validate config for %s", name)
