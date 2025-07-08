@@ -219,4 +219,27 @@ class MemoryResource:
 - Any worker instance can process any conversation through external state loading
 
 **Benefits**: Linear horizontal scaling, worker processes are disposable, conversation continuity through external persistence, standard container orchestration patterns applicable.
-```
+
+
+
+## 6. Response Termination Control
+
+**Decision**: Only DELIVER stage plugins can set the final pipeline response that terminates the iteration loop.
+
+**Rationale**: 
+- Creates clear separation of concerns across pipeline stages
+- PARSE validates and loads context
+- THINK performs reasoning and planning  
+- DO executes tools and actions
+- REVIEW validates and formats intermediate results
+- DELIVER handles final response composition and output transmission
+- Prevents early termination from skipping important downstream processing
+- Makes pipeline flow predictable and debuggable
+
+**Implementation**: 
+- `context.set_response()` method restricted to DELIVER stage plugins only
+- Pipeline continues looping (PARSE → THINK → DO → REVIEW → DELIVER) until a DELIVER plugin calls `set_response()`
+- Earlier stages use `context.set_stage_result()` to store intermediate outputs for DELIVER plugins to access
+- Maximum iteration limit (default 5) prevents infinite loops when no DELIVER plugin sets a response
+
+**Benefits**: Ensures consistent output processing, logging, and formatting while maintaining the hybrid pipeline-state machine mental model.
