@@ -4,7 +4,7 @@ import argparse
 import importlib.util
 import inspect
 from pathlib import Path
-from typing import Any, Dict, List, Type
+from typing import Any, Awaitable, Callable, Type
 
 from pipeline.base_plugins import (
     AdapterPlugin,
@@ -19,7 +19,7 @@ from pipeline.logging import get_logger
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 
-PLUGIN_TYPES = {
+PLUGIN_TYPES: dict[str, Type[BasePlugin]] = {
     "resource": ResourcePlugin,
     "tool": ToolPlugin,
     "prompt": PromptPlugin,
@@ -34,7 +34,7 @@ class PluginToolCLI:
     """CLI utility for working with Entity plugins."""
 
     def __init__(self) -> None:
-        self.args = self._parse_args()
+        self.args: argparse.Namespace = self._parse_args()
 
     def _parse_args(self) -> argparse.Namespace:
         parser = argparse.ArgumentParser(
@@ -143,8 +143,8 @@ class PluginToolCLI:
             logger.info("Executing plugin...")
 
             class DummyContext:
-                async def __getattr__(self, _):
-                    async def _noop(*_a, **_kw):
+                async def __getattr__(self, _: str) -> Callable[..., Awaitable[None]]:
+                    async def _noop(*_a: Any, **_kw: Any) -> None:
                         return None
 
                     return _noop
@@ -166,7 +166,7 @@ class PluginToolCLI:
     def _config(self) -> int:
         name = self.args.name
         plugin_type = self.args.type
-        cfg: Dict[str, Any] = {}
+        cfg: dict[str, str] = {}
         logger.info("Building configuration for %s (%s)", name, plugin_type)
         while True:
             key = input("key (blank to finish): ").strip()
@@ -182,7 +182,7 @@ class PluginToolCLI:
         return 0
 
     def _deps(self) -> int:
-        paths: List[str] = self.args.paths
+        paths: list[str] = self.args.paths
         for p in paths:
             cls = self._load_plugin(p)
             deps = getattr(cls, "dependencies", [])

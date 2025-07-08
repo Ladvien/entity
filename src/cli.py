@@ -11,6 +11,7 @@ if str(ROOT) not in sys.path:
 import argparse  # noqa: E402
 import asyncio  # noqa: E402
 import shutil  # noqa: E402
+from typing import Any  # noqa: E402
 
 import yaml  # noqa: E402
 
@@ -233,7 +234,9 @@ class CLI:
                         return True
                 return False
 
-            async def register_new_plugin(section: str, name: str, conf: dict) -> bool:
+            async def register_new_plugin(
+                section: str, name: str, conf: dict[str, Any]
+            ) -> bool:
                 cls = import_plugin_class(conf.get("type", name))
                 if not cls.validate_config(conf).success:
                     logger.error("Failed to validate config for %s", name)
