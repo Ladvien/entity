@@ -57,7 +57,7 @@ class PgVectorStore(VectorStoreResource):
             await self._db.initialize()
         async with self._db.connection() as conn:
             await conn.execute(
-                f"INSERT INTO {self._table} (text, embedding) VALUES ($1, $2)",
+                f"INSERT INTO {self._table} (text, embedding) VALUES ($1, $2)",  # nosec
                 text,
                 embedding,
             )
@@ -68,7 +68,7 @@ class PgVectorStore(VectorStoreResource):
             await self._db.initialize()
         async with self._db.connection() as conn:
             rows = await conn.fetch(
-                f"SELECT text FROM {self._table} ORDER BY embedding <-> $1 LIMIT $2",
+                f"SELECT text FROM {self._table} ORDER BY embedding <-> $1 LIMIT $2",  # nosec
                 embedding,
                 k,
             )

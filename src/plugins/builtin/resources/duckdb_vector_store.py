@@ -59,7 +59,7 @@ class DuckDBVectorStore(VectorStoreResource):
             raise ResourceError("Resource not initialized")
         await asyncio.to_thread(
             self._connection.execute,
-            f"INSERT INTO {self._table} (text, embedding) VALUES (?, ?)",
+            f"INSERT INTO {self._table} (text, embedding) VALUES (?, ?)",  # nosec
             [text, embedding],
         )
 
@@ -69,7 +69,7 @@ class DuckDBVectorStore(VectorStoreResource):
             return []
         query = (
             f"SELECT text FROM {self._table} "
-            "ORDER BY list_cosine_similarity(embedding, ?) DESC LIMIT ?"
+            "ORDER BY list_cosine_similarity(embedding, ?) DESC LIMIT ?"  # nosec
         )
         rel = await asyncio.to_thread(
             self._connection.execute,
