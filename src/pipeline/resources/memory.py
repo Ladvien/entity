@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 """Memory resource interface wrapper."""
 
+# Avoid importing the full memory plugin until it is needed.
+
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from plugins.builtin.resources.memory import Memory
 

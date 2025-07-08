@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 """Wrapper for PgVectorStore."""
 
+# Defer import until used to avoid loading database drivers too early.
+
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from plugins.builtin.resources.pg_vector_store import PgVectorStore
 

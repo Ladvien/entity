@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 """Thin wrapper exposing the built-in filesystem StorageResource."""
 
+# Uses lazy import to keep heavy filesystem deps optional.
+
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from plugins.builtin.resources.storage_resource import StorageResource
 

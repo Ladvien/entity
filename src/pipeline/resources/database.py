@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 """Database resource wrapper used by tests."""
 
+# __getattr__ keeps heavy DB drivers out of memory until requested.
+
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from plugins.builtin.resources.database import DatabaseResource
 

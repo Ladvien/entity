@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 """Wrapper for DuckDBDatabaseResource."""
 
+# Defer duckdb import until the resource is accessed.
+
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from plugins.builtin.resources.duckdb_database import DuckDBDatabaseResource
 
