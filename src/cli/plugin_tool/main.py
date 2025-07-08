@@ -4,6 +4,7 @@ import argparse
 import importlib.util
 import inspect
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Awaitable, Callable, Optional, Type
 
@@ -19,8 +20,8 @@ from pipeline.base_plugins import ToolPlugin  # noqa: E402
 from pipeline.base_plugins import AdapterPlugin, ValidationResult  # noqa: E402
 from pipeline.logging import get_logger  # noqa: E402
 
-from .generate import generate_plugin
-from .utils import load_plugin
+from .generate import generate_plugin  # noqa: E402
+from .utils import load_plugin  # noqa: E402
 
 PLUGIN_TYPES: dict[str, Type[BasePlugin]] = {
     "resource": ResourcePlugin,

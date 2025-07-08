@@ -12,13 +12,14 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar
 
 import yaml
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
 from common_interfaces.base_plugin import BasePlugin as BasePluginInterface
-from plugins.builtin.config_models import PLUGIN_CONFIG_MODELS, DefaultConfigModel
+from plugins.builtin.config_models import (PLUGIN_CONFIG_MODELS,
+                                           DefaultConfigModel)
 
-from ..errors import ToolExecutionError
-from ..exceptions import CircuitBreakerTripped, PipelineError, PluginExecutionError
+from ..exceptions import (CircuitBreakerTripped, PipelineError,
+                          PluginExecutionError)
 from ..logging import get_logger
 from ..observability.utils import execute_with_observability
 from ..reliability import RetryPolicy
