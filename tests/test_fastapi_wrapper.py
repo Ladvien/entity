@@ -3,7 +3,7 @@ import asyncio
 import httpx
 
 from app import create_app
-from entity import Agent
+from pipeline import Agent
 
 
 def test_fastapi_wrapper():
