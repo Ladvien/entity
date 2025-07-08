@@ -23,7 +23,7 @@ from pipeline.base_plugins import AdapterPlugin
 from pipeline.exceptions import ResourceError
 from pipeline.manager import PipelineManager
 from pipeline.metrics import MetricsCollector
-from pipeline.observability import get_metrics_server, start_metrics_server
+from pipeline.observability import MetricsServerManager
 from pipeline.pipeline import execute_pipeline
 from pipeline.security import AdapterAuthenticator
 from registry import SystemRegistries
@@ -118,7 +118,7 @@ class HTTPAdapter(AdapterPlugin):
         self._setup_middleware()
         self.dashboard_enabled = bool(self.config.get("dashboard", False))
         if self.dashboard_enabled:
-            start_metrics_server()
+            MetricsServerManager.start()
         self._server: uvicorn.Server | None = None
         self._registries: SystemRegistries | None = None
         self._setup_routes()
@@ -180,7 +180,7 @@ class HTTPAdapter(AdapterPlugin):
             async def dashboard() -> HTMLResponse:
                 metrics = MetricsCollector()
                 metrics.record_dashboard_request()
-                server = get_metrics_server()
+                server = MetricsServerManager.get()
                 if server is not None:
                     server.update(metrics)
                 count = 0
@@ -205,7 +205,7 @@ class HTTPAdapter(AdapterPlugin):
 
             @self.app.get("/metrics")
             async def metrics() -> HTMLResponse:
-                server = get_metrics_server()
+                server = MetricsServerManager.get()
                 if server is None:
                     return HTMLResponse(status_code=404)
                 return HTMLResponse(server.render(), media_type="text/plain")

@@ -3,18 +3,12 @@ from __future__ import annotations
 """Prometheus metrics integration for the Entity pipeline."""
 
 import psutil
-from prometheus_client import (
-    CollectorRegistry,
-    Counter,
-    Gauge,
-    Histogram,
-    generate_latest,
-    start_http_server,
-)
+from prometheus_client import (CollectorRegistry, Counter, Gauge, Histogram,
+                               generate_latest, start_http_server)
 
 from pipeline.metrics import MetricsCollector
 
-__all__ = ["MetricsServer", "start_metrics_server", "get_metrics_server"]
+__all__ = ["MetricsServer", "MetricsServerManager"]
 
 
 class MetricsServer:
@@ -78,17 +72,33 @@ class MetricsServer:
         return generate_latest(self.registry)
 
 
-_metrics_server: MetricsServer | None = None
+class MetricsServerManager:
+    """Manage a single :class:`MetricsServer` instance."""
 
+    _server: MetricsServer | None = None
 
-def get_metrics_server() -> MetricsServer | None:
-    """Return the current metrics server instance if running."""
-    return _metrics_server
+    @classmethod
+    def start(cls, port: int = 9001) -> MetricsServer:
+        """Start the Prometheus metrics HTTP server if not already running."""
+
+        if cls._server is None:
+            cls._server = MetricsServer(port)
+        return cls._server
+
+    @classmethod
+    def get(cls) -> MetricsServer | None:
+        """Return the active :class:`MetricsServer` instance if running."""
+
+        return cls._server
 
 
 def start_metrics_server(port: int = 9001) -> MetricsServer:
-    """Start the Prometheus metrics HTTP server."""
-    global _metrics_server
-    if _metrics_server is None:
-        _metrics_server = MetricsServer(port)
-    return _metrics_server
+    """Backward-compatible wrapper for :meth:`MetricsServerManager.start`."""
+
+    return MetricsServerManager.start(port)
+
+
+def get_metrics_server() -> MetricsServer | None:
+    """Backward-compatible wrapper for :meth:`MetricsServerManager.get`."""
+
+    return MetricsServerManager.get()

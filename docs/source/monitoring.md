@@ -4,13 +4,13 @@ This guide shows how to collect metrics and traces from an Entity deployment.
 
 ## Prometheus Metrics
 
-Call `start_metrics_server()` at application startup to expose metrics on
+Call `MetricsServerManager.start()` at application startup to expose metrics on
 `/metrics`:
 
 ```python
-from pipeline.observability import start_metrics_server
+from pipeline.observability import MetricsServerManager
 
-start_metrics_server(port=9001)
+MetricsServerManager.start(port=9001)
 ```
 
 The exporter provides stage latency, LLM latency and failure counters along with

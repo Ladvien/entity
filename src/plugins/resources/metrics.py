@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-from pipeline.observability import start_metrics_server
+from pipeline.observability import MetricsServerManager
 from pipeline.validation import ValidationResult
 from plugins.resources.base import BaseResource
 
@@ -27,7 +27,7 @@ class MetricsResource(BaseResource):
         return ValidationResult.success_result()
 
     async def initialize(self) -> None:
-        start_metrics_server(self._port)
+        MetricsServerManager.start(self._port)
 
     def get_metrics(self) -> Dict[str, int]:
         return {"port": self._port}
