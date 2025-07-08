@@ -5,8 +5,17 @@ from __future__ import annotations
 import asyncio
 from copy import deepcopy
 from datetime import datetime
-from typing import (TYPE_CHECKING, Any, AsyncIterator, Callable, Dict, List,
-                    Optional, TypeVar, cast)
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    AsyncIterator,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    TypeVar,
+    cast,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from common_interfaces.resources import LLM
@@ -25,8 +34,7 @@ __all__ = [
 from .errors import ResourceError
 from .metrics import MetricsCollector
 from .stages import PipelineStage
-from .state import (ConversationEntry, FailureInfo, LLMResponse, PipelineState,
-                    ToolCall)
+from .state import ConversationEntry, FailureInfo, LLMResponse, PipelineState, ToolCall
 from .tools.base import RetryOptions
 from .tools.execution import execute_tool
 

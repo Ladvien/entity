@@ -3,8 +3,7 @@ from __future__ import annotations
 """Base class for HTTP LLM providers."""
 
 
-from plugins.builtin.resources.http_provider_resource import \
-    HTTPProviderResource
+from plugins.builtin.resources.http_provider_resource import HTTPProviderResource
 
 
 class BaseProvider(HTTPProviderResource):
