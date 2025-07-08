@@ -4,7 +4,9 @@ This package provides a simple debug prompt for the Entity agent.
 
 ## Installation
 
-Install in editable mode with development dependencies:
+Install in editable mode with development dependencies.
+Running the command below installs `entity` and all of its dependencies,
+including `grpcio`:
 
 ```bash
 poetry install --with dev
