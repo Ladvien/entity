@@ -14,6 +14,7 @@ import shutil  # noqa: E402
 
 import yaml  # noqa: E402
 
+from pipeline import Agent  # noqa: E402
 from pipeline import update_plugin_configuration  # noqa: E402
 from pipeline import Agent
 from pipeline.base_plugins import ResourcePlugin, ToolPlugin  # noqa: E402
