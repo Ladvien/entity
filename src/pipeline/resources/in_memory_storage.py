@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 """Wrapper for InMemoryStorageResource."""
 
+# Import lazily so heavy plugin deps load only when accessed.
+
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from plugins.builtin.resources.in_memory_storage import InMemoryStorageResource
 

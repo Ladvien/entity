@@ -1,5 +1,7 @@
 """Public resource wrappers for pipeline consumers."""
 
+# Lazy imports so optional resources don't load heavy dependencies.
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only

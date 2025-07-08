@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 """Wrapper for PostgresResource."""
 
+# Delays import so psycopg and friends load only when needed.
+
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from plugins.builtin.resources.postgres import PostgresResource
 

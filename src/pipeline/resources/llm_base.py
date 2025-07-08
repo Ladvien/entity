@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 """Public re-export of :class:`LLM`."""
 
+# Import the concrete LLM class lazily to reduce startup time.
+
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from plugins.builtin.resources.llm_base import LLM
 

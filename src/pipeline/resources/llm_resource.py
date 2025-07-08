@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 """Public re-export of :class:`LLMResource`."""
 
+# Load the real LLM resource only when requested.
+
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from plugins.builtin.resources.llm_resource import LLMResource
 
