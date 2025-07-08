@@ -8,6 +8,7 @@ package-mode = true
 [tool.poetry.dependencies]
 python = "^3.11"
 entity = { path = "../", develop = true }
+grpcio = "^1.62.2"
 
 [tool.entity.plugins.prompts.debug_prompt]
 class = "debug_plugin:DebugPrompt"
