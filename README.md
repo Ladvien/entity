@@ -57,14 +57,14 @@ plugins:
       model: tinyllama
       base_url: "http://localhost:11434"
 ```
-Lightweight deployments can use SQLite:
+Lightweight deployments can use DuckDB:
 
 ```yaml
 plugins:
   resources:
     database:
-      type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
-      path: ./entity.db
+      type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
+      path: ./entity.duckdb
       pool_min_size: 1
       pool_max_size: 5
 ```
@@ -250,8 +250,8 @@ plugins:
     storage:
       type: storage
       database:
-        type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
-        path: ./agent.db
+        type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
+        path: ./agent.duckdb
 ```
 
 ### DuckDB Configuration
@@ -322,8 +322,8 @@ plugins:
     storage:
       type: storage
       database:
-        type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
-        path: ./agent.db
+        type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
+        path: ./agent.duckdb
       filesystem:
         type: plugins.builtin.resources.local_filesystem:LocalFileSystemResource
         base_path: ./files
@@ -370,7 +370,7 @@ python examples/servers/cli_adapter.py
 
 3. **Provide Sensible Defaults**
    ```python
-   # If no config provided, use SQLite + local filesystem
+   # If no config provided, use DuckDB + local filesystem
    storage = StorageResource()  # Works out of the box
    ```
 

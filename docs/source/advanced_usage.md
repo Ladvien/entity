@@ -34,7 +34,7 @@ plugins:
 
 `MemoryResource` persists conversation history and vectors. `StorageResource` extends it with file CRUD across the configured backends.
 
-For local experimentation you can swap the database section with SQLite:
+For local experimentation you can swap the database section with DuckDB:
 
 ```yaml
 plugins:
@@ -42,8 +42,8 @@ plugins:
     storage:
       type: storage
       database:
-        type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
-        path: ./agent.db
+        type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
+        path: ./agent.duckdb
 ```
 
 You can also use `StorageResource` for a lighter setup:
@@ -54,8 +54,8 @@ plugins:
     storage:
       type: storage
       database:
-        type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
-        path: ./agent.db
+        type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
+        path: ./agent.duckdb
       filesystem:
         type: plugins.builtin.resources.local_filesystem:LocalFileSystemResource
         base_path: ./files

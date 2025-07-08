@@ -11,8 +11,8 @@ tool_registry:
 plugins:
   resources:
     database:
-      type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
-      path: ./prod.db
+      type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
+      path: ./prod.duckdb
     llm:
       type: plugins.builtin.resources.llm.unified:UnifiedLLMResource
       provider: ollama

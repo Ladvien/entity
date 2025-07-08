@@ -11,8 +11,8 @@ tool_registry:
 plugins:
   resources:
     database:
-      type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
-      path: ./dev.db
+      type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
+      path: ./dev.duckdb
     llm:
       type: plugins.builtin.resources.llm.unified:UnifiedLLMResource
       provider: ollama
@@ -23,8 +23,8 @@ plugins:
     memory:
       type: pipeline.resources.memory_resource:MemoryResource
       storage:
-        type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
-        path: ./dev.db
+        type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
+        path: ./dev.duckdb
     vector_store:
       type: plugins.builtin.resources.memory_vector_store:MemoryVectorStore
       table: vector_mem

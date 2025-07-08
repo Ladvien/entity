@@ -128,7 +128,7 @@ Several example pipelines in the `examples/` directory showcase more advanced pa
 
 ```python
 storage = StorageResource(
-    database=SQLiteDatabaseResource({"path": "./agent.db"}),
+    database=DuckDBDatabaseResource({"path": "./agent.duckdb"}),
     vector_store=PgVectorStore({"table": "embeddings"}),
     filesystem=LocalFileSystemResource({"base_path": "./files"}),
 )
@@ -138,7 +138,7 @@ storage = StorageResource(
 
 ```python
 storage = StorageResource(
-    database=SQLiteDatabaseResource({"path": "./agent.db"}),
+    database=DuckDBDatabaseResource({"path": "./agent.duckdb"}),
     filesystem=LocalFileSystemResource({"base_path": "./files"}),
 )
 ```
