@@ -13,20 +13,18 @@ Thank you for helping improve Entity Pipeline Framework! Always start with `poet
 
 ## Development workflow
 
-Run these commands before creating a pull request:
+Use this checklist before opening a pull request:
 
-```bash
-poetry install --with dev
-poetry run black src tests
-poetry run isort src tests
-poetry run flake8 src tests
-poetry run mypy src
-bandit -r src
-python -m src.entity_config.validator --config config/dev.yaml
-python -m src.entity_config.validator --config config/prod.yaml
-python -m src.registry.validator
-pytest
-```
+- `poetry install --with dev`
+- `poetry run black src tests`
+- `poetry run isort src tests`
+- `poetry run flake8 src tests`
+- `poetry run mypy src`
+- `bandit -r src`
+- `python -m src.entity_config.validator --config config/dev.yaml`
+- `python -m src.entity_config.validator --config config/prod.yaml`
+- `python -m src.registry.validator`
+- `pytest`
 
 ## Quality Checks
 
