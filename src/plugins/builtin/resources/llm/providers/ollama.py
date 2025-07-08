@@ -44,7 +44,7 @@ class OllamaProvider(BaseProvider):
         if functions:
             payload["functions"] = functions
 
-        async for data in self._stream_post_request(url, payload):
+        async for data in self.http.stream_request(url, payload):
             text = data.get("response")
             if text:
                 yield str(text)

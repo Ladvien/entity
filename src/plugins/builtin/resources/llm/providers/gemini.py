@@ -59,7 +59,7 @@ class GeminiProvider(BaseProvider):
         if functions:
             payload["functions"] = functions
 
-        async for data in self._stream_post_request(url, payload, headers, params):
+        async for data in self.http.stream_request(url, payload, headers, params):
             text = (
                 data.get("candidates", [{}])[0]
                 .get("content", {})

@@ -1,13 +1,10 @@
 from __future__ import annotations
 
 """Shared HTTP logic for LLM providers."""
-import asyncio
-import json
 from typing import Any, AsyncIterator, Dict, Optional
 
 import httpx
 
-from pipeline.exceptions import ResourceError
 from pipeline.validation import ValidationResult
 
 from .http_llm_resource import HttpLLMResource
@@ -73,29 +70,5 @@ class HTTPProviderResource(LLM):
         headers: Optional[Dict[str, str]] = None,
         params: Optional[Dict[str, Any]] = None,
     ) -> AsyncIterator[Dict[str, Any]]:
-        last_exc: Exception | None = None
-        for attempt in range(self.retry_attempts):
-            try:
-                client = self._client or httpx.AsyncClient(timeout=self.timeout)
-                close_client = self._client is None
-                try:
-                    async with client.stream(
-                        "POST", url, json=payload, headers=headers, params=params
-                    ) as response:
-                        response.raise_for_status()
-                        async for line in response.aiter_lines():
-                            if not line:
-                                continue
-                            if line.startswith("data: "):
-                                line = line[6:]
-                            if line == "[DONE]":
-                                break
-                            yield json.loads(line)
-                    return
-                finally:
-                    if close_client:
-                        await client.aclose()
-            except Exception as exc:  # noqa: BLE001 - retry
-                last_exc = exc
-                await asyncio.sleep(2**attempt)
-        raise ResourceError(f"{self.name} provider request failed") from last_exc
+        async for chunk in self.http.stream_request(url, payload, headers, params):
+            yield chunk

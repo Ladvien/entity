@@ -57,7 +57,7 @@ class OpenAIProvider(BaseProvider):
         if functions:
             payload["functions"] = functions
 
-        async for data in self._stream_post_request(url, payload, headers):
+        async for data in self.http.stream_request(url, payload, headers):
             delta = data.get("choices", [{}])[0].get("delta", {})
             content = delta.get("content")
             if content:
