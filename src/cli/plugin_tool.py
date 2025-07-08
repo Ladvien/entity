@@ -3,8 +3,9 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import inspect
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Awaitable, Callable, Type
+from typing import Any, Awaitable, Callable, Optional, Type
 
 from pipeline.base_plugins import (
     AdapterPlugin,
@@ -30,13 +31,26 @@ PLUGIN_TYPES: dict[str, Type[BasePlugin]] = {
 logger = get_logger(__name__)
 
 
+@dataclass
+class PluginToolArgs:
+    """Arguments parsed for :class:`PluginToolCLI`."""
+
+    command: str
+    name: Optional[str] = None
+    type: Optional[str] = None
+    out: Optional[str] = None
+    docs_dir: Optional[str] = None
+    path: Optional[str] = None
+    paths: Optional[list[str]] = None
+
+
 class PluginToolCLI:
     """CLI utility for working with Entity plugins."""
 
     def __init__(self) -> None:
-        self.args: argparse.Namespace = self._parse_args()
+        self.args: PluginToolArgs = self._parse_args()
 
-    def _parse_args(self) -> argparse.Namespace:
+    def _parse_args(self) -> PluginToolArgs:
         parser = argparse.ArgumentParser(
             description="Helper tool for creating and validating Entity plugins"
         )
@@ -70,7 +84,16 @@ class PluginToolCLI:
         )
         ana.add_argument("path", help="Plugin file path")
 
-        return parser.parse_args()
+        parsed = parser.parse_args()
+        return PluginToolArgs(
+            command=parsed.command,
+            name=getattr(parsed, "name", None),
+            type=getattr(parsed, "type", None),
+            out=getattr(parsed, "out", None),
+            docs_dir=getattr(parsed, "docs_dir", None),
+            path=getattr(parsed, "path", None),
+            paths=getattr(parsed, "paths", None),
+        )
 
     # -----------------------------------------------------
     # command implementations
@@ -94,6 +117,10 @@ class PluginToolCLI:
         return 0
 
     def _generate(self) -> int:
+        assert self.args.name is not None
+        assert self.args.type is not None
+        assert self.args.out is not None
+        assert self.args.docs_dir is not None
         name = self.args.name
         plugin_type = self.args.type
         out_dir = Path(self.args.out)
@@ -117,6 +144,7 @@ class PluginToolCLI:
         return 0
 
     def _validate(self) -> int:
+        assert self.args.path is not None
         plugin_cls = self._load_plugin(self.args.path)
         if not issubclass(plugin_cls, BasePlugin):
             logger.error("Not a plugin class")
@@ -132,6 +160,7 @@ class PluginToolCLI:
         return 0
 
     def _test(self) -> int:
+        assert self.args.path is not None
         plugin_cls = self._load_plugin(self.args.path)
         instance = plugin_cls(getattr(plugin_cls, "config", {}))
         if hasattr(instance, "initialize") and callable(instance.initialize):
@@ -164,6 +193,8 @@ class PluginToolCLI:
         return 0
 
     def _config(self) -> int:
+        assert self.args.name is not None
+        assert self.args.type is not None
         name = self.args.name
         plugin_type = self.args.type
         cfg: dict[str, str] = {}
@@ -182,6 +213,7 @@ class PluginToolCLI:
         return 0
 
     def _deps(self) -> int:
+        assert self.args.paths is not None
         paths: list[str] = self.args.paths
         for p in paths:
             cls = self._load_plugin(p)
@@ -195,6 +227,8 @@ class PluginToolCLI:
         return 0
 
     def _docs(self) -> int:
+        assert self.args.path is not None
+        assert self.args.out is not None
         cls = self._load_plugin(self.args.path)
         out_dir = Path(self.args.out)
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -206,6 +240,7 @@ class PluginToolCLI:
         return 0
 
     def _analyze_plugin(self) -> int:
+        assert self.args.path is not None
         path = self.args.path
         spec = importlib.util.spec_from_file_location(Path(path).stem, path)
         if spec is None or spec.loader is None:

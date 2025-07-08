@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from user_plugins.resources.cache import CacheResource
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> Any:
     if name == "CacheResource":
         from user_plugins.resources.cache import CacheResource
 

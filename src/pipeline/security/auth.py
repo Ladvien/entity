@@ -17,4 +17,7 @@ class AdapterAuthenticator:
 
     def authorize(self, token: str | None, role: str) -> bool:
         """Return ``True`` if ``token`` grants ``role`` access."""
-        return self.authenticate(token) and role in self._tokens.get(token, [])
+        if not self.authenticate(token):
+            return False
+        assert token is not None
+        return role in self._tokens.get(token, [])

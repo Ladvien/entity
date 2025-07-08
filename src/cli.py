@@ -11,7 +11,8 @@ if str(ROOT) not in sys.path:
 import argparse  # noqa: E402
 import asyncio  # noqa: E402
 import shutil  # noqa: E402
-from typing import Any  # noqa: E402
+from dataclasses import dataclass  # noqa: E402
+from typing import Any, Optional  # noqa: E402
 
 import yaml  # noqa: E402
 
@@ -27,6 +28,18 @@ from plugins.builtin.adapters.server import AgentServer  # noqa: E402
 logger = get_logger(__name__)
 
 
+@dataclass
+class CLIArgs:
+    """Typed command-line arguments for :class:`CLI`."""
+
+    config: str
+    watch_dirs: Optional[list[str]] = None
+    state_log: Optional[str] = None
+    command: str = "run"
+    path: Optional[str] = None
+    file: Optional[str] = None
+
+
 class CLI:
     """Command line interface for the Entity agent.
 
@@ -40,14 +53,10 @@ class CLI:
         if str(ROOT) not in sys.path:
             sys.path.insert(0, str(ROOT))
 
-        self.args = self._parse_args()
+        self.args: CLIArgs = self._parse_args()
 
-    def _parse_args(self) -> argparse.Namespace:
-        """Create and parse CLI arguments.
-
-        Returns:
-            argparse.Namespace: Parsed command-line arguments.
-        """
+    def _parse_args(self) -> CLIArgs:
+        """Create and parse CLI arguments."""
 
         parser = argparse.ArgumentParser(
             description="Run an Entity agent using a YAML configuration.",
@@ -94,7 +103,15 @@ class CLI:
         )
         new_parser.add_argument("path", help="Directory for the new project")
 
-        return parser.parse_args()
+        args = parser.parse_args()
+        return CLIArgs(
+            config=args.config,
+            watch_dirs=args.watch_dirs,
+            state_log=args.state_log,
+            command=args.command,
+            path=getattr(args, "path", None),
+            file=getattr(args, "file", None),
+        )
 
     def run(self) -> int:
         """Execute the requested CLI action.
@@ -103,6 +120,7 @@ class CLI:
             int: Exit code of the action.
         """
         if self.args.command == "new":
+            assert self.args.path is not None
             return self._create_project(self.args.path)
 
         if self.args.command == "verify":
@@ -111,11 +129,13 @@ class CLI:
         if self.args.command == "replay-log":
             from pipeline.state_logger import LogReplayer
 
+            assert self.args.file is not None
             LogReplayer(self.args.file).replay()
             return 0
 
         agent = Agent(self.args.config)
         if self.args.command == "reload-config":
+            assert self.args.file is not None
             return self._reload_config(agent, self.args.file)
 
         async def _serve() -> None:
