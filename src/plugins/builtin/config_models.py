@@ -6,12 +6,15 @@ class DefaultConfigModel(BaseModel):
         extra = "allow"
 
 
-__all__ = ["DefaultConfigModel"]
+class SimpleConfigModel(DefaultConfigModel):
+    pass
+
+
+__all__ = ["DefaultConfigModel", "SimpleConfigModel"]
 
 
 # Adapter configs
-class CLIAdapterConfig(DefaultConfigModel):
-    pass
+CLIAdapterConfig = SimpleConfigModel
 
 
 class LLMGRPCAdapterConfig(DefaultConfigModel):
@@ -25,8 +28,7 @@ class HTTPAdapterConfig(DefaultConfigModel):
     dashboard: bool | None = None
 
 
-class LoggingAdapterConfig(DefaultConfigModel):
-    pass
+LoggingAdapterConfig = SimpleConfigModel
 
 
 class WebSocketAdapterConfig(DefaultConfigModel):
@@ -35,24 +37,20 @@ class WebSocketAdapterConfig(DefaultConfigModel):
 
 
 # Prompt configs
-class MemoryPluginConfig(DefaultConfigModel):
-    pass
+MemoryPluginConfig = SimpleConfigModel
 
 
 class ComplexPromptConfig(DefaultConfigModel):
     k: int | None = None
 
 
-class ConversationHistoryConfig(DefaultConfigModel):
-    pass
+ConversationHistoryConfig = SimpleConfigModel
 
 
-class MemoryRetrievalPromptConfig(DefaultConfigModel):
-    pass
+MemoryRetrievalPromptConfig = SimpleConfigModel
 
 
-class ChatHistoryConfig(DefaultConfigModel):
-    pass
+ChatHistoryConfig = SimpleConfigModel
 
 
 # Tool configs
@@ -62,12 +60,10 @@ class WeatherApiToolConfig(DefaultConfigModel):
     timeout: int | None = None
 
 
-class CalculatorToolConfig(DefaultConfigModel):
-    pass
+CalculatorToolConfig = SimpleConfigModel
 
 
-class SearchToolConfig(DefaultConfigModel):
-    pass
+SearchToolConfig = SimpleConfigModel
 
 
 # Resource configs
@@ -76,8 +72,7 @@ class BedrockResourceConfig(DefaultConfigModel):
     model_id: str | None = None
 
 
-class ClaudeResourceConfig(DefaultConfigModel):
-    pass
+ClaudeResourceConfig = SimpleConfigModel
 
 
 class DuckDBDatabaseResourceConfig(DefaultConfigModel):
@@ -89,12 +84,10 @@ class DuckDBVectorStoreConfig(DefaultConfigModel):
     path: str | None = None
 
 
-class EchoLLMResourceConfig(DefaultConfigModel):
-    pass
+EchoLLMResourceConfig = SimpleConfigModel
 
 
-class GeminiResourceConfig(DefaultConfigModel):
-    pass
+GeminiResourceConfig = SimpleConfigModel
 
 
 class InMemoryStorageResourceConfig(DefaultConfigModel):
@@ -105,12 +98,10 @@ class LocalFileSystemResourceConfig(DefaultConfigModel):
     base_path: str | None = None
 
 
-class OllamaLLMResourceConfig(DefaultConfigModel):
-    pass
+OllamaLLMResourceConfig = SimpleConfigModel
 
 
-class OpenAIResourceConfig(DefaultConfigModel):
-    pass
+OpenAIResourceConfig = SimpleConfigModel
 
 
 class PgVectorStoreConfig(DefaultConfigModel):
@@ -180,29 +171,29 @@ __all__ += [
 
 # Map plugin class names to config models
 PLUGIN_CONFIG_MODELS = {
-    "CLIAdapter": CLIAdapterConfig,
+    "CLIAdapter": SimpleConfigModel,
     "LLMGRPCAdapter": LLMGRPCAdapterConfig,
     "HTTPAdapter": HTTPAdapterConfig,
-    "LoggingAdapter": LoggingAdapterConfig,
+    "LoggingAdapter": SimpleConfigModel,
     "WebSocketAdapter": WebSocketAdapterConfig,
-    "MemoryPlugin": MemoryPluginConfig,
+    "MemoryPlugin": SimpleConfigModel,
     "ComplexPrompt": ComplexPromptConfig,
-    "ConversationHistory": ConversationHistoryConfig,
-    "MemoryRetrievalPrompt": MemoryRetrievalPromptConfig,
-    "ChatHistory": ChatHistoryConfig,
+    "ConversationHistory": SimpleConfigModel,
+    "MemoryRetrievalPrompt": SimpleConfigModel,
+    "ChatHistory": SimpleConfigModel,
     "WeatherApiTool": WeatherApiToolConfig,
-    "CalculatorTool": CalculatorToolConfig,
-    "SearchTool": SearchToolConfig,
+    "CalculatorTool": SimpleConfigModel,
+    "SearchTool": SimpleConfigModel,
     "BedrockResource": BedrockResourceConfig,
-    "ClaudeResource": ClaudeResourceConfig,
+    "ClaudeResource": SimpleConfigModel,
     "DuckDBDatabaseResource": DuckDBDatabaseResourceConfig,
     "DuckDBVectorStore": DuckDBVectorStoreConfig,
-    "EchoLLMResource": EchoLLMResourceConfig,
-    "GeminiResource": GeminiResourceConfig,
+    "EchoLLMResource": SimpleConfigModel,
+    "GeminiResource": SimpleConfigModel,
     "InMemoryStorageResource": InMemoryStorageResourceConfig,
     "LocalFileSystemResource": LocalFileSystemResourceConfig,
-    "OllamaLLMResource": OllamaLLMResourceConfig,
-    "OpenAIResource": OpenAIResourceConfig,
+    "OllamaLLMResource": SimpleConfigModel,
+    "OpenAIResource": SimpleConfigModel,
     "PgVectorStore": PgVectorStoreConfig,
     "PostgresResource": PostgresResourceConfig,
     "SQLiteStorageResource": SQLiteStorageResourceConfig,
