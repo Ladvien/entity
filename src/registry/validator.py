@@ -69,15 +69,21 @@ class RegistryValidator:
 
     def _validate_dependencies(self) -> None:
         for cls, _ in self.registry.all_plugin_classes():
-            try:
-                result: ValidationResult = cls.validate_dependencies(self.registry)
-            except NameError as exc:  # pragma: no cover - legacy plugins
-                if "ValidationResult" in str(exc):
-                    from pipeline.validation import ValidationResult
+            validate = getattr(cls, "validate_dependencies", None)
+            if validate is None:
+                from pipeline.validation import ValidationResult
 
-                    result = ValidationResult.success_result()
-                else:
-                    raise
+                result = ValidationResult.success_result()
+            else:
+                try:
+                    result = validate(self.registry)
+                except NameError as exc:  # pragma: no cover - legacy plugins
+                    if "ValidationResult" in str(exc):
+                        from pipeline.validation import ValidationResult
+
+                        result = ValidationResult.success_result()
+                    else:
+                        raise
             if not result.success:
                 raise SystemError(
                     f"Dependency validation failed for {cls.__name__}: {result.error_message}"
