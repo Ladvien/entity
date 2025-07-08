@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Detect directories that contain no files."""
+"""Detect directories that contain no files at any depth."""
 
 from __future__ import annotations
 
@@ -14,11 +14,9 @@ class DirectoryScanner:
     def __init__(self, root: Path) -> None:
         self.root = root
 
-    def _has_file(self, path: Path) -> bool:
-        for item in path.iterdir():
-            if item.is_file():
-                return True
-        return False
+    def _contains_file(self, path: Path) -> bool:
+        """Return ``True`` if ``path`` or any descendant directory contains a file."""
+        return any(p.is_file() for p in path.rglob("*"))
 
     def find_dirs_without_files(self) -> List[Path]:
         """Return directories that contain no files."""
@@ -26,9 +24,9 @@ class DirectoryScanner:
         for p in self.root.rglob("*"):
             if not p.is_dir():
                 continue
-            if "\.git" in p.parts:
+            if ".git" in p.parts:
                 continue
-            if not self._has_file(p):
+            if not self._contains_file(p):
                 directories.append(p)
         return directories
 

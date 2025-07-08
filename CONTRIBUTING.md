@@ -28,8 +28,14 @@ pytest tests/infrastructure/ -v
 pytest tests/performance/ -m benchmark
 ```
 
-Pre-commit will also run `tools/check_empty_dirs.py` to ensure no directories
-exist without files. If such folders are found, the commit will fail.
+Pre-commit also runs `tools/check_empty_dirs.py`. This tool searches for
+directories that do not contain any files (even if subdirectories are present)
+and rejects the commit when such directories are found. You can run it
+manually with:
+
+```bash
+python tools/check_empty_dirs.py
+```
 
 ## Optional Dependencies for Examples
 
