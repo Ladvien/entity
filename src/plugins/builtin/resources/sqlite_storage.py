@@ -4,14 +4,12 @@ from __future__ import annotations
 import json
 import re
 from datetime import datetime
-from importlib import util as import_util
 from typing import TYPE_CHECKING, Dict, List, Optional
 
 import aiosqlite
 
 from pipeline.observability.tracing import start_span
 from pipeline.stages import PipelineStage
-from pipeline.validation import ValidationResult
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
     from pipeline.state import ConversationEntry
