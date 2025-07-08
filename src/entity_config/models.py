@@ -60,13 +60,19 @@ class ToolRegistryConfig:
 
 @dataclass
 class EntityConfig:
-    server: ServerConfig
+    server: ServerConfig = field(
+        default_factory=lambda: ServerConfig(host="localhost", port=8000)
+    )
     plugins: PluginsSection = field(default_factory=PluginsSection)
     tool_registry: ToolRegistryConfig = field(default_factory=ToolRegistryConfig)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "EntityConfig":
-        server = ServerConfig(**data.get("server", {}))
+        server_data = data.get("server")
+        if server_data is None:
+            server = ServerConfig(host="localhost", port=8000)
+        else:
+            server = ServerConfig(**server_data)
         plugins = PluginsSection.from_dict(data.get("plugins", {}))
         tool_reg_cfg = ToolRegistryConfig(**data.get("tool_registry", {}))
         return cls(server, plugins, tool_reg_cfg)
