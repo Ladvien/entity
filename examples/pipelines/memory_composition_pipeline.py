@@ -1,14 +1,14 @@
-"""Demonstrate composed memory resource using SQLite, PGVector and local files."""
+"""Demonstrate composed memory resource using SQLite, PGVector and local files.
+
+Run with ``python -m examples.pipelines.memory_composition_pipeline`` or install
+the package in editable mode.
+"""
 
 from __future__ import annotations
 
 import asyncio
 import os
-import pathlib
-import sys
 
-# Ensure project source is available for imports
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))  # noqa: E402
 
 from ..utilities import enable_plugins_namespace
 

@@ -1,12 +1,12 @@
-"""Demonstrate basic tracing with OpenTelemetry."""
+"""Demonstrate basic tracing with OpenTelemetry.
+
+Run with ``python -m examples.observability_tracing`` or install the package in
+editable mode.
+"""
 
 from __future__ import annotations
 
 import asyncio
-import pathlib
-import sys
-
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
 from .utilities import enable_plugins_namespace
 

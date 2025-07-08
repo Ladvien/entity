@@ -1,13 +1,13 @@
-"""Example demonstrating error handling with BasicLogger and ErrorFormatter."""
+"""Example demonstrating error handling with BasicLogger and ErrorFormatter.
+
+Run with ``python -m examples.failure_example`` or install the package in
+editable mode.
+"""
 
 from __future__ import annotations
 
 import asyncio
-import pathlib
-import sys
 
-# Make the repository's ``src`` directory importable
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
 from .utilities import enable_plugins_namespace
 

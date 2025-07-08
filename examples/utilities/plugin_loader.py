@@ -1,11 +1,12 @@
-"""Example showing Agent.from_directory error handling."""
+"""Example showing Agent.from_directory error handling.
+
+Run with ``python -m examples.utilities.plugin_loader`` or install the package in
+editable mode.
+"""
 
 from __future__ import annotations
 
 import pathlib
-import sys
-
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))
 
 from . import enable_plugins_namespace
 

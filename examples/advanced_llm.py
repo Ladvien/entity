@@ -1,14 +1,14 @@
-"""Demonstrate streaming and function-calling with UnifiedLLMResource."""
+"""Demonstrate streaming and function-calling with UnifiedLLMResource.
+
+Run with ``python -m examples.advanced_llm`` or install the package in
+editable mode.
+"""
 
 from __future__ import annotations
 
 import asyncio
 import os
-import pathlib
-import sys
 from typing import Any, Dict
-
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
 from .utilities import enable_plugins_namespace
 

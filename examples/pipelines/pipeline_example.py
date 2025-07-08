@@ -1,14 +1,13 @@
-"""Simple pipeline execution example without installing the package."""
+"""Simple pipeline execution example without installing the package.
+
+Run with ``python -m examples.pipelines.pipeline_example`` or install the package
+in editable mode.
+"""
 
 from __future__ import annotations
 
 import os
-import pathlib
-import sys
 from typing import Any, Dict
-
-# Ensure the repository's ``src`` directory is available for imports
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))
 
 from ..utilities import enable_plugins_namespace
 

@@ -1,13 +1,14 @@
-"""Minimal pipeline using SearchTool and WeatherApiTool."""
+"""Minimal pipeline using SearchTool and WeatherApiTool.
+
+Run with ``python -m examples.tools.search_weather_example`` or install the
+package in editable mode.
+"""
 
 from __future__ import annotations
 
 import asyncio
 import os
-import pathlib
-import sys
 
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
 from ..utilities import enable_plugins_namespace
 

@@ -1,12 +1,13 @@
-"""Start Prometheus metrics and trace a simple asynchronous task."""
+"""Start Prometheus metrics and trace a simple asynchronous task.
+
+Run with ``python -m examples.observability_metrics`` or install the package in
+editable mode.
+"""
 
 from __future__ import annotations
 
 import asyncio
-import pathlib
-import sys
 
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
 from .utilities import enable_plugins_namespace
 

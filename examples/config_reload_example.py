@@ -1,4 +1,8 @@
-"""Demonstrate runtime configuration reload using the CLI."""
+"""Demonstrate runtime configuration reload using the CLI.
+
+Run with ``python -m examples.config_reload_example`` or install the package in
+editable mode.
+"""
 
 from __future__ import annotations
 
@@ -9,7 +13,6 @@ import tempfile
 import yaml
 
 # Allow importing from the repository's src directory
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
 # Expose local plugins namespace
 from .utilities import enable_plugins_namespace

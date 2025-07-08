@@ -1,19 +1,16 @@
 """Run a pipeline with vector memory support.
 
 Usage:
-    python examples/vector_memory_pipeline.py
+    python -m examples.pipelines.vector_memory_pipeline
+
+Run with the ``-m`` flag or install the package in editable mode.
 """
 
 from __future__ import annotations
 
 import asyncio
 import os
-import pathlib
-import sys
 from typing import Dict, List
-
-# Ensure project source is available for imports
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))  # noqa: E402
 
 from ..utilities import enable_plugins_namespace
 

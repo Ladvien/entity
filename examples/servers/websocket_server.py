@@ -1,13 +1,14 @@
-"""Run a simple WebSocket server using the Entity framework."""
+"""Run a simple WebSocket server using the Entity framework.
+
+Run with ``python -m examples.servers.websocket_server`` or install the package
+in editable mode.
+"""
 
 from __future__ import annotations
 
 import asyncio
 import contextlib
-import pathlib
-import sys
 
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))
 
 from ..utilities import enable_plugins_namespace
 

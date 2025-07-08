@@ -1,12 +1,12 @@
-"""Demonstrate CacheResource with an in-memory backend."""
+"""Demonstrate CacheResource with an in-memory backend.
+
+Run with ``python -m examples.cache_example`` or install the package in editable
+mode.
+"""
 
 from __future__ import annotations
 
 import asyncio
-import pathlib
-import sys
-
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
 from .utilities import enable_plugins_namespace
 

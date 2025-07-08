@@ -1,14 +1,13 @@
-"""Demonstrate StorageResource with SQLite and local files."""
+"""Demonstrate StorageResource with SQLite and local files.
+
+Run with ``python -m examples.storage_resource_example`` or install the package
+in editable mode.
+"""
 
 from __future__ import annotations
 
 import asyncio
-import pathlib
-import sys
 from datetime import datetime
-
-# Make the repository's ``src`` directory importable
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
 from .utilities import enable_plugins_namespace
 

@@ -1,12 +1,13 @@
-"""Auto deploy AWS Bedrock infrastructure."""
+"""Auto deploy AWS Bedrock infrastructure.
+
+Run with ``python -m examples.bedrock_deploy`` or install the package in
+editable mode.
+"""
 
 from __future__ import annotations
 
 import os
-import pathlib
-import sys
 
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
 from .utilities import enable_plugins_namespace
 

@@ -3,16 +3,16 @@
 Refer to the "Regenerating gRPC Code" section in
 ``docs/source/grpc_services.md`` for instructions on rebuilding the gRPC
 bindings.
+
+Run with ``python -m examples.servers.grpc_server`` or install the package in
+editable mode.
 """
 
 from __future__ import annotations
 
 import asyncio
 import contextlib
-import pathlib
-import sys
 
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))
 
 from ..utilities import enable_plugins_namespace
 

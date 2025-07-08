@@ -1,7 +1,10 @@
 # Example Scripts
 
 This folder contains small programs that showcase different features of the Entity pipeline framework.
-Many of them read credentials from environment variables. Copy `.env.example` to `.env` and fill in the values before running the scripts.
+Run them with ``python -m examples.<script>`` from the repository root or install
+the package in editable mode with ``pip install -e .``.
+Many scripts read credentials from environment variables. Copy `.env.example` to
+`.env` and fill in the values before running them.
 
 ## Variables by Example
 

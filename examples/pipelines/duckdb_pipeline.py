@@ -1,14 +1,13 @@
-"""DuckDB memory pipeline example."""
+"""DuckDB memory pipeline example.
+
+Run with ``python -m examples.pipelines.duckdb_pipeline`` or install the package
+in editable mode.
+"""
 
 from __future__ import annotations
 
 import asyncio
-import pathlib
-import sys
 from typing import Any
-
-# Ensure project source is available for imports
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))
 
 from ..utilities import enable_plugins_namespace
 
