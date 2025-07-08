@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Dict, List, Type
+from typing import TYPE_CHECKING, Any, Dict, List, Type
 
 from pydantic import BaseModel, ValidationError
 
 from ..errors import ToolExecutionError
 from .base import BasePlugin
+
+if TYPE_CHECKING:  # pragma: no cover - type check only
+    from ..context import PluginContext
 
 
 class ToolPlugin(BasePlugin):

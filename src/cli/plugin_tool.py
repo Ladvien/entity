@@ -1,5 +1,3 @@
-from cli.plugin_tool import main
-
 """Command line utilities for plugin management."""
 
 import argparse

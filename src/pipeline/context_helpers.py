@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from typing import Any, List, cast
+from typing import TYPE_CHECKING, Any, List, cast
+
+if TYPE_CHECKING:  # pragma: no cover - type check only
+    from .context import PluginContext
 
 from .state import ConversationEntry
 from .tools.base import RetryOptions
