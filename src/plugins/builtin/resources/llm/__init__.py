@@ -1,10 +1,14 @@
 """LLM resource utilities."""
 
-from plugins.llm.providers import (ClaudeProvider, EchoProvider,
-                                   GeminiProvider, OllamaProvider,
-                                   OpenAIProvider)
-
 from ..llm_base import LLM
+from .providers import (
+    BedrockProvider,
+    ClaudeProvider,
+    EchoProvider,
+    GeminiProvider,
+    OllamaProvider,
+    OpenAIProvider,
+)
 
 __all__ = [
     "LLM",
@@ -13,4 +17,5 @@ __all__ = [
     "ClaudeProvider",
     "GeminiProvider",
     "EchoProvider",
+    "BedrockProvider",
 ]
