@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 """SQLite-based conversation history storage."""
+import importlib.util as import_util
 import json
 import re
 from datetime import datetime
@@ -8,6 +9,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional
 
 import aiosqlite
 
+from pipeline.base_plugins import ValidationResult
 from pipeline.observability.tracing import start_span
 from pipeline.stages import PipelineStage
 

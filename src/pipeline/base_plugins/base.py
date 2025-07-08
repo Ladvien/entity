@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component: base plugins."""
+
 import asyncio
 import inspect
 import json

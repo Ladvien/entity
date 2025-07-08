@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Configuration helpers for Entity."""
+
 import argparse
 from pathlib import Path
 

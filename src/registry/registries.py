@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Registries for plugins and resources."""
+
 import asyncio
 import time
 from collections import defaultdict

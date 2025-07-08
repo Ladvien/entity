@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component: filesystem."""
+
 from typing import TYPE_CHECKING
 
 """Filesystem resource wrapper used by pipeline components."""

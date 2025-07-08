@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component: decorators."""
+
 from typing import Any, Callable, Optional
 
 from .interfaces import PluginAutoClassifier

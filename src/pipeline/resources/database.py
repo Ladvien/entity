@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component: database."""
+
 from typing import TYPE_CHECKING
 
 """Database resource wrapper used by tests."""

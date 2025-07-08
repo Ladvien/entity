@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component: memory."""
+
 from typing import TYPE_CHECKING
 
 """Memory resource interface wrapper."""

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component: sqlite storage."""
+
 from typing import TYPE_CHECKING
 
 """Wrapper for SQLiteStorageResource."""

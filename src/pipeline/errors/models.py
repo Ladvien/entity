@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component: models."""
+
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, Optional
 

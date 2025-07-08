@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component: utils."""
+
 import os
 from typing import Any
 

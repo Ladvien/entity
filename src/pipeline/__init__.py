@@ -1,3 +1,5 @@
+"""Pipeline component:   init  ."""
+
 from importlib import import_module
 from typing import TYPE_CHECKING, Any
 

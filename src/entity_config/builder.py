@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Configuration helpers for Entity."""
+
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict

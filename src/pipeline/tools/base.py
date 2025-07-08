@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component: base."""
+
 from dataclasses import dataclass
 
 

@@ -1,3 +1,5 @@
+"""Configuration helpers for Entity."""
+
 import argparse
 import asyncio
 import difflib

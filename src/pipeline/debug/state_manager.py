@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component: state manager."""
+
 import asyncio
 from dataclasses import dataclass
 from typing import Dict, List

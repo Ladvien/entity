@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Built-in plugins and resources."""
+
 from abc import ABC, abstractmethod
 
 

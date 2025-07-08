@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""CLI entry point for interacting with the Entity pipeline."""
+
 import sys
 from pathlib import Path
 

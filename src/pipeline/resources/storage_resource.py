@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component: storage resource."""
+
 from typing import TYPE_CHECKING
 
 """Thin wrapper exposing the built-in filesystem StorageResource."""

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component: metrics."""
+
 from dataclasses import dataclass, field
 from typing import Any
 

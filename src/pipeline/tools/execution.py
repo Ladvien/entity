@@ -1,3 +1,5 @@
+"""Pipeline component: execution."""
+
 import asyncio
 import hashlib
 import json

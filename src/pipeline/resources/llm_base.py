@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component: llm base."""
+
 from typing import TYPE_CHECKING
 
 """Public re-export of :class:`LLM`."""

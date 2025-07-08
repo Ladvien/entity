@@ -1,3 +1,5 @@
+"""Pipeline component: stages."""
+
 from enum import Enum, auto
 
 

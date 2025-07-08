@@ -1,3 +1,5 @@
+"""Template for prompt plugin."""
+
 from pipeline.base_plugins import PromptPlugin
 from pipeline.stages import PipelineStage
 

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Pipeline component:   init  ."""
+
 from datetime import datetime
 from typing import Any, Dict
 

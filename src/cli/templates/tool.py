@@ -1,3 +1,5 @@
+"""Template for tool plugin."""
+
 from typing import Any, Dict
 
 from pipeline.base_plugins import ToolPlugin
