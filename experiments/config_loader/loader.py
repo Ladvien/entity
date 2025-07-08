@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Prototype config watcher for demos only, not production ready."""
+
 import asyncio
 from pathlib import Path
 from typing import Any, Callable

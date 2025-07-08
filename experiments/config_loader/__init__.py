@@ -1,1 +1,2 @@
-"""Example configuration hot reload."""
+"""Example configuration hot reload.
+Experimental; not for production use."""

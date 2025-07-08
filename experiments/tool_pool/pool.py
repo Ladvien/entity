@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Experimental async pool for running tools. Not production ready."""
+
 import asyncio
 import time
 from dataclasses import dataclass, field

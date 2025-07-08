@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Prototype hot reloader for plugin discovery experiments."""
+
 import time
 from typing import Callable, List
 

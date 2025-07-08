@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Demonstration tool plugin, not production ready."""
+
 from typing import Any, Dict, Protocol
 
 from pipeline.base_plugins import ToolPlugin

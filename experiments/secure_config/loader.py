@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Experimental encrypted config loader."""
+
 import os
 from pathlib import Path
 from typing import Any, Protocol

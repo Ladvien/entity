@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Simple plugin loader used for experimentation only."""
+
 import importlib.util
 from dataclasses import dataclass
 from pathlib import Path

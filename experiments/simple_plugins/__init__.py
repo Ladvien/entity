@@ -1,4 +1,4 @@
-"""Simplified plugin examples using composition."""
+"""Simplified plugin examples using composition. Not for production."""
 
 from .prompt import ComposedPrompt
 from .resource import ComposedResource

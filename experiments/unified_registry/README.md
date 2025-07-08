@@ -12,3 +12,5 @@ Key features:
 
 The same manager can be integrated with Django by creating the instance inside
 `apps.py` and exposing resources through dependency injection utilities.
+
+This code is experimental and not intended for production use.

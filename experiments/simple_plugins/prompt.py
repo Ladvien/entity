@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Demonstration prompt plugin, not production ready."""
+
 from typing import Awaitable, Callable
 
 from pipeline.base_plugins import PromptPlugin

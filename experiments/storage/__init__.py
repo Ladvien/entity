@@ -1,4 +1,4 @@
-"""Storage resource prototype."""
+"""Storage resource prototype. Not for production."""
 
 from .resource import StorageResource
 
