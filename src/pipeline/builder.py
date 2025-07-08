@@ -117,6 +117,7 @@ class AgentBuilder:
 
     # ------------------------------ runtime build -----------------------------
     def build_runtime(self) -> "AgentRuntime":
+        asyncio.run(self.resource_registry.build_all())
         registries = SystemRegistries(
             resources=self.resource_registry,
             tools=self.tool_registry,
