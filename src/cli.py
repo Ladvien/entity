@@ -173,7 +173,6 @@ class CLI:
 
         main_path = target / "src" / "main.py"
         main_path.write_text(
-            """from pipeline import Agent\n\n\n"""
             "def main() -> None:\n"
             "    agent = Agent('config/dev.yaml')\n"
             "    agent.run_http()\n\n\n"
