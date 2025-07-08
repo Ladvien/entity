@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import asyncio
 
-from entity import AgentRuntime
+from pipeline import AgentRuntime
 from plugins.builtin.adapters.http import HTTPAdapter
 from plugins.builtin.adapters.websocket import WebSocketAdapter
 

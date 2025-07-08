@@ -1,5 +1,4 @@
-from entity import Agent
-from pipeline import PipelineStage, PromptPlugin
+from pipeline import Agent, PipelineStage, PromptPlugin
 
 
 def test_plugin_decorator_registration():
