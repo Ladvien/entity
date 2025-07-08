@@ -5,9 +5,11 @@ from plugins.llm.providers import (ClaudeProvider, EchoProvider,
                                    OpenAIProvider)
 
 from ..llm_base import LLM
+from .provider_resource import ProviderResource
 
 __all__ = [
     "LLM",
+    "ProviderResource",
     "OpenAIProvider",
     "OllamaProvider",
     "ClaudeProvider",

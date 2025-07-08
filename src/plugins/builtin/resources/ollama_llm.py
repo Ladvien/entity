@@ -1,37 +1,24 @@
 from __future__ import annotations
 
-"""LLM resource backed by Ollama."""
-from typing import Dict
+"""LLM resource backed by an Ollama server."""
 
-from pipeline.exceptions import ResourceError
+from typing import Any, Dict
+
 from pipeline.validation import ValidationResult
-from plugins.builtin.resources.http_llm_resource import HttpLLMResource
-from plugins.builtin.resources.llm_resource import LLMResource
+
+from .llm.provider_resource import ProviderResource
+from .llm.providers.ollama import OllamaProvider
 
 
-class OllamaLLMResource(LLMResource):
-    """LLM resource backed by a running Ollama server.
-
-    Uses **Structured LLM Access (22)** so any stage can generate text while the
-    framework automatically tracks token usage.
-    """
+class OllamaLLMResource(ProviderResource):
+    """Resource backed by :class:`OllamaProvider`."""
 
     name = "ollama"
+    provider_cls = OllamaProvider
 
-    def __init__(self, config: Dict | None = None) -> None:
-        super().__init__(config)
-        self.http = HttpLLMResource(self.config)
+    def __init__(self, config: Dict[str, Any] | None = None) -> None:
+        super().__init__(self.provider_cls(config or {}))
 
     @classmethod
-    def validate_config(cls, config: Dict) -> ValidationResult:
-        return HttpLLMResource(config).validate_config()
-
-    async def generate(self, prompt: str) -> str:
-        if not self.http.validate_config().success:
-            raise ResourceError("Ollama resource not properly configured")
-
-        url = f"{self.http.base_url.rstrip('/')}/api/generate"
-        payload = {"model": self.http.model, "prompt": prompt, **self.http.params}
-        data = await self.http._post_request(url, payload)
-        text = data.get("response", "")
-        return str(text)
+    def validate_config(cls, config: Dict[str, Any]) -> ValidationResult:
+        return cls.provider_cls.validate_config(config)
