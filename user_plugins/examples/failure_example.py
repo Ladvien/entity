@@ -15,7 +15,7 @@ from .utilities import enable_plugins_namespace
 enable_plugins_namespace()
 
 from pipeline import Agent, PipelineStage, PromptPlugin
-from pipeline.context import PluginContext
+from entity.core.context import PluginContext
 from user_plugins.failure import BasicLogger, ErrorFormatter
 
 
