@@ -200,6 +200,8 @@ class PluginContext:
             raise ValueError("set_response() is only valid during the DELIVER stage")
 
         state = self.__state
+        if state.current_stage is not PipelineStage.DELIVER:
+            raise ValueError("Only DELIVER stage can set response")
         if state.response is not None:
             raise ValueError("Response already set")
         state.response = response

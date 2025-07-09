@@ -15,7 +15,6 @@ from pipeline.resources import ResourceContainer
 
 
 class First(PromptPlugin):
-    priority = 30
     stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
@@ -26,7 +25,6 @@ class First(PromptPlugin):
 
 
 class Second(PromptPlugin):
-    priority = 20
     stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
@@ -36,7 +34,6 @@ class Second(PromptPlugin):
 
 
 class Third(PromptPlugin):
-    priority = 10
     stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
@@ -75,5 +72,5 @@ def test_initializer_preserves_yaml_order(tmp_path):
 
     initializer = SystemInitializer.from_yaml(str(path))
     plugin_reg, _, _ = asyncio.run(initializer.initialize())
-    plugins = plugin_reg.get_plugins_for_stage(PipelineStage.DO)
+    plugins = plugin_reg.get_plugins_for_stage(PipelineStage.DELIVER)
     assert [p.__class__ for p in plugins] == [Second, First, Third]

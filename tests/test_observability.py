@@ -35,7 +35,7 @@ def test_metrics_overhead():
         execute_pipeline("hi", registries, return_metrics=True)
     )
     duration = time.time() - start
-    plugin_key = f"{PipelineStage.DO}:TimedPlugin"
+    plugin_key = f"{PipelineStage.DELIVER}:TimedPlugin"
     recorded = metrics.plugin_durations[plugin_key][0]
     assert result == "ok"
     assert recorded >= 0.05

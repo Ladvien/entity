@@ -41,9 +41,9 @@ def make_registries() -> SystemRegistries:
     plugins = PluginRegistry()
     plugin = PluginAutoClassifier.classify(
         my_prompt,
-        {"stage": PipelineStage.DO, "name": "MyPrompt"},
+        {"stage": PipelineStage.DELIVER, "name": "MyPrompt"},
     )
-    asyncio.run(plugins.register_plugin_for_stage(plugin, PipelineStage.DO))
+    asyncio.run(plugins.register_plugin_for_stage(plugin, PipelineStage.DELIVER))
     return SystemRegistries(resources, tools, plugins)
 
 

@@ -64,6 +64,7 @@ class ChainOfThoughtPlugin(PromptPlugin):
             if "final answer" in reasoning.content.lower():
                 break
         context.set_response(final_answer)
+        # Only plugins running in the DELIVER stage may set responses
 ```
 
 ### 3. Canonical Resource Architecture
@@ -172,8 +173,8 @@ class FailurePlugin(BasePlugin):
 ```python
 async def _execute_impl(self, context):
     # Tools execute immediately with natural async/await
-    result = await context.tool_use("calculator", expression="2+2")
-    context.set_response(f"The answer is {result}")
+    result = await context.use_tool("calculator", expression="2+2")
+    context.set_response(f"The answer is {result}")  # DELIVER stage only
 ```
 
 **Benefits**:
@@ -302,7 +303,7 @@ payload = ErrorResponse(
     error=info.error_message,
     message="Unable to complete request",
 ).to_dict()
-ctx.set_response(payload)
+ctx.set_response(payload)  # must be called from DELIVER stage
 ```
 
 ## Developer Experience Features

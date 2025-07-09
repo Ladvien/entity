@@ -55,7 +55,7 @@ def test_metrics_collected():
     assert response == "ok"
 
     data = metrics.to_dict()
-    stage = str(PipelineStage.DO)
+    stage = str(PipelineStage.DELIVER)
     plugin_key = f"{stage}:{MetricsPlugin.__name__}"
     assert plugin_key in data["plugin_durations"]
     assert plugin_key in data["llm_durations"]
