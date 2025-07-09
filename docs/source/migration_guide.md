@@ -15,7 +15,7 @@ exist in the `plugins.builtin` package. For example:
 from experiments.storage.resource import StorageResource
 
 # New
-from plugins.builtin.resources.storage import StorageResource
+# from plugins.builtin.resources.storage import StorageResource  # placeholder
 ```
 
 ## 2. Check Configuration Files

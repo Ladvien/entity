@@ -15,7 +15,7 @@ workflow:
 plugins:
   resources:
     database:
-      type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
+      # type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
       path: ./entity.db
     llm:
       provider: openai
@@ -25,7 +25,7 @@ plugins:
       type: user_plugins.prompts.simple:SimplePrompt
   adapters:
     http:
-      type: plugins.builtin.adapters.http:HTTPAdapter
+      # type: plugins.builtin.adapters.http:HTTPAdapter
       stages: [parse, deliver]
 ```
 

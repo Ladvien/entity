@@ -10,29 +10,29 @@ tool_registry:
 
 plugins:
   resources:
-    database:
-      type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
-      path: ./prod.duckdb
-    llm:
-      type: plugins.builtin.resources.llm.unified:UnifiedLLMResource
-      provider: ollama
-      base_url: "${OLLAMA_BASE_URL}"
-      model: "${OLLAMA_MODEL}"
-      temperature: 0.7
-      retries: 5
-      backoff: 2.0
+    # database:
+    #   type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
+    #   path: ./prod.duckdb
+    # llm:
+    #   type: plugins.builtin.resources.llm.unified:UnifiedLLMResource
+    #   provider: ollama
+    #   base_url: "${OLLAMA_BASE_URL}"
+    #   model: "${OLLAMA_MODEL}"
+    #   temperature: 0.7
+    #   retries: 5
+    #   backoff: 2.0
     memory:
       type: entity.resources.memory:Memory
-    vector_store:
-      type: plugins.builtin.resources.duckdb_vector_store:DuckDBVectorStore
-      table: vector_mem
-      embedding_model:
-        name: dummy
-        dimensions: 3
-    filesystem:
-      type: plugins.builtin.resources.s3_filesystem:S3FileSystem
-      bucket: agent-files
-      region: us-east-1
+    # vector_store:
+    #   type: plugins.builtin.resources.duckdb_vector_store:DuckDBVectorStore
+    #   table: vector_mem
+    #   embedding_model:
+    #     name: dummy
+    #     dimensions: 3
+    # filesystem:
+    #   type: plugins.builtin.resources.s3_filesystem:S3FileSystem
+    #   bucket: agent-files
+    #   region: us-east-1
     # storage:
     #   type: pipeline.resources.storage_resource:StorageResource
 #   storage:
@@ -66,22 +66,22 @@ plugins:
       type: user_plugins.tools.calculator_tool:CalculatorTool
       precision: 10
   adapters:
-    http:
-      type: plugins.builtin.adapters.http:HTTPAdapter
-      stages: [parse, deliver]
-      auth_tokens:
-        - ${HTTP_TOKEN}
-      rate_limit:
-        requests: 100
-        interval: 60
-      audit_log_path: logs/audit.log
-      dashboard: false
-    cli:
-      type: plugins.builtin.adapters.cli:CLIAdapter
-      stages: [deliver]
-    logging:
-      type: plugins.builtin.adapters.logging:LoggingAdapter
-      stages: [deliver]
+    # http:
+    #   type: plugins.builtin.adapters.http:HTTPAdapter
+    #   stages: [parse, deliver]
+    #   auth_tokens:
+    #     - ${HTTP_TOKEN}
+    #   rate_limit:
+    #     requests: 100
+    #     interval: 60
+    #   audit_log_path: logs/audit.log
+    #   dashboard: false
+    # cli:
+    #   type: plugins.builtin.adapters.cli:CLIAdapter
+    #   stages: [deliver]
+    # logging:
+    #   type: plugins.builtin.adapters.logging:LoggingAdapter
+    #   stages: [deliver]
   prompts:
     chain_of_thought:
       type: entity.plugins.prompts.chain_of_thought:ChainOfThoughtPrompt

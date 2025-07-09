@@ -4,20 +4,20 @@ The easiest way to capture structured logs is using ``LoggingAdapter``. Add it
 to your ``adapters`` configuration or initialize it directly:
 
 ```python
-from plugins.builtin.adapters.logging import LoggingAdapter
+# from plugins.builtin.adapters.logging import LoggingAdapter
 
-adapter = LoggingAdapter()
+# adapter = LoggingAdapter()
 ```
 
 To configure logging globally, call ``configure_logging`` from
 ``plugins.builtin.adapters.logging_adapter``:
 
 ```python
-from plugins.builtin.adapters.logging_adapter import configure_logging, get_logger
+# from plugins.builtin.adapters.logging_adapter import configure_logging, get_logger
 
-configure_logging(level="INFO", json_enabled=True)
-logger = get_logger(__name__)
-logger.info("Logging configured")
+# configure_logging(level="INFO", json_enabled=True)
+# logger = get_logger(__name__)
+# logger.info("Logging configured")
 ```
 
 Set the ``ENTITY_LOG_PATH`` environment variable to route logs to a file.
