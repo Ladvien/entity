@@ -12,7 +12,7 @@ from pipeline import (
     ToolCall,
     ToolRegistry,
 )
-from pipeline.resources import ResourceContainer
+from entity.core.resources.container import ResourceContainer
 from pipeline.tools.execution import execute_pending_tools
 from pipeline.context import PluginContext
 

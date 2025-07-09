@@ -21,8 +21,7 @@ plugins:
       retries: 3
       backoff: 1.0
     memory:
-      type: entity.resources.memory:Memory
-      dependencies: [database, vector_store]
+      type: pipeline.resources.memory:Memory
     vector_store:
       type: plugins.builtin.resources.duckdb_vector_store:DuckDBVectorStore
       table: vector_mem

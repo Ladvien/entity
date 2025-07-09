@@ -15,6 +15,7 @@ class OpenAIResource(ProviderResource):
 
     name = "openai"
     provider_cls = OpenAIProvider
+    dependencies: list[str] = []
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
         super().__init__(self.provider_cls(config or {}))

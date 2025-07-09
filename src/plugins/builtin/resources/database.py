@@ -43,6 +43,7 @@ class DatabaseResource(BaseResource, StorageBackend, ABC):
     """Unified base class for database resources."""
 
     name = "database"
+    dependencies: list[str] = []
 
     def __init__(self, config: dict | None = None) -> None:
         super().__init__(config)

@@ -15,6 +15,7 @@ class BedrockResource(LLMResource):
     """LLM resource for AWS Bedrock."""
 
     name = "bedrock"
+    dependencies: list[str] = []
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)

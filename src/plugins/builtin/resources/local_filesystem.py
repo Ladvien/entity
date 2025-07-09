@@ -13,6 +13,7 @@ class LocalFileSystemResource(BaseResource, FileSystemResource):
     """Persist files on the local disk."""
 
     name = "filesystem"
+    dependencies: list[str] = []
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)

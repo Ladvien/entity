@@ -13,6 +13,7 @@ class MetricsResource(BaseResource):
     """Expose Prometheus metrics via an HTTP server."""
 
     name = "metrics"
+    dependencies: list[str] = []
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)

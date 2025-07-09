@@ -15,6 +15,7 @@ class S3FileSystem(BaseResource, FileSystemResource):
     """S3-backed file storage using ``aioboto3``."""
 
     name = "filesystem"
+    dependencies: list[str] = []
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)

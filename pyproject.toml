@@ -16,6 +16,7 @@ packages = [
     { include = "entity", from = "src" },
     { include = "common_interfaces", from = "src" },
     { include = "tools", from = "src" },
+    { include = "entity", from = "src" },
     { include = "user_plugins" },
 ]
 

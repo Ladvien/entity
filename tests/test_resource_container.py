@@ -8,7 +8,7 @@ import pytest
 
 from pipeline import PipelineStage
 from pipeline.base_plugins import ResourcePlugin
-from pipeline.resources import ResourceContainer
+from entity.core.resources.container import ResourceContainer
 
 
 class BaseRes(ResourcePlugin):

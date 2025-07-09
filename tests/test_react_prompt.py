@@ -10,7 +10,7 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from pipeline.resources import ResourceContainer
+from entity.core.resources.container import ResourceContainer
 from user_plugins.prompts.react_prompt import ReActPrompt
 from user_plugins.tools.calculator_tool import CalculatorTool
 

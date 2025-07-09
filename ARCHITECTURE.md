@@ -84,3 +84,4 @@ entity/
 - `ConversationHistory` data schema
 - `MetricsCollector` and telemetry
 - `core` versus `community` plugin separation
+- Import paths / circular imports

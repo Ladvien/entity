@@ -15,7 +15,7 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from pipeline.resources import ResourceContainer
+from entity.core.resources.container import ResourceContainer
 from pipeline.resources.llm import UnifiedLLMResource
 from entity.resources.memory import Memory
 from plugins.builtin.resources.pg_vector_store import PgVectorStore

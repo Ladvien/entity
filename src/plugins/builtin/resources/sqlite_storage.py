@@ -26,6 +26,7 @@ class SQLiteStorageResource(DatabaseResource):
 
     stages = [PipelineStage.PARSE]
     name = "database"
+    dependencies: list[str] = []
 
     @classmethod
     def validate_dependencies(cls, registry) -> ValidationResult:

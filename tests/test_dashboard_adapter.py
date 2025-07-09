@@ -12,7 +12,7 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from pipeline.resources import ResourceContainer
+from entity.core.resources.container import ResourceContainer
 from plugins.builtin.adapters import DashboardAdapter
 
 

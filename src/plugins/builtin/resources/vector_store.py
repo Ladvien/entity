@@ -21,3 +21,5 @@ class VectorStore(ABC):
 
 class VectorStoreResource(BaseResource, VectorStore, ABC):
     """Base class for vector store resources."""
+
+    dependencies: list[str] = []

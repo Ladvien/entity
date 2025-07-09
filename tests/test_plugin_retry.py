@@ -8,7 +8,7 @@ from pipeline import (
     ToolRegistry,
     execute_pipeline,
 )
-from pipeline.resources import ResourceContainer
+from entity.core.resources.container import ResourceContainer
 from user_plugins.failure.basic_logger import BasicLogger
 
 
