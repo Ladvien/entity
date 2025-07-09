@@ -111,6 +111,7 @@ class PluginAutoClassifier:
         plugin_obj._inferred_stages = inferred
         plugin_obj._auto_inferred_stages = inferred
         plugin_obj._type_default_stages = _default_stages(base)
+        plugin_obj._inferred = inferred
         return plugin_obj
 
     @staticmethod
