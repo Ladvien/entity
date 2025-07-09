@@ -1,3 +1,15 @@
-from . import plugin_base_registry, configure_plugins
+"""Thin wrappers exposing plugin utilities."""
 
-__all__ = ["plugin_base_registry", "configure_plugins"]
+from entity.core.plugin_utils import (
+    PluginAutoClassifier,
+    configure_plugins,
+    import_plugin_class,
+    plugin_base_registry,
+)
+
+__all__ = [
+    "PluginAutoClassifier",
+    "configure_plugins",
+    "import_plugin_class",
+    "plugin_base_registry",
+]
