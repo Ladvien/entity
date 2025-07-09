@@ -40,4 +40,4 @@ async def test_resource_and_tool_registry_thread_safety():
     )
 
     assert len(resources._resources) == 5
-    assert len(tools._tools) == 5
+    assert len(tools.query()) == 5
