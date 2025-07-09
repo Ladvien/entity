@@ -1,7 +1,8 @@
-"""Demonstrate composed memory resources using a simple Workflow.
+"""Demonstrate composed memory resources using :class:`Workflow`.
 
-Swap ``config/dev.yaml`` for ``config/prod.yaml`` to run the same
-workflow in production. This illustrates the hybrid dev/prod pattern.
+Run ``config/dev.yaml`` locally then switch to ``config/prod.yaml`` for
+deployment. The same workflow works in both places, highlighting the
+dev-to-prod pattern.
 """
 
 from __future__ import annotations
@@ -14,15 +15,9 @@ from ..utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 from entity_config.environment import load_env
-from pipeline import (
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    ResourceContainer,
-    SystemRegistries,
-    ToolRegistry,
-    execute_pipeline,
-)
+from pipeline import PipelineStage, PromptPlugin
+from pipeline.pipeline import Pipeline, Workflow
+from entity.core.builder import AgentBuilder
 from pipeline.config import ConfigLoader
 from entity.core.context import PluginContext
 from plugins.builtin.resources.pg_vector_store import PgVectorStore
@@ -68,28 +63,19 @@ def create_vector_store() -> PgVectorStore | DuckDBVectorStore:
     return DuckDBVectorStore({"table": "embeddings"})
 
 
-async def build_registries(workflow: dict[PipelineStage, List]) -> SystemRegistries:
+async def main() -> None:
     load_env()
-    plugins = PluginRegistry()
-    resources = ResourceContainer()
-    tools = ToolRegistry()
-
+    builder = AgentBuilder()
     database = SQLiteDatabaseResource({"path": "./agent.db"})
     vector_store = create_vector_store()
     memory = Memory(database=database, vector_store=vector_store)
-    resources.add("memory", memory)
+    await builder.resource_registry.add("memory", memory)
+    builder.add_plugin(StorePrompt())
 
-    for stage, stage_plugins in workflow.items():
-        for plugin in stage_plugins:
-            await plugins.register_plugin_for_stage(plugin, stage)
-
-    return SystemRegistries(resources=resources, tools=tools, plugins=plugins)
-
-
-async def main() -> None:
-    workflow = {PipelineStage.THINK: [StorePrompt()]}
-    registries = await build_registries(workflow)
-    result = await execute_pipeline("remember this", registries)
+    runtime = builder.build_runtime()
+    workflow = Workflow({PipelineStage.THINK: ["StorePrompt"]})
+    pipeline = Pipeline(approach=workflow)
+    result = await pipeline.run_message("remember this", runtime.capabilities)
     print(result)
 
 

@@ -1,7 +1,8 @@
-"""Run a pipeline with vector memory support using the Workflow pattern.
+"""Run a pipeline with vector memory support using :class:`Workflow`.
 
-Switch between ``config/dev.yaml`` and ``config/prod.yaml`` to apply the
-same workflow in different environments.
+Start with ``config/dev.yaml`` for local testing and deploy with
+``config/prod.yaml``. The workflow definition stays the same across
+environments.
 """
 
 from __future__ import annotations
@@ -14,8 +15,9 @@ from ..utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 from entity.config.environment import load_env
-from pipeline import Agent  # noqa: E402
 from pipeline import PipelineStage, PromptPlugin  # noqa: E402
+from pipeline.pipeline import Pipeline, Workflow
+from entity.core.builder import AgentBuilder
 from pipeline.config import ConfigLoader
 from entity.core.context import PluginContext
 from plugins.builtin.resources.pg_vector_store import PgVectorStore
@@ -98,31 +100,21 @@ def create_vector_store() -> PgVectorStore | DuckDBVectorStore:
     return DuckDBVectorStore({"table": "vectors", "dimensions": 3})
 
 
-async def build_registries(workflow: dict[PipelineStage, List]) -> SystemRegistries:
+async def main() -> None:
     load_env()
-    plugins = PluginRegistry()
-    resources = ResourceContainer()
-    tools = ToolRegistry()
-
+    builder = AgentBuilder()
     db_cls, db_cfg = create_database_config()
     llm_cls, llm_cfg = create_llm_config()
-    resources.register("database", db_cls, db_cfg)
-    resources.register("llm", llm_cls, llm_cfg)
-    resources.add("vector_store", create_vector_store())
-    resources.register("memory", Memory, {})
+    builder.resource_registry.register("database", db_cls, db_cfg)
+    builder.resource_registry.register("llm", llm_cls, llm_cfg)
+    await builder.resource_registry.add("vector_store", create_vector_store())
+    builder.resource_registry.register("memory", Memory, {})
+    builder.add_plugin(ComplexPrompt())
 
-    for stage, stage_plugins in workflow.items():
-        for plugin in stage_plugins:
-            await plugins.register_plugin_for_stage(plugin, stage)
-
-    await resources.build_all()
-    return SystemRegistries(resources=resources, tools=tools, plugins=plugins)
-
-
-async def main() -> None:
-    workflow = {PipelineStage.THINK: [ComplexPrompt()]}
-    registries = await build_registries(workflow)
-    result = await execute_pipeline("hello", registries)
+    runtime = builder.build_runtime()
+    workflow = Workflow({PipelineStage.THINK: ["ComplexPrompt"]})
+    pipeline = Pipeline(approach=workflow)
+    result = await pipeline.run_message("hello", runtime.capabilities)
     print(result)
 
 

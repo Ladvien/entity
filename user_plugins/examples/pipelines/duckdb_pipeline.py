@@ -1,7 +1,8 @@
-"""DuckDB memory pipeline using a Workflow object.
+"""DuckDB memory pipeline using :class:`Workflow`.
 
-Change ``config/dev.yaml`` to ``config/prod.yaml`` for production. This
-commented switch showcases the hybrid dev/prod pattern.
+Use ``config/dev.yaml`` for local runs and switch to ``config/prod.yaml``
+in production. The workflow remains identical, illustrating the
+dev-to-prod approach.
 """
 
 from __future__ import annotations
@@ -13,15 +14,9 @@ from ..utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 from entity_config.environment import load_env
-from pipeline import (
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    ResourceContainer,
-    SystemRegistries,
-    ToolRegistry,
-    execute_pipeline,
-)
+from pipeline import PipelineStage, PromptPlugin
+from pipeline.pipeline import Pipeline, Workflow
+from entity.core.builder import AgentBuilder
 from entity.core.context import PluginContext
 from entity.resources.memory import Memory
 from user_plugins.resources import DuckDBDatabaseResource, DuckDBVectorStore
@@ -42,36 +37,26 @@ class SimilarityPrompt(PromptPlugin):
             ctx.add_conversation_entry(f"Similar entries: {similar}", role="assistant")
 
 
-async def build_registries(workflow: dict[PipelineStage, List]) -> SystemRegistries:
+async def main() -> None:
     load_env()
-    plugins = PluginRegistry()
-    resources = ResourceContainer()
-    tools = ToolRegistry()
-
-    resources.register(
+    builder = AgentBuilder()
+    builder.resource_registry.register(
         "database",
         DuckDBDatabaseResource,
         {"path": "./agent.duckdb", "history_table": "history"},
     )
-    resources.register(
+    builder.resource_registry.register(
         "vector_store",
         DuckDBVectorStore,
         {"table": "vectors", "dimensions": 3},
     )
-    resources.register("memory", Memory, {})
+    builder.resource_registry.register("memory", Memory, {})
+    builder.add_plugin(SimilarityPrompt())
 
-    for stage, stage_plugins in workflow.items():
-        for plugin in stage_plugins:
-            await plugins.register_plugin_for_stage(plugin, stage)
-
-    await resources.build_all()
-    return SystemRegistries(resources=resources, tools=tools, plugins=plugins)
-
-
-async def main() -> None:
-    workflow = {PipelineStage.THINK: [SimilarityPrompt()]}
-    registries = await build_registries(workflow)
-    result = await execute_pipeline("hello world", registries)
+    runtime = builder.build_runtime()
+    workflow = Workflow({PipelineStage.THINK: ["SimilarityPrompt"]})
+    pipeline = Pipeline(approach=workflow)
+    result = await pipeline.run_message("hello world", runtime.capabilities)
     print(result)
 
 
