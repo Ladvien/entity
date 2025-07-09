@@ -6,15 +6,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pipeline.stages import PipelineStage
-from pipeline.state import PipelineState, ToolCall, ConversationEntry
-
-
-@dataclass
-class ConversationEntry:
-    content: str
-    role: str
-    metadata: Dict[str, Any] | None = None
+from .stages import PipelineStage
+from .state import ConversationEntry, PipelineState, ToolCall
 
 
 class PluginContext:

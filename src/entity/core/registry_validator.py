@@ -7,17 +7,52 @@ import pathlib
 import sys
 from typing import Dict, List
 
-from pipeline.utils import DependencyGraph
+from entity.core.resources.container import DependencyGraph
 
 SRC_PATH = pathlib.Path(__file__).resolve().parents[1]
 if str(SRC_PATH) not in sys.path:
     sys.path.insert(0, str(SRC_PATH))
 
-from pipeline.initializer import ClassRegistry  # noqa: E402
-from pipeline.initializer import SystemInitializer  # noqa: E402
-from pipeline.initializer import import_plugin_class  # noqa: E402
+from entity.core.plugin_utils import import_plugin_class
+
+
+class ClassRegistry:
+    def __init__(self) -> None:
+        self._classes: Dict[str, type] = {}
+        self._configs: Dict[str, Dict] = {}
+        self._order: List[str] = []
+
+    def register_class(self, plugin_class: type, config: Dict, name: str) -> None:
+        self._classes[name] = plugin_class
+        self._configs[name] = config
+        self._order.append(name)
+
+    def has_plugin(self, name: str) -> bool:
+        return name in self._classes
+
+    def list_plugins(self) -> List[str]:
+        return list(self._order)
+
+    def all_plugin_classes(self):
+        for name in self._order:
+            yield self._classes[name], self._configs[name]
+
+
+class SystemInitializer:
+    def __init__(self, config: Dict) -> None:
+        self.config = config
+
+    @classmethod
+    def from_yaml(cls, yaml_path: str) -> "SystemInitializer":
+        import yaml
+
+        with open(yaml_path, "r", encoding="utf-8") as handle:
+            data = yaml.safe_load(handle) or {}
+        return cls(data)
+
+
 from entity.utils.logging import get_logger  # noqa: E402
-from pipeline.stages import PipelineStage  # noqa: E402
+from .stages import PipelineStage
 
 logger = get_logger(__name__)
 
@@ -54,10 +89,9 @@ class RegistryValidator:
 
     @staticmethod
     def _validate_stage_assignment(name: str, cls: type) -> None:
-        from pipeline.resources import Resource
         from entity.core.plugins import ResourcePlugin, ToolPlugin
 
-        if issubclass(cls, (ResourcePlugin, Resource, ToolPlugin)):
+        if issubclass(cls, (ResourcePlugin, ToolPlugin)):
             return
 
         stages = getattr(cls, "stages", None)
@@ -71,7 +105,7 @@ class RegistryValidator:
         for cls, _ in self.registry.all_plugin_classes():
             validate = getattr(cls, "validate_dependencies", None)
             if validate is None:
-                from pipeline.validation import ValidationResult
+                from entity.core.plugins import ValidationResult
 
                 result = ValidationResult.success_result()
             else:
@@ -79,7 +113,7 @@ class RegistryValidator:
                     result = validate(self.registry)
                 except NameError as exc:  # pragma: no cover - legacy plugins
                     if "ValidationResult" in str(exc):
-                        from pipeline.validation import ValidationResult
+                        from entity.core.plugins import ValidationResult
 
                         result = ValidationResult.success_result()
                     else:

@@ -9,7 +9,7 @@ from .builder import AgentBuilder
 from .exceptions import PipelineError
 from .registries import PluginRegistry, SystemRegistries
 from .runtime import AgentRuntime
-from pipeline.workflow import Pipeline, WorkflowMapping
+from entity.workflows import Workflow
 
 
 @dataclass
@@ -17,7 +17,7 @@ class Agent:
     """High level agent wrapper combining builder and runtime."""
 
     config_path: str | None = None
-    pipeline: Pipeline | None = None
+    workflow: Workflow | None = None
     _builder: AgentBuilder | None = field(default=None, init=False)
     _runtime: AgentRuntime | None = field(default=None, init=False)
     _workflows: dict[str, type] = field(default_factory=dict, init=False)
@@ -26,8 +26,6 @@ class Agent:
     def builder(self) -> AgentBuilder:
         """Lazily create and return an :class:`AgentBuilder`."""
 
-        if self.pipeline is not None:
-            return self.pipeline.builder
         if self._builder is None:
             self._builder = AgentBuilder()
         return self._builder
@@ -93,29 +91,24 @@ class Agent:
 
     @classmethod
     def from_directory(
-        cls, directory: str, *, workflow: WorkflowMapping | None = None
+        cls, directory: str, *, workflow: Workflow | None = None
     ) -> "Agent":
-        pipeline = Pipeline(workflow=workflow) if workflow is not None else None
-        agent = cls(pipeline=pipeline)
+        agent = cls(workflow=workflow)
         agent.load_plugins_from_directory(directory)
         return agent
 
     @classmethod
     def from_package(
-        cls, package_name: str, *, workflow: WorkflowMapping | None = None
+        cls, package_name: str, *, workflow: Workflow | None = None
     ) -> "Agent":
-        pipeline = Pipeline(workflow=workflow) if workflow is not None else None
-        agent = cls(pipeline=pipeline)
+        agent = cls(workflow=workflow)
         agent.load_plugins_from_package(package_name)
         return agent
 
     # ------------------------------------------------------------------
     async def _ensure_runtime(self) -> None:
         if self._runtime is None:
-            if self.pipeline is not None:
-                self._runtime = self.pipeline.build_runtime()
-            else:
-                self._runtime = self.builder.build_runtime()
+            self._runtime = self.builder.build_runtime()
 
     @property
     def runtime(self) -> AgentRuntime:

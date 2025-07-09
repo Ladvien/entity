@@ -13,8 +13,8 @@ from typing import Any, Dict, List
 import asyncio
 import time
 
-from pipeline.logging import get_logger
-from pipeline.stages import PipelineStage
+from entity.utils.logging import get_logger
+from ..stages import PipelineStage
 
 
 class ToolExecutionError(Exception):
