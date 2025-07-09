@@ -6,8 +6,6 @@ This module delegates tool execution to
 
 from __future__ import annotations
 
-import json
-import os
 import time
 from datetime import datetime
 from typing import Any, Dict
@@ -30,7 +28,6 @@ from .manager import PipelineManager
 from .metrics import MetricsCollector
 from .observability.metrics import MetricsServerManager
 from .observability.tracing import start_span
-from .serialization import dumps_state, loads_state
 from .stages import PipelineStage
 from .state import FailureInfo, PipelineState
 from .state_logger import StateLogger
@@ -197,8 +194,6 @@ async def execute_pipeline(
     user_message: str,
     registries: SystemRegistries,
     *,
-    state_file: str | None = None,
-    snapshots_dir: str | None = None,
     pipeline_manager: PipelineManager | None = None,
     state_logger: "StateLogger" | None = None,
     return_metrics: bool = False,
@@ -206,25 +201,15 @@ async def execute_pipeline(
     max_iterations: int = 5,
 ) -> Dict[str, Any] | tuple[Dict[str, Any], MetricsCollector]:
     if state is None:
-        if state_file and os.path.exists(state_file):
-            if state_file.endswith((".mpk", ".msgpack")):
-                with open(state_file, "rb") as fh:
-                    state = loads_state(fh.read())
-            else:
-                with open(state_file, "r", encoding="utf-8") as fh:
-                    data = json.load(fh)
-                state = PipelineState.from_dict(data)
-            state.failure_info = None
-        else:
-            state = PipelineState(
-                conversation=[
-                    ConversationEntry(
-                        content=user_message, role="user", timestamp=datetime.now()
-                    )
-                ],
-                pipeline_id=generate_pipeline_id(),
-                metrics=MetricsCollector(),
-            )
+        state = PipelineState(
+            conversation=[
+                ConversationEntry(
+                    content=user_message, role="user", timestamp=datetime.now()
+                )
+            ],
+            pipeline_id=generate_pipeline_id(),
+            metrics=MetricsCollector(),
+        )
     start = time.time()
     if pipeline_manager is not None:
         await pipeline_manager.register(state.pipeline_id)
@@ -248,23 +233,16 @@ async def execute_pipeline(
                         try:
                             await execute_stage(stage, state, registries)
                         finally:
-                            if state_file:
-                                if state_file.endswith((".mpk", ".msgpack")):
-                                    with open(state_file, "wb") as fh:
-                                        fh.write(dumps_state(state))
-                                else:
-                                    with open(state_file, "w", encoding="utf-8") as fh:
-                                        json.dump(state.to_dict(), fh)
-                            if snapshots_dir:
-                                os.makedirs(snapshots_dir, exist_ok=True)
-                                snap_path = os.path.join(
-                                    snapshots_dir,
-                                    f"{state.pipeline_id}_{stage.name.lower()}.json",
-                                )
-                                with open(snap_path, "w", encoding="utf-8") as fh:
-                                    json.dump(state.to_dict(), fh)
                             if state_logger is not None:
                                 state_logger.log(state, stage)
+                            logger.info(
+                                "stage complete",
+                                extra={
+                                    "stage": str(stage),
+                                    "pipeline_id": state.pipeline_id,
+                                    "iteration": state.iteration,
+                                },
+                            )
                         if state.failure_info:
                             break
                         state.last_completed_stage = stage
@@ -314,8 +292,6 @@ async def execute_pipeline(
             await pipeline_manager.deregister(state.pipeline_id)
         if state.metrics:
             state.metrics.record_pipeline_duration(time.time() - start)
-        if state_file and os.path.exists(state_file) and state.failure_info is None:
-            os.remove(state_file)
         server = MetricsServerManager.get()
         if server is not None and state.metrics:
             server.update(state.metrics)
