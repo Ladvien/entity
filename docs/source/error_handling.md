@@ -60,6 +60,10 @@ class MyTool(ToolPlugin):
 
 Base plugins include a simple circuit breaker using `failure_threshold` and `failure_reset_timeout` settings.
 
+When any plugin raises an exception the framework stops executing the rest of that stage.
+The failure is captured in `FailureInfo` and the `ERROR` stage runs immediately
+to handle the problem. No additional plugins from the failed stage are invoked.
+
 ## Error Responses and Failure Plugins
 
 When a stage fails the pipeline records a `FailureInfo` object and runs plugins assigned to the `ERROR` stage. A failure plugin can inspect the info and set a response:

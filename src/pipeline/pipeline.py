@@ -90,7 +90,7 @@ async def execute_stage(
                 )
                 if stage != PipelineStage.ERROR:
                     await execute_stage(PipelineStage.ERROR, state, registries)
-                return
+                break
             except PluginExecutionError as exc:
                 logger.exception(
                     "Plugin execution failed",
@@ -109,7 +109,7 @@ async def execute_stage(
                 )
                 if stage != PipelineStage.ERROR:
                     await execute_stage(PipelineStage.ERROR, state, registries)
-                return
+                break
             except ToolExecutionError as exc:
                 logger.exception(
                     "Tool execution failed",
@@ -128,7 +128,7 @@ async def execute_stage(
                 )
                 if stage != PipelineStage.ERROR:
                     await execute_stage(PipelineStage.ERROR, state, registries)
-                return
+                break
             except ResourceError as exc:
                 logger.exception(
                     "Resource error",
@@ -147,7 +147,7 @@ async def execute_stage(
                 )
                 if stage != PipelineStage.ERROR:
                     await execute_stage(PipelineStage.ERROR, state, registries)
-                return
+                break
             except PipelineError as exc:
                 logger.exception(
                     "Pipeline error",
@@ -166,7 +166,7 @@ async def execute_stage(
                 )
                 if stage != PipelineStage.ERROR:
                     await execute_stage(PipelineStage.ERROR, state, registries)
-                return
+                break
             except Exception as exc:  # noqa: BLE001
                 logger.exception(
                     "Unexpected plugin exception",
@@ -188,8 +188,7 @@ async def execute_stage(
                 )
                 if stage != PipelineStage.ERROR:
                     await execute_stage(PipelineStage.ERROR, state, registries)
-                if isinstance(exc, KeyError):
-                    raise
+                break
             finally:
                 reset_request_id(token)
     duration = time.perf_counter() - start
