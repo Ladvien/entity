@@ -37,7 +37,7 @@ class AdvancedContext:
             tool = self._ctx._registries.tools.get(call.name)
             if not tool:
                 result = f"Error: tool {call.name} not found"
-                self._ctx.set_stage_result(call.result_key, result)
+                self._ctx.store(call.result_key, result)
                 state.pending_tool_calls.remove(call)
                 return result
             tool = cast(Any, tool)
@@ -47,11 +47,11 @@ class AdvancedContext:
             )
             try:
                 result = await execute_tool(tool, call, state, options)
-                self._ctx.set_stage_result(call.result_key, result)
+                self._ctx.store(call.result_key, result)
                 self._ctx.record_tool_execution(call.name, call.result_key, call.source)
             except Exception as exc:  # noqa: BLE001
                 result = f"Error: {exc}"
-                self._ctx.set_stage_result(call.result_key, result)
+                self._ctx.store(call.result_key, result)
                 self._ctx.record_tool_error(call.name, str(exc))
                 state.failure_info = FailureInfo(
                     stage=str(state.current_stage),
@@ -63,6 +63,6 @@ class AdvancedContext:
                 state.pending_tool_calls.remove(call)
                 raise ToolExecutionError(call.name, exc, call.result_key)
             state.pending_tool_calls.remove(call)
-        result = self._ctx.get_stage_result(result_key)
+        result = self._ctx.load(result_key)
         state.stage_results.pop(result_key, None)
         return result

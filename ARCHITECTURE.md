@@ -441,7 +441,7 @@ class MemoryResource:
 **Implementation**: 
 - `context.set_response()` method restricted to DELIVER stage plugins only
 - Pipeline continues looping (PARSE → THINK → DO → REVIEW → DELIVER) until a DELIVER plugin calls `set_response()`
-- Earlier stages use `context.set_stage_result()` to store intermediate outputs for DELIVER plugins to access
+- Earlier stages use `context.store()` to store intermediate outputs for DELIVER plugins to access
 - Maximum iteration limit (default 5) prevents infinite loops when no DELIVER plugin sets a response
 
 **Benefits**: Ensures consistent output processing, logging, and formatting while maintaining the hybrid pipeline-state machine mental model.
