@@ -4,7 +4,7 @@ import asyncio
 from datetime import datetime
 
 from pipeline import PluginRegistry, PromptPlugin, SystemRegistries, ToolRegistry
-from pipeline.debug import LogReplayer, StateLogger
+from pipeline.state_logger import LogReplayer, StateLogger
 from pipeline.pipeline import execute_pipeline
 from pipeline.resources import ResourceContainer
 from pipeline.stages import PipelineStage
