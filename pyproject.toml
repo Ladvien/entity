@@ -22,9 +22,7 @@ packages = [
 ]
 
 [tool.poetry.scripts]
-entity-cli = "src.cli:main"
-entity-config-validate = "src.entity_config.validator:main"
-entity-config-migrate = "src.entity_config.migrate:main"
+entity = "entity.cli:main"
 
 
 [tool.poetry.urls]
