@@ -24,7 +24,6 @@ class CLIArgs:
     """Typed command-line arguments for :class:`CLI`."""
 
     config: str
-    watch_dirs: Optional[list[str]] = None
     state_log: Optional[str] = None
     command: str = "run"
     path: Optional[str] = None
@@ -53,15 +52,6 @@ class CLI:
             "-c",
             required=True,
             help="Path to a YAML configuration file.",
-        )
-        parser.add_argument(
-            "--watch-dir",
-            action="append",
-            dest="watch_dirs",
-            help=(
-                "Watch a directory for plugin changes (hot reload). "
-                "Can be used multiple times."
-            ),
         )
         parser.add_argument(
             "--state-log",
@@ -93,7 +83,6 @@ class CLI:
         args = parser.parse_args()
         return CLIArgs(
             config=args.config,
-            watch_dirs=args.watch_dirs,
             state_log=args.state_log,
             command=args.command,
             path=getattr(args, "path", None),
@@ -133,16 +122,6 @@ class CLI:
 
                 state_logger = StateLogger(self.args.state_log)
                 agent.runtime.manager.state_logger = state_logger
-            reloader = None
-            if self.args.watch_dirs:
-                from pipeline.hot_reload import PluginReloader
-
-                reloader = PluginReloader(
-                    agent.runtime.registries.plugins,
-                    self.args.watch_dirs,
-                    pipeline_manager=agent.runtime.manager,
-                )
-                await reloader.start()
             server = AgentServer(agent.runtime)
             try:
                 if self.args.command == "serve-websocket":
@@ -150,8 +129,6 @@ class CLI:
                 else:
                     await server.serve_http()
             finally:
-                if reloader is not None:
-                    await reloader.stop()
                 if state_logger is not None:
                     state_logger.close()
 
