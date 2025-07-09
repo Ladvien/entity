@@ -103,9 +103,6 @@ def asdict(model: BaseModel) -> Dict[str, Any]:
     return model.model_dump()
 
 
-CONFIG_SCHEMA = EntityConfig.model_json_schema()
-
-
 def validate_config(data: Dict[str, Any]) -> None:
     """Validate ``data`` by instantiating :class:`EntityConfig`."""
 
@@ -123,7 +120,6 @@ __all__ = [
     "ServerConfig",
     "ToolRegistryConfig",
     "EntityConfig",
-    "CONFIG_SCHEMA",
     "validate_config",
     "asdict",
 ]
