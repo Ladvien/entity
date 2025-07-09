@@ -6,17 +6,8 @@ import asyncio
 import warnings
 from copy import deepcopy
 from datetime import datetime
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    AsyncIterator,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    TypeVar,
-    cast,
-)
+from typing import (TYPE_CHECKING, Any, AsyncIterator, Callable, Dict, List,
+                    Optional, TypeVar, cast)
 
 if TYPE_CHECKING:  # pragma: no cover
     from common_interfaces.resources import LLM
@@ -36,7 +27,8 @@ from .context_helpers import AdvancedContext
 from .errors import ResourceError
 from .metrics import MetricsCollector
 from .stages import PipelineStage
-from .state import ConversationEntry, FailureInfo, LLMResponse, PipelineState, ToolCall
+from .state import (ConversationEntry, FailureInfo, LLMResponse, PipelineState,
+                    ToolCall)
 
 ResourceT = TypeVar("ResourceT", covariant=True)
 
@@ -168,6 +160,17 @@ class PluginContext:
             ToolCall(name=tool_name, params=params, result_key=result_key)
         )
         return result_key
+
+    def execute_tool(
+        self, tool_name: str, params: Dict[str, Any], result_key: Optional[str] = None
+    ) -> str:
+        """Deprecated alias for :meth:`queue_tool_use`."""
+        warnings.warn(
+            "PluginContext.execute_tool() is deprecated; use queue_tool_use() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.queue_tool_use(tool_name, params, result_key)
 
     def add_conversation_entry(
         self, content: str, role: str, metadata: Optional[Dict[str, Any]] = None
@@ -324,10 +327,22 @@ class PluginContext:
         self.set_metadata(key, value)
 
     async def tool_use(self, tool_name: str, **params: Any) -> Any:
-        """Execute ``tool_name`` immediately and return its result."""
+        """Run ``tool_name`` with ``params`` and return its result.
 
+        This helper schedules the tool call, waits for completion, and then
+        returns whatever value the tool produced.
+        """
         result_key = self.queue_tool_use(tool_name, params)
         return await self._wait_for_tool_result(result_key)
+
+    async def use_tool(self, tool_name: str, **params: Any) -> Any:
+        """Deprecated alias for :meth:`tool_use`."""
+        warnings.warn(
+            "PluginContext.use_tool() is deprecated; use tool_use() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return await self.tool_use(tool_name, **params)
 
     async def _wait_for_tool_result(self, result_key: str) -> Any:
         """Wait for a queued tool call to finish and return its result."""
