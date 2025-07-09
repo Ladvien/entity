@@ -112,7 +112,7 @@ class PluginRegistry:
         """
 
         try:
-            stage_obj = PipelineStage(stage)
+            stage_obj = PipelineStage.ensure(stage)
         except ValueError as exc:  # pragma: no cover - defensive
             raise ValueError(f"Invalid stage: {stage}") from exc
 
