@@ -35,18 +35,6 @@ class AgentRuntime:
     def __post_init__(self) -> None:
         self.manager = None
 
-    # ------------------------------------------------------------------
-    @property
-    def registries(self) -> SystemRegistries:  # pragma: no cover - legacy
-        """Backward compatibility alias for ``capabilities``."""
-
-        warnings.warn(
-            "'registries' is deprecated, use 'capabilities' instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.capabilities
-
     async def run_pipeline(self, message: str) -> Dict[str, Any]:
         return {"message": message}
 
