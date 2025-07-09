@@ -3,11 +3,46 @@ from __future__ import annotations
 from typing import Any, Dict
 
 from entity.core.plugin_utils import import_plugin_class
-from pipeline.base_plugins import ResourcePlugin
-from pipeline.cache import CacheBackend, InMemoryCache
-from pipeline.context import PluginContext
+from entity.core.plugins import ResourcePlugin, ValidationResult
+from entity.core.context import PluginContext
 from pipeline.stages import PipelineStage
-from pipeline.validation import ValidationResult
+
+
+class CacheBackend:
+    """Simple cache backend interface."""
+
+    async def get(self, key: str) -> Any:  # pragma: no cover - interface
+        raise NotImplementedError
+
+    async def set(
+        self, key: str, value: Any, ttl: int | None = None
+    ) -> None:  # pragma: no cover - interface
+        raise NotImplementedError
+
+    async def delete(self, key: str) -> None:  # pragma: no cover - interface
+        raise NotImplementedError
+
+    async def clear(self) -> None:  # pragma: no cover - interface
+        raise NotImplementedError
+
+
+class InMemoryCache(CacheBackend):
+    """Store values in a local dictionary."""
+
+    def __init__(self) -> None:  # pragma: no cover - trivial
+        self._data: Dict[str, Any] = {}
+
+    async def get(self, key: str) -> Any:
+        return self._data.get(key)
+
+    async def set(self, key: str, value: Any, ttl: int | None = None) -> None:
+        self._data[key] = value
+
+    async def delete(self, key: str) -> None:
+        self._data.pop(key, None)
+
+    async def clear(self) -> None:
+        self._data.clear()
 
 
 class CacheResource(ResourcePlugin, CacheBackend):

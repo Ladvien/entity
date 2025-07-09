@@ -1,4 +1,4 @@
-"""Demonstrate streaming and function-calling with UnifiedLLMResource.
+"""Demonstrate streaming and function-calling with a simple echo LLM.
 
 Run with ``python -m examples.advanced_llm`` or install the package in
 editable mode.
@@ -7,30 +7,30 @@ editable mode.
 from __future__ import annotations
 
 import asyncio
-import os
 from typing import Any, Dict
 
 from .utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 
-from user_plugins.llm.unified import UnifiedLLMResource
+
+class EchoLLM:
+    """Minimal LLM stub returning the prompt back."""
+
+    async def stream(self, prompt: str):
+        for word in prompt.split():
+            yield word + " "
+
+    async def generate(
+        self, prompt: str, functions: list[Dict[str, Any]] | None = None
+    ):
+        return type("LLMResponse", (), {"content": prompt, "metadata": {}})()
 
 
-def create_llm() -> UnifiedLLMResource:
-    """Return a configured LLM resource.
+def create_llm() -> EchoLLM:
+    """Return a simple echo LLM instance."""
 
-    Falls back to :class:`EchoProvider` when ``OLLAMA_BASE_URL`` or ``OLLAMA_MODEL``
-    is not defined.
-    """
-
-    base_url = os.getenv("OLLAMA_BASE_URL")
-    model = os.getenv("OLLAMA_MODEL")
-    if base_url and model:
-        cfg = {"provider": "ollama", "base_url": base_url, "model": model}
-    else:
-        cfg = {"provider": "echo"}
-    return UnifiedLLMResource(cfg)
+    return EchoLLM()
 
 
 async def main() -> None:

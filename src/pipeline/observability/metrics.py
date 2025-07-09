@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Stubbed metrics integration for the Entity pipeline."""
 
-from pipeline.metrics import MetricsCollector
+from entity.core.state import MetricsCollector
 
 __all__ = ["MetricsServer", "MetricsServerManager"]
 

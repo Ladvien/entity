@@ -7,6 +7,7 @@ These classes mirror the minimal architecture described in
 They offer a small, easy to understand surface for plugin authors.
 """
 
+from dataclasses import dataclass
 from typing import Any, Dict, List
 
 import asyncio
@@ -14,7 +15,10 @@ import time
 
 from pipeline.logging import get_logger
 from pipeline.stages import PipelineStage
-from pipeline.errors import ToolExecutionError
+
+
+class ToolExecutionError(Exception):
+    """Raised when a tool fails during execution."""
 
 
 class BasePlugin:
@@ -106,3 +110,26 @@ class FailurePlugin(BasePlugin):
     """Error handling plugin for the ``ERROR`` stage."""
 
     stages = [PipelineStage.ERROR]
+
+
+@dataclass
+class ValidationResult:
+    success: bool
+    message: str = ""
+
+    @classmethod
+    def success_result(cls) -> "ValidationResult":
+        return cls(True, "")
+
+    @classmethod
+    def error_result(cls, message: str) -> "ValidationResult":
+        return cls(False, message)
+
+
+class ConfigurationError(Exception):
+    """Raised when plugin configuration is invalid."""
+
+
+@dataclass
+class ReconfigResult:
+    updated: bool

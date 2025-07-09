@@ -2,9 +2,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from plugins.builtin.resources.vector_store import VectorStoreResource
+from ..cache import CacheBackend
 
-from pipeline.cache.base import CacheBackend
+try:  # optional dependency
+    from plugins.builtin.resources.vector_store import VectorStoreResource
+except Exception:  # pragma: no cover - example fallback
+    VectorStoreResource = object  # type: ignore[misc]
 
 
 class SemanticCache(CacheBackend):

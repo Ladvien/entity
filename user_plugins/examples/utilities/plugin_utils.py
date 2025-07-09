@@ -29,28 +29,6 @@ def enable_plugins_namespace() -> None:
     )
     sys.modules["plugins"] = plugins_mod
 
-    # isort: off
-    import pipeline.base_plugins
-    import plugins.builtin.resources as plugin_resources
-    import pipeline.resources
+    from entity.core import plugins as core_plugins
 
-    # isort: on
-
-    plugins_mod.__dict__.update(vars(pipeline.base_plugins))
-    sys.modules["user_plugins.resources"] = plugin_resources
-    plugins_mod.resources = plugin_resources
-
-    for _, name, _ in pkgutil.walk_packages(
-        pipeline.resources.__path__, prefix="pipeline.resources."
-    ):
-        module = importlib.import_module(name)
-        alias = name.replace("pipeline.resources.", "user_plugins.")
-        sys.modules[alias] = module
-        parent_alias = alias.rsplit(".", 1)[0]
-        if parent_alias == "plugins":
-            setattr(plugins_mod, alias.split(".")[-1], module)
-        else:
-            parent = sys.modules.setdefault(
-                parent_alias, types.ModuleType(parent_alias)
-            )
-            setattr(parent, alias.split(".")[-1], module)
+    plugins_mod.__dict__.update(vars(core_plugins))

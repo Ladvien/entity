@@ -12,8 +12,7 @@ from .utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 
-from user_plugins.resources.cache import CacheResource
-from pipeline.cache import InMemoryCache
+from user_plugins.resources.cache import CacheResource, InMemoryCache
 
 
 async def main() -> None:

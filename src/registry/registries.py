@@ -8,9 +8,17 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Callable
 
-from pipeline.base_plugins import BasePlugin
-from pipeline.resources.container import ResourceContainer
-from pipeline.security.hooks import StageInputValidator
+from entity.core.plugins import BasePlugin
+from entity.core.resources.container import ResourceContainer
+
+
+class StageInputValidator:
+    """Placeholder validator registry."""
+
+    def register(self, *args: Any, **kwargs: Any) -> None:  # pragma: no cover - example
+        pass
+
+
 from pipeline.stages import PipelineStage
 
 

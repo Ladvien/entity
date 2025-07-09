@@ -5,7 +5,7 @@ from typing import Any, Dict
 import httpx
 from pydantic import BaseModel
 
-from pipeline.base_plugins import ToolPlugin
+from entity.core.plugins import ToolPlugin
 from pipeline.stages import PipelineStage
 from pipeline.validation.input import validate_params
 

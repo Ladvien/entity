@@ -13,14 +13,11 @@ from .utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 
-try:  # optional dependency
-    from plugins.builtin.infrastructure.aws_bedrock import deploy
-except (ImportError, FileNotFoundError):  # noqa: WPS440
 
-    def deploy() -> None:
-        """Fallback when CDKTF is unavailable."""
+def deploy() -> None:
+    """Placeholder deploy function."""
 
-        return None
+    print("Bedrock deployment requires optional infrastructure modules")
 
 
 def can_deploy() -> bool:
