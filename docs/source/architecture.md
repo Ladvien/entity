@@ -77,11 +77,13 @@ a **Workflow** object:
 from my_workflows import QuickstartWorkflow
 from pipeline import Pipeline
 
-workflow = QuickstartWorkflow()
+workflow = QuickstartWorkflow(prompt="my_prompts:QuickstartPrompt")
 pipeline = Pipeline(approach=workflow)
 ```
 
 The pipeline loops through `PARSE → THINK → DO → REVIEW → DELIVER` until a
 plugin calls `set_response`, illustrating the hybrid pipeline–state machine model.
 Because the workflow defines plugin selection, you can launch on AWS without a
-YAML file and later swap in custom stages as needed.
+YAML file and later swap in custom stages as needed. Pass different plugin
+arguments when creating the workflow to reuse the same class across
+environments.
