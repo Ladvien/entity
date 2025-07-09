@@ -12,10 +12,8 @@ SRC_PATH = Path(__file__).resolve().parents[1]
 if str(SRC_PATH) not in sys.path:
     sys.path.insert(0, str(SRC_PATH))
 
-import yaml  # noqa: E402
 from pydantic import ValidationError  # noqa: E402
 
-from entity_config.environment import load_env  # noqa: E402
 from pipeline import SystemInitializer  # noqa: E402
 from pipeline.config import ConfigLoader  # noqa: E402
 from pipeline.logging import get_logger  # noqa: E402
@@ -32,7 +30,6 @@ class ConfigValidator:
 
     def __init__(self) -> None:
         self.args = self._parse_args()
-        pass
 
     def _parse_args(self) -> argparse.Namespace:
         parser = argparse.ArgumentParser(
