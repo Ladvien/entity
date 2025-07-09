@@ -4,6 +4,7 @@ on:
   pull_request:
     paths-ignore:
       - 'docs/**'
+      - 'src/docs_build/**'
 
 jobs:
   unit:
