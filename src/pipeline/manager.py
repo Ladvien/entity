@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-"""Pipeline component: manager."""
+"""Compatibility wrapper delegating to :class:`AgentRuntime`."""
 
 import asyncio
-from typing import Generic, Optional, Set, TypeVar, cast
+from typing import Generic, Optional, TypeVar, cast
 
+from entity.core.runtime import AgentRuntime
 from entity.core.state_logger import StateLogger
 from registry import SystemRegistries
 
@@ -12,79 +13,45 @@ ResultT = TypeVar("ResultT")
 
 
 class PipelineManager(Generic[ResultT]):
-    """Manage concurrent pipeline executions and track active pipelines.
-
-    Ensures **Linear Pipeline Flow (23)** by coordinating stage execution
-    across multiple requests.
-    """
+    """Backwards compatible manager interface."""
 
     def __init__(
         self,
         registries: Optional[SystemRegistries] = None,
         *,
-        state_logger: "StateLogger" | None = None,
+        state_logger: StateLogger | None = None,
     ) -> None:
-        self._registries = registries
-        self.state_logger = state_logger
-        self._tasks: Set[asyncio.Task[ResultT]] = set()
-        self._active: Set[str] = set()
-        self._lock = asyncio.Lock()
+        self._runtime = AgentRuntime(registries, state_logger=state_logger)
+        self._registries = self._runtime.registries
 
+    # ------------------------------------------------------------------
     def start_pipeline(
         self, message: str, *, max_iterations: int = 5
     ) -> asyncio.Task[ResultT]:
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-        task = loop.create_task(
-            self._run_pipeline(message, max_iterations=max_iterations)
-        )
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.discard)
-        return task
+        task = self._runtime.start_pipeline(message, max_iterations=max_iterations)
+        return cast(asyncio.Task[ResultT], task)
 
-    async def register(self, pipeline_id: str) -> None:
-        async with self._lock:
-            self._active.add(pipeline_id)
-
-    async def deregister(self, pipeline_id: str) -> None:
-        async with self._lock:
-            self._active.discard(pipeline_id)
-
-    async def _run_pipeline(self, message: str, *, max_iterations: int = 5) -> ResultT:
-        if self._registries is None:
-            raise ValueError("PipelineManager requires registries to run pipelines")
-        from .pipeline import execute_pipeline
-
-        result = await execute_pipeline(
-            message,
-            self._registries,
-            pipeline_manager=self,
-            state_logger=self.state_logger,
-            max_iterations=max_iterations,
+    async def run_pipeline(self, message: str, *, max_iterations: int = 5) -> ResultT:
+        result = await self._runtime.run_pipeline(
+            message, max_iterations=max_iterations
         )
         return cast(ResultT, result)
 
-    async def run_pipeline(self, message: str, *, max_iterations: int = 5) -> ResultT:
-        return await self._run_pipeline(message, max_iterations=max_iterations)
+    # Delegate activity tracking --------------------------------------
+    async def register(self, pipeline_id: str) -> None:  # pragma: no cover - legacy
+        await self._runtime.register(pipeline_id)
+
+    async def deregister(self, pipeline_id: str) -> None:  # pragma: no cover - legacy
+        await self._runtime.deregister(pipeline_id)
 
     async def has_active_pipelines_async(self) -> bool:
-        async with self._lock:
-            self._tasks = {t for t in self._tasks if not t.done()}
-            return bool(self._tasks or self._active)
+        return await self._runtime.has_active_pipelines_async()
 
     def has_active_pipelines(self) -> bool:
-        self._tasks = {t for t in self._tasks if not t.done()}
-        return bool(self._tasks or self._active)
+        return self._runtime.has_active_pipelines()
 
     async def active_pipeline_count_async(self) -> int:
-        """Return the number of pipelines currently executing."""
-        async with self._lock:
-            self._tasks = {t for t in self._tasks if not t.done()}
-            return max(len(self._tasks), len(self._active))
+        return await self._runtime.active_pipeline_count_async()
 
     def active_pipeline_count(self) -> int:
-        """Return the number of pipelines currently executing."""
-        self._tasks = {t for t in self._tasks if not t.done()}
-        return max(len(self._tasks), len(self._active))
+        return self._runtime.active_pipeline_count()
