@@ -282,3 +282,89 @@ class MemoryResource:
 
 **Usage Guidance**: Use `tool_use()` by default for simplicity. Use `queue_tool_use()` when you need multiple independent tool calls that can run in parallel or when processing results collectively.
  
+## 9. Memory Resource Consolidation
+
+**Decision**: Consolidate all memory-related components into a single unified `Memory` resource with embedded `ConversationHistory`.
+
+**Rationale**:
+- Eliminates architectural ambiguity between separate memory components
+- Single responsibility for all memory concerns (key-value, conversations, search)
+- Simplifies resource dependencies - plugins only need "memory" resource
+- Cleaner configuration with one memory section instead of multiple
+- Natural API progression from simple to advanced usage patterns
+
+**Implementation**:
+- `Memory` class provides `get()`, `set()`, `clear()` for key-value storage
+- `memory.conversation_history` property exposes advanced conversation management
+- Convenience methods `save_conversation()` and `load_conversation()` delegate to embedded ConversationHistory
+- Optional database and vector_store backends for persistence and similarity search
+- Replaces SimpleMemoryResource, MemoryResource, ConversationManager, and Memory interface
+
+**Usage**: `memory = context.get_resource("memory")` provides access to all memory functionality through a single resource interface.
+
+
+## 10. Resource Dependency Injection Pattern
+
+**Decision**: Use explicit dependency declaration with container injection for all resource-to-resource relationships.
+
+**Rationale**:
+- Enables complete dependency graph validation at startup
+- Supports hot-reload by tracking dependency chains for restart coordination
+- Makes system architecture visible through configuration
+- Improves testability through dependency injection
+- Prevents circular dependency issues through topological sorting
+- Aligns with existing SystemInitializer dependency resolution patterns
+
+**Implementation**:
+- Resources declare dependencies in `dependencies = ["database", "vector_store"]` class attribute
+- Container instantiates resources in dependency order
+- Dependencies injected as attributes after construction: `memory.database = container.get("database")`
+- Dependencies can be optional (None) for degraded operation modes
+- DependencyGraph validates entire system before initialization
+
+**Benefits**: Startup validation, clear architecture visibility, hot-reload support, and robust dependency management across the entire resource system.
+
+## 11. Plugin Stage Assignment Precedence
+
+**Decision**: Use layered approach with strict precedence hierarchy for plugin stage assignment.
+
+**Precedence Order (highest to lowest)**:
+1. **Explicit `stages` attribute** - declared in plugin class always wins
+2. **Plugin type defaults** - ToolPlugin → DO, PromptPlugin → THINK, AdapterPlugin → PARSE+DELIVER
+3. **Auto-classification** - analyze function source code for stage hints (function-based plugins only)
+
+**Rationale**:
+- Supports progressive disclosure from simple defaults to explicit control
+- Predictable override behavior - developers know explicit declarations always win
+- Enables flexible patterns like planning tools in THINK stage or validation tools in REVIEW
+- Clear debugging path - easy to trace why plugins are assigned to specific stages
+- Maintains backward compatibility with existing auto-classification
+
+**Implementation**:
+- Allow explicit stage overrides even when they conflict with type conventions
+- Log warnings when explicit stages deviate from type defaults for visibility
+- Auto-classification only applies to function-based plugins without explicit stages
+- Document common override patterns and use cases
+
+**Benefits**: Flexibility for advanced use cases while maintaining simple defaults and predictable behavior for debugging and system understanding.
+
+## 12. Resource Lifecycle Management
+
+**Decision**: Use strict sequential initialization with fail-fast behavior for all resources.
+
+**Rationale**:
+- Predictable failure points with clear error attribution
+- No partial state confusion or cascading dependency failures
+- Simple mental model - resources initialize in dependency order or system fails
+- Deterministic behavior ensures same configuration produces same results
+- Easier debugging with single failure mode instead of complex degraded states
+
+**Implementation**:
+- Initialize resources one at a time in topological dependency order
+- Fail immediately if any resource initialization or health check fails
+- Shutdown resources in reverse dependency order during cleanup
+- Clear error messages identifying exactly which resource failed and why
+- No degraded mode operation - system is either fully functional or stopped
+
+**Benefits**: Eliminates partial initialization debugging complexity, provides clear failure attribution, and ensures consistent system state across deployments.
+
