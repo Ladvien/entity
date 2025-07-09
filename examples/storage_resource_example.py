@@ -17,8 +17,9 @@ from pipeline import Agent, PipelineStage, PromptPlugin
 from pipeline.context import ConversationEntry, PluginContext
 from pipeline.resources.memory import Memory
 from plugins.builtin.resources.local_filesystem import LocalFileSystemResource
-from plugins.builtin.resources.sqlite_storage import \
-    SQLiteStorageResource as SQLiteDatabaseResource
+from plugins.builtin.resources.sqlite_storage import (
+    SQLiteStorageResource as SQLiteDatabaseResource,
+)
 from plugins.builtin.resources.storage_resource import StorageResource
 
 
@@ -39,21 +40,18 @@ class StorePrompt(PromptPlugin):
 def main() -> None:
     agent = Agent()
 
-    database = SQLiteDatabaseResource({"path": "./agent.db"})
-    filesystem = LocalFileSystemResource({"base_path": "./files"})
+    resources = agent.builder.resource_registry
+    resources.register("database", SQLiteDatabaseResource, {"path": "./agent.db"})
+    resources.register("filesystem", LocalFileSystemResource, {"base_path": "./files"})
+    resources.register("storage", StorageResource, {})
+    resources.register("memory", MemoryResource, {})
 
-    memory = MemoryResource({})
-    memory.database = database
-    storage = StorageResource({})
-    storage.filesystem = filesystem
-
-    agent.builder.resource_registry.add("memory", memory)
-    agent.builder.resource_registry.add("storage", storage)
     agent.builder.plugin_registry.register_plugin_for_stage(
         StorePrompt(), PipelineStage.THINK
     )
 
     async def run() -> None:
+        await resources.build_all()
         print(await agent.handle("remember this"))
 
     asyncio.run(run())

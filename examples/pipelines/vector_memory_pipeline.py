@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import os
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from ..utilities import enable_plugins_namespace
 
@@ -59,8 +59,8 @@ class ComplexPrompt(PromptPlugin):
         context.add_conversation_entry(response, role="assistant")
 
 
-def create_database() -> PostgresResource | DuckDBDatabaseResource:
-    """Return a database resource based on environment variables."""
+def create_database_config() -> Tuple[type, Dict]:
+    """Return database class and config based on environment variables."""
 
     host = os.getenv("DB_HOST")
     user = os.getenv("DB_USERNAME")
@@ -73,14 +73,15 @@ def create_database() -> PostgresResource | DuckDBDatabaseResource:
             "username": user,
             "password": password or "",
         }
-        return PostgresResource(ConfigLoader.from_dict(cfg))
-    return DuckDBDatabaseResource(
-        {"path": "./agent.duckdb", "history_table": "history"}
-    )
+        return PostgresResource, cfg
+    return DuckDBDatabaseResource, {
+        "path": "./agent.duckdb",
+        "history_table": "history",
+    }
 
 
-def create_llm() -> UnifiedLLMResource:
-    """Return a configured LLM resource."""
+def create_llm_config() -> Tuple[type, Dict]:
+    """Return LLM class and configuration."""
 
     base_url = os.getenv("OLLAMA_BASE_URL")
     model = os.getenv("OLLAMA_MODEL")
@@ -88,20 +89,24 @@ def create_llm() -> UnifiedLLMResource:
         cfg = {"provider": "ollama", "base_url": base_url, "model": model}
     else:
         cfg = {"provider": "echo"}
-    return UnifiedLLMResource(ConfigLoader.from_dict(cfg))
+    return UnifiedLLMResource, cfg
 
 
 def main() -> None:
     load_env()
     agent = Agent()
-    agent.builder.resource_registry.add("database", create_database())
-    agent.builder.resource_registry.add("llm", create_llm())
-    agent.builder.resource_registry.add("vector_memory", VectorMemoryResource())
+    resources = agent.builder.resource_registry
+    db_cls, db_cfg = create_database_config()
+    llm_cls, llm_cfg = create_llm_config()
+    resources.register("database", db_cls, db_cfg)
+    resources.register("llm", llm_cls, llm_cfg)
+    resources.register("vector_memory", VectorMemoryResource, {})
     agent.builder.plugin_registry.register_plugin_for_stage(
         ComplexPrompt(), PipelineStage.THINK
     )
 
     async def run() -> None:
+        await resources.build_all()
         print(await agent.handle("hello"))
 
     asyncio.run(run())

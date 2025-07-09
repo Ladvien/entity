@@ -36,22 +36,25 @@ class SimilarityPrompt(PromptPlugin):
 
 def main() -> None:
     agent = Agent()
+    resources = agent.builder.resource_registry
 
-    database = DuckDBDatabaseResource(
-        {"path": "./agent.duckdb", "history_table": "history"}
+    resources.register(
+        "database",
+        DuckDBDatabaseResource,
+        {"path": "./agent.duckdb", "history_table": "history"},
     )
-    vector_store = DuckDBVectorStore({"table": "vectors", "dimensions": 3})
-    vector_store.database = database
-    memory = MemoryResource({})
-    memory.database = database
-    memory.vector_store = vector_store
-
-    agent.builder.resource_registry.add("memory", memory)
+    resources.register(
+        "vector_store",
+        DuckDBVectorStore,
+        {"table": "vectors", "dimensions": 3},
+    )
+    resources.register("memory", MemoryResource, {})
     agent.builder.plugin_registry.register_plugin_for_stage(
         SimilarityPrompt(), PipelineStage.THINK
     )
 
     async def run() -> None:
+        await resources.build_all()
         print(await agent.handle("hello world"))
 
     asyncio.run(run())
