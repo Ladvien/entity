@@ -3,7 +3,7 @@ from __future__ import annotations
 """Minimal plugin context objects."""
 
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
@@ -14,14 +14,20 @@ class ConversationEntry:
 
 
 class PluginContext:
-    """Simplified context passed to plugins."""
+    """Simplified context passed to plugins with intuitive verbs."""
 
-    def __init__(self) -> None:
+    def __init__(self, memory: Optional[Any] = None) -> None:
         self._history: List[ConversationEntry] = []
-        self._store: Dict[str, Any] = {}
+        self._cache: Dict[str, Any] = {}
+        self._memory = memory
         self.response: Any | None = None
 
-    def get_conversation_history(self) -> List[ConversationEntry]:
+    # ------------------------------------------------------------------
+    # Conversation helpers
+    # ------------------------------------------------------------------
+
+    def conversation(self) -> List[ConversationEntry]:
+        """Return the current conversation history."""
         return list(self._history)
 
     async def call_llm(self, _context: Any, _prompt: str, *, purpose: str = ""):
@@ -30,16 +36,57 @@ class PluginContext:
 
         return _Resp()
 
-    def add_conversation_entry(
-        self, *, content: str, role: str, metadata: Dict[str, Any] | None = None
+    def say(
+        self,
+        content: str,
+        *,
+        role: str = "assistant",
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> None:
+        """Append a message to the conversation history."""
         self._history.append(ConversationEntry(content, role, metadata or {}))
 
     async def tool_use(self, name: str, **params: Any) -> None:  # noqa: ARG002
         return None
 
-    def store(self, key: str, value: Any) -> None:
-        self._store[key] = value
+    # ------------------------------------------------------------------
+    # Temporary cache helpers
+    # ------------------------------------------------------------------
+
+    def cache(self, key: str, value: Any) -> None:
+        """Store a temporary value for this pipeline run."""
+        self._cache[key] = value
+
+    def recall(self, key: str, default: Any | None = None) -> Any:
+        """Retrieve a cached value."""
+        return self._cache.get(key, default)
+
+    def has(self, key: str) -> bool:
+        """Return True if ``key`` exists in the cache."""
+        return key in self._cache
+
+    # Backwards compatibility
+    store = cache
+    load = recall
+
+    # ------------------------------------------------------------------
+    # Persistent memory helpers
+    # ------------------------------------------------------------------
+
+    def remember(self, key: str, value: Any) -> None:
+        """Persist ``value`` in the configured memory resource."""
+        if self._memory is not None:
+            self._memory.remember(key, value)
+
+    def memory(self, key: str, default: Any | None = None) -> Any:
+        """Retrieve a value from persistent memory."""
+        if self._memory is None:
+            return default
+        return self._memory.memory(key, default)
 
     def set_response(self, value: Any) -> None:
         self.response = value
+
+    # Backwards compatibility
+    get_conversation_history = conversation
+    add_conversation_entry = say

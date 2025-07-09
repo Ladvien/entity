@@ -35,11 +35,11 @@ class SimilarityPrompt(PromptPlugin):
 
     async def _execute_impl(self, ctx: PluginContext) -> None:
         memory: Memory = ctx.get_resource("memory")
-        await memory.save_conversation(ctx.pipeline_id, ctx.get_conversation_history())
+        await memory.save_conversation(ctx.pipeline_id, ctx.conversation())
         if memory.vector_store:
             await memory.vector_store.add_embedding(ctx.message)
             similar = await memory.search_similar(ctx.message, 1)
-            ctx.add_conversation_entry(f"Similar entries: {similar}", role="assistant")
+            ctx.say(f"Similar entries: {similar}")
 
 
 async def build_registries(workflow: dict[PipelineStage, List]) -> SystemRegistries:

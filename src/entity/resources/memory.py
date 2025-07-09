@@ -21,11 +21,21 @@ class Memory(ResourcePlugin):
     async def _execute_impl(self, context: Any) -> None:  # noqa: D401, ARG002
         return None
 
-    def get(self, key: str, default: Any | None = None) -> Any:
+    # ------------------------------------------------------------------
+    # Key-value helpers
+    # ------------------------------------------------------------------
+
+    def memory(self, key: str, default: Any | None = None) -> Any:
+        """Retrieve a persisted value."""
         return self._kv.get(key, default)
 
-    def set(self, key: str, value: Any) -> None:
+    def remember(self, key: str, value: Any) -> None:
+        """Persist ``value`` for later retrieval."""
         self._kv[key] = value
+
+    # Backwards compatibility
+    get = memory
+    set = remember
 
     def clear(self) -> None:
         self._kv.clear()

@@ -42,10 +42,8 @@ class StorePrompt(PromptPlugin):
 
     async def _execute_impl(self, context: PluginContext) -> None:
         memory: Memory = context.get_resource("memory")
-        await memory.save_conversation(
-            context.pipeline_id, context.get_conversation_history()
-        )
-        context.add_conversation_entry("Conversation stored", role="assistant")
+        await memory.save_conversation(context.pipeline_id, context.conversation())
+        context.say("Conversation stored")
 
 
 def create_vector_store() -> PgVectorStore | DuckDBVectorStore:

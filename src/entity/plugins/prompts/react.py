@@ -15,16 +15,14 @@ class ReActPrompt(PromptPlugin):
 
     async def _execute_impl(self, context: PluginContext) -> None:
         max_steps = int(self.config.get("max_steps", 5))
-        conversation = context.get_conversation_history()
+        conversation = context.conversation()
         user_messages = [e.content for e in conversation if e.role == "user"]
         question = user_messages[-1] if user_messages else "No question provided"
 
         steps: List[Dict[str, str]] = []
 
         for step in range(max_steps):
-            step_context = self._build_step_context(
-                context.get_conversation_history(), question
-            )
+            step_context = self._build_step_context(context.conversation(), question)
             thought_prompt = (
                 "Think step by step about this problem:\n\n"
                 f"Context: {step_context}\n\n"
@@ -33,9 +31,8 @@ class ReActPrompt(PromptPlugin):
             thought = await self.call_llm(
                 context, thought_prompt, purpose=f"react_thought_step_{step}"
             )
-            context.add_conversation_entry(
-                content=f"Thought: {thought.content}",
-                role="assistant",
+            context.say(
+                f"Thought: {thought.content}",
                 metadata={"react_step": step, "type": "thought"},
             )
             step_record: Dict[str, str] = {"thought": thought.content}
@@ -55,16 +52,15 @@ class ReActPrompt(PromptPlugin):
                 answer = decision.content.replace("Final Answer:", "").strip()
                 context.set_response(answer)
                 steps.append(step_record)
-                context.store("react_steps", steps)
+                context.cache("react_steps", steps)
                 return
 
             if decision.content.startswith("Action:"):
                 action_text = decision.content.replace("Action:", "").strip()
                 action_name, params = self._parse_action(action_text)
                 step_record["action"] = action_text
-                context.add_conversation_entry(
-                    content=f"Action: {action_text}",
-                    role="assistant",
+                context.say(
+                    f"Action: {action_text}",
                     metadata={"react_step": step, "type": "action"},
                 )
                 await context.tool_use(action_name, **params)
@@ -74,7 +70,7 @@ class ReActPrompt(PromptPlugin):
         context.set_response(
             "I've reached my reasoning limit without finding a definitive answer."
         )
-        context.store("react_steps", steps)
+        context.cache("react_steps", steps)
 
     def _build_step_context(
         self, conversation: List[ConversationEntry], question: str

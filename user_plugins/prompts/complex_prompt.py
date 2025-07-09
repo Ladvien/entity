@@ -36,7 +36,7 @@ class ComplexPrompt(PromptPlugin):
         history_text = "\n".join(f"{h.role}: {h.content}" for h in history)
 
         last_message = ""
-        for entry in reversed(context.get_conversation_history()):
+        for entry in reversed(context.conversation()):
             if entry.role == "user":
                 last_message = entry.content
                 break
@@ -57,13 +57,10 @@ class ComplexPrompt(PromptPlugin):
 
         response = await self.call_llm(context, prompt, purpose="complex_prompt")
 
-        context.add_conversation_entry(
-            content=response.content,
-            role="assistant",
+        context.say(
+            response.content,
             metadata={"source": "complex_prompt"},
         )
         context.set_response(response.content)
         if memory:
-            await memory.save_conversation(
-                context.pipeline_id, context.get_conversation_history()
-            )
+            await memory.save_conversation(context.pipeline_id, context.conversation())

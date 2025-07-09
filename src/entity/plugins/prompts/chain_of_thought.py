@@ -14,17 +14,14 @@ class ChainOfThoughtPrompt(PromptPlugin):
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context: PluginContext) -> None:
-        conversation_text = self._latest_user_message(
-            context.get_conversation_history()
-        )
+        conversation_text = self._latest_user_message(context.conversation())
 
         breakdown_prompt = f"Break this problem into logical steps: {conversation_text}"
         breakdown = await self.call_llm(
             context, breakdown_prompt, purpose="problem_breakdown"
         )
-        context.add_conversation_entry(
-            content=f"Problem breakdown: {breakdown.content}",
-            role="assistant",
+        context.say(
+            f"Problem breakdown: {breakdown.content}",
             metadata={"reasoning_step": "breakdown"},
         )
 
@@ -37,9 +34,8 @@ class ChainOfThoughtPrompt(PromptPlugin):
                 context, reasoning_prompt, purpose=f"reasoning_step_{step + 1}"
             )
             steps.append(reasoning.content)
-            context.add_conversation_entry(
-                content=f"Reasoning step {step + 1}: {reasoning.content}",
-                role="assistant",
+            context.say(
+                f"Reasoning step {step + 1}: {reasoning.content}",
                 metadata={"reasoning_step": step + 1},
             )
 
@@ -53,8 +49,8 @@ class ChainOfThoughtPrompt(PromptPlugin):
             if "final answer" in reasoning.content.lower():
                 break
 
-        context.store("reasoning_complete", True)
-        context.store("reasoning_steps", steps)
+        context.cache("reasoning_complete", True)
+        context.cache("reasoning_steps", steps)
 
     def _needs_tools(self, reasoning_text: str) -> bool:
         indicators = ["need to calculate", "should look up", "requires analysis"]
