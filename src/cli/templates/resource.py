@@ -1,7 +1,7 @@
 """Template for resource plugin."""
 
-from pipeline.base_plugins import ResourcePlugin, ValidationResult
-from pipeline.stages import PipelineStage
+from entity.core.plugins import ResourcePlugin, ValidationResult
+from entity.core.stages import PipelineStage
 
 
 class {class_name}(ResourcePlugin):

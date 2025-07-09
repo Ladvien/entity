@@ -1,7 +1,7 @@
 """Template for failure plugin."""
 
-from pipeline.base_plugins import FailurePlugin
-from pipeline.stages import PipelineStage
+from entity.core.plugins import FailurePlugin
+from entity.core.stages import PipelineStage
 
 
 class {class_name}(FailurePlugin):

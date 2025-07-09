@@ -2,8 +2,8 @@
 
 from typing import Any, Dict
 
-from pipeline.base_plugins import ToolPlugin
-from pipeline.stages import PipelineStage
+from entity.core.plugins import ToolPlugin
+from entity.core.stages import PipelineStage
 
 
 class {class_name}(ToolPlugin):
