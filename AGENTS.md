@@ -15,45 +15,36 @@ Use this document when preparing changes or reviewing pull requests.
 
 
 ## Architecture
-Here is the architecture directory.  Below are references to architectural notes found in `ARCHITECTURE.md`.  Please grep the `ARCHITECTURE.md` file for the section titles to find the full text. 
+Here is the architecture directory.  Below are references to architectural notes found in `ARCHITECTURE.md`.  Please grep the `ARCHITECTURE.md` file for the section titles to find the full text.  To find the architectural notes, search for the section titles below in `ARCHITECTURE.md`:
 
-* **0. Folder Structure and Naming Conventions**: Outlines the directory structure and naming conventions for plugins, resources, and configuration files to ensure consistency and clarity.
+```
+grep '^## <NUM>\. ' ARCHITECTURE.md
+```
 
-* **1. Core Mental Model: Plugin Taxonomy and Architecture**: Describes the foundational plugin architecture of the framework, including plugin categories, resource composition, lifecycle management, and development patterns.
+The `<NUM>` is the number in the section title above, e.g. `## 1. Core Mental Model: Plugin Taxonomy and Architecture` is section 1.
 
-* **2. Progressive Disclosure: Enhanced 3-Layer Plugin System**: Explains the framework’s tiered plugin abstraction model and how developers progressively adopt complexity through decorators, classes, and advanced customization.
-
-* **3. Resource Management: Core Canonical + Simple Flexible Keys**: Details the hybrid naming strategy for resource access, supporting both simple canonical names and flexible custom keys for more complex setups.
-
-* **4. Plugin Stage Assignment: Guided Explicit Declaration with Smart Defaults**: Describes how plugins are assigned to pipeline stages using explicit declarations, smart defaults, and tooling guidance to reduce developer confusion.
-
-* **5. Error Handling and Validation: Fail-Fast with Multi-Layered Validation**: Defines a three-phase validation system for configuration, dependencies, and runtime connectivity to catch issues early and enforce system health.
-
-* **6. Scalability Architecture: Stateless Workers with External State**: Outlines the stateless worker design that enables horizontal scaling by storing all pipeline context in external memory systems.
-
-* **6. Response Termination Control**: Specifies that only plugins in the DELIVER stage can finalize the response, ensuring consistent and complete pipeline processing.
-
-* **7. Stage Results Accumulation Pattern**: Explains how stages communicate via an internal key-value store (`context.store`, `context.load`, `context.has`) to maintain clarity and traceability of pipeline outputs.
-
-* **8. Tool Execution Patterns**: Details support for both immediate and queued tool execution patterns, giving developers control over tool concurrency and performance strategies.
-
-* **9. Memory Resource Consolidation**: Describes the unification of all memory-related responsibilities into a single `Memory` resource, simplifying configuration and access patterns.
-
-* **10. Resource Dependency Injection Pattern**: Covers how resources declare and receive dependencies explicitly, enabling full graph validation, clear architecture, and hot-reload support.
-
-* **11. Plugin Stage Assignment Precedence**: Specifies the order of precedence for determining plugin stage assignments—explicit declarations, plugin type defaults, and auto-classification.
-
-* **12. Resource Lifecycle Management**: Establishes that resources are initialized and shut down in strict topological order, ensuring predictable system startup and teardown behavior.
-
-* **13. Configuration Hot-Reload Scope**: Clarifies which configuration changes can be hot-reloaded (parameters only) versus those requiring full system restarts (structural changes).
-
-* **14. Error Handling and Failure Propagation**: Explains the framework’s fail-fast behavior, where any plugin failure immediately halts stage execution and routes processing to the ERROR stage.
-
-* **15. Pipeline State Management Strategy**: Defines how all conversation persistence and debugging state is managed through structured logs and the memory resource, eliminating separate state snapshot files.
-
-* **16. Plugin Execution Order Simplification**: States that plugins now execute in the order defined in the YAML configuration, removing priority fields for simplicity and predictability.
-
-* **17. Agent and AgentBuilder Separation**: Distinguishes between `Agent` (for config-based instantiation) and `AgentBuilder` (for programmatic construction), promoting clear intent and separation of concerns.
-
-* **18. Configuration Validation Consolidation**: Mandates the exclusive use of Pydantic for configuration validation, replacing JSON Schema and improving type safety, error messages, and tooling support.
-
+## 0. Folder Structure and Naming Conventions
+## 1. Core Mental Model: Plugin Taxonomy and Architecture
+## 2. Progressive Disclosure: Enhanced 3-Layer Plugin System
+## 3. Resource Management: Core Canonical + Simple Flexible Keys
+## 4. Plugin Stage Assignment: Guided Explicit Declaration with Smart Defaults
+## 5. Error Handling and Validation: Fail-Fast with Multi-Layered Validation
+## 6. Scalability Architecture: Stateless Workers with External State
+## 7. Response Termination Control
+## 8. Stage Results Accumulation Pattern
+## 9. Memory Resource Consolidation
+## 10. Resource Dependency Injection Pattern
+## 11. Plugin Stage Assignment Precedence
+## 12. Resource Lifecycle Management
+## 13. Configuration Hot-Reload Scope
+## 14. Error Handling and Failure Propagation
+## 15. Pipeline State Management Strategy
+## 16. Plugin Execution Order Simplification
+## 17. Agent and AgentBuilder Separation
+## 18. Configuration Validation Consolidation
+## 19. Reasoning Pattern Abstraction Strategy
+## 20. Memory Architecture: Primitive Resources + Custom Plugins
+## 21. Tool Discovery Architecture: Lightweight Registry Query + Plugin-Level Orchestration
+## 22. Plugin System Architecture: Explicit Configuration with Smart Defaults
+## 23. State Management Consolidation: Unified Cache/Memory Pattern
+## 24. Agent Instantiation Unification: Single Agent Class Pattern
