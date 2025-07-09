@@ -28,7 +28,7 @@ from plugins.builtin.resources.duckdb_database import (
 from plugins.builtin.resources.duckdb_vector_store import (
     DuckDBVectorStore,
 )  # noqa: E402
-from pipeline.resources.memory import Memory
+from entity.resources.memory import Memory
 from user_plugins.llm.unified import UnifiedLLMResource  # noqa: E402
 
 

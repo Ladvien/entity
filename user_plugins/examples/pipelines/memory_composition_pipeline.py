@@ -22,7 +22,7 @@ from plugins.builtin.resources.postgres import PostgresResource
 from plugins.builtin.resources.sqlite_storage import (
     SQLiteStorageResource as SQLiteDatabaseResource,
 )
-from pipeline.resources.memory import Memory
+from entity.resources.memory import Memory
 from user_plugins.resources import DuckDBVectorStore
 
 

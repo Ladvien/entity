@@ -345,7 +345,7 @@ plugins:
       base_url: http://localhost:11434
       
     memory:
-      type: pipeline.resources.memory_resource:MemoryResource  
+      type: entity.resources.memory:Memory
       database:
         type: plugins.builtin.resources.postgres:PostgresResource
         host: localhost

@@ -15,10 +15,6 @@ if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .filesystem import FileSystemResource
     from .in_memory_storage import InMemoryStorageResource
     from .llm.unified import UnifiedLLMResource
-    from .memory import Memory
-    from .memory_filesystem import MemoryFileSystem
-    from .memory_storage import MemoryStorage
-    from .memory_vector_store import MemoryVectorStore
     from .pg_vector_store import PgVectorStore
     from .postgres import PostgresResource
     from .sqlite_storage import SQLiteStorageResource
@@ -62,22 +58,6 @@ def __getattr__(name: str):
         from .llm.unified import UnifiedLLMResource
 
         return UnifiedLLMResource
-    if name == "Memory":
-        from .memory import Memory
-
-        return Memory
-    if name == "MemoryFileSystem":
-        from .memory_filesystem import MemoryFileSystem
-
-        return MemoryFileSystem
-    if name == "MemoryStorage":
-        from .memory_storage import MemoryStorage
-
-        return MemoryStorage
-    if name == "MemoryVectorStore":
-        from .memory_vector_store import MemoryVectorStore
-
-        return MemoryVectorStore
     if name == "PgVectorStore":
         from .pg_vector_store import PgVectorStore
 
@@ -103,10 +83,6 @@ __all__ = [
     "DuckDBDatabaseResource",
     "FileSystemResource",
     "InMemoryStorageResource",
-    "MemoryStorage",
-    "MemoryVectorStore",
-    "MemoryFileSystem",
-    "Memory",
     "PgVectorStore",
     "PostgresResource",
     "SQLiteStorageResource",

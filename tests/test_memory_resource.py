@@ -11,8 +11,7 @@ from pipeline import (
 )
 from pipeline.context import ConversationEntry
 from pipeline.resources import ResourceContainer
-from pipeline.resources.memory import Memory
-from plugins.builtin.resources.memory_storage import MemoryStorage
+from entity.resources.memory import Memory
 
 
 class IncrementPlugin(PromptPlugin):
@@ -46,9 +45,7 @@ def test_memory_persists_between_runs():
 
 def test_save_and_load_history():
     async def run():
-        storage = MemoryStorage({})
         memory = Memory(config={})
-        memory.database = storage
         history = [
             ConversationEntry(content="hi", role="user", timestamp=datetime.now())
         ]
@@ -61,7 +58,7 @@ def test_save_and_load_history():
 
 
 def test_memory_resource_name_constant():
-    from pipeline.resources.memory import Memory
+    from entity.resources.memory import Memory
 
     assert Memory.name == "memory"
     assert not hasattr(Memory, "aliases")

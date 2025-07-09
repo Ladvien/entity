@@ -22,10 +22,10 @@ plugins:
       retries: 5
       backoff: 2.0
     memory:
-      type: pipeline.resources.memory:Memory
+      type: entity.resources.memory:Memory
       dependencies: [database, vector_store]
     vector_store:
-      type: plugins.builtin.resources.memory_vector_store:MemoryVectorStore
+      type: plugins.builtin.resources.duckdb_vector_store:DuckDBVectorStore
       table: vector_mem
       embedding_model:
         name: dummy

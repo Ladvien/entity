@@ -15,7 +15,7 @@ enable_plugins_namespace()
 
 from pipeline import Agent, PipelineStage, PromptPlugin
 from pipeline.context import PluginContext
-from pipeline.resources.memory import Memory
+from entity.resources.memory import Memory
 from user_plugins.resources import DuckDBDatabaseResource, DuckDBVectorStore
 
 
