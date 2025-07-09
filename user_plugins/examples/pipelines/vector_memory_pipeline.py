@@ -39,12 +39,10 @@ class ComplexPrompt(PromptPlugin):
         if memory.vector_store:
             await memory.vector_store.add_embedding("greeting")
             similar = await memory.search_similar("greeting", 1)
-            context.add_conversation_entry(
-                f"Similar entries: {similar}", role="assistant"
-            )
+            context.say(f"Similar entries: {similar}")
         llm = context.get_llm()
         response = await llm.generate("Respond to the user using stored context.")
-        context.add_conversation_entry(response, role="assistant")
+        context.say(response)
 
 
 def create_database_config() -> Tuple[type, Dict]:

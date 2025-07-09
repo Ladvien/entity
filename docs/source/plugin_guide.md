@@ -39,17 +39,17 @@ async def weather_plugin(ctx):
     return await ctx.tool_use("weather", city="London")
 ```
 
-Plugins share data through `store()`, `load()`, and `has()` and can queue additional
-tool calls. `load()` accepts an optional default value when the key is missing:
+Plugins share data through `cache()` and `recall()` and can queue additional
+tool calls:
 
 ```python
 @agent.plugin
 async def summarizer(ctx):
     if ctx.has("summary"):
-        return ctx.load("summary")
+        return ctx.recall("summary")
     result_key = ctx.queue_tool_use("search", {"query": ctx.message})
     summary = await ctx.tool_use("summarize", text=ctx.message)
-ctx.store("summary", summary)
+ctx.cache("summary", summary)
     return summary
 ```
 
@@ -57,7 +57,7 @@ ctx.store("summary", summary)
 
 Entity provides two prompt plugins for common reasoning patterns:
 
-- `ChainOfThoughtPrompt` records intermediate thoughts and stores them with `context.store()`.
+- `ChainOfThoughtPrompt` records intermediate thoughts and stores them with `context.cache()`.
 - `ReActPrompt` alternates between reasoning and tool use, saving each step under `react_steps`.
 
 Add them in your YAML configuration:

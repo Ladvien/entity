@@ -19,4 +19,4 @@ class {class_name}(FailurePlugin):
     # List position controls execution order and SystemInitializer preserves it.
 
     async def _execute_impl(self, context):
-        context.store("failure_info", context.get_failure_info())
+        context.cache("failure_info", context.get_failure_info())

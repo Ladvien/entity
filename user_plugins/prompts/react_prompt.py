@@ -20,14 +20,12 @@ class ReActPrompt(PromptPlugin):
     async def _execute_impl(self, context: PluginContext) -> None:
         max_steps = int(self.config.get("max_steps", 5))
 
-        conversation = context.get_conversation_history()
+        conversation = context.conversation()
         user_messages = [e.content for e in conversation if e.role == "user"]
         question = user_messages[-1] if user_messages else "No question provided"
 
         for step in range(max_steps):
-            step_context = self._build_step_context(
-                context.get_conversation_history(), question
-            )
+            step_context = self._build_step_context(context.conversation(), question)
 
             thought_prompt = (
                 "Think step by step about this problem:\n\n"
@@ -38,9 +36,8 @@ class ReActPrompt(PromptPlugin):
                 context, thought_prompt, purpose=f"react_thought_step_{step}"
             )
 
-            context.add_conversation_entry(
-                content=f"Thought: {thought.content}",
-                role="assistant",
+            context.say(
+                f"Thought: {thought.content}",
                 metadata={"react_step": step, "type": "thought"},
             )
 
@@ -65,9 +62,8 @@ class ReActPrompt(PromptPlugin):
                 action_text = action_decision.content.replace("Action:", "").strip()
                 action_name, params = self._parse_action(action_text)
 
-                context.add_conversation_entry(
-                    content=f"Action: {action_text}",
-                    role="assistant",
+                context.say(
+                    f"Action: {action_text}",
                     metadata={"react_step": step, "type": "action"},
                 )
 
