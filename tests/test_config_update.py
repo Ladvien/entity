@@ -68,8 +68,9 @@ def test_update_plugin_configuration_restart_required():
     result = asyncio.run(
         update_plugin_configuration(reg, "test_plugin", {"value": "y"})
     )
-    assert result.success
-    assert p.config["value"] == "y"
+    assert not result.success
+    assert result.requires_restart
+    assert p.config["value"] == "x"
 
 
 def test_update_waits_for_running_pipeline():

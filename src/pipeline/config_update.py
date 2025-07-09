@@ -14,19 +14,6 @@ from pipeline.stages import PipelineStage
 from .manager import PipelineManager
 
 
-async def _restart_plugin(plugin, new_config: Dict) -> None:
-    shutdown = getattr(plugin, "shutdown", None)
-    if callable(shutdown):
-        await shutdown()
-    plugin.config = new_config
-    initialize = getattr(plugin, "initialize", None)
-    if callable(initialize):
-        await initialize()
-    if hasattr(plugin, "_config_history"):
-        plugin._config_history.append(new_config.copy())
-        plugin.config_version += 1
-
-
 @dataclass
 class ConfigUpdateResult:
     success: bool
@@ -88,13 +75,15 @@ async def update_plugin_configuration(
         except Exception as exc:  # noqa: BLE001
             return ConfigUpdateResult.failure_result(str(exc))
         if list(plugin_instance.__class__.stages) != new_stages:
-            return ConfigUpdateResult.restart_required("Stage changes require restart")
+            return ConfigUpdateResult.failure_result(
+                "Stage changes require full restart"
+            )
 
     if "dependencies" in new_config:
         current_deps = set(getattr(plugin_instance.__class__, "dependencies", []))
         if current_deps != set(new_config["dependencies"]):
-            return ConfigUpdateResult.restart_required(
-                "Dependency changes require restart"
+            return ConfigUpdateResult.failure_result(
+                "Dependency changes require full restart"
             )
 
     validation_result = plugin_instance.validate_config(new_config)
@@ -114,15 +103,11 @@ async def update_plugin_configuration(
     reconfig_result = await plugin_instance.reconfigure(new_config)
     if not reconfig_result.success:
         if reconfig_result.requires_restart:
-            try:
-                await _restart_plugin(plugin_instance, new_config)
-            except Exception as exc:  # noqa: BLE001
-                await plugin_instance.rollback_config(old_version)
-                return ConfigUpdateResult.failure_result(str(exc))
-        else:
-            return ConfigUpdateResult.failure_result(
-                reconfig_result.error_message or ""
+            return ConfigUpdateResult.restart_required(
+                reconfig_result.error_message
+                or "Plugin requires restart for configuration changes"
             )
+        return ConfigUpdateResult.failure_result(reconfig_result.error_message or "")
 
     updated = [plugin_name]
 

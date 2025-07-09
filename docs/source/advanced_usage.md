@@ -76,10 +76,10 @@ poetry run python src/cli.py reload-config updated.yaml
 ```
 
 The command waits for active pipelines to finish, then applies the new YAML
-configuration. Only parameter updates to **existing plugins** are hot reloadable;
-adding plugins or changing their stages or dependencies requires a full
-restart. This demonstrates **Dynamic Configuration Updates** for tunable values
-while keeping the system responsive.
+configuration. Only parameter updates to **existing plugins** are hot reloadable.
+Modifying plugin stages or dependencies requires a full restart. This
+demonstrates **Dynamic Configuration Updates** for tunable values while keeping
+the system responsive.
 
 For a hands-on demonstration, run `examples/config_reload_example.py`:
 
@@ -89,8 +89,9 @@ python examples/config_reload_example.py
 
 ### Runtime Reconfiguration and Rollback
 
-`update_plugin_configuration()` restarts plugins when necessary and validates
-their dependencies before applying new settings. If a dependent plugin rejects a
+`update_plugin_configuration()` applies parameter changes at runtime. If a
+plugin reports that a restart is required the function returns
+`requires_restart` and no updates are applied. If a dependent plugin rejects a
 change the framework rolls back to the previous configuration. Plugins expose a
 `config_version` and `rollback_config()` helper:
 
