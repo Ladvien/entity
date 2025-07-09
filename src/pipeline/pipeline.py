@@ -17,12 +17,16 @@ from entity.core.state_logger import StateLogger
 
 from .context import ConversationEntry, PluginContext
 from .errors import create_static_error_response
-from .exceptions import \
-    MaxIterationsExceeded  # noqa: F401 - reserved for future use
-from .exceptions import (CircuitBreakerTripped, PipelineError,
-                         PluginExecutionError, ResourceError,
-                         ToolExecutionError)
-from .logging import get_logger, reset_request_id, set_request_id
+from .exceptions import MaxIterationsExceeded  # noqa: F401 - reserved for future use
+from .exceptions import (
+    CircuitBreakerTripped,
+    PipelineError,
+    PluginExecutionError,
+    ResourceError,
+    ToolExecutionError,
+)
+from entity.utils.logging import get_logger
+from .manager import PipelineManager
 from .metrics import MetricsCollector
 from .observability.metrics import MetricsServerManager
 from .observability.tracing import start_span
@@ -115,7 +119,6 @@ async def execute_stage(
             context = PluginContext(state, registries)
             context.set_current_stage(stage)
             await registries.validators.validate(stage, context)
-            token = set_request_id(state.pipeline_id)
             plugin_name = registries.plugins.get_plugin_name(plugin)
             start_plugin = time.perf_counter()
             try:
@@ -235,8 +238,6 @@ async def execute_stage(
                     error_message=message,
                     original_exception=exc,
                 )
-            finally:
-                reset_request_id(token)
             if state.failure_info:
                 break
         if state.failure_info and stage != PipelineStage.ERROR:

@@ -23,7 +23,7 @@ from entity.workflows.discovery import (
 
 from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
 from .defaults import DEFAULT_CONFIG
-from .logging import configure_logging, get_logger
+from entity.utils.logging import configure_logging, get_logger
 from .stages import PipelineStage
 from .workflow import Workflow
 
