@@ -11,11 +11,14 @@ import logging
 import time
 from collections import defaultdict, deque
 from logging.handlers import RotatingFileHandler
-from typing import Any, cast
+from typing import Any, Awaitable, Callable, cast
+
+from pipeline.context import PluginContext
 
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
+from starlette.responses import Response
 from pydantic import BaseModel
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -29,7 +32,7 @@ from pipeline.security import AdapterAuthenticator
 from registry import SystemRegistries
 
 
-class TokenAuthMiddleware(BaseHTTPMiddleware):
+class TokenAuthMiddleware(BaseHTTPMiddleware):  # type: ignore[misc]
     """Validate bearer tokens on incoming requests."""
 
     def __init__(
@@ -42,7 +45,11 @@ class TokenAuthMiddleware(BaseHTTPMiddleware):
         self.auth = authenticator
         self.audit_logger = audit_logger
 
-    async def dispatch(self, request: Request, call_next):  # type: ignore[override]
+    async def dispatch(
+        self,
+        request: Request,
+        call_next: Callable[[Request], Awaitable[Response]],
+    ) -> Response:
         if self.auth:
             auth = request.headers.get("authorization")
             token = auth.split(" ")[-1] if auth and " " in auth else None
@@ -57,7 +64,7 @@ class TokenAuthMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
-class ThrottleMiddleware(BaseHTTPMiddleware):
+class ThrottleMiddleware(BaseHTTPMiddleware):  # type: ignore[misc]
     """Apply simple request rate limiting."""
 
     def __init__(
@@ -73,7 +80,11 @@ class ThrottleMiddleware(BaseHTTPMiddleware):
         self.audit_logger = audit_logger
         self.access: dict[str, deque[float]] = defaultdict(deque)
 
-    async def dispatch(self, request: Request, call_next):  # type: ignore[override]
+    async def dispatch(
+        self,
+        request: Request,
+        call_next: Callable[[Request], Awaitable[Response]],
+    ) -> Response:
         key = request.headers.get("authorization")
         if key and " " in key:
             key = key.split(" ")[-1]
@@ -93,7 +104,7 @@ class ThrottleMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
-class MessageRequest(BaseModel):
+class MessageRequest(BaseModel):  # type: ignore[misc]
     message: str
 
 
@@ -102,8 +113,8 @@ class HTTPAdapter(AdapterPlugin):
 
     def __init__(
         self,
-        manager: PipelineManager | None = None,
-        config: dict | None = None,
+        manager: PipelineManager[dict[str, Any]] | None = None,
+        config: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(config)
         self.manager = manager
@@ -159,11 +170,11 @@ class HTTPAdapter(AdapterPlugin):
             )
 
     def _setup_routes(self) -> None:
-        @self.app.post("/")
+        @self.app.post("/")  # type: ignore[misc]
         async def handle(req: MessageRequest) -> dict[str, Any]:
             return await self._handle_message(req.message)
 
-        @self.app.get("/health")
+        @self.app.get("/health")  # type: ignore[misc]
         async def health() -> dict[str, Any]:
             registries = self._registries
             if registries is None and self.manager is not None:
@@ -176,7 +187,7 @@ class HTTPAdapter(AdapterPlugin):
 
         if self.dashboard_enabled:
 
-            @self.app.get("/dashboard")
+            @self.app.get("/dashboard")  # type: ignore[misc]
             async def dashboard() -> HTMLResponse:
                 metrics = MetricsCollector()
                 metrics.record_dashboard_request()
@@ -203,7 +214,7 @@ class HTTPAdapter(AdapterPlugin):
                 )
                 return HTMLResponse(html)
 
-            @self.app.get("/metrics")
+            @self.app.get("/metrics")  # type: ignore[misc]
             async def metrics() -> HTMLResponse:
                 server = MetricsServerManager.get()
                 if server is None:
@@ -252,5 +263,7 @@ class HTTPAdapter(AdapterPlugin):
         if self._server is not None:
             await self._server.shutdown()
 
-    async def _execute_impl(self, context) -> None:  # pragma: no cover - adapter
+    async def _execute_impl(
+        self, context: PluginContext
+    ) -> None:  # pragma: no cover - adapter
         pass
