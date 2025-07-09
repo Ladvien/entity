@@ -46,17 +46,6 @@ class PipelineManager(Generic[ResultT]):
     def capabilities(self) -> SystemRegistries:
         return self._capabilities
 
-    @property
-    def registries(self) -> SystemRegistries:  # pragma: no cover - legacy
-        """Backward compatibility alias for ``capabilities``."""
-
-        warnings.warn(
-            "'registries' is deprecated, use 'capabilities' instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self._capabilities
-
     # ------------------------------------------------------------------
     def start_pipeline(
         self, message: str, *, max_iterations: int = 5

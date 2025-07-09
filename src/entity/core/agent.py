@@ -142,15 +142,6 @@ class Agent:
             raise PipelineError("Agent not initialized")
         return self._runtime.capabilities
 
-    # deprecated -----------------------------------------------------
-    def get_registries(self) -> SystemRegistries:  # pragma: no cover - legacy
-        warnings.warn(
-            "'get_registries' is deprecated, use 'get_capabilities' instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.get_capabilities()
-
     # ------------------------------------------------------------------
     # Compatibility helpers
     # ------------------------------------------------------------------
