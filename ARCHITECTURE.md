@@ -2,6 +2,8 @@
 
 The following architecture decisions were made through systematic analysis of the Entity Pipeline Framework to optimize for developer adoption, scalability, and maintainability.
 
+Ensure to check `CONTRIBUTING.md` for general contribution guidelines and `ARCHITECTURE.md` for detailed architectural decisions.
+
 ## 0. Folder Structure and Naming Conventions
 
 ## Repository Layout
