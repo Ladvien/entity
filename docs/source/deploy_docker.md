@@ -1,11 +1,11 @@
 # Docker Deployment
 
-Containerize the system to run anywhere Docker is available. The project
-Dockerfile now lives in `src/docker/`.
+Containerize the system to run anywhere Docker is available. Create a
+`Dockerfile` in your project root based on your deployment needs.
 
 1. Build the image:
    ```bash
-   docker build -f src/docker/Dockerfile -t entity-agent .
+   docker build -t entity-agent .
    ```
 2. Run the container:
    ```bash

@@ -39,9 +39,9 @@ A small example of structured logging lives in `user_plugins/examples/structured
 It initializes ``LoggingAdapter`` and emits one log entry.
 
 ## Network Architecture
-All backend services communicate using gRPC streaming with Protobuf schemas.
-Web interfaces may use WebSockets, but model services must expose gRPC
-endpoints.
+Backend services communicate over HTTP using JSON messages. Web
+interfaces may rely on WebSockets, while command-line tools use
+standard input and output.
 
 For additional diagrams and examples see the ADRs in `docs/adr/`.
 

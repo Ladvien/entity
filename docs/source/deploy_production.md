@@ -2,14 +2,14 @@
 
 This document describes a minimal production setup for running the Entity Pipeline Framework.
 It assumes you already tested your configuration locally and want to move it to a
-reliable environment. The Dockerfile is located in `src/docker/`.
+reliable environment. Provide your own `Dockerfile` for building the image.
 
 ## Container Image
 
 Build a Docker image containing your plugins and configuration:
 
 ```bash
-docker build -f src/docker/Dockerfile -t entity-agent:latest .
+docker build -t entity-agent:latest .
 ```
 
 Tag and push the image to your registry of choice. Kubernetes and many PaaS
@@ -30,8 +30,8 @@ poetry run python src/cli.py --config config/prod.yaml
 ```
 
 Use `systemd` or a container orchestrator such as Kubernetes to keep the process
-healthy and to manage logs. Configure liveness probes on the HTTP or gRPC
-adapter endpoint so the orchestrator can restart the container on failures.
+healthy and to manage logs. Configure liveness probes on the HTTP endpoint so
+the orchestrator can restart the container on failures.
 
 ## Scaling
 
