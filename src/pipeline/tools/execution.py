@@ -4,7 +4,7 @@ import asyncio
 import time
 from typing import Any, Dict
 
-from entity.core.plugins.base import ToolExecutionError
+from entity.core.plugins import ToolExecutionError
 from entity.core.state import ToolCall
 from pipeline.state import PipelineState, MetricsCollector
 from entity.core.registries import SystemRegistries
