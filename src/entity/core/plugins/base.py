@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Base plugin classes used by the Entity framework.
+"""Wrapper base plugin classes for the Entity framework.
 
 These classes mirror the minimal architecture described in
 ``architecture/general.md`` and avoid importing ``pipeline.base_plugins``.
