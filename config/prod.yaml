@@ -22,7 +22,7 @@ plugins:
       retries: 5
       backoff: 2.0
     memory:
-      type: pipeline.resources.memory_resource:MemoryResource
+      type: pipeline.resources.memory:Memory
       storage:
         type: plugins.builtin.resources.postgres:PostgresResource
         host: "${DB_HOST}"

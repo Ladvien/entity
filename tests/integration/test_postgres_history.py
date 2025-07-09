@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from entity_config.environment import load_env
-from pipeline.resources.memory_resource import MemoryResource
+from pipeline.resources.memory import Memory
 from pipeline.state import ConversationEntry
 from plugins.builtin.resources.postgres import PostgresResource
 
@@ -28,7 +28,7 @@ CONN = {
 def test_save_and_load_history(pg_env):
     async def run():
         db = PostgresResource(CONN)
-        memory = MemoryResource(database=db)
+        memory = Memory(database=db)
         try:
             await db.initialize()
         except OSError as exc:

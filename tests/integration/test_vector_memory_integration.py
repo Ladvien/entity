@@ -17,7 +17,7 @@ from pipeline import (
 )
 from pipeline.resources import ResourceContainer
 from pipeline.resources.llm import UnifiedLLMResource
-from pipeline.resources.memory_resource import MemoryResource
+from pipeline.resources.memory import Memory
 from plugins.builtin.resources.pg_vector_store import PgVectorStore
 from plugins.builtin.resources.postgres import PostgresResource
 from user_plugins.prompts.complex_prompt import ComplexPrompt
@@ -57,7 +57,7 @@ def test_vector_memory_integration(pg_env):
         }
         db = PostgresResource(db_cfg)
         vm = PgVectorStore(vm_cfg)
-        memory = MemoryResource(database=db, vector_store=vm)
+        memory = Memory(database=db, vector_store=vm)
         llm = UnifiedLLMResource(
             {"provider": "echo", "base_url": "http://localhost", "model": "none"}
         )

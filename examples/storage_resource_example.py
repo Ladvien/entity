@@ -15,7 +15,7 @@ enable_plugins_namespace()
 
 from pipeline import Agent, PipelineStage, PromptPlugin
 from pipeline.context import ConversationEntry, PluginContext
-from pipeline.resources.memory_resource import MemoryResource
+from pipeline.resources.memory import Memory
 from plugins.builtin.resources.local_filesystem import LocalFileSystemResource
 from plugins.builtin.resources.sqlite_storage import (
     SQLiteStorageResource as SQLiteDatabaseResource,
@@ -30,7 +30,7 @@ class StorePrompt(PromptPlugin):
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, ctx: PluginContext) -> None:
-        memory: MemoryResource = ctx.get_resource("memory")
+        memory: Memory = ctx.get_resource("memory")
         storage: StorageResource = ctx.get_resource("storage")
         await memory.save_conversation(ctx.pipeline_id, ctx.get_conversation_history())
         path = await storage.store_file("input.txt", ctx.message.encode())
@@ -43,7 +43,7 @@ def main() -> None:
     database = SQLiteDatabaseResource({"path": "./agent.db"})
     filesystem = LocalFileSystemResource({"base_path": "./files"})
 
-    memory = MemoryResource(database=database)
+    memory = Memory(database=database)
     storage = StorageResource(filesystem=filesystem)
 
     agent.builder.resource_registry.add("memory", memory)

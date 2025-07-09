@@ -9,7 +9,7 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.resources import ResourceContainer
-from pipeline.resources.memory_resource import SimpleMemoryResource
+from pipeline.resources.memory import Memory
 
 
 class ContinuePlugin(PromptPlugin):
@@ -33,7 +33,7 @@ def make_manager():
     asyncio.run(plugins.register_plugin_for_stage(ContinuePlugin({}), PipelineStage.DO))
     asyncio.run(plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.DO))
     resources = ResourceContainer()
-    asyncio.run(resources.add("memory", SimpleMemoryResource()))
+    asyncio.run(resources.add("memory", Memory()))
     registries = SystemRegistries(resources, ToolRegistry(), plugins)
     manager = PipelineManager(registries)
     memory = resources.get("memory")

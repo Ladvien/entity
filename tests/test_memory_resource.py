@@ -11,7 +11,7 @@ from pipeline import (
 )
 from pipeline.context import ConversationEntry
 from pipeline.resources import ResourceContainer
-from pipeline.resources.memory_resource import MemoryResource, SimpleMemoryResource
+from pipeline.resources.memory import Memory
 from plugins.builtin.resources.memory import Memory
 from plugins.builtin.resources.memory_storage import MemoryStorage
 
@@ -33,7 +33,7 @@ def make_registries():
         plugins.register_plugin_for_stage(IncrementPlugin({}), PipelineStage.DO)
     )
     resources = ResourceContainer()
-    asyncio.run(resources.add("memory", SimpleMemoryResource()))
+    asyncio.run(resources.add("memory", Memory()))
     return SystemRegistries(resources, ToolRegistry(), plugins)
 
 
@@ -48,7 +48,7 @@ def test_memory_persists_between_runs():
 def test_save_and_load_history():
     async def run():
         storage = MemoryStorage({})
-        memory = MemoryResource(database=storage)
+        memory = Memory(database=storage)
         history = [
             ConversationEntry(content="hi", role="user", timestamp=datetime.now())
         ]
@@ -61,7 +61,7 @@ def test_save_and_load_history():
 
 
 def test_memory_resource_name_constant():
-    from plugins.builtin.resources.memory_resource import MemoryResource
+    from pipeline.resources.memory import Memory
 
-    assert MemoryResource.name == "memory"
-    assert not hasattr(MemoryResource, "aliases")
+    assert Memory.name == "memory"
+    assert not hasattr(Memory, "aliases")

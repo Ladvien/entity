@@ -17,7 +17,6 @@ if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from .llm.unified import UnifiedLLMResource
     from .memory import Memory
     from .memory_filesystem import MemoryFileSystem
-    from .memory_resource import MemoryResource, SimpleMemoryResource
     from .memory_storage import MemoryStorage
     from .memory_vector_store import MemoryVectorStore
     from .pg_vector_store import PgVectorStore
@@ -71,14 +70,6 @@ def __getattr__(name: str):
         from .memory_filesystem import MemoryFileSystem
 
         return MemoryFileSystem
-    if name == "MemoryResource":
-        from .memory_resource import MemoryResource
-
-        return MemoryResource
-    if name == "SimpleMemoryResource":
-        from .memory_resource import SimpleMemoryResource
-
-        return SimpleMemoryResource
     if name == "MemoryStorage":
         from .memory_storage import MemoryStorage
 
@@ -107,8 +98,6 @@ def __getattr__(name: str):
 
 
 __all__ = [
-    "MemoryResource",
-    "SimpleMemoryResource",
     "UnifiedLLMResource",
     "DatabaseResource",
     "DuckDBDatabaseResource",

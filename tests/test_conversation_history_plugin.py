@@ -11,7 +11,7 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.resources import ResourceContainer
-from pipeline.resources.memory_resource import MemoryResource
+from pipeline.resources.memory import Memory
 from pipeline.stages import PipelineStage
 from plugins.builtin.resources.duckdb_database import DuckDBDatabaseResource
 from user_plugins.prompts.conversation_history import ConversationHistory
@@ -22,7 +22,7 @@ async def make_context(tmp_path):
         {"path": tmp_path / "hist.duckdb", "history_table": "h"}
     )
     await db.initialize()
-    memory = MemoryResource(database=db)
+    memory = Memory(database=db)
     state = PipelineState(
         conversation=[
             ConversationEntry(content="hi", role="user", timestamp=datetime.now())
