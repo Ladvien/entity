@@ -211,9 +211,25 @@ class SystemInitializer:
             stages = [PipelineStage.ensure(s) for s in stages]
             explicit = True
         else:
-            stages = getattr(instance, "stages", []) or []
-            stages = [PipelineStage.ensure(s) for s in stages]
-            explicit = getattr(instance, "_explicit_stages", "stages" in cls.__dict__)
+            attr_stages = getattr(instance, "stages", []) or []
+            attr_stages = [PipelineStage.ensure(s) for s in attr_stages]
+            attr_explicit = getattr(
+                instance, "_explicit_stages", "stages" in cls.__dict__
+            )
+            if attr_explicit:
+                stages = attr_stages
+                explicit = True
+            else:
+                type_defaults = self._type_default_stages(cls)
+                if type_defaults:
+                    stages = type_defaults
+                    explicit = False
+                elif getattr(instance, "_inferred_stages", False):
+                    stages = attr_stages
+                    explicit = False
+                else:
+                    stages = attr_stages
+                    explicit = False
 
         if not stages:
             stages = self._type_default_stages(cls)

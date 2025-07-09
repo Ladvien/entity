@@ -90,12 +90,14 @@ class PluginAutoClassifier:
             return []
 
         explicit = False
+        inferred = True
         stages = _default_stages(base)
         if "stage" in hints or "stages" in hints:
             hint = hints.get("stages") or hints.get("stage")
             stages = hint if isinstance(hint, list) else [hint]
             stages = [PipelineStage.from_str(str(s)) for s in stages]
             explicit = True
+            inferred = False
 
         name = hints.get("name", plugin_func.__name__)
 
@@ -106,6 +108,7 @@ class PluginAutoClassifier:
             base_class=base,
         )
         plugin_obj._explicit_stages = explicit
+        plugin_obj._inferred_stages = inferred
         plugin_obj._type_default_stages = _default_stages(base)
         return plugin_obj
 
