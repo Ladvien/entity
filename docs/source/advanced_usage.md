@@ -13,7 +13,7 @@ Use `StorageResource` with a Postgres database and optional S3 file storage:
 plugins:
   resources:
     postgres:
-      type: plugins.builtin.resources.postgres:PostgresResource
+      # type: plugins.builtin.resources.postgres:PostgresResource
       host: localhost
       port: 5432
       name: dev_db
@@ -21,11 +21,11 @@ plugins:
       setup_commands:
         - "CREATE EXTENSION IF NOT EXISTS vector"
     vector_store:
-      type: plugins.builtin.resources.pg_vector_store:PgVectorStore
+      # type: plugins.builtin.resources.pg_vector_store:PgVectorStore
       dimensions: 768
       table: embeddings
     filesystem:
-      type: plugins.builtin.resources.s3_filesystem:S3FileSystem
+      # type: plugins.builtin.resources.s3_filesystem:S3FileSystem
       bucket: agent-files
       region: us-east-1
     storage:
@@ -41,7 +41,7 @@ For local experimentation you can use a file-backed DuckDB database:
 plugins:
   resources:
     db:
-      type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
+      # type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
       path: ./agent.duckdb
     storage:
       type: storage
@@ -54,10 +54,10 @@ You can also use `StorageResource` for a lighter setup:
 plugins:
   resources:
     db:
-      type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
+      # type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
       path: ./agent.duckdb
     fs:
-      type: plugins.builtin.resources.local_filesystem:LocalFileSystemResource
+      # type: plugins.builtin.resources.local_filesystem:LocalFileSystemResource
       base_path: ./files
     storage:
       type: storage

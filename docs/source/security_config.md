@@ -10,7 +10,7 @@ Adapters accept a mapping of tokens to allowed roles. For example:
 plugins:
   adapters:
     http:
-      type: plugins.builtin.adapters.http:HTTPAdapter
+      # type: plugins.builtin.adapters.http:HTTPAdapter
       auth_tokens:
         admin-token: ["http"]
 ```

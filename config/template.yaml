@@ -6,21 +6,21 @@ server:
 
 plugins:
   resources:
-    database:
-      type: plugins.builtin.resources.postgres:PostgresResource
-      host: "${DB_HOST}"
-      port: 5432
-      name: "${DB_USERNAME}"
-      username: "${DB_USERNAME}"
-      password: "${DB_PASSWORD}"
-    llm:
-      provider: ollama
-      base_url: "${OLLAMA_BASE_URL}"
-      model: "${OLLAMA_MODEL}"
+    # database:
+    #   type: plugins.builtin.resources.postgres:PostgresResource
+    #   host: "${DB_HOST}"
+    #   port: 5432
+    #   name: "${DB_USERNAME}"
+    #   username: "${DB_USERNAME}"
+    #   password: "${DB_PASSWORD}"
+    # llm:
+    #   provider: ollama
+    #   base_url: "${OLLAMA_BASE_URL}"
+    #   model: "${OLLAMA_MODEL}"
     memory:
       type: entity.resources.memory:Memory
-    storage:
-      type: pipeline.resources.storage_resource:StorageResource
+    # storage:
+    #   type: pipeline.resources.storage_resource:StorageResource
       
     cache:
       type: user_plugins.resources.cache:CacheResource
@@ -34,18 +34,18 @@ plugins:
     calculator:
       type: user_plugins.tools.calculator_tool:CalculatorTool
   adapters:
-    http:
-      type: plugins.builtin.adapters.http:HTTPAdapter
-      auth_tokens:
-        - ${HTTP_TOKEN}
-      rate_limit:
-        requests: 60
-        interval: 60
-      audit_log_path: logs/audit.log
-    cli:
-      type: plugins.builtin.adapters.cli:CLIAdapter
-    logging:
-      type: plugins.builtin.adapters.logging:LoggingAdapter
+    # http:
+    #   type: plugins.builtin.adapters.http:HTTPAdapter
+    #   auth_tokens:
+    #     - ${HTTP_TOKEN}
+    #   rate_limit:
+    #     requests: 60
+    #     interval: 60
+    #   audit_log_path: logs/audit.log
+    # cli:
+    #   type: plugins.builtin.adapters.cli:CLIAdapter
+    # logging:
+    #   type: plugins.builtin.adapters.logging:LoggingAdapter
   prompts:
     chain_of_thought:
       type: entity.plugins.prompts.chain_of_thought:ChainOfThoughtPrompt

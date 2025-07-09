@@ -10,7 +10,7 @@ Enable the adapter in your YAML configuration:
 plugins:
   adapters:
     dashboard:
-      type: plugins.builtin.adapters.dashboard:DashboardAdapter
+      # type: plugins.builtin.adapters.dashboard:DashboardAdapter
       stages: [parse, deliver]
       dashboard: true
       state_log_path: ./state.log
