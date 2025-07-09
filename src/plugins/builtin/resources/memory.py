@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Unified memory resource with optional persistence and search."""
 
-from typing import Any, Dict, List, Optional, TYPE_CHECKING, cast
+from typing import Any, Dict, List, TYPE_CHECKING, cast
 
 from datetime import datetime
 
