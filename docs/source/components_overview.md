@@ -63,3 +63,20 @@ Multiple adapters may run during the `deliver` stage. Each adapter receives the 
 ## Putting It Together
 
 Pipelines, plugins, and adapters form the execution engine. Resources supply capabilities like LLMs, memory, and storage. The [architecture document](../../architecture/overview.md) shows how these pieces fit together.
+
+## Agent, Builder, and Runtime
+
+`AgentBuilder` collects plugins and creates the runtime. Use it when registering plugins programmatically:
+
+```python
+builder = AgentBuilder()
+builder.add_plugin(MyPlugin())
+runtime = builder.build_runtime()
+```
+
+`Agent` reads a configuration file and only creates a builder if you call its plugin methods. Methods like `run_message` lazily build the runtime and delegate execution to it:
+
+```python
+agent = Agent("config/dev.yaml")
+result = await agent.run_message("hello")
+```

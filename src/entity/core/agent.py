@@ -18,8 +18,16 @@ class Agent:
     """High level agent wrapper combining builder and runtime."""
 
     config_path: str | None = None
-    builder: AgentBuilder = field(default_factory=AgentBuilder)
-    _runtime: AgentRuntime | None = None
+    _builder: AgentBuilder | None = field(default=None, init=False)
+    _runtime: AgentRuntime | None = field(default=None, init=False)
+
+    @property
+    def builder(self) -> AgentBuilder:
+        """Lazily create and return an :class:`AgentBuilder`."""
+
+        if self._builder is None:
+            self._builder = AgentBuilder()
+        return self._builder
 
     # ------------------------------------------------------------------
     # Delegated plugin helpers
@@ -66,12 +74,16 @@ class Agent:
 
     # ------------------------------------------------------------------
     async def _ensure_runtime(self) -> None:
-        if self._runtime is None:
-            if self.config_path:
-                from pipeline.initializer import SystemInitializer
+        if self._runtime is not None:
+            return
 
-                initializer = SystemInitializer.from_yaml(self.config_path)
-                plugin_reg, resources, tools = await initializer.initialize()
+        if self.config_path:
+            from pipeline.initializer import SystemInitializer
+
+            initializer = SystemInitializer.from_yaml(self.config_path)
+            plugin_reg, resources, tools = await initializer.initialize()
+
+            if self._builder is not None:
                 for stage in PipelineStage:
                     for plugin in self.builder.plugin_registry.get_plugins_for_stage(
                         stage
@@ -79,14 +91,14 @@ class Agent:
                         name = self.builder.plugin_registry.get_plugin_name(plugin)
                         await plugin_reg.register_plugin_for_stage(plugin, stage, name)
 
-                registries = SystemRegistries(
-                    resources=resources,
-                    tools=tools,
-                    plugins=plugin_reg,
-                )
-                self._runtime = AgentRuntime(registries)
-            else:
-                self._runtime = self.builder.build_runtime()
+            registries = SystemRegistries(
+                resources=resources,
+                tools=tools,
+                plugins=plugin_reg,
+            )
+            self._runtime = AgentRuntime(registries)
+        else:
+            self._runtime = self.builder.build_runtime()
 
     @property
     def runtime(self) -> AgentRuntime:
