@@ -60,11 +60,12 @@ class BasePlugin(BasePluginInterface):
 
         mro_names = {base.__name__ for base in cls.__mro__}
 
-        if "ToolPlugin" in mro_names and "stages" not in cls.__dict__:
+        has_explicit = "stages" in cls.__dict__
+        if "ToolPlugin" in mro_names and not has_explicit:
             cls.stages = [PipelineStage.DO]
-        elif "PromptPlugin" in mro_names and "stages" not in cls.__dict__:
+        elif "PromptPlugin" in mro_names and not has_explicit:
             cls.stages = [PipelineStage.THINK]
-        elif "AdapterPlugin" in mro_names and "stages" not in cls.__dict__:
+        elif "AdapterPlugin" in mro_names and not has_explicit:
             cls.stages = [PipelineStage.PARSE, PipelineStage.DELIVER]
 
         stages = getattr(cls, "stages", None)
@@ -98,6 +99,7 @@ class BasePlugin(BasePluginInterface):
             )
 
         cls.stages = normalized
+        cls._explicit_stages = has_explicit
 
     def __init__(self, config: Dict | None = None) -> None:
         self.config = config or {}
