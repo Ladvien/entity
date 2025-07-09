@@ -1,4 +1,0 @@
-type: object
-additionalProperties:
-  $ref: ./plugin_conf.yaml
-default: {}

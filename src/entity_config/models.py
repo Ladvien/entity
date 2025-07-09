@@ -1,145 +1,69 @@
 from __future__ import annotations
 
-"""Configuration helpers for Entity."""
+"""Pydantic models for Entity configuration."""
 
-from dataclasses import MISSING, asdict, dataclass, field, is_dataclass
-from typing import Any, Dict, get_args, get_origin, get_type_hints
+from typing import Any, Dict
 
-from jsonschema import validate
+from pydantic import BaseModel, Field
 
 
-@dataclass
-class PluginConfig:
+class PluginConfig(BaseModel):
     """Configuration for a single plugin."""
 
     type: str
-    options: Dict[str, Any] = field(default_factory=dict)
+
+    class Config:
+        extra = "allow"
 
 
-@dataclass
-class PluginsSection:
-    """Collection of user-defined plugins."""
+class PluginsSection(BaseModel):
+    """Collection of user-defined plugins grouped by category."""
 
-    resources: Dict[str, PluginConfig] = field(default_factory=dict)
-    tools: Dict[str, PluginConfig] = field(default_factory=dict)
-    adapters: Dict[str, PluginConfig] = field(default_factory=dict)
-    prompts: Dict[str, PluginConfig] = field(default_factory=dict)
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "PluginsSection":
-        def _load(section: str) -> Dict[str, PluginConfig]:
-            result = {}
-            for name, conf in data.get(section, {}).items():
-                conf = dict(conf)
-                result[name] = PluginConfig(conf.pop("type"), conf)
-            return result
-
-        return cls(
-            resources=_load("resources"),
-            tools=_load("tools"),
-            adapters=_load("adapters"),
-            prompts=_load("prompts"),
-        )
+    resources: Dict[str, PluginConfig] = Field(default_factory=dict)
+    tools: Dict[str, PluginConfig] = Field(default_factory=dict)
+    adapters: Dict[str, PluginConfig] = Field(default_factory=dict)
+    prompts: Dict[str, PluginConfig] = Field(default_factory=dict)
 
 
-@dataclass
-class ServerConfig:
+class ServerConfig(BaseModel):
     host: str
     port: int
     reload: bool = False
     log_level: str = "info"
 
 
-@dataclass
-class ToolRegistryConfig:
+class ToolRegistryConfig(BaseModel):
     """Options controlling tool execution."""
 
     concurrency_limit: int = 5
     cache_ttl: int | None = None
 
 
-@dataclass
-class EntityConfig:
-    server: ServerConfig = field(
+class EntityConfig(BaseModel):
+    server: ServerConfig = Field(
         default_factory=lambda: ServerConfig(host="localhost", port=8000)
     )
-    plugins: PluginsSection = field(default_factory=PluginsSection)
-    tool_registry: ToolRegistryConfig = field(default_factory=ToolRegistryConfig)
+    plugins: PluginsSection = Field(default_factory=PluginsSection)
+    tool_registry: ToolRegistryConfig = Field(default_factory=ToolRegistryConfig)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "EntityConfig":
-        server_data = data.get("server")
-        if server_data is None:
-            server = ServerConfig(host="localhost", port=8000)
-        else:
-            server = ServerConfig(**server_data)
-        plugins = PluginsSection.from_dict(data.get("plugins", {}))
-        tool_reg_cfg = ToolRegistryConfig(**data.get("tool_registry", {}))
-        return cls(server, plugins, tool_reg_cfg)
+        return cls.model_validate(data)
 
 
-# ---------------------------------------------------------------------------
-# Schema generation and validation helpers
-# ---------------------------------------------------------------------------
+def asdict(model: BaseModel) -> Dict[str, Any]:
+    """Return a dictionary representation of ``model``."""
+
+    return model.model_dump()
 
 
-def _type_to_schema(tp: Any) -> Dict[str, Any]:
-    origin = get_origin(tp)
-    if origin is dict:
-        args = get_args(tp)
-        if args and len(args) == 2 and is_dataclass(args[1]):
-            return {
-                "type": "object",
-                "additionalProperties": _class_to_schema(args[1]),
-                "default": {},
-            }
-        return {"type": "object", "default": {}}
-    if is_dataclass(tp):
-        return _class_to_schema(tp)
-    if tp is str:
-        return {"type": "string"}
-    if tp is int:
-        return {"type": "integer"}
-    if tp is bool:
-        return {"type": "boolean"}
-    return {}
-
-
-def _class_to_schema(cls: type) -> Dict[str, Any]:
-    """Generate a JSON schema for ``cls`` dataclass."""
-
-    additional_props = True if cls is PluginConfig else False
-    schema = {
-        "type": "object",
-        "properties": {},
-        "additionalProperties": additional_props,
-    }
-    required = []
-
-    hints = get_type_hints(cls)
-
-    for field_obj in cls.__dataclass_fields__.values():
-        if cls is PluginConfig and field_obj.name == "options":
-            continue
-
-        field_type = hints.get(field_obj.name, field_obj.type)
-        schema["properties"][field_obj.name] = _type_to_schema(field_type)
-        if field_obj.default is MISSING and field_obj.default_factory is MISSING:
-            required.append(field_obj.name)
-
-    if required:
-        schema["required"] = required
-
-    return schema
-
-
-CONFIG_SCHEMA = _class_to_schema(EntityConfig)
+CONFIG_SCHEMA = EntityConfig.model_json_schema()
 
 
 def validate_config(data: Dict[str, Any]) -> None:
-    """Validate ``data`` using the generated schema."""
+    """Validate ``data`` by instantiating :class:`EntityConfig`."""
 
-    validate(instance=data, schema=CONFIG_SCHEMA)
+    EntityConfig.model_validate(data)
 
 
 __all__ = [

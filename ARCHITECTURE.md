@@ -728,11 +728,8 @@ class HTTPAdapter(AdapterPlugin):
             return ValidationResult.error(str(e))
 ```
 
-**Migration Tasks**:
-- Convert existing JSON Schema definitions to Pydantic models
-- Remove `entity_config/schemas/` directory and JSON Schema validation
-- Update all plugin `validate_config()` methods to use corresponding Pydantic models
-- Consolidate configuration models in single module
+**Status**: Configuration validation now relies solely on Pydantic models. The
+`entity_config/schemas` directory and JSON Schema logic were removed.
 
 **Benefits**: Single learning curve, better error attribution, type safety with automatic coercion, and consistent validation experience across the entire framework.
 
