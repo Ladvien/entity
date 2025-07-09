@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime
 
+from entity.core.resources.container import ResourceContainer
 from pipeline import (
     ConversationEntry,
     MetricsCollector,
@@ -12,8 +13,6 @@ from pipeline import (
 )
 from pipeline.context import PluginContext
 from pipeline.tools.execution import execute_pending_tools
-
-from entity.core.resources.container import ResourceContainer
 
 
 class EchoTool:
@@ -46,4 +45,4 @@ def test_execute_pending_tools_returns_mapping_by_result_key():
 
     assert results == {"echo1": "hello"}
     ctx = PluginContext(state, capabilities)
-    assert ctx.load("echo1") == "hello"
+    assert ctx.recall("echo1") == "hello"

@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime
 
+from entity.core.resources.container import ResourceContainer
 from pipeline import (
     ConversationEntry,
     MetricsCollector,
@@ -10,8 +11,6 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-
-from entity.core.resources.container import ResourceContainer
 from user_plugins.prompts.chain_of_thought import ChainOfThoughtPrompt
 
 
@@ -68,8 +67,8 @@ def test_chain_of_thought_records_steps_and_tool_call():
         assistant_entries[1].content == "Reasoning step 1: We need to calculate result"
     )
     assert assistant_entries[2].content == "Reasoning step 2: Final answer is 42"
-    assert ctx.load("reasoning_complete") is True
-    assert ctx.load("reasoning_steps") == [
+    assert ctx.recall("reasoning_complete") is True
+    assert ctx.recall("reasoning_steps") == [
         "We need to calculate result",
         "Final answer is 42",
     ]

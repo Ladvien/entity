@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime
 
+from entity.core.resources.container import ResourceContainer
 from pipeline import (
     ConversationEntry,
     MetricsCollector,
@@ -10,8 +11,6 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-
-from entity.core.resources.container import ResourceContainer
 from user_plugins.prompts.intent_classifier import IntentClassifierPrompt
 
 
@@ -40,7 +39,7 @@ def test_intent_classifier_success():
 
     asyncio.run(plugin.execute(ctx))
 
-    assert ctx.load("intent") == "greeting"
+    assert ctx.recall("intent") == "greeting"
 
 
 def test_intent_classifier_validate_error():

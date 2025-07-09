@@ -2,19 +2,13 @@ from __future__ import annotations
 
 """Minimal plugin context objects."""
 
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from pipeline.stages import PipelineStage
-from pipeline.state import PipelineState, ToolCall, ConversationEntry
-
-
-@dataclass
-class ConversationEntry:
-    content: str
-    role: str
-    metadata: Dict[str, Any] | None = None
+from pipeline.state import ConversationEntry, PipelineState
 
 
 class PluginContext:
@@ -23,7 +17,8 @@ class PluginContext:
     def __init__(self, state: PipelineState, registries: Any) -> None:
         self._state = state
         self._registries = registries
-        self._store: Dict[str, Any] = {}
+        self._cache: Dict[str, Any] = {}
+        self._memory = getattr(registries.resources, "memory", None)
 
     # ------------------------------------------------------------------
     @property
@@ -103,10 +98,6 @@ class PluginContext:
         """Return True if ``key`` exists in the cache."""
         return key in self._cache
 
-    # Backwards compatibility
-    store = cache
-    load = recall
-
     # ------------------------------------------------------------------
     # Persistent memory helpers
     # ------------------------------------------------------------------
@@ -121,19 +112,6 @@ class PluginContext:
         if self._memory is None:
             return default
         return self._memory.memory(key, default)
-
-    def load(self, key: str, default: Any | None = None) -> Any:
-        """Return ``key`` from the internal store or ``default`` when missing."""
-
-        return self._store.get(key, default)
-
-    def has(self, key: str) -> bool:
-        """Return ``True`` when ``key`` is stored."""
-
-        return key in self._store
-
-    def load(self, key: str, default: Any | None = None) -> Any:
-        return self._store.get(key, default)
 
     def set_metadata(self, key: str, value: Any) -> None:
         self._state.metadata[key] = value
