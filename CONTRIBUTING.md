@@ -30,8 +30,8 @@ Before opening a pull request:
 2. **Configuration Validation**
 
    ```bash
-   poetry run python -m src.entity_config.validator --config config/dev.yaml
-   poetry run python -m src.entity_config.validator --config config/prod.yaml
+   poetry run entity-cli --config config/dev.yaml verify
+   poetry run entity-cli --config config/prod.yaml verify
    python -m src.registry.validator
    ```
 
