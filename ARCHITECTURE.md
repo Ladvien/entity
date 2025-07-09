@@ -2,6 +2,33 @@
 
 The following architecture decisions were made through systematic analysis of the Entity Pipeline Framework to optimize for developer adoption, scalability, and maintainability.
 
+## 0. Folder Structure and Naming Conventions
+
+## Repository Layout
+
+Folder structure:
+```plaintext
+entity/
+├── user_plugins/              # Example or custom plugins for local use or sharing
+│
+├── src/
+│   └── entity/                # Main Python package
+│       ├── core/              # Core execution engine and orchestration logic
+│       ├── plugins/           # Plugin definitions grouped by type
+│       ├── resources/         # Composed resource interfaces (memory, storage, llm)
+│       ├── config/             # Configuration models and validation logic
+│       ├── cli/               # Developer CLI tools and utilities
+│       └── utils/             # Misc shared utilities (logging, retries, etc.)
+│
+└── tests/                     # Unit and integration tests
+    ├── test_core/             # Tests for pipeline, agent, and context
+    ├── test_plugins/          # Tests for plugin behaviors and base classes
+    ├── test_resources/        # Tests for memory, storage, and LLM resources
+    ├── test_config/            # Tests for config model parsing and validation
+    └── test_cli/              # Tests for CLI commands and developer tools
+```
+
+
 ## 1. Core Mental Model: Plugin Taxonomy and Architecture
 
 The Entity Pipeline Framework uses a unified plugin architecture where all extensions inherit from a single `Plugin` base class. This design follows the universal extension pattern found in frameworks like Blender's Node system, providing a consistent interface while supporting diverse functionality.

@@ -17,6 +17,8 @@ Use this document when preparing changes or reviewing pull requests.
 ## Architecture
 Here is the architecture directory.  Below are references to architectural notes found in `ARCHITECTURE.md`.  Please grep the `ARCHITECTURE.md` file for the section titles to find the full text. 
 
+* **0. Folder Structure and Naming Conventions**: Outlines the directory structure and naming conventions for plugins, resources, and configuration files to ensure consistency and clarity.
+
 * **1. Core Mental Model: Plugin Taxonomy and Architecture**: Describes the foundational plugin architecture of the framework, including plugin categories, resource composition, lifecycle management, and development patterns.
 
 * **2. Progressive Disclosure: Enhanced 3-Layer Plugin System**: Explains the framework’s tiered plugin abstraction model and how developers progressively adopt complexity through decorators, classes, and advanced customization.
@@ -55,58 +57,3 @@ Here is the architecture directory.  Below are references to architectural notes
 
 * **18. Configuration Validation Consolidation**: Mandates the exclusive use of Pydantic for configuration validation, replacing JSON Schema and improving type safety, error messages, and tooling support.
 
-
-## Repository Layout
-
-Folder structure:
-```plaintext
-entity/
-├── user_plugins/                # Example or custom plugins (used by AgentBuilder or CLI)
-│   ├── my_prompt.py            # Example PromptPlugin
-│   └── my_tool.py              # Example ToolPlugin
-│
-├── src/
-│   └── entity/                 # Main package
-│       ├── __init__.py
-│       ├── core/               # Core execution engine and orchestration
-│       │   ├── __init__.py
-│       │   ├── agent.py         # Agent: config-based runner
-│       │   ├── builder.py       # AgentBuilder: programmatic plugin composition
-│       │   ├── context.py       # PipelineContext: runtime data, resource access, tool calls
-│       │   ├── pipeline.py      # PipelineWorker: stage loop executor
-│       │   ├── state.py         # PipelineState: transient run state container
-│       │   ├── registry.py      # PluginRegistry: maps plugins to pipeline stages
-│       │   └── container.py     # DependencyContainer: initializes and wires ResourcePlugins
-│       ├── plugins/            # Plugin type definitions and bases
-│       │   ├── __init__.py
-│       │   ├── base.py              # Plugin ABC: lifecycle and stage contract
-│       │   ├── resource_plugin.py   # ResourcePlugin base: systems like LLMs, DBs, memory
-│       │   ├── prompt_plugin.py     # PromptPlugin base: THINK stage logic
-│       │   ├── tool_plugin.py       # ToolPlugin base: DO stage tools
-│       │   ├── adapter_plugin.py    # AdapterPlugin base: input/output for PARSE/DELIVER
-│       │   ├── failure_plugin.py    # FailurePlugin base: ERROR stage fallbacks
-│       │   └── infra_plugin.py      # InfrastructurePlugin base: metrics, tracing, health
-│       ├── resources/          # Composed system resources
-│       │   ├── __init__.py
-│       │   ├── memory.py          # Unified memory (e.g. history + vector store)
-│       │   ├── storage.py         # Filesystem or cloud storage abstraction
-│       │   └── llm.py             # Unified LLM interface and access layer
-│       ├── config/             # Configuration and validation
-│       │   ├── __init__.py
-│       │   └── models.py         # Pydantic models for plugin/resource config
-│       ├── cli/                # CLI tools for validation, debugging, analysis
-│       │   ├── __init__.py
-│       │   ├── main.py            # CLI entry point
-│       │   ├── validate.py        # Config/schema validator
-│       │   ├── analyze_plugin.py  # Suggest stage for user-defined plugin
-│       │   └── graph_dep.py       # Resource dependency graph visualizer
-│       └── utils/              # Misc shared helpers
-│           └── __init__.py
-│
-└── tests/                     # Unit test suite
-    ├── test_core/              # Agent, builder, context, pipeline
-    ├── test_plugins/           # Plugin behavior and integration
-    ├── test_resources/         # Memory, storage, LLM resource tests
-    ├── test_config/            # Config parsing, validation edge cases
-    └── test_cli/               # CLI command behavior and error handling
-```
