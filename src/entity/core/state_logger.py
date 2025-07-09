@@ -1,4 +1,4 @@
-"""State transition logging and replay utilities."""
+"""Structured logging of pipeline state transitions."""
 
 from __future__ import annotations
 
@@ -9,13 +9,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Generator
 
-from .stages import PipelineStage
-from .state import PipelineState
+from pipeline.stages import PipelineStage
+from pipeline.state import PipelineState
 
 
 @dataclass
 class StateTransition:
-    """Recorded pipeline state at a specific stage."""
+    """Snapshot of pipeline state after a stage completes."""
 
     timestamp: str
     pipeline_id: str

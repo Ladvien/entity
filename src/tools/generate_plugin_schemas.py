@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from plugins.builtin.config_models import PLUGIN_CONFIG_MODELS
+from plugins.builtin.config_models import PLUGIN_CONFIG_MODELS  # noqa: E402
 
 SCHEMA_DIR = Path("docs/source/schemas")
 SCHEMA_DIR.mkdir(exist_ok=True)

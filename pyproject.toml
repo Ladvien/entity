@@ -12,6 +12,7 @@ packages = [
     { include = "cli", from = "src" },
     { include = "entity_config", from = "src" },
     { include = "registry", from = "src" },
+    { include = "entity", from = "src" },
     { include = "plugins", from = "src" },
     { include = "common_interfaces", from = "src" },
     { include = "tools", from = "src" },

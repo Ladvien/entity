@@ -8,6 +8,7 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
+from pipeline.resources import ResourceContainer
 from pipeline.state import PipelineState
 
 
@@ -27,9 +28,6 @@ class StateManager:
 
     async def pipeline_ids(self):
         return list(self._states.keys())
-
-
-from pipeline.resources import ResourceContainer
 
 
 class SavePlugin(PromptPlugin):
