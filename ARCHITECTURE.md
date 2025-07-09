@@ -968,7 +968,51 @@ await agent.serve_cli()                   # CLI interface
 4. **Progressive Complexity**: Simple cases remain simple, complex cases remain possible
 5. **Internal Implementation**: `AgentBuilder` and `AgentRuntime` become private implementation details
 
-This unification provides a single, learnable interface while maintaining all current functionality and flexibility.e
+This unification provides a single, learnable interface while maintaining all current functionality and flexibility.
+
+## 25. Workflow Objects with Progressive Complexity
+
+We will introduce **Workflow objects** that get passed to Pipeline for execution, maintaining the existing stage system as the foundation. 
+
+**Implementation approach:**
+- **Start with simple stage→plugin mappings** (Option A) for v1 implementation
+- **Evolve to support conditional logic** (Option C) in future versions
+- **Preserve existing architecture** - no breaking changes to current stage-based system
+
+**Key benefits:**
+- Maintains alignment with stateless execution model
+- Preserves YAML configuration compatibility  
+- Enables workflow reusability and testing
+- Provides clear upgrade path from simple to complex workflows
+
+**Example pattern:**
+```python
+# Simple v1 workflow
+CustomerWorkflow = {
+    Stage.PARSE: ["extract_info", "validate_account"],
+    Stage.THINK: ["classify_issue", "route_specialist"],
+    Stage.DO: ["resolution_tools"],
+    Stage.DELIVER: ["format_response"]
+}
+
+pipeline = Pipeline(workflow=CustomerWorkflow)
+agent = Agent(pipeline=pipeline)
+```
+
+This gives us the composability and reusability benefits immediately while maintaining the simplicity and reliability of the current stage-based execution model.
+
+**Decisions Made So Far**: 
+- ✅ Hybrid stateless/stateful lifecycle model  
+- ✅ Need dev-to-prod documentation clarity
+- ✅ Add Workflow objects with progressive complexity (simple→rich)
+- ✅ Maintain existing stage system as foundation
+
+Ready for the next architectural concern?
+
+
+
+
+
 
 
 ## Architectural Decisions not Reviewed
