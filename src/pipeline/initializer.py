@@ -3,7 +3,6 @@ from __future__ import annotations
 """Pipeline component: initializer."""
 
 import copy
-import json
 import tomllib
 from contextlib import contextmanager
 from pathlib import Path
@@ -11,8 +10,10 @@ from typing import Any, Dict, Iterable, List, Tuple, Type
 
 from common_interfaces.plugins import import_plugin_class
 from entity_config.environment import load_env
+from pipeline.config import ConfigLoader
 from pipeline.config.utils import interpolate_env_vars
 from pipeline.resources.container import ResourceContainer
+from entity_config.models import EntityConfig, asdict
 from pipeline.utils import DependencyGraph
 from registry import PluginRegistry, ToolRegistry
 
@@ -99,38 +100,37 @@ class SystemInitializer:
     ) -> None:
         load_env(env_file)
         configure_logging()
-        self.config = config or copy.deepcopy(DEFAULT_CONFIG)
+        if isinstance(config, EntityConfig):
+            self._config_model = config
+            self.config = asdict(config)
+        else:
+            self._config_model = EntityConfig.from_dict(
+                config or copy.deepcopy(DEFAULT_CONFIG)
+            )
+            self.config = asdict(self._config_model)
         self.plugin_registry_cls = plugin_registry_cls
         self.tool_registry_cls = tool_registry_cls
         self.resource_container_cls = resource_container_cls
 
     @classmethod
     def from_yaml(cls, yaml_path: str, env_file: str = ".env") -> "SystemInitializer":
-        import yaml
-
-        with open(yaml_path, "r") as fh:
-            content = fh.read()
-        config = yaml.safe_load(content)
-        load_env(env_file)
-        config = interpolate_env_vars(config)
-        return cls(config, env_file)
+        data = ConfigLoader.from_yaml(yaml_path, env_file)
+        model = EntityConfig.from_dict(data)
+        return cls(model, env_file)
 
     @classmethod
     def from_json(cls, json_path: str, env_file: str = ".env") -> "SystemInitializer":
-        with open(json_path, "r") as fh:
-            content = fh.read()
-        config = json.loads(content or "{}")
-        load_env(env_file)
-        config = interpolate_env_vars(config)
-        return cls(config, env_file)
+        data = ConfigLoader.from_json(json_path, env_file)
+        model = EntityConfig.from_dict(data)
+        return cls(model, env_file)
 
     @classmethod
     def from_dict(
         cls, cfg: Dict[str, Any], env_file: str = ".env"
     ) -> "SystemInitializer":
-        load_env(env_file)
-        config = interpolate_env_vars(dict(cfg))
-        return cls(config, env_file)
+        data = ConfigLoader.from_dict(cfg, env_file)
+        model = EntityConfig.from_dict(data)
+        return cls(model, env_file)
 
     # --------------------------- plugin discovery ---------------------------
     def _discover_plugins(self) -> None:

@@ -7,8 +7,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 from pipeline.config import ConfigLoader
-
-from .validators import _validate_memory, _validate_vector_memory
+from .models import EntityConfig, asdict
 
 
 @dataclass
@@ -88,12 +87,11 @@ class ConfigBuilder:
     # ------------------------------------------------------------------
 
     def validate(self) -> None:
-        _validate_memory(self.config)
-        _validate_vector_memory(self.config)
+        EntityConfig.from_dict(self.config)
 
     def build(self) -> Dict[str, Any]:
-        self.validate()
-        return ConfigLoader.from_dict(self.config, self.env_file)
+        model = EntityConfig.from_dict(self.config)
+        return asdict(model)
 
 
 __all__ = ["ConfigBuilder"]
