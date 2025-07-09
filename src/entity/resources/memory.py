@@ -33,10 +33,6 @@ class Memory(ResourcePlugin):
         """Persist ``value`` for later retrieval."""
         self._kv[key] = value
 
-    # Backwards compatibility
-    memory = get
-    set = remember
-
     def clear(self) -> None:
         self._kv.clear()
 
