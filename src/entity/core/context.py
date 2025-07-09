@@ -7,7 +7,8 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from pipeline.stages import PipelineStage
-from pipeline.state import PipelineState, ToolCall, ConversationEntry
+from pipeline.state import ConversationEntry, PipelineState, ToolCall
+from pipeline.errors import PluginContextError
 
 
 @dataclass
@@ -146,5 +147,7 @@ class PluginContext:
 
     def set_response(self, value: Any) -> None:
         if self.current_stage is not PipelineStage.DELIVER:
-            raise ValueError("Only DELIVER stage plugins may set responses")
+            raise PluginContextError(
+                f"set_response may only be called in DELIVER stage, not {self.current_stage}"
+            )
         self._state.response = value
