@@ -7,7 +7,7 @@ The Entity framework is built around extensible plugins. Plugins run during spec
 Create a plugin class that inherits from one of the base plugin types and implement `_execute_impl`:
 
 ```python
-from pipeline.base_plugins import PromptPlugin
+from entity.core.plugins import PromptPlugin
 from pipeline.stages import PipelineStage
 
 

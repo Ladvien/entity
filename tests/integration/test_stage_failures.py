@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 from pipeline import PipelineStage, execute_pipeline
-from pipeline.base_plugins import BasePlugin
+from entity.core.plugins import BasePlugin
 from pipeline.pipeline import generate_pipeline_id
 from pipeline.resources import ResourceContainer
 from pipeline.state import ConversationEntry, MetricsCollector, PipelineState
