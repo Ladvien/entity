@@ -8,9 +8,8 @@ removed in a future release.
 """
 
 import asyncio
-from typing import Any, Generic, Optional, TypeVar, cast
+from typing import Generic, TypeVar, cast
 
-import warnings
 
 from entity.core.runtime import _AgentRuntime
 from entity.core.state_logger import StateLogger
@@ -24,20 +23,10 @@ class PipelineManager(Generic[ResultT]):
 
     def __init__(
         self,
-        capabilities: Optional[SystemRegistries] = None,
+        capabilities: SystemRegistries,
         *,
         state_logger: StateLogger | None = None,
-        **kwargs: Any,
     ) -> None:
-        if capabilities is None and "registries" in kwargs:
-            warnings.warn(
-                "'registries' is deprecated, use 'capabilities' instead",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            capabilities = kwargs.pop("registries")
-        if kwargs:
-            raise TypeError(f"Unexpected arguments: {', '.join(kwargs)}")
         self._runtime = _AgentRuntime(capabilities, state_logger=state_logger)
         self._capabilities = self._runtime.capabilities
 

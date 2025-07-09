@@ -10,7 +10,6 @@ import time
 from datetime import datetime
 from dataclasses import dataclass
 from typing import Any, Dict
-import warnings
 
 from entity.core.state_logger import StateLogger
 from entity.core.registries import PluginRegistry, SystemRegistries
@@ -64,7 +63,7 @@ class Pipeline:
     async def run_message(
         self,
         message: str,
-        registries: SystemRegistries,
+        capabilities: SystemRegistries,
         *,
         pipeline_manager: PipelineManager | None = None,
         state_logger: StateLogger | None = None,
@@ -75,16 +74,16 @@ class Pipeline:
         plugin_reg = PluginRegistry()
         for stage, plugin_names in self.workflow.stage_map.items():
             for name in plugin_names:
-                plugin = registries.plugins.get_by_name(name)
+                plugin = capabilities.plugins.get_by_name(name)
                 if plugin is None:
                     raise KeyError(f"Plugin '{name}' not registered")
                 await plugin_reg.register_plugin_for_stage(plugin, stage, name)
 
         regs = SystemRegistries(
-            resources=registries.resources,
-            tools=registries.tools,
+            resources=capabilities.resources,
+            tools=capabilities.tools,
             plugins=plugin_reg,
-            validators=registries.validators,
+            validators=capabilities.validators,
         )
         return await execute_pipeline(
             message,
@@ -255,22 +254,14 @@ async def execute_stage(
 
 async def execute_pipeline(
     user_message: str,
-    capabilities: SystemRegistries | None,
+    capabilities: SystemRegistries,
     *,
     pipeline_manager: PipelineManager | None = None,
     state_logger: "StateLogger" | None = None,
     return_metrics: bool = False,
     state: PipelineState | None = None,
     max_iterations: int = 5,
-    registries: SystemRegistries | None = None,
 ) -> Dict[str, Any] | tuple[Dict[str, Any], MetricsCollector]:
-    if capabilities is None and registries is not None:
-        warnings.warn(
-            "'registries' is deprecated, use 'capabilities' instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        capabilities = registries
     if state is None:
         state = PipelineState(
             conversation=[

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, Dict
-import warnings
 
 from .registries import SystemRegistries
 
@@ -14,21 +13,7 @@ class _AgentRuntime:
     capabilities: SystemRegistries
     manager: Any = field(init=False)
 
-    def __init__(
-        self,
-        capabilities: SystemRegistries | None = None,
-        *,
-        registries: SystemRegistries | None = None,
-    ) -> None:
-        if capabilities is None and registries is not None:
-            warnings.warn(
-                "'registries' is deprecated, use 'capabilities' instead",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            capabilities = registries
-        if capabilities is None:
-            raise TypeError("capabilities is required")
+    def __init__(self, capabilities: SystemRegistries) -> None:
         self.capabilities = capabilities
         self.__post_init__()
 
