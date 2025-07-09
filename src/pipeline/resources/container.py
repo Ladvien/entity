@@ -134,15 +134,31 @@ class ResourceContainer:
         for name in self._order:
             cls = self._classes[name]
             cfg = self._configs[name]
+
             instance = self._instantiate(name, cls, cfg)
             await self.add(name, instance)
+
             init = getattr(instance, "initialize", None)
             if callable(init):
-                await init()
-            self._init_order.append(name)
+                try:
+                    await init()
+                except Exception as exc:  # noqa: WPS440 - propagate failure
+                    raise SystemError(
+                        f"Resource '{name}' failed to initialize"
+                    ) from exc
+
             check = getattr(instance, "health_check", None)
-            if callable(check) and not await check():
-                raise SystemError(f"Resource '{name}' failed health check")
+            if callable(check):
+                try:
+                    healthy = await check()
+                except Exception as exc:  # noqa: WPS440 - propagate failure
+                    raise SystemError(
+                        f"Resource '{name}' health check raised an exception"
+                    ) from exc
+                if not healthy:
+                    raise SystemError(f"Resource '{name}' failed health check")
+
+            self._init_order.append(name)
 
     async def shutdown_all(self) -> None:
         order = self._init_order or self._order
