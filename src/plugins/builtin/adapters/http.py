@@ -171,7 +171,7 @@ class HTTPAdapter(AdapterPlugin):
             if registries is None:
                 return {"status": "starting"}
             report = await registries.resources.health_report()
-            status = "ok" if all(report.values()) else "degraded"
+            status = "ok" if all(report.values()) else "error"
             return {"status": status, "resources": report}
 
         if self.dashboard_enabled:

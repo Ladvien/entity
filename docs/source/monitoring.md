@@ -85,5 +85,5 @@ Create alerts in Prometheus for high latency or failures:
 
 HTTP services expose a `/health` endpoint that reports the status of every
 registered resource. The endpoint returns `{"status": "ok"}` when all resources
-report healthy and `{"status": "degraded"}` otherwise. Use this for container
+report healthy and `{"status": "error"}` otherwise. Use this for container
 liveness probes and external monitoring.
