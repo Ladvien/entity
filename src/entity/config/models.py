@@ -89,6 +89,7 @@ class EntityConfig(BaseModel):
         default_factory=lambda: ServerConfig(host="localhost", port=8000)
     )
     plugins: PluginsSection = Field(default_factory=PluginsSection)
+    workflow: Dict[str, list[str]] | None = Field(default=None)
     tool_registry: ToolRegistryConfig = Field(default_factory=ToolRegistryConfig)
 
     @classmethod

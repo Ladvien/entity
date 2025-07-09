@@ -38,6 +38,8 @@ plugins:
       provider: ollama  # openai, ollama, gemini, claude
       base_url: "http://localhost:11434"
       model: "tinyllama"
+workflow:
+  think: []
 ```
 
 The development environment does not require authentication.

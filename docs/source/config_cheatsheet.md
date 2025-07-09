@@ -7,6 +7,11 @@ server:
   host: "0.0.0.0"
   port: 8000
 
+workflow:
+  parse: [http]
+  think: [main]
+  deliver: [http]
+
 plugins:
   resources:
     database:

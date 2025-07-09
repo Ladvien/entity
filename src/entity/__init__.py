@@ -4,4 +4,10 @@ from __future__ import annotations
 
 __all__ = ["core"]
 
-from . import core  # noqa: E402
+
+def __getattr__(name: str):
+    if name == "core":
+        from . import core as _core
+
+        return _core
+    raise AttributeError(name)

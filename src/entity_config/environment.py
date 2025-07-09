@@ -1,15 +1,17 @@
 from __future__ import annotations
 
-"""Environment loading utilities used in tests."""
+"""Minimal environment loader used for tests."""
 
 from pathlib import Path
-from typing import Any
-
-from dotenv import load_dotenv
+import os
 
 
-def load_env(env_file: str | Path = ".env", override: bool = False) -> None:
-    """Load environment variables from ``env_file``."""
-    path = Path(env_file)
-    if path.exists():
-        load_dotenv(path, override=override)
+def load_env(path: str | Path = ".env") -> None:
+    """Load key=value pairs from ``path`` into ``os.environ`` if file exists."""
+    env_path = Path(path)
+    if not env_path.exists():
+        return
+    for line in env_path.read_text().splitlines():
+        if "=" in line:
+            key, value = line.split("=", 1)
+            os.environ.setdefault(key, value)
