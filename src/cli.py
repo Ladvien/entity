@@ -6,6 +6,7 @@ import argparse  # noqa: E402
 import asyncio  # noqa: E402
 import shutil  # noqa: E402
 from dataclasses import dataclass  # noqa: E402
+from importlib import util
 from pathlib import Path
 from typing import Optional  # noqa: E402
 
@@ -28,6 +29,10 @@ class CLIArgs:
     command: str = "run"
     path: Optional[str] = None
     file: Optional[str] = None
+    workflow_cmd: Optional[str] = None
+    workflow_name: Optional[str] = None
+    out: Optional[str] = None
+    fmt: Optional[str] = None
 
 
 class CLI:
@@ -80,6 +85,22 @@ class CLI:
         )
         new_parser.add_argument("path", help="Directory for the new project")
 
+        workflow_parser = subparsers.add_parser("workflow", help="Workflow utilities")
+        wf_sub = workflow_parser.add_subparsers(dest="workflow_cmd", required=True)
+
+        create = wf_sub.add_parser("create", help="Create a workflow module")
+        create.add_argument("workflow_name", help="Workflow variable name")
+        create.add_argument("--out", default="src/workflows", help="Output directory")
+
+        validate = wf_sub.add_parser("validate", help="Validate a workflow module")
+        validate.add_argument("file", help="Workflow file path")
+
+        visualize = wf_sub.add_parser("visualize", help="Visualize workflow")
+        visualize.add_argument("file", help="Workflow file path")
+        visualize.add_argument(
+            "--format", dest="fmt", choices=["ascii", "graphviz"], default="ascii"
+        )
+
         args = parser.parse_args()
         return CLIArgs(
             config=args.config,
@@ -87,6 +108,10 @@ class CLI:
             command=args.command,
             path=getattr(args, "path", None),
             file=getattr(args, "file", None),
+            workflow_cmd=getattr(args, "workflow_cmd", None),
+            workflow_name=getattr(args, "workflow_name", None),
+            out=getattr(args, "out", None),
+            fmt=getattr(args, "fmt", None),
         )
 
     def run(self) -> int:
@@ -101,6 +126,9 @@ class CLI:
 
         if self.args.command == "verify":
             return self._verify_plugins(self.args.config)
+
+        if self.args.command == "workflow":
+            return self._handle_workflow()
 
         if self.args.command == "replay-log":
             from entity.core.state_logger import LogReplayer
@@ -188,6 +216,75 @@ class CLI:
         logger.info(
             "Reloading configuration is not supported in this simplified build."
         )
+        return 0
+
+    # -----------------------------------------------------
+    # workflow helpers
+    # -----------------------------------------------------
+    def _handle_workflow(self) -> int:
+        cmd = self.args.workflow_cmd
+        if cmd == "create":
+            assert self.args.workflow_name is not None
+            return self._workflow_create(self.args.workflow_name, self.args.out)
+        if cmd == "validate":
+            assert self.args.file is not None
+            return self._workflow_validate(self.args.file)
+        if cmd == "visualize":
+            assert self.args.file is not None
+            return self._workflow_visualize(self.args.file, self.args.fmt)
+        return 0
+
+    def _workflow_create(self, name: str, out: Optional[str]) -> int:
+        assert out is not None
+        out_dir = Path(out)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        class_name = "".join(part.capitalize() for part in name.split("_"))
+        template = (
+            Path(__file__).resolve().parent / "templates" / "workflow_template.py"
+        )
+        content = template.read_text().format(workflow_name=class_name)
+        dest = out_dir / f"{name}.py"
+        dest.write_text(content)
+        logger.info("Created %s", dest)
+        return 0
+
+    def _load_workflow(self, path: str) -> Optional[dict]:
+        spec = util.spec_from_file_location(Path(path).stem, path)
+        if spec is None or spec.loader is None:
+            logger.error("Cannot import %s", path)
+            return None
+        module = util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        for obj in module.__dict__.values():
+            if isinstance(obj, dict):
+                return obj
+        logger.error("No workflow mapping found in %s", path)
+        return None
+
+    def _workflow_validate(self, path: str) -> int:
+        if self._load_workflow(path) is None:
+            return 1
+        logger.info("Workflow validated successfully")
+        return 0
+
+    def _workflow_visualize(self, path: str, fmt: Optional[str]) -> int:
+        workflow = self._load_workflow(path)
+        if workflow is None:
+            return 1
+        if fmt == "graphviz":
+            lines = ["digraph workflow {"]
+            for stage, plugins in workflow.items():
+                stage_name = str(stage).split(".")[-1]
+                for plugin in plugins:
+                    lines.append(f'    "{stage_name}" -> "{plugin}"')
+            lines.append("}")
+            print("\n".join(lines))
+        else:
+            for stage, plugins in workflow.items():
+                stage_name = str(stage).split(".")[-1]
+                print(stage_name)
+                for plugin in plugins:
+                    print(f"  -> {plugin}")
         return 0
 
 
