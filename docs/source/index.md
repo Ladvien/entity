@@ -19,6 +19,7 @@ Welcome to the Entity Pipeline framework. These pages explain how to configure a
 - [Detailed guide](plugin_guide.md)
 - [Naming conventions](plugins.md)
 - [Developer examples](developer_examples.md)
+- [Workflows](workflows.md)
 
 ### Architecture
 - [Architecture overview](../../architecture/overview.md)
@@ -51,6 +52,7 @@ config_cheatsheet
 plugin_cheatsheet
 plugin_guide
 developer_examples
+workflows
 context
 security_config
 logging
