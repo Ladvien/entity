@@ -1,12 +1,11 @@
-from __future__ import annotations
+"""Workflow utilities."""
 
-"""Workflow base classes and utilities."""
+from .base import Workflow
+from .builtin import ChainOfThoughtWorkflow, ReActWorkflow, StandardWorkflow
 
-
-class Workflow:
-    """Base workflow object describing stage order."""
-
-    stages: dict[str, list[str]] = {}
-
-
-__all__ = ["Workflow"]
+__all__ = [
+    "Workflow",
+    "StandardWorkflow",
+    "ReActWorkflow",
+    "ChainOfThoughtWorkflow",
+]
