@@ -4,19 +4,18 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from pipeline.base_plugins import ResourcePlugin, ValidationResult
+from pipeline.base_plugins import ValidationResult
 from pipeline.context import ConversationEntry
 from pipeline.stages import PipelineStage
 from plugins.builtin.resources.vector_store import VectorStoreResource
 from registry import SystemRegistries
 
-from ..conversation_manager import ConversationManager
 from ..manager import PipelineManager
 from .database import DatabaseResource
 from .memory import Memory
 
 
-class SimpleMemoryResource(ResourcePlugin, Memory):
+class SimpleMemoryResource(Memory):
     """Basic in-memory key/value store with conversation support."""
 
     stages = [PipelineStage.PARSE]
@@ -53,17 +52,18 @@ class SimpleMemoryResource(ResourcePlugin, Memory):
         pipeline_manager: PipelineManager | None = None,
         *,
         history_limit: int | None = None,
-    ) -> ConversationManager:
-        """Return a conversation manager for this resource."""
+    ) -> Memory.ConversationSession:
+        """Return a conversation session for this resource."""
 
-        return ConversationManager(
+        return Memory.ConversationSession(
+            self,
             registries,
             pipeline_manager,
             history_limit=history_limit,
         )
 
 
-class MemoryResource(ResourcePlugin, Memory):
+class MemoryResource(Memory):
     """Combine in-memory storage with optional database and vector backends."""
 
     stages = [PipelineStage.PARSE]
@@ -77,7 +77,7 @@ class MemoryResource(ResourcePlugin, Memory):
         self.database: DatabaseResource | None = None
         self.vector_store: VectorStoreResource | None = None
         self._kv: Dict[str, Any] = {}
-        self._conversation_manager: ConversationManager | None = None
+        self._conversation_manager: Memory.ConversationSession | None = None
 
     @classmethod
     def from_config(cls, config: Dict) -> "MemoryResource":
@@ -125,11 +125,12 @@ class MemoryResource(ResourcePlugin, Memory):
         pipeline_manager: PipelineManager | None = None,
         *,
         history_limit: int | None = None,
-    ) -> ConversationManager:
-        """Return a lazily created :class:`ConversationManager`."""
+    ) -> Memory.ConversationSession:
+        """Return a lazily created :class:`Memory.ConversationSession`."""
 
         if self._conversation_manager is None:
-            self._conversation_manager = ConversationManager(
+            self._conversation_manager = Memory.ConversationSession(
+                self,
                 registries,
                 pipeline_manager,
                 history_limit=history_limit,

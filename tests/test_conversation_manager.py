@@ -41,7 +41,7 @@ def make_manager():
     registries = SystemRegistries(resources, ToolRegistry(), plugins)
     manager = PipelineManager(registries)
     memory = resources.get("memory")
-    conv = memory.get_conversation_manager(registries, manager)  # type: ignore[arg-type]
+    conv = memory.start_conversation(registries, manager)  # type: ignore[arg-type]
     return conv, manager
 
 

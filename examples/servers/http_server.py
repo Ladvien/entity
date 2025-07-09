@@ -25,7 +25,7 @@ async def main() -> None:
     registries = await initializer.initialize()
     pipeline_manager = PipelineManager(registries)
     memory: Memory = registries.resources.get("memory")  # type: ignore[arg-type]
-    conversation_manager = memory.get_conversation_manager(registries, pipeline_manager)
+    conversation_manager = memory.start_conversation(registries, pipeline_manager)
     adapter = HTTPAdapter(pipeline_manager, {"host": "127.0.0.1", "port": 8000})
 
     @adapter.app.post("/conversation")
