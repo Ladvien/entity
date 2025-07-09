@@ -82,6 +82,8 @@ Plugin stages are resolved in a predictable order:
 
 Explicit configuration always wins. If a plugin class declares stages that differ from its type defaults the initializer emits a warning. The same warning appears when configuration overrides either the class stages or the defaults so you can double‑check the override is intentional.
 
+Programmatic registration through ``_AgentBuilder`` follows the same rules. ``add_plugin`` checks any provided configuration first, then the class attribute, and finally falls back to the plugin type defaults or auto‑classified stages. Warnings appear whenever a higher‑precedence source overrides a lower one.
+
 ## Loading Plugins Automatically
 
 Built-in plugin modules live in `src/plugins`. Place your own plugins inside any directory and load them with `Agent.from_directory(path)` or `Agent.from_package(package)`.

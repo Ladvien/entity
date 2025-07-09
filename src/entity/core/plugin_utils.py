@@ -24,6 +24,18 @@ class PluginBaseRegistry:
 plugin_base_registry = PluginBaseRegistry()
 
 
+def default_stages_for_class(plugin_class: Type) -> list[PipelineStage]:
+    """Return default stages based on plugin class hierarchy."""
+
+    if issubclass(plugin_class, plugin_base_registry.tool_plugin):
+        return [PipelineStage.DO]
+    if issubclass(plugin_class, plugin_base_registry.prompt_plugin):
+        return [PipelineStage.THINK]
+    if issubclass(plugin_class, plugin_base_registry.adapter_plugin):
+        return [PipelineStage.PARSE, PipelineStage.DELIVER]
+    return []
+
+
 def configure_plugins(
     base_plugin: Type,
     prompt_plugin: Type,
@@ -83,18 +95,9 @@ class PluginAutoClassifier:
         else:
             base = cast(Type, plugin_base_registry.prompt_plugin)
 
-        def _default_stages(plugin_base: Type) -> list[PipelineStage]:
-            if issubclass(plugin_base, plugin_base_registry.tool_plugin):
-                return [PipelineStage.DO]
-            if issubclass(plugin_base, plugin_base_registry.prompt_plugin):
-                return [PipelineStage.THINK]
-            if issubclass(plugin_base, plugin_base_registry.adapter_plugin):
-                return [PipelineStage.PARSE, PipelineStage.DELIVER]
-            return []
-
         explicit = False
         inferred = False
-        stages = _default_stages(base)
+        stages = default_stages_for_class(base)
         if "stage" in hints or "stages" in hints:
             hint = hints.get("stages") or hints.get("stage")
             stages = hint if isinstance(hint, list) else [hint]
@@ -114,7 +117,7 @@ class PluginAutoClassifier:
         plugin_obj._explicit_stages = explicit
         plugin_obj._inferred_stages = inferred
         plugin_obj._auto_inferred_stages = inferred
-        plugin_obj._type_default_stages = _default_stages(base)
+        plugin_obj._type_default_stages = default_stages_for_class(base)
         plugin_obj._inferred = inferred
         return plugin_obj
 
@@ -125,4 +128,9 @@ class PluginAutoClassifier:
         return PluginAutoClassifier.classify(plugin_func, user_hints)
 
 
-__all__ = ["PluginAutoClassifier", "import_plugin_class", "configure_plugins"]
+__all__ = [
+    "PluginAutoClassifier",
+    "import_plugin_class",
+    "configure_plugins",
+    "default_stages_for_class",
+]
