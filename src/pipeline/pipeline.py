@@ -13,7 +13,7 @@ from typing import Any, Dict
 import warnings
 
 from entity.core.state_logger import StateLogger
-from registry import PluginRegistry, SystemRegistries
+from entity.core.registries import PluginRegistry, SystemRegistries
 
 from .context import ConversationEntry, PluginContext
 from .errors import create_static_error_response

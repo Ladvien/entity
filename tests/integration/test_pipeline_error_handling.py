@@ -3,7 +3,7 @@ import asyncio
 import pytest
 from pipeline import PipelineStage, execute_pipeline
 from pipeline.base_plugins import BasePlugin, FailurePlugin
-from registry import PluginRegistry, SystemRegistries, ToolRegistry
+from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
 
 from entity.core.resources.container import ResourceContainer
 

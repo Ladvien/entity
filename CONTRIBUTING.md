@@ -32,7 +32,7 @@ Before opening a pull request:
    ```bash
    poetry run entity-cli --config config/dev.yaml verify
    poetry run entity-cli --config config/prod.yaml verify
-   python -m src.registry.validator
+   python -m src.entity.core.registry_validator
    ```
 
 3. **Run Tests**

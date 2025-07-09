@@ -67,12 +67,12 @@ def __getattr__(name: str) -> Any:
         "SystemInitializer",
         "initialization_cleanup_context",
     }:
-        from registry import (
+        from entity.core.registries import (
             PluginRegistry,
-            ResourceContainer,
             SystemRegistries,
             ToolRegistry,
         )
+        from entity.core.resources.container import ResourceContainer
         from .initializer import (
             ClassRegistry,
             SystemInitializer,
