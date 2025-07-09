@@ -15,7 +15,7 @@ class ReplyPlugin(BasePlugin):
 
 @pytest.mark.integration
 def test_legacy_config_without_workflow_executes():
-    builder = _AgentBuilder()
+    builder = AgentBuilder()
     builder.add_plugin(ReplyPlugin({}))
     runtime = builder.build_runtime()
     result = asyncio.run(runtime.run_pipeline("hi"))
