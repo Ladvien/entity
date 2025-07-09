@@ -21,7 +21,7 @@ class ThinkPlugin(BasePlugin):
 
 
 class RespondPlugin(BasePlugin):
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
         context.set_response("ok")
@@ -34,5 +34,6 @@ def test_full_agent_pipeline():
     agent.add_plugin(ThinkPlugin())
     agent.add_plugin(RespondPlugin())
 
+    agent._runtime = agent.builder.build_runtime()
     result = asyncio.run(agent.handle("hi"))
     assert result == "ok"

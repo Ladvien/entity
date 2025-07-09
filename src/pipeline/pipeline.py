@@ -196,7 +196,7 @@ async def execute_stage(
     if state.metrics:
         state.metrics.record_stage_duration(str(stage), duration)
 
-    if stage == PipelineStage.ERROR and state.response is None:
+    if stage == PipelineStage.DELIVER and state.response is None:
         fallback = FallbackErrorPlugin({})
         context = PluginContext(state, registries)
         await fallback.execute(context)
@@ -260,7 +260,10 @@ async def execute_pipeline(
                         state.last_completed_stage = stage
 
                     if (
-                        state.response is not None
+                        (
+                            state.response is not None
+                            and state.last_completed_stage == PipelineStage.DELIVER
+                        )
                         or state.failure_info is not None
                         or state.iteration >= max_iterations
                     ):
@@ -283,6 +286,14 @@ async def execute_pipeline(
                     state.last_completed_stage = None
 
         if state.failure_info:
+            try:
+                await execute_stage(PipelineStage.ERROR, state, registries)
+                if state_logger is not None:
+                    state_logger.log(state, PipelineStage.ERROR)
+                await execute_stage(PipelineStage.DELIVER, state, registries)
+            except Exception:
+                result = create_static_error_response(state.pipeline_id).to_dict()
+                return (result, state.metrics) if return_metrics else result
             if state.response is None:
                 result = create_static_error_response(state.pipeline_id).to_dict()
             else:

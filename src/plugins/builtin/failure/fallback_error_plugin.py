@@ -11,7 +11,7 @@ from pipeline.stages import PipelineStage
 class FallbackErrorPlugin(FailurePlugin):
     """Provide a generic error response."""
 
-    stages = [PipelineStage.ERROR]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context: PluginContext) -> None:
         """Provide a static fallback response."""

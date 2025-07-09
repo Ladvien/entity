@@ -13,7 +13,7 @@ from pipeline import (
 
 
 class RespondPlugin(PromptPlugin):
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):  # pragma: no cover - simple
         context.set_response("ok")
@@ -43,3 +43,18 @@ def test_restore_replaces_state():
     state1.restore(state2)
     assert state1.prompt == ""
     assert len(state1.conversation) == 1
+
+
+def test_execute_pipeline_persists_snapshots(tmp_path: Path):
+    plugins = PluginRegistry()
+    asyncio.run(
+        plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.DELIVER)
+    )
+    registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
+    snap_dir = tmp_path / "snaps"
+    result = asyncio.run(
+        execute_pipeline("hello", registries, snapshots_dir=str(snap_dir))
+    )
+    assert result == "ok"
+    files = list(snap_dir.iterdir())
+    assert len(files) >= 5
