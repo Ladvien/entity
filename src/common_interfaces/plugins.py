@@ -85,13 +85,11 @@ class PluginAutoClassifier:
         if "stage" in hints:
             stage = PipelineStage.from_str(str(hints["stage"]))
 
-        priority = int(hints.get("priority", 50))
         name = hints.get("name", plugin_func.__name__)
 
         return plugin_base_registry.auto_plugin(
             func=plugin_func,
             stages=[stage],
-            priority=priority,
             name=name,
             base_class=base,
         )

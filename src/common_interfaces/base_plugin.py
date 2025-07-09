@@ -13,7 +13,6 @@ class BasePlugin(ABC):
     """Minimal interface implemented by all pipeline plugins."""
 
     stages: List["PipelineStage"]
-    priority: int = 50
     dependencies: List[str] = []
 
     @abstractmethod

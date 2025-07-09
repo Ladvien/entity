@@ -15,11 +15,9 @@ import yaml
 from pydantic import ValidationError
 
 from common_interfaces.base_plugin import BasePlugin as BasePluginInterface
-from plugins.builtin.config_models import (PLUGIN_CONFIG_MODELS,
-                                           DefaultConfigModel)
+from plugins.builtin.config_models import PLUGIN_CONFIG_MODELS, DefaultConfigModel
 
-from ..exceptions import (CircuitBreakerTripped, PipelineError,
-                          PluginExecutionError)
+from ..exceptions import CircuitBreakerTripped, PipelineError, PluginExecutionError
 from ..logging import get_logger
 from ..observability.utils import execute_with_observability
 from ..reliability import RetryPolicy
@@ -50,7 +48,6 @@ class ConfigurationError(Exception):
 
 class BasePlugin(BasePluginInterface):
     stages: List[PipelineStage]
-    priority: int = 50
     dependencies: List[str] = []
     max_retries: int = 1
     retry_delay: float = 0.0

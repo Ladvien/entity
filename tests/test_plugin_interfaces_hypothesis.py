@@ -14,15 +14,6 @@ def test_classifier_respects_stage_hint(stage_name: str) -> None:
     assert plugin.stages == [PipelineStage.from_str(stage_name)]
 
 
-@given(st.integers(min_value=1, max_value=100))
-def test_classifier_sets_priority(priority: int) -> None:
-    async def dummy(ctx):
-        return "ok"
-
-    plugin = PluginAutoClassifier.classify(dummy, {"priority": priority})
-    assert plugin.priority == priority
-
-
 @given(st.text(min_size=1, max_size=20))
 def test_classifier_assigns_name(name: str) -> None:
     async def dummy(ctx):
