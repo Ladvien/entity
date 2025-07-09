@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pipeline.base_plugins import AdapterPlugin
+from entity.core.plugins import AdapterPlugin
 from pipeline.stages import PipelineStage
 
 

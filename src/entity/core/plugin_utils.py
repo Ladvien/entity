@@ -1,14 +1,18 @@
-"""Defines common plugin interfaces."""
+from __future__ import annotations
+
+"""Utilities for plugin classification and discovery."""
 
 import inspect
 from dataclasses import dataclass
 from importlib import import_module
 from typing import Any, Dict, Optional, Type, cast
 
+from pipeline.stages import PipelineStage
+
 
 @dataclass
 class PluginBaseRegistry:
-    """Container for plugin base classes used across the system."""
+    """Container for plugin base classes used by the classifier."""
 
     base_plugin: Type = object
     prompt_plugin: Type = object
@@ -25,9 +29,8 @@ def configure_plugins(
     adapter_plugin: Type,
     auto_plugin: Type,
 ) -> PluginBaseRegistry:
-    """Configure concrete plugin base classes used for auto classification."""
+    """Override the plugin base classes used for auto classification."""
 
-    global plugin_base_registry
     plugin_base_registry.base_plugin = base_plugin
     plugin_base_registry.prompt_plugin = prompt_plugin
     plugin_base_registry.adapter_plugin = adapter_plugin
@@ -36,7 +39,8 @@ def configure_plugins(
 
 
 def import_plugin_class(path: str) -> Type:
-    """Import plugin class from ``path``."""
+    """Import a plugin class from ``path``."""
+
     if ":" in path:
         module_path, class_name = path.split(":", 1)
     elif "." in path:
@@ -48,15 +52,13 @@ def import_plugin_class(path: str) -> Type:
 
 
 class PluginAutoClassifier:
-    """Utility to generate plugin classes from async functions."""
+    """Generate plugin classes from async functions."""
 
     @staticmethod
     def classify(
         plugin_func: Any, user_hints: Optional[Dict[str, Any]] | None = None
     ) -> Any:
-        """Return a generated plugin class for ``plugin_func``."""
-
-        from pipeline.stages import PipelineStage
+        """Return a plugin object for ``plugin_func``."""
 
         if not inspect.iscoroutinefunction(plugin_func):
             raise TypeError(
@@ -78,9 +80,9 @@ class PluginAutoClassifier:
         else:
             base = cast(Type, plugin_base_registry.prompt_plugin)
 
-        def _default_stages(plugin_base: Type) -> list[PipelineStage]:
-            from pipeline.base_plugins import AdapterPlugin, PromptPlugin, ToolPlugin
+        from .plugins import AdapterPlugin, PromptPlugin, ToolPlugin
 
+        def _default_stages(plugin_base: Type) -> list[PipelineStage]:
             if issubclass(plugin_base, ToolPlugin):
                 return [PipelineStage.DO]
             if issubclass(plugin_base, PromptPlugin):
@@ -120,4 +122,4 @@ class PluginAutoClassifier:
         return PluginAutoClassifier.classify(plugin_func, user_hints)
 
 
-__all__ = ["PluginAutoClassifier", "import_plugin_class"]
+__all__ = ["PluginAutoClassifier", "import_plugin_class", "configure_plugins"]

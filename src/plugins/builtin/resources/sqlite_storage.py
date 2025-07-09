@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional
 
 import aiosqlite
 
-from pipeline.base_plugins import ValidationResult
+from entity.core.plugins import ValidationResult
 from pipeline.observability.tracing import start_span
 from pipeline.stages import PipelineStage
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-from pipeline.base_plugins import ResourcePlugin, ValidationResult
+from entity.core.plugins import ResourcePlugin, ValidationResult
 from pipeline.exceptions import ResourceError
 from pipeline.stages import PipelineStage
 

@@ -4,7 +4,7 @@ from importlib import import_module
 from typing import TYPE_CHECKING, Any
 
 # Expose plugin configuration API used by the pipeline package
-from common_interfaces import plugins as plugin_utils
+from entity.core import plugin_utils
 
 from .agent import Agent
 from .base_plugins import (

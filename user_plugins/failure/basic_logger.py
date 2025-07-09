@@ -4,7 +4,10 @@ import logging
 from typing import Any
 
 from pipeline.base_plugins import FailurePlugin
-from pipeline.context import PluginContext
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover - type hints only
+    from pipeline.context import PluginContext
 from pipeline.stages import PipelineStage
 
 

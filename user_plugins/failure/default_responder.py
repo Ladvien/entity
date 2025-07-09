@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from pipeline.base_plugins import FailurePlugin
-from pipeline.context import PluginContext
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover - type hints only
+    from pipeline.context import PluginContext
 from pipeline.errors import create_error_response, create_static_error_response
 from pipeline.stages import PipelineStage
 
