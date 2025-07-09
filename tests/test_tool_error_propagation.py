@@ -24,7 +24,7 @@ class CallToolPlugin(PromptPlugin):
     stages = [PipelineStage.DO]
 
     async def _execute_impl(self, context):
-        await context.use_tool("fail")
+        await context.tool_use("fail")
 
 
 def make_registries():

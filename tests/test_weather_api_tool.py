@@ -46,7 +46,7 @@ async def run_weather() -> dict:
     registries = SystemRegistries(ResourceContainer(), tools, PluginRegistry())
     ctx = PluginContext(state, registries)
     try:
-        result = await ctx.use_tool("weather", location="Berlin")
+        result = await ctx.tool_use("weather", location="Berlin")
     finally:
         server.shutdown()
         thread.join()

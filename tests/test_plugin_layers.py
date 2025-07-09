@@ -29,7 +29,7 @@ class MyTool(ToolPlugin):
 
 
 async def my_prompt(ctx: PluginContext) -> None:
-    val = await ctx.use_tool("tool", value="ok")
+    val = await ctx.tool_use("tool", value="ok")
     ctx.set_response(val)
 
 

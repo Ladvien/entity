@@ -71,7 +71,7 @@ class ReActPrompt(PromptPlugin):
                     metadata={"react_step": step, "type": "action"},
                 )
 
-                await context.use_tool(action_name, **params)
+                await context.tool_use(action_name, **params)
 
         context.set_response(
             "I've reached my reasoning limit without finding a definitive answer."

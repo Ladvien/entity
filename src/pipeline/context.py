@@ -3,19 +3,11 @@ from __future__ import annotations
 """Runtime context passed to plugins during pipeline execution."""
 
 import asyncio
+import warnings
 from copy import deepcopy
 from datetime import datetime
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    AsyncIterator,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    TypeVar,
-    cast,
-)
+from typing import (TYPE_CHECKING, Any, AsyncIterator, Callable, Dict, List,
+                    Optional, TypeVar, cast)
 
 if TYPE_CHECKING:  # pragma: no cover
     from common_interfaces.resources import LLM
@@ -35,7 +27,8 @@ from .context_helpers import AdvancedContext
 from .errors import ResourceError
 from .metrics import MetricsCollector
 from .stages import PipelineStage
-from .state import ConversationEntry, FailureInfo, LLMResponse, PipelineState, ToolCall
+from .state import (ConversationEntry, FailureInfo, LLMResponse, PipelineState,
+                    ToolCall)
 
 ResourceT = TypeVar("ResourceT", covariant=True)
 
@@ -151,7 +144,7 @@ class PluginContext:
                 return cast(str, entry.content)
         return ""
 
-    def execute_tool(
+    def queue_tool_use(
         self, tool_name: str, params: Dict[str, Any], result_key: Optional[str] = None
     ) -> str:
         """Queue execution of ``tool_name`` with ``params``.
@@ -167,6 +160,17 @@ class PluginContext:
             ToolCall(name=tool_name, params=params, result_key=result_key)
         )
         return result_key
+
+    def execute_tool(
+        self, tool_name: str, params: Dict[str, Any], result_key: Optional[str] = None
+    ) -> str:
+        """Deprecated alias for :meth:`queue_tool_use`."""
+        warnings.warn(
+            "PluginContext.execute_tool() is deprecated; use queue_tool_use() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.queue_tool_use(tool_name, params, result_key)
 
     def add_conversation_entry(
         self, content: str, role: str, metadata: Optional[Dict[str, Any]] = None
@@ -289,14 +293,23 @@ class PluginContext:
         """Persist a value in pipeline metadata."""
         self.set_metadata(key, value)
 
-    async def use_tool(self, tool_name: str, **params: Any) -> Any:
+    async def tool_use(self, tool_name: str, **params: Any) -> Any:
         """Run ``tool_name`` with ``params`` and return its result.
 
-        This helper schedules the tool call, waits for completion, and
-        then returns whatever value the tool produced.
+        This helper schedules the tool call, waits for completion, and then
+        returns whatever value the tool produced.
         """
-        result_key = self.execute_tool(tool_name, params)
+        result_key = self.queue_tool_use(tool_name, params)
         return await self._wait_for_tool_result(result_key)
+
+    async def use_tool(self, tool_name: str, **params: Any) -> Any:
+        """Deprecated alias for :meth:`tool_use`."""
+        warnings.warn(
+            "PluginContext.use_tool() is deprecated; use tool_use() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return await self.tool_use(tool_name, **params)
 
     async def _wait_for_tool_result(self, result_key: str) -> Any:
         """Wait for a queued tool call to finish and return its result."""
@@ -346,7 +359,7 @@ class PluginContext:
 
     async def calculate(self, expression: str) -> Any:
         """Evaluate an arithmetic ``expression`` using the calculator tool."""
-        return await self.use_tool("calculator", expression=expression)
+        return await self.tool_use("calculator", expression=expression)
 
     def is_question(self) -> bool:
         """Return ``True`` if the user message ends with a question mark."""
