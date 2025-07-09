@@ -142,8 +142,13 @@ class PluginContext:
     def get_metadata(self, key: str, default: Any | None = None) -> Any:
         return self._state.metadata.get(key, default)
 
-    def get_failure_info(self) -> Any:
+    @property
+    def failure_info(self) -> Any:
+        """Return information about the most recent failure."""
         return self._state.failure_info
+
+    # Backwards compatibility
+    get_failure_info = failure_info
 
     def set_response(self, value: Any) -> None:
         if self.current_stage is not PipelineStage.DELIVER:

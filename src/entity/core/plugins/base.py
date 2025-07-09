@@ -27,8 +27,6 @@ class BasePlugin:
 
     stages: List[PipelineStage]
     dependencies: List[str] = []
-    failure_threshold: int = 3
-    failure_reset_timeout: float = 60.0
     max_retries: int = 1
     retry_delay: float = 0.0
 
