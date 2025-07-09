@@ -2,9 +2,11 @@ import asyncio
 from datetime import datetime
 
 import pytest
+
+from entity.core.resources.container import ResourceContainer
+from entity.core.state import MetricsCollector
 from pipeline import (
     ConversationEntry,
-    MetricsCollector,
     PipelineStage,
     PipelineState,
     PluginContext,
@@ -14,8 +16,6 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.errors import ResourceError
-
-from entity.core.resources.container import ResourceContainer
 
 
 class StubLLM:

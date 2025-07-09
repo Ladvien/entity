@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 from .exceptions import CircuitBreakerTripped
 from .reliability import CircuitBreaker, RetryPolicy
+
 # Registry classes are no longer imported eagerly.
 # Access ``PluginRegistry`` and related classes via ``registry`` or
 # rely on this module's ``__getattr__`` for lazy loading.
@@ -24,7 +25,6 @@ __all__ = [
     "ToolCall",
     "LLMResponse",
     "FailureInfo",
-    "MetricsCollector",
     "RetryPolicy",
     "CircuitBreaker",
     "CircuitBreakerTripped",
@@ -75,8 +75,11 @@ def __getattr__(name: str) -> Any:
                                             ToolRegistry)
         from entity.core.resources.container import ResourceContainer
 
-        from .initializer import (ClassRegistry, SystemInitializer,
-                                  initialization_cleanup_context)
+        from .initializer import (
+            ClassRegistry,
+            SystemInitializer,
+            initialization_cleanup_context,
+        )
 
         return {
             "PluginRegistry": PluginRegistry,
@@ -104,7 +107,6 @@ def __getattr__(name: str) -> Any:
         "AgentRuntime": "entity.core.runtime",
         "PluginAutoClassifier": "entity.core.plugin_utils",
         "import_plugin_class": "entity.core.plugin_utils",
-        "MetricsCollector": "pipeline.metrics",
         "LLM": "pipeline.resources",
         "BaseResource": "pipeline.resources",
         "Resource": "pipeline.resources",

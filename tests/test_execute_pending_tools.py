@@ -2,13 +2,12 @@ import asyncio
 from datetime import datetime
 
 from entity.core.resources.container import ResourceContainer
+from entity.core.state import MetricsCollector
 from pipeline import (
     ConversationEntry,
-    MetricsCollector,
     PipelineState,
     PluginRegistry,
     SystemRegistries,
-    ToolCall,
     ToolRegistry,
 )
 from pipeline.context import PluginContext

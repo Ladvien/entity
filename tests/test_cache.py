@@ -1,10 +1,11 @@
 from datetime import datetime
 
 import pipeline.context as context_module
+from entity.core.plugins import PromptPlugin
 from entity.core.resources.container import ResourceContainer
+from entity.core.state import MetricsCollector
 from pipeline import (
     ConversationEntry,
-    MetricsCollector,
     PipelineStage,
     PipelineState,
     PluginContext,
@@ -12,9 +13,7 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from entity.core.plugins import PromptPlugin
 from pipeline.cache import InMemoryCache
-from pipeline.state import ToolCall
 from pipeline.tools.execution import execute_pending_tools
 from plugins.builtin.resources.llm_base import LLM
 from user_plugins.resources.cache import CacheResource

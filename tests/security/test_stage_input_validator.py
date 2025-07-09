@@ -3,9 +3,10 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime
 
+from entity.core.resources.container import ResourceContainer
+from entity.core.state import MetricsCollector
 from pipeline import (
     ConversationEntry,
-    MetricsCollector,
     PipelineStage,
     PipelineState,
     PluginRegistry,
@@ -13,8 +14,6 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.pipeline import execute_stage
-
-from entity.core.resources.container import ResourceContainer
 
 
 class DummyPlugin:

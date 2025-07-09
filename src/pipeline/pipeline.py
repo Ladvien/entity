@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import Any, Dict
 
 from entity.core.registries import PluginRegistry, SystemRegistries
+from entity.core.state import MetricsCollector
 from entity.core.state_logger import StateLogger
 
 from .context import ConversationEntry, PluginContext
@@ -27,7 +28,6 @@ from .exceptions import (
 )
 from entity.utils.logging import get_logger
 from .manager import PipelineManager
-from .metrics import MetricsCollector
 from .observability.metrics import MetricsServerManager
 from .observability.tracing import start_span
 from .stages import PipelineStage
