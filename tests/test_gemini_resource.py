@@ -1,13 +1,8 @@
 import asyncio
 import json
 
-from pipeline import (
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    SystemInitializer,
-    SystemRegistries,
-)
+from pipeline import (MetricsCollector, PipelineState, PluginContext,
+                      SystemInitializer, SystemRegistries)
 from plugins.builtin.resources.llm.unified import UnifiedLLMResource
 
 

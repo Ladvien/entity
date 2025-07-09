@@ -6,7 +6,7 @@ from typing import Any
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from pipeline import Agent
+from entity.core.agent import Agent
 
 
 class MessageRequest(BaseModel):

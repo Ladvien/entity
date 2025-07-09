@@ -1,8 +1,8 @@
 import pytest
-
 from pipeline import PipelineStage, PipelineState, PluginContext
-from entity.core.resources.container import ResourceContainer
 from registry import PluginRegistry, SystemRegistries, ToolRegistry
+
+from entity.core.resources.container import ResourceContainer
 
 
 def make_context(stage: PipelineStage) -> PluginContext:

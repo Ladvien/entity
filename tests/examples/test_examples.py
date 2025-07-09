@@ -5,7 +5,6 @@ from importlib import import_module
 from pathlib import Path
 
 import pytest
-
 from plugins.builtin.infrastructure import infrastructure
 
 if not infrastructure.CDKTF_AVAILABLE:  # pragma: no cover - optional dependency

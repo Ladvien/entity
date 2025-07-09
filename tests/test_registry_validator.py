@@ -1,8 +1,7 @@
-import pytest
-import yaml
-
 import logging
 
+import pytest
+import yaml
 from pipeline.base_plugins import PromptPlugin, ResourcePlugin
 from pipeline.initializer import SystemInitializer
 from pipeline.stages import PipelineStage

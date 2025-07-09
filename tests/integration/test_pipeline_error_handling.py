@@ -1,11 +1,11 @@
 import asyncio
 
 import pytest
-
 from pipeline import PipelineStage, execute_pipeline
 from pipeline.base_plugins import BasePlugin, FailurePlugin
-from entity.core.resources.container import ResourceContainer
 from registry import PluginRegistry, SystemRegistries, ToolRegistry
+
+from entity.core.resources.container import ResourceContainer
 
 
 class FailingPlugin(BasePlugin):

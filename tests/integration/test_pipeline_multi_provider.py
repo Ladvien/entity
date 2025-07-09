@@ -3,11 +3,11 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from threading import Thread
 
 import pytest
-
-from entity import AgentBuilder
 from pipeline import PipelineStage
 from pipeline.base_plugins import BasePlugin
 from plugins.builtin.resources.llm.unified import UnifiedLLMResource
+
+from entity import AgentBuilder
 
 
 class FailHandler(BaseHTTPRequestHandler):

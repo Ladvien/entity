@@ -1,7 +1,8 @@
 import logging
 
-from entity import Agent
 from pipeline import PipelineStage
+
+from entity import Agent
 
 
 def test_from_directory_import_error(tmp_path, caplog):

@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import pytest
-from pydantic import BaseModel
-
 from pipeline.base_plugins import ToolPlugin
 from pipeline.security import InputValidator, SecureToolWrapper
+from pydantic import BaseModel
 
 
 class EchoTool(ToolPlugin):

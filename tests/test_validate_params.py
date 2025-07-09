@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import pytest
-from pydantic import BaseModel
-
 from pipeline.validation.input import validate_params
+from pydantic import BaseModel
 
 
 class Echo:

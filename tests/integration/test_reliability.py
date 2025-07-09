@@ -1,7 +1,6 @@
 import asyncio
 
 import pytest
-
 from pipeline.exceptions import CircuitBreakerTripped
 from pipeline.reliability import CircuitBreaker, RetryPolicy
 

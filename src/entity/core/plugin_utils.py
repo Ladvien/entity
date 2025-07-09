@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from importlib import import_module
 from typing import Any, Dict, Optional, Type, cast
 
-from pipeline.stages import PipelineStage
+from .stages import PipelineStage
 
 
 @dataclass

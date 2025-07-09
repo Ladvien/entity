@@ -1,9 +1,10 @@
 import asyncio
 
-from entity.core.resources.container import ResourceContainer
 from pipeline.stages import PipelineStage
 from pipeline.user_plugins import PromptPlugin
 from registry.registries import PluginRegistry, ToolRegistry
+
+from entity.core.resources.container import ResourceContainer
 
 
 class DummyPlugin(PromptPlugin):

@@ -9,8 +9,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Generator
 
-from pipeline.stages import PipelineStage
-from pipeline.state import PipelineState
+from .stages import PipelineStage
+from .state import PipelineState
 
 
 @dataclass

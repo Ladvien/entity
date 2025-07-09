@@ -2,16 +2,11 @@ import asyncio
 import logging
 from typing import Any
 
-from pipeline import (
-    PipelineManager,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolRegistry,
-)
-from entity.core.resources.container import ResourceContainer
+from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
+                      PromptPlugin, SystemRegistries, ToolRegistry)
 from plugins.builtin.adapters.cli import CLIAdapter
+
+from entity.core.resources.container import ResourceContainer
 
 
 class EchoPlugin(PromptPlugin):

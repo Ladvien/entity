@@ -2,14 +2,8 @@ import asyncio
 
 import pytest
 import yaml
-
-from pipeline import (
-    PipelineStage,
-    PromptPlugin,
-    ResourcePlugin,
-    SystemInitializer,
-    ValidationResult,
-)
+from pipeline import (PipelineStage, PromptPlugin, ResourcePlugin,
+                      SystemInitializer, ValidationResult)
 
 
 class ValidatingPlugin(PromptPlugin):

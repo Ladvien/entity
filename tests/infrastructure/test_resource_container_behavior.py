@@ -1,10 +1,8 @@
-import asyncio
 from typing import List
 
 import pytest
-
-from pipeline.resources import ResourceContainer
 from common_interfaces.resources import BaseResource
+from pipeline.resources import ResourceContainer
 
 
 class A(BaseResource):

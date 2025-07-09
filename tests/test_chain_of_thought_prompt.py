@@ -1,15 +1,10 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginContext, PluginRegistry, SystemRegistries,
+                      ToolRegistry)
+
 from entity.core.resources.container import ResourceContainer
 from user_plugins.prompts.chain_of_thought import ChainOfThoughtPrompt
 

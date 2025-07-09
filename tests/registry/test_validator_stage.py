@@ -1,6 +1,5 @@
 import pytest
 import yaml
-
 from pipeline import PipelineStage, PromptPlugin
 from registry.validator import RegistryValidator
 

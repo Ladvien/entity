@@ -1,9 +1,10 @@
 import pytest
-
-from pipeline import PipelineStage, PluginRegistry, SystemRegistries, ToolRegistry
+from pipeline import (PipelineStage, PluginRegistry, SystemRegistries,
+                      ToolRegistry)
 from pipeline.context import PluginContext
-from entity.core.resources.container import ResourceContainer
 from pipeline.state import PipelineState
+
+from entity.core.resources.container import ResourceContainer
 
 
 def test_set_response_disallowed_outside_deliver():

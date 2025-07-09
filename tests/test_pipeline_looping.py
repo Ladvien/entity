@@ -1,17 +1,12 @@
 import asyncio
 from typing import Optional
 
-from pipeline import (
-    FailurePlugin,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolRegistry,
-    execute_pipeline,
-)
-from entity.core.resources.container import ResourceContainer
+from pipeline import (FailurePlugin, PipelineStage, PluginRegistry,
+                      PromptPlugin, SystemRegistries, ToolRegistry,
+                      execute_pipeline)
 from pipeline.state import FailureInfo, PipelineState
+
+from entity.core.resources.container import ResourceContainer
 
 
 class CountingDeliverPlugin(PromptPlugin):

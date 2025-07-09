@@ -2,17 +2,11 @@ import asyncio
 from datetime import datetime
 
 import pytest
-
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineStage,
-    PipelineState,
-    PluginRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
+                      PipelineState, PluginRegistry, SystemRegistries,
+                      ToolRegistry)
 from pipeline.pipeline import execute_stage
+
 from entity.core.resources.container import ResourceContainer
 
 

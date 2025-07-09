@@ -1,7 +1,6 @@
 import asyncio
 
 import pytest
-
 from pipeline import PipelineStage, PluginRegistry, PromptPlugin
 
 

@@ -1,8 +1,7 @@
 import pytest
-from pydantic import ValidationError
-
-from pipeline.config import ConfigLoader
 from entity_config.models import EntityConfig
+from pipeline.config import ConfigLoader
+from pydantic import ValidationError
 
 
 def test_valid_config_load():

@@ -1,5 +1,4 @@
 import pytest
-
 from pipeline.resources.llm import UnifiedLLMResource
 
 PROVIDER_CONFIGS = {

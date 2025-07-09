@@ -1,6 +1,5 @@
 import httpx
 import pytest
-
 from plugins.builtin.resources.llm.providers.openai import OpenAIProvider
 
 

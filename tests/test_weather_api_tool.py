@@ -3,15 +3,10 @@ from datetime import datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from threading import Thread
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginContext, PluginRegistry, SystemRegistries,
+                      ToolRegistry)
+
 from entity.core.resources.container import ResourceContainer
 from user_plugins.tools.weather_api_tool import WeatherApiTool
 

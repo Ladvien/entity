@@ -1,18 +1,12 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginRegistry,
-    SystemRegistries,
-    ToolCall,
-    ToolRegistry,
-)
-from entity.core.resources.container import ResourceContainer
-from pipeline.tools.execution import execute_pending_tools
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginRegistry, SystemRegistries, ToolCall, ToolRegistry)
 from pipeline.context import PluginContext
+from pipeline.tools.execution import execute_pending_tools
+
+from entity.core.resources.container import ResourceContainer
 
 
 class EchoTool:

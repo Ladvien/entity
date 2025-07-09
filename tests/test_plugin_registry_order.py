@@ -1,16 +1,10 @@
 import asyncio
 
 import yaml
+from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
+                      SystemInitializer, SystemRegistries, ToolRegistry,
+                      execute_pipeline)
 
-from pipeline import (
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemInitializer,
-    SystemRegistries,
-    ToolRegistry,
-    execute_pipeline,
-)
 from entity.core.resources.container import ResourceContainer
 
 

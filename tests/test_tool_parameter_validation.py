@@ -1,10 +1,10 @@
 import asyncio
 
 import pytest
-from pydantic import BaseModel
-
 from pipeline.base_plugins import ToolPlugin
 from pipeline.errors import ToolExecutionError
+from pydantic import BaseModel
+
 from user_plugins.tools.search_tool import SearchTool
 
 
