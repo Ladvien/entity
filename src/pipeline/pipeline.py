@@ -122,8 +122,14 @@ async def execute_stage(
             context.set_current_stage(stage)
             await registries.validators.validate(stage, context)
             token = set_request_id(state.pipeline_id)
+            plugin_name = registries.plugins.get_plugin_name(plugin)
+            start_plugin = time.perf_counter()
             try:
                 await plugin.execute(context)
+                plugin_duration = time.perf_counter() - start_plugin
+                if state.metrics:
+                    key = f"{stage}:{plugin_name}"
+                    state.metrics.record_plugin_duration(key, plugin_duration)
                 if stage == PipelineStage.DELIVER and state.response is not None:
                     break
                 if state.pending_tool_calls:
