@@ -57,11 +57,12 @@ async def summarizer(ctx):
 
 Plugin stages are resolved in a predictable order:
 
-1. Stages defined in YAML or as a ``stages`` attribute on the class.
-2. Defaults based on plugin type (``ToolPlugin`` → ``DO``, ``PromptPlugin`` → ``THINK``, ``AdapterPlugin`` → ``PARSE`` + ``DELIVER``).
-3. Hints inferred by ``PluginAutoClassifier`` for function plugins.
+1. Stages provided via configuration files.
+2. Stages declared directly on the plugin class.
+3. Defaults based on plugin type (``ToolPlugin`` → ``DO``, ``PromptPlugin`` → ``THINK``, ``AdapterPlugin`` → ``PARSE`` + ``DELIVER``).
+4. Stages inferred by ``PluginAutoClassifier``.
 
-Explicit stages override type defaults. When they differ, the initializer logs a warning so you can confirm the override is intentional.
+When configuration or class-defined stages override the plugin type defaults, the initializer logs a warning so you can confirm the override is intentional.
 
 ## Loading Plugins Automatically
 
