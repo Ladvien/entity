@@ -346,8 +346,8 @@ class ComplexPlugin(ToolPlugin):
     stages = [PipelineStage.THINK, PipelineStage.DO]  # Override default
 ```
 
-**2. Interactive Stage Discovery**:
-- CLI command: `poetry run python src/cli/plugin_tool.py analyze-plugin my_plugin.py`
+-**2. Interactive Stage Discovery**:
+- CLI command: `poetry run python src/cli/plugin_tool/main.py analyze-plugin my_plugin.py`
 - The tool inspects async functions and suggests stages based on `PluginAutoClassifier` heuristics.
 - Provides stage recommendations with clear reasoning
 
