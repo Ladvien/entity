@@ -236,7 +236,8 @@ poetry run entity-cli serve-websocket --config config/dev.yaml
 
 When implementing custom error handling, refer to
 [`user_plugins/examples/failure_example.py`](../../user_plugins/examples/failure_example.py),
-the failure plugin template at `src/cli/templates/failure.py`,
+the failure plugin template at `src/cli/templates/failure.py` (which shows how
+to register the plugin in a workflow),
 and the [error handling guide](error_handling.md).
 
 ## Troubleshooting Plugins

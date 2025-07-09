@@ -1,4 +1,12 @@
-"""Template for prompt plugin."""
+"""Template for a prompt plugin.
+
+Prompt plugins drive the conversation. Include the generated class in a
+workflow mapping under the ``THINK`` stage:
+
+```
+workflow = {PipelineStage.THINK: ["MyPromptPlugin"]}
+```
+"""
 
 from entity.core.plugins import PromptPlugin
 from entity.core.stages import PipelineStage

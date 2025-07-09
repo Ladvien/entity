@@ -1,4 +1,12 @@
-"""Template for adapter plugin."""
+"""Template for an adapter plugin.
+
+Adapters connect pipeline output to the outside world. Add the generated
+plugin to a workflow so it runs in the ``DELIVER`` stage:
+
+```
+workflow = {PipelineStage.DELIVER: ["MyAdapter"]}
+```
+"""
 
 from entity.core.plugins import AdapterPlugin
 from entity.core.stages import PipelineStage

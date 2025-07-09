@@ -1,4 +1,12 @@
-"""Template for resource plugin."""
+"""Template for a resource plugin.
+
+Resources prepare data for other plugins. Add the generated resource to a
+workflow mapping so it executes in the ``PARSE`` stage:
+
+```
+workflow = {PipelineStage.PARSE: ["MyResource"]}
+```
+"""
 
 from entity.core.plugins import ResourcePlugin, ValidationResult
 from entity.core.stages import PipelineStage

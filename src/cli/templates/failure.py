@@ -1,4 +1,12 @@
-"""Template for failure plugin."""
+"""Template for a failure plugin.
+
+Failure plugins run when other plugins raise an error. Integrate the
+generated plugin into a workflow as an ``ERROR`` stage handler:
+
+```
+workflow = {PipelineStage.ERROR: ["MyFailureHandler"]}
+```
+"""
 
 from entity.core.plugins import FailurePlugin
 from entity.core.stages import PipelineStage

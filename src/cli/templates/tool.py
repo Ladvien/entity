@@ -1,4 +1,12 @@
-"""Template for tool plugin."""
+"""Template for a tool plugin.
+
+Tool plugins expose functions that other plugins can call. Register the
+generated tool in a workflow under the ``DO`` stage:
+
+```
+workflow = {PipelineStage.DO: ["MyTool"]}
+```
+"""
 
 from typing import Any, Dict
 
