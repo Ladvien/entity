@@ -90,34 +90,34 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poe.tasks]
-docs = "sphinx-build docs/source docs/build/html"
-docs_view = "sphinx-autobuild docs/source docs/build/html"
-patch = "poetry version patch"
-_publish = "poetry publish --build"
+docs = { cmd = "sphinx-build docs/source docs/build/html" }
+docs_view = { cmd = "sphinx-autobuild docs/source docs/build/html" }
+patch = { cmd = "poetry version patch" }
+_publish = { cmd = "poetry publish --build" }
 release = ["docs", "patch", "_publish"]
-test = "pytest"
-test-verbose = "pytest -v"
-test-coverage = "pytest --cov=src --cov-report=html --cov-report=term-missing"
-setup-dev = "poetry install --with dev"
+test = { cmd = "pytest" }
+test-verbose = { cmd = "pytest -v" }
+test-coverage = { cmd = "pytest --cov=src --cov-report=html --cov-report=term-missing" }
+setup-dev = { cmd = "poetry install --with dev" }
 [tool.poe.tasks.lint]
 sequence = [
-    "poetry run black src tests",
-    "poetry run isort src tests",
-    "poetry run flake8 src tests",
+    { cmd = "poetry run black src tests" },
+    { cmd = "poetry run isort src tests" },
+    { cmd = "poetry run flake8 src tests" },
 ]
 [tool.poe.tasks.validate]
 sequence = [
-    "python -m src.entity_config.validator --config config/dev.yaml",
-    "python -m src.entity_config.validator --config config/prod.yaml",
-    "python -m src.registry.validator",
+    { cmd = "python -m src.entity_config.validator --config config/dev.yaml" },
+    { cmd = "python -m src.entity_config.validator --config config/prod.yaml" },
+    { cmd = "python -m src.registry.validator" },
 ]
 [tool.poe.tasks.check]
 sequence = [
-    "poe lint",
-    "poetry run mypy src",
-    "bandit -r src",
-    "poe validate",
-    "pytest",
+    { ref = "lint" },
+    { cmd = "poetry run mypy src" },
+    { cmd = "bandit -r src" },
+    { ref = "validate" },
+    { cmd = "pytest" },
 ]
 
 
