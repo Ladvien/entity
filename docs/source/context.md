@@ -64,6 +64,6 @@ During stage execution the framework creates a `PluginContext` and passes it to 
 
 ```python
 for plugin in stage_plugins:
-    plugin_context = PluginContext(state, registries)
+    plugin_context = PluginContext(state, capabilities)
     await plugin.execute(plugin_context)
 ```

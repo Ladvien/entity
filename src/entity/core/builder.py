@@ -121,12 +121,12 @@ class AgentBuilder:
     # ------------------------------ runtime build -----------------------------
     def build_runtime(self) -> "AgentRuntime":
         asyncio.run(self.resource_registry.build_all())
-        registries = SystemRegistries(
+        capabilities = SystemRegistries(
             resources=self.resource_registry,
             tools=self.tool_registry,
             plugins=self.plugin_registry,
         )
-        return AgentRuntime(registries)
+        return AgentRuntime(capabilities)
 
     # ------------------------------ internals --------------------------------
     def _import_module(self, file: Path) -> ModuleType | None:

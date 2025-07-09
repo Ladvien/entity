@@ -1,8 +1,14 @@
 import asyncio
 import time
 
-from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      SystemRegistries, ToolRegistry, execute_pipeline)
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
 
 from entity.core.resources.container import ResourceContainer
 
@@ -15,7 +21,7 @@ class TimedPlugin(PromptPlugin):
         context.set_response("ok")
 
 
-def make_registries():
+def make_capabilities():
     plugins = PluginRegistry()
     asyncio.run(
         plugins.register_plugin_for_stage(TimedPlugin({}), PipelineStage.DELIVER)
@@ -24,10 +30,10 @@ def make_registries():
 
 
 def test_metrics_overhead():
-    registries = make_registries()
+    capabilities = make_capabilities()
     start = time.time()
     result, metrics = asyncio.run(
-        execute_pipeline("hi", registries, return_metrics=True)
+        execute_pipeline("hi", capabilities, return_metrics=True)
     )
     duration = time.time() - start
     plugin_key = f"{PipelineStage.DELIVER}:TimedPlugin"

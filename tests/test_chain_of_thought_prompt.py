@@ -1,9 +1,15 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, SystemRegistries,
-                      ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 
 from entity.core.resources.container import ResourceContainer
 from user_plugins.prompts.chain_of_thought import ChainOfThoughtPrompt
@@ -39,8 +45,8 @@ def make_context(llm: FakeLLM):
     plugins = PluginRegistry()
     asyncio.run(resources.add("llm", llm))
     asyncio.run(tools.add("analysis_tool", DummyTool()))
-    registries = SystemRegistries(resources, tools, plugins)
-    return state, PluginContext(state, registries)
+    capabilities = SystemRegistries(resources, tools, plugins)
+    return state, PluginContext(state, capabilities)
 
 
 def test_chain_of_thought_records_steps_and_tool_call():

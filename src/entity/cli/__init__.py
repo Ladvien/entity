@@ -62,7 +62,7 @@ class EntityCLI:
 
     async def _list_plugins(self, config_path: str) -> int:
         agent = await self._load_agent(config_path)
-        registry = agent.get_registries().plugins
+        registry = agent.get_capabilities().plugins
         for plugin in registry.list_plugins():
             print(registry.get_plugin_name(plugin))
         return 0

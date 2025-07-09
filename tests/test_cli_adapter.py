@@ -2,8 +2,14 @@ import asyncio
 import logging
 from typing import Any
 
-from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
-                      PromptPlugin, SystemRegistries, ToolRegistry)
+from pipeline import (
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
 from plugins.builtin.adapters.cli import CLIAdapter
 
 from entity.core.resources.container import ResourceContainer
@@ -22,13 +28,13 @@ def make_adapter() -> tuple[CLIAdapter, SystemRegistries]:
     asyncio.run(
         plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.DELIVER)
     )
-    registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
-    manager = PipelineManager(registries)
-    return CLIAdapter(manager), registries
+    capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
+    manager = PipelineManager(capabilities)
+    return CLIAdapter(manager), capabilities
 
 
 def test_cli_adapter_round_trip(monkeypatch, caplog):
-    adapter, registries = make_adapter()
+    adapter, capabilities = make_adapter()
     inputs: list[Any] = ["hello", EOFError()]
 
     def fake_input(prompt: str = "") -> str:
@@ -40,5 +46,5 @@ def test_cli_adapter_round_trip(monkeypatch, caplog):
     monkeypatch.setattr("builtins.input", fake_input)
 
     caplog.set_level(logging.INFO)
-    asyncio.run(adapter.serve(registries))
+    asyncio.run(adapter.serve(capabilities))
     assert any("'msg': 'hello'" in record.getMessage() for record in caplog.records)

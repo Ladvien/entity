@@ -1,9 +1,15 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, SystemRegistries,
-                      ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 
 from entity.core.resources.container import ResourceContainer
 from user_plugins.prompts.pii_scrubber import PIIScrubberPrompt
@@ -22,8 +28,10 @@ def make_context():
         metrics=MetricsCollector(),
     )
     state.response = "Contact admin@example.com at (123) 456-7890"
-    registries = SystemRegistries(ResourceContainer(), ToolRegistry(), PluginRegistry())
-    return state, PluginContext(state, registries)
+    capabilities = SystemRegistries(
+        ResourceContainer(), ToolRegistry(), PluginRegistry()
+    )
+    return state, PluginContext(state, capabilities)
 
 
 def test_pii_is_scrubbed_from_history_and_response():

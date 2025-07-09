@@ -3,7 +3,9 @@ from __future__ import annotations
 """Compatibility wrapper delegating to :class:`AgentRuntime`."""
 
 import asyncio
-from typing import Generic, Optional, TypeVar, cast
+from typing import Any, Generic, Optional, TypeVar, cast
+
+import warnings
 
 from entity.core.runtime import AgentRuntime
 from entity.core.state_logger import StateLogger
@@ -17,12 +19,38 @@ class PipelineManager(Generic[ResultT]):
 
     def __init__(
         self,
-        registries: Optional[SystemRegistries] = None,
+        capabilities: Optional[SystemRegistries] = None,
         *,
         state_logger: StateLogger | None = None,
+        **kwargs: Any,
     ) -> None:
-        self._runtime = AgentRuntime(registries, state_logger=state_logger)
-        self._registries = self._runtime.registries
+        if capabilities is None and "registries" in kwargs:
+            warnings.warn(
+                "'registries' is deprecated, use 'capabilities' instead",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            capabilities = kwargs.pop("registries")
+        if kwargs:
+            raise TypeError(f"Unexpected arguments: {', '.join(kwargs)}")
+        self._runtime = AgentRuntime(capabilities, state_logger=state_logger)
+        self._capabilities = self._runtime.capabilities
+
+    # ------------------------------------------------------------------
+    @property
+    def capabilities(self) -> SystemRegistries:
+        return self._capabilities
+
+    @property
+    def registries(self) -> SystemRegistries:  # pragma: no cover - legacy
+        """Backward compatibility alias for ``capabilities``."""
+
+        warnings.warn(
+            "'registries' is deprecated, use 'capabilities' instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self._capabilities
 
     # ------------------------------------------------------------------
     def start_pipeline(

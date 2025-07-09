@@ -24,7 +24,7 @@ Use `StageInputValidator` to register callbacks that inspect or modify the
 `SystemRegistries.validators` object.
 
 ```python
-registries.validators.register(PipelineStage.PARSE, my_validator)
+capabilities.validators.register(PipelineStage.PARSE, my_validator)
 ```
 
 ## Best Practices

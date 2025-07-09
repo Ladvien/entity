@@ -4,17 +4,48 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, Dict
+import warnings
 
 from .registries import SystemRegistries
 
 
-@dataclass
+@dataclass(init=False)
 class AgentRuntime:
-    registries: SystemRegistries
+    capabilities: SystemRegistries
     manager: Any = field(init=False)
+
+    def __init__(
+        self,
+        capabilities: SystemRegistries | None = None,
+        *,
+        registries: SystemRegistries | None = None,
+    ) -> None:
+        if capabilities is None and registries is not None:
+            warnings.warn(
+                "'registries' is deprecated, use 'capabilities' instead",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            capabilities = registries
+        if capabilities is None:
+            raise TypeError("capabilities is required")
+        self.capabilities = capabilities
+        self.__post_init__()
 
     def __post_init__(self) -> None:
         self.manager = None
+
+    # ------------------------------------------------------------------
+    @property
+    def registries(self) -> SystemRegistries:  # pragma: no cover - legacy
+        """Backward compatibility alias for ``capabilities``."""
+
+        warnings.warn(
+            "'registries' is deprecated, use 'capabilities' instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.capabilities
 
     async def run_pipeline(self, message: str) -> Dict[str, Any]:
         return {"message": message}

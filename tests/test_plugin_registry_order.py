@@ -1,9 +1,15 @@
 import asyncio
 
 import yaml
-from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      SystemInitializer, SystemRegistries, ToolRegistry,
-                      execute_pipeline)
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemInitializer,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
 
 from entity.core.resources.container import ResourceContainer
 
@@ -46,8 +52,8 @@ def test_plugin_registration_order_matches_execution():
     asyncio.run(registry.register_plugin_for_stage(First({}), PipelineStage.DELIVER))
     asyncio.run(registry.register_plugin_for_stage(Third({}), PipelineStage.DELIVER))
     asyncio.run(registry.register_plugin_for_stage(Second({}), PipelineStage.DELIVER))
-    registries = SystemRegistries(ResourceContainer(), ToolRegistry(), registry)
-    result = asyncio.run(execute_pipeline("hi", registries))
+    capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), registry)
+    result = asyncio.run(execute_pipeline("hi", capabilities))
     assert result == ["first", "third", "second"]
 
 

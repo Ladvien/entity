@@ -1,8 +1,14 @@
 import asyncio
 
-from pipeline import (PipelineStage, PluginRegistry, ResourcePlugin,
-                      SystemRegistries, ToolPlugin, ToolRegistry,
-                      execute_pipeline)
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    ResourcePlugin,
+    SystemRegistries,
+    ToolPlugin,
+    ToolRegistry,
+    execute_pipeline,
+)
 from pipeline.base_plugins import PluginAutoClassifier
 from pipeline.context import PluginContext
 
@@ -28,7 +34,7 @@ async def my_prompt(ctx: PluginContext) -> None:
     ctx.set_response(val)
 
 
-def make_registries() -> SystemRegistries:
+def make_capabilities() -> SystemRegistries:
     resources = ResourceContainer()
     asyncio.run(resources.add("resource", MyResource({})))
     tools = ToolRegistry()
@@ -43,6 +49,6 @@ def make_registries() -> SystemRegistries:
 
 
 def test_plugin_layers_cooperate():
-    registries = make_registries()
-    result = asyncio.run(execute_pipeline("hi", registries))
+    capabilities = make_capabilities()
+    result = asyncio.run(execute_pipeline("hi", capabilities))
     assert result == "ok"

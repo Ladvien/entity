@@ -1,9 +1,15 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, SystemRegistries,
-                      ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 
 from entity.core.resources.container import ResourceContainer
 from user_plugins.prompts.intent_classifier import IntentClassifierPrompt
@@ -24,8 +30,8 @@ def make_context(llm: FakeLLM):
     )
     resources = ResourceContainer()
     asyncio.run(resources.add("llm", llm))
-    registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
-    return state, PluginContext(state, registries)
+    capabilities = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
+    return state, PluginContext(state, capabilities)
 
 
 def test_intent_classifier_success():

@@ -1,7 +1,13 @@
 import asyncio
 
-from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      SystemRegistries, ToolRegistry, execute_pipeline)
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
 from pipeline.errors import ErrorResponse
 
 from entity.core.resources.container import ResourceContainer
@@ -16,7 +22,7 @@ class UnstablePlugin(PromptPlugin):
         raise ValueError("boom")
 
 
-def make_registries():
+def make_capabilities():
     plugins = PluginRegistry()
     asyncio.run(
         plugins.register_plugin_for_stage(
@@ -32,9 +38,9 @@ def make_registries():
 
 
 def test_circuit_breaker_trips():
-    registries = make_registries()
-    asyncio.run(execute_pipeline("hi", registries))
-    asyncio.run(execute_pipeline("hi", registries))
-    result = asyncio.run(execute_pipeline("hi", registries))
+    capabilities = make_capabilities()
+    asyncio.run(execute_pipeline("hi", capabilities))
+    asyncio.run(execute_pipeline("hi", capabilities))
+    result = asyncio.run(execute_pipeline("hi", capabilities))
     assert isinstance(result, ErrorResponse)
     assert "circuit breaker" in result.error.lower()

@@ -1,6 +1,5 @@
 import pytest
-from pipeline import (PipelineStage, PluginRegistry, SystemRegistries,
-                      ToolRegistry)
+from pipeline import PipelineStage, PluginRegistry, SystemRegistries, ToolRegistry
 from pipeline.context import PluginContext
 from pipeline.state import PipelineState
 

@@ -2,9 +2,16 @@ import asyncio
 import time
 from datetime import datetime
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
-                      PipelineState, PluginRegistry, SystemRegistries,
-                      ToolCall, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineStage,
+    PipelineState,
+    PluginRegistry,
+    SystemRegistries,
+    ToolCall,
+    ToolRegistry,
+)
 from pipeline.context import PluginContext
 from pipeline.tools.execution import execute_pending_tools
 
@@ -37,13 +44,13 @@ def test_concurrency_limit():
     tool = SleepTool()
     tools = ToolRegistry(concurrency_limit=2)
     asyncio.run(tools.add("sleep", tool))
-    registries = SystemRegistries(ResourceContainer(), tools, PluginRegistry())
+    capabilities = SystemRegistries(ResourceContainer(), tools, PluginRegistry())
     for i in range(4):
         state.pending_tool_calls.append(
             ToolCall(name="sleep", params={"delay": 0.1}, result_key=f"r{i}")
         )
     start = time.time()
-    asyncio.run(execute_pending_tools(state, registries))
+    asyncio.run(execute_pending_tools(state, capabilities))
     duration = time.time() - start
     assert tool.calls == 4
     assert duration >= 0.2
@@ -54,17 +61,17 @@ def test_cache_ttl():
     tool = SleepTool()
     tools = ToolRegistry(cache_ttl=5)
     asyncio.run(tools.add("sleep", tool))
-    registries = SystemRegistries(ResourceContainer(), tools, PluginRegistry())
+    capabilities = SystemRegistries(ResourceContainer(), tools, PluginRegistry())
     state.pending_tool_calls.append(
         ToolCall(name="sleep", params={"delay": 0}, result_key="a")
     )
-    asyncio.run(execute_pending_tools(state, registries))
+    asyncio.run(execute_pending_tools(state, capabilities))
     state.pending_tool_calls.append(
         ToolCall(name="sleep", params={"delay": 0}, result_key="b")
     )
-    asyncio.run(execute_pending_tools(state, registries))
+    asyncio.run(execute_pending_tools(state, capabilities))
     assert tool.calls == 1
-    ctx = PluginContext(state, registries)
+    ctx = PluginContext(state, capabilities)
     assert ctx.load("b") == 0
     key = f"{PipelineStage.DO}:sleep"
     assert key in state.metrics.tool_durations

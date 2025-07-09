@@ -1,8 +1,14 @@
 import asyncio
 
-from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      SystemRegistries, ToolPlugin, ToolRegistry,
-                      execute_pipeline)
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolPlugin,
+    ToolRegistry,
+    execute_pipeline,
+)
 from pipeline.errors import ErrorResponse
 
 from entity.core.resources.container import ResourceContainer
@@ -22,7 +28,7 @@ class CallToolPlugin(PromptPlugin):
         await context.tool_use("fail")
 
 
-def make_registries():
+def make_capabilities():
     plugins = PluginRegistry()
     asyncio.run(plugins.register_plugin_for_stage(CallToolPlugin({}), PipelineStage.DO))
     asyncio.run(plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR))
@@ -37,8 +43,8 @@ def make_registries():
 
 
 def test_tool_failure_propagates_to_error_stage():
-    registries = make_registries()
-    result = asyncio.run(execute_pipeline("hi", registries))
+    capabilities = make_capabilities()
+    result = asyncio.run(execute_pipeline("hi", capabilities))
     assert isinstance(result, ErrorResponse)
     data = result.to_dict()
     assert data["error"] == "tool boom"
