@@ -88,16 +88,6 @@ plugins:
       type: user_plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
       enable_reasoning: true
       max_steps: 5
-    conversation_history:
-      type: plugins.builtin.prompts.conversation_history:ConversationHistory
-      db_schema: public
-      history_table: chat_history
-      stages: [parse, deliver]
-    memory_retrieval:
-      type: plugins.builtin.prompts.memory_retrieval:MemoryRetrievalPrompt
-      max_context_length: 4000
-      similarity_threshold: 0.7
-      stages: [think]
     intent_classifier:
       type: user_plugins.prompts.intent_classifier:IntentClassifierPrompt
       confidence_threshold: 0.8

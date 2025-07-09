@@ -39,20 +39,8 @@ class WebSocketAdapterConfig(DefaultConfigModel):
 
 
 # Prompt configs
-MemoryPluginConfig = SimpleConfigModel
-
-
 class ComplexPromptConfig(DefaultConfigModel):
     k: int | None = None
-
-
-ConversationHistoryConfig = SimpleConfigModel
-
-
-MemoryRetrievalPromptConfig = SimpleConfigModel
-
-
-ChatHistoryConfig = SimpleConfigModel
 
 
 # Tool configs
@@ -145,11 +133,7 @@ __all__ += [
     "HTTPAdapterConfig",
     "LoggingAdapterConfig",
     "WebSocketAdapterConfig",
-    "MemoryPluginConfig",
     "ComplexPromptConfig",
-    "ConversationHistoryConfig",
-    "MemoryRetrievalPromptConfig",
-    "ChatHistoryConfig",
     "WeatherApiToolConfig",
     "CalculatorToolConfig",
     "SearchToolConfig",
@@ -178,11 +162,7 @@ PLUGIN_CONFIG_MODELS = {
     "HTTPAdapter": HTTPAdapterConfig,
     "LoggingAdapter": SimpleConfigModel,
     "WebSocketAdapter": WebSocketAdapterConfig,
-    "MemoryPlugin": SimpleConfigModel,
     "ComplexPrompt": ComplexPromptConfig,
-    "ConversationHistory": SimpleConfigModel,
-    "MemoryRetrievalPrompt": SimpleConfigModel,
-    "ChatHistory": SimpleConfigModel,
     "WeatherApiTool": WeatherApiToolConfig,
     "CalculatorTool": SimpleConfigModel,
     "SearchTool": SimpleConfigModel,
