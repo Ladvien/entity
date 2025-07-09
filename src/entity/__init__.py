@@ -1,1 +1,3 @@
-"""Entity built-in plugins and helpers."""
+from .core import Agent, AgentBuilder
+
+__all__ = ["Agent", "AgentBuilder"]

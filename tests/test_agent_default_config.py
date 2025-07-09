@@ -1,6 +1,6 @@
 import asyncio
 
-from pipeline import Agent
+from entity import Agent
 
 
 def test_agent_no_config_runs_pipeline():
