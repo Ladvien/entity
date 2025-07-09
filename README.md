@@ -34,6 +34,7 @@ For details on failures and recovery see [docs/source/error_handling.md](docs/so
    development tools.
 3. Start the agent with your desired configuration file.
 4. Copy `.env.example` to `.env` and fill in the values if you want to run the example scripts. See [user_plugins/examples/README.md](user_plugins/examples/README.md) for what each example expects.
+5. Use `src/scripts/mc.sh` if you need to merge multiple open pull requests.
 
 ### Testing Setup
 Run `poetry install --with dev` before executing tests or quality checks.
