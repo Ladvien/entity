@@ -4,7 +4,7 @@ from entity.core.plugins import FailurePlugin
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
-    from pipeline.context import PluginContext
+    from entity.core.context import PluginContext
 from pipeline.errors import create_error_response, create_static_error_response
 from pipeline.stages import PipelineStage
 

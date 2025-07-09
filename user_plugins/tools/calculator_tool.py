@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from entity.core.plugins import ToolPlugin
 from pipeline.stages import PipelineStage
-from pipeline.validation.input import validate_params
+from entity.core.validation.input import validate_params
 
 
 class SafeEvaluator:

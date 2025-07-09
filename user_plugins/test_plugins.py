@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pipeline import PipelineStage, PromptPlugin, ToolPlugin, ValidationResult
-from pipeline.context import PluginContext
+from entity.core.context import PluginContext
 
 
 class ReloadPlugin(PromptPlugin):

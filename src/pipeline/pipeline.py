@@ -15,7 +15,8 @@ import warnings
 from entity.core.state_logger import StateLogger
 from entity.core.registries import PluginRegistry, SystemRegistries
 
-from .context import ConversationEntry, PluginContext
+from entity.core.context import PluginContext
+from entity.core.state import ConversationEntry
 from .errors import create_static_error_response
 from .exceptions import MaxIterationsExceeded  # noqa: F401 - reserved for future use
 from .exceptions import (
@@ -31,7 +32,7 @@ from .metrics import MetricsCollector
 from .observability.metrics import MetricsServerManager
 from .observability.tracing import start_span
 from .stages import PipelineStage
-from .state import FailureInfo, PipelineState
+from entity.core.state import FailureInfo, PipelineState
 from .tools.execution import execute_pending_tools
 
 logger = get_logger(__name__)

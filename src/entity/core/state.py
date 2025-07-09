@@ -84,3 +84,18 @@ class PipelineState:
             ),
             "max_stage_results": self.max_stage_results,
         }
+
+
+@dataclass
+class FailureInfo:
+    stage: str
+    plugin_name: str
+    error_type: str
+    error_message: str
+    original_exception: Exception | None = None
+    timestamp: datetime = field(default_factory=datetime.now)
+
+
+@dataclass
+class LLMResponse:
+    content: str

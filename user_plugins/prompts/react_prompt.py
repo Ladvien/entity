@@ -3,7 +3,8 @@ from __future__ import annotations
 from typing import Any, Dict, List, Tuple
 
 from entity.core.plugins import PromptPlugin
-from pipeline.context import ConversationEntry, PluginContext
+from entity.core.state import ConversationEntry
+from entity.core.context import PluginContext
 from pipeline.stages import PipelineStage
 
 

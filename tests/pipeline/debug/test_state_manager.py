@@ -8,8 +8,8 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from pipeline.resources import ResourceContainer
-from pipeline.state import PipelineState
+from entity.core.resources.container import ResourceContainer
+from entity.core.state import PipelineState
 
 
 class StateManager:

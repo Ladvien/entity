@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 import asyncio
 
 from pipeline.stages import PipelineStage
-from pipeline.state import ConversationEntry, PipelineState
+from entity.core.state import ConversationEntry, PipelineState
 
 
 class PluginContext:

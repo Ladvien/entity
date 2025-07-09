@@ -3,17 +3,14 @@ import time
 from datetime import datetime
 
 from entity.core.resources.container import ResourceContainer
-from pipeline import (
+from entity.core.state import (
     ConversationEntry,
     MetricsCollector,
-    PipelineStage,
     PipelineState,
-    PluginRegistry,
-    SystemRegistries,
     ToolCall,
-    ToolRegistry,
 )
-from pipeline.context import PluginContext
+from pipeline import PluginRegistry, SystemRegistries, ToolRegistry, PipelineStage
+from entity.core.context import PluginContext
 from pipeline.tools.execution import execute_pending_tools
 
 

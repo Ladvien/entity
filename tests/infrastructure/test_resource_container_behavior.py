@@ -2,7 +2,7 @@ from typing import List
 
 import pytest
 from entity.core.plugins import ResourcePlugin as BaseResource
-from pipeline.resources import ResourceContainer
+from entity.core.resources.container import ResourceContainer
 
 
 class A(BaseResource):

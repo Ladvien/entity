@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pytest
-from pipeline.validation.input import validate_params
+from entity.core.validation.input import validate_params
 from pydantic import BaseModel
 
 
