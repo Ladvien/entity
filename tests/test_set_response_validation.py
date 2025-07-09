@@ -1,8 +1,8 @@
 import pytest
 from pipeline import PipelineStage, PluginRegistry, SystemRegistries, ToolRegistry
-from pipeline.context import PluginContext
+from entity.core.context import PluginContext
 from pipeline.errors import PluginContextError
-from pipeline.state import PipelineState
+from entity.core.state import PipelineState
 
 from entity.core.resources.container import ResourceContainer
 

@@ -10,7 +10,7 @@ from pipeline import (
     execute_pipeline,
 )
 from entity.core.plugins import PluginAutoClassifier
-from pipeline.context import PluginContext
+from entity.core.context import PluginContext
 
 from entity.core.resources.container import ResourceContainer
 

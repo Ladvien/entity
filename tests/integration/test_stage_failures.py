@@ -9,8 +9,8 @@ from entity.core.state_logger import LogReplayer, StateLogger
 from pipeline import PipelineStage, execute_pipeline
 from entity.core.plugins import BasePlugin
 from pipeline.pipeline import generate_pipeline_id
-from pipeline.resources import ResourceContainer
-from pipeline.state import ConversationEntry, MetricsCollector, PipelineState
+from entity.core.resources.container import ResourceContainer
+from entity.core.state import ConversationEntry, MetricsCollector, PipelineState
 
 
 class RespondPlugin(BasePlugin):

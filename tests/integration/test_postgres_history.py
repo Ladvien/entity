@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 from entity.config.environment import load_env
-from pipeline.state import ConversationEntry
+from entity.core.state import ConversationEntry
 from plugins.builtin.resources.postgres import PostgresResource
 
 from entity.resources.memory import Memory

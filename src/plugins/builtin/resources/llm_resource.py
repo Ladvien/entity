@@ -4,7 +4,7 @@ from html import escape
 from typing import Any, Dict
 
 from entity.core.plugins import ResourcePlugin
-from pipeline.state import LLMResponse
+from entity.core.state import LLMResponse
 
 
 class LLMResource(ResourcePlugin):

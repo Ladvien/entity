@@ -1,18 +1,16 @@
 from datetime import datetime
 
-import pipeline.context as context_module
-from entity.core.plugins import PromptPlugin
+import entity.core.context as context_module
 from entity.core.resources.container import ResourceContainer
-from entity.core.state import MetricsCollector
-from pipeline import (
+from entity.core.state import (
     ConversationEntry,
-    PipelineStage,
+    MetricsCollector,
     PipelineState,
-    PluginContext,
-    PluginRegistry,
-    SystemRegistries,
-    ToolRegistry,
+    ToolCall,
 )
+from pipeline import PipelineStage, PluginRegistry, SystemRegistries, ToolRegistry
+from entity.core.context import PluginContext
+from entity.core.plugins import PromptPlugin
 from pipeline.cache import InMemoryCache
 from pipeline.tools.execution import execute_pending_tools
 from plugins.builtin.resources.llm_base import LLM

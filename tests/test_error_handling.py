@@ -20,7 +20,7 @@ from pipeline.errors import (
     create_error_response,
     create_static_error_response,
 )
-from pipeline.state import FailureInfo
+from entity.core.state import FailureInfo
 
 from entity.core.resources.container import ResourceContainer
 from user_plugins.failure.basic_logger import BasicLogger

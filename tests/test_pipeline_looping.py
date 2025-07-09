@@ -10,7 +10,7 @@ from pipeline import (
     ToolRegistry,
     execute_pipeline,
 )
-from pipeline.state import FailureInfo, PipelineState
+from entity.core.state import FailureInfo, PipelineState
 
 from entity.core.resources.container import ResourceContainer
 

@@ -1,10 +1,15 @@
 import asyncio
 
-from entity.core.runtime import _AgentRuntime
-from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      SystemRegistries, ToolRegistry, execute_pipeline)
-from pipeline.resources import ResourceContainer
-from pipeline.state import PipelineState
+from pipeline import (
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
+from entity.core.resources.container import ResourceContainer
+from entity.core.state import PipelineState
 
 
 class StateManager:

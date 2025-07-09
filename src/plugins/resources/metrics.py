@@ -7,7 +7,7 @@ from typing import Dict
 from pydantic import BaseModel, ValidationError
 
 from pipeline.observability import MetricsServerManager
-from pipeline.validation import ValidationResult
+from entity.core.plugins import ValidationResult
 from plugins.resources.base import BaseResource
 
 

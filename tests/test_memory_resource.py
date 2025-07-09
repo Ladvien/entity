@@ -9,7 +9,7 @@ from pipeline import (
     ToolRegistry,
     execute_pipeline,
 )
-from pipeline.context import ConversationEntry
+from entity.core.state import ConversationEntry
 from pipeline.resources.memory import Memory
 
 from entity.core.resources.container import ResourceContainer

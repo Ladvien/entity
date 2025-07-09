@@ -4,9 +4,9 @@ import re
 from typing import Any
 
 from entity.core.plugins import PromptPlugin
-from pipeline.context import PluginContext
+from entity.core.context import PluginContext
 from pipeline.stages import PipelineStage
-from pipeline.state import ConversationEntry
+from entity.core.state import ConversationEntry
 
 
 class PIIScrubberPrompt(PromptPlugin):

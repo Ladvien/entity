@@ -1,7 +1,6 @@
 import asyncio
 
 from pipeline import (
-    LLMResponse,
     PipelineStage,
     PluginRegistry,
     PromptPlugin,
@@ -10,6 +9,7 @@ from pipeline import (
     ToolRegistry,
     execute_pipeline,
 )
+from entity.core.state import LLMResponse
 
 from entity.core.resources.container import ResourceContainer
 

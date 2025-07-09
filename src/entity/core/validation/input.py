@@ -1,7 +1,3 @@
-from __future__ import annotations
-
-"""Utilities for validating tool input parameters."""
-
 import re
 from html import escape
 from typing import Any, Callable, Dict, Type

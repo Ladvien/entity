@@ -94,7 +94,7 @@ class ClassRegistry:
     def _type_default_stages(self, cls: type[BasePlugin]) -> List[PipelineStage]:
         """Return default stages for the given plugin class."""
 
-        from entity.core.plugins import AdapterPlugin, PromptPlugin
+        from entity.core.plugins.base import AdapterPlugin, PromptPlugin
 
         if issubclass(cls, ToolPlugin):
             return [PipelineStage.DO]
@@ -313,7 +313,7 @@ class SystemInitializer:
     def _type_default_stages(self, cls: type[BasePlugin]) -> List[PipelineStage]:
         """Return default stages for the given plugin class."""
 
-        from entity.core.plugins import AdapterPlugin, PromptPlugin
+        from entity.core.plugins.base import AdapterPlugin, PromptPlugin
 
         if issubclass(cls, ToolPlugin):
             return [PipelineStage.DO]
