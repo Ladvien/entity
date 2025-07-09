@@ -19,6 +19,7 @@ class PostgresResource(DatabaseResource):
 
     stages = [PipelineStage.PARSE]
     name = "database"
+    dependencies: list[str] = []
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)

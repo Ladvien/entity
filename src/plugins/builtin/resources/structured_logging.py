@@ -21,6 +21,7 @@ class StructuredLogging(BaseResource):
     """
 
     name = "logging"
+    dependencies: list[str] = []
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)

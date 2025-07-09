@@ -11,7 +11,7 @@ from pipeline import (
 )
 from pipeline.base_plugins import PluginAutoClassifier
 from pipeline.context import PluginContext
-from pipeline.resources import ResourceContainer
+from entity.core.resources.container import ResourceContainer
 
 
 class SleepTool(ToolPlugin):

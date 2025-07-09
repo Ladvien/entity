@@ -9,7 +9,7 @@ if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from plugins.builtin.resources.llm_base import LLM
     from plugins.builtin.resources.llm_resource import LLMResource
 
-    from .container import ResourceContainer
+    from entity.core.resources.container import ResourceContainer
     from .database import DatabaseResource
     from .duckdb_database import DuckDBDatabaseResource
     from .filesystem import FileSystemResource
@@ -39,7 +39,7 @@ def __getattr__(name: str):
 
         return LLMResource
     if name == "ResourceContainer":
-        from .container import ResourceContainer
+        from entity.core.resources.container import ResourceContainer
 
         return ResourceContainer
     if name == "DatabaseResource":

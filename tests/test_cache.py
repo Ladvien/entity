@@ -13,7 +13,7 @@ from pipeline import (
 )
 from pipeline.base_plugins import PromptPlugin
 from pipeline.cache import InMemoryCache
-from pipeline.resources import ResourceContainer
+from entity.core.resources.container import ResourceContainer
 from pipeline.state import ToolCall
 from pipeline.tools.execution import execute_pending_tools
 from plugins.builtin.resources.llm_base import LLM

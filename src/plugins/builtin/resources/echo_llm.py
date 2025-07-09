@@ -8,6 +8,7 @@ class EchoLLMResource(LLMResource):
     """Simple LLM resource that echoes the prompt back."""
 
     name = "echo"
+    dependencies: list[str] = []
 
     async def generate(self, prompt: str) -> str:
         return prompt

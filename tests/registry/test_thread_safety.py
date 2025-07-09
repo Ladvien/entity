@@ -1,6 +1,6 @@
 import asyncio
 
-from pipeline.resources import ResourceContainer
+from entity.core.resources.container import ResourceContainer
 from pipeline.stages import PipelineStage
 from pipeline.user_plugins import PromptPlugin
 from registry.registries import PluginRegistry, ToolRegistry

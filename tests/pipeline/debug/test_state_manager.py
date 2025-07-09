@@ -29,7 +29,7 @@ class StateManager:
         return list(self._states.keys())
 
 
-from pipeline.resources import ResourceContainer
+from entity.core.resources.container import ResourceContainer
 
 
 class SavePlugin(PromptPlugin):

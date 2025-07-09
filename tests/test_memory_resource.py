@@ -10,7 +10,7 @@ from pipeline import (
     execute_pipeline,
 )
 from pipeline.context import ConversationEntry
-from pipeline.resources import ResourceContainer
+from entity.core.resources.container import ResourceContainer
 from pipeline.resources.memory import Memory
 from plugins.builtin.resources.memory_storage import MemoryStorage
 

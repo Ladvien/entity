@@ -15,7 +15,7 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.errors import ResourceError
-from pipeline.resources import ResourceContainer
+from entity.core.resources.container import ResourceContainer
 
 
 class StubLLM:

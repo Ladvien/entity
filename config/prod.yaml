@@ -23,7 +23,6 @@ plugins:
       backoff: 2.0
     memory:
       type: pipeline.resources.memory:Memory
-      dependencies: [database, vector_store]
     vector_store:
       type: plugins.builtin.resources.memory_vector_store:MemoryVectorStore
       table: vector_mem

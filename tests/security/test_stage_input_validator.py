@@ -13,7 +13,7 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.pipeline import execute_stage
-from pipeline.resources import ResourceContainer
+from entity.core.resources.container import ResourceContainer
 
 
 class DummyPlugin:

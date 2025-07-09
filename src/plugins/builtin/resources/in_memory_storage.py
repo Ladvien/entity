@@ -14,6 +14,7 @@ class InMemoryStorageResource(DatabaseResource):
     """Simple in-memory storage backend for conversation history."""
 
     name = "database"
+    dependencies: list[str] = []
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)

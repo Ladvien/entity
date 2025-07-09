@@ -15,6 +15,7 @@ class ClaudeResource(ProviderResource):
 
     name = "claude"
     provider_cls = ClaudeProvider
+    dependencies: list[str] = []
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
         super().__init__(self.provider_cls(config or {}))

@@ -9,7 +9,7 @@ from pipeline import (
     ToolRegistry,
     execute_pipeline,
 )
-from pipeline.resources import ResourceContainer
+from entity.core.resources.container import ResourceContainer
 
 
 class TimedPlugin(PromptPlugin):

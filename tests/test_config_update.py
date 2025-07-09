@@ -11,7 +11,7 @@ from pipeline import (
     execute_pipeline,
     update_plugin_configuration,
 )
-from pipeline.resources import ResourceContainer
+from entity.core.resources.container import ResourceContainer
 
 
 class TestReconfigPlugin(PromptPlugin):

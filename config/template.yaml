@@ -19,10 +19,9 @@ plugins:
       model: "${OLLAMA_MODEL}"
     memory:
       type: pipeline.resources.memory:Memory
-      dependencies: [database]
     storage:
       type: pipeline.resources.storage_resource:StorageResource
-      dependencies: [filesystem]
+      
     cache:
       type: user_plugins.resources.cache:CacheResource
       backend:

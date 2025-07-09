@@ -9,7 +9,7 @@ from pipeline.pipeline import generate_pipeline_id
 from pipeline.state import ConversationEntry, MetricsCollector, PipelineState
 from pipeline.state_logger import LogReplayer, StateLogger
 from pipeline.base_plugins import BasePlugin
-from pipeline.resources import ResourceContainer
+from entity.core.resources.container import ResourceContainer
 from registry import PluginRegistry, SystemRegistries, ToolRegistry
 
 

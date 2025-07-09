@@ -10,7 +10,7 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from pipeline.resources import ResourceContainer
+from entity.core.resources.container import ResourceContainer
 from user_plugins.prompts.intent_classifier import IntentClassifierPrompt
 
 

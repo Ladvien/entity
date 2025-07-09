@@ -11,7 +11,7 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from pipeline.resources import ResourceContainer
+from entity.core.resources.container import ResourceContainer
 from pipeline.resources.memory import Memory
 from user_plugins.prompts.complex_prompt import ComplexPrompt
 

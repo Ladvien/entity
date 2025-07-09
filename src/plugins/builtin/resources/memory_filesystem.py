@@ -12,6 +12,7 @@ class MemoryFileSystem(BaseResource, FileSystemResource):
     """Store files in an in-memory dictionary."""
 
     name = "filesystem"
+    dependencies: list[str] = []
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
