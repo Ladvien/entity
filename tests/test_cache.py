@@ -12,7 +12,7 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from pipeline.base_plugins import PromptPlugin
+from entity.core.plugins import PromptPlugin
 from pipeline.cache import InMemoryCache
 from pipeline.state import ToolCall
 from pipeline.tools.execution import execute_pending_tools

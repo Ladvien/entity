@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pytest
-from pipeline.base_plugins import ToolPlugin
+from entity.core.plugins import ToolPlugin
 from pipeline.security import InputValidator, SecureToolWrapper
 from pydantic import BaseModel
 

@@ -18,6 +18,7 @@ class PluginBaseRegistry:
     prompt_plugin: Type = object
     adapter_plugin: Type = object
     auto_plugin: Type = object
+    tool_plugin: Type = object
 
 
 plugin_base_registry = PluginBaseRegistry()
@@ -28,6 +29,7 @@ def configure_plugins(
     prompt_plugin: Type,
     adapter_plugin: Type,
     auto_plugin: Type,
+    tool_plugin: Type,
 ) -> PluginBaseRegistry:
     """Override the plugin base classes used for auto classification."""
 
@@ -35,6 +37,7 @@ def configure_plugins(
     plugin_base_registry.prompt_plugin = prompt_plugin
     plugin_base_registry.adapter_plugin = adapter_plugin
     plugin_base_registry.auto_plugin = auto_plugin
+    plugin_base_registry.tool_plugin = tool_plugin
     return plugin_base_registry
 
 
@@ -68,14 +71,12 @@ class PluginAutoClassifier:
         hints = user_hints or {}
         base = cast(Type, plugin_base_registry.prompt_plugin)
 
-        from .plugins.base import AdapterPlugin, PromptPlugin, ToolPlugin
-
         def _default_stages(plugin_base: Type) -> list[PipelineStage]:
-            if issubclass(plugin_base, ToolPlugin):
+            if issubclass(plugin_base, plugin_base_registry.tool_plugin):
                 return [PipelineStage.DO]
-            if issubclass(plugin_base, PromptPlugin):
+            if issubclass(plugin_base, plugin_base_registry.prompt_plugin):
                 return [PipelineStage.THINK]
-            if issubclass(plugin_base, AdapterPlugin):
+            if issubclass(plugin_base, plugin_base_registry.adapter_plugin):
                 return [PipelineStage.PARSE, PipelineStage.DELIVER]
             return []
 

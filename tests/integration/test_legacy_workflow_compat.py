@@ -2,8 +2,8 @@ import asyncio
 import pytest
 
 from pipeline import PipelineStage
-from pipeline.base_plugins import BasePlugin
-from entity.core.builder import _AgentBuilder
+from entity.core.plugins import BasePlugin
+from entity import AgentBuilder
 
 
 class ReplyPlugin(BasePlugin):
