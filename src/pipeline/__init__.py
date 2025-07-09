@@ -19,11 +19,11 @@ from .base_plugins import (
     ToolPlugin,
     ValidationResult,
 )
-from .builder import AgentBuilder
 from .config_update import ConfigUpdateResult, update_plugin_configuration
 from .context import ConversationEntry, PluginContext, ToolCall
 from .decorators import plugin
 from .errors import create_static_error_response
+from .builder import AgentBuilder
 from .initializer import (
     ClassRegistry,
     SystemInitializer,
