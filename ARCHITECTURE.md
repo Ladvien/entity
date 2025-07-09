@@ -789,9 +789,7 @@ class HTTPAdapter(AdapterPlugin):
 
 **Benefits**: Single learning curve, better error attribution, type safety with automatic coercion, and consistent validation experience across the entire framework.
 
-## Summary So Far ✅
-
-### 19. Reasoning Pattern Abstraction Strategy
+## 19. Reasoning Pattern Abstraction Strategy
 
 **Decision**: Provide built-in reasoning pattern plugins while maintaining full extensibility for custom patterns.
 
@@ -823,7 +821,7 @@ class NovelReasoningPattern(PromptPlugin):
 
 **Rationale**: Aligns with progressive disclosure philosophy - simple defaults for common cases, unlimited flexibility for advanced use cases.
 
-### 20. Memory Architecture: Primitive Resources + Custom Plugins
+## 20. Memory Architecture: Primitive Resources + Custom Plugins
 
 **Decision**: Provide foundational memory primitives through unified Memory resource; users implement domain-specific memory patterns as plugins.
 
@@ -847,7 +845,7 @@ class PersonalPreferencesPlugin(PromptPlugin):
 
 **Rationale**: Maintains framework focus on providing powerful primitives rather than opinionated solutions. Enables unlimited memory patterns while keeping core simple.
 
-### 21. Tool Discovery Architecture: Lightweight Registry Query + Plugin-Level Orchestration
+## 21. Tool Discovery Architecture: Lightweight Registry Query + Plugin-Level Orchestration
 
 **Decision**: Provide simple tool discovery primitive through registry queries; users implement discovery logic and tool orchestration in plugins.
 
