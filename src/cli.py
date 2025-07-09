@@ -11,16 +11,10 @@ from typing import Optional  # noqa: E402
 
 import yaml  # noqa: E402
 
-from pipeline import Agent  # noqa: E402
-from pipeline import (
-    update_plugin_configuration,
-    validate_topology,
-)  # noqa: E402
 from entity.utils.logging import get_logger  # noqa: E402
 from plugins.builtin.adapters.server import AgentServer  # noqa: E402
 
 from entity.core.agent import Agent  # noqa: E402
-from entity.core.logging import get_logger  # noqa: E402
 
 logger = get_logger(__name__)
 
