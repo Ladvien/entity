@@ -8,7 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover - type check only
 from .errors import ToolExecutionError
 from .state import ConversationEntry, FailureInfo
 from .tools.base import RetryOptions
-from .tools.execution import execute_tool
+from .tools.execution import queue_tool_use
 
 
 class AdvancedContext:
@@ -46,7 +46,7 @@ class AdvancedContext:
                 delay=getattr(tool, "retry_delay", 1.0),
             )
             try:
-                result = await execute_tool(tool, call, state, options)
+                result = await queue_tool_use(tool, call, state, options)
                 self._ctx.store(call.result_key, result)
                 self._ctx.record_tool_execution(call.name, call.result_key, call.source)
             except Exception as exc:  # noqa: BLE001

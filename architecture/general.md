@@ -173,7 +173,7 @@ class FailurePlugin(BasePlugin):
 ```python
 async def _execute_impl(self, context):
     # Tools execute immediately with natural async/await
-    result = await context.use_tool("calculator", expression="2+2")
+    result = await context.tool_use("calculator", expression="2+2")
     context.set_response(f"The answer is {result}")  # DELIVER stage only
 ```
 

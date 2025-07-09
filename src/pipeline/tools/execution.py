@@ -4,6 +4,7 @@ import asyncio
 import hashlib
 import json
 import time
+import warnings
 from typing import Any, Awaitable, Callable, Dict, TypeVar, cast
 
 from common_interfaces import ToolPluginProtocol
@@ -19,7 +20,7 @@ logger = get_logger(__name__)
 ResultT = TypeVar("ResultT")
 
 
-async def execute_tool(
+async def queue_tool_use(
     tool: ToolPluginProtocol[ResultT],
     call: ToolCall,
     state: PipelineState,
@@ -56,6 +57,21 @@ async def execute_tool(
     raise ToolExecutionError(
         call.name, RuntimeError("Tool execution failed"), call.result_key
     )
+
+
+async def execute_tool(
+    tool: ToolPluginProtocol[ResultT],
+    call: ToolCall,
+    state: PipelineState,
+    options: RetryOptions,
+) -> ResultT:
+    """Deprecated wrapper for :func:`queue_tool_use`."""
+    warnings.warn(
+        "execute_tool() is deprecated; use queue_tool_use() instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return await queue_tool_use(tool, call, state, options)
 
 
 async def execute_pending_tools(
@@ -129,7 +145,7 @@ async def execute_pending_tools(
                 },
             )
             try:
-                result: ResultT = await execute_tool(tool, call, state, options)
+                result: ResultT = await queue_tool_use(tool, call, state, options)
             except Exception as exc:
                 err = f"Error: {exc}"
                 state.stage_results[call.result_key] = err
@@ -215,4 +231,4 @@ async def execute_pending_tools(
     return results
 
 
-__all__ = ["execute_tool", "execute_pending_tools"]
+__all__ = ["queue_tool_use", "execute_pending_tools"]
