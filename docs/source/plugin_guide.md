@@ -39,8 +39,8 @@ async def weather_plugin(ctx):
     return await ctx.tool_use("weather", city="London")
 ```
 
-Plugins share data through `store()` and `load()` and can queue additional
-tool calls:
+Plugins share data through `store()`, `load()`, and `has()` and can queue additional
+tool calls. `load()` accepts an optional default value when the key is missing:
 
 ```python
 @agent.plugin
