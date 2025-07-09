@@ -8,7 +8,13 @@ from threading import Thread
 
 import pytest
 
-from entity_config.environment import load_env
+try:  # pragma: no cover - optional environment module
+    from entity_config.environment import load_env
+except Exception:  # pragma: no cover - fallback for missing deps
+
+    def load_env(_path: Path | str | None = None) -> None:
+        return None
+
 
 SRC_PATH = str(Path(__file__).resolve().parents[1] / "src")
 if SRC_PATH not in sys.path:

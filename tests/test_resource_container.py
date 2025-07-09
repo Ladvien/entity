@@ -40,6 +40,23 @@ async def build_container():
     return container
 
 
+class DepInitRes(ResourcePlugin):
+    stages = [PipelineStage.PARSE]
+    name = "dep_init"
+    dependencies = ["base"]
+
+    def __init__(self, config=None) -> None:
+        super().__init__(config)
+        self.base = None
+        self.initialized_with_dep = False
+
+    async def initialize(self) -> None:
+        self.initialized_with_dep = self.base is not None
+
+    async def _execute_impl(self, context):
+        return None
+
+
 def test_container_injects_dependencies():
     container = asyncio.run(build_container())
     dep = container.get("dep")
@@ -149,3 +166,13 @@ async def test_shutdown_order_reversed():
     await container.build_all()
     await container.shutdown_all()
     assert log == ["init-a", "init-b", "stop-b", "stop-a"]
+
+
+@pytest.mark.asyncio
+async def test_dependencies_injected_before_initialize():
+    container = ResourceContainer()
+    container.register("base", BaseRes, {})
+    container.register("dep", DepInitRes, {})
+    await container.build_all()
+    dep = container.get("dep")
+    assert dep is not None and dep.initialized_with_dep
