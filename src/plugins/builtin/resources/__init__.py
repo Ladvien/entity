@@ -10,6 +10,8 @@ from .duckdb_vector_store import DuckDBVectorStore
 from .filesystem import FileSystemResource
 from .llm_base import LLM
 from .llm_resource import LLMResource
+from .postgres import PostgresResource
+from .echo_llm import EchoLLMResource
 from .local_filesystem import LocalFileSystemResource
 from .memory_filesystem import MemoryFileSystem
 from .metrics import MetricsResource
@@ -28,10 +30,12 @@ __all__ = [
     "Resource",
     "BaseResource",
     "LLMResource",
+    "EchoLLMResource",
     "StructuredLogging",
     "MetricsResource",
     "DuckDBDatabaseResource",
     "PgVectorStore",
+    "PostgresResource",
     "MemoryFileSystem",
     "DuckDBVectorStore",
     "LocalFileSystemResource",
