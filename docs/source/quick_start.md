@@ -71,23 +71,3 @@ plugins:
       api_key: ${OPENAI_API_KEY}
 ```
 
-### Building Configurations in Code
-Instead of YAML, you can create a configuration programmatically:
-
-```python
-from entity_config import ConfigBuilder
-from pipeline import SystemInitializer
-
-builder = (
-    ConfigBuilder.dev_preset()
-    .add_resource(
-        "llm",
-        "plugins.builtin.resources.llm.unified:UnifiedLLMResource",
-        provider="ollama",
-        base_url="http://localhost:11434",
-        model="tinyllama",
-    )
-)
-config = builder.build()
-initializer = SystemInitializer.from_dict(config)
-```

@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
-from entity_config.environment import load_env
+from entity.config.environment import load_env
 from pipeline import (
     ConversationEntry,
     MetricsCollector,

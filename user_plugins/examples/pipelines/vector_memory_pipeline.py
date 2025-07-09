@@ -13,16 +13,9 @@ from typing import Dict, List, Tuple
 from ..utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
-from entity_config.environment import load_env
-from pipeline import (
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    ResourceContainer,
-    SystemRegistries,
-    ToolRegistry,
-    execute_pipeline,
-)
+from entity.config.environment import load_env
+from pipeline import Agent  # noqa: E402
+from pipeline import PipelineStage, PromptPlugin  # noqa: E402
 from pipeline.config import ConfigLoader
 from entity.core.context import PluginContext
 from plugins.builtin.resources.pg_vector_store import PgVectorStore
