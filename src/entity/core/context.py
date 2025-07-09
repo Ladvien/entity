@@ -3,7 +3,11 @@ from __future__ import annotations
 """Minimal plugin context objects."""
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Dict, List, Optional
+
+from pipeline.stages import PipelineStage
+from pipeline.state import PipelineState, ToolCall, ConversationEntry
 
 
 @dataclass
@@ -14,40 +18,74 @@ class ConversationEntry:
 
 
 class PluginContext:
-    """Simplified context passed to plugins with intuitive verbs."""
+    """Runtime context passed to plugins."""
 
-    def __init__(self, memory: Optional[Any] = None) -> None:
-        self._history: List[ConversationEntry] = []
-        self._cache: Dict[str, Any] = {}
-        self._memory = memory
-        self.response: Any | None = None
+    def __init__(self, state: PipelineState, registries: Any) -> None:
+        self._state = state
+        self._registries = registries
+        self._store: Dict[str, Any] = {}
 
     # ------------------------------------------------------------------
-    # Conversation helpers
-    # ------------------------------------------------------------------
+    @property
+    def current_stage(self) -> Optional[PipelineStage]:
+        return self._state.current_stage
 
-    def conversation(self) -> List[ConversationEntry]:
-        """Return the current conversation history."""
-        return list(self._history)
+    def set_current_stage(self, stage: PipelineStage) -> None:
+        self._state.current_stage = stage
 
-    async def call_llm(self, _context: Any, _prompt: str, *, purpose: str = ""):
+    @property
+    def pipeline_id(self) -> str:
+        return self._state.pipeline_id
+
+    @property
+    def response(self) -> Any:
+        return self._state.response
+
+    def get_conversation_history(self) -> List[ConversationEntry]:
+        return list(self._state.conversation)
+
+    async def call_llm(self, _context: Any, prompt: str, *, purpose: str = "") -> Any:
+        llm = self._registries.resources.get("llm")
+        if llm is None:
+
+            class _Resp:
+                content = ""
+
+            return _Resp()
+        if hasattr(llm, "generate"):
+            return await llm.generate(prompt)
+        func = getattr(llm, "__call__", None)
+        if asyncio.iscoroutinefunction(func):
+            return await func(prompt)
+        if func:
+            return func(prompt)
+
         class _Resp:
             content = ""
 
         return _Resp()
 
-    def say(
-        self,
-        content: str,
-        *,
-        role: str = "assistant",
-        metadata: Optional[Dict[str, Any]] = None,
-    ) -> None:
-        """Append a message to the conversation history."""
-        self._history.append(ConversationEntry(content, role, metadata or {}))
+    async def ask_llm(self, prompt: str) -> str:
+        result = await self.call_llm(self, prompt)
+        return getattr(result, "content", str(result))
 
-    async def tool_use(self, name: str, **params: Any) -> None:  # noqa: ARG002
-        return None
+    def add_conversation_entry(
+        self, *, content: str, role: str, metadata: Dict[str, Any] | None = None
+    ) -> None:
+        self._state.conversation.append(
+            ConversationEntry(
+                content=content,
+                role=role,
+                timestamp=datetime.now(),
+                metadata=metadata or {},
+            )
+        )
+
+    async def tool_use(self, name: str, **params: Any) -> Any:
+        tool = self._registries.tools.get(name)
+        if tool is None:
+            raise ValueError(f"Tool '{name}' not found")
+        return await tool.execute_function(params)
 
     # ------------------------------------------------------------------
     # Temporary cache helpers
@@ -94,9 +132,19 @@ class PluginContext:
 
         return key in self._store
 
-    def set_response(self, value: Any) -> None:
-        self.response = value
+    def load(self, key: str, default: Any | None = None) -> Any:
+        return self._store.get(key, default)
 
-    # Backwards compatibility
-    get_conversation_history = conversation
-    add_conversation_entry = say
+    def set_metadata(self, key: str, value: Any) -> None:
+        self._state.metadata[key] = value
+
+    def get_metadata(self, key: str, default: Any | None = None) -> Any:
+        return self._state.metadata.get(key, default)
+
+    def get_failure_info(self) -> Any:
+        return self._state.failure_info
+
+    def set_response(self, value: Any) -> None:
+        if self.current_stage is not PipelineStage.DELIVER:
+            raise ValueError("Only DELIVER stage plugins may set responses")
+        self._state.response = value

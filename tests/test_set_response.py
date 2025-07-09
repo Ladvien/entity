@@ -1,6 +1,7 @@
+import asyncio
 import pytest
-from pipeline import PipelineStage, PipelineState, PluginContext
-from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
+from pipeline import PipelineStage, PipelineState, PluginContext, PromptPlugin
+from registry import PluginRegistry, SystemRegistries, ToolRegistry
 
 from entity.core.resources.container import ResourceContainer
 
@@ -25,3 +26,17 @@ def test_set_response_fails_in_other_stage():
         ValueError, match="Only DELIVER stage plugins may set responses"
     ):
         ctx.set_response("nope")
+
+
+class EarlyPlugin(PromptPlugin):
+    stages = [PipelineStage.DO]
+
+    async def _execute_impl(self, context: PluginContext) -> None:
+        context.set_response("bad")
+
+
+def test_plugin_cannot_set_response_before_deliver():
+    ctx = make_context(PipelineStage.DO)
+    plugin = EarlyPlugin({})
+    with pytest.raises(ValueError):
+        asyncio.run(plugin.execute(ctx))

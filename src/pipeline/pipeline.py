@@ -119,6 +119,7 @@ async def execute_stage(
     async with start_span(f"stage.{stage.name.lower()}"):
         for plugin in stage_plugins:
             context = PluginContext(state, registries)
+            context.set_current_stage(stage)
             await registries.validators.validate(stage, context)
             token = set_request_id(state.pipeline_id)
             try:
