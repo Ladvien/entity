@@ -40,3 +40,9 @@ class _AgentRuntime:
 
     async def handle(self, message: str) -> Dict[str, Any]:
         return await self.run_pipeline(message)
+
+
+# Public alias for backwards compatibility and clearer imports
+AgentRuntime = _AgentRuntime
+
+__all__ = ["AgentRuntime", "_AgentRuntime"]
