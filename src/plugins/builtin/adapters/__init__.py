@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from .cli import CLIAdapter
 from .dashboard import DashboardAdapter
-from .grpc import LLMGRPCAdapter
+
+try:  # pragma: no cover - covered in tests
+    from .grpc import LLMGRPCAdapter
+except ImportError:  # pragma: no cover - absence of grpc is tested
+    LLMGRPCAdapter = None  # type: ignore[assignment]
+
 from .http import HTTPAdapter
 from .logging import LoggingAdapter
 from .logging_adapter import StructuredLoggingAdapter
@@ -15,7 +20,9 @@ __all__ = [
     "DashboardAdapter",
     "CLIAdapter",
     "WebSocketAdapter",
-    "LLMGRPCAdapter",
     "LoggingAdapter",
     "StructuredLoggingAdapter",
 ]
+
+if LLMGRPCAdapter is not None:
+    __all__.append("LLMGRPCAdapter")
