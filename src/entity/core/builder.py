@@ -6,7 +6,7 @@ import asyncio
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Mapping, Iterable
 
 from entity.core import plugin_utils
 from entity.core.plugins.base import BasePlugin as BasePluginInterface
@@ -19,6 +19,7 @@ from entity.core.plugins.base import (
     PromptPlugin,
 )
 from pipeline.interfaces import PluginAutoClassifier
+from pipeline.stages import PipelineStage
 from entity.utils.logging import get_logger
 from pipeline.runtime import AgentRuntime
 from entity.core.plugins.base import BasePlugin
@@ -119,7 +120,9 @@ class AgentBuilder:
             self._register_module_plugins(module)
 
     # ------------------------------ runtime build -----------------------------
-    def build_runtime(self) -> "AgentRuntime":
+    def build_runtime(
+        self, workflow: Mapping[PipelineStage | str, Iterable[str]] | None = None
+    ) -> "AgentRuntime":
         asyncio.run(self.resource_registry.build_all())
         capabilities = SystemRegistries(
             resources=self.resource_registry,
