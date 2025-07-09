@@ -767,3 +767,4 @@ class HTTPAdapter(AdapterPlugin):
 - .env credential interpolation
 - `ConversationHistory` data schema
 - `MetricsCollector` and telemetry
+- `core` versus `community` plugin separation
