@@ -2,8 +2,6 @@ import asyncio
 
 import pytest
 from entity import Agent
-from entity.core.plugins import BasePlugin
-from pipeline import PipelineStage
 
 
 class ParsePlugin(BasePlugin):
