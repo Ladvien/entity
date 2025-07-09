@@ -1,9 +1,10 @@
 import asyncio
 from datetime import datetime
 
+from entity.core.resources.container import ResourceContainer
+from entity.core.state import MetricsCollector
 from pipeline import (
     ConversationEntry,
-    MetricsCollector,
     PipelineStage,
     PipelineState,
     PluginContext,
@@ -13,8 +14,6 @@ from pipeline import (
     ToolRegistry,
 )
 from plugins.builtin.resources.echo_llm import EchoLLMResource
-
-from entity.core.resources.container import ResourceContainer
 
 
 class DummyPlugin(PromptPlugin):

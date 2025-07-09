@@ -1,12 +1,7 @@
 from datetime import datetime
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineStage,
-    PipelineState,
-    PromptPlugin,
-)
+from entity.core.state import MetricsCollector
+from pipeline import ConversationEntry, PipelineStage, PipelineState, PromptPlugin
 
 
 class RespondPlugin(PromptPlugin):

@@ -1,17 +1,16 @@
 import asyncio
 from datetime import datetime
 
+from entity.core.resources.container import ResourceContainer
+from entity.core.state import MetricsCollector
 from pipeline import (
     ConversationEntry,
-    MetricsCollector,
     PipelineState,
     PluginContext,
     PluginRegistry,
     SystemRegistries,
     ToolRegistry,
 )
-
-from entity.core.resources.container import ResourceContainer
 from user_plugins.prompts.pii_scrubber import PIIScrubberPrompt
 
 

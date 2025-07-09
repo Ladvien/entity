@@ -1,17 +1,16 @@
 import asyncio
 from datetime import datetime
 
+from entity.core.resources.container import ResourceContainer
+from entity.core.state import MetricsCollector
 from pipeline import (
     ConversationEntry,
-    MetricsCollector,
     PipelineState,
     PluginContext,
     PluginRegistry,
     SystemRegistries,
     ToolRegistry,
 )
-
-from entity.core.resources.container import ResourceContainer
 from user_plugins.prompts.react_prompt import ReActPrompt
 from user_plugins.tools.calculator_tool import CalculatorTool
 

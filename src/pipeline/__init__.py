@@ -3,15 +3,16 @@
 from importlib import import_module
 from typing import TYPE_CHECKING, Any
 
-# Expose plugin configuration API used by the pipeline package
-
+from .exceptions import CircuitBreakerTripped
+from .reliability import CircuitBreaker, RetryPolicy
 
 # Registry classes are no longer imported eagerly.
 # Access ``PluginRegistry`` and related classes via ``registry`` or
 # rely on this module's ``__getattr__`` for lazy loading.
 from .stages import PipelineStage
-from .reliability import CircuitBreaker, RetryPolicy
-from .exceptions import CircuitBreakerTripped
+
+# Expose plugin configuration API used by the pipeline package
+
 
 if TYPE_CHECKING:  # pragma: no cover - imported for type checking only
     from .state import FailureInfo, LLMResponse, PipelineState
@@ -24,7 +25,6 @@ __all__ = [
     "ToolCall",
     "LLMResponse",
     "FailureInfo",
-    "MetricsCollector",
     "RetryPolicy",
     "CircuitBreaker",
     "CircuitBreakerTripped",
@@ -77,6 +77,7 @@ def __getattr__(name: str) -> Any:
             ToolRegistry,
         )
         from entity.core.resources.container import ResourceContainer
+
         from .initializer import (
             ClassRegistry,
             SystemInitializer,
@@ -109,7 +110,6 @@ def __getattr__(name: str) -> Any:
         "initialization_cleanup_context": "pipeline.initializer",
         "PluginAutoClassifier": "entity.core.plugin_utils",
         "import_plugin_class": "entity.core.plugin_utils",
-        "MetricsCollector": "pipeline.metrics",
         "LLM": "pipeline.resources",
         "BaseResource": "pipeline.resources",
         "Resource": "pipeline.resources",

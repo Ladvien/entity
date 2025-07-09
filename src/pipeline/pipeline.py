@@ -7,13 +7,14 @@ This module delegates tool execution to
 from __future__ import annotations
 
 import time
-from datetime import datetime
-from dataclasses import dataclass
-from typing import Any, Dict
 import warnings
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any, Dict
 
-from entity.core.state_logger import StateLogger
 from entity.core.registries import PluginRegistry, SystemRegistries
+from entity.core.state import MetricsCollector
+from entity.core.state_logger import StateLogger
 
 from .context import ConversationEntry, PluginContext
 from .errors import create_static_error_response
@@ -27,7 +28,6 @@ from .exceptions import (
 )
 from .logging import get_logger, reset_request_id, set_request_id
 from .manager import PipelineManager
-from .metrics import MetricsCollector
 from .observability.metrics import MetricsServerManager
 from .observability.tracing import start_span
 from .stages import PipelineStage
