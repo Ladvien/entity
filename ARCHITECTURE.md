@@ -662,7 +662,7 @@ class MemoryResource:
 
 **Implementation**:
 - Remove `state_file` and `snapshots_dir` parameters from pipeline execution
-- Log stage completion with pipeline context in structured format
+- Log stage completion with pipeline context using `StateLogger`
 - Use Memory resource for cross-execution conversation continuity
 - Clean up state serialization utilities if no longer needed
 
