@@ -2,7 +2,7 @@
 
 from .base import BaseResource, Resource
 from .bedrock import BedrockResource
-from .container import ResourceContainer
+from entity.core.resources.container import ResourceContainer
 from .database import DatabaseResource
 from .dsl import ResourceDef, ResourceGraph
 from .duckdb_database import DuckDBDatabaseResource

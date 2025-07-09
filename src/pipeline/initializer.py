@@ -12,10 +12,10 @@ from entity.core.plugin_utils import import_plugin_class
 from entity_config.environment import load_env
 from pipeline.config import ConfigLoader
 from pipeline.config.utils import interpolate_env_vars
-from pipeline.resources.container import ResourceContainer
+from entity.core.resources.container import ResourceContainer
 from entity.config.models import EntityConfig, asdict
 from pipeline.utils import DependencyGraph
-from registry import PluginRegistry, ToolRegistry
+from entity.core.registries import PluginRegistry, ToolRegistry
 from entity.workflows.discovery import (
     discover_workflows,
     register_module_workflows,

@@ -5,7 +5,7 @@ import yaml
 from pipeline.base_plugins import PromptPlugin, ResourcePlugin
 from pipeline.initializer import SystemInitializer
 from pipeline.stages import PipelineStage
-from registry.validator import RegistryValidator
+from entity.core.registry_validator import RegistryValidator
 
 
 class A(ResourcePlugin):

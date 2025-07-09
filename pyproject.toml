@@ -101,7 +101,7 @@ sequence = [
 sequence = [
     { cmd = "poetry run entity-cli --config config/dev.yaml verify" },
     { cmd = "poetry run entity-cli --config config/prod.yaml verify" },
-    { cmd = "python -m src.registry.validator" },
+    { cmd = "python -m src.entity.core.registry_validator" },
 ]
 [tool.poe.tasks.check]
 sequence = [

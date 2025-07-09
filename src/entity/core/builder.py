@@ -10,7 +10,8 @@ from typing import Any, Callable, Optional, Mapping, Iterable
 
 from entity.core import plugin_utils
 from entity.core.plugins.base import BasePlugin as BasePluginInterface
-from registry import PluginRegistry, ResourceContainer, SystemRegistries, ToolRegistry
+from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
+from entity.core.resources.container import ResourceContainer
 
 from entity.core.plugins.base import (
     AdapterPlugin,

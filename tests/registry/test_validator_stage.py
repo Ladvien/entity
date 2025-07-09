@@ -1,7 +1,7 @@
 import pytest
 import yaml
 from pipeline import PipelineStage, PromptPlugin
-from registry.validator import RegistryValidator
+from entity.core.registry_validator import RegistryValidator
 
 
 class GoodPlugin(PromptPlugin):

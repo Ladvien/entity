@@ -9,7 +9,7 @@ import warnings
 
 from entity.core.runtime import AgentRuntime
 from entity.core.state_logger import StateLogger
-from registry import SystemRegistries
+from entity.core.registries import SystemRegistries
 
 ResultT = TypeVar("ResultT")
 
