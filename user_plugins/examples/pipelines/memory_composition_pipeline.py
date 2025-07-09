@@ -1,22 +1,30 @@
-"""Demonstrate composed memory resource using SQLite, PGVector and local files.
+"""Demonstrate composed memory resources using a simple Workflow.
 
-Run with ``python -m examples.pipelines.memory_composition_pipeline`` or install
-the package in editable mode.
+Swap ``config/dev.yaml`` for ``config/prod.yaml`` to run the same
+workflow in production. This illustrates the hybrid dev/prod pattern.
 """
 
 from __future__ import annotations
 
 import asyncio
 import os
+from typing import List
 
 from ..utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
-
-from pipeline import Agent  # noqa: E402
-from pipeline import PipelineStage, PromptPlugin  # noqa: E402
+from entity_config.environment import load_env
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    ResourceContainer,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
 from pipeline.config import ConfigLoader
-from entity.core.context import PluginContext  # noqa: E402
+from entity.core.context import PluginContext
 from plugins.builtin.resources.pg_vector_store import PgVectorStore
 from plugins.builtin.resources.postgres import PostgresResource
 from plugins.builtin.resources.sqlite_storage import (
@@ -27,7 +35,7 @@ from user_plugins.resources import DuckDBVectorStore
 
 
 class StorePrompt(PromptPlugin):
-    """Example prompt that persists conversation history."""
+    """Persist conversation history."""
 
     dependencies = ["memory"]
     stages = [PipelineStage.THINK]
@@ -60,23 +68,30 @@ def create_vector_store() -> PgVectorStore | DuckDBVectorStore:
     return DuckDBVectorStore({"table": "embeddings"})
 
 
-def main() -> None:
-    agent = Agent()
+async def build_registries(workflow: dict[PipelineStage, List]) -> SystemRegistries:
+    load_env()
+    plugins = PluginRegistry()
+    resources = ResourceContainer()
+    tools = ToolRegistry()
 
     database = SQLiteDatabaseResource({"path": "./agent.db"})
     vector_store = create_vector_store()
     memory = Memory(database=database, vector_store=vector_store)
+    resources.add("memory", memory)
 
-    agent.builder.resource_registry.add("memory", memory)
-    agent.builder.plugin_registry.register_plugin_for_stage(
-        StorePrompt(), PipelineStage.THINK
-    )
+    for stage, stage_plugins in workflow.items():
+        for plugin in stage_plugins:
+            await plugins.register_plugin_for_stage(plugin, stage)
 
-    async def run() -> None:
-        print(await agent.handle("remember this"))
+    return SystemRegistries(resources=resources, tools=tools, plugins=plugins)
 
-    asyncio.run(run())
+
+async def main() -> None:
+    workflow = {PipelineStage.THINK: [StorePrompt()]}
+    registries = await build_registries(workflow)
+    result = await execute_pipeline("remember this", registries)
+    print(result)
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

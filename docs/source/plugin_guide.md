@@ -202,7 +202,6 @@ resources.register("filesystem", LocalFileSystemResource, {"base_path": "./files
 resources.register("storage", StorageResource, {})
 await resources.build_all()
 ```
-The script at `user_plugins/examples/storage_resource_example.py` demonstrates this setup.
 
 ### Vector Memory
 
@@ -234,11 +233,8 @@ poetry run entity-cli --config config/dev.yaml
 poetry run entity-cli serve-websocket --config config/dev.yaml
 ```
 
-When implementing custom error handling, refer to
-[`user_plugins/examples/failure_example.py`](../../user_plugins/examples/failure_example.py),
-the failure plugin template at `src/cli/templates/failure.py` (which shows how
-to register the plugin in a workflow),
-and the [error handling guide](error_handling.md).
+When implementing custom error handling, see the failure plugin template at
+`src/cli/templates/failure.py` and the [error handling guide](error_handling.md).
 
 ## Troubleshooting Plugins
 - **Plugin not executing** – confirm the `stages` list contains the desired pipeline stage.
