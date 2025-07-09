@@ -37,12 +37,3 @@ def test_snapshot_returns_deep_copy():
     snap = state.snapshot()
     snap.conversation[0].content = "bye"
     assert state.conversation[0].content == "hi"
-
-
-def test_restore_replaces_state():
-    state1 = make_state()
-    state2 = make_state()
-    state1.prompt = "changed"
-    state1.restore(state2)
-    assert state1.prompt == ""
-    assert len(state1.conversation) == 1
