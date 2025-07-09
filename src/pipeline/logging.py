@@ -2,29 +2,17 @@
 
 from __future__ import annotations
 
+"""Shims to maintain backward compatibility for logging utilities."""
 
-def configure_logging(*args, **kwargs):
-    from plugins.builtin.adapters.logging_adapter import configure_logging
-
-    return configure_logging(*args, **kwargs)
+from entity.utils.logging import configure_logging, get_logger
 
 
-def get_logger(name: str):
-    from plugins.builtin.adapters.logging_adapter import get_logger
-
-    return get_logger(name)
+def set_request_id(request_id: str):  # pragma: no cover - compatibility stub
+    return request_id
 
 
-def set_request_id(request_id: str):
-    from plugins.builtin.adapters.logging_adapter import set_request_id
-
-    return set_request_id(request_id)
-
-
-def reset_request_id(token):
-    from plugins.builtin.adapters.logging_adapter import reset_request_id
-
-    return reset_request_id(token)
+def reset_request_id(token: str) -> None:  # pragma: no cover - compatibility stub
+    pass
 
 
 __all__ = [

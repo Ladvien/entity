@@ -8,7 +8,7 @@ from typing import Any, Callable, Dict, Type
 
 from pydantic import BaseModel, ValidationError
 
-from pipeline.logging import get_logger
+from entity.utils.logging import get_logger
 
 SQL_PATTERN = re.compile(r"(;|--|/\*|\b(drop|delete|insert|update)\b)", re.IGNORECASE)
 

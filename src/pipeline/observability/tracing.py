@@ -1,49 +1,32 @@
 from __future__ import annotations
 
-"""OpenTelemetry tracing helpers for the Entity pipeline."""
+"""Minimal tracing utilities used throughout the pipeline."""
 
-import os
 from contextlib import asynccontextmanager
 from typing import Any, Awaitable, Callable
 
-from opentelemetry import trace
-
-try:  # Optional dependency
-    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-except Exception:  # pragma: no cover - optional
-    OTLPSpanExporter = None  # type: ignore
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+# Telemetry integration is currently disabled. These helpers provide the same
+# interface without relying on OpenTelemetry.
 
 
-class _NullWriter:
-    """A writer that silently drops all data."""
+class _Span:  # pragma: no cover - simple placeholder
+    """No-op span object used when tracing is disabled."""
 
-    def write(self, _: str) -> None:  # pragma: no cover - simple pass-through
+    def __enter__(self) -> "_Span":
+        return self
+
+    def __exit__(self, *args: Any) -> None:
         pass
-
-    def flush(self) -> None:  # pragma: no cover - simple pass-through
-        pass
-
-
-def _get_exporter():
-    endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
-    if endpoint and OTLPSpanExporter is not None:
-        return OTLPSpanExporter(endpoint=endpoint)
-    return ConsoleSpanExporter(out=_NullWriter())
-
-
-_tracer_provider = TracerProvider(resource=Resource.create({"service.name": "entity"}))
-_tracer_provider.add_span_processor(BatchSpanProcessor(_get_exporter()))
-trace.set_tracer_provider(_tracer_provider)
-_tracer = trace.get_tracer(__name__)
 
 
 @asynccontextmanager
-async def start_span(name: str):
-    with _tracer.start_as_current_span(name) as span:
+async def start_span(name: str):  # pragma: no cover - trivial
+    """Yield a no-op span to maintain tracing API compatibility."""
+    span = _Span()
+    try:
         yield span
+    finally:
+        pass
 
 
 async def traced(

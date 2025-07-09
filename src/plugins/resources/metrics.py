@@ -28,6 +28,7 @@ class MetricsResource(BaseResource):
         return ValidationResult.success_result()
 
     async def initialize(self) -> None:
+        """Initialize the metrics server if telemetry is enabled."""
         MetricsServerManager.start(self._port)
 
     def get_metrics(self) -> Dict[str, int]:

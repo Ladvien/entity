@@ -18,7 +18,7 @@ from pipeline.base_plugins import PromptPlugin  # noqa: E402
 from pipeline.base_plugins import ResourcePlugin  # noqa: E402
 from pipeline.base_plugins import ToolPlugin  # noqa: E402
 from pipeline.base_plugins import AdapterPlugin, ValidationResult  # noqa: E402
-from pipeline.logging import get_logger  # noqa: E402
+from entity.utils.logging import get_logger  # noqa: E402
 
 from .generate import generate_plugin  # noqa: E402
 from .utils import load_plugin  # noqa: E402

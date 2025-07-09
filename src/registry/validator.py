@@ -16,7 +16,7 @@ if str(SRC_PATH) not in sys.path:
 from pipeline.initializer import ClassRegistry  # noqa: E402
 from pipeline.initializer import SystemInitializer  # noqa: E402
 from pipeline.initializer import import_plugin_class  # noqa: E402
-from pipeline.logging import get_logger  # noqa: E402
+from entity.utils.logging import get_logger  # noqa: E402
 from pipeline.stages import PipelineStage  # noqa: E402
 
 logger = get_logger(__name__)

@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from pipeline.logging import get_logger
+from entity.utils.logging import get_logger
 from plugins.builtin.adapters.logging_adapter import configure_logging
 
 logger = get_logger(__name__)

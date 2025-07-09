@@ -19,7 +19,7 @@ from pipeline.base_plugins import (
     PromptPlugin,
 )
 from pipeline.interfaces import PluginAutoClassifier
-from pipeline.logging import get_logger
+from entity.utils.logging import get_logger
 from pipeline.runtime import AgentRuntime
 from pipeline.user_plugins import BasePlugin
 

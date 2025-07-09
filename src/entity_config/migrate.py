@@ -9,7 +9,7 @@ import yaml
 
 from entity_config.models import EntityConfig, asdict
 from pipeline.config import ConfigLoader
-from pipeline.logging import get_logger
+from entity.utils.logging import get_logger
 from plugins.builtin.adapters.logging_adapter import configure_logging
 
 logger = get_logger(__name__)

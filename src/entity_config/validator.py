@@ -16,7 +16,7 @@ from pydantic import ValidationError  # noqa: E402
 
 from pipeline import SystemInitializer  # noqa: E402
 from pipeline.config import ConfigLoader  # noqa: E402
-from pipeline.logging import get_logger  # noqa: E402
+from entity.utils.logging import get_logger  # noqa: E402
 from plugins.builtin.adapters.logging_adapter import configure_logging  # noqa: E402
 
 from .models import EntityConfig, asdict  # noqa: E402
