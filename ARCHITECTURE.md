@@ -738,3 +738,10 @@ class HTTPAdapter(AdapterPlugin):
 - Consolidate configuration models in single module
 
 **Benefits**: Single learning curve, better error attribution, type safety with automatic coercion, and consistent validation experience across the entire framework.
+
+
+## Architectural Decisions not Reviewed
+- Logging
+- Docker
+- .env credential interpolation
+

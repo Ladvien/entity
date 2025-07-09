@@ -1,8 +1,3 @@
-## Architectural Decisions not Reviewed
-- Logging
-- Docker
-
-
 ## Implementation Updates Required
 
 ### 1. Response Termination Control
