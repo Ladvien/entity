@@ -48,7 +48,7 @@ def main() -> None:
         DuckDBVectorStore,
         {"table": "vectors", "dimensions": 3},
     )
-    resources.register("memory", MemoryResource, {})
+    resources.register("memory", Memory, {})
     agent.builder.plugin_registry.register_plugin_for_stage(
         SimilarityPrompt(), PipelineStage.THINK
     )

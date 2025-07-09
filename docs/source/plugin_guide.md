@@ -150,7 +150,7 @@ Several example pipelines in the `examples/` directory showcase more advanced pa
 
 ### StorageResource Composition
 
-`StorageResource` composes `DatabaseResource`, `VectorStoreResource`, and `FileSystemResource` behind one interface for handling files. The pipeline at `examples/pipelines/memory_composition_pipeline.py` demonstrates the same pattern using the older `MemoryResource`. `MemoryResource` now persists conversation history and vectors and is configured in [config/dev.yaml](../../config/dev.yaml). Use `StorageResource` when your plugins need to create or read files. With the plugin configured the code looks like:
+`StorageResource` composes `DatabaseResource`, `VectorStoreResource`, and `FileSystemResource` behind one interface for handling files. The pipeline at `examples/pipelines/memory_composition_pipeline.py` demonstrates the same pattern using the unified `Memory` resource. `Memory` persists conversation history and vectors and is configured in [config/dev.yaml](../../config/dev.yaml). Use `StorageResource` when your plugins need to create or read files. With the plugin configured the code looks like:
 
 ```python
 resources = ResourceContainer()

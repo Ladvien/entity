@@ -44,7 +44,7 @@ def main() -> None:
     resources.register("database", SQLiteDatabaseResource, {"path": "./agent.db"})
     resources.register("filesystem", LocalFileSystemResource, {"base_path": "./files"})
     resources.register("storage", StorageResource, {})
-    resources.register("memory", MemoryResource, {})
+    resources.register("memory", Memory, {})
 
     agent.builder.plugin_registry.register_plugin_for_stage(
         StorePrompt(), PipelineStage.THINK
