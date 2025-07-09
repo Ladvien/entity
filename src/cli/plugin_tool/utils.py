@@ -5,7 +5,7 @@ import inspect
 from pathlib import Path
 from typing import Type
 
-from pipeline.base_plugins import BasePlugin
+from entity.core.plugins import BasePlugin
 
 
 def load_plugin(path: str) -> Type[BasePlugin]:
