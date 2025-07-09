@@ -21,7 +21,7 @@ from entity.core.plugins.base import (
 from pipeline.interfaces import PluginAutoClassifier
 from entity.utils.logging import get_logger
 from pipeline.runtime import AgentRuntime
-from common_interfaces import BasePlugin
+from entity.core.plugins.base import BasePlugin
 
 logger = get_logger(__name__)
 
