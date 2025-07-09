@@ -85,7 +85,7 @@ plugins:
       type: user_plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
       enable_reasoning: true
     conversation_history:
-      type: plugins.builtin.prompts.conversation_history:ConversationHistory
+      type: user_plugins.prompts.conversation_history:ConversationHistory
       history_table: chat_history
       stages: [parse, deliver]
     memory_retrieval:
