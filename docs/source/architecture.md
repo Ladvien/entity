@@ -65,3 +65,23 @@ ImportError: cannot import name 'Resource' from partially initialized module 'co
 
 Once the imports are resolved, the `pytest-benchmark` plugin can capture
 timing metrics for each pipeline stage.
+
+## Zero-Config AWS Startup
+
+The framework includes helper scripts that spin up a minimal AWS stack and run a
+pipeline with almost no configuration. Run `python user_plugins/examples/bedrock_deploy.py`
+to create an S3 bucket and IAM role, then start the agent. Behavior is defined by
+a **Workflow** object:
+
+```python
+from my_workflows import QuickstartWorkflow
+from pipeline import Pipeline
+
+workflow = QuickstartWorkflow()
+pipeline = Pipeline(approach=workflow)
+```
+
+The pipeline loops through `PARSE → THINK → DO → REVIEW → DELIVER` until a
+plugin calls `set_response`, illustrating the hybrid pipeline–state machine model.
+Because the workflow defines plugin selection, you can launch on AWS without a
+YAML file and later swap in custom stages as needed.
