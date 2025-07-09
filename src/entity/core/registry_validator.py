@@ -55,7 +55,7 @@ class RegistryValidator:
     @staticmethod
     def _validate_stage_assignment(name: str, cls: type) -> None:
         from pipeline.resources import Resource
-        from pipeline.base_plugins import ResourcePlugin, ToolPlugin
+        from entity.core.plugins import ResourcePlugin, ToolPlugin
 
         if issubclass(cls, (ResourcePlugin, Resource, ToolPlugin)):
             return

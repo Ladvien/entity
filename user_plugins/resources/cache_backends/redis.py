@@ -6,6 +6,12 @@ user configuration can continue referencing
 duplicating its implementation.
 """
 
-from plugins.contrib.resources.cache_backends.redis import RedisCache
+
+class RedisCache:
+    """Placeholder for the optional Redis cache backend."""
+
+    def __init__(self, *args, **kwargs) -> None:  # pragma: no cover - example
+        raise NotImplementedError("Redis backend not available")
+
 
 __all__ = ["RedisCache"]

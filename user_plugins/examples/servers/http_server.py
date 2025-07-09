@@ -1,39 +1,16 @@
 """Run a simple HTTP server using the Entity framework.
 
-Run with ``python -m examples.servers.http_server`` or install the package in
-editable mode.
+This example is disabled because optional adapter plugins are not included.
 """
 
 from __future__ import annotations
 
 
-from ..utilities import enable_plugins_namespace
+def main() -> None:
+    """Inform that HTTP server components are unavailable."""
 
-enable_plugins_namespace()
-
-import asyncio
-from typing import Any
-
-from pipeline import PipelineManager
-from pipeline.initializer import SystemInitializer
-from entity.resources.memory import Memory
-from plugins.builtin.adapters.http import HTTPAdapter, MessageRequest
-
-
-async def main() -> None:
-    initializer = SystemInitializer.from_yaml("config/dev.yaml")
-    registries = await initializer.initialize()
-    pipeline_manager = PipelineManager(registries)
-    memory: Memory = registries.resources.get("memory")  # type: ignore[arg-type]
-    conversation_manager = memory.start_conversation(registries, pipeline_manager)
-    adapter = HTTPAdapter(pipeline_manager, {"host": "127.0.0.1", "port": 8000})
-
-    @adapter.app.post("/conversation")
-    async def conversation(req: MessageRequest) -> dict[str, Any]:
-        return await conversation_manager.process_request(req.message)
-
-    await adapter.serve(registries)
+    print("HTTP server example requires optional adapters")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
