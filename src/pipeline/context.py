@@ -6,8 +6,17 @@ import asyncio
 import warnings
 from copy import deepcopy
 from datetime import datetime
-from typing import (TYPE_CHECKING, Any, AsyncIterator, Callable, Dict, List,
-                    Optional, TypeVar, cast)
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    AsyncIterator,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    TypeVar,
+    cast,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from common_interfaces.resources import LLM
@@ -27,8 +36,7 @@ from .context_helpers import AdvancedContext
 from .errors import ResourceError
 from .metrics import MetricsCollector
 from .stages import PipelineStage
-from .state import (ConversationEntry, FailureInfo, LLMResponse, PipelineState,
-                    ToolCall)
+from .state import ConversationEntry, FailureInfo, LLMResponse, PipelineState, ToolCall
 
 ResourceT = TypeVar("ResourceT", covariant=True)
 
@@ -194,14 +202,12 @@ class PluginContext:
         return [deepcopy(entry) for entry in history]
 
     def set_response(self, response: Any) -> None:
-        """Set the pipeline's final ``response`` during the DELIVER stage."""
+        """Finalize the pipeline ``response`` during the DELIVER stage."""
 
         if self.current_stage != PipelineStage.DELIVER:
-            raise ValueError("set_response() is only valid during the DELIVER stage")
+            raise ValueError("Only DELIVER stage plugins may set responses")
 
         state = self.__state
-        if state.current_stage is not PipelineStage.DELIVER:
-            raise ValueError("Only DELIVER stage can set response")
         if state.response is not None:
             raise ValueError("Response already set")
         state.response = response

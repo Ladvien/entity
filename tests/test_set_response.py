@@ -1,8 +1,8 @@
 import pytest
 
 from pipeline import PipelineStage, PipelineState, PluginContext
-from registry import PluginRegistry, SystemRegistries, ToolRegistry
 from pipeline.resources import ResourceContainer
+from registry import PluginRegistry, SystemRegistries, ToolRegistry
 
 
 def make_context(stage: PipelineStage) -> PluginContext:
@@ -19,5 +19,7 @@ def test_set_response_allowed_in_deliver():
 
 def test_set_response_fails_in_other_stage():
     ctx = make_context(PipelineStage.DO)
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="Only DELIVER stage plugins may set responses"
+    ):
         ctx.set_response("nope")

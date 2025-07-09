@@ -260,11 +260,13 @@ async def execute_pipeline(
                         state.last_completed_stage = stage
 
                     if (
-                        (
-                            state.response is not None
-                            and state.last_completed_stage == PipelineStage.DELIVER
-                        )
-                        or state.failure_info is not None
+                        state.response is not None
+                        and state.last_completed_stage == PipelineStage.DELIVER
+                    ):
+                        break
+
+                    if (
+                        state.failure_info is not None
                         or state.iteration >= max_iterations
                     ):
                         if (
