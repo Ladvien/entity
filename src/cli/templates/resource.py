@@ -8,6 +8,7 @@ class {class_name}(ResourcePlugin):
     """Example resource plugin."""
 
     stages = [PipelineStage.PARSE]
+    # Execution order follows the YAML list or registration sequence
 
     @classmethod
     def validate_config(cls, config: dict) -> ValidationResult:

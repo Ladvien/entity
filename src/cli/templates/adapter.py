@@ -8,6 +8,7 @@ class {class_name}(AdapterPlugin):
     """Example adapter plugin."""
 
     stages = [PipelineStage.DELIVER]
+    # Execution order follows the YAML list or registration sequence
 
     async def _execute_impl(self, context):
         pass

@@ -97,12 +97,7 @@ class PluginRegistry:
 
         async with self._lock:
             plugins = self._stage_plugins[stage_obj]
-            insert_at = len(plugins)
-            for idx, existing in enumerate(plugins):
-                if plugin.priority < existing.priority:
-                    insert_at = idx
-                    break
-            plugins.insert(insert_at, plugin)
+            plugins.append(plugin)
 
             plugin_name = name or getattr(plugin, "name", plugin.__class__.__name__)
             self._names[plugin] = plugin_name

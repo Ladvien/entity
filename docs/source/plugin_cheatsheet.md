@@ -30,3 +30,4 @@ class ExamplePlugin(PromptPlugin):
 ```
 
 Register plugins through `Agent.add_plugin()` or in a YAML configuration file.
+Plugins run in the same order they are listed under each stage.

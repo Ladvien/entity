@@ -15,7 +15,6 @@ from pipeline.resources import ResourceContainer
 
 
 class First(PromptPlugin):
-    priority = 30
     stages = [PipelineStage.DO]
 
     async def _execute_impl(self, context):
@@ -26,7 +25,6 @@ class First(PromptPlugin):
 
 
 class Second(PromptPlugin):
-    priority = 20
     stages = [PipelineStage.DO]
 
     async def _execute_impl(self, context):
@@ -36,7 +34,6 @@ class Second(PromptPlugin):
 
 
 class Third(PromptPlugin):
-    priority = 10
     stages = [PipelineStage.DO]
 
     async def _execute_impl(self, context):
@@ -50,17 +47,17 @@ def _set_final_response(context):
     context.set_response(order)
 
 
-def test_plugin_priority_order_matches_execution():
+def test_plugin_registration_order_matches_execution():
     registry = PluginRegistry()
     asyncio.run(registry.register_plugin_for_stage(First({}), PipelineStage.DO))
     asyncio.run(registry.register_plugin_for_stage(Third({}), PipelineStage.DO))
     asyncio.run(registry.register_plugin_for_stage(Second({}), PipelineStage.DO))
     registries = SystemRegistries(ResourceContainer(), ToolRegistry(), registry)
     result = asyncio.run(execute_pipeline("hi", registries))
-    assert result == ["third", "second", "first"]
+    assert result == ["first", "third", "second"]
 
 
-def test_initializer_orders_by_priority(tmp_path):
+def test_initializer_preserves_yaml_order(tmp_path):
     config = {
         "plugins": {
             "prompts": {
@@ -76,4 +73,4 @@ def test_initializer_orders_by_priority(tmp_path):
     initializer = SystemInitializer.from_yaml(str(path))
     plugin_reg, _, _ = asyncio.run(initializer.initialize())
     plugins = plugin_reg.get_plugins_for_stage(PipelineStage.DO)
-    assert [p.__class__ for p in plugins] == [Third, Second, First]
+    assert [p.__class__ for p in plugins] == [Second, First, Third]

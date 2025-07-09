@@ -17,7 +17,6 @@ class SecureToolWrapper(ToolPlugin):
         self._plugin = plugin
         self._validator = validator
         self.stages = getattr(plugin, "stages", [])
-        self.priority = getattr(plugin, "priority", 50)
 
     async def execute_function(self, params: Dict[str, Any]) -> Any:
         validated = self._validator(params)
