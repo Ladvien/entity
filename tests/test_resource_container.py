@@ -115,3 +115,37 @@ async def test_container_async_context_shutdown():
     container = await build_container()
     async with container:
         assert container.get("base") is not None
+
+
+@pytest.mark.asyncio
+async def test_shutdown_order_reversed():
+    log: list[str] = []
+
+    class A(ResourcePlugin):
+        async def initialize(self) -> None:
+            log.append("init-a")
+
+        async def shutdown(self) -> None:
+            log.append("stop-a")
+
+        async def _execute_impl(self, context):
+            return None
+
+    class B(ResourcePlugin):
+        dependencies = ["a"]
+
+        async def initialize(self) -> None:
+            log.append("init-b")
+
+        async def shutdown(self) -> None:
+            log.append("stop-b")
+
+        async def _execute_impl(self, context):
+            return None
+
+    container = ResourceContainer()
+    container.register("a", A, {})
+    container.register("b", B, {})
+    await container.build_all()
+    await container.shutdown_all()
+    assert log == ["init-a", "init-b", "stop-b", "stop-a"]

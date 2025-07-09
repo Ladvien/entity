@@ -92,6 +92,7 @@ class ResourceContainer:
         self._configs: Dict[str, Dict] = {}
         self._deps: Dict[str, List[str]] = {}
         self._order: List[str] = []
+        self._init_order: List[str] = []
         self._pools: Dict[str, ResourcePool] = {}
 
     async def add(self, name: str, resource: Any) -> None:
@@ -129,6 +130,7 @@ class ResourceContainer:
 
     async def build_all(self) -> None:
         self._order = self._resolve_order()
+        self._init_order = []
         for name in self._order:
             cls = self._classes[name]
             cfg = self._configs[name]
@@ -137,9 +139,14 @@ class ResourceContainer:
             init = getattr(instance, "initialize", None)
             if callable(init):
                 await init()
+            self._init_order.append(name)
+            check = getattr(instance, "health_check", None)
+            if callable(check) and not await check():
+                raise SystemError(f"Resource '{name}' failed health check")
 
     async def shutdown_all(self) -> None:
-        for name in reversed(self._order):
+        order = self._init_order or self._order
+        for name in reversed(order):
             res = self.get(name)
             if res is None:
                 continue
