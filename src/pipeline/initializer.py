@@ -4,14 +4,13 @@ from __future__ import annotations
 
 import copy
 import tomllib
-from contextlib import contextmanager
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple, Type
 
 from entity.core.plugin_utils import import_plugin_class
 from entity.config.environment import load_env
 from pipeline.config import ConfigLoader
-from pipeline.config.utils import interpolate_env_vars
 from entity.core.resources.container import ResourceContainer
 from entity.config.models import EntityConfig, asdict
 from pipeline.utils import DependencyGraph
@@ -170,11 +169,15 @@ class ClassRegistry:
             raise SystemError(f"Plugin '{name}' has invalid stage values: {invalid}")
 
 
-@contextmanager
-def initialization_cleanup_context():
-    """Placeholder context manager for future initialization cleanup."""
+@asynccontextmanager
+async def initialization_cleanup_context(container: ResourceContainer):
+    """Ensure resources shut down if initialization fails."""
 
-    yield
+    try:
+        yield
+    except Exception:
+        await container.shutdown_all()
+        raise
 
 
 class SystemInitializer:
@@ -439,41 +442,38 @@ class SystemInitializer:
         resource_container = self.resource_container_cls()
         for name, cls, config in registry.resource_classes():
             resource_container.register(name, cls, config)
-        await resource_container.build_all()
 
-        report = await resource_container.health_report()
-        for name, healthy in report.items():
-            if not healthy:
-                raise SystemError(f"Resource '{name}' failed health check")
+        async with initialization_cleanup_context(resource_container):
+            await resource_container.build_all()
 
-        for name, resource in resource_container._resources.items():
-            validate = getattr(resource, "validate_runtime", None)
-            if callable(validate):
-                result = await validate()
-                if not result.success:
-                    raise SystemError(
-                        f"Runtime validation failed for {name}: {result.error_message}"
+            for name, resource in resource_container._resources.items():
+                validate = getattr(resource, "validate_runtime", None)
+                if callable(validate):
+                    result = await validate()
+                    if not result.success:
+                        raise SystemError(
+                            f"Runtime validation failed for {name}: {result.error_message}"
+                        )
+
+            # Phase 3.5: register tools
+            tr_cfg = self.config.get("tool_registry", {})
+            tool_registry = self.tool_registry_cls(
+                concurrency_limit=tr_cfg.get("concurrency_limit", 5),
+                cache_ttl=tr_cfg.get("cache_ttl"),
+            )
+            for name, cls, config in registry.named_tool_classes():
+                instance = cls(config)
+                await tool_registry.add(name, instance)
+
+            # Phase 4: instantiate prompt and adapter plugins
+            plugin_registry = self.plugin_registry_cls()
+            for cls, config in registry.non_resource_non_tool_classes():
+                instance = cls(config)
+                stages, _ = self._resolve_plugin_stages(cls, instance, config)
+                for stage in stages:
+                    await plugin_registry.register_plugin_for_stage(
+                        instance, PipelineStage.ensure(stage)
                     )
-
-        # Phase 3.5: register tools
-        tr_cfg = self.config.get("tool_registry", {})
-        tool_registry = self.tool_registry_cls(
-            concurrency_limit=tr_cfg.get("concurrency_limit", 5),
-            cache_ttl=tr_cfg.get("cache_ttl"),
-        )
-        for name, cls, config in registry.named_tool_classes():
-            instance = cls(config)
-            await tool_registry.add(name, instance)
-
-        # Phase 4: instantiate prompt and adapter plugins
-        plugin_registry = self.plugin_registry_cls()
-        for cls, config in registry.non_resource_non_tool_classes():
-            instance = cls(config)
-            stages, _ = self._resolve_plugin_stages(cls, instance, config)
-            for stage in stages:
-                await plugin_registry.register_plugin_for_stage(
-                    instance, PipelineStage.ensure(stage)
-                )
 
         return plugin_registry, resource_container, tool_registry, workflow
 
