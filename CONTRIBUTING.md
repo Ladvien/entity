@@ -1,67 +1,74 @@
+Here’s a cleaned-up and deduplicated version of your `CONTRIBUTING.md` section. Redundant sections like repeated command blocks and overlapping workflow guidance have been consolidated under clear headings.
+
 # Contributing
 
-Thank you for helping improve Entity Pipeline Framework! Always start with `poetry install --with dev` to create the virtual environment and install dependencies. After that, follow the project guidelines and run all checks before opening a pull request.
+Thank you for helping improve the Entity Pipeline Framework!
 
-## Code Review Expectations
-
-- Keep pull requests focused and small.
-- Describe the purpose of the change and any new dependencies.
-- Ensure tests and documentation are updated when relevant.
-- Maintain readable, well-structured code. Favor object oriented design.
-- Pre-commit hooks run automatically. They will fail if the repository contains
-  empty directories; remove them before committing.
-
-## Development workflow
-
-Use this checklist before opening a pull request:
-
-- `poetry install --with dev`
-- `poetry run black src tests`
-- `poetry run isort src tests`
-- `poetry run flake8 src tests`
-- `poetry run mypy src`
-- `bandit -r src`
-- `python -m src.entity_config.validator --config config/dev.yaml`
-- `python -m src.entity_config.validator --config config/prod.yaml`
-- `python -m src.registry.validator`
-- `pytest`
-
-## Quality Checks
-
-Before running the commands below, execute `poetry install --with dev` so that
-all development dependencies are available. Then, before pushing changes, run:
+Start by setting up your development environment:
 
 ```bash
-poetry run black src tests
-poetry run isort src tests
-poetry run flake8 src tests
-poetry run mypy src
-bandit -r src
-python tools/check_empty_dirs.py
-poetry run python -m src.entity_config.validator --config config/dev.yaml
-poetry run python -m src.entity_config.validator --config config/prod.yaml
-python -m src.registry.validator
-pytest tests/integration/ -v
-pytest tests/infrastructure/ -v
-pytest tests/performance/ -m benchmark
+poetry install --with dev
 ```
 
-Pre-commit also runs `tools/check_empty_dirs.py`. This tool searches for
-directories that do not contain any files (even if subdirectories are present)
-and rejects the commit when such directories are found. You can run it
-manually with:
+This installs all required development dependencies.
+
+## Development Workflow
+
+Before opening a pull request:
+
+1. **Code Quality & Static Analysis**
+
+   ```bash
+   poetry run black src tests
+   poetry run isort src tests
+   poetry run flake8 src tests
+   poetry run mypy src
+   bandit -r src
+   python tools/check_empty_dirs.py
+   ```
+
+2. **Configuration Validation**
+
+   ```bash
+   poetry run python -m src.entity_config.validator --config config/dev.yaml
+   poetry run python -m src.entity_config.validator --config config/prod.yaml
+   python -m src.registry.validator
+   ```
+
+3. **Run Tests**
+
+   ```bash
+   pytest
+   pytest tests/integration/ -v
+   pytest tests/infrastructure/ -v
+   pytest tests/performance/ -m benchmark
+   ```
+
+Pre-commit hooks will enforce these checks automatically. The `check_empty_dirs.py` script will block commits if empty directories (without any files) are found—even if they contain subdirectories. Run it manually when needed:
 
 ```bash
 python tools/check_empty_dirs.py
 ```
+
+## Pull Request Guidelines
+
+* Keep pull requests small and focused.
+* Provide a clear description of the change.
+* List any new dependencies or configuration updates.
+* Ensure relevant tests and documentation are updated.
+* Maintain clean, readable, object-oriented code.
+* Verify plugin stage assignments and error handling.
 
 ## Optional Dependencies for Examples
 
-The examples under `examples/` rely on packages such as `websockets` and `grpcio-tools`.
-Install them all at once with:
+Examples in `examples/` may require additional packages like `websockets` and `grpcio-tools`. To install:
 
 ```bash
 poetry install --with examples
 ```
 
-CI will also check docstrings with `pydocstyle`. Core modules may import plugins, but plugins must not import core modules directly.
+## Notes
+
+* CI will run all checks automatically, including `pydocstyle` for docstring formatting.
+* Core modules may import plugins, but **plugins must not import core modules** directly (enforces architectural boundaries).
+

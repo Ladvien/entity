@@ -3,64 +3,57 @@
 This repository contains a plugin based framework for building AI agents.
 Use this document when preparing changes or reviewing pull requests.
 
-## IMPORTANT!
-Before commit, please pull changes from main and resolve any conflicts from main:
-```sh
-git remote set-url origin https://${GITHUB_TOKEN}@github.com/Ladvien/entity.git
-git pull origin main
-git branch --set-upstream-to=origin/main work
-```
-
-- `/architecture/*` – architecture overview and design documents. Start with
-  [`architecture/overview.md`](architecture/overview.md).
-- `/src/pipeline` – core engine and shared abstractions
-- `/plugins` – concrete plugin implementations grouped by type
-- `/config` – YAML configuration files
-- `/tests` – unit and integration tests
-- `/docs` – documentation and architecture guides
-
-## Architecture Directory
-
-The `/architecture` folder contains the following documents:
-
-```
-/architecture
-├── design_principles.md
-├── frameworks.md
-├── general.md
-├── models.md
-├── overview.md
-└── pipeline_overview.md
-```
-
 ## Important Notes
+- **You must adhere to architectural guidelines when making changes.** See
+  `ARCHITECTURE.md` for details on the architectural design and principles.
+- Refer to `CONTRIBUTING.md` for general contribution guidelines.
 - The project is pre-alpha; remove unused code rather than keeping
   backward compatibility.
 - Prefer adding `TODO:` comments when scope is unclear.
 - Always use the Poetry environment for development.
 - Run `poetry install --with dev` before executing any quality checks or tests.
 
-## Programmatic Checks
-Run the following commands before opening a pull request:
 
-```bash
-poetry run black src tests
-poetry run isort src tests
-poetry run flake8 src tests
-poetry run mypy src
-bandit -r src
-python -m src.entity_config.validator --config config/dev.yaml
-python -m src.entity_config.validator --config config/prod.yaml
-python -m src.registry.validator
-pytest
-```
+## Architecture
+Here is the architecture directory.  Below are references to architectural notes found in `ARCHITECTURE.md`.  Please grep the `ARCHITECTURE.md` file for the section titles to find the full text. 
 
-## Pull Request Guidelines
-1. Provide a clear description of the change.
-2. List any new dependencies or configuration updates.
-3. Ensure tests and documentation are updated.
-4. Verify plugin stage assignments and error handling.
+* **1. Core Mental Model: Plugin Taxonomy and Architecture**: Describes the foundational plugin architecture of the framework, including plugin categories, resource composition, lifecycle management, and development patterns.
 
-## Further Reading
-See the **Architecture Directory** section for a full architecture overview and
-`CONTRIBUTING.md` for detailed contribution instructions.
+* **2. Progressive Disclosure: Enhanced 3-Layer Plugin System**: Explains the framework’s tiered plugin abstraction model and how developers progressively adopt complexity through decorators, classes, and advanced customization.
+
+* **3. Resource Management: Core Canonical + Simple Flexible Keys**: Details the hybrid naming strategy for resource access, supporting both simple canonical names and flexible custom keys for more complex setups.
+
+* **4. Plugin Stage Assignment: Guided Explicit Declaration with Smart Defaults**: Describes how plugins are assigned to pipeline stages using explicit declarations, smart defaults, and tooling guidance to reduce developer confusion.
+
+* **5. Error Handling and Validation: Fail-Fast with Multi-Layered Validation**: Defines a three-phase validation system for configuration, dependencies, and runtime connectivity to catch issues early and enforce system health.
+
+* **6. Scalability Architecture: Stateless Workers with External State**: Outlines the stateless worker design that enables horizontal scaling by storing all pipeline context in external memory systems.
+
+* **6. Response Termination Control**: Specifies that only plugins in the DELIVER stage can finalize the response, ensuring consistent and complete pipeline processing.
+
+* **7. Stage Results Accumulation Pattern**: Explains how stages communicate via an internal key-value store (`context.store`, `context.load`, `context.has`) to maintain clarity and traceability of pipeline outputs.
+
+* **8. Tool Execution Patterns**: Details support for both immediate and queued tool execution patterns, giving developers control over tool concurrency and performance strategies.
+
+* **9. Memory Resource Consolidation**: Describes the unification of all memory-related responsibilities into a single `Memory` resource, simplifying configuration and access patterns.
+
+* **10. Resource Dependency Injection Pattern**: Covers how resources declare and receive dependencies explicitly, enabling full graph validation, clear architecture, and hot-reload support.
+
+* **11. Plugin Stage Assignment Precedence**: Specifies the order of precedence for determining plugin stage assignments—explicit declarations, plugin type defaults, and auto-classification.
+
+* **12. Resource Lifecycle Management**: Establishes that resources are initialized and shut down in strict topological order, ensuring predictable system startup and teardown behavior.
+
+* **13. Configuration Hot-Reload Scope**: Clarifies which configuration changes can be hot-reloaded (parameters only) versus those requiring full system restarts (structural changes).
+
+* **14. Error Handling and Failure Propagation**: Explains the framework’s fail-fast behavior, where any plugin failure immediately halts stage execution and routes processing to the ERROR stage.
+
+* **15. Pipeline State Management Strategy**: Defines how all conversation persistence and debugging state is managed through structured logs and the memory resource, eliminating separate state snapshot files.
+
+* **16. Plugin Execution Order Simplification**: States that plugins now execute in the order defined in the YAML configuration, removing priority fields for simplicity and predictability.
+
+* **17. Agent and AgentBuilder Separation**: Distinguishes between `Agent` (for config-based instantiation) and `AgentBuilder` (for programmatic construction), promoting clear intent and separation of concerns.
+
+* **18. Configuration Validation Consolidation**: Mandates the exclusive use of Pydantic for configuration validation, replacing JSON Schema and improving type safety, error messages, and tooling support.
+
+
+
