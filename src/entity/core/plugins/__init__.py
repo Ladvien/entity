@@ -10,8 +10,8 @@ from .base import (
     PromptPlugin,
     ResourcePlugin,
     ToolPlugin,
+    ValidationResult,
 )
-from pipeline.validation import ValidationResult
 
 __all__ = [
     "BasePlugin",

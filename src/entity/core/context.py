@@ -8,16 +8,8 @@ import time
 from typing import Any, Dict, List, Optional
 import asyncio
 
-from pipeline.stages import PipelineStage
-from pipeline.state import ConversationEntry, PipelineState, ToolCall
-from pipeline.errors import PluginContextError
-
-
-@dataclass
-class ConversationEntry:
-    content: str
-    role: str
-    metadata: Dict[str, Any] | None = None
+from .stages import PipelineStage
+from .state import ConversationEntry, PipelineState, ToolCall
 
 
 class PluginContext:

@@ -19,10 +19,10 @@ from entity.core.plugins.base import (
     BasePlugin as BasePluginType,
     PromptPlugin,
 )
-from pipeline.interfaces import PluginAutoClassifier
-from pipeline.stages import PipelineStage
+from .plugin_utils import PluginAutoClassifier
+from .stages import PipelineStage
 from entity.utils.logging import get_logger
-from pipeline.runtime import AgentRuntime
+from .runtime import AgentRuntime
 from entity.core.plugins.base import BasePlugin
 
 logger = get_logger(__name__)
