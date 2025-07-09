@@ -286,22 +286,19 @@ class SystemInitializer:
             resource_container.register(name, cls, config)
         await resource_container.build_all()
 
-        degraded: List[str] = []
         report = await resource_container.health_report()
         for name, healthy in report.items():
             if not healthy:
-                degraded.append(name)
-                await resource_container.remove(name)
+                raise SystemError(f"Resource '{name}' failed health check")
 
-        for name, resource in list(resource_container._resources.items()):
-            if name in degraded:
-                continue
+        for name, resource in resource_container._resources.items():
             validate = getattr(resource, "validate_runtime", None)
             if callable(validate):
                 result = await validate()
                 if not result.success:
-                    degraded.append(name)
-                    await resource_container.remove(name)
+                    raise SystemError(
+                        f"Runtime validation failed for {name}: {result.error_message}"
+                    )
 
         # Phase 3.5: register tools
         tr_cfg = self.config.get("tool_registry", {})
@@ -310,25 +307,18 @@ class SystemInitializer:
             cache_ttl=tr_cfg.get("cache_ttl"),
         )
         for name, cls, config in registry.named_tool_classes():
-            if any(dep in degraded for dep in getattr(cls, "dependencies", [])):
-                continue
             instance = cls(config)
             await tool_registry.add(name, instance)
 
         # Phase 4: instantiate prompt and adapter plugins
         plugin_registry = self.plugin_registry_cls()
         for cls, config in registry.non_resource_non_tool_classes():
-            if any(dep in degraded for dep in getattr(cls, "dependencies", [])):
-                continue
             instance = cls(config)
             stages, _ = self._resolve_plugin_stages(cls, instance, config)
             for stage in stages:
                 await plugin_registry.register_plugin_for_stage(
                     instance, PipelineStage.ensure(stage)
                 )
-
-        if degraded:
-            self.config.setdefault("_disabled_resources", degraded)
 
         return plugin_registry, resource_container, tool_registry
 
