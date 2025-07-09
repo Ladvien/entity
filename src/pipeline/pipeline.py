@@ -152,9 +152,6 @@ async def execute_stage(
                     error_message=str(exc),
                     original_exception=exc,
                 )
-                if stage != PipelineStage.ERROR:
-                    await execute_stage(PipelineStage.ERROR, state, registries)
-                break
             except PluginExecutionError as exc:
                 logger.exception(
                     "Plugin execution failed",
@@ -171,9 +168,6 @@ async def execute_stage(
                     error_message=str(exc.original_exception),
                     original_exception=exc.original_exception,
                 )
-                if stage != PipelineStage.ERROR:
-                    await execute_stage(PipelineStage.ERROR, state, registries)
-                break
             except ToolExecutionError as exc:
                 logger.exception(
                     "Tool execution failed",
@@ -190,9 +184,6 @@ async def execute_stage(
                     error_message=str(exc.original_exception),
                     original_exception=exc.original_exception,
                 )
-                if stage != PipelineStage.ERROR:
-                    await execute_stage(PipelineStage.ERROR, state, registries)
-                break
             except ResourceError as exc:
                 logger.exception(
                     "Resource error",
@@ -209,9 +200,6 @@ async def execute_stage(
                     error_message=str(exc),
                     original_exception=exc,
                 )
-                if stage != PipelineStage.ERROR:
-                    await execute_stage(PipelineStage.ERROR, state, registries)
-                break
             except PipelineError as exc:
                 logger.exception(
                     "Pipeline error",
@@ -228,9 +216,6 @@ async def execute_stage(
                     error_message=str(exc),
                     original_exception=exc,
                 )
-                if stage != PipelineStage.ERROR:
-                    await execute_stage(PipelineStage.ERROR, state, registries)
-                break
             except Exception as exc:  # noqa: BLE001
                 logger.exception(
                     "Unexpected plugin exception",
@@ -250,11 +235,13 @@ async def execute_stage(
                     error_message=message,
                     original_exception=exc,
                 )
-                if stage != PipelineStage.ERROR:
-                    await execute_stage(PipelineStage.ERROR, state, registries)
-                break
             finally:
                 reset_request_id(token)
+            if state.failure_info:
+                break
+        if state.failure_info and stage != PipelineStage.ERROR:
+            await execute_stage(PipelineStage.ERROR, state, registries)
+            state.last_completed_stage = PipelineStage.ERROR
     duration = time.perf_counter() - start
     if state.metrics:
         state.metrics.record_stage_duration(str(stage), duration)
@@ -355,9 +342,10 @@ async def execute_pipeline(
 
         if state.failure_info:
             try:
-                await execute_stage(PipelineStage.ERROR, state, capabilities)
-                if state_logger is not None:
-                    state_logger.log(state, PipelineStage.ERROR)
+                if state.last_completed_stage != PipelineStage.ERROR:
+                    await execute_stage(PipelineStage.ERROR, state, capabilities)
+                    if state_logger is not None:
+                        state_logger.log(state, PipelineStage.ERROR)
                 await execute_stage(PipelineStage.DELIVER, state, capabilities)
             except Exception:
                 result = create_static_error_response(state.pipeline_id).to_dict()
