@@ -3,8 +3,6 @@
 This section is generated from the project source using autodoc. Every public
 module is documented directly from its docstrings.
 
-!!! warning "Deprecated modules"
-    ``PipelineManager`` is deprecated. Use ``entity.Agent`` instead.
 
 ::: entity
     options:

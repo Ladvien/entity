@@ -51,7 +51,7 @@ Define a workflow programmatically and store conversation data using the
 
 ```python
 from entity.workflows import Workflow
-from pipeline.stages import PipelineStage
+from entity.core.stages import PipelineStage
 
 workflow = Workflow(
     {

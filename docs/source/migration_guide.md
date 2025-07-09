@@ -15,7 +15,7 @@ exist in the `plugins.builtin` package. For example:
 from experiments.storage.resource import StorageResource
 
 # New
-# from plugins.builtin.resources.storage import StorageResource  # placeholder
+# from entity.plugins.builtin.resources.storage import StorageResource  # placeholder
 ```
 
 ## 2. Check Configuration Files
@@ -32,7 +32,7 @@ poetry run entity-cli --config your.yaml
 
 If you wrote custom plugins during the experimental phase, make sure they inherit
 from the current base classes in `entity.core.plugins`. Then update the
-`stages` list to use values from `pipeline.stages.PipelineStage`.
+`stages` list to use values from `entity.core.stages.PipelineStage`.
 
 ## 4. Verify Stored Data
 
