@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pipeline.logging import get_logger
+from entity.utils.logging import get_logger
 
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
 logger = get_logger(__name__)
