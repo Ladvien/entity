@@ -5,11 +5,11 @@
 - **Update pipeline loop logic** - Ensure only DELIVER stage responses terminate iteration
 - **Add validation error** - Clear error message when non-DELIVER plugins try to set response
 
-### 2. Stage Results Accumulation  
-- **Rename methods in `PluginContext`**:
-  - `set_stage_result()` → `store()`
-  - `get_stage_result()` → `load()` 
-  - `has_stage_result()` → `has()`
+### 2. Stage Results Accumulation
+- **Use the stage results helpers**:
+  - `store()` to add a value
+  - `load()` to read a value
+  - `has()` to check if a key exists
 - **Update all plugin examples** in docs and templates
 - **Update method documentation** and type hints
 

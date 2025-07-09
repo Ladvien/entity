@@ -24,7 +24,7 @@ def make_failing_plugin(stage: PipelineStage):
             if not context.get_metadata("failed"):
                 context.set_metadata("failed", True)
                 raise RuntimeError("boom")
-            context.set_stage_result(str(stage), True)
+            context.store(str(stage), True)
 
     return FailingPlugin()
 

@@ -6,8 +6,17 @@ import asyncio
 import warnings
 from copy import deepcopy
 from datetime import datetime
-from typing import (TYPE_CHECKING, Any, AsyncIterator, Callable, Dict, List,
-                    Optional, TypeVar, cast)
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    AsyncIterator,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    TypeVar,
+    cast,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from common_interfaces.resources import LLM
@@ -27,8 +36,7 @@ from .context_helpers import AdvancedContext
 from .errors import ResourceError
 from .metrics import MetricsCollector
 from .stages import PipelineStage
-from .state import (ConversationEntry, FailureInfo, LLMResponse, PipelineState,
-                    ToolCall)
+from .state import ConversationEntry, FailureInfo, LLMResponse, PipelineState, ToolCall
 
 ResourceT = TypeVar("ResourceT", covariant=True)
 
@@ -232,44 +240,15 @@ class PluginContext:
             if oldest != key:
                 state.stage_results.pop(oldest, None)
 
-    def set_stage_result(
-        self, key: str, value: Any
-    ) -> None:  # pragma: no cover - deprecated
-        """Deprecated wrapper for :meth:`store`."""
-        warnings.warn(
-            "set_stage_result() is deprecated; use store()",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.store(key, value)
-
     def load(self, key: str) -> Any:
         """Retrieve a stage result previously stored via :meth:`store`."""
         if key not in self.__state.stage_results:
             raise KeyError(key)
         return self.__state.stage_results[key]
 
-    def get_stage_result(self, key: str) -> Any:  # pragma: no cover - deprecated
-        """Deprecated wrapper for :meth:`load`."""
-        warnings.warn(
-            "get_stage_result() is deprecated; use load()",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.load(key)
-
     def has(self, key: str) -> bool:
         """Return ``True`` if ``key`` exists in stage results."""
         return key in self.__state.stage_results
-
-    def has_stage_result(self, key: str) -> bool:  # pragma: no cover - deprecated
-        """Deprecated wrapper for :meth:`has`."""
-        warnings.warn(
-            "has_stage_result() is deprecated; use has()",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.has(key)
 
     def get_metadata(self, key: str, default: Any = None) -> Any:
         """Return arbitrary metadata value previously stored."""
