@@ -10,7 +10,7 @@ def test_cli_entrypoint(tmp_path):
     path.write_text(yaml.dump(config, sort_keys=False))
 
     result = subprocess.run(
-        [sys.executable, "src/cli.py", "--config", str(path), "--help"],
+        [sys.executable, "-m", "entity.cli", "--config", str(path), "--help"],
         capture_output=True,
         text=True,
         check=True,
