@@ -82,8 +82,11 @@ plugins:
       stages: [deliver]
   prompts:
     chain_of_thought:
-      type: user_plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
+      type: entity.plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
       enable_reasoning: true
+    react:
+      type: entity.plugins.prompts.react:ReActPrompt
+      max_steps: 3
     conversation_history:
       type: user_plugins.prompts.conversation_history:ConversationHistory
       history_table: chat_history

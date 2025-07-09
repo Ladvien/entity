@@ -49,8 +49,26 @@ async def summarizer(ctx):
         return ctx.load("summary")
     result_key = ctx.queue_tool_use("search", {"query": ctx.message})
     summary = await ctx.tool_use("summarize", text=ctx.message)
-    ctx.store("summary", summary)
+ctx.store("summary", summary)
     return summary
+```
+
+## Built-in Reasoning Plugins
+
+Entity provides two prompt plugins for common reasoning patterns:
+
+- `ChainOfThoughtPrompt` records intermediate thoughts and stores them with `context.store()`.
+- `ReActPrompt` alternates between reasoning and tool use, saving each step under `react_steps`.
+
+Add them in your YAML configuration:
+
+```yaml
+plugins:
+  prompts:
+    chain_of_thought:
+      type: entity.plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
+    react:
+      type: entity.plugins.prompts.react:ReActPrompt
 ```
 
 ### Stage Override Patterns

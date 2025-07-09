@@ -1,3 +1,1 @@
-from .resources import Memory
-
-__all__ = ["Memory"]
+"""Entity built-in plugins and helpers."""
