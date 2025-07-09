@@ -668,3 +668,73 @@ plugins:
 ```
 
 **Benefits**: Predictable execution sequence, simplified plugin development, clearer debugging, and elimination of an entire configuration dimension while maintaining full control over execution order.
+
+## 17. Agent and AgentBuilder Separation
+
+**Decision**: Use clear separation between `AgentBuilder` for programmatic construction and `Agent` for config-driven initialization.
+
+**Responsibilities**:
+- **AgentBuilder** - Programmatic agent construction for dynamic/code-based agents
+- **Agent** - Config-driven agent initialization for YAML/production deployments
+
+**Implementation**:
+```python
+class AgentBuilder:
+    """Programmatic construction with plugin registration methods"""
+    def add_plugin(self, plugin) -> None: ...
+    def plugin(self, func, **hints) -> Callable: ...  # Decorator
+    def load_plugins_from_directory(self, dir) -> None: ...
+    def build_runtime(self) -> AgentRuntime: ...
+
+class Agent:
+    """Config-driven initialization with runtime execution"""
+    def __init__(self, config_path: str): ...
+    async def handle(self, message: str) -> Dict[str, Any]: ...
+    
+    @classmethod
+    def from_builder(cls, builder: AgentBuilder) -> "Agent": ...
+```
+
+**Usage Patterns**:
+- **Production**: `Agent("config.yaml")` for stable, configuration-managed deployments
+- **Development**: `AgentBuilder()` for dynamic plugin registration and testing
+- **Hybrid**: `Agent.from_builder(builder)` to combine programmatic and config approaches
+
+**Benefits**: Single responsibility per class, clear intent distinction, no method duplication, easier testing and documentation with distinct use cases.
+
+## 18. Configuration Validation Consolidation
+
+**Decision**: Use Pydantic models exclusively for all configuration validation, eliminating JSON Schema approaches.
+
+**Rationale**:
+- Clear, field-specific error messages improve debugging experience
+- Automatic type coercion reduces common configuration errors  
+- Single validation pathway eliminates confusion about where config fails
+- IDE support through type hints enhances developer experience
+- Runtime validation supports hot-reload configuration changes
+- Consistent validation approach across all plugin types
+
+**Implementation**:
+```python
+class HTTPAdapterConfig(BaseModel):
+    host: str = "127.0.0.1"
+    port: int = Field(ge=1, le=65535, default=8000)
+    dashboard: bool = False
+
+class HTTPAdapter(AdapterPlugin):
+    @classmethod
+    def validate_config(cls, config: Dict) -> ValidationResult:
+        try:
+            HTTPAdapterConfig(**config)
+            return ValidationResult.success()
+        except ValidationError as e:
+            return ValidationResult.error(str(e))
+```
+
+**Migration Tasks**:
+- Convert existing JSON Schema definitions to Pydantic models
+- Remove `entity_config/schemas/` directory and JSON Schema validation
+- Update all plugin `validate_config()` methods to use corresponding Pydantic models
+- Consolidate configuration models in single module
+
+**Benefits**: Single learning curve, better error attribution, type safety with automatic coercion, and consistent validation experience across the entire framework.
