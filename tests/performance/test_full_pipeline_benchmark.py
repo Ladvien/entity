@@ -1,15 +1,10 @@
 import asyncio
 
 import pytest
-from pipeline import (
-    PipelineManager,
-    PipelineStage,
-    PluginRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
 
 from entity.core.resources.container import ResourceContainer
+from pipeline import (PipelineStage, PluginRegistry, SystemRegistries,
+                      ToolRegistry, execute_pipeline)
 
 
 class RespondPlugin:
@@ -26,10 +21,9 @@ def test_full_pipeline_benchmark(benchmark):
         plugins.register_plugin_for_stage(RespondPlugin(), PipelineStage.DELIVER)
     )
     capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
-    manager = PipelineManager(capabilities)
 
     def run():
-        return asyncio.run(manager.run_pipeline("hi"))
+        return asyncio.run(execute_pipeline("hi", capabilities))
 
     result = benchmark(run)
     assert result == "ok"

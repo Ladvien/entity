@@ -1,17 +1,17 @@
 import asyncio
 import logging
 
-from pipeline import (
-    PipelineManager,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolRegistry,
-)
-from plugins.builtin.adapters.logging import LoggingAdapter
-
 from entity.core.resources.container import ResourceContainer
+from entity.core.runtime import _AgentRuntime
+from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
+                      SystemRegistries, ToolRegistry, execute_pipeline)
+
+
+class LoggingAdapter(PromptPlugin):
+    stages = [PipelineStage.DELIVER]
+
+    async def _execute_impl(self, context):
+        logging.info("adapter", extra={"response": context.state.response})
 
 
 class EchoPlugin(PromptPlugin):
@@ -22,7 +22,7 @@ class EchoPlugin(PromptPlugin):
         context.set_response({"echo": entry.content})
 
 
-def make_manager() -> PipelineManager:
+def make_runtime() -> _AgentRuntime:
     plugins = PluginRegistry()
     asyncio.run(
         plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.DELIVER)
@@ -31,13 +31,13 @@ def make_manager() -> PipelineManager:
         plugins.register_plugin_for_stage(LoggingAdapter({}), PipelineStage.DELIVER)
     )
     capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
-    return PipelineManager(capabilities)
+    return _AgentRuntime(capabilities)
 
 
 def test_logging_adapter_logs_response(caplog):
-    manager = make_manager()
+    runtime = make_runtime()
     caplog.set_level(logging.INFO)
-    asyncio.run(manager.run_pipeline("hello"))
+    asyncio.run(execute_pipeline("hello", runtime.capabilities))
     assert any(
         getattr(record, "response", {}).get("echo") == "hello"
         for record in caplog.records

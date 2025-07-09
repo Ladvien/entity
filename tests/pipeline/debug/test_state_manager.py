@@ -1,13 +1,8 @@
 import asyncio
 
-from pipeline import (
-    PipelineManager,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolRegistry,
-)
+from entity.core.runtime import _AgentRuntime
+from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
+                      SystemRegistries, ToolRegistry, execute_pipeline)
 from pipeline.resources import ResourceContainer
 from pipeline.state import PipelineState
 
@@ -42,21 +37,25 @@ class SavePlugin(PromptPlugin):
         context.set_response(context.state.pipeline_id)
 
 
-def make_manager(manager: StateManager) -> PipelineManager:
+def make_runtime(manager: StateManager) -> _AgentRuntime:
     plugins = PluginRegistry()
     asyncio.run(
         plugins.register_plugin_for_stage(SavePlugin(manager), PipelineStage.DELIVER)
     )
     capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
-    return PipelineManager(capabilities)
+    return _AgentRuntime(capabilities)
 
 
 def test_state_manager_concurrent_limit():
     state_manager = StateManager(max_states=2)
-    manager = make_manager(state_manager)
+    runtime = make_runtime(state_manager)
 
     async def run_tasks():
-        tasks = [manager.start_pipeline(str(i)) for i in range(3)]
+        async def _run(msg):
+            result = await execute_pipeline(msg, runtime.capabilities)
+            return result
+
+        tasks = [asyncio.create_task(_run(str(i))) for i in range(3)]
         return await asyncio.gather(*tasks)
 
     ids = asyncio.run(run_tasks())

@@ -3,15 +3,15 @@
 from importlib import import_module
 from typing import TYPE_CHECKING, Any
 
-# Expose plugin configuration API used by the pipeline package
-
-
+from .exceptions import CircuitBreakerTripped
+from .reliability import CircuitBreaker, RetryPolicy
 # Registry classes are no longer imported eagerly.
 # Access ``PluginRegistry`` and related classes via ``registry`` or
 # rely on this module's ``__getattr__`` for lazy loading.
 from .stages import PipelineStage
-from .reliability import CircuitBreaker, RetryPolicy
-from .exceptions import CircuitBreakerTripped
+
+# Expose plugin configuration API used by the pipeline package
+
 
 if TYPE_CHECKING:  # pragma: no cover - imported for type checking only
     from .state import FailureInfo, LLMResponse, PipelineState
@@ -54,7 +54,6 @@ __all__ = [
     "LogReplayer",
     "Agent",
     "Pipeline",
-    "PipelineManager",
     "execute_with_observability",
 ]
 
@@ -71,17 +70,12 @@ def __getattr__(name: str) -> Any:
         "SystemInitializer",
         "initialization_cleanup_context",
     }:
-        from entity.core.registries import (
-            PluginRegistry,
-            SystemRegistries,
-            ToolRegistry,
-        )
+        from entity.core.registries import (PluginRegistry, SystemRegistries,
+                                            ToolRegistry)
         from entity.core.resources.container import ResourceContainer
-        from .initializer import (
-            ClassRegistry,
-            SystemInitializer,
-            initialization_cleanup_context,
-        )
+
+        from .initializer import (ClassRegistry, SystemInitializer,
+                                  initialization_cleanup_context)
 
         return {
             "PluginRegistry": PluginRegistry,
@@ -95,7 +89,6 @@ def __getattr__(name: str) -> Any:
 
     heavy_imports = {
         "Agent": "pipeline.agent",
-        "PipelineManager": "pipeline.manager",
         "Pipeline": "pipeline.workflow",
         "execute_pipeline": "pipeline.pipeline",
         "create_default_response": "pipeline.pipeline",

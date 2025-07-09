@@ -7,26 +7,22 @@ This module delegates tool execution to
 from __future__ import annotations
 
 import time
-from datetime import datetime
-from dataclasses import dataclass
-from typing import Any, Dict
 import warnings
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any, Dict
 
-from entity.core.state_logger import StateLogger
 from entity.core.registries import PluginRegistry, SystemRegistries
+from entity.core.state_logger import StateLogger
 
 from .context import ConversationEntry, PluginContext
 from .errors import create_static_error_response
-from .exceptions import MaxIterationsExceeded  # noqa: F401 - reserved for future use
-from .exceptions import (
-    CircuitBreakerTripped,
-    PipelineError,
-    PluginExecutionError,
-    ResourceError,
-    ToolExecutionError,
-)
+from .exceptions import \
+    MaxIterationsExceeded  # noqa: F401 - reserved for future use
+from .exceptions import (CircuitBreakerTripped, PipelineError,
+                         PluginExecutionError, ResourceError,
+                         ToolExecutionError)
 from .logging import get_logger, reset_request_id, set_request_id
-from .manager import PipelineManager
 from .metrics import MetricsCollector
 from .observability.metrics import MetricsServerManager
 from .observability.tracing import start_span
@@ -66,7 +62,6 @@ class Pipeline:
         message: str,
         registries: SystemRegistries,
         *,
-        pipeline_manager: PipelineManager | None = None,
         state_logger: StateLogger | None = None,
         return_metrics: bool = False,
         state: PipelineState | None = None,
@@ -89,7 +84,6 @@ class Pipeline:
         return await execute_pipeline(
             message,
             regs,
-            pipeline_manager=pipeline_manager,
             state_logger=state_logger,
             return_metrics=return_metrics,
             state=state,
@@ -257,7 +251,6 @@ async def execute_pipeline(
     user_message: str,
     capabilities: SystemRegistries | None,
     *,
-    pipeline_manager: PipelineManager | None = None,
     state_logger: "StateLogger" | None = None,
     return_metrics: bool = False,
     state: PipelineState | None = None,
@@ -271,6 +264,8 @@ async def execute_pipeline(
             stacklevel=2,
         )
         capabilities = registries
+    if capabilities is None:
+        raise TypeError("capabilities is required")
     if state is None:
         state = PipelineState(
             conversation=[
@@ -282,8 +277,6 @@ async def execute_pipeline(
             metrics=MetricsCollector(),
         )
     start = time.time()
-    if pipeline_manager is not None:
-        await pipeline_manager.register(state.pipeline_id)
     try:
         async with capabilities.resources:
             async with start_span("pipeline.execute"):
@@ -366,8 +359,6 @@ async def execute_pipeline(
             result = state.response
         return (result, state.metrics) if return_metrics else result
     finally:
-        if pipeline_manager is not None:
-            await pipeline_manager.deregister(state.pipeline_id)
         if state.metrics:
             state.metrics.record_pipeline_duration(time.time() - start)
         server = MetricsServerManager.get()
