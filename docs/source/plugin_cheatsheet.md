@@ -30,5 +30,5 @@ class ExamplePlugin(PromptPlugin):
 ```
 
 Register plugins through `Agent.add_plugin()` or in a YAML configuration file.
-The position in the list under each stage controls execution order and
-`SystemInitializer` keeps the sequence intact. There is no priority field.
+YAML order determines execution order and `SystemInitializer` keeps the
+sequence intact. There is no priority field.
