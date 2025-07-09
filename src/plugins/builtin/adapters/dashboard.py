@@ -7,6 +7,8 @@ from collections import deque
 from pathlib import Path
 from typing import Any
 
+from pipeline.manager import PipelineManager
+
 from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -19,7 +21,11 @@ from tools.pipeline_viz import PipelineGraphBuilder
 class DashboardAdapter(HTTPAdapter):
     """HTTP adapter with a simple status dashboard."""
 
-    def __init__(self, manager=None, config=None) -> None:
+    def __init__(
+        self,
+        manager: PipelineManager[dict[str, Any]] | None = None,
+        config: dict[str, Any] | None = None,
+    ) -> None:
         super().__init__(manager, config)
         templates_dir = Path(__file__).parent / "templates"
         self.templates = Jinja2Templates(directory=str(templates_dir))
@@ -31,7 +37,7 @@ class DashboardAdapter(HTTPAdapter):
         if not self.dashboard_enabled:
             return
 
-        @self.app.get("/dashboard", response_class=HTMLResponse)
+        @self.app.get("/dashboard", response_class=HTMLResponse)  # type: ignore[misc]
         async def dashboard(request: Request) -> HTMLResponse:
             count = 0
             if self.manager is not None:
@@ -46,7 +52,7 @@ class DashboardAdapter(HTTPAdapter):
                 },
             )
 
-        @self.app.get("/dashboard/transitions")
+        @self.app.get("/dashboard/transitions")  # type: ignore[misc]
         async def transitions(limit: int = 50) -> list[dict[str, Any]]:
             return self._load_transitions(limit)
 

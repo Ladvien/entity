@@ -14,6 +14,7 @@ from typing import Any, cast
 from pipeline.base_plugins import AdapterPlugin
 from pipeline.exceptions import ResourceError
 from pipeline.manager import PipelineManager
+from pipeline.context import PluginContext
 from pipeline.pipeline import execute_pipeline
 from pipeline.security import AdapterAuthenticator
 from pipeline.stages import PipelineStage
@@ -29,7 +30,7 @@ class CLIAdapter(AdapterPlugin):
 
     def __init__(
         self,
-        manager: PipelineManager | None = None,
+        manager: PipelineManager[dict[str, Any]] | None = None,
         config: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(config)
@@ -79,5 +80,7 @@ class CLIAdapter(AdapterPlugin):
                 )
             self.logger.info("%s", response)
 
-    async def _execute_impl(self, context) -> None:  # pragma: no cover - adapter
+    async def _execute_impl(
+        self, context: PluginContext
+    ) -> None:  # pragma: no cover - adapter
         pass
