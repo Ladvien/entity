@@ -76,4 +76,5 @@ components_overview
 architecture
 components_overview
 plugins
+tools
 ```

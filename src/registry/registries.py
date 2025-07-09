@@ -6,7 +6,7 @@ import asyncio
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Callable
 
 from common_interfaces.base_plugin import BasePlugin
 from pipeline.resources.container import ResourceContainer
@@ -39,6 +39,24 @@ class ToolRegistry:
         """Return the tool registered as ``name`` if present."""
 
         return self._tools.get(name)
+
+    def query(
+        self, filter_fn: Callable[[str, Any], bool] | None = None
+    ) -> Dict[str, Any]:
+        """Return tools matching ``filter_fn``.
+
+        Parameters
+        ----------
+        filter_fn:
+            Callable receiving ``name`` and ``tool``. When provided, only
+            entries where ``filter_fn(name, tool)`` evaluates to ``True``
+            are returned.
+        """
+
+        items = list(self._tools.items())
+        if filter_fn is None:
+            return dict(items)
+        return {name: tool for name, tool in items if filter_fn(name, tool)}
 
     async def get_cached_result(self, name: str, params: Dict[str, Any]) -> Any | None:
         if self._cache_ttl is None:
