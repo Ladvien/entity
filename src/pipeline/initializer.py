@@ -206,10 +206,12 @@ class SystemInitializer:
         """Determine final stages and whether they were explicit."""
 
         cfg_value = config.get("stages") or config.get("stage")
+        explicit_source = None
         if cfg_value is not None:
             stages = cfg_value if isinstance(cfg_value, list) else [cfg_value]
             stages = [PipelineStage.ensure(s) for s in stages]
             explicit = True
+            explicit_source = "config"
         else:
             attr_stages = getattr(instance, "stages", []) or []
             attr_stages = [PipelineStage.ensure(s) for s in attr_stages]
@@ -219,6 +221,7 @@ class SystemInitializer:
             if attr_explicit:
                 stages = attr_stages
                 explicit = True
+                explicit_source = "class"
             else:
                 type_defaults = self._type_default_stages(cls)
                 if type_defaults:
@@ -237,9 +240,11 @@ class SystemInitializer:
 
         type_defaults = self._type_default_stages(cls)
         if explicit and type_defaults and set(stages) != set(type_defaults):
+            source = explicit_source or "config"
             logger.warning(
-                "Plugin '%s' stages %s override type defaults %s",
+                "Plugin '%s' explicit %s stages %s override type defaults %s",
                 cls.__name__,
+                source,
                 [str(s) for s in stages],
                 [str(s) for s in type_defaults],
             )

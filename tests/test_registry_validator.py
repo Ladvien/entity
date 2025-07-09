@@ -1,7 +1,10 @@
 import pytest
 import yaml
 
+import logging
+
 from pipeline.base_plugins import PromptPlugin, ResourcePlugin
+from pipeline.initializer import SystemInitializer
 from pipeline.stages import PipelineStage
 from registry.validator import RegistryValidator
 
@@ -145,3 +148,26 @@ def test_vector_memory_with_postgres(tmp_path):
     }
     path = _write_config(tmp_path, plugins)
     RegistryValidator(str(path)).run()
+
+
+def test_stage_override_warning(caplog):
+    class OverridePrompt(PromptPlugin):
+        async def _execute_impl(self, context):
+            pass
+
+    initializer = SystemInitializer()
+    plugin = OverridePrompt({})
+
+    caplog.set_level(logging.WARNING, logger="pipeline.initializer")
+    logging.getLogger("pipeline.initializer").addHandler(caplog.handler)
+    initializer._resolve_plugin_stages(
+        OverridePrompt,
+        plugin,
+        {"stage": PipelineStage.DO},
+    )
+
+    assert any(
+        "override type defaults" in record.getMessage()
+        and "OverridePrompt" in record.getMessage()
+        for record in caplog.records
+    )
