@@ -1,6 +1,7 @@
 import pytest
 from pipeline import PipelineStage, PluginRegistry, SystemRegistries, ToolRegistry
 from pipeline.context import PluginContext
+from pipeline.errors import PluginContextError
 from pipeline.state import PipelineState
 
 from entity.core.resources.container import ResourceContainer
@@ -13,7 +14,8 @@ def test_set_response_disallowed_outside_deliver():
     )
     ctx.set_current_stage(PipelineStage.PARSE)
     with pytest.raises(
-        ValueError, match="Only DELIVER stage plugins may set responses"
+        PluginContextError,
+        match="set_response may only be called in DELIVER stage",
     ):
         ctx.set_response("nope")
     assert state.response is None
