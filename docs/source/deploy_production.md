@@ -2,14 +2,14 @@
 
 This document describes a minimal production setup for running the Entity Pipeline Framework.
 It assumes you already tested your configuration locally and want to move it to a
-reliable environment.
+reliable environment. The Dockerfile is located in `src/docker/`.
 
 ## Container Image
 
 Build a Docker image containing your plugins and configuration:
 
 ```bash
-docker build -t entity-agent:latest .
+docker build -f src/docker/Dockerfile -t entity-agent:latest .
 ```
 
 Tag and push the image to your registry of choice. Kubernetes and many PaaS

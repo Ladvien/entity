@@ -1,10 +1,11 @@
 # Docker Deployment
 
-Containerize the system to run anywhere Docker is available.
+Containerize the system to run anywhere Docker is available. The project
+Dockerfile now lives in `src/docker/`.
 
 1. Build the image:
    ```bash
-   docker build -t entity-agent .
+   docker build -f src/docker/Dockerfile -t entity-agent .
    ```
 2. Run the container:
    ```bash
