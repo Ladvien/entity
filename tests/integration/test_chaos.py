@@ -16,7 +16,7 @@ class CrashPlugin:
         if not context.metadata.get("crashed"):
             context.metadata["crashed"] = True
             raise RuntimeError("boom")
-        context.set_stage_result("parse", True)
+        context.store("parse", True)
 
 
 @pytest.mark.integration

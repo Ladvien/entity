@@ -210,7 +210,7 @@ class PluginContext:
         """Return the pipeline response if set."""
         return self.__state.response
 
-    def set_stage_result(self, key: str, value: Any) -> None:
+    def store(self, key: str, value: Any) -> None:
         """Store intermediate ``value`` for the current stage under ``key``."""
         state = self.__state
         if key in state.stage_results:
@@ -222,13 +222,13 @@ class PluginContext:
             if oldest != key:
                 state.stage_results.pop(oldest, None)
 
-    def get_stage_result(self, key: str) -> Any:
-        """Retrieve a stage result stored with :meth:`set_stage_result`."""
+    def load(self, key: str) -> Any:
+        """Retrieve a stage result previously stored via :meth:`store`."""
         if key not in self.__state.stage_results:
             raise KeyError(key)
         return self.__state.stage_results[key]
 
-    def has_stage_result(self, key: str) -> bool:
+    def has(self, key: str) -> bool:
         """Return ``True`` if ``key`` exists in stage results."""
         return key in self.__state.stage_results
 
