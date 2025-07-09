@@ -1,18 +1,9 @@
 import asyncio
 
-from pipeline import (
-    PipelineManager,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolRegistry,
-    ValidationResult,
-    execute_pipeline,
-    update_plugin_configuration,
-)
-
 from entity.core.resources.container import ResourceContainer
+from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
+                      SystemRegistries, ToolRegistry, ValidationResult,
+                      execute_pipeline, update_plugin_configuration)
 
 
 class TestReconfigPlugin(PromptPlugin):
@@ -78,17 +69,14 @@ def test_update_waits_for_running_pipeline():
     async def run_test():
         reg, plugin = await make_registry(add_slow=True)
         capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), reg)
-        manager = PipelineManager()
-        task = asyncio.create_task(
-            execute_pipeline("hello", capabilities, pipeline_manager=manager)
-        )
+        task = asyncio.create_task(execute_pipeline("hello", capabilities))
         await asyncio.sleep(0.05)
         start = asyncio.get_event_loop().time()
         result = await update_plugin_configuration(
             reg,
             "test_plugin",
             {"value": "two"},
-            pipeline_manager=manager,
+            pipeline_manager=None,
         )
         duration = asyncio.get_event_loop().time() - start
         await task

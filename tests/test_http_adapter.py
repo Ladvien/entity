@@ -1,17 +1,12 @@
 import asyncio
 
 import httpx
-from pipeline import (
-    PipelineManager,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolRegistry,
-)
-from plugins.builtin.adapters import HTTPAdapter
 
 from entity.core.resources.container import ResourceContainer
+from entity.core.runtime import _AgentRuntime
+from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
+                      SystemRegistries, ToolRegistry)
+from plugins.builtin.adapters import HTTPAdapter
 
 
 class RespPlugin(PromptPlugin):
@@ -28,8 +23,8 @@ def make_adapter(config=None):
         plugins.register_plugin_for_stage(RespPlugin({}), PipelineStage.DELIVER)
     )
     capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
-    manager = PipelineManager(capabilities)
-    return HTTPAdapter(manager, config)
+    runtime = _AgentRuntime(capabilities)
+    return HTTPAdapter(runtime, config)
 
 
 def test_http_adapter_basic():

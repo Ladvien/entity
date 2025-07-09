@@ -3,17 +3,12 @@ import json
 from pathlib import Path
 
 import httpx
-from pipeline import (
-    PipelineManager,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolRegistry,
-)
-from plugins.builtin.adapters import DashboardAdapter
 
 from entity.core.resources.container import ResourceContainer
+from entity.core.runtime import _AgentRuntime
+from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
+                      SystemRegistries, ToolRegistry)
+from plugins.builtin.adapters import DashboardAdapter
 
 
 class RespPlugin(PromptPlugin):
@@ -28,14 +23,14 @@ def make_adapter(tmp_path: Path) -> DashboardAdapter:
     plugins = PluginRegistry()
     plugins.register_plugin_for_stage(RespPlugin({}), PipelineStage.DELIVER)
     capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
-    manager = PipelineManager(capabilities)
+    runtime = _AgentRuntime(capabilities)
     log_path = tmp_path / "state.log"
     cfg = {
         "dashboard": True,
         "state_log_path": str(log_path),
         "pipeline_config": str(Path("config/dev.yaml")),
     }
-    return DashboardAdapter(manager, cfg), log_path
+    return DashboardAdapter(runtime, cfg), log_path
 
 
 def write_log(path: Path) -> None:

@@ -2,17 +2,11 @@ import asyncio
 import logging
 from typing import Any
 
-from pipeline import (
-    PipelineManager,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolRegistry,
-)
-from plugins.builtin.adapters.cli import CLIAdapter
-
 from entity.core.resources.container import ResourceContainer
+from entity.core.runtime import _AgentRuntime
+from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
+                      SystemRegistries, ToolRegistry)
+from plugins.builtin.adapters.cli import CLIAdapter
 
 
 class EchoPlugin(PromptPlugin):
@@ -29,8 +23,8 @@ def make_adapter() -> tuple[CLIAdapter, SystemRegistries]:
         plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.DELIVER)
     )
     capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
-    manager = PipelineManager(capabilities)
-    return CLIAdapter(manager), capabilities
+    runtime = _AgentRuntime(capabilities)
+    return CLIAdapter(runtime), capabilities
 
 
 def test_cli_adapter_round_trip(monkeypatch, caplog):

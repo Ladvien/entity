@@ -1,16 +1,9 @@
 import asyncio
 
-from pipeline import (
-    PipelineManager,
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolRegistry,
-)
-from pipeline.resources.memory import Memory
-
 from entity.core.resources.container import ResourceContainer
+from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
+                      SystemRegistries, ToolRegistry)
+from pipeline.resources.memory import Memory
 
 
 class ContinuePlugin(PromptPlugin):
@@ -29,7 +22,7 @@ class RespondPlugin(PromptPlugin):
             context.set_response("done")
 
 
-def make_manager():
+def make_conversation():
     plugins = PluginRegistry()
     asyncio.run(
         plugins.register_plugin_for_stage(ContinuePlugin({}), PipelineStage.DELIVER)
@@ -40,14 +33,13 @@ def make_manager():
     resources = ResourceContainer()
     asyncio.run(resources.add("memory", Memory()))
     capabilities = SystemRegistries(resources, ToolRegistry(), plugins)
-    manager = PipelineManager(capabilities)
     memory = resources.get("memory")
-    conv = memory.start_conversation(capabilities, manager)  # type: ignore[arg-type]
-    return conv, manager
+    conv = memory.start_conversation(capabilities)
+    return conv
 
 
 def test_conversation_manager_delegation():
-    conv, manager = make_manager()
+    conv = make_conversation()
 
     async def run():
         result = await conv.process_request("start")
@@ -55,4 +47,3 @@ def test_conversation_manager_delegation():
 
     result = asyncio.run(run())
     assert result == "done"
-    assert not manager.has_active_pipelines()
