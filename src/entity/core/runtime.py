@@ -10,7 +10,7 @@ from .registries import SystemRegistries
 
 
 @dataclass(init=False)
-class AgentRuntime:
+class _AgentRuntime:
     capabilities: SystemRegistries
     manager: Any = field(init=False)
 

@@ -7,7 +7,7 @@ from pipeline import PipelineStage
 from pipeline.base_plugins import BasePlugin
 from plugins.builtin.resources.llm.unified import UnifiedLLMResource
 
-from entity import AgentBuilder
+from entity.core.builder import _AgentBuilder
 
 
 class FailHandler(BaseHTTPRequestHandler):
@@ -39,7 +39,7 @@ def test_pipeline_llm_failover():
         "base_url": base_url,
     }
     try:
-        builder = AgentBuilder()
+        builder = _AgentBuilder()
         builder.add_plugin(LLMResponder({}))
         builder.resource_registry.register("llm", UnifiedLLMResource, config)
         runtime = builder.build_runtime()

@@ -5,10 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Optional, cast, Mapping, Iterable
 
-from .builder import AgentBuilder
+from .builder import _AgentBuilder
 from .exceptions import PipelineError
 from .registries import PluginRegistry, SystemRegistries
-from .runtime import AgentRuntime
+from .runtime import _AgentRuntime
 from pipeline.workflow import Pipeline, WorkflowMapping
 
 
@@ -18,18 +18,18 @@ class Agent:
 
     config_path: str | None = None
     pipeline: Pipeline | None = None
-    _builder: AgentBuilder | None = field(default=None, init=False)
-    _runtime: AgentRuntime | None = field(default=None, init=False)
+    _builder: _AgentBuilder | None = field(default=None, init=False)
+    _runtime: _AgentRuntime | None = field(default=None, init=False)
     _workflows: dict[str, type] = field(default_factory=dict, init=False)
 
     @property
-    def builder(self) -> AgentBuilder:
-        """Lazily create and return an :class:`AgentBuilder`."""
+    def builder(self) -> _AgentBuilder:
+        """Lazily create and return an :class:`_AgentBuilder`."""
 
         if self.pipeline is not None:
             return self.pipeline.builder
         if self._builder is None:
-            self._builder = AgentBuilder()
+            self._builder = _AgentBuilder()
         return self._builder
 
     # ------------------------------------------------------------------
@@ -109,6 +109,38 @@ class Agent:
         agent.load_plugins_from_package(package_name)
         return agent
 
+    @classmethod
+    def from_config(
+        cls, cfg: str | Mapping[str, Any], *, env_file: str = ".env"
+    ) -> "Agent":
+        """Instantiate an agent from a YAML/JSON path or mapping."""
+
+        from pathlib import Path
+        import asyncio
+        from pipeline.initializer import SystemInitializer
+
+        if isinstance(cfg, Mapping):
+            initializer = SystemInitializer.from_dict(cfg, env_file)
+            path = None
+        else:
+            path = str(cfg)
+            suffix = Path(path).suffix
+            if suffix == ".json":
+                initializer = SystemInitializer.from_json(path, env_file)
+            else:
+                initializer = SystemInitializer.from_yaml(path, env_file)
+
+        async def _build() -> tuple[_AgentRuntime, dict[str, type]]:
+            plugins, resources, tools, _ = await initializer.initialize()
+            caps = SystemRegistries(resources=resources, tools=tools, plugins=plugins)
+            return _AgentRuntime(caps), initializer.workflows
+
+        runtime, workflows = asyncio.run(_build())
+        agent = cls(config_path=path)
+        agent._runtime = runtime
+        agent._workflows = workflows
+        return agent
+
     # ------------------------------------------------------------------
     async def _ensure_runtime(self) -> None:
         if self._runtime is None:
@@ -118,7 +150,7 @@ class Agent:
                 self._runtime = self.builder.build_runtime()
 
     @property
-    def runtime(self) -> AgentRuntime:
+    def runtime(self) -> _AgentRuntime:
         if self._runtime is None:
             raise PipelineError("Agent not initialized; call an async method")
         return self._runtime
@@ -129,7 +161,7 @@ class Agent:
         await self._ensure_runtime()
         if self._runtime is None:  # pragma: no cover - sanity check
             raise RuntimeError("Runtime not initialized")
-        runtime = cast(AgentRuntime, self._runtime)
+        runtime = cast(_AgentRuntime, self._runtime)
         return cast(Dict[str, Any], await runtime.run_pipeline(message))
 
     async def handle(self, message: str) -> Dict[str, Any]:

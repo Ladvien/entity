@@ -12,7 +12,7 @@ from typing import Any, Generic, Optional, TypeVar, cast
 
 import warnings
 
-from entity.core.runtime import AgentRuntime
+from entity.core.runtime import _AgentRuntime
 from entity.core.state_logger import StateLogger
 from entity.core.registries import SystemRegistries
 
@@ -38,7 +38,7 @@ class PipelineManager(Generic[ResultT]):
             capabilities = kwargs.pop("registries")
         if kwargs:
             raise TypeError(f"Unexpected arguments: {', '.join(kwargs)}")
-        self._runtime = AgentRuntime(capabilities, state_logger=state_logger)
+        self._runtime = _AgentRuntime(capabilities, state_logger=state_logger)
         self._capabilities = self._runtime.capabilities
 
     # ------------------------------------------------------------------

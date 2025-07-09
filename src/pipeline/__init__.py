@@ -48,7 +48,6 @@ __all__ = [
     "StateLogger",
     "LogReplayer",
     "Agent",
-    "AgentBuilder",
     "Pipeline",
     "PipelineManager",
     "execute_with_observability",
@@ -91,8 +90,6 @@ def __getattr__(name: str) -> Any:
 
     heavy_imports = {
         "Agent": "pipeline.agent",
-        "AgentBuilder": "pipeline.builder",
-        "AgentRuntime": "pipeline.runtime",
         "PipelineManager": "pipeline.manager",
         "Pipeline": "pipeline.workflow",
         "execute_pipeline": "pipeline.pipeline",

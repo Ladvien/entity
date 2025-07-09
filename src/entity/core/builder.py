@@ -22,15 +22,15 @@ from entity.core.plugins.base import (
 from pipeline.interfaces import PluginAutoClassifier
 from pipeline.stages import PipelineStage
 from entity.utils.logging import get_logger
-from pipeline.runtime import AgentRuntime
+from entity.core.runtime import _AgentRuntime
 from entity.core.plugins.base import BasePlugin
 
 logger = get_logger(__name__)
 
 
 @dataclass
-class AgentBuilder:
-    """Collect plugins and build :class:`AgentRuntime`."""
+class _AgentBuilder:
+    """Collect plugins and build :class:`_AgentRuntime`."""
 
     plugin_registry: PluginRegistry = field(default_factory=PluginRegistry)
     resource_registry: ResourceContainer = field(default_factory=ResourceContainer)
@@ -77,13 +77,13 @@ class AgentBuilder:
 
     # ---------------------------- discovery helpers ---------------------------
     @classmethod
-    def from_directory(cls, directory: str) -> "AgentBuilder":
+    def from_directory(cls, directory: str) -> "_AgentBuilder":
         builder = cls()
         builder.load_plugins_from_directory(directory)
         return builder
 
     @classmethod
-    def from_package(cls, package_name: str) -> "AgentBuilder":
+    def from_package(cls, package_name: str) -> "_AgentBuilder":
         builder = cls()
         builder.load_plugins_from_package(package_name)
         return builder
@@ -123,14 +123,14 @@ class AgentBuilder:
     # ------------------------------ runtime build -----------------------------
     def build_runtime(
         self, workflow: Mapping[PipelineStage | str, Iterable[str]] | None = None
-    ) -> "AgentRuntime":
+    ) -> "_AgentRuntime":
         asyncio.run(self.resource_registry.build_all())
         capabilities = SystemRegistries(
             resources=self.resource_registry,
             tools=self.tool_registry,
             plugins=self.plugin_registry,
         )
-        return AgentRuntime(capabilities)
+        return _AgentRuntime(capabilities)
 
     # ------------------------------ internals --------------------------------
     def _import_module(self, file: Path) -> ModuleType | None:
