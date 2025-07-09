@@ -12,7 +12,7 @@ packages = [
 ]
 
 [tool.poetry.scripts]
-entity-cli = "src.cli:main"
+entity-cli = "entity.cli:main"
 
 
 [tool.poetry.urls]
