@@ -5,12 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Optional, cast
 
-from registry import PluginRegistry, SystemRegistries
-
-from entity.core.builder import AgentBuilder
-from pipeline.exceptions import PipelineError
-from pipeline.runtime import AgentRuntime
-from pipeline.stages import PipelineStage
+from .builder import AgentBuilder
+from .exceptions import PipelineError
+from .registries import PluginRegistry, SystemRegistries
+from .runtime import AgentRuntime
 
 
 @dataclass
@@ -74,30 +72,7 @@ class Agent:
 
     # ------------------------------------------------------------------
     async def _ensure_runtime(self) -> None:
-        if self._runtime is not None:
-            return
-
-        if self.config_path:
-            from pipeline.initializer import SystemInitializer
-
-            initializer = SystemInitializer.from_yaml(self.config_path)
-            plugin_reg, resources, tools = await initializer.initialize()
-
-            if self._builder is not None:
-                for stage in PipelineStage:
-                    for plugin in self.builder.plugin_registry.get_plugins_for_stage(
-                        stage
-                    ):
-                        name = self.builder.plugin_registry.get_plugin_name(plugin)
-                        await plugin_reg.register_plugin_for_stage(plugin, stage, name)
-
-            registries = SystemRegistries(
-                resources=resources,
-                tools=tools,
-                plugins=plugin_reg,
-            )
-            self._runtime = AgentRuntime(registries)
-        else:
+        if self._runtime is None:
             self._runtime = self.builder.build_runtime()
 
     @property

@@ -8,22 +8,11 @@ readme = "README.md"
 package-mode = true
 
 packages = [
-    { include = "pipeline", from = "src" },
-    { include = "cli", from = "src" },
-    { include = "entity_config", from = "src" },
     { include = "entity", from = "src" },
-    { include = "registry", from = "src" },
-    { include = "entity", from = "src" },
-    { include = "plugins", from = "src" },
-    { include = "entity", from = "src" },
-    { include = "tools", from = "src" },
-    { include = "entity", from = "src" },
-    { include = "user_plugins" },
 ]
 
 [tool.poetry.scripts]
 entity-cli = "src.cli:main"
-entity-config-migrate = "src.entity_config.migrate:main"
 
 
 [tool.poetry.urls]

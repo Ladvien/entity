@@ -5,7 +5,30 @@ import asyncio
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Dict, List, Optional
 
-from pipeline.utils import DependencyGraph
+
+class DependencyGraph:
+    def __init__(self, graph: Dict[str, List[str]]) -> None:
+        self.graph = graph
+
+    def topological_sort(self) -> List[str]:
+        in_degree: Dict[str, int] = {n: 0 for n in self.graph}
+        for node, deps in self.graph.items():
+            for dep in deps:
+                if dep in in_degree:
+                    in_degree[dep] += 1
+        queue: List[str] = [n for n, d in in_degree.items() if d == 0]
+        order: List[str] = []
+        while queue:
+            current = queue.pop(0)
+            order.append(current)
+            for dep in self.graph.get(current, []):
+                if dep in in_degree:
+                    in_degree[dep] -= 1
+                    if in_degree[dep] == 0:
+                        queue.append(dep)
+        if len(order) != len(in_degree):
+            raise SystemError("Circular dependency detected")
+        return order
 
 
 @dataclass

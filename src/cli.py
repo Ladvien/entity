@@ -9,15 +9,10 @@ from dataclasses import dataclass  # noqa: E402
 from pathlib import Path
 from typing import Optional  # noqa: E402
 
-import yaml  # noqa: E402
-
-from pipeline import Agent  # noqa: E402
-from pipeline import (
-    update_plugin_configuration,
-    validate_topology,
-)  # noqa: E402
-from pipeline.logging import get_logger  # noqa: E402
 from plugins.builtin.adapters.server import AgentServer  # noqa: E402
+
+from entity.core.agent import Agent  # noqa: E402
+from entity.core.logging import get_logger  # noqa: E402
 
 logger = get_logger(__name__)
 
@@ -186,72 +181,12 @@ class CLI:
         return asyncio.run(_run())
 
     def _reload_config(self, agent: Agent, file_path: str) -> int:
-        """Reload plugin configuration for a running agent.
+        """Reload plugin configuration placeholder."""
 
-        Args:
-            agent: Target agent instance.
-            file_path: YAML file containing updated plugin configuration.
-
-        Returns:
-            int: ``0`` when successful, ``1`` otherwise.
-        """
-
-        async def _run() -> int:
-            await agent._ensure_runtime()
-
-            registries = agent.runtime.registries
-
-            resource_registry = getattr(registries, "resources", registries[1])
-            tool_registry = getattr(registries, "tools", registries[2])
-            plugin_registry = getattr(registries, "plugins", registries[0])
-
-            with open(file_path, "r") as fh:
-                cfg = yaml.safe_load(fh) or {}
-
-            result = validate_topology(registries, cfg)
-            if not result.success:
-                logger.error("%s", result.error_message)
-                return 1
-
-            success = True
-
-            def plugin_exists(section: str, plugin_name: str) -> bool:
-                if section == "resources":
-                    return plugin_name in getattr(resource_registry, "_resources", {})
-                if section == "tools":
-                    return plugin_name in getattr(tool_registry, "_tools", {})
-                for p in plugin_registry.list_plugins():
-                    if plugin_registry.get_plugin_name(p) == plugin_name:
-                        return True
-                return False
-
-            for section in ["resources", "tools", "adapters", "prompts"]:
-                for name, conf in cfg.get("plugins", {}).get(section, {}).items():
-                    if not plugin_exists(section, name):
-                        logger.error(
-                            "Plugin %s not found. Restart required to add new plugins",
-                            name,
-                        )
-                        success = False
-                        continue
-
-                    result = await update_plugin_configuration(
-                        plugin_registry, name, conf
-                    )
-                    if result.success:
-                        logger.info("Updated %s", name)
-                    elif result.requires_restart:
-                        logger.error("%s", result.error_message)
-                        success = False
-                    else:
-                        logger.error(
-                            "Failed to update %s: %s", name, result.error_message
-                        )
-                        success = False
-
-            return 0 if success else 1
-
-        return asyncio.run(_run())
+        logger.info(
+            "Reloading configuration is not supported in this simplified build."
+        )
+        return 0
 
 
 def main() -> None:

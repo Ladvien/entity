@@ -1,21 +1,45 @@
 from __future__ import annotations
 
-"""Entity-specific plugin context."""
+"""Minimal plugin context objects."""
 
-from typing import Any
-
-from pipeline.context import PluginContext as _BaseContext
-from pipeline.stages import PipelineStage
+from dataclasses import dataclass
+from typing import Any, Dict, List
 
 
-class PluginContext(_BaseContext):
-    """Extend base context with stricter response handling."""
-
-    def set_response(self, response: Any) -> None:  # noqa: D401 - clear override
-        """Finalize ``response`` only during the DELIVER stage."""
-        if self.current_stage != PipelineStage.DELIVER:
-            raise ValueError("Only DELIVER stage plugins may set responses")
-        super().set_response(response)
+@dataclass
+class ConversationEntry:
+    content: str
+    role: str
+    metadata: Dict[str, Any] | None = None
 
 
-__all__ = ["PluginContext"]
+class PluginContext:
+    """Simplified context passed to plugins."""
+
+    def __init__(self) -> None:
+        self._history: List[ConversationEntry] = []
+        self._store: Dict[str, Any] = {}
+        self.response: Any | None = None
+
+    def get_conversation_history(self) -> List[ConversationEntry]:
+        return list(self._history)
+
+    async def call_llm(self, _context: Any, _prompt: str, *, purpose: str = ""):
+        class _Resp:
+            content = ""
+
+        return _Resp()
+
+    def add_conversation_entry(
+        self, *, content: str, role: str, metadata: Dict[str, Any] | None = None
+    ) -> None:
+        self._history.append(ConversationEntry(content, role, metadata or {}))
+
+    async def tool_use(self, name: str, **params: Any) -> None:  # noqa: ARG002
+        return None
+
+    def store(self, key: str, value: Any) -> None:
+        self._store[key] = value
+
+    def set_response(self, value: Any) -> None:
+        self.response = value

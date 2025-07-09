@@ -2,17 +2,12 @@ import asyncio
 from datetime import datetime
 from unittest.mock import AsyncMock
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginContext, PluginRegistry, SystemRegistries,
+                      ToolRegistry)
+from pipeline.resources.memory import Memory
+
 from entity.core.resources.container import ResourceContainer
-from entity.resources.memory import Memory
 from user_plugins.prompts.complex_prompt import ComplexPrompt
 
 

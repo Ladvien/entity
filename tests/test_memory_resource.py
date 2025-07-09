@@ -1,18 +1,12 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolRegistry,
-    execute_pipeline,
-)
+from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
+                      SystemRegistries, ToolRegistry, execute_pipeline)
 from pipeline.context import ConversationEntry
+from pipeline.resources.memory import Memory
+
 from entity.core.resources.container import ResourceContainer
-from entity.resources.memory import Memory
-from plugins.builtin.resources.memory_storage import MemoryStorage
 
 
 class IncrementPlugin(PromptPlugin):
