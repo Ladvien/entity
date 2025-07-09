@@ -65,6 +65,16 @@ class BadRes(ResourcePlugin):
         return ValidationResult.error_result("no runtime")
 
 
+class UnhealthyRes(ResourcePlugin):
+    stages = [PipelineStage.PARSE]
+
+    async def _execute_impl(self, context):
+        pass
+
+    async def health_check(self) -> bool:
+        return False
+
+
 def test_initializer_env_and_dependencies(tmp_path):
     os.environ["TEST_VALUE"] = "ok"
     config = {
@@ -170,4 +180,19 @@ def test_runtime_validation_failure(tmp_path):
 
     initializer = SystemInitializer.from_yaml(str(path))
     with pytest.raises(SystemError, match="Runtime validation failed"):
+        asyncio.run(initializer.initialize())
+
+
+def test_health_check_failure(tmp_path):
+    config = {
+        "plugins": {
+            "resources": {"bad": {"type": "tests.test_initializer:UnhealthyRes"}}
+        }
+    }
+
+    path = tmp_path / "cfg.yml"
+    path.write_text(yaml.dump(config))
+
+    initializer = SystemInitializer.from_yaml(str(path))
+    with pytest.raises(SystemError, match="failed health check"):
         asyncio.run(initializer.initialize())
