@@ -1009,8 +1009,36 @@ This gives us the composability and reusability benefits immediately while maint
 
 Ready for the next architectural concern?
 
+## 26. Workflow Objects: Composable Agent Blueprints
 
+A **Workflow** is a reusable blueprint that defines which plugins execute in which pipeline stages. It separates the "what should happen" (workflow definition) from the "how it executes" (pipeline execution), enabling better composition, testing, and reusability.
 
+**Core Purpose:**
+- **Composition**: Mix and match different agent behaviors without rebuilding pipelines
+- **Reusability**: Share common workflows across teams, projects, and deployments  
+- **Testability**: Test workflow logic independently from execution infrastructure
+- **Configurability**: Parameterize workflows for different environments or use cases
+
+**How it works:**
+```python
+# Define what happens
+workflow = CustomerServiceWorkflow()
+
+# Define how it executes  
+pipeline = Pipeline(approach=workflow)
+
+# Combine them
+agent = Agent(pipeline=pipeline)
+```
+
+**Key Design Principles:**
+1. **Workflows are stateless blueprints** - they define behavior, not execution state
+2. **Pipelines handle execution** - they manage resources, state, and plugin orchestration
+3. **Clean separation of concerns** - workflow logic separate from infrastructure concerns
+4. **Backward compatible** - existing stage-based configurations continue to work
+5. **Progressive complexity** - simple stage mappings initially, conditional logic later
+
+This architecture maintains your existing stateless execution model while providing the higher-level abstractions developers need for complex agent behaviors.
 
 
 
