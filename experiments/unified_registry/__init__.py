@@ -1,1 +1,0 @@
-"""Experimental resource manager prototype."""

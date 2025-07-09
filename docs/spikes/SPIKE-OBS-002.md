@@ -50,4 +50,4 @@ Use **Grafana** for monitoring production metrics because it excels at alerting 
 
 ## Next Steps
 1. Document a basic Grafana setup using Docker.
-2. Provide Streamlit examples in the `experiments` directory.
+2. Provide Streamlit examples in the `examples` directory.

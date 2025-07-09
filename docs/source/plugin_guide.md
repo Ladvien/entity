@@ -100,15 +100,12 @@ their dependencies validated automatically.
 
 ### External Plugin Repositories
 
-Plugins can live in their own repositories. The
-[`entity-debug-plugin`](https://github.com/Ladvien/entity-debug-plugin) example
-demonstrates a standalone debug plugin that relies on the local `entity`
-package through a path dependency. Point `plugin_dirs` at the repository so the
-initializer discovers its `pyproject.toml`:
+Plugins can live in their own repositories. Add the repository path to
+`plugin_dirs` so the initializer discovers its `pyproject.toml`:
 
 ```yaml
 plugin_dirs:
-  - ../entity-debug-plugin
+  - ../my-plugin-repo
 ```
 
 ## Development Steps
