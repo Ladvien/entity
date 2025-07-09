@@ -45,10 +45,9 @@ def test_concurrency_limit():
     tools = ToolRegistry(concurrency_limit=2)
     asyncio.run(tools.add("sleep", tool))
     capabilities = SystemRegistries(ResourceContainer(), tools, PluginRegistry())
+    ctx = PluginContext(state, capabilities)
     for i in range(4):
-        state.pending_tool_calls.append(
-            ToolCall(name="sleep", params={"delay": 0.1}, result_key=f"r{i}")
-        )
+        asyncio.run(ctx.queue_tool_use("sleep", result_key=f"r{i}", delay=0.1))
     start = time.time()
     asyncio.run(execute_pending_tools(state, capabilities))
     duration = time.time() - start
@@ -62,13 +61,10 @@ def test_cache_ttl():
     tools = ToolRegistry(cache_ttl=5)
     asyncio.run(tools.add("sleep", tool))
     capabilities = SystemRegistries(ResourceContainer(), tools, PluginRegistry())
-    state.pending_tool_calls.append(
-        ToolCall(name="sleep", params={"delay": 0}, result_key="a")
-    )
+    ctx = PluginContext(state, capabilities)
+    asyncio.run(ctx.queue_tool_use("sleep", result_key="a", delay=0))
     asyncio.run(execute_pending_tools(state, capabilities))
-    state.pending_tool_calls.append(
-        ToolCall(name="sleep", params={"delay": 0}, result_key="b")
-    )
+    asyncio.run(ctx.queue_tool_use("sleep", result_key="b", delay=0))
     asyncio.run(execute_pending_tools(state, capabilities))
     assert tool.calls == 1
     ctx = PluginContext(state, capabilities)

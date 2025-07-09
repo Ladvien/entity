@@ -84,14 +84,10 @@ async def test_tool_results_are_cached():
     tool = FakeTool()
     await capabilities.tools.add("fake", tool)
 
-    state.pending_tool_calls.append(
-        ToolCall(name="fake", params={"x": 2}, result_key="r1")
-    )
+    await ctx.queue_tool_use("fake", result_key="r1", x=2)
     await execute_pending_tools(state, capabilities)
 
-    state.pending_tool_calls.append(
-        ToolCall(name="fake", params={"x": 2}, result_key="r2")
-    )
+    await ctx.queue_tool_use("fake", result_key="r2", x=2)
     await execute_pending_tools(state, capabilities)
 
     assert tool.calls == 1

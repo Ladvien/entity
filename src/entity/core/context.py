@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+import time
 from typing import Any, Dict, List, Optional
+import asyncio
 
 from pipeline.stages import PipelineStage
 from pipeline.state import PipelineState, ToolCall, ConversationEntry
@@ -23,7 +25,9 @@ class PluginContext:
     def __init__(self, state: PipelineState, registries: Any) -> None:
         self._state = state
         self._registries = registries
-        self._store: Dict[str, Any] = {}
+        self._store = state.stage_results
+        self._cache: Dict[str, Any] = {}
+        self._memory = registries.resources.get("memory") if registries else None
 
     # ------------------------------------------------------------------
     @property
@@ -43,6 +47,20 @@ class PluginContext:
 
     def get_conversation_history(self) -> List[ConversationEntry]:
         return list(self._state.conversation)
+
+    # ------------------------------------------------------------------
+    # Convenience helpers
+    # ------------------------------------------------------------------
+
+    def conversation(self) -> List[ConversationEntry]:
+        """Return the current conversation history."""
+        return self.get_conversation_history()
+
+    def say(self, content: str, *, metadata: Dict[str, Any] | None = None) -> None:
+        """Append an assistant message to the conversation."""
+        self.add_conversation_entry(
+            content=content, role="assistant", metadata=metadata
+        )
 
     async def call_llm(self, _context: Any, prompt: str, *, purpose: str = "") -> Any:
         llm = self._registries.resources.get("llm")
@@ -82,10 +100,34 @@ class PluginContext:
         )
 
     async def tool_use(self, name: str, **params: Any) -> Any:
+        """Execute ``name`` immediately and return the result."""
         tool = self._registries.tools.get(name)
         if tool is None:
             raise ValueError(f"Tool '{name}' not found")
-        return await tool.execute_function(params)
+        cached = await self._registries.tools.get_cached_result(name, params)
+        if cached is not None:
+            result = cached
+            duration = 0.0
+        else:
+            start = time.perf_counter()
+            result = await tool.execute_function(params)
+            duration = time.perf_counter() - start
+            await self._registries.tools.cache_result(name, params, result)
+        if self._state.metrics:
+            key = f"{self.current_stage}:{name}"
+            self._state.metrics.record_tool_duration(key, duration)
+        return result
+
+    async def queue_tool_use(
+        self, name: str, *, result_key: str | None = None, **params: Any
+    ) -> str:
+        """Queue ``name`` for later execution and return its result key."""
+        if result_key is None:
+            result_key = f"{name}_{len(self._state.pending_tool_calls)}"
+        self._state.pending_tool_calls.append(
+            ToolCall(name=name, params=params, result_key=result_key, source="queued")
+        )
+        return result_key
 
     # ------------------------------------------------------------------
     # Temporary cache helpers

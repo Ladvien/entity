@@ -29,9 +29,6 @@ def make_state():
         pipeline_id="1",
         metrics=MetricsCollector(),
     )
-    state.pending_tool_calls.append(
-        ToolCall(name="echo", params={"text": "hello"}, result_key="echo1")
-    )
     return state
 
 
@@ -41,6 +38,8 @@ def test_execute_pending_tools_returns_mapping_by_result_key():
         ResourceContainer(), ToolRegistry(), PluginRegistry()
     )
     asyncio.run(capabilities.tools.add("echo", EchoTool()))
+    ctx = PluginContext(state, capabilities)
+    asyncio.run(ctx.queue_tool_use("echo", result_key="echo1", text="hello"))
 
     results = asyncio.run(execute_pending_tools(state, capabilities))
 
