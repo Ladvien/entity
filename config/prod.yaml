@@ -89,7 +89,7 @@ plugins:
       enable_reasoning: true
       max_steps: 5
     conversation_history:
-      type: plugins.builtin.prompts.conversation_history:ConversationHistory
+      type: user_plugins.prompts.conversation_history:ConversationHistory
       db_schema: public
       history_table: chat_history
       stages: [parse, deliver]
