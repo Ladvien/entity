@@ -21,7 +21,7 @@ agent.tool_registry.add("search", SearchTool())
 
 @agent.plugin
 async def lookup(context):
-    return await context.use_tool("search", query="Entity Pipeline")
+    return await context.tool_use("search", query="Entity Pipeline")
 ```
 
 The `context` argument is an instance of `PluginContext`. See

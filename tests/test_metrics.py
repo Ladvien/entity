@@ -29,7 +29,7 @@ class MetricsPlugin(PromptPlugin):
     stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
-        await context.use_tool("echo", text="hello")
+        await context.tool_use("echo", text="hello")
         await self.call_llm(context, "hi", "test")
         context.set_response("ok")
 

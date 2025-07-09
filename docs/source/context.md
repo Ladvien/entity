@@ -4,7 +4,7 @@
 
 - conversation history and other pipeline state
 - registered resources via `get_resource`
-- tool execution through `execute_tool`
+- tool execution through `queue_tool_use`
 - helpers for adding conversation entries and stage results
 
 Plugins receive this object inside their `_execute_impl` method.
@@ -21,7 +21,7 @@ class ExamplePlugin(PromptPlugin):
 
 - `say()` to set the pipeline response
 - `ask_llm()` to call the configured LLM
-- `use_tool()` to run a tool and wait for the result
+- `tool_use()` to run a tool and wait for the result
 
 ```python
 class MyPrompt(PromptPlugin):
