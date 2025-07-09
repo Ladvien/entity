@@ -14,10 +14,16 @@ from typing import List
 from ..utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
-from entity_config.environment import load_env
-from pipeline import PipelineStage, PromptPlugin
-from pipeline.pipeline import Pipeline, Workflow
-from entity.core.builder import AgentBuilder
+from entity.config.environment import load_env
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    ResourceContainer,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
 from pipeline.config import ConfigLoader
 from entity.core.context import PluginContext
 from plugins.builtin.resources.pg_vector_store import PgVectorStore

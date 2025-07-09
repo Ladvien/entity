@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple, Type
 
 from entity.core.plugin_utils import import_plugin_class
-from entity_config.environment import load_env
+from entity.config.environment import load_env
 from pipeline.config import ConfigLoader
 from pipeline.config.utils import interpolate_env_vars
 from entity.core.resources.container import ResourceContainer
