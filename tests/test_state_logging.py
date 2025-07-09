@@ -3,8 +3,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime
 
-from pipeline import (PluginRegistry, PromptPlugin, SystemRegistries,
-                      ToolRegistry)
+from pipeline import PluginRegistry, PromptPlugin, SystemRegistries, ToolRegistry
 from pipeline.pipeline import execute_pipeline
 from pipeline.stages import PipelineStage
 from pipeline.state import ConversationEntry, PipelineState
@@ -57,12 +56,12 @@ def test_execute_pipeline_logs_states(tmp_path):
     asyncio.run(
         plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.DELIVER)
     )
-    registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
+    capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 
     log_file = tmp_path / "run.jsonl"
     logger = StateLogger(log_file)
 
-    result = asyncio.run(execute_pipeline("hi", registries, state_logger=logger))
+    result = asyncio.run(execute_pipeline("hi", capabilities, state_logger=logger))
     logger.close()
     assert result == "ok"
 

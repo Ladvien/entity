@@ -1,9 +1,17 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
-                      PipelineState, PluginContext, PluginRegistry,
-                      PromptPlugin, SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineStage,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
 from plugins.builtin.resources.echo_llm import EchoLLMResource
 
 from entity.core.resources.container import ResourceContainer
@@ -27,8 +35,8 @@ def make_context(llm) -> PluginContext:
     )
     resources = ResourceContainer()
     asyncio.run(resources.add("llm", llm))
-    registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
-    return PluginContext(state, registries)
+    capabilities = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
+    return PluginContext(state, capabilities)
 
 
 def test_call_llm_logs_info(monkeypatch):

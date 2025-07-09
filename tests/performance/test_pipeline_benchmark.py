@@ -1,8 +1,14 @@
 import asyncio
 
 import pytest
-from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
-                      PromptPlugin, SystemRegistries, ToolRegistry)
+from pipeline import (
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
 
 from entity.core.resources.container import ResourceContainer
 
@@ -19,8 +25,8 @@ def _make_manager():
     asyncio.run(
         plugins.register_plugin_for_stage(NoOpPlugin({}), PipelineStage.DELIVER)
     )
-    registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
-    return PipelineManager(registries)
+    capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
+    return PipelineManager(capabilities)
 
 
 @pytest.mark.benchmark

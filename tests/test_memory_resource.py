@@ -1,8 +1,14 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      SystemRegistries, ToolRegistry, execute_pipeline)
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
 from pipeline.context import ConversationEntry
 from pipeline.resources.memory import Memory
 
@@ -20,7 +26,7 @@ class IncrementPlugin(PromptPlugin):
         context.set_response(count)
 
 
-def make_registries():
+def make_capabilities():
     plugins = PluginRegistry()
     asyncio.run(
         plugins.register_plugin_for_stage(IncrementPlugin({}), PipelineStage.DELIVER)
@@ -31,9 +37,9 @@ def make_registries():
 
 
 def test_memory_persists_between_runs():
-    registries = make_registries()
-    first = asyncio.run(execute_pipeline("hi", registries))
-    second = asyncio.run(execute_pipeline("again", registries))
+    capabilities = make_capabilities()
+    first = asyncio.run(execute_pipeline("hi", capabilities))
+    second = asyncio.run(execute_pipeline("again", capabilities))
     assert first == 1
     assert second == 2
 

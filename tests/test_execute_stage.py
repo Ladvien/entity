@@ -2,9 +2,15 @@ import asyncio
 from datetime import datetime
 
 import pytest
-from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
-                      PipelineState, PluginRegistry, SystemRegistries,
-                      ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineStage,
+    PipelineState,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.pipeline import execute_stage
 
 from entity.core.resources.container import ResourceContainer
@@ -34,7 +40,7 @@ def make_state():
     )
 
 
-def make_registries(plugin):
+def make_capabilities(plugin):
     plugins = PluginRegistry()
     asyncio.run(plugins.register_plugin_for_stage(plugin, PipelineStage.DO))
     return SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
@@ -42,16 +48,16 @@ def make_registries(plugin):
 
 def test_generic_error_sets_failure_info():
     state = make_state()
-    registries = make_registries(GenericFailPlugin())
-    asyncio.run(execute_stage(PipelineStage.DO, state, registries))
+    capabilities = make_capabilities(GenericFailPlugin())
+    asyncio.run(execute_stage(PipelineStage.DO, state, capabilities))
     assert state.failure_info is not None
     assert state.failure_info.error_message == "boom"
 
 
 def test_unexpected_error_propagates():
     state = make_state()
-    registries = make_registries(PropagatePlugin())
+    capabilities = make_capabilities(PropagatePlugin())
     with pytest.raises(KeyError):
-        asyncio.run(execute_stage(PipelineStage.DO, state, registries))
+        asyncio.run(execute_stage(PipelineStage.DO, state, capabilities))
     assert state.failure_info is not None
     assert state.failure_info.error_message == "oops"

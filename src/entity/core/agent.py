@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Optional, cast
+import warnings
 
 from .builder import AgentBuilder
 from .exceptions import PipelineError
@@ -95,10 +96,19 @@ class Agent:
 
         return await self.run_message(message)
 
-    def get_registries(self) -> SystemRegistries:
+    def get_capabilities(self) -> SystemRegistries:
         if self._runtime is None:
             raise PipelineError("Agent not initialized")
-        return self._runtime.registries
+        return self._runtime.capabilities
+
+    # deprecated -----------------------------------------------------
+    def get_registries(self) -> SystemRegistries:  # pragma: no cover - legacy
+        warnings.warn(
+            "'get_registries' is deprecated, use 'get_capabilities' instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.get_capabilities()
 
     # ------------------------------------------------------------------
     # Compatibility helpers
@@ -106,11 +116,11 @@ class Agent:
     @property
     def plugin_registry(self) -> "PluginRegistry":  # pragma: no cover - passthrough
         if self._runtime is not None:
-            return self._runtime.registries.plugins
+            return self._runtime.capabilities.plugins
         return self.builder.plugin_registry
 
     @property
     def plugins(self) -> "PluginRegistry":  # pragma: no cover - passthrough
         if self._runtime is not None:
-            return self._runtime.registries.plugins
+            return self._runtime.capabilities.plugins
         return self.builder.plugin_registry

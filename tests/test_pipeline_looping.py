@@ -1,9 +1,15 @@
 import asyncio
 from typing import Optional
 
-from pipeline import (FailurePlugin, PipelineStage, PluginRegistry,
-                      PromptPlugin, SystemRegistries, ToolRegistry,
-                      execute_pipeline)
+from pipeline import (
+    FailurePlugin,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
 from pipeline.state import FailureInfo, PipelineState
 
 from entity.core.resources.container import ResourceContainer
@@ -47,7 +53,7 @@ class RecordFailurePlugin(FailurePlugin):
             self.store.append(info)
 
 
-async def make_registries(plugin):
+async def make_capabilities(plugin):
     plugins = PluginRegistry()
     await plugins.register_plugin_for_stage(plugin, PipelineStage.DELIVER)
     return SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
@@ -57,8 +63,8 @@ def test_pipeline_loops_until_response():
     plugin = CountingDeliverPlugin({})
 
     async def run():
-        registries = await make_registries(plugin)
-        result = await execute_pipeline("hi", registries)
+        capabilities = await make_capabilities(plugin)
+        result = await execute_pipeline("hi", capabilities)
         return result
 
     result = asyncio.run(run())
@@ -76,10 +82,10 @@ def test_max_iterations_triggers_error():
         await plugins.register_plugin_for_stage(
             RecordFailurePlugin(failures), PipelineStage.ERROR
         )
-        registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
+        capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
         state = PipelineState(conversation=[], pipeline_id="id")
         result = await execute_pipeline(
-            "hi", registries, state=state, max_iterations=2  # type: ignore[arg-type]
+            "hi", capabilities, state=state, max_iterations=2  # type: ignore[arg-type]
         )
         assert isinstance(result, dict)
         return state

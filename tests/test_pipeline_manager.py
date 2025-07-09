@@ -1,7 +1,13 @@
 import asyncio
 
-from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
-                      PromptPlugin, SystemRegistries, ToolRegistry)
+from pipeline import (
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
 
 from entity.core.resources.container import ResourceContainer
 
@@ -19,8 +25,8 @@ def make_manager():
     asyncio.run(
         plugins.register_plugin_for_stage(WaitPlugin({}), PipelineStage.DELIVER)
     )
-    registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
-    return PipelineManager(registries)
+    capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
+    return PipelineManager(capabilities)
 
 
 def test_pipeline_manager_active_flag():

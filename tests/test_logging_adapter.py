@@ -1,8 +1,14 @@
 import asyncio
 import logging
 
-from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
-                      PromptPlugin, SystemRegistries, ToolRegistry)
+from pipeline import (
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
 from plugins.builtin.adapters.logging import LoggingAdapter
 
 from entity.core.resources.container import ResourceContainer
@@ -24,8 +30,8 @@ def make_manager() -> PipelineManager:
     asyncio.run(
         plugins.register_plugin_for_stage(LoggingAdapter({}), PipelineStage.DELIVER)
     )
-    registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
-    return PipelineManager(registries)
+    capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
+    return PipelineManager(capabilities)
 
 
 def test_logging_adapter_logs_response(caplog):

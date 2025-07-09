@@ -1,7 +1,13 @@
 import asyncio
 
-from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
-                      PromptPlugin, SystemRegistries, ToolRegistry)
+from pipeline import (
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources.memory import Memory
 
 from entity.core.resources.container import ResourceContainer
@@ -33,10 +39,10 @@ def make_manager():
     )
     resources = ResourceContainer()
     asyncio.run(resources.add("memory", Memory()))
-    registries = SystemRegistries(resources, ToolRegistry(), plugins)
-    manager = PipelineManager(registries)
+    capabilities = SystemRegistries(resources, ToolRegistry(), plugins)
+    manager = PipelineManager(capabilities)
     memory = resources.get("memory")
-    conv = memory.start_conversation(registries, manager)  # type: ignore[arg-type]
+    conv = memory.start_conversation(capabilities, manager)  # type: ignore[arg-type]
     return conv, manager
 
 

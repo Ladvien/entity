@@ -2,9 +2,15 @@ import asyncio
 from datetime import datetime
 from unittest.mock import AsyncMock
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, SystemRegistries,
-                      ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources.memory import Memory
 
 from entity.core.resources.container import ResourceContainer
@@ -44,8 +50,8 @@ def make_context(llm, memory):
     resources = ResourceContainer()
     asyncio.run(resources.add("llm", llm))
     asyncio.run(resources.add("memory", memory))
-    registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
-    return state, PluginContext(state, registries)
+    capabilities = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
+    return state, PluginContext(state, capabilities)
 
 
 def test_complex_prompt_uses_resources():

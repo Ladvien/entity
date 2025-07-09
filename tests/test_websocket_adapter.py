@@ -1,8 +1,14 @@
 import asyncio
 
 from fastapi.testclient import TestClient
-from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
-                      PromptPlugin, SystemRegistries, ToolRegistry)
+from pipeline import (
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
 from plugins.builtin.adapters import WebSocketAdapter
 
 from entity.core.resources.container import ResourceContainer
@@ -21,8 +27,8 @@ def make_adapter():
     asyncio.run(
         plugins.register_plugin_for_stage(RespPlugin({}), PipelineStage.DELIVER)
     )
-    registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
-    manager = PipelineManager(registries)
+    capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
+    manager = PipelineManager(capabilities)
     return WebSocketAdapter(manager)
 
 

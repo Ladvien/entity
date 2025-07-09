@@ -1,9 +1,15 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, SystemRegistries,
-                      ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 
 from entity.core.resources.container import ResourceContainer
 from user_plugins.tools.search_tool import SearchTool
@@ -19,8 +25,8 @@ async def run_search() -> str:
     )
     tools = ToolRegistry()
     await tools.add("search", SearchTool())
-    registries = SystemRegistries(ResourceContainer(), tools, PluginRegistry())
-    ctx = PluginContext(state, registries)
+    capabilities = SystemRegistries(ResourceContainer(), tools, PluginRegistry())
+    ctx = PluginContext(state, capabilities)
     return await ctx.tool_use("search", query="open source")
 
 

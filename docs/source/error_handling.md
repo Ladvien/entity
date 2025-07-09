@@ -22,7 +22,7 @@ Use `StateLogger` to capture pipeline state after each stage.
 
 ```python
 logger = StateLogger("states.jsonl")
-result = await execute_pipeline("hi", registries, state_logger=logger)
+result = await execute_pipeline("hi", capabilities, state_logger=logger)
 ```
 
 Replay logged transitions with `LogReplayer`:

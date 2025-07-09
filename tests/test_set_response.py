@@ -7,8 +7,10 @@ from entity.core.resources.container import ResourceContainer
 
 def make_context(stage: PipelineStage) -> PluginContext:
     state = PipelineState(conversation=[], pipeline_id="1", current_stage=stage)
-    registries = SystemRegistries(ResourceContainer(), ToolRegistry(), PluginRegistry())
-    return PluginContext(state, registries)
+    capabilities = SystemRegistries(
+        ResourceContainer(), ToolRegistry(), PluginRegistry()
+    )
+    return PluginContext(state, capabilities)
 
 
 def test_set_response_allowed_in_deliver():

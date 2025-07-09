@@ -51,7 +51,7 @@ def test_pipeline_recovers_from_stage_failure(
         plugins = PluginRegistry()
         await plugins.register_plugin_for_stage(make_failing_plugin(stage), stage)
         await plugins.register_plugin_for_stage(RespondPlugin(), PipelineStage.DELIVER)
-        registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
+        capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 
         log_file = tmp_path / "state_log.jsonl"
         logger = StateLogger(log_file)
@@ -64,10 +64,10 @@ def test_pipeline_recovers_from_stage_failure(
             metrics=MetricsCollector(),
         )
 
-        await execute_pipeline("hi", registries, state_logger=logger, state=state)
+        await execute_pipeline("hi", capabilities, state_logger=logger, state=state)
         state.failure_info = None
         result = await execute_pipeline(
-            "hi", registries, state_logger=logger, state=state
+            "hi", capabilities, state_logger=logger, state=state
         )
 
         logger.close()
