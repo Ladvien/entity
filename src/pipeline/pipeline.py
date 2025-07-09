@@ -8,10 +8,11 @@ from __future__ import annotations
 
 import time
 from datetime import datetime
+from dataclasses import dataclass
 from typing import Any, Dict
 
 from entity.core.state_logger import StateLogger
-from registry import SystemRegistries
+from registry import PluginRegistry, SystemRegistries
 
 from .context import ConversationEntry, PluginContext
 from .errors import create_static_error_response
@@ -33,6 +34,66 @@ from .state import FailureInfo, PipelineState
 from .tools.execution import execute_pending_tools
 
 logger = get_logger(__name__)
+
+
+@dataclass
+class Workflow:
+    """Simple stage to plugin name mapping."""
+
+    stage_map: dict[PipelineStage, list[str]]
+
+    @classmethod
+    def from_dict(cls, data: Dict[Any, Any]) -> "Workflow":
+        mapping: dict[PipelineStage, list[str]] = {}
+        for stage, plugins in data.items():
+            stage_enum = PipelineStage.ensure(stage)
+            names = plugins if isinstance(plugins, list) else [plugins]
+            mapping[stage_enum] = [str(p) for p in names]
+        return cls(mapping)
+
+
+class Pipeline:
+    """Execute messages according to a workflow."""
+
+    def __init__(self, approach: Workflow | Dict[Any, Any]) -> None:
+        self.workflow = (
+            approach if isinstance(approach, Workflow) else Workflow.from_dict(approach)
+        )
+
+    async def run_message(
+        self,
+        message: str,
+        registries: SystemRegistries,
+        *,
+        pipeline_manager: PipelineManager | None = None,
+        state_logger: StateLogger | None = None,
+        return_metrics: bool = False,
+        state: PipelineState | None = None,
+        max_iterations: int = 5,
+    ) -> Dict[str, Any] | tuple[Dict[str, Any], MetricsCollector]:
+        plugin_reg = PluginRegistry()
+        for stage, plugin_names in self.workflow.stage_map.items():
+            for name in plugin_names:
+                plugin = registries.plugins.get_by_name(name)
+                if plugin is None:
+                    raise KeyError(f"Plugin '{name}' not registered")
+                await plugin_reg.register_plugin_for_stage(plugin, stage, name)
+
+        regs = SystemRegistries(
+            resources=registries.resources,
+            tools=registries.tools,
+            plugins=plugin_reg,
+            validators=registries.validators,
+        )
+        return await execute_pipeline(
+            message,
+            regs,
+            pipeline_manager=pipeline_manager,
+            state_logger=state_logger,
+            return_metrics=return_metrics,
+            state=state,
+            max_iterations=max_iterations,
+        )
 
 
 def generate_pipeline_id() -> str:
@@ -311,6 +372,8 @@ async def execute_pipeline(
 
 
 __all__ = [
+    "Workflow",
+    "Pipeline",
     "generate_pipeline_id",
     "create_default_response",
     "execute_stage",
