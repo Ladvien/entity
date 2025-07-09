@@ -4,12 +4,12 @@ from pathlib import Path
 
 import pytest
 
+from entity.core.state_logger import LogReplayer, StateLogger
 from pipeline import PipelineStage, execute_pipeline
-from pipeline.pipeline import generate_pipeline_id
-from pipeline.state import ConversationEntry, MetricsCollector, PipelineState
-from pipeline.state_logger import LogReplayer, StateLogger
 from pipeline.base_plugins import BasePlugin
-from entity.core.resources.container import ResourceContainer
+from pipeline.pipeline import generate_pipeline_id
+from pipeline.resources import ResourceContainer
+from pipeline.state import ConversationEntry, MetricsCollector, PipelineState
 from registry import PluginRegistry, SystemRegistries, ToolRegistry
 
 

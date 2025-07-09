@@ -1,3 +1,7 @@
-from .core import Agent, AgentBuilder
+"""Core utilities for the Entity framework."""
 
-__all__ = ["Agent", "AgentBuilder"]
+from __future__ import annotations
+
+__all__ = ["core"]
+
+from . import core  # noqa: E402

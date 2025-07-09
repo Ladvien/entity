@@ -10,6 +10,7 @@ import time
 from datetime import datetime
 from typing import Any, Dict
 
+from entity.core.state_logger import StateLogger
 from plugins.builtin.failure.fallback_error_plugin import FallbackErrorPlugin
 from registry import SystemRegistries
 
@@ -30,7 +31,6 @@ from .observability.metrics import MetricsServerManager
 from .observability.tracing import start_span
 from .stages import PipelineStage
 from .state import FailureInfo, PipelineState
-from .state_logger import StateLogger
 from .tools.execution import execute_pending_tools
 
 logger = get_logger(__name__)

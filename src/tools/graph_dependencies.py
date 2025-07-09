@@ -1,7 +1,6 @@
 import ast
 import os
 import sys
-from importlib import import_module
 from typing import Set
 
 import networkx as nx

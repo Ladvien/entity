@@ -13,6 +13,7 @@ packages = [
     { include = "entity_config", from = "src" },
     { include = "entity", from = "src" },
     { include = "registry", from = "src" },
+    { include = "entity", from = "src" },
     { include = "plugins", from = "src" },
     { include = "entity", from = "src" },
     { include = "tools", from = "src" },

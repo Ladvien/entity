@@ -3,7 +3,6 @@ from __future__ import annotations
 """Generate a Graphviz DOT diagram of the pipeline."""
 
 from collections import defaultdict
-from importlib import import_module
 from typing import Dict, List
 
 import yaml

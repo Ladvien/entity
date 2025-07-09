@@ -5,9 +5,8 @@ from __future__ import annotations
 import asyncio
 from typing import Generic, Optional, Set, TypeVar, cast
 
+from entity.core.state_logger import StateLogger
 from registry import SystemRegistries
-
-from .state_logger import StateLogger
 
 ResultT = TypeVar("ResultT")
 

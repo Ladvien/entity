@@ -106,7 +106,7 @@ class CLI:
             return self._verify_plugins(self.args.config)
 
         if self.args.command == "replay-log":
-            from pipeline.state_logger import LogReplayer
+            from entity.core.state_logger import LogReplayer
 
             assert self.args.file is not None
             LogReplayer(self.args.file).replay()
@@ -121,7 +121,7 @@ class CLI:
             await agent._ensure_runtime()
             state_logger = None
             if self.args.state_log:
-                from pipeline.state_logger import StateLogger
+                from entity.core.state_logger import StateLogger
 
                 state_logger = StateLogger(self.args.state_log)
                 agent.runtime.manager.state_logger = state_logger
