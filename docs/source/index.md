@@ -38,6 +38,7 @@ Welcome to the Entity Pipeline framework. These pages explain how to configure a
 - [Local](deploy_local.md)
 - [Docker](deploy_docker.md)
 - [Cloud](deploy_cloud.md)
+- [Dev to production](dev_to_production.md)
 - [Production guide](deploy_production.md)
 - [Migration guide](migration_guide.md)
 
@@ -63,6 +64,7 @@ deploy_aws
 deploy_local
 deploy_docker
 deploy_cloud
+dev_to_production
 deploy_production
 migration_guide
 principle_checklist
