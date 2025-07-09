@@ -21,6 +21,7 @@ from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
 from .defaults import DEFAULT_CONFIG
 from .logging import configure_logging, get_logger
 from .stages import PipelineStage
+from .workflow import Workflow
 
 logger = get_logger(__name__)
 
@@ -266,6 +267,7 @@ class SystemInitializer:
 
         registry = ClassRegistry()
         dep_graph: Dict[str, List[str]] = {}
+        workflow = Workflow.from_dict(self.config.get("workflow"))
 
         # Phase 1: register all plugin classes
         resources = self.config.get("plugins", {}).get("resources", {})
@@ -289,6 +291,15 @@ class SystemInitializer:
                 cls = import_plugin_class(cls_path)
                 registry.register_class(cls, config, name)
                 dep_graph[name] = getattr(cls, "dependencies", [])
+
+        # Validate workflow references
+        for stage_plugins in workflow.stage_map.values():
+            for plugin_name in stage_plugins:
+                if not registry.has_plugin(plugin_name):
+                    available = registry.list_plugins()
+                    raise SystemError(
+                        f"Workflow references unknown plugin '{plugin_name}'. Available: {available}"
+                    )
 
         # Validate dependencies declared by each plugin class
         for plugin_class, _ in registry.all_plugin_classes():
@@ -348,7 +359,7 @@ class SystemInitializer:
                     instance, PipelineStage.ensure(stage)
                 )
 
-        return plugin_registry, resource_container, tool_registry
+        return plugin_registry, resource_container, tool_registry, workflow
 
     def _validate_dependency_graph(
         self, registry: ClassRegistry, dep_graph: Dict[str, List[str]]

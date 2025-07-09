@@ -4,8 +4,13 @@ import os
 
 import pytest
 import yaml
-from pipeline import (PipelineStage, PromptPlugin, ResourcePlugin,
-                      SystemInitializer, ValidationResult)
+from pipeline import (
+    PipelineStage,
+    PromptPlugin,
+    ResourcePlugin,
+    SystemInitializer,
+    ValidationResult,
+)
 
 
 class A(ResourcePlugin):
@@ -88,7 +93,7 @@ def test_initializer_env_and_dependencies(tmp_path):
     initializer = SystemInitializer.from_yaml(str(path))
     assert initializer.get_resource_config("a")["val"] == "ok"
 
-    plugin_reg, resource_reg, tool_reg = asyncio.run(initializer.initialize())
+    plugin_reg, resource_reg, tool_reg, _ = asyncio.run(initializer.initialize())
 
     assert resource_reg.get("a")
     think_plugins = plugin_reg.get_plugins_for_stage(PipelineStage.THINK)
@@ -128,9 +133,9 @@ def test_initializer_from_json_and_dict(tmp_path):
 
     assert init_yaml.config == init_json.config == init_dict.config
 
-    py, ry, _ = asyncio.run(init_yaml.initialize())
-    pj, rj, _ = asyncio.run(init_json.initialize())
-    pd, rd, _ = asyncio.run(init_dict.initialize())
+    py, ry, _, _ = asyncio.run(init_yaml.initialize())
+    pj, rj, _, _ = asyncio.run(init_json.initialize())
+    pd, rd, _, _ = asyncio.run(init_dict.initialize())
 
     assert (
         len(py.get_plugins_for_stage(PipelineStage.THINK))
@@ -158,7 +163,7 @@ def test_llm_resource_registration(tmp_path):
     path.write_text(yaml.dump(config, sort_keys=False))
 
     initializer = SystemInitializer.from_yaml(str(path))
-    _, resources, _ = asyncio.run(initializer.initialize())
+    _, resources, _, _ = asyncio.run(initializer.initialize())
 
     assert resources.get("llm") is not None
     assert resources.get("ollama") is None

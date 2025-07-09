@@ -1,9 +1,15 @@
 import asyncio
 
 import yaml
-from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      SystemInitializer, SystemRegistries, ToolRegistry,
-                      execute_pipeline)
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemInitializer,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
 
 from entity.core.resources.container import ResourceContainer
 
@@ -65,6 +71,6 @@ def test_initializer_preserves_yaml_order(tmp_path):
     path.write_text(yaml.dump(config, sort_keys=False))
 
     initializer = SystemInitializer.from_yaml(str(path))
-    plugin_reg, _, _ = asyncio.run(initializer.initialize())
+    plugin_reg, _, _, _ = asyncio.run(initializer.initialize())
     plugins = plugin_reg.get_plugins_for_stage(PipelineStage.DELIVER)
     assert [p.__class__ for p in plugins] == [Second, First, Third]
