@@ -131,11 +131,22 @@ class ResourceContainer:
     async def build_all(self) -> None:
         self._order = self._resolve_order()
         self._init_order = []
+        # Instantiate resources without dependencies first
+        instances: Dict[str, Any] = {}
         for name in self._order:
             cls = self._classes[name]
             cfg = self._configs[name]
-            instance = self._instantiate(name, cls, cfg)
+            instance = self._create_instance(cls, cfg)
             await self.add(name, instance)
+            instances[name] = instance
+
+        # Inject dependencies after all instances exist
+        for name, instance in instances.items():
+            self._inject_dependencies(name, instance)
+
+        # Initialize resources in topological order
+        for name in self._order:
+            instance = instances[name]
             init = getattr(instance, "initialize", None)
             if callable(init):
                 await init()
@@ -196,11 +207,12 @@ class ResourceContainer:
     def get_metrics(self) -> Dict[str, Dict[str, int]]:
         return {name: pool.metrics() for name, pool in self._pools.items()}
 
-    def _instantiate(self, name: str, cls: type, cfg: Dict) -> Any:
+    def _create_instance(self, cls: type, cfg: Dict) -> Any:
         if hasattr(cls, "from_config"):
-            instance = cls.from_config(cfg)
-        else:
-            instance = cls(config=cfg)
+            return cls.from_config(cfg)
+        return cls(config=cfg)
+
+    def _inject_dependencies(self, name: str, instance: Any) -> None:
         for dep in self._deps.get(name, []):
             dep_obj = self.get(dep)
             if dep_obj is None:
@@ -208,7 +220,6 @@ class ResourceContainer:
                     f"Resource '{name}' requires '{dep}' which is missing"
                 )
             setattr(instance, dep, dep_obj)
-        return instance
 
     def _resolve_order(self) -> List[str]:
         # Build dependency graph with edges from each dependency to its dependents
