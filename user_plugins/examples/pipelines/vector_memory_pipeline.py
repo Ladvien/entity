@@ -1,9 +1,7 @@
-"""Run a pipeline with vector memory support.
+"""Run a pipeline with vector memory support using the Workflow pattern.
 
-Usage:
-    python -m examples.pipelines.vector_memory_pipeline
-
-Run with the ``-m`` flag or install the package in editable mode.
+Switch between ``config/dev.yaml`` and ``config/prod.yaml`` to apply the
+same workflow in different environments.
 """
 
 from __future__ import annotations
@@ -16,20 +14,23 @@ from ..utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
 from entity_config.environment import load_env
-from pipeline import Agent  # noqa: E402
-from pipeline import PipelineStage, PromptPlugin  # noqa: E402
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    ResourceContainer,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
 from pipeline.config import ConfigLoader
-from entity.core.context import PluginContext  # noqa: E402
-from plugins.builtin.resources.pg_vector_store import PgVectorStore  # noqa: E402
-from plugins.builtin.resources.postgres import PostgresResource  # noqa: E402
-from plugins.builtin.resources.duckdb_database import (
-    DuckDBDatabaseResource,
-)  # noqa: E402
-from plugins.builtin.resources.duckdb_vector_store import (
-    DuckDBVectorStore,
-)  # noqa: E402
+from entity.core.context import PluginContext
+from plugins.builtin.resources.pg_vector_store import PgVectorStore
+from plugins.builtin.resources.postgres import PostgresResource
+from plugins.builtin.resources.duckdb_database import DuckDBDatabaseResource
+from plugins.builtin.resources.duckdb_vector_store import DuckDBVectorStore
 from entity.resources.memory import Memory
-from user_plugins.llm.unified import UnifiedLLMResource  # noqa: E402
+from user_plugins.llm.unified import UnifiedLLMResource
 
 
 class ComplexPrompt(PromptPlugin):
@@ -104,27 +105,33 @@ def create_vector_store() -> PgVectorStore | DuckDBVectorStore:
     return DuckDBVectorStore({"table": "vectors", "dimensions": 3})
 
 
-def main() -> None:
+async def build_registries(workflow: dict[PipelineStage, List]) -> SystemRegistries:
     load_env()
-    agent = Agent()
-    resources = agent.builder.resource_registry
+    plugins = PluginRegistry()
+    resources = ResourceContainer()
+    tools = ToolRegistry()
+
     db_cls, db_cfg = create_database_config()
     llm_cls, llm_cfg = create_llm_config()
     resources.register("database", db_cls, db_cfg)
     resources.register("llm", llm_cls, llm_cfg)
-    vector_store = create_vector_store()
-    resources.add("vector_store", vector_store)
+    resources.add("vector_store", create_vector_store())
     resources.register("memory", Memory, {})
-    agent.builder.plugin_registry.register_plugin_for_stage(
-        ComplexPrompt(), PipelineStage.THINK
-    )
 
-    async def run() -> None:
-        await resources.build_all()
-        print(await agent.handle("hello"))
+    for stage, stage_plugins in workflow.items():
+        for plugin in stage_plugins:
+            await plugins.register_plugin_for_stage(plugin, stage)
 
-    asyncio.run(run())
+    await resources.build_all()
+    return SystemRegistries(resources=resources, tools=tools, plugins=plugins)
+
+
+async def main() -> None:
+    workflow = {PipelineStage.THINK: [ComplexPrompt()]}
+    registries = await build_registries(workflow)
+    result = await execute_pipeline("hello", registries)
+    print(result)
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

@@ -1,19 +1,27 @@
-"""DuckDB memory pipeline example.
+"""DuckDB memory pipeline using a Workflow object.
 
-Run with ``python -m examples.pipelines.duckdb_pipeline`` or install the package
-in editable mode.
+Change ``config/dev.yaml`` to ``config/prod.yaml`` for production. This
+commented switch showcases the hybrid dev/prod pattern.
 """
 
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import List
 
 from ..utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
-
-from pipeline import Agent, PipelineStage, PromptPlugin
+from entity_config.environment import load_env
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    ResourceContainer,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
 from entity.core.context import PluginContext
 from entity.resources.memory import Memory
 from user_plugins.resources import DuckDBDatabaseResource, DuckDBVectorStore
@@ -34,9 +42,11 @@ class SimilarityPrompt(PromptPlugin):
             ctx.add_conversation_entry(f"Similar entries: {similar}", role="assistant")
 
 
-def main() -> None:
-    agent = Agent()
-    resources = agent.builder.resource_registry
+async def build_registries(workflow: dict[PipelineStage, List]) -> SystemRegistries:
+    load_env()
+    plugins = PluginRegistry()
+    resources = ResourceContainer()
+    tools = ToolRegistry()
 
     resources.register(
         "database",
@@ -49,16 +59,21 @@ def main() -> None:
         {"table": "vectors", "dimensions": 3},
     )
     resources.register("memory", Memory, {})
-    agent.builder.plugin_registry.register_plugin_for_stage(
-        SimilarityPrompt(), PipelineStage.THINK
-    )
 
-    async def run() -> None:
-        await resources.build_all()
-        print(await agent.handle("hello world"))
+    for stage, stage_plugins in workflow.items():
+        for plugin in stage_plugins:
+            await plugins.register_plugin_for_stage(plugin, stage)
 
-    asyncio.run(run())
+    await resources.build_all()
+    return SystemRegistries(resources=resources, tools=tools, plugins=plugins)
+
+
+async def main() -> None:
+    workflow = {PipelineStage.THINK: [SimilarityPrompt()]}
+    registries = await build_registries(workflow)
+    result = await execute_pipeline("hello world", registries)
+    print(result)
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

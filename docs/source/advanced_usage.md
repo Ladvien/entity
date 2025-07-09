@@ -81,11 +81,6 @@ Any structural change—adding or removing plugins, modifying stage assignments,
 changing dependencies—requires restarting the agent. This keeps hot reloads fast
 for tunable values while preventing inconsistent pipeline state.
 
-For a hands-on demonstration, run `user_plugins/examples/config_reload_example.py`:
-
-```bash
-python user_plugins/examples/config_reload_example.py
-```
 
 ### Runtime Reconfiguration and Rollback
 
