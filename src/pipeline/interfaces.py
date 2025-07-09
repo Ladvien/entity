@@ -1,5 +1,5 @@
 """Pipeline component: interfaces."""
 
-from common_interfaces.plugins import PluginAutoClassifier, import_plugin_class
+from entity.core.plugin_utils import PluginAutoClassifier, import_plugin_class
 
 __all__ = ["PluginAutoClassifier", "import_plugin_class"]

@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, cast
 
-from pipeline.base_plugins import ResourcePlugin, ValidationResult
+from entity.core.plugins import ResourcePlugin, ValidationResult
 from pipeline.manager import PipelineManager
 from pipeline.pipeline import execute_pipeline, generate_pipeline_id
 from pipeline.stages import PipelineStage

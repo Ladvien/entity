@@ -11,7 +11,7 @@ printed to standard output.
 import asyncio
 from typing import Any, cast
 
-from pipeline.base_plugins import AdapterPlugin
+from entity.core.plugins import AdapterPlugin
 from pipeline.exceptions import ResourceError
 from pipeline.manager import PipelineManager
 from pipeline.context import PluginContext

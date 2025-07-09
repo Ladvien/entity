@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar
 import yaml
 from pydantic import ValidationError
 
-from common_interfaces.base_plugin import BasePlugin as BasePluginInterface
 from plugins.builtin.config_models import PLUGIN_CONFIG_MODELS, DefaultConfigModel
 
 from ..exceptions import CircuitBreakerTripped, PipelineError, PluginExecutionError
@@ -46,7 +45,7 @@ class ConfigurationError(Exception):
     pass
 
 
-class BasePlugin(BasePluginInterface):
+class BasePlugin:
     stages: List[PipelineStage]
     dependencies: List[str] = []
     max_retries: int = 1

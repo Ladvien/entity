@@ -7,7 +7,7 @@ import time
 import warnings
 from typing import Any, Awaitable, Callable, Dict, TypeVar, cast
 
-from common_interfaces import ToolPluginProtocol
+from entity.core.plugins import ToolPlugin
 from registry import SystemRegistries
 
 from ..exceptions import ToolExecutionError
@@ -21,7 +21,7 @@ ResultT = TypeVar("ResultT")
 
 
 async def queue_tool_use(
-    tool: ToolPluginProtocol[ResultT],
+    tool: ToolPlugin,
     call: ToolCall,
     state: PipelineState,
     options: RetryOptions,
@@ -60,7 +60,7 @@ async def queue_tool_use(
 
 
 async def execute_tool(
-    tool: ToolPluginProtocol[ResultT],
+    tool: ToolPlugin,
     call: ToolCall,
     state: PipelineState,
     options: RetryOptions,
@@ -89,7 +89,7 @@ async def execute_pending_tools(
         tool = registries.tools.get(call.name)
         if not tool:
             raise ToolExecutionError(call.name)
-        tool = cast(ToolPluginProtocol[ResultT], tool)
+        tool = cast(ToolPlugin, tool)
 
         options = RetryOptions(
             max_retries=getattr(tool, "max_retries", 1),

@@ -22,7 +22,7 @@ from starlette.responses import Response
 from pydantic import BaseModel
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from pipeline.base_plugins import AdapterPlugin
+from entity.core.plugins import AdapterPlugin
 from pipeline.exceptions import ResourceError
 from pipeline.manager import PipelineManager
 from pipeline.metrics import MetricsCollector

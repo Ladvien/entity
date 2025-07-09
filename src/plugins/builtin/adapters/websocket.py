@@ -13,7 +13,7 @@ from typing import Any, cast
 import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
-from pipeline.base_plugins import AdapterPlugin
+from entity.core.plugins import AdapterPlugin
 from pipeline.exceptions import ResourceError
 from pipeline.manager import PipelineManager
 from pipeline.pipeline import execute_pipeline

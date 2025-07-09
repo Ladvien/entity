@@ -1,7 +1,7 @@
 """Plugins package for the Entity pipeline.
 
 This module lazily re-exports the core plugin base classes from
-``pipeline.base_plugins`` to avoid circular dependencies. Usage::
+``entity.core.plugins`` to avoid circular dependencies. Usage::
 
     from plugins import BasePlugin, ToolPlugin
 """
@@ -23,7 +23,7 @@ __all__ = [
 
 def __getattr__(name: str) -> Any:
     if name in __all__:
-        from pipeline import base_plugins
+        from entity.core import plugins as base_plugins
 
         return getattr(base_plugins, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

@@ -8,7 +8,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
 
-from common_interfaces.base_plugin import BasePlugin
+from pipeline.base_plugins import BasePlugin
 from pipeline.resources.container import ResourceContainer
 from pipeline.security.hooks import StageInputValidator
 from pipeline.stages import PipelineStage

@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple, Type
 
-from common_interfaces.plugins import import_plugin_class
+from entity.core.plugin_utils import import_plugin_class
 from entity_config.environment import load_env
 from pipeline.config.utils import interpolate_env_vars
 from pipeline.resources.container import ResourceContainer
@@ -48,7 +48,7 @@ class ClassRegistry:
             yield cls, self._configs[name]
 
     def resource_classes(self) -> Iterable[Tuple[type, Dict]]:
-        from common_interfaces.resources import Resource
+        from pipeline.resources import Resource
 
         for name, cls in self._classes.items():
             if issubclass(cls, ResourcePlugin) or issubclass(cls, Resource):
@@ -67,7 +67,7 @@ class ClassRegistry:
                 yield name, cls, self._configs[name]
 
     def non_resource_non_tool_classes(self) -> Iterable[Tuple[type[BasePlugin], Dict]]:
-        from common_interfaces.resources import Resource
+        from pipeline.resources import Resource
 
         for name, cls in self._classes.items():
             if (

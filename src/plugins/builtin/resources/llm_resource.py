@@ -1,5 +1,5 @@
 """Built-in plugins and resources."""
 
-from common_interfaces.resources import LLMResource
+from .base import LLMResource
 
 __all__ = ["LLMResource"]

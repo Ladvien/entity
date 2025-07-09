@@ -9,7 +9,7 @@ import os
 from logging.handlers import RotatingFileHandler
 from typing import Optional
 
-from pipeline.base_plugins import AdapterPlugin
+from entity.core.plugins import AdapterPlugin
 from pipeline.stages import PipelineStage
 
 _request_id_var: contextvars.ContextVar[str | None] = contextvars.ContextVar(

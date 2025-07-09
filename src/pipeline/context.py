@@ -19,9 +19,9 @@ from typing import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover
-    from common_interfaces.resources import LLM
+    from pipeline.resources import LLM
 else:  # pragma: no cover - runtime type reference
-    from common_interfaces.resources import LLM
+    from pipeline.resources import LLM
 
 from registry import SystemRegistries
 

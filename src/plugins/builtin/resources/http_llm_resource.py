@@ -7,7 +7,7 @@ from typing import Any, AsyncIterator, Dict, Optional
 
 import httpx
 
-from pipeline.base_plugins import ValidationResult
+from entity.core.plugins import ValidationResult
 from pipeline.cache import CacheBackend, InMemoryCache
 from pipeline.exceptions import ResourceError
 from pipeline.reliability import CircuitBreaker, RetryPolicy
