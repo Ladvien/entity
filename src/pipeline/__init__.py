@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING, Any
 # Access ``PluginRegistry`` and related classes via ``registry`` or
 # rely on this module's ``__getattr__`` for lazy loading.
 from .stages import PipelineStage
+from .reliability import CircuitBreaker, RetryPolicy
+from .exceptions import CircuitBreakerTripped
 
 if TYPE_CHECKING:  # pragma: no cover - imported for type checking only
     from .state import FailureInfo, LLMResponse, PipelineState
@@ -23,6 +25,9 @@ __all__ = [
     "LLMResponse",
     "FailureInfo",
     "MetricsCollector",
+    "RetryPolicy",
+    "CircuitBreaker",
+    "CircuitBreakerTripped",
     "BasePlugin",
     "ResourcePlugin",
     "ToolPlugin",
