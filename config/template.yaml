@@ -49,8 +49,11 @@ plugins:
       type: plugins.builtin.adapters.logging:LoggingAdapter
   prompts:
     chain_of_thought:
-      type: user_plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
+      type: entity.plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
       enable_reasoning: true
+    react:
+      type: entity.plugins.prompts.react:ReActPrompt
+      max_steps: 5
     memory_retrieval:
       type: user_plugins.prompts.memory_retrieval:MemoryRetrievalPrompt
       max_context_length: 4000
