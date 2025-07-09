@@ -80,10 +80,9 @@ class ClassRegistry:
 
 @contextmanager
 def initialization_cleanup_context():
-    try:
-        yield
-    finally:
-        pass
+    """Placeholder context manager for future initialization cleanup."""
+
+    yield
 
 
 class SystemInitializer:
