@@ -41,5 +41,15 @@ class PluginContext:
     def store(self, key: str, value: Any) -> None:
         self._store[key] = value
 
+    def load(self, key: str, default: Any | None = None) -> Any:
+        """Return ``key`` from the internal store or ``default`` when missing."""
+
+        return self._store.get(key, default)
+
+    def has(self, key: str) -> bool:
+        """Return ``True`` when ``key`` is stored."""
+
+        return key in self._store
+
     def set_response(self, value: Any) -> None:
         self.response = value
