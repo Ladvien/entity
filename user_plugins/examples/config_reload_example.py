@@ -25,7 +25,7 @@ sys.modules.setdefault("examples.config_reload_example", sys.modules[__name__])
 from cli import CLI
 from pipeline import Agent
 from pipeline.base_plugins import PromptPlugin
-from pipeline.context import PluginContext
+from entity.core.context import PluginContext
 from pipeline.stages import PipelineStage
 
 

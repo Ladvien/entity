@@ -16,7 +16,7 @@ enable_plugins_namespace()
 
 from entity_config.environment import load_env
 from pipeline import Agent
-from pipeline.context import PluginContext
+from entity.core.context import PluginContext
 from user_plugins.tools import SearchTool, WeatherApiTool
 
 load_env()

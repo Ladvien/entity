@@ -39,6 +39,16 @@ class MyPrompt(PromptPlugin):
         context.say(summary)
 ```
 
+## Stage Results
+
+Use `store()` to save intermediate data that later stages can retrieve.
+
+```python
+context.store("answer", "The Eiffel Tower is in Paris")
+if context.has("answer"):
+    result = context.load("answer")
+```
+
 ## Advanced API
 
 Some less common operations are exposed through `context.advanced`.
