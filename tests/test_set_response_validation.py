@@ -1,16 +1,9 @@
-import asyncio
 import pytest
 
-from pipeline import (
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import PipelineStage, PluginRegistry, SystemRegistries, ToolRegistry
 from pipeline.context import PluginContext
-from pipeline.state import PipelineState
 from pipeline.resources import ResourceContainer
+from pipeline.state import PipelineState
 
 
 def test_set_response_disallowed_outside_deliver():

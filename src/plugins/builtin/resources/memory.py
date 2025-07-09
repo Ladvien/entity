@@ -2,15 +2,14 @@ from __future__ import annotations
 
 """Unified memory resource with optional persistence and search."""
 
-from typing import Any, Dict, List, TYPE_CHECKING, cast
-
 from datetime import datetime
+from typing import TYPE_CHECKING, Any, Dict, List, cast
 
 from pipeline.base_plugins import ResourcePlugin, ValidationResult
 from pipeline.manager import PipelineManager
 from pipeline.pipeline import execute_pipeline, generate_pipeline_id
-from pipeline.state import ConversationEntry, MetricsCollector, PipelineState
 from pipeline.stages import PipelineStage
+from pipeline.state import ConversationEntry, MetricsCollector, PipelineState
 from plugins.builtin.resources.vector_store import VectorStoreResource
 from registry import SystemRegistries
 
