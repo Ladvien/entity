@@ -12,7 +12,7 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.resources import ResourceContainer
-from pipeline.resources.memory import Memory
+from entity.resources.memory import Memory
 from user_plugins.prompts.complex_prompt import ComplexPrompt
 
 

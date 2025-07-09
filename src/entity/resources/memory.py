@@ -13,7 +13,7 @@ from pipeline.state import ConversationEntry, MetricsCollector, PipelineState
 from plugins.builtin.resources.vector_store import VectorStoreResource
 from registry import SystemRegistries
 
-from .database import DatabaseResource
+from plugins.builtin.resources.database import DatabaseResource
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     pass
@@ -24,24 +24,19 @@ class Memory(ResourcePlugin):
 
     stages = [PipelineStage.PARSE]
     name = "memory"
-    dependencies = ["database", "vector_store"]
+    dependencies: list[str] = []
 
-    def __init__(
-        self,
-        database: DatabaseResource | None = None,
-        vector_store: VectorStoreResource | None = None,
-        config: Dict | None = None,
-    ) -> None:
+    def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
-        self.database = database
-        self.vector_store = vector_store
+        self.database: DatabaseResource | None = None
+        self.vector_store: VectorStoreResource | None = None
         self._kv: Dict[str, Any] = {}
         self._conversations: Dict[str, List[ConversationEntry]] = {}
         self._conversation_manager: Memory.ConversationSession | None = None
 
     @classmethod
     def from_config(cls, config: Dict) -> "Memory":
-        return cls(None, None, config=config)
+        return cls(config=config)
 
     async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
         return None
@@ -188,6 +183,3 @@ class Memory(ResourcePlugin):
 
     # Backwards compatibility
     get_conversation_manager = start_conversation
-
-
-__all__ = ["Memory"]

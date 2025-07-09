@@ -9,7 +9,7 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.resources import ResourceContainer
-from pipeline.resources.memory import Memory
+from entity.resources.memory import Memory
 
 
 class ContinuePlugin(PromptPlugin):

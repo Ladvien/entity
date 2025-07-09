@@ -15,7 +15,7 @@ enable_plugins_namespace()
 
 from pipeline import Agent, PipelineStage, PromptPlugin
 from pipeline.context import ConversationEntry, PluginContext
-from pipeline.resources.memory import Memory
+from entity.resources.memory import Memory
 from plugins.builtin.resources.local_filesystem import LocalFileSystemResource
 from plugins.builtin.resources.sqlite_storage import (
     SQLiteStorageResource as SQLiteDatabaseResource,

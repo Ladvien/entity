@@ -16,7 +16,7 @@ from typing import Any
 
 from pipeline import PipelineManager
 from pipeline.initializer import SystemInitializer
-from pipeline.resources.memory import Memory
+from entity.resources.memory import Memory
 from plugins.builtin.adapters.http import HTTPAdapter, MessageRequest
 
 

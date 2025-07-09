@@ -17,7 +17,7 @@ from pipeline import (
 )
 from pipeline.resources import ResourceContainer
 from pipeline.resources.llm import UnifiedLLMResource
-from pipeline.resources.memory import Memory
+from entity.resources.memory import Memory
 from plugins.builtin.resources.pg_vector_store import PgVectorStore
 from plugins.builtin.resources.postgres import PostgresResource
 from user_plugins.prompts.complex_prompt import ComplexPrompt

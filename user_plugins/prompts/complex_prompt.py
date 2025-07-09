@@ -4,7 +4,7 @@ from typing import List
 
 from pipeline.base_plugins import PromptPlugin
 from pipeline.context import ConversationEntry, PluginContext
-from pipeline.resources.memory import Memory
+from entity.resources.memory import Memory
 from pipeline.stages import PipelineStage
 
 
