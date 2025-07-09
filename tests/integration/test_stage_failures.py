@@ -1,9 +1,13 @@
 import asyncio
+from datetime import datetime
 from pathlib import Path
 
 import pytest
 
 from pipeline import PipelineStage, execute_pipeline
+from pipeline.pipeline import generate_pipeline_id
+from pipeline.state import ConversationEntry, MetricsCollector, PipelineState
+from pipeline.state_logger import LogReplayer, StateLogger
 from pipeline.base_plugins import BasePlugin
 from pipeline.resources import ResourceContainer
 from registry import PluginRegistry, SystemRegistries, ToolRegistry
@@ -44,16 +48,33 @@ def test_pipeline_recovers_from_stage_failure(
     tmp_path: Path, stage: PipelineStage
 ) -> None:
     async def run() -> str:
-        state_file = tmp_path / "state.json"
         plugins = PluginRegistry()
         await plugins.register_plugin_for_stage(make_failing_plugin(stage), stage)
         await plugins.register_plugin_for_stage(RespondPlugin(), PipelineStage.DELIVER)
         registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
-        try:
-            await execute_pipeline("hi", registries, state_file=str(state_file))
-        except RuntimeError:
-            pass
-        result = await execute_pipeline("hi", registries, state_file=str(state_file))
+
+        log_file = tmp_path / "state_log.jsonl"
+        logger = StateLogger(log_file)
+
+        state = PipelineState(
+            conversation=[
+                ConversationEntry(content="hi", role="user", timestamp=datetime.now())
+            ],
+            pipeline_id=generate_pipeline_id(),
+            metrics=MetricsCollector(),
+        )
+
+        await execute_pipeline("hi", registries, state_logger=logger, state=state)
+        state.failure_info = None
+        result = await execute_pipeline(
+            "hi", registries, state_logger=logger, state=state
+        )
+
+        logger.close()
+        transitions = list(LogReplayer(log_file).transitions())
+        stages = [t.stage for t in transitions]
+        assert "deliver" in stages[-1]
+
         return result.get("message", "")
 
     assert asyncio.run(run()) == "ok"
