@@ -1,20 +1,25 @@
 from importlib import import_module
-from .plugins import plugin_base_registry, configure_plugins
+from typing import Any, Type
+
+from . import plugins
 from .base_plugin import BasePlugin
-
-
-def import_plugin_class(path: str):
-    if ":" in path:
-        module_path, class_name = path.split(":", 1)
-    else:
-        module_path, class_name = path.rsplit(".", 1)
-    module = import_module(module_path)
-    return getattr(module, class_name)
-
+from .resources import BaseResource
 
 __all__ = [
-    "plugin_base_registry",
-    "configure_plugins",
+    "plugins",
     "BasePlugin",
+    "BaseResource",
     "import_plugin_class",
 ]
+
+
+def import_plugin_class(path: str) -> Type[Any]:
+    """Import a class using ``module:Class`` or ``module.Class`` notation."""
+    if ":" in path:
+        module_path, class_name = path.split(":", 1)
+    elif "." in path:
+        module_path, class_name = path.rsplit(".", 1)
+    else:
+        raise ValueError(f"Invalid plugin path: {path}")
+    module = import_module(module_path)
+    return getattr(module, class_name)
