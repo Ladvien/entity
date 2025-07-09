@@ -33,3 +33,27 @@ Classifies user intent with a single LLM call.
 ```python
 from entity.workflows.examples import IntentClassificationWorkflow
 ```
+
+## Custom Workflow with Memory
+
+Define a workflow programmatically and store conversation data using the
+`memory` resource:
+
+```python
+from entity.workflows import Workflow
+from pipeline.stages import PipelineStage
+
+workflow = Workflow(
+    {
+        PipelineStage.PARSE: ["conversation_history"],
+        PipelineStage.THINK: ["main"],
+        PipelineStage.DELIVER: ["http"],
+    }
+)
+
+@agent.plugin
+async def remember(ctx):
+    history = ctx.memory("history", [])
+    history.append(ctx.message)
+    ctx.remember("history", history)
+```
