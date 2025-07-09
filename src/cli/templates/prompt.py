@@ -1,7 +1,7 @@
 """Template for prompt plugin."""
 
-from pipeline.base_plugins import PromptPlugin
-from pipeline.stages import PipelineStage
+from entity.core.plugins import PromptPlugin
+from entity.core.stages import PipelineStage
 
 
 class {class_name}(PromptPlugin):
