@@ -19,11 +19,6 @@ __all__ = ["DefaultConfigModel", "SimpleConfigModel"]
 CLIAdapterConfig = SimpleConfigModel
 
 
-class LLMGRPCAdapterConfig(DefaultConfigModel):
-    host: str | None = None
-    port: int | None = None
-
-
 class HTTPAdapterConfig(DefaultConfigModel):
     host: str | None = None
     port: int | None = None
@@ -129,7 +124,6 @@ class S3FileSystemConfig(DefaultConfigModel):
 
 __all__ += [
     "CLIAdapterConfig",
-    "LLMGRPCAdapterConfig",
     "HTTPAdapterConfig",
     "LoggingAdapterConfig",
     "WebSocketAdapterConfig",
@@ -158,7 +152,6 @@ __all__ += [
 # Map plugin class names to config models
 PLUGIN_CONFIG_MODELS = {
     "CLIAdapter": SimpleConfigModel,
-    "LLMGRPCAdapter": LLMGRPCAdapterConfig,
     "HTTPAdapter": HTTPAdapterConfig,
     "LoggingAdapter": SimpleConfigModel,
     "WebSocketAdapter": WebSocketAdapterConfig,

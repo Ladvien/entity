@@ -126,12 +126,6 @@ For a WebSocket server use the CLI:
 poetry run python src/cli.py serve-websocket --config config/dev.yaml
 ```
 
-Run the gRPC server:
-
-```bash
-python user_plugins/examples/servers/grpc_server.py
-```
-
 Start the CLI adapter for a basic text interface:
 
 ```bash
