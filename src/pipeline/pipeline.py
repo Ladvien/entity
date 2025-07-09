@@ -11,7 +11,6 @@ from datetime import datetime
 from typing import Any, Dict
 
 from entity.core.state_logger import StateLogger
-from plugins.builtin.failure.fallback_error_plugin import FallbackErrorPlugin
 from registry import SystemRegistries
 
 from .context import ConversationEntry, PluginContext
@@ -62,6 +61,8 @@ async def execute_stage(
             token = set_request_id(state.pipeline_id)
             try:
                 await plugin.execute(context)
+                if stage == PipelineStage.DELIVER and state.response is not None:
+                    break
                 if state.pending_tool_calls:
                     tool_results = await execute_pending_tools(state, registries)
                     for call in state.pending_tool_calls:
@@ -194,11 +195,6 @@ async def execute_stage(
     duration = time.perf_counter() - start
     if state.metrics:
         state.metrics.record_stage_duration(str(stage), duration)
-
-    if stage == PipelineStage.DELIVER and state.response is None:
-        fallback = FallbackErrorPlugin({})
-        context = PluginContext(state, registries)
-        await fallback.execute(context)
 
 
 async def execute_pipeline(

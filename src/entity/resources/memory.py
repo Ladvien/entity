@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any, Dict, List, cast
 
 from entity.core.plugins import ResourcePlugin, ValidationResult
 from pipeline.manager import PipelineManager
-from pipeline.pipeline import execute_pipeline, generate_pipeline_id
 from pipeline.stages import PipelineStage
 from pipeline.state import ConversationEntry, MetricsCollector, PipelineState
 from plugins.builtin.resources.vector_store import VectorStoreResource
@@ -89,6 +88,8 @@ class Memory(ResourcePlugin):
         ) -> None:
             self._memory = memory
             self._registries = registries
+            from pipeline.pipeline import generate_pipeline_id
+
             self._pipeline_manager = pipeline_manager or PipelineManager(registries)
             self._history_limit = history_limit
             self._conversation_id = generate_pipeline_id()
@@ -114,6 +115,8 @@ class Memory(ResourcePlugin):
                 pipeline_id=self._conversation_id,
                 metrics=MetricsCollector(),
             )
+
+            from pipeline.pipeline import execute_pipeline
 
             response = cast(
                 Dict[str, Any],
@@ -148,6 +151,8 @@ class Memory(ResourcePlugin):
                     pipeline_id=self._conversation_id,
                     metrics=MetricsCollector(),
                 )
+                from pipeline.pipeline import execute_pipeline
+
                 response = cast(
                     Dict[str, Any],
                     await execute_pipeline(
