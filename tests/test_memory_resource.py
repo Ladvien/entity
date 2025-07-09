@@ -11,7 +11,7 @@ from pipeline import (
 )
 from pipeline.context import ConversationEntry
 from entity.core.resources.container import ResourceContainer
-from pipeline.resources.memory import Memory
+from entity.resources.memory import Memory
 from plugins.builtin.resources.memory_storage import MemoryStorage
 
 
