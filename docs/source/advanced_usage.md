@@ -76,10 +76,10 @@ poetry run python src/cli.py reload-config updated.yaml
 ```
 
 The command waits for active pipelines to finish, then applies the new YAML
-configuration. Only parameter updates to **existing plugins** are hot reloadable.
-Modifying plugin stages or dependencies requires a full restart. This
-demonstrates **Dynamic Configuration Updates** for tunable values while keeping
-the system responsive.
+configuration. **Only parameter updates to existing plugins can be reloaded.**
+Any structural change—adding or removing plugins, modifying stage assignments, or
+changing dependencies—requires restarting the agent. This keeps hot reloads fast
+for tunable values while preventing inconsistent pipeline state.
 
 For a hands-on demonstration, run `examples/config_reload_example.py`:
 

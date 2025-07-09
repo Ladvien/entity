@@ -54,9 +54,10 @@ Reload parameter values for existing plugins while the agent is running:
 poetry run python src/cli.py reload-config updated.yaml
 ```
 
-Only configuration parameters can be reloaded. Adding or removing plugins or
-changing their stages requires restarting the agent. For more on dynamic
-configuration, see [the architecture overview](../../architecture/general.md#%F0%9F%94%84-reconfigurable-agent-infrastructure).
+Only updates to plugin parameters can be reloaded. Structural changes—adding or
+removing plugins, changing stage assignments, or altering dependencies—require a
+restart. For more on dynamic configuration see the
+[architecture overview](../../architecture/general.md#%F0%9F%94%84-reconfigurable-agent-infrastructure).
 
 ### Using the "llm" Resource Key
 Configure a shared LLM resource in YAML:
