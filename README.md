@@ -7,7 +7,7 @@ plugins so the pipeline can run out of the box:
 - ``Memory`` – composite store that defaults to a DuckDB-backed database in memory and supports optional SQL/NoSQL and vector backends.
 - ``SearchTool`` – wrapper around DuckDuckGo's search API.
 - ``CalculatorTool`` – safe evaluator for arithmetic expressions.
-Memory uses an in-memory DuckDB database by default, so there is no separate ``InMemoryResource``.
+``Memory`` uses an in-memory DuckDB database by default, so there is no separate ``InMemoryResource``.
 
 StorageResource handles file CRUD and can combine multiple backends. See [docs/source/plugin_guide.md](docs/source/plugin_guide.md) for details.
 These defaults allow ``Agent()`` to process messages without any external

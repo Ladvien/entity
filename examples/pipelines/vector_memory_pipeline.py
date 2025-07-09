@@ -17,43 +17,35 @@ from ..utilities import enable_plugins_namespace
 enable_plugins_namespace()
 from entity_config.environment import load_env
 from pipeline import Agent  # noqa: E402
-from pipeline import PipelineStage, PromptPlugin, ResourcePlugin  # noqa: E402
+from pipeline import PipelineStage, PromptPlugin  # noqa: E402
 from pipeline.config import ConfigLoader
 from pipeline.context import PluginContext  # noqa: E402
 from plugins.builtin.resources.pg_vector_store import PgVectorStore  # noqa: E402
 from plugins.builtin.resources.postgres import PostgresResource  # noqa: E402
+from plugins.builtin.resources.duckdb_database import (
+    DuckDBDatabaseResource,
+)  # noqa: E402
+from plugins.builtin.resources.duckdb_vector_store import (
+    DuckDBVectorStore,
+)  # noqa: E402
+from pipeline.resources.memory import Memory
 from user_plugins.llm.unified import UnifiedLLMResource  # noqa: E402
 
 
-class VectorMemoryResource(ResourcePlugin):
-    """In-memory vector store."""
-
-    stages = [PipelineStage.PARSE]
-    name = "vector_memory"
-
-    def __init__(self, config: Dict | None = None) -> None:
-        super().__init__(config)
-        self.vectors: Dict[str, List[float]] = {}
-
-    async def _execute_impl(self, context: PluginContext) -> None:
-        return None
-
-    def add(self, key: str, vector: List[float]) -> None:
-        self.vectors[key] = vector
-
-    def get(self, key: str) -> List[float] | None:
-        return self.vectors.get(key)
-
-
 class ComplexPrompt(PromptPlugin):
-    """Example prompt using the vector memory."""
+    """Example prompt using the vector store."""
 
-    dependencies = ["database", "llm", "vector_memory"]
+    dependencies = ["database", "llm", "memory"]
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context: PluginContext) -> None:
-        memory: VectorMemoryResource = context.get_resource("vector_memory")
-        memory.add("greeting", [1.0, 0.0, 0.0])
+        memory: Memory = context.get_resource("memory")
+        if memory.vector_store:
+            await memory.vector_store.add_embedding("greeting")
+            similar = await memory.search_similar("greeting", 1)
+            context.add_conversation_entry(
+                f"Similar entries: {similar}", role="assistant"
+            )
         llm = context.get_llm()
         response = await llm.generate("Respond to the user using stored context.")
         context.add_conversation_entry(response, role="assistant")
@@ -92,6 +84,26 @@ def create_llm_config() -> Tuple[type, Dict]:
     return UnifiedLLMResource, cfg
 
 
+def create_vector_store() -> PgVectorStore | DuckDBVectorStore:
+    """Return a vector store based on environment variables."""
+
+    host = os.getenv("DB_HOST")
+    user = os.getenv("DB_USERNAME")
+    password = os.getenv("DB_PASSWORD")
+    if host and user:
+        cfg = {
+            "host": host,
+            "port": 5432,
+            "name": user,
+            "username": user,
+            "password": password or "",
+            "table": "vectors",
+        }
+        db = PostgresResource(ConfigLoader.from_dict(cfg))
+        return PgVectorStore(ConfigLoader.from_dict({"table": "vectors"}), db)
+    return DuckDBVectorStore({"table": "vectors", "dimensions": 3})
+
+
 def main() -> None:
     load_env()
     agent = Agent()
@@ -100,7 +112,9 @@ def main() -> None:
     llm_cls, llm_cfg = create_llm_config()
     resources.register("database", db_cls, db_cfg)
     resources.register("llm", llm_cls, llm_cfg)
-    resources.register("vector_memory", VectorMemoryResource, {})
+    vector_store = create_vector_store()
+    resources.add("vector_store", vector_store)
+    resources.register("memory", Memory, {})
     agent.builder.plugin_registry.register_plugin_for_stage(
         ComplexPrompt(), PipelineStage.THINK
     )
