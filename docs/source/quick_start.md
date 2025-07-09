@@ -48,13 +48,15 @@ This fast path aligns with the **15-Minute Rule (2)**, giving new
 contributors a working agent almost immediately.
 
 ### Runtime Configuration Reload
-Reload plugin definitions while the agent is running:
+Reload parameter values for existing plugins while the agent is running:
 
 ```bash
 poetry run python src/cli.py reload-config updated.yaml
 ```
 
-For more on dynamic configuration, see [the architecture overview](../../architecture/general.md#%F0%9F%94%84-reconfigurable-agent-infrastructure).
+Only configuration parameters can be reloaded. Adding or removing plugins or
+changing their stages requires restarting the agent. For more on dynamic
+configuration, see [the architecture overview](../../architecture/general.md#%F0%9F%94%84-reconfigurable-agent-infrastructure).
 
 ### Using the "llm" Resource Key
 Configure a shared LLM resource in YAML:

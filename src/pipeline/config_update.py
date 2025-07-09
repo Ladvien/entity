@@ -8,6 +8,8 @@ from dataclasses import dataclass, field
 from typing import Dict, List
 
 from registry import PluginRegistry
+from pipeline.interfaces import import_plugin_class
+from pipeline.stages import PipelineStage
 
 from .manager import PipelineManager
 
@@ -69,6 +71,31 @@ async def update_plugin_configuration(
     plugin_instance = plugin_registry.get_plugin(plugin_name)
     if not plugin_instance:
         return ConfigUpdateResult.failure_result(f"Plugin {plugin_name} not found")
+
+    if "type" in new_config:
+        try:
+            new_cls = import_plugin_class(str(new_config["type"]))
+        except Exception as exc:  # noqa: BLE001
+            return ConfigUpdateResult.failure_result(str(exc))
+        if new_cls is not plugin_instance.__class__:
+            return ConfigUpdateResult.restart_required(
+                "Plugin type changes require restart"
+            )
+
+    if "stages" in new_config:
+        try:
+            new_stages = [PipelineStage.ensure(s) for s in new_config["stages"]]
+        except Exception as exc:  # noqa: BLE001
+            return ConfigUpdateResult.failure_result(str(exc))
+        if list(plugin_instance.__class__.stages) != new_stages:
+            return ConfigUpdateResult.restart_required("Stage changes require restart")
+
+    if "dependencies" in new_config:
+        current_deps = set(getattr(plugin_instance.__class__, "dependencies", []))
+        if current_deps != set(new_config["dependencies"]):
+            return ConfigUpdateResult.restart_required(
+                "Dependency changes require restart"
+            )
 
     validation_result = plugin_instance.validate_config(new_config)
     if not validation_result.success:

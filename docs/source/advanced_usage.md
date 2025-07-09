@@ -73,8 +73,10 @@ poetry run python src/cli.py reload-config updated.yaml
 ```
 
 The command waits for active pipelines to finish, then applies the new YAML
-configuration. This demonstrates **Dynamic Configuration Updates**, letting you
-tweak resources or tools at runtime while keeping the system responsive.
+configuration. Only parameter updates to **existing plugins** are hot reloadable;
+adding plugins or changing their stages or dependencies requires a full
+restart. This demonstrates **Dynamic Configuration Updates** for tunable values
+while keeping the system responsive.
 
 For a hands-on demonstration, run `examples/config_reload_example.py`:
 
