@@ -8,12 +8,12 @@ removed in a future release.
 """
 
 import asyncio
-from typing import Generic, TypeVar, cast
+import warnings
+from typing import Any, Generic, TypeVar, cast
 
-
+from entity.core.registries import SystemRegistries
 from entity.core.runtime import AgentRuntime
 from entity.core.state_logger import StateLogger
-from entity.core.registries import SystemRegistries
 
 ResultT = TypeVar("ResultT")
 
@@ -26,6 +26,7 @@ class PipelineManager(Generic[ResultT]):
         capabilities: SystemRegistries,
         *,
         state_logger: StateLogger | None = None,
+        **kwargs: Any,
     ) -> None:
         if capabilities is None and "registries" in kwargs:
             warnings.warn(
@@ -34,6 +35,14 @@ class PipelineManager(Generic[ResultT]):
                 stacklevel=2,
             )
             capabilities = kwargs.pop("registries")
+        if "state_file" in kwargs or "snapshots_dir" in kwargs:
+            warnings.warn(
+                "'state_file' and 'snapshots_dir' are removed; use StateLogger",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            kwargs.pop("state_file", None)
+            kwargs.pop("snapshots_dir", None)
         if kwargs:
             raise TypeError(f"Unexpected arguments: {', '.join(kwargs)}")
         self._runtime = AgentRuntime(capabilities, state_logger=state_logger)
@@ -65,13 +74,13 @@ class PipelineManager(Generic[ResultT]):
         await self._runtime.deregister(pipeline_id)
 
     async def has_active_pipelines_async(self) -> bool:
-        return await self._runtime.has_active_pipelines_async()
+        return bool(await self._runtime.has_active_pipelines_async())
 
     def has_active_pipelines(self) -> bool:
-        return self._runtime.has_active_pipelines()
+        return bool(self._runtime.has_active_pipelines())
 
     async def active_pipeline_count_async(self) -> int:
-        return await self._runtime.active_pipeline_count_async()
+        return int(await self._runtime.active_pipeline_count_async())
 
     def active_pipeline_count(self) -> int:
-        return self._runtime.active_pipeline_count()
+        return int(self._runtime.active_pipeline_count())
