@@ -39,6 +39,16 @@ async def weather_plugin(ctx):
     return await ctx.tool_use("weather", city="London")
 ```
 
+### Stage Override Patterns
+
+Plugin stages are resolved in a predictable order:
+
+1. Stages defined in YAML or as a ``stages`` attribute on the class.
+2. Defaults based on plugin type (``ToolPlugin`` → ``DO``, ``PromptPlugin`` → ``THINK``, ``AdapterPlugin`` → ``PARSE`` + ``DELIVER``).
+3. Hints inferred by ``PluginAutoClassifier`` for function plugins.
+
+Explicit stages override type defaults. When they differ, the initializer logs a warning so you can confirm the override is intentional.
+
 ## Loading Plugins Automatically
 
 Built-in plugin modules live in `src/plugins`. Place your own plugins inside any directory and load them with `Agent.from_directory(path)` or `Agent.from_package(package)`.
