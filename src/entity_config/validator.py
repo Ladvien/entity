@@ -13,7 +13,7 @@ if str(SRC_PATH) not in sys.path:
     sys.path.insert(0, str(SRC_PATH))
 
 import yaml  # noqa: E402
-from jsonschema import RefResolver, ValidationError, validate  # noqa: E402
+from pydantic import ValidationError  # noqa: E402
 
 from entity_config.environment import load_env  # noqa: E402
 from pipeline import SystemInitializer  # noqa: E402
@@ -32,17 +32,7 @@ class ConfigValidator:
 
     def __init__(self) -> None:
         self.args = self._parse_args()
-        schema_path = Path(__file__).resolve().parent / "schemas" / "config.yaml"
-        self.schema = yaml.safe_load(schema_path.read_text())
-        base_uri = f"file://{schema_path.parent}/"
-
-        def yaml_loader(uri: str) -> object:
-            path = Path(uri.replace("file://", ""))
-            return yaml.safe_load(path.read_text())
-
-        self.resolver = RefResolver(
-            base_uri, self.schema, handlers={"file": yaml_loader}
-        )
+        pass
 
     def _parse_args(self) -> argparse.Namespace:
         parser = argparse.ArgumentParser(
@@ -71,17 +61,17 @@ class ConfigValidator:
 
         def validate_once() -> bool:
             try:
-                with cfg_path.open("r") as fh:
-                    raw = yaml.safe_load(fh) or {}
-                validate(instance=raw, schema=self.schema, resolver=self.resolver)
-                load_env()
-                config = ConfigLoader.from_dict(raw)
+                config = ConfigLoader.from_yaml(cfg_path)
                 _validate_memory(config)
                 _validate_cache(config)
                 _validate_vector_memory(config)
                 initializer = SystemInitializer(config)
                 asyncio.run(initializer.initialize())
-            except (ValidationError, Exception) as exc:  # pragma: no cover - error path
+            except ValidationError as exc:  # pragma: no cover - error path
+                logger.error("Configuration invalid: %s", exc)
+                print(f"Configuration invalid: {exc}")
+                return False
+            except Exception as exc:  # pragma: no cover - error path
                 logger.error("Configuration invalid: %s", exc)
                 print(f"Configuration invalid: {exc}")
                 return False

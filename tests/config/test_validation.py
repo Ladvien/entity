@@ -1,5 +1,5 @@
 import pytest
-from jsonschema import ValidationError
+from pydantic import ValidationError
 
 from pipeline.config import ConfigLoader
 
