@@ -94,6 +94,8 @@ plugins:
 ```
 <!-- end config -->
 
+Plugins run sequentially in the order they appear under each stage in the YAML configuration. No priority field is used.
+
 Every plugin executes with a ``PluginContext`` which grants controlled
 access to resources, conversation history, and helper methods for calling
 tools or LLMs. This context keeps plugin logic focused while the framework

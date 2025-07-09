@@ -88,7 +88,10 @@ class PluginRegistry:
     async def register_plugin_for_stage(
         self, plugin: BasePlugin, stage: PipelineStage | str, name: str | None = None
     ) -> None:
-        """Register ``plugin`` to execute during ``stage``."""
+        """Register ``plugin`` to execute during ``stage``.
+
+        Plugins are appended in registration order without sorting.
+        """
 
         try:
             stage_obj = PipelineStage(stage)

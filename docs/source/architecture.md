@@ -30,7 +30,7 @@ and mental models stay easy to grasp.
 
 ## Design Principles
 1. Progressive disclosure: simple things stay simple, complex things are possible
-2. Async-first with predictable execution order
+2. Async-first with predictable execution order. Plugin order follows the YAML listing.
 3. Runtime reconfiguration with fail‑fast validation
 4. Clear stage boundaries and structured logging
 5. One canonical name per resource

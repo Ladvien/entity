@@ -10,7 +10,7 @@ class {class_name}(ToolPlugin):
     """Example tool plugin."""
 
     stages = [PipelineStage.DO]
-    # Execution order follows the YAML list or registration sequence
+    # Execution order follows the YAML list or registration sequence; no priority field
 
     async def execute_function(self, params: Dict[str, Any]) -> Any:
         return None

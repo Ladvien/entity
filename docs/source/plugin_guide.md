@@ -90,7 +90,7 @@ plugin_dirs:
 ## Development Steps
 1. Create your plugin class and implement `_execute_impl`.
 2. Register the plugin with the `Agent` or include it in your YAML under `plugins:`.
-   Plugins execute in the order they appear in the YAML list.
+   Plugins run sequentially in the exact order listed. There is no priority field.
 3. Run `python -m src.entity_config.validator --config your.yaml` to verify configuration.
 4. Write unit tests and run `pytest` before committing changes.
 
