@@ -5,7 +5,6 @@ from datetime import datetime
 from entity.core.resources.container import ResourceContainer
 from entity.core.state import (
     ConversationEntry,
-    MetricsCollector,
     PipelineState,
     ToolCall,
 )
@@ -30,7 +29,6 @@ def _make_state() -> PipelineState:
             ConversationEntry(content="hi", role="user", timestamp=datetime.now()),
         ],
         pipeline_id="1",
-        metrics=MetricsCollector(),
         current_stage=PipelineStage.DO,
     )
 

@@ -4,7 +4,6 @@ import entity.core.context as context_module
 from entity.core.resources.container import ResourceContainer
 from entity.core.state import (
     ConversationEntry,
-    MetricsCollector,
     PipelineState,
     ToolCall,
 )
@@ -50,7 +49,6 @@ async def make_context(cache: CacheResource, llm: FakeLLM):
             ConversationEntry(content="hi", role="user", timestamp=datetime.now())
         ],
         pipeline_id="123",
-        metrics=MetricsCollector(),
         current_stage=PipelineStage.THINK,
     )
     resources = ResourceContainer()

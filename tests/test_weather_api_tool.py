@@ -4,7 +4,6 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from threading import Thread
 
 from entity.core.resources.container import ResourceContainer
-from entity.core.state import MetricsCollector
 from pipeline import (
     ConversationEntry,
     PipelineState,
@@ -38,7 +37,6 @@ async def run_weather() -> dict:
             ConversationEntry(content="hi", role="user", timestamp=datetime.now())
         ],
         pipeline_id="1",
-        metrics=MetricsCollector(),
     )
     tools = ToolRegistry()
     tool = WeatherApiTool({"base_url": base_url, "api_key": "x"})

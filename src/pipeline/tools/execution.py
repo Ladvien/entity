@@ -6,7 +6,7 @@ from typing import Any, Dict
 
 from entity.core.plugins import ToolExecutionError
 from entity.core.state import ToolCall
-from pipeline.state import PipelineState, MetricsCollector
+from entity.core.state import PipelineState
 from entity.core.registries import SystemRegistries
 
 
@@ -36,9 +36,6 @@ async def execute_pending_tools(
             await tools.cache_result(call.name, call.params, result)
         results[call.result_key] = result
         state.stage_results[call.result_key] = result
-        if state.metrics:
-            key = f"{state.current_stage}:{call.name}"
-            state.metrics.record_tool_duration(key, duration)
 
     await asyncio.gather(*(run_call(c) for c in list(state.pending_tool_calls)))
     return results

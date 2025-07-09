@@ -2,7 +2,6 @@ import asyncio
 from datetime import datetime
 
 from entity.core.resources.container import ResourceContainer
-from entity.core.state import MetricsCollector
 from pipeline import (
     ConversationEntry,
     PipelineStage,
@@ -29,7 +28,6 @@ def make_context(llm) -> PluginContext:
             ConversationEntry(content="hi", role="user", timestamp=datetime.now())
         ],
         pipeline_id="123",
-        metrics=MetricsCollector(),
         current_stage=PipelineStage.THINK,
     )
     resources = ResourceContainer()

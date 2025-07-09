@@ -4,8 +4,13 @@ import httpx
 
 from entity.core.resources.container import ResourceContainer
 from entity.core.runtime import _AgentRuntime
-from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
 from plugins.builtin.adapters import HTTPAdapter
 
 
@@ -102,8 +107,6 @@ def test_http_adapter_dashboard():
             resp = await client.get("/dashboard")
             assert resp.status_code == 200
             assert "Entity Dashboard" in resp.text
-            metrics = await client.get("/metrics")
-            assert metrics.status_code == 200
 
     asyncio.run(_requests())
 

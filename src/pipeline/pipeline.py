@@ -13,7 +13,6 @@ from datetime import datetime
 from typing import Any, Dict
 
 from entity.core.registries import PluginRegistry, SystemRegistries
-from entity.core.state import MetricsCollector
 from entity.core.state_logger import StateLogger
 
 from entity.core.context import PluginContext
@@ -29,8 +28,6 @@ from .exceptions import (
 )
 from entity.utils.logging import get_logger
 from .manager import PipelineManager
-from .observability.metrics import MetricsServerManager
-from .observability.tracing import start_span
 from .stages import PipelineStage
 from entity.core.state import FailureInfo, PipelineState
 from .tools.execution import execute_pending_tools
@@ -68,10 +65,9 @@ class Pipeline:
         capabilities: SystemRegistries,
         *,
         state_logger: StateLogger | None = None,
-        return_metrics: bool = False,
         state: PipelineState | None = None,
         max_iterations: int = 5,
-    ) -> Dict[str, Any] | tuple[Dict[str, Any], MetricsCollector]:
+    ) -> Dict[str, Any]:
         plugin_reg = PluginRegistry()
         for stage, plugin_names in self.workflow.stage_map.items():
             for name in plugin_names:
@@ -90,7 +86,6 @@ class Pipeline:
             message,
             regs,
             state_logger=state_logger,
-            return_metrics=return_metrics,
             state=state,
             max_iterations=max_iterations,
         )
@@ -115,138 +110,131 @@ async def execute_stage(
     state.current_stage = stage
     stage_plugins = registries.plugins.get_plugins_for_stage(stage)
     start = time.perf_counter()
-    async with start_span(f"stage.{stage.name.lower()}"):
-        for plugin in stage_plugins:
-            context = PluginContext(state, registries)
-            context.set_current_stage(stage)
-            await registries.validators.validate(stage, context)
-            plugin_name = registries.plugins.get_plugin_name(plugin)
-            start_plugin = time.perf_counter()
-            try:
-                await plugin.execute(context)
-                plugin_duration = time.perf_counter() - start_plugin
-                if state.metrics:
-                    key = f"{stage}:{plugin_name}"
-                    state.metrics.record_plugin_duration(key, plugin_duration)
-                if stage == PipelineStage.DELIVER and state.response is not None:
-                    break
-                if state.pending_tool_calls:
-                    tool_results = await execute_pending_tools(state, registries)
-                    for call in state.pending_tool_calls:
-                        result = tool_results.get(call.result_key)
-                        context.add_conversation_entry(
-                            content=f"Tool result: {result}",
-                            role="system",
-                            metadata={"tool_name": call.name, "stage": str(stage)},
-                        )
-                    state.pending_tool_calls.clear()
-            except CircuitBreakerTripped as exc:
-                logger.exception(
-                    "Circuit breaker tripped",
-                    extra={
-                        "plugin": getattr(plugin, "name", plugin.__class__.__name__),
-                        "stage": str(stage),
-                        "pipeline_id": state.pipeline_id,
-                    },
-                )
-                state.failure_info = FailureInfo(
-                    stage=str(stage),
-                    plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
-                    error_type="circuit_breaker",
-                    error_message=str(exc),
-                    original_exception=exc,
-                )
-            except PluginExecutionError as exc:
-                logger.exception(
-                    "Plugin execution failed",
-                    extra={
-                        "plugin": getattr(plugin, "name", plugin.__class__.__name__),
-                        "stage": str(stage),
-                        "pipeline_id": state.pipeline_id,
-                    },
-                )
-                state.failure_info = FailureInfo(
-                    stage=str(stage),
-                    plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
-                    error_type=exc.original_exception.__class__.__name__,
-                    error_message=str(exc.original_exception),
-                    original_exception=exc.original_exception,
-                )
-            except ToolExecutionError as exc:
-                logger.exception(
-                    "Tool execution failed",
-                    extra={
-                        "plugin": exc.tool_name,
-                        "stage": str(stage),
-                        "pipeline_id": state.pipeline_id,
-                    },
-                )
-                state.failure_info = FailureInfo(
-                    stage=str(stage),
-                    plugin_name=exc.tool_name,
-                    error_type=exc.original_exception.__class__.__name__,
-                    error_message=str(exc.original_exception),
-                    original_exception=exc.original_exception,
-                )
-            except ResourceError as exc:
-                logger.exception(
-                    "Resource error",
-                    extra={
-                        "plugin": getattr(plugin, "name", plugin.__class__.__name__),
-                        "stage": str(stage),
-                        "pipeline_id": state.pipeline_id,
-                    },
-                )
-                state.failure_info = FailureInfo(
-                    stage=str(stage),
-                    plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
-                    error_type=exc.__class__.__name__,
-                    error_message=str(exc),
-                    original_exception=exc,
-                )
-            except PipelineError as exc:
-                logger.exception(
-                    "Pipeline error",
-                    extra={
-                        "plugin": getattr(plugin, "name", plugin.__class__.__name__),
-                        "stage": str(stage),
-                        "pipeline_id": state.pipeline_id,
-                    },
-                )
-                state.failure_info = FailureInfo(
-                    stage=str(stage),
-                    plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
-                    error_type=exc.__class__.__name__,
-                    error_message=str(exc),
-                    original_exception=exc,
-                )
-            except Exception as exc:  # noqa: BLE001
-                logger.exception(
-                    "Unexpected plugin exception",
-                    exc_info=exc,
-                    extra={
-                        "plugin": getattr(plugin, "name", plugin.__class__.__name__),
-                        "stage": str(stage),
-                        "pipeline_id": state.pipeline_id,
-                    },
-                )
+    for plugin in stage_plugins:
+        context = PluginContext(state, registries)
+        context.set_current_stage(stage)
+        await registries.validators.validate(stage, context)
+        plugin_name = registries.plugins.get_plugin_name(plugin)
+        start_plugin = time.perf_counter()
+        try:
+            await plugin.execute(context)
+            if stage == PipelineStage.DELIVER and state.response is not None:
+                break
+            if state.pending_tool_calls:
+                tool_results = await execute_pending_tools(state, registries)
+                for call in state.pending_tool_calls:
+                    result = tool_results.get(call.result_key)
+                    context.add_conversation_entry(
+                        content=f"Tool result: {result}",
+                        role="system",
+                        metadata={"tool_name": call.name, "stage": str(stage)},
+                    )
+                state.pending_tool_calls.clear()
+        except CircuitBreakerTripped as exc:
+            logger.exception(
+                "Circuit breaker tripped",
+                extra={
+                    "plugin": getattr(plugin, "name", plugin.__class__.__name__),
+                    "stage": str(stage),
+                    "pipeline_id": state.pipeline_id,
+                },
+            )
+            state.failure_info = FailureInfo(
+                stage=str(stage),
+                plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
+                error_type="circuit_breaker",
+                error_message=str(exc),
+                original_exception=exc,
+            )
+        except PluginExecutionError as exc:
+            logger.exception(
+                "Plugin execution failed",
+                extra={
+                    "plugin": getattr(plugin, "name", plugin.__class__.__name__),
+                    "stage": str(stage),
+                    "pipeline_id": state.pipeline_id,
+                },
+            )
+            state.failure_info = FailureInfo(
+                stage=str(stage),
+                plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
+                error_type=exc.original_exception.__class__.__name__,
+                error_message=str(exc.original_exception),
+                original_exception=exc.original_exception,
+            )
+        except ToolExecutionError as exc:
+            logger.exception(
+                "Tool execution failed",
+                extra={
+                    "plugin": exc.tool_name,
+                    "stage": str(stage),
+                    "pipeline_id": state.pipeline_id,
+                },
+            )
+            state.failure_info = FailureInfo(
+                stage=str(stage),
+                plugin_name=exc.tool_name,
+                error_type=exc.original_exception.__class__.__name__,
+                error_message=str(exc.original_exception),
+                original_exception=exc.original_exception,
+            )
+        except ResourceError as exc:
+            logger.exception(
+                "Resource error",
+                extra={
+                    "plugin": getattr(plugin, "name", plugin.__class__.__name__),
+                    "stage": str(stage),
+                    "pipeline_id": state.pipeline_id,
+                },
+            )
+            state.failure_info = FailureInfo(
+                stage=str(stage),
+                plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
+                error_type=exc.__class__.__name__,
+                error_message=str(exc),
+                original_exception=exc,
+            )
+        except PipelineError as exc:
+            logger.exception(
+                "Pipeline error",
+                extra={
+                    "plugin": getattr(plugin, "name", plugin.__class__.__name__),
+                    "stage": str(stage),
+                    "pipeline_id": state.pipeline_id,
+                },
+            )
+            state.failure_info = FailureInfo(
+                stage=str(stage),
+                plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
+                error_type=exc.__class__.__name__,
+                error_message=str(exc),
+                original_exception=exc,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.exception(
+                "Unexpected plugin exception",
+                exc_info=exc,
+                extra={
+                    "plugin": getattr(plugin, "name", plugin.__class__.__name__),
+                    "stage": str(stage),
+                    "pipeline_id": state.pipeline_id,
+                },
+            )
 
-                message = exc.args[0] if exc.args else str(exc)
-                state.failure_info = FailureInfo(
-                    stage=str(stage),
-                    plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
-                    error_type=exc.__class__.__name__,
-                    error_message=message,
-                    original_exception=exc,
-                )
+            message = exc.args[0] if exc.args else str(exc)
+            state.failure_info = FailureInfo(
+                stage=str(stage),
+                plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
+                error_type=exc.__class__.__name__,
+                error_message=message,
+                original_exception=exc,
+            )
             if state.failure_info:
                 break
         if state.failure_info and stage != PipelineStage.ERROR:
             await execute_stage(PipelineStage.ERROR, state, registries)
             state.last_completed_stage = PipelineStage.ERROR
-    duration = time.perf_counter() - start
-    if state.metrics:
-        state.metrics.record_stage_duration(str(stage), duration)
+    _ = time.perf_counter() - start
 
 
 async def execute_pipeline(
@@ -254,10 +242,9 @@ async def execute_pipeline(
     capabilities: SystemRegistries,
     *,
     state_logger: "StateLogger" | None = None,
-    return_metrics: bool = False,
     state: PipelineState | None = None,
     max_iterations: int = 5,
-) -> Dict[str, Any] | tuple[Dict[str, Any], MetricsCollector]:
+) -> Dict[str, Any]:
     if capabilities is None and registries is not None:
         warnings.warn(
             "'registries' is deprecated, use 'capabilities' instead",
@@ -275,42 +262,40 @@ async def execute_pipeline(
                 )
             ],
             pipeline_id=generate_pipeline_id(),
-            metrics=MetricsCollector(),
         )
     start = time.time()
     try:
         async with capabilities.resources:
-            async with start_span("pipeline.execute"):
-                while True:
-                    state.iteration += 1
-                    for stage in [
-                        PipelineStage.PARSE,
-                        PipelineStage.THINK,
-                        PipelineStage.DO,
-                        PipelineStage.REVIEW,
-                        PipelineStage.DELIVER,
-                    ]:
-                        if (
-                            state.last_completed_stage is not None
-                            and stage.value <= state.last_completed_stage.value
-                        ):
-                            continue
-                        try:
-                            await execute_stage(stage, state, capabilities)
-                        finally:
-                            if state_logger is not None:
-                                state_logger.log(state, stage)
-                            logger.info(
-                                "stage complete",
-                                extra={
-                                    "stage": str(stage),
-                                    "pipeline_id": state.pipeline_id,
-                                    "iteration": state.iteration,
-                                },
-                            )
-                        if state.failure_info:
-                            break
-                        state.last_completed_stage = stage
+            while True:
+                state.iteration += 1
+                for stage in [
+                    PipelineStage.PARSE,
+                    PipelineStage.THINK,
+                    PipelineStage.DO,
+                    PipelineStage.REVIEW,
+                    PipelineStage.DELIVER,
+                ]:
+                    if (
+                        state.last_completed_stage is not None
+                        and stage.value <= state.last_completed_stage.value
+                    ):
+                        continue
+                    try:
+                        await execute_stage(stage, state, capabilities)
+                    finally:
+                        if state_logger is not None:
+                            state_logger.log(state, stage)
+                        logger.info(
+                            "stage complete",
+                            extra={
+                                "stage": str(stage),
+                                "pipeline_id": state.pipeline_id,
+                                "iteration": state.iteration,
+                            },
+                        )
+                    if state.failure_info:
+                        break
+                    state.last_completed_stage = stage
 
                     if (
                         state.response is not None
@@ -349,7 +334,7 @@ async def execute_pipeline(
                 await execute_stage(PipelineStage.DELIVER, state, capabilities)
             except Exception:
                 result = create_static_error_response(state.pipeline_id).to_dict()
-                return (result, state.metrics) if return_metrics else result
+                return result
             if state.response is None:
                 result = create_static_error_response(state.pipeline_id).to_dict()
             else:
@@ -358,13 +343,9 @@ async def execute_pipeline(
             result = create_default_response("No response generated", state.pipeline_id)
         else:
             result = state.response
-        return (result, state.metrics) if return_metrics else result
+        return result
     finally:
-        if state.metrics:
-            state.metrics.record_pipeline_duration(time.time() - start)
-        server = MetricsServerManager.get()
-        if server is not None and state.metrics:
-            server.update(state.metrics)
+        _ = time.time() - start
 
 
 __all__ = [

@@ -2,7 +2,6 @@ import asyncio
 from datetime import datetime
 
 from entity.core.resources.container import ResourceContainer
-from entity.core.state import MetricsCollector
 from pipeline import (
     ConversationEntry,
     PipelineState,
@@ -25,7 +24,6 @@ def make_context(llm: FakeLLM):
             ConversationEntry(content="hi", role="user", timestamp=datetime.now())
         ],
         pipeline_id="1",
-        metrics=MetricsCollector(),
     )
     resources = ResourceContainer()
     asyncio.run(resources.add("llm", llm))

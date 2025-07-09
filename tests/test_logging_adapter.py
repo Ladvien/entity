@@ -3,8 +3,14 @@ import logging
 
 from entity.core.resources.container import ResourceContainer
 from entity.core.runtime import _AgentRuntime
-from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      SystemRegistries, ToolRegistry, execute_pipeline)
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
 
 
 class LoggingAdapter(PromptPlugin):

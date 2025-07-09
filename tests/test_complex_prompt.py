@@ -3,7 +3,6 @@ from datetime import datetime
 from unittest.mock import AsyncMock
 
 from entity.core.resources.container import ResourceContainer
-from entity.core.state import MetricsCollector
 from pipeline import (
     ConversationEntry,
     PipelineState,
@@ -44,7 +43,6 @@ def make_context(llm, memory):
             ConversationEntry(content="hello", role="user", timestamp=datetime.now())
         ],
         pipeline_id="1",
-        metrics=MetricsCollector(),
     )
     resources = ResourceContainer()
     asyncio.run(resources.add("llm", llm))

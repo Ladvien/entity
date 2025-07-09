@@ -1,47 +1,8 @@
 # Monitoring the Pipeline
 
-This guide shows how to collect metrics and traces from an Entity deployment.
-
-## Prometheus Metrics
-
-Call `MetricsServerManager.start()` at application startup to expose metrics on
-`/metrics`:
-
-```python
-from pipeline.observability import MetricsServerManager
-
-MetricsServerManager.start(port=9001)
-```
-
-The exporter provides stage latency, LLM latency and failure counters along with
-CPU and memory usage. Point Prometheus at the server to scrape these metrics.
-See `user_plugins/examples/observability_metrics.py` for a minimal example.
-
-### Built-in Dashboard
-
-Enable the HTTP adapter dashboard to visualize metrics without extra tooling.
-When `dashboard: true` is configured, the adapter starts the metrics server and
-exposes:
-
-* `/dashboard` – basic HTML dashboard with charts for LLM latency and failures
-* `/metrics` – Prometheus endpoint consumed by the dashboard
-
-Navigate to `/dashboard` during development to quickly inspect pipeline health.
-
-## OpenTelemetry Tracing
-
-Wrap tasks with `start_span()` to emit traces. When the
-`OTEL_EXPORTER_OTLP_ENDPOINT` environment variable is set, spans are exported to
-that OTLP endpoint; otherwise they are printed to the console.
-
-```python
-from pipeline.observability import start_span
-
-async with start_span("my_task"):
-    await do_work()
-```
-
-See `user_plugins/examples/observability_tracing.py` for a minimal demonstration.
+This guide previously described metrics and tracing integration. These
+features are temporarily disabled while the telemetry architecture is being
+reworked.
 
 ## Grafana Dashboard
 

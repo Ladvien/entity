@@ -26,18 +26,6 @@ class ToolCall:
 
 
 @dataclass
-class MetricsCollector:
-    stage_durations: Dict[str, float] = field(default_factory=dict)
-
-    def record_stage_duration(self, stage: str, duration: float) -> None:
-        self.stage_durations[stage] = duration
-
-    def record_pipeline_duration(self, _duration: float) -> None:  # noqa: D401, ARG002
-        """No-op placeholder."""
-        pass
-
-
-@dataclass
 class PipelineState:
     conversation: List[ConversationEntry]
     response: Any = None
@@ -50,7 +38,6 @@ class PipelineState:
     iteration: int = 0
     current_stage: Optional[PipelineStage] = None
     last_completed_stage: Optional[PipelineStage] = None
-    metrics: MetricsCollector = field(default_factory=MetricsCollector)
 
     def to_dict(self) -> Dict[str, Any]:
         return {

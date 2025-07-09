@@ -105,9 +105,6 @@ class PluginContext:
             result = await tool.execute_function(params)
             duration = time.perf_counter() - start
             await self._registries.tools.cache_result(name, params, result)
-        if self._state.metrics:
-            key = f"{self.current_stage}:{name}"
-            self._state.metrics.record_tool_duration(key, duration)
         return result
 
     async def queue_tool_use(

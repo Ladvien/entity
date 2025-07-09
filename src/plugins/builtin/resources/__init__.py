@@ -14,7 +14,6 @@ from .postgres import PostgresResource
 from .echo_llm import EchoLLMResource
 from .local_filesystem import LocalFileSystemResource
 from .memory_filesystem import MemoryFileSystem
-from .metrics import MetricsResource
 from .pg_vector_store import PgVectorStore
 from .s3_filesystem import S3FileSystem
 from .structured_logging import StructuredLogging
@@ -32,7 +31,6 @@ __all__ = [
     "LLMResource",
     "EchoLLMResource",
     "StructuredLogging",
-    "MetricsResource",
     "DuckDBDatabaseResource",
     "PgVectorStore",
     "PostgresResource",
