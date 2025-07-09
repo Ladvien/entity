@@ -4,9 +4,15 @@ from __future__ import annotations
 
 from typing import Dict
 
+from pydantic import BaseModel, ValidationError
+
 from pipeline.observability import MetricsServerManager
 from pipeline.validation import ValidationResult
 from plugins.resources.base import BaseResource
+
+
+class MetricsResourceConfig(BaseModel):
+    port: int = 9001
 
 
 class MetricsResource(BaseResource):
@@ -17,14 +23,15 @@ class MetricsResource(BaseResource):
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
-        self._port = int(self.config.get("port", 9001))
+        cfg = MetricsResourceConfig.model_validate(self.config)
+        self._port = cfg.port
 
     @classmethod
     def validate_config(cls, config: Dict) -> ValidationResult:
         try:
-            int(config.get("port", 9001))
-        except Exception:
-            return ValidationResult.error_result("'port' must be an integer")
+            MetricsResourceConfig.model_validate(config)
+        except ValidationError as exc:
+            return ValidationResult.error_result(str(exc))
         return ValidationResult.success_result()
 
     async def initialize(self) -> None:
