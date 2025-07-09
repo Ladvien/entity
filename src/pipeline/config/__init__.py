@@ -8,7 +8,7 @@ from typing import Any, Dict
 
 import yaml
 
-from entity_config.environment import load_env
+from entity.config.environment import load_env
 from entity.config.models import validate_config
 from pipeline.workflow import Workflow
 

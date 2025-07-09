@@ -756,7 +756,7 @@ class HTTPAdapter(AdapterPlugin):
 ```
 
 **Status**: Configuration validation now relies solely on Pydantic models. The
-`entity_config/schemas` directory and JSON Schema logic were removed.
+`entity/config` directory now handles configuration models; JSON Schema logic was removed.
 
 **Benefits**: Single learning curve, better error attribution, type safety with automatic coercion, and consistent validation experience across the entire framework.
 

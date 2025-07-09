@@ -13,7 +13,7 @@ from typing import List
 from ..utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
-from entity_config.environment import load_env
+from entity.config.environment import load_env
 from pipeline import (
     PipelineStage,
     PluginRegistry,
