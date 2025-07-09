@@ -1,6 +1,7 @@
 import logging
 
-from pipeline import Agent, PipelineStage
+from entity import Agent
+from pipeline import PipelineStage
 
 
 def test_from_package_import_error(tmp_path, caplog, monkeypatch):
