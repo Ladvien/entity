@@ -14,7 +14,7 @@ from pipeline.resources import ResourceContainer
 
 
 class NoOpPlugin(PromptPlugin):
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
         context.set_response("ok")
@@ -22,7 +22,9 @@ class NoOpPlugin(PromptPlugin):
 
 def _make_manager():
     plugins = PluginRegistry()
-    asyncio.run(plugins.register_plugin_for_stage(NoOpPlugin({}), PipelineStage.DO))
+    asyncio.run(
+        plugins.register_plugin_for_stage(NoOpPlugin({}), PipelineStage.DELIVER)
+    )
     registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     return PipelineManager(registries)
 

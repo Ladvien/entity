@@ -15,7 +15,7 @@ from plugins.builtin.adapters import HTTPAdapter
 
 
 class RespPlugin(PromptPlugin):
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
         first = context.get_conversation_history()[0]
@@ -24,7 +24,9 @@ class RespPlugin(PromptPlugin):
 
 def make_adapter(config=None):
     plugins = PluginRegistry()
-    asyncio.run(plugins.register_plugin_for_stage(RespPlugin({}), PipelineStage.DO))
+    asyncio.run(
+        plugins.register_plugin_for_stage(RespPlugin({}), PipelineStage.DELIVER)
+    )
     registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     manager = PipelineManager(registries)
     return HTTPAdapter(manager, config)

@@ -68,7 +68,7 @@ When a stage fails the pipeline records a `FailureInfo` object and runs plugins 
 from pipeline.errors.response import ErrorResponse
 
 class ErrorFormatter(FailurePlugin):
-    stages = [PipelineStage.ERROR]
+    stages = [PipelineStage.DELIVER]
     async def _execute_impl(self, ctx: PluginContext) -> None:
         info = ctx.get_failure_info()
         ctx.set_response(
@@ -78,6 +78,8 @@ class ErrorFormatter(FailurePlugin):
             ).to_dict()
         )
 ```
+
+Only plugins executed in the `DELIVER` stage may invoke ``set_response``.
 
 If failure handling itself fails the framework returns a static response created by `create_static_error_response`:
 

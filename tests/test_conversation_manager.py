@@ -13,7 +13,7 @@ from pipeline.resources.memory import Memory
 
 
 class ContinuePlugin(PromptPlugin):
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
         if context.message == "start":
@@ -21,7 +21,7 @@ class ContinuePlugin(PromptPlugin):
 
 
 class RespondPlugin(PromptPlugin):
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
         if context.message == "next":
@@ -30,8 +30,12 @@ class RespondPlugin(PromptPlugin):
 
 def make_manager():
     plugins = PluginRegistry()
-    asyncio.run(plugins.register_plugin_for_stage(ContinuePlugin({}), PipelineStage.DO))
-    asyncio.run(plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.DO))
+    asyncio.run(
+        plugins.register_plugin_for_stage(ContinuePlugin({}), PipelineStage.DELIVER)
+    )
+    asyncio.run(
+        plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.DELIVER)
+    )
     resources = ResourceContainer()
     asyncio.run(resources.add("memory", Memory()))
     registries = SystemRegistries(resources, ToolRegistry(), plugins)

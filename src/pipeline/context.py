@@ -192,6 +192,8 @@ class PluginContext:
     def set_response(self, response: Any) -> None:
         """Set the pipeline's final ``response`` if not already set."""
         state = self.__state
+        if state.current_stage is not PipelineStage.DELIVER:
+            raise ValueError("Only DELIVER stage can set response")
         if state.response is not None:
             raise ValueError("Response already set")
         state.response = response

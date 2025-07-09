@@ -21,7 +21,7 @@ class ThinkPlugin(BasePlugin):
 
 
 class RespondPlugin(BasePlugin):
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
         context.set_response("ok")

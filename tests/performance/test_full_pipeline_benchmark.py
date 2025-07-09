@@ -13,7 +13,7 @@ from pipeline.resources import ResourceContainer
 
 
 class RespondPlugin:
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def execute(self, context):
         context.set_response("ok")
@@ -22,7 +22,9 @@ class RespondPlugin:
 @pytest.mark.benchmark
 def test_full_pipeline_benchmark(benchmark):
     plugins = PluginRegistry()
-    asyncio.run(plugins.register_plugin_for_stage(RespondPlugin(), PipelineStage.DO))
+    asyncio.run(
+        plugins.register_plugin_for_stage(RespondPlugin(), PipelineStage.DELIVER)
+    )
     registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     manager = PipelineManager(registries)
 

@@ -17,7 +17,7 @@ class FailHandler(BaseHTTPRequestHandler):
 
 
 class LLMResponder(BasePlugin):
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
         response = await context.ask_llm(context.message)

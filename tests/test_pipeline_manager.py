@@ -12,7 +12,7 @@ from pipeline.resources import ResourceContainer
 
 
 class WaitPlugin(PromptPlugin):
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
         await asyncio.sleep(0.05)
@@ -21,7 +21,9 @@ class WaitPlugin(PromptPlugin):
 
 def make_manager():
     plugins = PluginRegistry()
-    asyncio.run(plugins.register_plugin_for_stage(WaitPlugin({}), PipelineStage.DO))
+    asyncio.run(
+        plugins.register_plugin_for_stage(WaitPlugin({}), PipelineStage.DELIVER)
+    )
     registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     return PipelineManager(registries)
 

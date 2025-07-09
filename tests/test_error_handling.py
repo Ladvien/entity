@@ -40,7 +40,7 @@ class ResourceFailPlugin(PromptPlugin):
 
 
 class FallbackPlugin(FailurePlugin):
-    stages = [PipelineStage.ERROR]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
         info = context.get_failure_info()
@@ -52,7 +52,7 @@ def make_registries(error_plugin, main_plugin=BoomPlugin):
     asyncio.run(plugins.register_plugin_for_stage(main_plugin({}), PipelineStage.DO))
     asyncio.run(plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR))
     asyncio.run(
-        plugins.register_plugin_for_stage(error_plugin({}), PipelineStage.ERROR)
+        plugins.register_plugin_for_stage(error_plugin({}), PipelineStage.DELIVER)
     )
     return SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 

@@ -26,7 +26,7 @@ class EchoTool(ToolPlugin):
 
 
 class MetricsPlugin(PromptPlugin):
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
         await context.use_tool("echo", text="hello")
@@ -36,7 +36,9 @@ class MetricsPlugin(PromptPlugin):
 
 def make_registries():
     plugins = PluginRegistry()
-    asyncio.run(plugins.register_plugin_for_stage(MetricsPlugin({}), PipelineStage.DO))
+    asyncio.run(
+        plugins.register_plugin_for_stage(MetricsPlugin({}), PipelineStage.DELIVER)
+    )
     resources = ResourceContainer()
     asyncio.run(resources.add("llm", EchoLLM()))
     tools = ToolRegistry()
@@ -53,7 +55,7 @@ def test_metrics_collected():
     assert response == "ok"
 
     data = metrics.to_dict()
-    stage = str(PipelineStage.DO)
+    stage = str(PipelineStage.DELIVER)
     plugin_key = f"{stage}:{MetricsPlugin.__name__}"
     assert plugin_key in data["plugin_durations"]
     assert plugin_key in data["llm_durations"]

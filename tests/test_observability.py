@@ -13,7 +13,7 @@ from pipeline.resources import ResourceContainer
 
 
 class TimedPlugin(PromptPlugin):
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
         await asyncio.sleep(0.05)
@@ -22,7 +22,9 @@ class TimedPlugin(PromptPlugin):
 
 def make_registries():
     plugins = PluginRegistry()
-    asyncio.run(plugins.register_plugin_for_stage(TimedPlugin({}), PipelineStage.DO))
+    asyncio.run(
+        plugins.register_plugin_for_stage(TimedPlugin({}), PipelineStage.DELIVER)
+    )
     return SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 
 
@@ -33,7 +35,7 @@ def test_metrics_overhead():
         execute_pipeline("hi", registries, return_metrics=True)
     )
     duration = time.time() - start
-    plugin_key = f"{PipelineStage.DO}:TimedPlugin"
+    plugin_key = f"{PipelineStage.DELIVER}:TimedPlugin"
     recorded = metrics.plugin_durations[plugin_key][0]
     assert result == "ok"
     assert recorded >= 0.05

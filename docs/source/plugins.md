@@ -15,11 +15,13 @@ from plugins import PromptPlugin
 from pipeline.stages import PipelineStage
 
 class HelloPlugin(PromptPlugin):
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
         context.set_response("Hello")
 ```
+
+Only plugins running in the `DELIVER` stage may call ``set_response``.
 
 Plugins may declare dependencies via the `dependencies` list and must specify the
 pipeline stages they run in. See `plugin_guide.md` for in‑depth examples.

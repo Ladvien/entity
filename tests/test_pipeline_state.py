@@ -13,7 +13,7 @@ from pipeline import (
 
 
 class RespondPlugin(PromptPlugin):
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):  # pragma: no cover - simple
         context.set_response("ok")
