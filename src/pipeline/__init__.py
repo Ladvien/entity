@@ -50,6 +50,7 @@ __all__ = [
     "LogReplayer",
     "Agent",
     "AgentBuilder",
+    "Pipeline",
     "PipelineManager",
     "execute_with_observability",
 ]
@@ -94,6 +95,7 @@ def __getattr__(name: str) -> Any:
         "AgentBuilder": "pipeline.builder",
         "AgentRuntime": "pipeline.runtime",
         "PipelineManager": "pipeline.manager",
+        "Pipeline": "pipeline.workflow",
         "execute_pipeline": "pipeline.pipeline",
         "create_default_response": "pipeline.pipeline",
         "create_static_error_response": "pipeline.errors",
