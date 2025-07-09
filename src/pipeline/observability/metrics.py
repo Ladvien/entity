@@ -38,15 +38,3 @@ class MetricsServerManager:
         """Return the active :class:`MetricsServer` instance if running."""
 
         return cls._server
-
-
-def start_metrics_server(port: int = 9001) -> MetricsServer:
-    """Backward-compatible wrapper for :meth:`MetricsServerManager.start`."""
-
-    return MetricsServerManager.start(port)
-
-
-def get_metrics_server() -> MetricsServer | None:
-    """Backward-compatible wrapper for :meth:`MetricsServerManager.get`."""
-
-    return MetricsServerManager.get()
