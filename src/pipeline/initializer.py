@@ -44,6 +44,7 @@ class ClassRegistry:
         self._classes[name] = plugin_class
         self._configs[name] = config
         self._order.append(name)
+        self._validate_stage_assignment(name, plugin_class, config)
 
     def has_plugin(self, name: str) -> bool:
         return name in self._classes
@@ -89,6 +90,84 @@ class ClassRegistry:
                 and not issubclass(cls, Resource)
             ):
                 yield cls, self._configs[name]
+
+    def _type_default_stages(self, cls: type[BasePlugin]) -> List[PipelineStage]:
+        """Return default stages for the given plugin class."""
+
+        from .base_plugins import AdapterPlugin, PromptPlugin
+
+        if issubclass(cls, ToolPlugin):
+            return [PipelineStage.DO]
+        if issubclass(cls, PromptPlugin):
+            return [PipelineStage.THINK]
+        if issubclass(cls, AdapterPlugin):
+            return [PipelineStage.PARSE, PipelineStage.DELIVER]
+        return []
+
+    def _resolve_plugin_stages(
+        self, cls: type[BasePlugin], config: Dict
+    ) -> tuple[List[PipelineStage], bool]:
+        """Determine final stages and whether they were explicit."""
+
+        cfg_value = config.get("stages") or config.get("stage")
+        explicit_source = None
+
+        attr_stages = [PipelineStage.ensure(s) for s in getattr(cls, "stages", [])]
+        attr_explicit = bool(attr_stages)
+        type_defaults = self._type_default_stages(cls)
+
+        stages: list[PipelineStage] = []
+        explicit = False
+
+        if cfg_value is not None:
+            stages = cfg_value if isinstance(cfg_value, list) else [cfg_value]
+            stages = [PipelineStage.ensure(s) for s in stages]
+            explicit = True
+            explicit_source = "config"
+            if attr_explicit and set(stages) != set(attr_stages):
+                logger.warning(
+                    "Plugin '%s' config stages %s override class stages %s",
+                    cls.__name__,
+                    [str(s) for s in stages],
+                    [str(s) for s in attr_stages],
+                )
+        elif attr_explicit:
+            stages = attr_stages
+            explicit = True
+            explicit_source = "class"
+        elif type_defaults:
+            stages = type_defaults
+
+        if explicit and type_defaults and set(stages) != set(type_defaults):
+            source = explicit_source or "config"
+            logger.warning(
+                "Plugin '%s' explicit %s stages %s override type defaults %s",
+                cls.__name__,
+                source,
+                [str(s) for s in stages],
+                [str(s) for s in type_defaults],
+            )
+
+        if not stages:
+            stages = attr_stages or type_defaults
+
+        if not stages:
+            raise SystemError(f"No stage specified for {cls.__name__}")
+
+        return stages, explicit
+
+    def _validate_stage_assignment(
+        self, name: str, cls: type[BasePlugin], config: Dict
+    ) -> None:
+        from pipeline.resources import Resource
+
+        if issubclass(cls, (ResourcePlugin, Resource, ToolPlugin)):
+            return
+
+        stages, _ = self._resolve_plugin_stages(cls, config)
+        invalid = [s for s in stages if not isinstance(s, PipelineStage)]
+        if invalid:
+            raise SystemError(f"Plugin '{name}' has invalid stage values: {invalid}")
 
 
 @contextmanager

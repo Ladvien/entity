@@ -154,16 +154,11 @@ def test_stage_override_warning(caplog):
         async def _execute_impl(self, context):
             pass
 
-    initializer = SystemInitializer()
-    plugin = OverridePrompt({})
+    registry = ClassRegistry()
 
     caplog.set_level(logging.WARNING, logger="pipeline.initializer")
     logging.getLogger("pipeline.initializer").addHandler(caplog.handler)
-    initializer._resolve_plugin_stages(
-        OverridePrompt,
-        plugin,
-        {"stage": PipelineStage.DO},
-    )
+    registry._resolve_plugin_stages(OverridePrompt, {"stage": PipelineStage.DO})
 
     assert any(
         "override type defaults" in record.getMessage()
