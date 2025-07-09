@@ -67,8 +67,8 @@ def test_chain_of_thought_records_steps_and_tool_call():
         assistant_entries[1].content == "Reasoning step 1: We need to calculate result"
     )
     assert assistant_entries[2].content == "Reasoning step 2: Final answer is 42"
-    assert state.stage_results["reasoning_complete"] is True
-    assert state.stage_results["reasoning_steps"] == [
+    assert ctx.load("reasoning_complete") is True
+    assert ctx.load("reasoning_steps") == [
         "We need to calculate result",
         "Final answer is 42",
     ]

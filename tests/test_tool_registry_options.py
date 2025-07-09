@@ -14,6 +14,7 @@ from pipeline import (
 )
 from pipeline.resources import ResourceContainer
 from pipeline.tools.execution import execute_pending_tools
+from pipeline.context import PluginContext
 
 
 class SleepTool:
@@ -69,6 +70,7 @@ def test_cache_ttl():
     )
     asyncio.run(execute_pending_tools(state, registries))
     assert tool.calls == 1
-    assert state.stage_results["b"] == 0
+    ctx = PluginContext(state, registries)
+    assert ctx.load("b") == 0
     key = f"{PipelineStage.DO}:sleep"
     assert key in state.metrics.tool_durations
