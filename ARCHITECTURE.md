@@ -738,4 +738,5 @@ class HTTPAdapter(AdapterPlugin):
 - Logging
 - Docker
 - .env credential interpolation
+- `ConversationHistory` data schema
 
