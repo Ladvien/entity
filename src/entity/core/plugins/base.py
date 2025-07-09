@@ -9,8 +9,6 @@ They offer a small, easy to understand surface for plugin authors.
 
 from dataclasses import dataclass
 from typing import Any, Dict, List, Type
-
-import asyncio
 import time
 
 from entity.utils.logging import get_logger
@@ -26,22 +24,13 @@ class BasePlugin:
 
     stages: List[PipelineStage]
     dependencies: List[str] = []
-    max_retries: int = 1
-    retry_delay: float = 0.0
 
     def __init__(self, config: Dict | None = None) -> None:
         self.config = config or {}
         self.logger = get_logger(self.__class__.__name__)
 
     async def execute(self, context: Any) -> Any:
-        for attempt in range(self.max_retries + 1):
-            try:
-                return await self._execute_impl(context)
-            except Exception:  # noqa: BLE001 - propagate after retries
-                if attempt >= self.max_retries:
-                    raise
-                await asyncio.sleep(self.retry_delay)
-        return None
+        return await self._execute_impl(context)
 
     async def _execute_impl(self, context: Any) -> Any:
         """Execute plugin logic in the pipeline."""
@@ -85,14 +74,7 @@ class ToolPlugin(BasePlugin):
         for name in self.required_params:
             if name not in params:
                 raise ToolExecutionError(f"Missing parameter: {name}")
-        for attempt in range(self.max_retries + 1):
-            try:
-                return await self.execute_function(params)
-            except Exception as exc:
-                if attempt >= self.max_retries:
-                    raise
-                await asyncio.sleep(self.retry_delay)
-        raise RuntimeError("unreachable")
+        return await self.execute_function(params)
 
 
 class PromptPlugin(BasePlugin):

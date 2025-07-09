@@ -37,7 +37,7 @@ def make_capabilities():
     )
 
     tools = ToolRegistry()
-    asyncio.run(tools.add("fail", FailingTool({"max_retries": 0})))
+    asyncio.run(tools.add("fail", FailingTool({})))
 
     return SystemRegistries(ResourceContainer(), tools, plugins)
 

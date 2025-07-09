@@ -44,15 +44,6 @@ breaker = CircuitBreaker(failure_threshold=3, recovery_timeout=30)
 await breaker.call(do_work)
 ```
 
-Tool plugins can define `max_retries` and `retry_delay` attributes (formerly
-called `retry_attempts` and `retry_backoff`):
-
-```python
-class MyTool(ToolPlugin):
-    max_retries = 2
-    retry_delay = 0.5
-```
-
 Base plugins include a simple circuit breaker using `failure_threshold` and `failure_reset_timeout` settings.
 
 When any plugin raises an exception the framework stops executing the rest of that stage and no further stages run for that iteration.
@@ -94,19 +85,37 @@ If failure handling itself fails the framework returns a static response created
 
 Use `BasicLogger` and `ErrorFormatter` from `user_plugins.failure` as templates for custom failure handling.
 
-## Error Recovery Strategies
 
-Plugins can retry failures by specifying `max_retries` and `retry_delay` in their configuration. `BasePlugin` applies a `RetryPolicy` so `_execute_impl` is re-run before a failure is reported.
+## ERROR Stage Patterns
+
+When a plugin raises an exception the pipeline stops executing the remaining
+plugins in that stage and immediately runs any plugins assigned to the `ERROR`
+stage. These plugins typically log the issue or produce a fallback response.
 
 ```python
-class MyPlugin(PromptPlugin):
-    stages = [PipelineStage.DO]
+from pipeline.errors import create_static_error_response
+from pipeline.stages import PipelineStage
+from entity.core.plugins import FailurePlugin
+
+class DefaultResponder(FailurePlugin):
+    stages = [PipelineStage.ERROR]
 
     async def _execute_impl(self, ctx: PluginContext) -> None:
-        ...
-
-plugin = MyPlugin({"max_retries": 3, "retry_delay": 0.5})
+        ctx.set_response(create_static_error_response(ctx.pipeline_id).to_dict())
 ```
 
-If all retries fail the `DefaultResponder` plugin converts the captured `FailureInfo`
-into an `ErrorResponse` and returns its `to_dict()` form via `create_error_response`.
+```python
+import logging
+
+class BasicLogger(FailurePlugin):
+    stages = [PipelineStage.ERROR]
+
+    async def _execute_impl(self, ctx: PluginContext) -> None:
+        info = ctx.get_failure_info()
+        logging.error(
+            "Stage %s plugin %s failed: %s",
+            info.stage,
+            info.plugin_name,
+            info.error_message,
+        )
+```
