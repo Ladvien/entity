@@ -15,7 +15,7 @@ from plugins.builtin.adapters.cli import CLIAdapter
 
 
 class EchoPlugin(PromptPlugin):
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
         first = context.get_conversation_history()[0]
@@ -24,7 +24,9 @@ class EchoPlugin(PromptPlugin):
 
 def make_adapter() -> tuple[CLIAdapter, SystemRegistries]:
     plugins = PluginRegistry()
-    asyncio.run(plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.DO))
+    asyncio.run(
+        plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.DELIVER)
+    )
     registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     manager = PipelineManager(registries)
     return CLIAdapter(manager), registries

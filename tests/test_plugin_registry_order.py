@@ -16,7 +16,7 @@ from pipeline.resources import ResourceContainer
 
 class First(PromptPlugin):
     priority = 30
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
         order = context.get_metadata("order") or []
@@ -27,7 +27,7 @@ class First(PromptPlugin):
 
 class Second(PromptPlugin):
     priority = 20
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
         order = context.get_metadata("order") or []
@@ -37,7 +37,7 @@ class Second(PromptPlugin):
 
 class Third(PromptPlugin):
     priority = 10
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
         order = context.get_metadata("order") or []
@@ -52,9 +52,9 @@ def _set_final_response(context):
 
 def test_plugin_priority_order_matches_execution():
     registry = PluginRegistry()
-    asyncio.run(registry.register_plugin_for_stage(First({}), PipelineStage.DO))
-    asyncio.run(registry.register_plugin_for_stage(Third({}), PipelineStage.DO))
-    asyncio.run(registry.register_plugin_for_stage(Second({}), PipelineStage.DO))
+    asyncio.run(registry.register_plugin_for_stage(First({}), PipelineStage.DELIVER))
+    asyncio.run(registry.register_plugin_for_stage(Third({}), PipelineStage.DELIVER))
+    asyncio.run(registry.register_plugin_for_stage(Second({}), PipelineStage.DELIVER))
     registries = SystemRegistries(ResourceContainer(), ToolRegistry(), registry)
     result = asyncio.run(execute_pipeline("hi", registries))
     assert result == ["third", "second", "first"]

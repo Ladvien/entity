@@ -10,7 +10,7 @@ from registry import PluginRegistry, SystemRegistries, ToolRegistry
 
 
 class RespondPlugin(BasePlugin):
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
         context.set_response({"message": "ok"})
@@ -47,7 +47,7 @@ def test_pipeline_recovers_from_stage_failure(
         state_file = tmp_path / "state.json"
         plugins = PluginRegistry()
         await plugins.register_plugin_for_stage(make_failing_plugin(stage), stage)
-        await plugins.register_plugin_for_stage(RespondPlugin(), PipelineStage.DO)
+        await plugins.register_plugin_for_stage(RespondPlugin(), PipelineStage.DELIVER)
         registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
         try:
             await execute_pipeline("hi", registries, state_file=str(state_file))

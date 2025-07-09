@@ -30,7 +30,10 @@ class InputValidator:
         except ValidationError as exc:
             raise ValueError(str(exc)) from exc
 
-        data = instance.model_dump()
+        if hasattr(instance, "model_dump"):
+            data = instance.model_dump()
+        else:  # pragma: no cover - pydantic v1 compatibility
+            data = instance.dict()  # type: ignore[attr-defined]
         for key, value in data.items():
             if isinstance(value, str):
                 data[key] = sanitize_text(value)

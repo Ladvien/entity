@@ -17,7 +17,7 @@ from pipeline.resources import ResourceContainer
 
 
 class RespondPlugin(PromptPlugin):
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):  # pragma: no cover - simple
         context.set_response("ok")
@@ -51,7 +51,9 @@ def test_restore_replaces_state():
 
 def test_execute_pipeline_persists_snapshots(tmp_path: Path):
     plugins = PluginRegistry()
-    asyncio.run(plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.DO))
+    asyncio.run(
+        plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.DELIVER)
+    )
     registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     snap_dir = tmp_path / "snaps"
     result = asyncio.run(

@@ -17,7 +17,7 @@ from plugins.builtin.adapters import DashboardAdapter
 
 
 class RespPlugin(PromptPlugin):
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
         first = context.get_conversation_history()[0]
@@ -26,7 +26,7 @@ class RespPlugin(PromptPlugin):
 
 def make_adapter(tmp_path: Path) -> DashboardAdapter:
     plugins = PluginRegistry()
-    plugins.register_plugin_for_stage(RespPlugin({}), PipelineStage.DO)
+    plugins.register_plugin_for_stage(RespPlugin({}), PipelineStage.DELIVER)
     registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     manager = PipelineManager(registries)
     log_path = tmp_path / "state.log"

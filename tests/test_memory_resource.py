@@ -17,7 +17,7 @@ from plugins.builtin.resources.memory_storage import MemoryStorage
 
 
 class IncrementPlugin(PromptPlugin):
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
     dependencies = ["memory"]
 
     async def _execute_impl(self, context):
@@ -30,7 +30,7 @@ class IncrementPlugin(PromptPlugin):
 def make_registries():
     plugins = PluginRegistry()
     asyncio.run(
-        plugins.register_plugin_for_stage(IncrementPlugin({}), PipelineStage.DO)
+        plugins.register_plugin_for_stage(IncrementPlugin({}), PipelineStage.DELIVER)
     )
     resources = ResourceContainer()
     asyncio.run(resources.add("memory", SimpleMemoryResource()))

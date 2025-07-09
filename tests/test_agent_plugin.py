@@ -20,5 +20,6 @@ def test_agent_plugin_autoclassification():
     assert any(p.name == "think_response" for p in think_plugins)
     assert any(p.name == "parse_func" for p in parse_plugins)
 
+    agent._runtime = agent.builder.build_runtime()
     result = asyncio.run(agent.run_message("hi"))
     assert result == "parsed"

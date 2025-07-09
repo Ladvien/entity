@@ -27,7 +27,7 @@ class FailPlugin(PromptPlugin):
 
 
 class ErrorPlugin(FailurePlugin):
-    stages = [PipelineStage.ERROR]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
         info = context.get_failure_info()
@@ -36,7 +36,7 @@ class ErrorPlugin(FailurePlugin):
 
 
 class BadErrorPlugin(FailurePlugin):
-    stages = [PipelineStage.ERROR]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
         raise RuntimeError("bad")
@@ -47,7 +47,7 @@ def make_registries(error_plugin):
     asyncio.run(plugins.register_plugin_for_stage(FailPlugin({}), PipelineStage.DO))
     asyncio.run(plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR))
     asyncio.run(
-        plugins.register_plugin_for_stage(error_plugin({}), PipelineStage.ERROR)
+        plugins.register_plugin_for_stage(error_plugin({}), PipelineStage.DELIVER)
     )
     return SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 

@@ -15,7 +15,7 @@ from user_plugins.failure.error_formatter import ErrorFormatter
 
 
 class UnstablePlugin(PromptPlugin):
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
         raise ValueError("boom")
@@ -26,12 +26,12 @@ def make_registries():
     asyncio.run(
         plugins.register_plugin_for_stage(
             UnstablePlugin({"failure_threshold": 2, "failure_reset_timeout": 60}),
-            PipelineStage.DO,
+            PipelineStage.DELIVER,
         )
     )
     asyncio.run(plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR))
     asyncio.run(
-        plugins.register_plugin_for_stage(ErrorFormatter({}), PipelineStage.ERROR)
+        plugins.register_plugin_for_stage(ErrorFormatter({}), PipelineStage.DELIVER)
     )
     return SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 

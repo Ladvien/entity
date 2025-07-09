@@ -14,7 +14,7 @@ from plugins.builtin.adapters.logging import LoggingAdapter
 
 
 class EchoPlugin(PromptPlugin):
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context):
         entry = context.get_conversation_history()[0]
@@ -23,7 +23,9 @@ class EchoPlugin(PromptPlugin):
 
 def make_manager() -> PipelineManager:
     plugins = PluginRegistry()
-    asyncio.run(plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.DO))
+    asyncio.run(
+        plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.DELIVER)
+    )
     asyncio.run(
         plugins.register_plugin_for_stage(LoggingAdapter({}), PipelineStage.DELIVER)
     )

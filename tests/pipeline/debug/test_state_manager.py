@@ -13,7 +13,7 @@ from pipeline.resources import ResourceContainer
 
 
 class SavePlugin(PromptPlugin):
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     def __init__(self, manager: StateManager) -> None:
         super().__init__({})
@@ -27,7 +27,7 @@ class SavePlugin(PromptPlugin):
 def make_manager(manager: StateManager) -> PipelineManager:
     plugins = PluginRegistry()
     asyncio.run(
-        plugins.register_plugin_for_stage(SavePlugin(manager), PipelineStage.DO)
+        plugins.register_plugin_for_stage(SavePlugin(manager), PipelineStage.DELIVER)
     )
     registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     return PipelineManager(registries)

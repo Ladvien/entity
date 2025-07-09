@@ -190,7 +190,11 @@ class PluginContext:
         return [deepcopy(entry) for entry in history]
 
     def set_response(self, response: Any) -> None:
-        """Set the pipeline's final ``response`` if not already set."""
+        """Set the pipeline's final ``response`` during the DELIVER stage."""
+
+        if self.current_stage != PipelineStage.DELIVER:
+            raise ValueError("set_response() is only valid during the DELIVER stage")
+
         state = self.__state
         if state.response is not None:
             raise ValueError("Response already set")

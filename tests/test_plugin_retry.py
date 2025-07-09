@@ -13,7 +13,7 @@ from user_plugins.failure.basic_logger import BasicLogger
 
 
 class FlakyPlugin(PromptPlugin):
-    stages = [PipelineStage.DO]
+    stages = [PipelineStage.DELIVER]
 
     def __init__(self, config=None):
         super().__init__(config)
@@ -30,7 +30,7 @@ def make_registries():
     plugins = PluginRegistry()
     asyncio.run(
         plugins.register_plugin_for_stage(
-            FlakyPlugin({"max_retries": 1, "retry_delay": 0}), PipelineStage.DO
+            FlakyPlugin({"max_retries": 1, "retry_delay": 0}), PipelineStage.DELIVER
         )
     )
     asyncio.run(plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR))
