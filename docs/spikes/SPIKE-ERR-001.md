@@ -22,11 +22,11 @@ This spike investigates strategies for protecting the pipeline from repeated fai
 - **Cons**: Additional dependency management and potential overkill for simple pipelines.
 
 ## State Recovery Strategies
-### 1. File Snapshots
-- Current pipeline writes a JSON snapshot after each stage when `snapshots_dir` is provided.
-- Allows reloading the last saved state via `PipelineState.from_dict`.
-- **Pros**: Easy to implement and works without a database.
-- **Cons**: Snapshots may be outdated if the process crashes before writing.
+### 1. Structured Logs
+- Each stage now records its completion details in the standard log output.
+- Logs include the pipeline ID, stage name and context data.
+- **Pros**: No files to manage and integrates with existing log pipelines.
+- **Cons**: Requires log aggregation to recover state across processes.
 
 ### 2. Persistent Store
 - Save state in a database or object storage on each stage completion.

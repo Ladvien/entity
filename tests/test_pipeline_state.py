@@ -1,6 +1,4 @@
-import asyncio
 from datetime import datetime
-from pathlib import Path
 
 from pipeline import (
     ConversationEntry,
@@ -12,8 +10,6 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from pipeline.pipeline import execute_pipeline
-from pipeline.resources import ResourceContainer
 
 
 class RespondPlugin(PromptPlugin):
@@ -47,16 +43,3 @@ def test_restore_replaces_state():
     state1.restore(state2)
     assert state1.prompt == ""
     assert len(state1.conversation) == 1
-
-
-def test_execute_pipeline_persists_snapshots(tmp_path: Path):
-    plugins = PluginRegistry()
-    asyncio.run(plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.DO))
-    registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
-    snap_dir = tmp_path / "snaps"
-    result = asyncio.run(
-        execute_pipeline("hello", registries, snapshots_dir=str(snap_dir))
-    )
-    assert result == "ok"
-    files = list(snap_dir.iterdir())
-    assert len(files) >= 5
