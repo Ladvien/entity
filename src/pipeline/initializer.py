@@ -16,6 +16,10 @@ from pipeline.resources.container import ResourceContainer
 from entity.config.models import EntityConfig, asdict
 from pipeline.utils import DependencyGraph
 from registry import PluginRegistry, ToolRegistry
+from entity.workflows.discovery import (
+    discover_workflows,
+    register_module_workflows,
+)
 
 from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
 from .defaults import DEFAULT_CONFIG
@@ -118,6 +122,7 @@ class SystemInitializer:
         self.plugin_registry_cls = plugin_registry_cls
         self.tool_registry_cls = tool_registry_cls
         self.resource_container_cls = resource_container_cls
+        self.workflows: Dict[str, Type] = {}
 
     @classmethod
     def from_yaml(cls, yaml_path: str, env_file: str = ".env") -> "SystemInitializer":
@@ -182,6 +187,13 @@ class SystemInitializer:
                                 cfg[k] = v
                         cfg_section[name] = cfg
 
+    def _discover_workflows(self) -> None:
+        """Load workflow classes from ``workflow_dirs`` into ``self.workflows``."""
+
+        dirs = self.config.get("workflow_dirs", [])
+        for directory in dirs:
+            self.workflows.update(discover_workflows(directory))
+
     def get_resource_config(self, name: str) -> Dict:
         return self.config["plugins"]["resources"][name]
 
@@ -193,6 +205,30 @@ class SystemInitializer:
 
     def get_prompt_config(self, name: str) -> Dict:
         return self.config["plugins"]["prompts"][name]
+
+    # --------------------------- workflow discovery ---------------------------
+    def load_workflows_from_directory(self, directory: str) -> None:
+        """Load workflows from ``directory`` and store them."""
+
+        self.workflows.update(discover_workflows(directory))
+
+    def load_workflows_from_package(self, package_name: str) -> None:
+        import importlib
+        import pkgutil
+
+        package = importlib.import_module(package_name)
+        if not hasattr(package, "__path__"):
+            register_module_workflows(package, self.workflows)
+            return
+
+        for info in pkgutil.walk_packages(
+            package.__path__, prefix=package.__name__ + "."
+        ):
+            try:
+                module = importlib.import_module(info.name)
+            except Exception:  # noqa: BLE001
+                continue
+            register_module_workflows(module, self.workflows)
 
     def _type_default_stages(self, cls: type[BasePlugin]) -> List[PipelineStage]:
         """Return default stages for the given plugin class."""
@@ -263,6 +299,7 @@ class SystemInitializer:
 
     async def initialize(self):
         self._discover_plugins()
+        self._discover_workflows()
 
         registry = ClassRegistry()
         dep_graph: Dict[str, List[str]] = {}
