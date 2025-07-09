@@ -6,10 +6,10 @@ format was evaluated for encoded size and time to serialize and deserialize a
 sample payload.
 
 ## Method
-A small benchmark script (`experiments/performance/serialization_bench.py`)
-serializes a list of 1000 dictionaries using `pickle`, `json`, `msgpack`, and
-`protobuf`. The script measures the byte size of the encoded payload and the
-execution time for 1000 serialization and deserialization loops.
+A small benchmark script serializes a list of 1000 dictionaries using
+`pickle`, `json`, `msgpack`, and `protobuf`. The script measures the byte
+size of the encoded payload and the execution time for 1000 serialization
+and deserialization loops.
 
 Compression with gzip and lzma was tested on the msgpack output to gauge the
 effect on size and throughput.
