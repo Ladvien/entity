@@ -169,6 +169,5 @@ def test_runtime_validation_failure(tmp_path):
     path.write_text(yaml.dump(config))
 
     initializer = SystemInitializer.from_yaml(str(path))
-    _, resources, _ = asyncio.run(initializer.initialize())
-
-    assert resources.get("bad") is None
+    with pytest.raises(SystemError, match="Runtime validation failed"):
+        asyncio.run(initializer.initialize())
