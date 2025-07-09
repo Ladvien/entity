@@ -11,4 +11,4 @@ class {class_name}(FailurePlugin):
     # Execution order follows the YAML list or registration sequence; no priority field
 
     async def _execute_impl(self, context):
-        pass
+        context.store("failure_info", context.get_failure_info())

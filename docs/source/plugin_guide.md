@@ -39,6 +39,20 @@ async def weather_plugin(ctx):
     return await ctx.tool_use("weather", city="London")
 ```
 
+Plugins share data through `store()` and `load()` and can queue additional
+tool calls:
+
+```python
+@agent.plugin
+async def summarizer(ctx):
+    if ctx.has("summary"):
+        return ctx.load("summary")
+    result_key = ctx.queue_tool_use("search", {"query": ctx.message})
+    summary = await ctx.tool_use("summarize", text=ctx.message)
+    ctx.store("summary", summary)
+    return summary
+```
+
 ### Stage Override Patterns
 
 Plugin stages are resolved in a predictable order:

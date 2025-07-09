@@ -11,4 +11,5 @@ class {class_name}(AdapterPlugin):
     # Execution order follows the YAML list or registration sequence; no priority field
 
     async def _execute_impl(self, context):
-        pass
+        if context.has("response"):
+            await context.queue_tool_use("send", {"text": context.load("response")})

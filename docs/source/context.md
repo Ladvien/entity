@@ -4,8 +4,9 @@
 
 - conversation history and other pipeline state
 - registered resources via `get_resource`
-- tool execution through `queue_tool_use`
-- helpers for adding conversation entries and stage results
+- intermediate values with `store()`, `load()`, and `has()`
+- tool execution through `tool_use()` and `queue_tool_use()`
+- helpers for adding conversation entries
 
 Plugins receive this object inside their `_execute_impl` method.
 
@@ -21,13 +22,21 @@ class ExamplePlugin(PromptPlugin):
 
 - `say()` to set the pipeline response
 - `ask_llm()` to call the configured LLM
+- `store()`, `load()`, and `has()` for sharing data between stages
 - `tool_use()` to run a tool and wait for the result
+- `queue_tool_use()` to defer tool execution until later
 
 ```python
 class MyPrompt(PromptPlugin):
     async def _execute_impl(self, context: PluginContext) -> None:
-        reply = await context.ask_llm(context.message)
-        context.say(reply)
+        if context.has("summary"):
+            context.say(context.load("summary"))
+            return
+
+        summary = await context.tool_use("summarize", text=context.message)
+        context.store("summary", summary)
+        context.queue_tool_use("log_summary", {"text": summary})
+        context.say(summary)
 ```
 
 ## Advanced API
