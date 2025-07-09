@@ -165,11 +165,10 @@ llm = UnifiedLLMResource([
     OllamaProvider(config),      # LLMResourcePlugin (fallback)
 ])
 
-# Memory Resource Composition  
-memory = Memory(
-    database=PostgresResource(config),        # DatabaseResourcePlugin
-    vector_store=PgVectorStore(config),       # VectorStoreResourcePlugin
-)
+# Memory Resource Composition
+memory = Memory(config={})
+memory.database = PostgresResource(config)        # DatabaseResourcePlugin
+memory.vector_store = PgVectorStore(config)       # VectorStoreResourcePlugin
 
 # Storage Resource Composition
 storage = Storage(

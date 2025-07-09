@@ -65,7 +65,9 @@ def main() -> None:
 
     database = SQLiteDatabaseResource({"path": "./agent.db"})
     vector_store = create_vector_store()
-    memory = Memory(database=database, vector_store=vector_store)
+    memory = Memory(config={})
+    memory.database = database
+    memory.vector_store = vector_store
 
     agent.builder.resource_registry.add("memory", memory)
     agent.builder.plugin_registry.register_plugin_for_stage(
