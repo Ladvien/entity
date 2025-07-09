@@ -130,8 +130,8 @@ plugin_dirs:
 ## Development Steps
 1. Create your plugin class and implement `_execute_impl`.
 2. Register the plugin with the `Agent` or include it in your YAML under `plugins:`.
-   The list position determines execution order and `SystemInitializer` preserves
-   that sequence. There is no priority field.
+   YAML order determines execution order and `SystemInitializer` preserves that
+   sequence. There is no priority field.
 3. Validate the YAML using `SystemInitializer.from_yaml("your.yaml")`.
 4. Write unit tests and run `pytest` before committing changes.
 

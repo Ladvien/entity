@@ -412,4 +412,5 @@ class SystemInitializer:
                         f"Available: {available}"
                     )
 
-        graph.topological_sort()
+        # DependencyGraph may enforce valid dependencies but should not reorder
+        # plugins. Execution strictly follows YAML order.

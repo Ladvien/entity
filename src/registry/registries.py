@@ -136,9 +136,9 @@ class PluginRegistry:
                 self._dependents.setdefault(dep, []).append(plugin)
 
     def get_plugins_for_stage(self, stage: PipelineStage) -> List[BasePlugin]:
-        """Return list of plugins registered for ``stage``."""
+        """Return plugins for ``stage`` in registration order."""
 
-        return self._stage_plugins.get(stage, [])
+        return list(self._stage_plugins.get(stage, []))
 
     def list_plugins(self) -> List[BasePlugin]:
         plugins: List[BasePlugin] = []
