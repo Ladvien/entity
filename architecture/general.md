@@ -242,8 +242,10 @@ class PluginContext:
 - **LLM Provider Swapping**: OpenAI ↔ Ollama without restart (framework is LLM agnostic)
 - **Plugin Configuration**: Update parameters, retry settings at runtime
 - **Resource Backends**: SQLite → PostgreSQL migration while running
-- **Tool Addition**: Add new capabilities dynamically
 - **Memory Backends**: Switch from in-memory to persistent storage
+
+Only configuration values of existing plugins can be reloaded. Adding or removing
+plugins or altering their stages or dependencies requires restarting the system.
 
 ### Configuration Update Process
 ```python
@@ -399,10 +401,9 @@ CMD ["python", "-m", "entity", "--config", "config/prod.yaml", "serve-http"]
 
 ## Architecture Benefits
 
-### For Developers
 - **Mental Model Clarity**: Pipeline stages are intuitive
 - **Progressive Disclosure**: Simple → Complex as needed
-- **Hot Reconfiguration**: Change behavior without restarts
+- **Hot Reconfiguration**: Parameter tweaks without restarts
 - **Rich Tooling**: Built-in observability and debugging
 
 ### For Operations  

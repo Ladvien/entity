@@ -7,17 +7,13 @@ import asyncio  # noqa: E402
 import shutil  # noqa: E402
 from dataclasses import dataclass  # noqa: E402
 from pathlib import Path
-from typing import Any, Optional  # noqa: E402
+from typing import Optional  # noqa: E402
 
 import yaml  # noqa: E402
 
 from pipeline import Agent  # noqa: E402
 from pipeline import update_plugin_configuration  # noqa: E402
-from pipeline.base_plugins import ResourcePlugin, ToolPlugin  # noqa: E402
-from pipeline.initializer import ClassRegistry  # noqa: E402
-from pipeline.interfaces import import_plugin_class  # noqa: E402
 from pipeline.logging import get_logger  # noqa: E402
-from pipeline.resources import Resource  # noqa: E402
 from plugins.builtin.adapters.server import AgentServer  # noqa: E402
 
 logger = get_logger(__name__)
@@ -244,74 +240,29 @@ class CLI:
                         return True
                 return False
 
-            async def register_new_plugin(
-                section: str, name: str, conf: dict[str, Any]
-            ) -> bool:
-                cls = import_plugin_class(conf.get("type", name))
-                if not cls.validate_config(conf).success:
-                    logger.error("Failed to validate config for %s", name)
-                    return False
-
-                class_reg = ClassRegistry()
-                for n, r in getattr(resource_registry, "_resources", {}).items():
-                    class_reg.register_class(r.__class__, getattr(r, "config", {}), n)
-                for n, t in getattr(tool_registry, "_tools", {}).items():
-                    class_reg.register_class(t.__class__, getattr(t, "config", {}), n)
-                for p in plugin_registry.list_plugins():
-                    class_reg.register_class(
-                        p.__class__,
-                        getattr(p, "config", {}),
-                        plugin_registry.get_plugin_name(p),
-                    )
-                class_reg.register_class(cls, conf, name)
-
-                dep_result = cls.validate_dependencies(class_reg)
-                if not dep_result.success:
-                    logger.error(
-                        "Dependency validation failed for %s: %s",
-                        name,
-                        dep_result.error_message,
-                    )
-                    return False
-                for dep in getattr(cls, "dependencies", []):
-                    if not class_reg.has_plugin(dep):
-                        logger.error("Missing dependency %s for plugin %s", dep, name)
-                        return False
-
-                instance = cls(conf)
-                if issubclass(cls, ResourcePlugin) or issubclass(cls, Resource):
-                    if hasattr(instance, "initialize") and callable(
-                        instance.initialize
-                    ):
-                        await instance.initialize()
-                    await resource_registry.add(name, instance)
-                elif issubclass(cls, ToolPlugin):
-                    await tool_registry.add(name, instance)
-                else:
-                    for stage in getattr(cls, "stages", []):
-                        await plugin_registry.register_plugin_for_stage(
-                            instance, stage, name
-                        )
-                logger.info("Registered %s", name)
-                return True
-
             for section in ["resources", "tools", "adapters", "prompts"]:
                 for name, conf in cfg.get("plugins", {}).get(section, {}).items():
-                    if plugin_exists(section, name):
-                        result = await update_plugin_configuration(
-                            plugin_registry, name, conf
+                    if not plugin_exists(section, name):
+                        logger.error(
+                            "Plugin %s not found. Restart required to add new plugins",
+                            name,
                         )
-                        if result.success:
-                            logger.info("Updated %s", name)
-                        else:
-                            logger.error(
-                                "Failed to update %s: %s", name, result.error_message
-                            )
-                            success = False
+                        success = False
+                        continue
+
+                    result = await update_plugin_configuration(
+                        plugin_registry, name, conf
+                    )
+                    if result.success:
+                        logger.info("Updated %s", name)
+                    elif result.requires_restart:
+                        logger.error("%s", result.error_message)
+                        success = False
                     else:
-                        ok = await register_new_plugin(section, name, conf)
-                        if not ok:
-                            success = False
+                        logger.error(
+                            "Failed to update %s: %s", name, result.error_message
+                        )
+                        success = False
 
             return 0 if success else 1
 
