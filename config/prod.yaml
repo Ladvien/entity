@@ -59,12 +59,12 @@ plugins:
         type: user_plugins.resources.cache_backends.redis:RedisCache
   tools:
     weather:
-      type: plugins.builtin.tools.weather_api_tool:WeatherApiTool
+      type: user_plugins.tools.weather_api_tool:WeatherApiTool
       api_key: "${WEATHER_API_KEY}"
       base_url: "https://api.weather.com"
       timeout: 30
     calculator:
-      type: plugins.builtin.tools.calculator_tool:CalculatorTool
+      type: user_plugins.tools.calculator_tool:CalculatorTool
       precision: 10
   adapters:
     http:
@@ -88,6 +88,16 @@ plugins:
       type: user_plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
       enable_reasoning: true
       max_steps: 5
+    conversation_history:
+      type: user_plugins.prompts.conversation_history:ConversationHistory
+      db_schema: public
+      history_table: chat_history
+      stages: [parse, deliver]
+    memory_retrieval:
+      type: user_plugins.prompts.memory_retrieval:MemoryRetrievalPrompt
+      max_context_length: 4000
+      similarity_threshold: 0.7
+      stages: [think]
     intent_classifier:
       type: user_plugins.prompts.intent_classifier:IntentClassifierPrompt
       confidence_threshold: 0.8
