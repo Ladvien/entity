@@ -13,8 +13,8 @@ All plugins declare their `stages` and any `dependencies`.
 
 ## Skeleton
 ```python
-from plugins import PromptPlugin
-from pipeline.stages import PipelineStage
+from entity.core.plugins import PromptPlugin
+from entity.core.stages import PipelineStage
 
 class ExamplePlugin(PromptPlugin):
     dependencies = ["database", "llm"]

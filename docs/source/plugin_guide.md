@@ -8,7 +8,7 @@ Create a plugin class that inherits from one of the base plugin types and implem
 
 ```python
 from entity.core.plugins import PromptPlugin
-from pipeline.stages import PipelineStage
+from entity.core.stages import PipelineStage
 
 
 class HelloPlugin(PromptPlugin):
@@ -21,7 +21,7 @@ class HelloPlugin(PromptPlugin):
 Register the plugin with an `Agent` instance:
 
 ```python
-from pipeline import Agent
+from entity import Agent
 
 agent = Agent()
 agent.add_plugin(HelloPlugin({}))
@@ -144,8 +144,8 @@ new backend, subclass `ResourcePlugin` and implement the `save_history` and
 ```python
 import asyncpg
 
-from pipeline.stages import PipelineStage
-from plugins import ResourcePlugin
+from entity.core.stages import PipelineStage
+from entity.core.plugins import ResourcePlugin
 
 
 class MyStorage(ResourcePlugin):
