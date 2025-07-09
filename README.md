@@ -4,10 +4,10 @@ When instantiated without a configuration file, ``Agent`` loads a basic set of
 plugins so the pipeline can run out of the box:
 
 - ``EchoLLMResource`` – minimal LLM resource that simply echoes prompts.
-- ``MemoryResource`` – composite store that defaults to a DuckDB-backed database in memory and supports optional SQL/NoSQL and vector backends.
+- ``Memory`` – composite store that defaults to a DuckDB-backed database in memory and supports optional SQL/NoSQL and vector backends.
 - ``SearchTool`` – wrapper around DuckDuckGo's search API.
 - ``CalculatorTool`` – safe evaluator for arithmetic expressions.
-MemoryResource uses an in-memory DuckDB database by default, so there is no separate ``InMemoryResource``.
+Memory uses an in-memory DuckDB database by default, so there is no separate ``InMemoryResource``.
 
 StorageResource handles file CRUD and can combine multiple backends. See [docs/source/plugin_guide.md](docs/source/plugin_guide.md) for details.
 These defaults allow ``Agent()`` to process messages without any external

@@ -22,7 +22,7 @@ from plugins.builtin.resources.postgres import PostgresResource
 from plugins.builtin.resources.sqlite_storage import (
     SQLiteStorageResource as SQLiteDatabaseResource,
 )
-from user_plugins.memory_resource import MemoryResource
+from pipeline.resources.memory import Memory
 from user_plugins.resources import DuckDBVectorStore
 
 
@@ -65,7 +65,7 @@ def main() -> None:
 
     database = SQLiteDatabaseResource({"path": "./agent.db"})
     vector_store = create_vector_store()
-    memory = MemoryResource({})
+    memory = Memory()
     memory.database = database
     memory.vector_store = vector_store
 
