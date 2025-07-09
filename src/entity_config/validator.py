@@ -19,8 +19,7 @@ from pipeline.config import ConfigLoader  # noqa: E402
 from pipeline.logging import get_logger  # noqa: E402
 from plugins.builtin.adapters.logging_adapter import configure_logging  # noqa: E402
 
-from .validators import _validate_memory  # noqa: E402
-from .validators import _validate_cache, _validate_vector_memory  # noqa: E402
+from .models import EntityConfig, asdict  # noqa: E402
 
 logger = get_logger(__name__)
 
@@ -58,11 +57,9 @@ class ConfigValidator:
 
         def validate_once() -> bool:
             try:
-                config = ConfigLoader.from_yaml(cfg_path)
-                _validate_memory(config)
-                _validate_cache(config)
-                _validate_vector_memory(config)
-                initializer = SystemInitializer(config)
+                data = ConfigLoader.from_yaml(cfg_path)
+                config_model = EntityConfig.from_dict(data)
+                initializer = SystemInitializer(asdict(config_model))
                 asyncio.run(initializer.initialize())
             except ValidationError as exc:  # pragma: no cover - error path
                 logger.error("Configuration invalid: %s", exc)

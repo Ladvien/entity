@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class PluginConfig(BaseModel):
@@ -16,6 +16,36 @@ class PluginConfig(BaseModel):
         extra = "allow"
 
 
+class BackendConfig(BaseModel):
+    """Generic backend configuration."""
+
+    type: str
+
+    class Config:
+        extra = "allow"
+
+
+class MemoryConfig(PluginConfig):
+    backend: BackendConfig | None = None
+
+
+class CacheConfig(PluginConfig):
+    backend: BackendConfig | None = None
+
+
+class EmbeddingModelConfig(BaseModel):
+    name: str
+    dimensions: int | None = None
+
+    class Config:
+        extra = "allow"
+
+
+class VectorMemoryConfig(PluginConfig):
+    table: str
+    embedding_model: EmbeddingModelConfig
+
+
 class PluginsSection(BaseModel):
     """Collection of user-defined plugins grouped by category."""
 
@@ -23,6 +53,20 @@ class PluginsSection(BaseModel):
     tools: Dict[str, PluginConfig] = Field(default_factory=dict)
     adapters: Dict[str, PluginConfig] = Field(default_factory=dict)
     prompts: Dict[str, PluginConfig] = Field(default_factory=dict)
+
+    @model_validator(mode="before")
+    def _specialize_resources(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        resources = values.get("resources", {}) or {}
+        if "memory" in resources:
+            resources["memory"] = MemoryConfig.model_validate(resources["memory"])
+        if "cache" in resources:
+            resources["cache"] = CacheConfig.model_validate(resources["cache"])
+        if "vector_store" in resources:
+            resources["vector_store"] = VectorMemoryConfig.model_validate(
+                resources["vector_store"]
+            )
+        values["resources"] = resources
+        return values
 
 
 class ServerConfig(BaseModel):
@@ -68,6 +112,11 @@ def validate_config(data: Dict[str, Any]) -> None:
 
 __all__ = [
     "PluginConfig",
+    "BackendConfig",
+    "MemoryConfig",
+    "CacheConfig",
+    "EmbeddingModelConfig",
+    "VectorMemoryConfig",
     "PluginsSection",
     "ServerConfig",
     "ToolRegistryConfig",
