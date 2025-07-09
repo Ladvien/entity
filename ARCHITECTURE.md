@@ -2,6 +2,35 @@
 
 The following architecture decisions were made through systematic analysis of the Entity Pipeline Framework to optimize for developer adoption, scalability, and maintainability.
 
+* [0. Folder Structure and Naming Conventions](#0-folder-structure-and-naming-conventions)
+* [1. Core Mental Model: Plugin Taxonomy and Architecture](#1-core-mental-model-plugin-taxonomy-and-architecture)
+* [2. Progressive Disclosure: Enhanced 3-Layer Plugin System](#2-progressive-disclosure-enhanced-3-layer-plugin-system)
+* [3. Resource Management: Core Canonical + Simple Flexible Keys](#3-resource-management-core-canonical--simple-flexible-keys)
+* [4. Plugin Stage Assignment: Guided Explicit Declaration with Smart Defaults](#4-plugin-stage-assignment-guided-explicit-declaration-with-smart-defaults)
+* [5. Error Handling and Validation: Fail-Fast with Multi-Layered Validation](#5-error-handling-and-validation-fail-fast-with-multi-layered-validation)
+* [6. Scalability Architecture: Stateless Workers with External State](#6-scalability-architecture-stateless-workers-with-external-state)
+* [6. Response Termination Control](#6-response-termination-control)
+* [7. Stage Results Accumulation Pattern](#7-stage-results-accumulation-pattern)
+* [8. Tool Execution Patterns](#8-tool-execution-patterns)
+* [9. Memory Resource Consolidation](#9-memory-resource-consolidation)
+* [10. Resource Dependency Injection Pattern](#10-resource-dependency-injection-pattern)
+* [11. Plugin Stage Assignment Precedence](#11-plugin-stage-assignment-precedence)
+* [12. Resource Lifecycle Management](#12-resource-lifecycle-management)
+* [13. Configuration Hot-Reload Scope](#13-configuration-hot-reload-scope)
+* [14. Error Handling and Failure Propagation](#14-error-handling-and-failure-propagation)
+* [15. Pipeline State Management Strategy](#15-pipeline-state-management-strategy)
+* [16. Plugin Execution Order Simplification](#16-plugin-execution-order-simplification)
+* [17. Agent and AgentBuilder Separation](#17-agent-and-agentbuilder-separation)
+* [18. Configuration Validation Consolidation](#18-configuration-validation-consolidation)
+* [19. Reasoning Pattern Abstraction Strategy](#19-reasoning-pattern-abstraction-strategy)
+* [20. Memory Architecture: Primitive Resources + Custom Plugins](#20-memory-architecture-primitive-resources--custom-plugins)
+* [21. Tool Discovery Architecture: Lightweight Registry Query + Plugin-Level Orchestration](#21-tool-discovery-architecture-lightweight-registry-query--plugin-level-orchestration)
+* [22. Plugin System Architecture: Explicit Configuration with Smart Defaults](#22-plugin-system-architecture-explicit-configuration-with-smart-defaults)
+* [23. State Management Consolidation: Unified Cache/Memory Pattern](#23-state-management-consolidation-unified-cachememory-pattern)
+* [24. Agent Instantiation Unification: Single Agent Class Pattern](#24-agent-instantiation-unification-single-agent-class-pattern)
+* [25. Workflow Objects with Progressive Complexity](#25-workflow-objects-with-progressive-complexity)
+* [26. Workflow Objects: Composable Agent Blueprints](#26-workflow-objects-composable-agent-blueprints)
+
 ## 0. Folder Structure and Naming Conventions
 
 ## Repository Layout
