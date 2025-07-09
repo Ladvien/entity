@@ -23,7 +23,6 @@ packages = [
 
 [tool.poetry.scripts]
 entity-cli = "src.cli:main"
-entity-config-validate = "src.entity_config.validator:main"
 entity-config-migrate = "src.entity_config.migrate:main"
 
 
@@ -111,8 +110,8 @@ sequence = [
 ]
 [tool.poe.tasks.validate]
 sequence = [
-    { cmd = "python -m src.entity_config.validator --config config/dev.yaml" },
-    { cmd = "python -m src.entity_config.validator --config config/prod.yaml" },
+    { cmd = "poetry run entity-cli --config config/dev.yaml verify" },
+    { cmd = "poetry run entity-cli --config config/prod.yaml verify" },
     { cmd = "python -m src.registry.validator" },
 ]
 [tool.poe.tasks.check]

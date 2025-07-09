@@ -1,7 +1,6 @@
-import subprocess
-import sys
-
 import yaml
+from pipeline.config import ConfigLoader
+from entity.config.models import EntityConfig
 
 
 def test_config_validator_success(tmp_path):
@@ -9,13 +8,7 @@ def test_config_validator_success(tmp_path):
     path = tmp_path / "valid.yml"
     path.write_text(yaml.dump(config))
 
-    result = subprocess.run(
-        [sys.executable, "-m", "src.entity_config.validator", "--config", str(path)],
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode == 0
-    assert "Configuration valid" in result.stdout
+    EntityConfig.from_dict(ConfigLoader.from_yaml(path))
 
 
 def test_config_validator_failure(tmp_path):
@@ -23,13 +16,12 @@ def test_config_validator_failure(tmp_path):
     path = tmp_path / "bad.yml"
     path.write_text(yaml.dump(config))
 
-    result = subprocess.run(
-        [sys.executable, "-m", "src.entity_config.validator", "--config", str(path)],
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode != 0
-    assert "missing dependency" in result.stdout.lower()
+    try:
+        EntityConfig.from_dict(ConfigLoader.from_yaml(path))
+    except Exception as exc:
+        assert "missing dependency" in str(exc).lower()
+    else:
+        raise AssertionError("validation should fail")
 
 
 def test_config_validator_schema_error(tmp_path):
@@ -37,10 +29,9 @@ def test_config_validator_schema_error(tmp_path):
     path = tmp_path / "schema.yml"
     path.write_text(yaml.dump(config))
 
-    result = subprocess.run(
-        [sys.executable, "-m", "src.entity_config.validator", "--config", str(path)],
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode != 0
-    assert "port" in result.stdout.lower()
+    try:
+        EntityConfig.from_dict(ConfigLoader.from_yaml(path))
+    except Exception as exc:
+        assert "port" in str(exc).lower()
+    else:
+        raise AssertionError("validation should fail")
