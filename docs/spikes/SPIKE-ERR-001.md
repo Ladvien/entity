@@ -39,12 +39,12 @@ This spike investigates strategies for protecting the pipeline from repeated fai
 - **Cons**: Does not help when the process is terminated.
 
 ## Recommendation
-Use the existing `CircuitBreaker` utility for all long-running or external calls. Pair it with file snapshots so failed pipelines can restart from the last completed stage. External libraries and persistent stores introduce more maintenance overhead than value at this stage.
+Use the existing `CircuitBreaker` utility for all long-running or external calls. Record state transitions with `StateLogger` to aid debugging. External stores introduce more maintenance overhead than value at this stage.
 
 ## Risks
-- File snapshots can accumulate and require cleanup.
+- Logs may grow large if not rotated.
 - Per-process circuit breakers do not share state, so concurrent instances may trip independently.
 
 ## Next Steps
-- Standardize snapshot cleanup in deployment scripts.
+- Monitor log volume and rotation.
 - Monitor breaker statistics to decide if shared storage is warranted later.

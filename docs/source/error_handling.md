@@ -16,25 +16,20 @@ from pipeline.errors import (PipelineContextError, PipelineError,
 
 `PluginExecutionError`, `ResourceError`, and `ToolExecutionError` indicate failures in plugins, resources, and tools. The context-aware classes carry additional fields like the stage and plugin name.
 
-## StateManager Snapshots and Rollbacks
+## State Logging and Replay
 
-`PipelineState` supports snapshotting and restoration:
+Use `StateLogger` to capture pipeline state after each stage.
 
 ```python
-state = PipelineState(...)
-copy = state.snapshot()       # deep copy of current state
-state.prompt = "new"
-state.restore(copy)           # revert fields from snapshot
+logger = StateLogger("states.jsonl")
+result = await execute_pipeline("hi", registries, state_logger=logger)
 ```
 
-`experiments.state_manager.StateManager` persists snapshots for later retrieval:
+Replay logged transitions with `LogReplayer`:
 
 ```python
-manager = StateManager(max_states=2)
-await manager.save_state(state)       # stores a snapshot
-saved = await manager.load_state(state.pipeline_id)
-if saved:
-    state.restore(saved)
+for transition in LogReplayer("states.jsonl").transitions():
+    print(transition.stage, transition.pipeline_id)
 ```
 
 ## Reliability Helpers
