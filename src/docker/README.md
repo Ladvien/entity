@@ -5,7 +5,7 @@ This image installs Python 3.12, Poetry, all project dependencies and Node.js. I
 Build the image:
 
 ```bash
-docker build -t entity-test docker
+docker build -f src/docker/Dockerfile -t entity-test .
 ```
 
 Run the tests in the container:
