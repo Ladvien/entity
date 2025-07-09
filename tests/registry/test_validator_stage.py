@@ -29,7 +29,7 @@ def test_validator_rejects_invalid_stage(tmp_path):
         }
     }
     path = tmp_path / "invalid.yml"
-    path.write_text(yaml.dump(config))
+    path.write_text(yaml.dump(config, sort_keys=False))
 
     validator = RegistryValidator(str(path))
     with pytest.raises(SystemError, match="invalid stage values"):
@@ -45,7 +45,7 @@ def test_validator_accepts_valid_stage(tmp_path):
         }
     }
     path = tmp_path / "valid.yml"
-    path.write_text(yaml.dump(config))
+    path.write_text(yaml.dump(config, sort_keys=False))
 
     validator = RegistryValidator(str(path))
     validator.run()

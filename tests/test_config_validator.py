@@ -7,7 +7,7 @@ import yaml
 def test_config_validator_success(tmp_path):
     config = {"plugins": {"resources": {"a": {"type": "tests.test_initializer:A"}}}}
     path = tmp_path / "valid.yml"
-    path.write_text(yaml.dump(config))
+    path.write_text(yaml.dump(config, sort_keys=False))
 
     result = subprocess.run(
         [sys.executable, "-m", "src.entity_config.validator", "--config", str(path)],
@@ -21,7 +21,7 @@ def test_config_validator_success(tmp_path):
 def test_config_validator_failure(tmp_path):
     config = {"plugins": {"prompts": {"d": {"type": "tests.test_initializer:D"}}}}
     path = tmp_path / "bad.yml"
-    path.write_text(yaml.dump(config))
+    path.write_text(yaml.dump(config, sort_keys=False))
 
     result = subprocess.run(
         [sys.executable, "-m", "src.entity_config.validator", "--config", str(path)],
@@ -35,7 +35,7 @@ def test_config_validator_failure(tmp_path):
 def test_config_validator_schema_error(tmp_path):
     config = {"server": {"host": "localhost", "port": "not-int"}}
     path = tmp_path / "schema.yml"
-    path.write_text(yaml.dump(config))
+    path.write_text(yaml.dump(config, sort_keys=False))
 
     result = subprocess.run(
         [sys.executable, "-m", "src.entity_config.validator", "--config", str(path)],

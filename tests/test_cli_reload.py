@@ -16,7 +16,7 @@ def _write_config(path, value=True, tool=False, include_plugin=True):
         cfg["plugins"].setdefault("tools", {})["echo"] = {
             "type": "user_plugins.test_plugins:ReloadTool"
         }
-    path.write_text(yaml.dump(cfg))
+    path.write_text(yaml.dump(cfg, sort_keys=False))
 
 
 def test_cli_reload_success(tmp_path):

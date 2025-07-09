@@ -54,13 +54,13 @@ def test_dependency_validation(tmp_path):
         }
     }
     path = tmp_path / "cfg.yml"
-    path.write_text(yaml.dump(cfg))
+    path.write_text(yaml.dump(cfg, sort_keys=False))
     initializer = SystemInitializer.from_yaml(str(path))
     with pytest.raises(SystemError):
         asyncio.run(initializer.initialize())
 
     cfg["plugins"]["resources"] = {"resource": {"type": "tests.test_validation:Res"}}
-    path.write_text(yaml.dump(cfg))
+    path.write_text(yaml.dump(cfg, sort_keys=False))
     initializer = SystemInitializer.from_yaml(str(path))
     registries = asyncio.run(initializer.initialize())
     assert registries[2] is not None

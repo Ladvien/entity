@@ -11,7 +11,6 @@ from .filesystem import FileSystemResource
 from .llm_base import LLM
 from .llm_resource import LLMResource
 from .local_filesystem import LocalFileSystemResource
-from entity.resources.memory import Memory
 from .memory_filesystem import MemoryFileSystem
 from .metrics import MetricsResource
 from .pg_vector_store import PgVectorStore
@@ -21,7 +20,6 @@ from .vector_store import VectorStore, VectorStoreResource
 
 __all__ = [
     "LLM",
-    "Memory",
     "DatabaseResource",
     "FileSystemResource",
     "VectorStore",
