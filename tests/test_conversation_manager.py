@@ -1,9 +1,14 @@
 import asyncio
 
 from entity.core.resources.container import ResourceContainer
-from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      SystemRegistries, ToolRegistry)
-from pipeline.resources.memory import Memory
+from entity.resources.memory import Memory
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
 
 
 class ContinuePlugin(PromptPlugin):

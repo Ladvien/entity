@@ -18,6 +18,13 @@ from experiments.storage.resource import StorageResource
 # from entity.plugins.builtin.resources.storage import StorageResource  # placeholder
 ```
 
+The memory resource moved from `pipeline.resources.memory` to
+`entity.resources.memory`. Update any imports accordingly:
+
+```python
+from entity.resources.memory import Memory
+```
+
 ## 2. Check Configuration Files
 
 Experimental plugins used different keys and stage names. Use the sample
@@ -26,6 +33,15 @@ Run the config validator to confirm:
 
 ```bash
 poetry run entity-cli --config your.yaml
+```
+
+Ensure the `memory` resource in your YAML uses the new path:
+
+```yaml
+plugins:
+  resources:
+    memory:
+      type: entity.resources.memory:Memory
 ```
 
 ## 3. Validate Plugins
@@ -42,4 +58,3 @@ as needed.
 
 By following these steps you can remove all deprecated experimental features and
 rely on the stable interfaces going forward.
-
