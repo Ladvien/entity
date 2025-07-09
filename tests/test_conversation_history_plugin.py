@@ -1,15 +1,9 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
+                      PluginContext, PluginRegistry, SystemRegistries,
+                      ToolRegistry)
 from pipeline.resources import ResourceContainer
 from pipeline.resources.memory import Memory
 from pipeline.stages import PipelineStage
@@ -22,7 +16,8 @@ async def make_context(tmp_path):
         {"path": tmp_path / "hist.duckdb", "history_table": "h"}
     )
     await db.initialize()
-    memory = Memory(database=db)
+    memory = MemoryResource({})
+    memory.database = db
     state = PipelineState(
         conversation=[
             ConversationEntry(content="hi", role="user", timestamp=datetime.now())

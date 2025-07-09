@@ -6,16 +6,9 @@ from pathlib import Path
 import pytest
 
 from entity_config.environment import load_env
-from pipeline import (
-    ConversationEntry,
-    MetricsCollector,
-    PipelineStage,
-    PipelineState,
-    PluginContext,
-    PluginRegistry,
-    SystemRegistries,
-    ToolRegistry,
-)
+from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
+                      PipelineState, PluginContext, PluginRegistry,
+                      SystemRegistries, ToolRegistry)
 from pipeline.resources import ResourceContainer
 from pipeline.resources.memory import Memory
 from plugins.builtin.resources.duckdb_database import DuckDBDatabaseResource
@@ -44,7 +37,8 @@ async def run_history_test(resource):
         resource._history_table = "test_history"
         await resource.initialize()
 
-    memory = Memory(database=resource)
+    memory = MemoryResource({})
+    memory.database = resource
     resources = ResourceContainer()
     await resources.add("memory", memory)
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())

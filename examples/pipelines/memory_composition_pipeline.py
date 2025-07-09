@@ -9,7 +9,6 @@ from __future__ import annotations
 import asyncio
 import os
 
-
 from ..utilities import enable_plugins_namespace
 
 enable_plugins_namespace()
@@ -20,10 +19,9 @@ from pipeline.config import ConfigLoader
 from pipeline.context import PluginContext  # noqa: E402
 from plugins.builtin.resources.pg_vector_store import PgVectorStore
 from plugins.builtin.resources.postgres import PostgresResource
-from plugins.builtin.resources.sqlite_storage import (
-    SQLiteStorageResource as SQLiteDatabaseResource,
-)
-from pipeline.resources.memory import Memory
+from plugins.builtin.resources.sqlite_storage import \
+    SQLiteStorageResource as SQLiteDatabaseResource
+from user_plugins.memory_resource import MemoryResource
 from user_plugins.resources import DuckDBVectorStore
 
 
@@ -66,7 +64,9 @@ def main() -> None:
 
     database = SQLiteDatabaseResource({"path": "./agent.db"})
     vector_store = create_vector_store()
-    memory = Memory(database=database, vector_store=vector_store)
+    memory = MemoryResource({})
+    memory.database = database
+    memory.vector_store = vector_store
 
     agent.builder.resource_registry.add("memory", memory)
     agent.builder.plugin_registry.register_plugin_for_stage(

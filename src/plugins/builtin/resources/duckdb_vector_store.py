@@ -17,19 +17,16 @@ class DuckDBVectorStore(VectorStoreResource):
 
     name = "vector_memory"
 
-    def __init__(
-        self,
-        config: Dict | None = None,
-        connection: DuckDBDatabaseResource | None = None,
-    ) -> None:
+    dependencies = ["database"]
+
+    def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
         table = self.config.get("table", "vector_memory")
         self._table = self._sanitize_identifier(table)
         self._dim = int(self.config.get("dimensions", 3))
-        self._external = connection
+        self.database: DuckDBDatabaseResource | None = None
         self._connection: Optional[duckdb.DuckDBPyConnection] = None
-        if isinstance(connection, DuckDBDatabaseResource):
-            self._connection = connection._connection
+        self._external = False
 
     @staticmethod
     def _sanitize_identifier(name: str) -> str:
@@ -38,6 +35,9 @@ class DuckDBVectorStore(VectorStoreResource):
         return name
 
     async def initialize(self) -> None:
+        if self.database and self.database._connection is not None:
+            self._connection = self.database._connection
+            self._external = True
         if self._connection is None:
             self._connection = await asyncio.to_thread(
                 duckdb.connect, self.config.get("path", ":memory:")

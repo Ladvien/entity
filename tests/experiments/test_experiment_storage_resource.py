@@ -11,7 +11,9 @@ from plugins.builtin.resources.local_filesystem import LocalFileSystemResource
 async def make_storage(tmp_path: Path) -> StorageResource:
     fs = LocalFileSystemResource({"base_path": str(tmp_path)})
     db = InMemoryStorageResource({})
-    storage = StorageResource(database=db, filesystem=fs)
+    storage = StorageResource({})
+    storage.database = db
+    storage.filesystem = fs
     await storage.initialize()
     return storage
 

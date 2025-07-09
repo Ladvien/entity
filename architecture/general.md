@@ -113,19 +113,16 @@ Resources are composed from simpler backends:
 
 ```python
 # Simple setup
-memory = MemoryResource(
-    database=SQLiteDatabaseResource("./agent.db")
-)
+memory = MemoryResource({})
+memory.database = SQLiteDatabaseResource("./agent.db")
 
-# Production setup  
-memory = MemoryResource(
-    database=PostgresResource(connection_str),
-    vector_store=PgVectorStore(postgres, dimensions=768)
-)
+# Production setup
+memory = MemoryResource({})
+memory.database = PostgresResource(connection_str)
+memory.vector_store = PgVectorStore({"dimensions": 768})
 
-storage = StorageResource(
-    filesystem=S3FileSystem(bucket="agent-files")
-)
+storage = StorageResource({})
+storage.filesystem = S3FileSystem(bucket="agent-files")
 ```
 
 MemoryResource \u2013 composite store that defaults to a DuckDB-backed database

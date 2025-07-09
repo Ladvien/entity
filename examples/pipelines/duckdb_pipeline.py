@@ -40,8 +40,11 @@ def main() -> None:
     database = DuckDBDatabaseResource(
         {"path": "./agent.duckdb", "history_table": "history"}
     )
-    vector_store = DuckDBVectorStore({"table": "vectors", "dimensions": 3}, database)
-    memory = Memory(database=database, vector_store=vector_store)
+    vector_store = DuckDBVectorStore({"table": "vectors", "dimensions": 3})
+    vector_store.database = database
+    memory = MemoryResource({})
+    memory.database = database
+    memory.vector_store = vector_store
 
     agent.builder.resource_registry.add("memory", memory)
     agent.builder.plugin_registry.register_plugin_for_stage(
