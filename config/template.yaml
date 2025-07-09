@@ -19,15 +19,10 @@ plugins:
       model: "${OLLAMA_MODEL}"
     memory:
       type: pipeline.resources.memory_resource:MemoryResource
-      database:
-        type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
-        path: ./agent.db
+      dependencies: [database]
     storage:
       type: pipeline.resources.storage_resource:StorageResource
-      filesystem:
-        type: plugins.builtin.resources.s3_filesystem:S3FileSystem
-        bucket: agent-files
-        region: us-east-1
+      dependencies: [filesystem]
     cache:
       type: user_plugins.resources.cache:CacheResource
       backend:

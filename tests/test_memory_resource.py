@@ -1,17 +1,12 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (
-    PipelineStage,
-    PluginRegistry,
-    PromptPlugin,
-    SystemRegistries,
-    ToolRegistry,
-    execute_pipeline,
-)
+from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
+                      SystemRegistries, ToolRegistry, execute_pipeline)
 from pipeline.context import ConversationEntry
 from pipeline.resources import ResourceContainer
-from pipeline.resources.memory_resource import MemoryResource, SimpleMemoryResource
+from pipeline.resources.memory_resource import (MemoryResource,
+                                                SimpleMemoryResource)
 from plugins.builtin.resources.memory import Memory
 from plugins.builtin.resources.memory_storage import MemoryStorage
 
@@ -48,7 +43,8 @@ def test_memory_persists_between_runs():
 def test_save_and_load_history():
     async def run():
         storage = MemoryStorage({})
-        memory = MemoryResource(database=storage)
+        memory = MemoryResource({})
+        memory.database = storage
         history = [
             ConversationEntry(content="hi", role="user", timestamp=datetime.now())
         ]

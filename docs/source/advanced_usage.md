@@ -12,24 +12,25 @@ Use `StorageResource` with a Postgres database and optional S3 file storage:
 ```yaml
 plugins:
   resources:
+    postgres:
+      type: plugins.builtin.resources.postgres:PostgresResource
+      host: localhost
+      port: 5432
+      name: dev_db
+      username: agent
+      setup_commands:
+        - "CREATE EXTENSION IF NOT EXISTS vector"
+    vector_store:
+      type: plugins.builtin.resources.pg_vector_store:PgVectorStore
+      dimensions: 768
+      table: embeddings
+    filesystem:
+      type: plugins.builtin.resources.s3_filesystem:S3FileSystem
+      bucket: agent-files
+      region: us-east-1
     storage:
       type: storage
-      database:
-        type: plugins.builtin.resources.postgres:PostgresResource
-        host: localhost
-        port: 5432
-        name: dev_db
-        username: agent
-        setup_commands:
-          - "CREATE EXTENSION IF NOT EXISTS vector"
-      vector_store:
-        type: plugins.builtin.resources.pg_vector_store:PgVectorStore
-        dimensions: 768
-        table: embeddings
-      filesystem:
-        type: plugins.builtin.resources.s3_filesystem:S3FileSystem
-        bucket: agent-files
-        region: us-east-1
+      dependencies: [postgres, vector_store, filesystem]
 ```
 
 `MemoryResource` persists conversation history and vectors. `StorageResource` extends it with file CRUD across the configured backends.
@@ -39,11 +40,12 @@ For local experimentation you can use a file-backed DuckDB database:
 ```yaml
 plugins:
   resources:
+    db:
+      type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
+      path: ./agent.duckdb
     storage:
       type: storage
-      database:
-        type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
-        path: ./agent.duckdb
+      dependencies: [db]
 ```
 
 You can also use `StorageResource` for a lighter setup:
@@ -51,14 +53,15 @@ You can also use `StorageResource` for a lighter setup:
 ```yaml
 plugins:
   resources:
+    db:
+      type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
+      path: ./agent.duckdb
+    fs:
+      type: plugins.builtin.resources.local_filesystem:LocalFileSystemResource
+      base_path: ./files
     storage:
       type: storage
-      database:
-        type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
-        path: ./agent.duckdb
-      filesystem:
-        type: plugins.builtin.resources.local_filesystem:LocalFileSystemResource
-        base_path: ./files
+      dependencies: [db, fs]
 ```
 
 These configurations illustrate **Preserve All Power (7)** by enabling

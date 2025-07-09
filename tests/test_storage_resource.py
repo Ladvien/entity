@@ -7,7 +7,9 @@ from plugins.builtin.resources.storage_resource import StorageResource
 
 async def make_resource(tmp_path: Path) -> StorageResource:
     fs = LocalFileSystemResource({"base_path": str(tmp_path)})
-    return StorageResource(filesystem=fs)
+    res = StorageResource({})
+    res.filesystem = fs
+    return res
 
 
 def test_store_and_load_file(tmp_path):

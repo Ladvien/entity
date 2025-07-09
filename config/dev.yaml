@@ -22,9 +22,7 @@ plugins:
       backoff: 1.0
     memory:
       type: pipeline.resources.memory_resource:MemoryResource
-      storage:
-        type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
-        path: ./dev.duckdb
+      dependencies: [database, vector_store]
     vector_store:
       type: plugins.builtin.resources.memory_vector_store:MemoryVectorStore
       table: vector_mem

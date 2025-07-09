@@ -10,6 +10,7 @@ Create a plugin class that inherits from one of the base plugin types and implem
 from pipeline.base_plugins import PromptPlugin
 from pipeline.stages import PipelineStage
 
+
 class HelloPlugin(PromptPlugin):
     stages = [PipelineStage.DO]
 
@@ -100,8 +101,9 @@ new backend, subclass `ResourcePlugin` and implement the `save_history` and
 
 ```python
 import asyncpg
-from plugins import ResourcePlugin
+
 from pipeline.stages import PipelineStage
+from plugins import ResourcePlugin
 
 
 class MyStorage(ResourcePlugin):
@@ -140,20 +142,18 @@ Several example pipelines in the `examples/` directory showcase more advanced pa
 `StorageResource` composes `DatabaseResource`, `VectorStoreResource`, and `FileSystemResource` behind one interface for handling files. The pipeline at `examples/pipelines/memory_composition_pipeline.py` demonstrates the same pattern using the older `MemoryResource`. `MemoryResource` now persists conversation history and vectors and is configured in [config/dev.yaml](../../config/dev.yaml). Use `StorageResource` when your plugins need to create or read files. With the plugin configured the code looks like:
 
 ```python
-storage = StorageResource(
-    database=DuckDBDatabaseResource({"path": "./agent.duckdb"}),
-    vector_store=PgVectorStore({"table": "embeddings"}),
-    filesystem=LocalFileSystemResource({"base_path": "./files"}),
-)
+storage = StorageResource({})
+storage.database = DuckDBDatabaseResource({"path": "./agent.duckdb"})
+storage.vector_store = PgVectorStore({"table": "embeddings"})
+storage.filesystem = LocalFileSystemResource({"base_path": "./files"})
 ```
 
 `StorageResource` offers the same interface when you only need history and file storage:
 
 ```python
-storage = StorageResource(
-    database=DuckDBDatabaseResource({"path": "./agent.duckdb"}),
-    filesystem=LocalFileSystemResource({"base_path": "./files"}),
-)
+storage = StorageResource({})
+storage.database = DuckDBDatabaseResource({"path": "./agent.duckdb"})
+storage.filesystem = LocalFileSystemResource({"base_path": "./files"})
 ```
 The script at `examples/storage_resource_example.py` demonstrates this setup.
 

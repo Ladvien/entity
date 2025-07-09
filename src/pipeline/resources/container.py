@@ -99,10 +99,7 @@ class ResourceContainer:
             self._resources[name] = resource
 
     async def add_from_config(self, name: str, cls: type, config: Dict) -> None:
-        if hasattr(cls, "from_config"):
-            instance = cls.from_config(config)
-        else:
-            instance = cls(config)
+        instance = self._instantiate(name, cls, config)
         await self.add(name, instance)
 
     def get(self, name: str) -> Any | None:
@@ -135,14 +132,7 @@ class ResourceContainer:
         for name in self._order:
             cls = self._classes[name]
             cfg = self._configs[name]
-            instance = self._instantiate(cls, cfg)
-            for dep in self._deps[name]:
-                dep_obj = self.get(dep)
-                if dep_obj is None:
-                    raise SystemError(
-                        f"Resource '{name}' requires '{dep}' which is missing"
-                    )
-                setattr(instance, dep, dep_obj)
+            instance = self._instantiate(name, cls, cfg)
             await self.add(name, instance)
             init = getattr(instance, "initialize", None)
             if callable(init):
@@ -199,10 +189,19 @@ class ResourceContainer:
     def get_metrics(self) -> Dict[str, Dict[str, int]]:
         return {name: pool.metrics() for name, pool in self._pools.items()}
 
-    def _instantiate(self, cls: type, cfg: Dict) -> Any:
+    def _instantiate(self, name: str, cls: type, cfg: Dict) -> Any:
         if hasattr(cls, "from_config"):
-            return cls.from_config(cfg)
-        return cls(config=cfg)
+            instance = cls.from_config(cfg)
+        else:
+            instance = cls(config=cfg)
+        for dep in self._deps.get(name, []):
+            dep_obj = self.get(dep)
+            if dep_obj is None:
+                raise SystemError(
+                    f"Resource '{name}' requires '{dep}' which is missing"
+                )
+            setattr(instance, dep, dep_obj)
+        return instance
 
     def _resolve_order(self) -> List[str]:
         # Build dependency graph with edges from each dependency to its dependents

@@ -70,42 +70,18 @@ class MemoryResource(ResourcePlugin, Memory):
     name = "memory"
     dependencies = ["database", "vector_store"]
 
-    def __init__(
-        self,
-        database: DatabaseResource | None = None,
-        vector_store: VectorStoreResource | None = None,
-        config: Dict | None = None,
-        *,
-        storage: DatabaseResource | None = None,
-    ) -> None:
-        """Initialize the resource.
-
-        Parameters
-        ----------
-        database:
-            Backend used to persist conversation history.
-        vector_store:
-            Backend used for similarity search.
-        config:
-            Optional configuration mapping.
-        storage:
-            Keyword-only alias for ``database`` kept for backward
-            compatibility.
-        """
+    def __init__(self, config: Dict | None = None) -> None:
+        """Initialize the resource with optional configuration."""
 
         super().__init__(config or {})
-        if storage is not None and database is None:
-            database = storage
-        elif storage is not None and storage is not database:
-            raise ValueError("'database' and 'storage' refer to different objects")
-        self.database = database
-        self.vector_store = vector_store
+        self.database: DatabaseResource | None = None
+        self.vector_store: VectorStoreResource | None = None
         self._kv: Dict[str, Any] = {}
         self._conversation_manager: ConversationManager | None = None
 
     @classmethod
     def from_config(cls, config: Dict) -> "MemoryResource":
-        return cls(None, None, config=config)
+        return cls(config=config)
 
     async def _execute_impl(self, context) -> None:  # pragma: no cover - no op
         return None

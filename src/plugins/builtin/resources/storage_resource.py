@@ -18,13 +18,9 @@ class StorageResource(ResourcePlugin):
     name = "storage"
     dependencies = ["filesystem"]
 
-    def __init__(
-        self,
-        filesystem: FileSystemResource | None = None,
-        config: Dict | None = None,
-    ) -> None:
+    def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
-        self.filesystem = filesystem
+        self.filesystem: FileSystemResource | None = None
 
     @classmethod
     def from_config(cls, config: Dict) -> "StorageResource":

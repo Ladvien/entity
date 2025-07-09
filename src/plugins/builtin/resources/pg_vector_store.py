@@ -8,6 +8,7 @@ from typing import Dict, List
 from pgvector import Vector
 from pgvector.asyncpg import register_vector
 
+from pipeline.exceptions import ResourceError
 from pipeline.stages import PipelineStage
 from plugins.builtin.resources.postgres import PostgresResource
 from plugins.builtin.resources.vector_store import VectorStoreResource
@@ -19,14 +20,14 @@ class PgVectorStore(VectorStoreResource):
     stages = [PipelineStage.PARSE]
     name = "vector_memory"
 
-    def __init__(
-        self, config: Dict | None = None, database: PostgresResource | None = None
-    ) -> None:
+    dependencies = ["database"]
+
+    def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config)
         table = self.config.get("table", "vector_memory")
         self._table = self._sanitize_identifier(table)
         self._dim = int(self.config.get("dimensions", 3))
-        self._db = database or PostgresResource(config)
+        self.database: PostgresResource | None = None
 
     @staticmethod
     def _sanitize_identifier(name: str) -> str:
@@ -35,10 +36,12 @@ class PgVectorStore(VectorStoreResource):
         return name
 
     async def initialize(self) -> None:
-        if self._db._pool is None:
-            await self._db.initialize()
-        await register_vector(self._db._pool)
-        async with self._db.connection() as conn:
+        if not self.database:
+            self.database = PostgresResource(self.config)
+        if self.database._pool is None:
+            await self.database.initialize()
+        await register_vector(self.database._pool)
+        async with self.database.connection() as conn:
             await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
             await conn.execute(
                 f"CREATE TABLE IF NOT EXISTS {self._table} "
@@ -54,9 +57,11 @@ class PgVectorStore(VectorStoreResource):
 
     async def add_embedding(self, text: str, metadata: Dict | None = None) -> None:
         embedding = Vector(self._embed(text))
-        if self._db._pool is None:
-            await self._db.initialize()
-        async with self._db.connection() as conn:
+        if self.database is None:
+            raise ResourceError("Database dependency not provided")
+        if self.database._pool is None:
+            await self.database.initialize()
+        async with self.database.connection() as conn:
             await conn.execute(
                 f"INSERT INTO {self._table} (text, embedding) VALUES ($1, $2)",  # nosec
                 text,
@@ -65,9 +70,11 @@ class PgVectorStore(VectorStoreResource):
 
     async def query_similar(self, query: str, k: int) -> List[str]:
         embedding = Vector(self._embed(query))
-        if self._db._pool is None:
-            await self._db.initialize()
-        async with self._db.connection() as conn:
+        if self.database is None:
+            raise ResourceError("Database dependency not provided")
+        if self.database._pool is None:
+            await self.database.initialize()
+        async with self.database.connection() as conn:
             rows = await conn.fetch(
                 f"SELECT text FROM {self._table} ORDER BY embedding <-> $1 LIMIT $2",  # nosec
                 embedding,
