@@ -151,10 +151,10 @@ class PluginContext:
                 return cast(str, entry.content)
         return ""
 
-    def execute_tool(
+    def queue_tool_use(
         self, tool_name: str, params: Dict[str, Any], result_key: Optional[str] = None
     ) -> str:
-        """Queue execution of ``tool_name`` with ``params``.
+        """Queue ``tool_name`` for execution with ``params``.
 
         Returns the key where the result will be stored.
         """
@@ -289,13 +289,10 @@ class PluginContext:
         """Persist a value in pipeline metadata."""
         self.set_metadata(key, value)
 
-    async def use_tool(self, tool_name: str, **params: Any) -> Any:
-        """Run ``tool_name`` with ``params`` and return its result.
+    async def tool_use(self, tool_name: str, **params: Any) -> Any:
+        """Execute ``tool_name`` immediately and return its result."""
 
-        This helper schedules the tool call, waits for completion, and
-        then returns whatever value the tool produced.
-        """
-        result_key = self.execute_tool(tool_name, params)
+        result_key = self.queue_tool_use(tool_name, params)
         return await self._wait_for_tool_result(result_key)
 
     async def _wait_for_tool_result(self, result_key: str) -> Any:
@@ -346,7 +343,7 @@ class PluginContext:
 
     async def calculate(self, expression: str) -> Any:
         """Evaluate an arithmetic ``expression`` using the calculator tool."""
-        return await self.use_tool("calculator", expression=expression)
+        return await self.tool_use("calculator", expression=expression)
 
     def is_question(self) -> bool:
         """Return ``True`` if the user message ends with a question mark."""

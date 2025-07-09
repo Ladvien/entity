@@ -175,7 +175,7 @@ class FailurePlugin(BasePlugin):
 ```python
 async def _execute_impl(self, context):
     # Tools execute immediately with natural async/await
-    result = await context.use_tool("calculator", expression="2+2")
+    result = await context.tool_use("calculator", expression="2+2")
     context.set_response(f"The answer is {result}")
 ```
 
@@ -186,7 +186,7 @@ async def _execute_impl(self, context):
 - Natural async/await patterns
 - No queuing complexity
 
-**Tip**: Use `context.use_tool()` to run tools directly.
+**Tip**: Use `context.tool_use()` to run tools directly.
 
 ## State Management
 
@@ -213,7 +213,7 @@ class PluginContext:
     def get_llm(self) -> LLM
     
     # Tool execution (immediate)
-    async def use_tool(self, tool_name: str, **params) -> Any
+    async def tool_use(self, tool_name: str, **params) -> Any
     
     # Response control
     def set_response(self, response: Any) -> None
@@ -320,7 +320,7 @@ if context.is_question():
     response = await context.ask_llm("Answer this question: " + context.message)
     
 if context.contains("weather", "temperature"):
-    weather = await context.use_tool("weather", location=context.location)
+    weather = await context.tool_use("weather", location=context.location)
 
 # Memory operations with semantic meaning
 memory = context.get_resource("memory")

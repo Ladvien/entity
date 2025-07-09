@@ -32,8 +32,8 @@ agent.tool_registry.add(
 @agent.plugin
 async def gather(ctx: PluginContext) -> str:
     """Run both tools and combine their output."""
-    search = await ctx.use_tool("search", query="OpenAI news")
-    weather = await ctx.use_tool("weather", location="Berlin")
+    search = await ctx.tool_use("search", query="OpenAI news")
+    weather = await ctx.tool_use("weather", location="Berlin")
     return f"{search} Weather: {weather}"
 
 

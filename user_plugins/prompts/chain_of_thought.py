@@ -48,7 +48,7 @@ class ChainOfThoughtPrompt(PromptPlugin):
             )
 
             if self._needs_tools(reasoning.content):
-                await context.use_tool(
+                await context.tool_use(
                     "analysis_tool",
                     data=conversation_text,
                     reasoning_step=reasoning.content,

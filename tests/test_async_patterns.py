@@ -21,7 +21,7 @@ class SleepTool(ToolPlugin):
 
 
 async def use_tool_plugin(ctx: PluginContext) -> None:
-    result = await ctx.use_tool("sleep", text="hello")
+    result = await ctx.tool_use("sleep", text="hello")
     ctx.set_response(result)
 
 

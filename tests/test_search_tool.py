@@ -26,7 +26,7 @@ async def run_search() -> str:
     await tools.add("search", SearchTool())
     registries = SystemRegistries(ResourceContainer(), tools, PluginRegistry())
     ctx = PluginContext(state, registries)
-    return await ctx.use_tool("search", query="open source")
+    return await ctx.tool_use("search", query="open source")
 
 
 def test_search_tool_returns_result():

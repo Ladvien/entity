@@ -35,7 +35,7 @@ agent = Agent()
 
 @agent.plugin
 async def weather_plugin(ctx):
-    return await ctx.use_tool("weather", city="London")
+    return await ctx.tool_use("weather", city="London")
 ```
 
 ## Loading Plugins Automatically
