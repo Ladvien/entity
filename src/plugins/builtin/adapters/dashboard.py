@@ -15,7 +15,7 @@ from fastapi.templating import Jinja2Templates
 
 from pipeline.stages import PipelineStage
 from plugins.builtin.adapters.http import HTTPAdapter
-from tools.pipeline_viz import PipelineGraphBuilder
+from src.tools.pipeline_viz import PipelineGraphBuilder
 
 
 class DashboardAdapter(HTTPAdapter):

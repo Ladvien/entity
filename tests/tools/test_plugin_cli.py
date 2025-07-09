@@ -7,7 +7,7 @@ def test_scaffold_plugin(tmp_path):
         [
             sys.executable,
             "-m",
-            "tools.plugin_cli",
+            "src.tools.plugin_cli",
             "example_plugin",
             "--type",
             "prompt",
@@ -29,7 +29,7 @@ def test_scaffold_invalid_type(tmp_path):
         [
             sys.executable,
             "-m",
-            "tools.plugin_cli",
+            "src.tools.plugin_cli",
             "bad_plugin",
             "--type",
             "unknown",

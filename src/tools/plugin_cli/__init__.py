@@ -9,7 +9,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Dict, Type, cast
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
