@@ -8,7 +8,27 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from pipeline.debug import StateManager
+from pipeline.state import PipelineState
+
+
+class StateManager:
+    def __init__(self, max_states: int = 1) -> None:
+        self.max_states = max_states
+        self._states: dict[str, "PipelineState"] = {}
+
+    async def save_state(self, state: "PipelineState") -> None:
+        if len(self._states) >= self.max_states:
+            oldest = next(iter(self._states))
+            self._states.pop(oldest)
+        self._states[state.pipeline_id] = state.snapshot()
+
+    async def load_state(self, pid: str):
+        return self._states.get(pid)
+
+    async def pipeline_ids(self):
+        return list(self._states.keys())
+
+
 from pipeline.resources import ResourceContainer
 
 
