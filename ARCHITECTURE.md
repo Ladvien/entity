@@ -451,7 +451,7 @@ class MemoryResource:
 
 
 
-## 6. Response Termination Control
+## 7. Response Termination Control
 
 **Decision**: Only DELIVER stage plugins can set the final pipeline response that terminates the iteration loop.
 
@@ -473,7 +473,7 @@ class MemoryResource:
 
 **Benefits**: Ensures consistent output processing, logging, and formatting while maintaining the hybrid pipeline-state machine mental model.
 
-## 7. Stage Results Accumulation Pattern
+## 8. Stage Results Accumulation Pattern
 
 **Decision**: Use stage results accumulation with `context.store()`, `context.load()`, and `context.has()` methods for inter-stage communication.
 
@@ -492,7 +492,7 @@ class MemoryResource:
 
 **Benefits**: Clear data flow, debugging visibility, flexible response composition, and natural support for iterative pipeline execution.
 
-## 8. Tool Execution Patterns
+## 9. Tool Execution Patterns
 
 **Decision**: Support both immediate and queued tool execution with `context.tool_use()` and `context.queue_tool_use()` methods.
 
@@ -511,7 +511,7 @@ class MemoryResource:
 
 **Usage Guidance**: Use `tool_use()` by default for simplicity. Use `queue_tool_use()` when you need multiple independent tool calls that can run in parallel or when processing results collectively.
  
-## 9. Memory Resource Consolidation
+## 10. Memory Resource Consolidation
 
 **Decision**: Consolidate all memory-related components into a single unified `Memory` resource with embedded `ConversationHistory`.
 
@@ -532,7 +532,7 @@ class MemoryResource:
 **Usage**: `memory = context.get_resource("memory")` provides access to all memory functionality through a single resource interface.
 
 
-## 10. Resource Dependency Injection Pattern
+## 11. Resource Dependency Injection Pattern
 
 **Decision**: Use explicit dependency declaration with container injection for all resource-to-resource relationships.
 
@@ -553,7 +553,7 @@ class MemoryResource:
 
 **Benefits**: Startup validation, clear architecture visibility, hot-reload support, and robust dependency management across the entire resource system.
 
-## 11. Plugin Stage Assignment Precedence
+## 12. Plugin Stage Assignment Precedence
 
 **Decision**: Use layered approach with strict precedence hierarchy for plugin stage assignment.
 
@@ -577,7 +577,7 @@ class MemoryResource:
 
 **Benefits**: Flexibility for advanced use cases while maintaining simple defaults and predictable behavior for debugging and system understanding.
 
-## 12. Resource Lifecycle Management
+## 13. Resource Lifecycle Management
 
 **Decision**: Use strict sequential initialization with fail-fast behavior for all resources.
 
@@ -597,7 +597,7 @@ class MemoryResource:
 
 **Benefits**: Eliminates partial initialization debugging complexity, provides clear failure attribution, and ensures consistent system state across deployments.
 
-## 13. Configuration Hot-Reload Scope
+## 14. Configuration Hot-Reload Scope
 
 **Decision**: Support only parameter changes for hot-reload; all other configuration changes require full restart.
 
@@ -624,7 +624,7 @@ class MemoryResource:
 
 **Benefits**: Reliable parameter tuning in production while maintaining system stability and predictable debugging paths.
 
-## 14. Error Handling and Failure Propagation
+## 15. Error Handling and Failure Propagation
 
 **Decision**: Use fail-fast error propagation where any plugin failure immediately fails the stage and triggers ERROR stage processing.
 
@@ -644,7 +644,7 @@ class MemoryResource:
 
 **Benefits**: Simplified debugging paths, predictable failure behavior, clear error attribution, and graceful user experience through dedicated ERROR stage handling.
 
-## 15. Pipeline State Management Strategy
+## 16. Pipeline State Management Strategy
 
 **Decision**: Use Memory resource for conversation persistence and structured logging for debugging, eliminating separate state checkpoint mechanisms.
 
@@ -668,7 +668,7 @@ class MemoryResource:
 
 **Benefits**: Simplified architecture, single persistence mechanism, scalable debugging through log infrastructure, and elimination of file-based state management complexity.
 
-## 16. Plugin Execution Order Simplification
+## 17. Plugin Execution Order Simplification
 
 **Decision**: Plugins execute in the order defined in the YAML configuration.
 
@@ -692,39 +692,6 @@ plugins:
 ```
 
 **Benefits**: Predictable execution sequence, simplified plugin development, clearer debugging, and elimination of an entire configuration dimension while maintaining full control over execution order.
-
-## 17. Agent and AgentBuilder Separation
-
-**Decision**: Use clear separation between `AgentBuilder` for programmatic construction and `Agent` for config-driven initialization.
-
-**Responsibilities**:
-- **AgentBuilder** - Programmatic agent construction for dynamic/code-based agents
-- **Agent** - Config-driven agent initialization for YAML/production deployments
-
-**Implementation**:
-```python
-class AgentBuilder:
-    """Programmatic construction with plugin registration methods"""
-    def add_plugin(self, plugin) -> None: ...
-    def plugin(self, func, **hints) -> Callable: ...  # Decorator
-    def load_plugins_from_directory(self, dir) -> None: ...
-    def build_runtime(self) -> AgentRuntime: ...
-
-class Agent:
-    """Config-driven initialization with runtime execution"""
-    def __init__(self, config_path: str): ...
-    async def handle(self, message: str) -> Dict[str, Any]: ...
-    
-    @classmethod
-    def from_builder(cls, builder: AgentBuilder) -> "Agent": ...
-```
-
-**Usage Patterns**:
-- **Production**: `Agent("config.yaml")` for stable, configuration-managed deployments
-- **Development**: `AgentBuilder()` for dynamic plugin registration and testing
-- **Hybrid**: `Agent.from_builder(builder)` to combine programmatic and config approaches
-
-**Benefits**: Single responsibility per class, clear intent distinction, no method duplication, easier testing and documentation with distinct use cases.
 
 ## 18. Configuration Validation Consolidation
 
@@ -762,7 +729,7 @@ class HTTPAdapter(AdapterPlugin):
 
 ## Summary So Far ✅
 
-### 19. Reasoning Pattern Abstraction Strategy
+## 19. Reasoning Pattern Abstraction Strategy
 
 **Decision**: Provide built-in reasoning pattern plugins while maintaining full extensibility for custom patterns.
 
@@ -794,7 +761,7 @@ class NovelReasoningPattern(PromptPlugin):
 
 **Rationale**: Aligns with progressive disclosure philosophy - simple defaults for common cases, unlimited flexibility for advanced use cases.
 
-### 20. Memory Architecture: Primitive Resources + Custom Plugins
+## 20. Memory Architecture: Primitive Resources + Custom Plugins
 
 **Decision**: Provide foundational memory primitives through unified Memory resource; users implement domain-specific memory patterns as plugins.
 
@@ -818,7 +785,7 @@ class PersonalPreferencesPlugin(PromptPlugin):
 
 **Rationale**: Maintains framework focus on providing powerful primitives rather than opinionated solutions. Enables unlimited memory patterns while keeping core simple.
 
-### 21. Tool Discovery Architecture: Lightweight Registry Query + Plugin-Level Orchestration
+## 21. Tool Discovery Architecture: Lightweight Registry Query + Plugin-Level Orchestration
 
 **Decision**: Provide simple tool discovery primitive through registry queries; users implement discovery logic and tool orchestration in plugins.
 
