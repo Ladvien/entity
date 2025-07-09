@@ -8,7 +8,6 @@ from threading import Thread
 
 import pytest
 
-from entity_config.environment import load_env
 
 SRC_PATH = str(Path(__file__).resolve().parents[1] / "src")
 if SRC_PATH not in sys.path:
@@ -19,7 +18,11 @@ if SRC_PATH not in sys.path:
 def _load_test_env():
     """Load environment variables for tests."""
     env_path = Path(__file__).resolve().parents[1] / ".env"
-    load_env(env_path)
+    if env_path.exists():
+        for line in env_path.read_text().splitlines():
+            if "=" in line:
+                key, value = line.split("=", 1)
+                os.environ.setdefault(key, value)
     yield
 
 
