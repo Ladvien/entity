@@ -643,20 +643,17 @@ class MemoryResource:
 
 ## 16. Plugin Execution Order Simplification
 
-**Decision**: Remove priority-based plugin ordering and use YAML configuration order for plugin execution sequence.
+**Decision**: Plugins execute in the order defined in the YAML configuration.
 
 **Rationale**:
 - YAML order provides clear, visible execution sequence without mystery
 - Simpler mental model - "plugins run in the order I list them"
 - Easier debugging with predictable execution order
-- Eliminates unnecessary priority configuration decisions
+- Eliminates configuration ambiguity
 - "What you see is what you get" approach reduces cognitive overhead
 
 **Implementation**:
-- Remove `priority` attribute from all plugin base classes
-- Remove priority sorting logic in `PluginRegistry`
 - Register plugins in YAML configuration order or list order
-- Update plugin templates and documentation to remove priority references
 
 **Configuration Example**:
 ```yaml
