@@ -64,8 +64,4 @@
 - **Update `execute_pipeline`** to remove file-based state persistence
 
 ### 11. Plugin Execution Order Simplification
-- **Remove `priority` attribute** from all plugin base classes
-- **Remove priority sorting logic** in `PluginRegistry` 
-- **Update plugin registration** to use YAML/list order
-- **Update plugin templates** to remove priority references
-- **Update documentation** to emphasize execution order through configuration order
+- **Update plugin registration** to use YAML/list order- **Update documentation** to emphasize execution order through configuration order

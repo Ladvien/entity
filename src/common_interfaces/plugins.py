@@ -79,8 +79,7 @@ class PluginAutoClassifier:
             base = cast(Type, plugin_base_registry.prompt_plugin)
 
         def _default_stages(plugin_base: Type) -> list[PipelineStage]:
-            from pipeline.base_plugins import (AdapterPlugin, PromptPlugin,
-                                               ToolPlugin)
+            from pipeline.base_plugins import AdapterPlugin, PromptPlugin, ToolPlugin
 
             if issubclass(plugin_base, ToolPlugin):
                 return [PipelineStage.DO]
@@ -103,7 +102,6 @@ class PluginAutoClassifier:
         plugin_obj = plugin_base_registry.auto_plugin(
             func=plugin_func,
             stages=stages,
-            priority=priority,
             name=name,
             base_class=base,
         )
