@@ -1,6 +1,11 @@
 from __future__ import annotations
 
-"""Compatibility wrapper delegating to :class:`AgentRuntime`."""
+"""Deprecated wrapper delegating to :class:`AgentRuntime`.
+
+This class exists solely for backward compatibility. Prefer using
+``entity.Agent`` or ``entity.core.runtime.AgentRuntime`` directly. It will be
+removed in a future release.
+"""
 
 import asyncio
 from typing import Any, Generic, Optional, TypeVar, cast

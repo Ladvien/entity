@@ -3,6 +3,10 @@
 This section is generated from the project source using autodoc. Every public
 module is documented directly from its docstrings.
 
+!!! warning "Deprecated modules"
+    ``PipelineManager`` and ``pipeline.runtime`` are deprecated. Use
+    ``entity.Agent`` or ``entity.core.runtime.AgentRuntime`` instead.
+
 ::: entity
     options:
         members: true
