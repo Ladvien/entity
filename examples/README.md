@@ -2,7 +2,8 @@
 
 This folder contains small programs that showcase different features of the Entity pipeline framework.
 Run them with ``python -m examples.<script>`` from the repository root or install
-the package in editable mode with ``pip install -e .``.
+the project in editable mode with ``pip install -e .``. Installing this way
+adds the ``src`` directory to your ``PYTHONPATH`` so modules resolve properly.
 Many scripts read credentials from environment variables. Copy `.env.example` to
 `.env` and fill in the values before running them.
 
