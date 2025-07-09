@@ -1,6 +1,8 @@
 import asyncio
 
 import pytest
+from entity.core.plugins import BasePlugin
+from pipeline import PipelineStage
 from entity import Agent
 
 
