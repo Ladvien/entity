@@ -1,23 +1,12 @@
 from __future__ import annotations
 
-"""Workflow base classes."""
-
-from dataclasses import dataclass, field
-from typing import Dict, List
-
-from pipeline.stages import PipelineStage
+"""Workflow base classes and utilities."""
 
 
-@dataclass
 class Workflow:
-    """Mapping of pipeline stages to plugin names."""
+    """Base workflow object describing stage order."""
 
-    stage_map: Dict[PipelineStage, List[str]] = field(default_factory=dict)
-
-    def get_stage_map(self) -> Dict[PipelineStage, List[str]]:
-        """Return mapping of stages to plugin names."""
-
-        return self.stage_map
+    stages: dict[str, list[str]] = {}
 
 
 __all__ = ["Workflow"]
