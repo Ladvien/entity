@@ -7,7 +7,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Dict, List
 
-from registry import PluginRegistry
+from registry import PluginRegistry, SystemRegistries
 from pipeline.interfaces import import_plugin_class
 from pipeline.stages import PipelineStage
 
@@ -46,6 +46,41 @@ async def wait_for_pipeline_completion(
         if time.time() - start > timeout_seconds:
             raise TimeoutError("Timeout waiting for pipelines to complete")
         await asyncio.sleep(0.1)
+
+
+def validate_topology(
+    registries: SystemRegistries, new_config: Dict
+) -> ConfigUpdateResult:
+    """Ensure ``new_config`` matches the running plugin topology."""
+
+    plugins_cfg = new_config.get("plugins", {})
+
+    cfg_resources = set(plugins_cfg.get("resources", {}).keys())
+    cfg_tools = set(plugins_cfg.get("tools", {}).keys())
+    cfg_other: set[str] = set()
+    for key in ("adapters", "prompts"):
+        cfg_other.update(plugins_cfg.get(key, {}).keys())
+
+    def _get(obj: SystemRegistries | tuple, attr: str, idx: int):
+        return getattr(obj, attr, obj[idx])
+
+    resource_reg = _get(registries, "resources", 1)
+    tool_reg = _get(registries, "tools", 2)
+    plugin_reg = _get(registries, "plugins", 0)
+
+    current_resources = set(getattr(resource_reg, "_resources", {}).keys())
+    current_tools = set(getattr(tool_reg, "_tools", {}).keys())
+    current_other = {plugin_reg.get_plugin_name(p) for p in plugin_reg.list_plugins()}
+
+    if cfg_resources != current_resources:
+        return ConfigUpdateResult.failure_result("Resource changes require restart")
+    if cfg_tools != current_tools:
+        return ConfigUpdateResult.failure_result("Tool changes require restart")
+    if cfg_other != current_other:
+        return ConfigUpdateResult.failure_result(
+            "Plugin additions or removals require restart"
+        )
+    return ConfigUpdateResult.success_result()
 
 
 async def update_plugin_configuration(

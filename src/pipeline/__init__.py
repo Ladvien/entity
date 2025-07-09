@@ -20,7 +20,11 @@ from .base_plugins import (
     ValidationResult,
 )
 from .builder import AgentBuilder
-from .config_update import ConfigUpdateResult, update_plugin_configuration
+from .config_update import (
+    ConfigUpdateResult,
+    update_plugin_configuration,
+    validate_topology,
+)
 from .context import ConversationEntry, PluginContext, ToolCall
 from .decorators import plugin
 from .errors import create_static_error_response
@@ -78,6 +82,7 @@ __all__ = [
     "create_static_error_response",
     "ConfigUpdateResult",
     "update_plugin_configuration",
+    "validate_topology",
     "StateLogger",
     "LogReplayer",
     "Agent",
@@ -127,6 +132,7 @@ def __getattr__(name: str) -> Any:
         "create_static_error_response": "pipeline.errors",
         "ConfigUpdateResult": "pipeline.config_update",
         "update_plugin_configuration": "pipeline.config_update",
+        "validate_topology": "pipeline.config_update",
         "StateLogger": "pipeline.state_logger",
         "LogReplayer": "pipeline.state_logger",
         "ClassRegistry": "pipeline.initializer",

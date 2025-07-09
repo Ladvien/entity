@@ -4,13 +4,13 @@ import sys
 import yaml
 
 
-def _write_config(path, value=True, tool=False):
-    cfg = {
-        "plugins": {
-            "prompts": {"reload": {"type": "user_plugins.test_plugins:ReloadPlugin"}}
+def _write_config(path, value=True, tool=False, include_plugin=True):
+    cfg = {"plugins": {"prompts": {}}}
+    if include_plugin:
+        cfg["plugins"]["prompts"]["reload"] = {
+            "type": "user_plugins.test_plugins:ReloadPlugin"
         }
-    }
-    if value is not False:
+    if include_plugin and value is not False:
         cfg["plugins"]["prompts"]["reload"]["value"] = value
     if tool:
         cfg["plugins"].setdefault("tools", {})["echo"] = {
@@ -80,4 +80,25 @@ def test_cli_reload_add_tool(tmp_path):
         text=True,
         capture_output=True,
     )
-    assert result.returncode == 0
+    assert result.returncode != 0
+
+
+def test_cli_reload_remove_plugin(tmp_path):
+    base = tmp_path / "base.yml"
+    update = tmp_path / "update.yml"
+    _write_config(base, value="one")
+    _write_config(update, include_plugin=False)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "src/cli.py",
+            "--config",
+            str(base),
+            "reload-config",
+            str(update),
+        ],
+        text=True,
+        capture_output=True,
+    )
+    assert result.returncode != 0
