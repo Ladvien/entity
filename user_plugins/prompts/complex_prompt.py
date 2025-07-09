@@ -4,7 +4,7 @@ from typing import List
 
 from pipeline.base_plugins import PromptPlugin
 from pipeline.context import ConversationEntry, PluginContext
-from pipeline.resources.memory_resource import MemoryResource
+from pipeline.resources.memory import Memory
 from pipeline.stages import PipelineStage
 
 
@@ -28,7 +28,7 @@ class ComplexPrompt(PromptPlugin):
         4. Record the reply in the conversation and set the pipeline response.
         """
 
-        memory: MemoryResource = context.get_resource("memory")
+        memory: Memory = context.get_resource("memory")
 
         history: List[ConversationEntry] = []
         if memory:

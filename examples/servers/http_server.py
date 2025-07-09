@@ -16,7 +16,7 @@ from typing import Any
 
 from pipeline import PipelineManager
 from pipeline.initializer import SystemInitializer
-from pipeline.resources.memory_resource import MemoryResource
+from pipeline.resources.memory import Memory
 from plugins.builtin.adapters.http import HTTPAdapter, MessageRequest
 
 
@@ -24,7 +24,7 @@ async def main() -> None:
     initializer = SystemInitializer.from_yaml("config/dev.yaml")
     registries = await initializer.initialize()
     pipeline_manager = PipelineManager(registries)
-    memory: MemoryResource = registries.resources.get("memory")  # type: ignore[arg-type]
+    memory: Memory = registries.resources.get("memory")  # type: ignore[arg-type]
     conversation_manager = memory.get_conversation_manager(registries, pipeline_manager)
     adapter = HTTPAdapter(pipeline_manager, {"host": "127.0.0.1", "port": 8000})
 

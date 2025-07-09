@@ -15,7 +15,7 @@ enable_plugins_namespace()
 
 from pipeline import Agent, PipelineStage, PromptPlugin
 from pipeline.context import PluginContext
-from user_plugins.memory_resource import MemoryResource
+from pipeline.resources.memory import Memory
 from user_plugins.resources import DuckDBDatabaseResource, DuckDBVectorStore
 
 
@@ -26,7 +26,7 @@ class SimilarityPrompt(PromptPlugin):
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, ctx: PluginContext) -> None:
-        memory: MemoryResource = ctx.get_resource("memory")
+        memory: Memory = ctx.get_resource("memory")
         await memory.save_conversation(ctx.pipeline_id, ctx.get_conversation_history())
         if memory.vector_store:
             await memory.vector_store.add_embedding(ctx.message)
@@ -41,7 +41,7 @@ def main() -> None:
         {"path": "./agent.duckdb", "history_table": "history"}
     )
     vector_store = DuckDBVectorStore({"table": "vectors", "dimensions": 3}, database)
-    memory = MemoryResource(database=database, vector_store=vector_store)
+    memory = Memory(database=database, vector_store=vector_store)
 
     agent.builder.resource_registry.add("memory", memory)
     agent.builder.plugin_registry.register_plugin_for_stage(

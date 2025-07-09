@@ -17,7 +17,7 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.resources import ResourceContainer
-from pipeline.resources.memory_resource import MemoryResource
+from pipeline.resources.memory import Memory
 from plugins.builtin.resources.duckdb_database import DuckDBDatabaseResource
 from plugins.builtin.resources.memory_storage import MemoryStorage
 from plugins.builtin.resources.postgres import PostgresResource
@@ -44,7 +44,7 @@ async def run_history_test(resource):
         resource._history_table = "test_history"
         await resource.initialize()
 
-    memory = MemoryResource(database=resource)
+    memory = Memory(database=resource)
     resources = ResourceContainer()
     await resources.add("memory", memory)
     registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())

@@ -19,7 +19,7 @@ DEFAULT_LLM_CONFIG: Dict[str, Any] = {
 
 DEFAULT_RESOURCES: Dict[str, Dict[str, Any]] = {
     "llm": DEFAULT_LLM_CONFIG,
-    "memory": {"type": "pipeline.resources.memory_resource:SimpleMemoryResource"},
+    "memory": {"type": "pipeline.resources.memory:Memory"},
     "storage": {
         "type": "plugins.builtin.resources.storage_resource:StorageResource",
         "filesystem": {

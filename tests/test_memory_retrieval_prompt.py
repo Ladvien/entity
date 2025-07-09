@@ -11,11 +11,11 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.resources import ResourceContainer
-from pipeline.resources.memory_resource import MemoryResource, SimpleMemoryResource
+from pipeline.resources.memory import Memory
 from user_plugins.prompts.memory_retrieval import MemoryRetrievalPrompt
 
 
-class DummyMemory(MemoryResource):
+class DummyMemory(Memory):
     def __init__(self, history):
         super().__init__(None, None, {})
         self.history = history
@@ -27,13 +27,13 @@ class DummyMemory(MemoryResource):
         self.history = entries
 
 
-def make_context(memory: MemoryResource | None = None):
+def make_context(memory: Memory | None = None):
     past = [
         ConversationEntry(
             content="past message", role="assistant", timestamp=datetime.now()
         )
     ]
-    memory = memory or SimpleMemoryResource()
+    memory = memory or Memory()
     asyncio.run(memory.save_conversation("1", past))
     resources = ResourceContainer()
     asyncio.run(resources.add("memory", memory))

@@ -12,7 +12,7 @@ from pipeline import (
     ToolRegistry,
 )
 from pipeline.resources import ResourceContainer
-from pipeline.resources.memory_resource import MemoryResource
+from pipeline.resources.memory import Memory
 from user_plugins.prompts.complex_prompt import ComplexPrompt
 
 
@@ -23,7 +23,7 @@ class FakeLLM:
         self.generate = AsyncMock(return_value="done")
 
 
-class FakeMemory(MemoryResource):
+class FakeMemory(Memory):
     def __init__(self, history):
         super().__init__(config={})
         self._history = history

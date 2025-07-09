@@ -21,7 +21,7 @@ plugins:
       retries: 3
       backoff: 1.0
     memory:
-      type: pipeline.resources.memory_resource:MemoryResource
+      type: pipeline.resources.memory:Memory
       storage:
         type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
         path: ./dev.duckdb

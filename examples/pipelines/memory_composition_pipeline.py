@@ -23,7 +23,7 @@ from plugins.builtin.resources.postgres import PostgresResource
 from plugins.builtin.resources.sqlite_storage import (
     SQLiteStorageResource as SQLiteDatabaseResource,
 )
-from user_plugins.memory_resource import MemoryResource
+from pipeline.resources.memory import Memory
 from user_plugins.resources import DuckDBVectorStore
 
 
@@ -34,7 +34,7 @@ class StorePrompt(PromptPlugin):
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context: PluginContext) -> None:
-        memory: MemoryResource = context.get_resource("memory")
+        memory: Memory = context.get_resource("memory")
         await memory.save_conversation(
             context.pipeline_id, context.get_conversation_history()
         )
@@ -66,7 +66,7 @@ def main() -> None:
 
     database = SQLiteDatabaseResource({"path": "./agent.db"})
     vector_store = create_vector_store()
-    memory = MemoryResource(database=database, vector_store=vector_store)
+    memory = Memory(database=database, vector_store=vector_store)
 
     agent.builder.resource_registry.add("memory", memory)
     agent.builder.plugin_registry.register_plugin_for_stage(
