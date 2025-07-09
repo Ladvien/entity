@@ -8,7 +8,7 @@ class {class_name}(AdapterPlugin):
     """Example adapter plugin."""
 
     stages = [PipelineStage.DELIVER]
-    # Execution order follows the YAML list or registration sequence; no priority field
+    # List position controls execution order and SystemInitializer preserves it.
 
     async def _execute_impl(self, context):
         if context.has("response"):

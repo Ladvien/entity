@@ -30,4 +30,5 @@ class ExamplePlugin(PromptPlugin):
 ```
 
 Register plugins through `Agent.add_plugin()` or in a YAML configuration file.
-Plugins run sequentially in the order listed under each stage; there is no priority.
+The position in the list under each stage controls execution order and
+`SystemInitializer` keeps the sequence intact. There is no priority field.

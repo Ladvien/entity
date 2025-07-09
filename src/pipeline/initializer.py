@@ -31,46 +31,53 @@ class ClassRegistry:
     def __init__(self) -> None:
         self._classes: Dict[str, type[BasePlugin]] = {}
         self._configs: Dict[str, Dict] = {}
+        self._order: List[str] = []
 
     def register_class(
         self, plugin_class: type[BasePlugin], config: Dict, name: str
     ) -> None:
         self._classes[name] = plugin_class
         self._configs[name] = config
+        self._order.append(name)
 
     def has_plugin(self, name: str) -> bool:
         return name in self._classes
 
     def list_plugins(self) -> List[str]:
-        return list(self._classes.keys())
+        return list(self._order)
 
     def all_plugin_classes(self) -> Iterable[Tuple[type[BasePlugin], Dict]]:
-        for name, cls in self._classes.items():
+        for name in self._order:
+            cls = self._classes[name]
             yield cls, self._configs[name]
 
     def resource_classes(self) -> Iterable[Tuple[type, Dict]]:
         from pipeline.resources import Resource
 
-        for name, cls in self._classes.items():
+        for name in self._order:
+            cls = self._classes[name]
             if issubclass(cls, ResourcePlugin) or issubclass(cls, Resource):
                 yield name, cls, self._configs[name]
 
     def tool_classes(self) -> Iterable[Tuple[type[ToolPlugin], Dict]]:
-        for name, cls in self._classes.items():
+        for name in self._order:
+            cls = self._classes[name]
             if issubclass(cls, ToolPlugin):
                 yield cls, self._configs[name]
 
     def named_tool_classes(self) -> Iterable[Tuple[str, type[ToolPlugin], Dict]]:
         """Return registered tool plugin classes with their names."""
 
-        for name, cls in self._classes.items():
+        for name in self._order:
+            cls = self._classes[name]
             if issubclass(cls, ToolPlugin):
                 yield name, cls, self._configs[name]
 
     def non_resource_non_tool_classes(self) -> Iterable[Tuple[type[BasePlugin], Dict]]:
         from pipeline.resources import Resource
 
-        for name, cls in self._classes.items():
+        for name in self._order:
+            cls = self._classes[name]
             if (
                 not issubclass(cls, ResourcePlugin)
                 and not issubclass(cls, ToolPlugin)
