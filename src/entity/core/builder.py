@@ -23,7 +23,7 @@ from entity.core.plugins.base import (
 from .plugin_utils import PluginAutoClassifier
 from .stages import PipelineStage
 from entity.utils.logging import get_logger
-from entity.core.runtime import _AgentRuntime
+from entity.core.runtime import AgentRuntime
 from entity.core.plugins.base import BasePlugin
 
 logger = get_logger(__name__)
@@ -31,7 +31,7 @@ logger = get_logger(__name__)
 
 @dataclass
 class _AgentBuilder:
-    """Collect plugins and build :class:`_AgentRuntime`."""
+    """Collect plugins and build :class:`AgentRuntime`."""
 
     plugin_registry: PluginRegistry = field(default_factory=PluginRegistry)
     resource_registry: ResourceContainer = field(default_factory=ResourceContainer)
@@ -125,14 +125,14 @@ class _AgentBuilder:
     # ------------------------------ runtime build -----------------------------
     def build_runtime(
         self, workflow: Mapping[PipelineStage | str, Iterable[str]] | None = None
-    ) -> "_AgentRuntime":
+    ) -> "AgentRuntime":
         asyncio.run(self.resource_registry.build_all())
         capabilities = SystemRegistries(
             resources=self.resource_registry,
             tools=self.tool_registry,
             plugins=self.plugin_registry,
         )
-        return _AgentRuntime(capabilities)
+        return AgentRuntime(capabilities)
 
     # ------------------------------ internals --------------------------------
     def _import_module(self, file: Path) -> ModuleType | None:

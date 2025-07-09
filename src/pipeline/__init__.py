@@ -53,6 +53,7 @@ __all__ = [
     "StateLogger",
     "LogReplayer",
     "Agent",
+    "AgentRuntime",
     "Pipeline",
     "execute_with_observability",
 ]
@@ -100,6 +101,7 @@ def __getattr__(name: str) -> Any:
         "ClassRegistry": "pipeline.initializer",
         "SystemInitializer": "pipeline.initializer",
         "initialization_cleanup_context": "pipeline.initializer",
+        "AgentRuntime": "entity.core.runtime",
         "PluginAutoClassifier": "entity.core.plugin_utils",
         "import_plugin_class": "entity.core.plugin_utils",
         "MetricsCollector": "pipeline.metrics",

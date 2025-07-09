@@ -8,7 +8,7 @@ from typing import Any, Callable, Dict, Optional, cast, Mapping, Iterable
 from .builder import _AgentBuilder
 from .exceptions import PipelineError
 from .registries import PluginRegistry, SystemRegistries
-from .runtime import _AgentRuntime
+from .runtime import AgentRuntime
 from pipeline.workflow import Pipeline, WorkflowMapping
 
 
@@ -19,7 +19,7 @@ class Agent:
     config_path: str | None = None
     pipeline: Pipeline | None = None
     _builder: _AgentBuilder | None = field(default=None, init=False)
-    _runtime: _AgentRuntime | None = field(default=None, init=False)
+    _runtime: AgentRuntime | None = field(default=None, init=False)
     _workflows: dict[str, type] = field(default_factory=dict, init=False)
 
     @property
@@ -126,10 +126,14 @@ class Agent:
             else:
                 initializer = SystemInitializer.from_yaml(path, env_file)
 
-        async def _build() -> tuple[_AgentRuntime, dict[str, type]]:
+        async def _build() -> tuple[AgentRuntime, dict[str, type]]:
             plugins, resources, tools, _ = await initializer.initialize()
-            caps = SystemRegistries(resources=resources, tools=tools, plugins=plugins)
-            return _AgentRuntime(caps), initializer.workflows
+            caps = SystemRegistries(
+                resources=resources,
+                tools=tools,
+                plugins=plugins,
+            )
+            return AgentRuntime(caps), initializer.workflows
 
         runtime, workflows = asyncio.run(_build())
         agent = cls(config_path=path)
@@ -143,7 +147,7 @@ class Agent:
             self._runtime = self.builder.build_runtime()
 
     @property
-    def runtime(self) -> _AgentRuntime:
+    def runtime(self) -> AgentRuntime:
         if self._runtime is None:
             raise PipelineError("Agent not initialized; call an async method")
         return self._runtime
@@ -154,7 +158,7 @@ class Agent:
         await self._ensure_runtime()
         if self._runtime is None:  # pragma: no cover - sanity check
             raise RuntimeError("Runtime not initialized")
-        runtime = cast(_AgentRuntime, self._runtime)
+        runtime = cast(AgentRuntime, self._runtime)
         return cast(Dict[str, Any], await runtime.run_pipeline(message))
 
     async def handle(self, message: str) -> Dict[str, Any]:

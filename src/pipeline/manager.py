@@ -11,7 +11,7 @@ import asyncio
 from typing import Generic, TypeVar, cast
 
 
-from entity.core.runtime import _AgentRuntime
+from entity.core.runtime import AgentRuntime
 from entity.core.state_logger import StateLogger
 from entity.core.registries import SystemRegistries
 
@@ -27,7 +27,16 @@ class PipelineManager(Generic[ResultT]):
         *,
         state_logger: StateLogger | None = None,
     ) -> None:
-        self._runtime = _AgentRuntime(capabilities, state_logger=state_logger)
+        if capabilities is None and "registries" in kwargs:
+            warnings.warn(
+                "'registries' is deprecated, use 'capabilities' instead",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            capabilities = kwargs.pop("registries")
+        if kwargs:
+            raise TypeError(f"Unexpected arguments: {', '.join(kwargs)}")
+        self._runtime = AgentRuntime(capabilities, state_logger=state_logger)
         self._capabilities = self._runtime.capabilities
 
     # ------------------------------------------------------------------
