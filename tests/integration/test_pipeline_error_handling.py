@@ -61,8 +61,8 @@ def test_plugin_exception_triggers_error_and_halts_stage():
         await plugins.register_plugin_for_stage(
             ErrorRecorder(executed), PipelineStage.ERROR
         )
-        registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
-        await execute_pipeline("hi", registries)
+        capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
+        await execute_pipeline("hi", capabilities)
 
     asyncio.run(run())
     assert executed and executed[0] == "error"
@@ -82,8 +82,8 @@ def test_pipeline_stops_processing_after_error():
         await plugins.register_plugin_for_stage(
             ErrorRecorder(executed), PipelineStage.ERROR
         )
-        registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
-        await execute_pipeline("hi", registries)
+        capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
+        await execute_pipeline("hi", capabilities)
 
     asyncio.run(run())
     assert executed and executed[0] == "error"

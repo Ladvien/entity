@@ -9,6 +9,7 @@ from __future__ import annotations
 import time
 from datetime import datetime
 from typing import Any, Dict
+import warnings
 
 from entity.core.state_logger import StateLogger
 from registry import SystemRegistries
@@ -199,14 +200,22 @@ async def execute_stage(
 
 async def execute_pipeline(
     user_message: str,
-    registries: SystemRegistries,
+    capabilities: SystemRegistries | None,
     *,
     pipeline_manager: PipelineManager | None = None,
     state_logger: "StateLogger" | None = None,
     return_metrics: bool = False,
     state: PipelineState | None = None,
     max_iterations: int = 5,
+    registries: SystemRegistries | None = None,
 ) -> Dict[str, Any] | tuple[Dict[str, Any], MetricsCollector]:
+    if capabilities is None and registries is not None:
+        warnings.warn(
+            "'registries' is deprecated, use 'capabilities' instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        capabilities = registries
     if state is None:
         state = PipelineState(
             conversation=[
@@ -221,7 +230,7 @@ async def execute_pipeline(
     if pipeline_manager is not None:
         await pipeline_manager.register(state.pipeline_id)
     try:
-        async with registries.resources:
+        async with capabilities.resources:
             async with start_span("pipeline.execute"):
                 while True:
                     state.iteration += 1
@@ -238,7 +247,7 @@ async def execute_pipeline(
                         ):
                             continue
                         try:
-                            await execute_stage(stage, state, registries)
+                            await execute_stage(stage, state, capabilities)
                         finally:
                             if state_logger is not None:
                                 state_logger.log(state, stage)
@@ -284,10 +293,10 @@ async def execute_pipeline(
 
         if state.failure_info:
             try:
-                await execute_stage(PipelineStage.ERROR, state, registries)
+                await execute_stage(PipelineStage.ERROR, state, capabilities)
                 if state_logger is not None:
                     state_logger.log(state, PipelineStage.ERROR)
-                await execute_stage(PipelineStage.DELIVER, state, registries)
+                await execute_stage(PipelineStage.DELIVER, state, capabilities)
             except Exception:
                 result = create_static_error_response(state.pipeline_id).to_dict()
                 return (result, state.metrics) if return_metrics else result

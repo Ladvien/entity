@@ -1,8 +1,15 @@
 import asyncio
 
-from pipeline import (LLMResponse, PipelineStage, PluginRegistry, PromptPlugin,
-                      SystemRegistries, ToolPlugin, ToolRegistry,
-                      execute_pipeline)
+from pipeline import (
+    LLMResponse,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolPlugin,
+    ToolRegistry,
+    execute_pipeline,
+)
 
 from entity.core.resources.container import ResourceContainer
 
@@ -28,7 +35,7 @@ class MetricsPlugin(PromptPlugin):
         context.set_response("ok")
 
 
-def make_registries():
+def make_capabilities():
     plugins = PluginRegistry()
     asyncio.run(
         plugins.register_plugin_for_stage(MetricsPlugin({}), PipelineStage.DELIVER)
@@ -41,10 +48,10 @@ def make_registries():
 
 
 def test_metrics_collected():
-    registries = make_registries()
+    capabilities = make_capabilities()
 
     response, metrics = asyncio.run(
-        execute_pipeline("start", registries, return_metrics=True)
+        execute_pipeline("start", capabilities, return_metrics=True)
     )
     assert response == "ok"
 

@@ -1,7 +1,13 @@
 import asyncio
 
-from pipeline import (PipelineManager, PipelineStage, PluginRegistry,
-                      PromptPlugin, SystemRegistries, ToolRegistry)
+from pipeline import (
+    PipelineManager,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources import ResourceContainer
 from pipeline.state import PipelineState
 
@@ -41,8 +47,8 @@ def make_manager(manager: StateManager) -> PipelineManager:
     asyncio.run(
         plugins.register_plugin_for_stage(SavePlugin(manager), PipelineStage.DELIVER)
     )
-    registries = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
-    return PipelineManager(registries)
+    capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
+    return PipelineManager(capabilities)
 
 
 def test_state_manager_concurrent_limit():

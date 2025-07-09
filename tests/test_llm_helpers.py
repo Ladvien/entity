@@ -2,9 +2,17 @@ import asyncio
 from datetime import datetime
 
 import pytest
-from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
-                      PipelineState, PluginContext, PluginRegistry,
-                      PromptPlugin, SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineStage,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.errors import ResourceError
 
 from entity.core.resources.container import ResourceContainer
@@ -26,8 +34,8 @@ def make_context(llm=None) -> PluginContext:
     resources = ResourceContainer()
     if llm is not None:
         asyncio.run(resources.add("llm", llm))
-    registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
-    return PluginContext(state, registries)
+    capabilities = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
+    return PluginContext(state, capabilities)
 
 
 def test_ask_llm_returns_text():

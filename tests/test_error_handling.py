@@ -1,13 +1,25 @@
 import asyncio
 
-from pipeline import (FailurePlugin, PipelineStage, PluginRegistry,
-                      PromptPlugin, SystemRegistries, ToolRegistry,
-                      execute_pipeline)
-from pipeline.errors import (ErrorResponse, PipelineError, PluginContextError,
-                             PluginExecutionError, ResourceError,
-                             StageExecutionError, ToolExecutionError,
-                             create_error_response,
-                             create_static_error_response)
+from pipeline import (
+    FailurePlugin,
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
+from pipeline.errors import (
+    ErrorResponse,
+    PipelineError,
+    PluginContextError,
+    PluginExecutionError,
+    ResourceError,
+    StageExecutionError,
+    ToolExecutionError,
+    create_error_response,
+    create_static_error_response,
+)
 from pipeline.state import FailureInfo
 
 from entity.core.resources.container import ResourceContainer
@@ -36,7 +48,7 @@ class FallbackPlugin(FailurePlugin):
         context.set_response({"error": info.error_message})
 
 
-def make_registries(error_plugin, main_plugin=BoomPlugin):
+def make_capabilities(error_plugin, main_plugin=BoomPlugin):
     plugins = PluginRegistry()
     asyncio.run(plugins.register_plugin_for_stage(main_plugin({}), PipelineStage.DO))
     asyncio.run(plugins.register_plugin_for_stage(BasicLogger({}), PipelineStage.ERROR))
@@ -47,8 +59,8 @@ def make_registries(error_plugin, main_plugin=BoomPlugin):
 
 
 def test_error_plugin_runs():
-    registries = make_registries(FallbackPlugin)
-    result = asyncio.run(execute_pipeline("hi", registries))
+    capabilities = make_capabilities(FallbackPlugin)
+    result = asyncio.run(execute_pipeline("hi", capabilities))
     assert result == {"error": "boom"}
 
 
@@ -84,8 +96,8 @@ def test_error_hierarchy():
 
 
 def test_resource_error_propagation():
-    registries = make_registries(FallbackPlugin, main_plugin=ResourceFailPlugin)
-    result = asyncio.run(execute_pipeline("hi", registries))
+    capabilities = make_capabilities(FallbackPlugin, main_plugin=ResourceFailPlugin)
+    result = asyncio.run(execute_pipeline("hi", capabilities))
     assert result == {"error": "missing resource"}
 
 

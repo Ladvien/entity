@@ -10,7 +10,7 @@ def test_cli_websocket(monkeypatch, tmp_path):
     config.write_text("")
     called = False
 
-    async def fake_serve(self, registries):
+    async def fake_serve(self, capabilities):
         nonlocal called
         called = True
 

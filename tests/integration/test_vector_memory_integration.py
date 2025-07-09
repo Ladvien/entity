@@ -5,9 +5,15 @@ from pathlib import Path
 
 import pytest
 from entity_config.environment import load_env
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, SystemRegistries,
-                      ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources.llm import UnifiedLLMResource
 from plugins.builtin.resources.pg_vector_store import PgVectorStore
 from plugins.builtin.resources.postgres import PostgresResource
@@ -84,7 +90,7 @@ def test_vector_memory_integration(pg_env):
         resources = ResourceContainer()
         await resources.add("memory", memory)
         await resources.add("llm", llm)
-        registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
+        capabilities = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
         state = PipelineState(
             conversation=[
                 ConversationEntry(
@@ -94,7 +100,7 @@ def test_vector_memory_integration(pg_env):
             pipeline_id="conv1",
             metrics=MetricsCollector(),
         )
-        ctx = PluginContext(state, registries)
+        ctx = PluginContext(state, capabilities)
         plugin = ComplexPrompt({"k": 1})
         await plugin.execute(ctx)
         response = state.response

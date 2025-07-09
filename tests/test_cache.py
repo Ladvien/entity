@@ -1,9 +1,16 @@
 from datetime import datetime
 
 import pipeline.context as context_module
-from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
-                      PipelineState, PluginContext, PluginRegistry,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineStage,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.base_plugins import PromptPlugin
 from pipeline.cache import InMemoryCache
 from pipeline.state import ToolCall
@@ -53,8 +60,8 @@ async def make_context(cache: CacheResource, llm: FakeLLM):
     resources = ResourceContainer()
     await resources.add("llm", llm)
     await resources.add("cache", cache)
-    registries = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
-    return PluginContext(state, registries), state, registries
+    capabilities = SystemRegistries(resources, ToolRegistry(), PluginRegistry())
+    return PluginContext(state, capabilities), state, capabilities
 
 
 async def test_llm_results_are_cached():
@@ -72,20 +79,20 @@ async def test_llm_results_are_cached():
 async def test_tool_results_are_cached():
     llm = FakeLLM()
     cache = CacheResource(InMemoryCache())
-    ctx, state, registries = await make_context(cache, llm)
+    ctx, state, capabilities = await make_context(cache, llm)
 
     tool = FakeTool()
-    await registries.tools.add("fake", tool)
+    await capabilities.tools.add("fake", tool)
 
     state.pending_tool_calls.append(
         ToolCall(name="fake", params={"x": 2}, result_key="r1")
     )
-    await execute_pending_tools(state, registries)
+    await execute_pending_tools(state, capabilities)
 
     state.pending_tool_calls.append(
         ToolCall(name="fake", params={"x": 2}, result_key="r2")
     )
-    await execute_pending_tools(state, registries)
+    await execute_pending_tools(state, capabilities)
 
     assert tool.calls == 1
     assert ctx.load("r1") == ctx.load("r2")

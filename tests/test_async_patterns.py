@@ -1,8 +1,14 @@
 import asyncio
 import time
 
-from pipeline import (PipelineStage, PluginRegistry, SystemRegistries,
-                      ToolPlugin, ToolRegistry, execute_pipeline)
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    SystemRegistries,
+    ToolPlugin,
+    ToolRegistry,
+    execute_pipeline,
+)
 from pipeline.base_plugins import PluginAutoClassifier
 from pipeline.context import PluginContext
 
@@ -20,7 +26,7 @@ async def use_tool_plugin(ctx: PluginContext) -> None:
     ctx.set_response(result)
 
 
-def make_registries() -> SystemRegistries:
+def make_capabilities() -> SystemRegistries:
     resources = ResourceContainer()
     tools = ToolRegistry()
     asyncio.run(tools.add("sleep", SleepTool({})))
@@ -34,9 +40,9 @@ def make_registries() -> SystemRegistries:
 
 
 def test_async_tool_execution():
-    registries = make_registries()
+    capabilities = make_capabilities()
     start = time.time()
-    result = asyncio.run(execute_pipeline("hi", registries))
+    result = asyncio.run(execute_pipeline("hi", capabilities))
     duration = time.time() - start
     assert result == "hello"
     assert duration >= 0.05

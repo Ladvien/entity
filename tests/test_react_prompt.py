@@ -1,9 +1,15 @@
 import asyncio
 from datetime import datetime
 
-from pipeline import (ConversationEntry, MetricsCollector, PipelineState,
-                      PluginContext, PluginRegistry, SystemRegistries,
-                      ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 
 from entity.core.resources.container import ResourceContainer
 from user_plugins.prompts.react_prompt import ReActPrompt
@@ -38,8 +44,8 @@ def make_context(llm: FakeLLM):
     calculator = CalculatorTool()
     asyncio.run(tools.add("calculator_tool", calculator))
 
-    registries = SystemRegistries(resources, tools, plugins)
-    return state, PluginContext(state, registries)
+    capabilities = SystemRegistries(resources, tools, plugins)
+    return state, PluginContext(state, capabilities)
 
 
 def test_react_prompt_multiple_steps_and_tool_call():
