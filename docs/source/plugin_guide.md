@@ -7,7 +7,7 @@ The Entity framework is built around extensible plugins. Plugins run during spec
 Create a plugin class that inherits from one of the base plugin types and implement `_execute_impl`:
 
 ```python
-from pipeline.base_plugins import PromptPlugin
+from entity.core.plugins import PromptPlugin
 from pipeline.stages import PipelineStage
 
 
@@ -132,7 +132,8 @@ plugin_dirs:
 2. Register the plugin with the `Agent` or include it in your YAML under `plugins:`.
    The list position determines execution order and `SystemInitializer` preserves
    that sequence. There is no priority field.
-3. Validate the YAML using `SystemInitializer.from_yaml("your.yaml")`.
+3. Validate the configuration with `entity.config.EntityConfig` or
+   load a YAML file using `SystemInitializer.from_yaml("your.yaml")`.
 4. Write unit tests and run `pytest` before committing changes.
 
 ## Implementing Storage Backends

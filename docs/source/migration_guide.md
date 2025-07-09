@@ -31,7 +31,7 @@ poetry run entity-cli --config your.yaml
 ## 3. Validate Plugins
 
 If you wrote custom plugins during the experimental phase, make sure they inherit
-from the current base classes in `pipeline.base_plugins`. Then update the
+from the current base classes in `entity.core.plugins`. Then update the
 `stages` list to use values from `pipeline.stages.PipelineStage`.
 
 ## 4. Verify Stored Data
