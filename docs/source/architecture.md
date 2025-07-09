@@ -35,7 +35,7 @@ and mental models stay easy to grasp.
 4. Clear stage boundaries and structured logging
 5. One canonical name per resource
 
-A small example of structured logging lives in `examples/structured_logging_example.py`.
+A small example of structured logging lives in `user_plugins/examples/structured_logging_example.py`.
 It initializes ``LoggingAdapter`` and emits one log entry.
 
 ## Network Architecture

@@ -158,11 +158,11 @@ methods, enabling a consistent storage interface across resources.
 
 ## Example Pipelines
 
-Several example pipelines in the `examples/` directory showcase more advanced patterns.
+Several example pipelines in the `user_plugins/examples/` directory showcase more advanced patterns.
 
 ### StorageResource Composition
 
-`StorageResource` composes `DatabaseResource`, `VectorStoreResource`, and `FileSystemResource` behind one interface for handling files. The pipeline at `examples/pipelines/memory_composition_pipeline.py` demonstrates the same pattern using the unified `Memory` resource. `Memory` persists conversation history and vectors and is configured in [config/dev.yaml](../../config/dev.yaml). Use `StorageResource` when your plugins need to create or read files. With the plugin configured the code looks like:
+`StorageResource` composes `DatabaseResource`, `VectorStoreResource`, and `FileSystemResource` behind one interface for handling files. The pipeline at `user_plugins/examples/pipelines/memory_composition_pipeline.py` demonstrates the same pattern using the unified `Memory` resource. `Memory` persists conversation history and vectors and is configured in [config/dev.yaml](../../config/dev.yaml). Use `StorageResource` when your plugins need to create or read files. With the plugin configured the code looks like:
 
 ```python
 resources = ResourceContainer()
@@ -183,11 +183,11 @@ resources.register("filesystem", LocalFileSystemResource, {"base_path": "./files
 resources.register("storage", StorageResource, {})
 await resources.build_all()
 ```
-The script at `examples/storage_resource_example.py` demonstrates this setup.
+The script at `user_plugins/examples/storage_resource_example.py` demonstrates this setup.
 
 ### Vector Memory
 
-`examples/pipelines/vector_memory_pipeline.py` shows a custom `ResourcePlugin` that stores vectors in memory. A prompt plugin retrieves vectors and interacts with the LLM:
+`user_plugins/examples/pipelines/vector_memory_pipeline.py` shows a custom `ResourcePlugin` that stores vectors in memory. A prompt plugin retrieves vectors and interacts with the LLM:
 
 ```python
 class VectorMemoryResource(ResourcePlugin):
@@ -199,14 +199,14 @@ class VectorMemoryResource(ResourcePlugin):
 ```
 
 These scripts are great starting points when designing your own plugins.
-The `examples/tools/search_weather_example.py` script demonstrates
+The `user_plugins/examples/tools/search_weather_example.py` script demonstrates
 registering built-in tools directly with an `Agent` and combining their
 results.
 
 ### Adapter and Failure Examples
 
 The repository also includes short examples for adapter usage and basic
-failure handling. See [`examples/servers/cli_adapter.py`](../../examples/servers/cli_adapter.py)
+failure handling. See [`user_plugins/examples/servers/cli_adapter.py`](../../user_plugins/examples/servers/cli_adapter.py)
 for how to expose an `Agent` through a command line interface. Use `src/cli.py`
 to run the agent interactively or over a WebSocket connection:
 
@@ -216,7 +216,7 @@ poetry run python src/cli.py serve-websocket --config config/dev.yaml
 ```
 
 When implementing custom error handling, refer to
-[`examples/failure_example.py`](../../examples/failure_example.py),
+[`user_plugins/examples/failure_example.py`](../../user_plugins/examples/failure_example.py),
 the failure plugin template at `src/cli/templates/failure.py`,
 and the [error handling guide](error_handling.md).
 

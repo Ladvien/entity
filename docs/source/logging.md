@@ -38,11 +38,11 @@ Use the ID to trace a single request across plugins and stages.
 
 ### Example Script
 
-The `examples/structured_logging_example.py` script initializes ``LoggingAdapter`` and writes a single log entry.
+The `user_plugins/examples/structured_logging_example.py` script initializes ``LoggingAdapter`` and writes a single log entry.
 Run it with:
 
 ```bash
-python examples/structured_logging_example.py
+python user_plugins/examples/structured_logging_example.py
 ```
 
 ## Plugin and Tool Observability

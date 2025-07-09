@@ -53,7 +53,7 @@ Run the example server implemented with ``LLMGRPCAdapter`` and stream a short
 response:
 
 ```bash
-python examples/servers/grpc_server.py
+python user_plugins/examples/servers/grpc_server.py
 ```
 
 The adapter launches ``LLMService`` locally and prints each token generated for

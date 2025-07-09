@@ -33,7 +33,7 @@ For details on failures and recovery see [docs/source/error_handling.md](docs/so
 2. Run `poetry install --with dev` to create the virtual environment and install
    development tools.
 3. Start the agent with your desired configuration file.
-4. Copy `.env.example` to `.env` and fill in the values if you want to run the example scripts. See [examples/README.md](examples/README.md) for what each example expects.
+4. Copy `.env.example` to `.env` and fill in the values if you want to run the example scripts. See [user_plugins/examples/README.md](user_plugins/examples/README.md) for what each example expects.
 
 ### Testing Setup
 Run `poetry install --with dev` before executing tests or quality checks.
@@ -326,18 +326,18 @@ plugins:
         type: plugins.builtin.resources.local_filesystem:LocalFileSystemResource
         base_path: ./files
 ```
-For a runnable demonstration see `examples/storage_resource_example.py`.
+For a runnable demonstration see `user_plugins/examples/storage_resource_example.py`.
 
 ## Server Examples
 
-A set of demo servers lives in `examples/servers`. The WebSocket example
+A set of demo servers lives in `user_plugins/examples/servers`. The WebSocket example
 requires the `websockets` package, which is now listed in `pyproject.toml`.
 
 ```bash
-python examples/servers/http_server.py
+python user_plugins/examples/servers/http_server.py
 poetry run python src/cli.py serve-websocket --config config/dev.yaml
-python examples/servers/grpc_server.py
-python examples/servers/cli_adapter.py
+python user_plugins/examples/servers/grpc_server.py
+python user_plugins/examples/servers/cli_adapter.py
 ```
 
 ## Implementation Recommendations

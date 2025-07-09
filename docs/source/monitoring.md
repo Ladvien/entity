@@ -15,7 +15,7 @@ MetricsServerManager.start(port=9001)
 
 The exporter provides stage latency, LLM latency and failure counters along with
 CPU and memory usage. Point Prometheus at the server to scrape these metrics.
-See `examples/observability_metrics.py` for a minimal example.
+See `user_plugins/examples/observability_metrics.py` for a minimal example.
 
 ### Built-in Dashboard
 
@@ -41,7 +41,7 @@ async with start_span("my_task"):
     await do_work()
 ```
 
-See `examples/observability_tracing.py` for a minimal demonstration.
+See `user_plugins/examples/observability_tracing.py` for a minimal demonstration.
 
 ## Grafana Dashboard
 

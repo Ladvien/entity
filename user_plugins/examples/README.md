@@ -1,7 +1,7 @@
 # Example Scripts
 
 This folder contains small programs that showcase different features of the Entity pipeline framework.
-Run them with ``python -m examples.<script>`` from the repository root or install
+Run them with ``python -m user_plugins.examples.<script>`` from the repository root or install
 the package in editable mode with ``pip install -e .``.
 Many scripts read credentials from environment variables. Copy `.env.example` to
 `.env` and fill in the values before running them.

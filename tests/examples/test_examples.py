@@ -15,20 +15,20 @@ from pipeline import SystemRegistries
 
 
 def test_pipeline_example_setup_registries() -> None:
-    mod = import_module("examples.pipelines.pipeline_example")
+    mod = import_module("user_plugins.examples.pipelines.pipeline_example")
     regs = mod.setup_registries()
     assert isinstance(regs, SystemRegistries)
 
 
 def test_example_modules_importable() -> None:
     modules = [
-        "examples.advanced_llm",
-        "examples.bedrock_deploy",
-        "examples.servers.http_server",
-        "examples.utilities.plugin_loader",
-        "examples.pipelines.memory_composition_pipeline",
-        "examples.pipelines.vector_memory_pipeline",
-        "examples.pipelines.duckdb_pipeline",
+        "user_plugins.examples.advanced_llm",
+        "user_plugins.examples.bedrock_deploy",
+        "user_plugins.examples.servers.http_server",
+        "user_plugins.examples.utilities.plugin_loader",
+        "user_plugins.examples.pipelines.memory_composition_pipeline",
+        "user_plugins.examples.pipelines.vector_memory_pipeline",
+        "user_plugins.examples.pipelines.duckdb_pipeline",
     ]
     for name in modules:
         import_module(name)
@@ -38,11 +38,11 @@ class TestExamples:
     """Ensure example scripts run without errors."""
 
     scripts = [
-        Path("examples/advanced_llm.py"),
-        Path("examples/pipelines/pipeline_example.py"),
-        Path("examples/pipelines/duckdb_pipeline.py"),
-        Path("examples/pipelines/memory_composition_pipeline.py"),
-        Path("examples/pipelines/vector_memory_pipeline.py"),
+        Path("user_plugins/examples/advanced_llm.py"),
+        Path("user_plugins/examples/pipelines/pipeline_example.py"),
+        Path("user_plugins/examples/pipelines/duckdb_pipeline.py"),
+        Path("user_plugins/examples/pipelines/memory_composition_pipeline.py"),
+        Path("user_plugins/examples/pipelines/vector_memory_pipeline.py"),
     ]
 
     @pytest.mark.slow

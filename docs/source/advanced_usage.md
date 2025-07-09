@@ -81,10 +81,10 @@ Any structural change—adding or removing plugins, modifying stage assignments,
 changing dependencies—requires restarting the agent. This keeps hot reloads fast
 for tunable values while preventing inconsistent pipeline state.
 
-For a hands-on demonstration, run `examples/config_reload_example.py`:
+For a hands-on demonstration, run `user_plugins/examples/config_reload_example.py`:
 
 ```bash
-python examples/config_reload_example.py
+python user_plugins/examples/config_reload_example.py
 ```
 
 ### Runtime Reconfiguration and Rollback
@@ -105,11 +105,11 @@ await reg.get_plugin("my_plugin").rollback_config()
 ### Streaming and Function Calling
 
 UnifiedLLMResource now exposes streaming via Server-Sent Events and optional
-function calling. Run the `examples/advanced_llm.py` script to see these
+function calling. Run the `user_plugins/examples/advanced_llm.py` script to see these
 features in action:
 
 ```bash
-python examples/advanced_llm.py
+python user_plugins/examples/advanced_llm.py
 ```
 
 ### Running the Example Servers
@@ -117,7 +117,7 @@ python examples/advanced_llm.py
 Start the demo HTTP server:
 
 ```bash
-python examples/servers/http_server.py
+python user_plugins/examples/servers/http_server.py
 ```
 
 For a WebSocket server use the CLI:
@@ -129,24 +129,24 @@ poetry run python src/cli.py serve-websocket --config config/dev.yaml
 Run the gRPC server:
 
 ```bash
-python examples/servers/grpc_server.py
+python user_plugins/examples/servers/grpc_server.py
 ```
 
 Start the CLI adapter for a basic text interface:
 
 ```bash
-python examples/servers/cli_adapter.py
+python user_plugins/examples/servers/cli_adapter.py
 ```
 
 ### DuckDB Pipeline Example
 
-The `examples/pipelines/duckdb_pipeline.py` script demonstrates a local vector
+The `user_plugins/examples/pipelines/duckdb_pipeline.py` script demonstrates a local vector
 store backed by DuckDB:
 
 ```bash
-python examples/pipelines/duckdb_pipeline.py
+python user_plugins/examples/pipelines/duckdb_pipeline.py
 ```
 
 ### Caching Pipeline Data
 
-`CacheResource` lets plugins store intermediate results between stages. Configure it with `InMemoryCache` or your own backend. Run `examples/cache_example.py` for a minimal setup.
+`CacheResource` lets plugins store intermediate results between stages. Configure it with `InMemoryCache` or your own backend. Run `user_plugins/examples/cache_example.py` for a minimal setup.
