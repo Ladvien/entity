@@ -1,7 +1,6 @@
-"""Failure handling plugins for logging and user-friendly errors."""
+"""Expose failure plugins from ``user_plugins`` under the builtin namespace."""
 
-from .basic_logger import BasicLogger
-from .error_formatter import ErrorFormatter
+from user_plugins.failure import BasicLogger, ErrorFormatter
 from .fallback_error_plugin import FallbackErrorPlugin
 
 __all__ = [

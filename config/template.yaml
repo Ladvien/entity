@@ -29,11 +29,11 @@ plugins:
         type: pipeline.cache.memory:InMemoryCache
   tools:
     weather:
-      type: plugins.builtin.tools.weather_api_tool:WeatherApiTool
+      type: user_plugins.tools.weather_api_tool:WeatherApiTool
       api_key: "${WEATHER_API_KEY}"
       base_url: "https://api.weather.com"
     calculator:
-      type: plugins.builtin.tools.calculator_tool:CalculatorTool
+      type: user_plugins.tools.calculator_tool:CalculatorTool
   adapters:
     http:
       type: plugins.builtin.adapters.http:HTTPAdapter
@@ -52,7 +52,7 @@ plugins:
       type: user_plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
       enable_reasoning: true
     memory_retrieval:
-      type: plugins.builtin.prompts.memory_retrieval:MemoryRetrievalPrompt
+      type: user_plugins.prompts.memory_retrieval:MemoryRetrievalPrompt
       max_context_length: 4000
     intent_classifier:
       type: user_plugins.prompts.intent_classifier:IntentClassifierPrompt

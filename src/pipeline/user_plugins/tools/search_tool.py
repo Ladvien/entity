@@ -1,5 +1,5 @@
-"""Expose the builtin :class:`SearchTool` for user configurations."""
+"""Provide ``SearchTool`` for config paths under ``user_plugins``."""
 
-from plugins.builtin.tools.search_tool import SearchTool
+from user_plugins.tools.search_tool import SearchTool
 
 __all__ = ["SearchTool"]
