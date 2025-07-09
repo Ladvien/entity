@@ -1,7 +1,7 @@
 import asyncio
 
 import pytest
-from pipeline.base_plugins import ToolPlugin
+from entity.core.plugins import ToolPlugin
 from pipeline.errors import ToolExecutionError
 
 

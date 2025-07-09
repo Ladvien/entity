@@ -2,7 +2,7 @@ import logging
 
 import pytest
 import yaml
-from pipeline.base_plugins import PromptPlugin, ResourcePlugin
+from entity.core.plugins import PromptPlugin, ResourcePlugin
 from pipeline.initializer import SystemInitializer
 from pipeline.stages import PipelineStage
 from entity.core.registry_validator import RegistryValidator

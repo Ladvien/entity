@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pipeline.base_plugins import FailurePlugin
+from entity.core.plugins import FailurePlugin
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
