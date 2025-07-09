@@ -439,7 +439,29 @@ class SystemInitializer:
         resource_container = self.resource_container_cls()
         for name, cls, config in registry.resource_classes():
             resource_container.register(name, cls, config)
-        await resource_container.build_all()
+
+        # Instantiate all resources before injecting dependencies
+        order = resource_container._resolve_order()
+        instances: Dict[str, Any] = {}
+        for name in order:
+            cls = resource_container._classes[name]
+            cfg = resource_container._configs[name]
+            instance = resource_container._create_instance(cls, cfg)
+            await resource_container.add(name, instance)
+            instances[name] = instance
+
+        for name, instance in instances.items():
+            resource_container._inject_dependencies(name, instance)
+
+        for name in order:
+            inst = instances[name]
+            init = getattr(inst, "initialize", None)
+            if callable(init):
+                await init()
+            resource_container._init_order.append(name)
+            check = getattr(inst, "health_check", None)
+            if callable(check) and not await check():
+                raise SystemError(f"Resource '{name}' failed health check")
 
         report = await resource_container.health_report()
         for name, healthy in report.items():

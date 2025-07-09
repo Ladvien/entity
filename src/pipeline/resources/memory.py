@@ -24,6 +24,8 @@ class Conversation:
 class Memory(_Memory):
     """Expose start_conversation on top of base Memory."""
 
+    dependencies: list[str] = []
+
     def start_conversation(
         self, capabilities: SystemRegistries, _manager: object | None = None
     ) -> Conversation:

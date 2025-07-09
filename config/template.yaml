@@ -19,6 +19,7 @@ plugins:
     #   model: "${OLLAMA_MODEL}"
     memory:
       type: entity.resources.memory:Memory
+      dependencies: []
     # storage:
     #   type: pipeline.resources.storage_resource:StorageResource
   tools:
@@ -44,12 +45,15 @@ plugins:
   prompts:
     chain_of_thought:
       type: entity.plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
+      dependencies: [llm]
       enable_reasoning: true
     react:
       type: entity.plugins.prompts.react:ReActPrompt
+      dependencies: [llm]
       max_steps: 5
     memory_retrieval:
       type: user_plugins.prompts.memory_retrieval:MemoryRetrievalPrompt
+      dependencies: [memory]
       max_context_length: 4000
     intent_classifier:
       type: user_plugins.prompts.intent_classifier:IntentClassifierPrompt

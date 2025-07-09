@@ -36,6 +36,8 @@ class _Provider:
 class UnifiedLLMResource:
     """Simplified multi-provider LLM wrapper."""
 
+    dependencies: list[str] = []
+
     def __init__(self, config: Dict[str, Any]) -> None:
         self._providers = [_Provider(config.get("provider", ""), config)]
 
