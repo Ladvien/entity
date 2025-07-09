@@ -1,7 +1,7 @@
 from typing import List
 
 import pytest
-from common_interfaces import BaseResource
+from pipeline.base_plugins import ResourcePlugin as BaseResource
 from pipeline.resources import ResourceContainer
 
 

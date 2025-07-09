@@ -60,7 +60,7 @@ flowchart LR
 The performance suite currently fails to run due to circular import errors.
 Example output:
 ```
-ImportError: cannot import name 'Resource' from partially initialized module 'common_interfaces.resources'
+ImportError: cannot import name 'Resource' from partially initialized module 'entity.core.resources'
 ```
 
 Once the imports are resolved, the `pytest-benchmark` plugin can capture

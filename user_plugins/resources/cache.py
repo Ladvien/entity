@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from common_interfaces import import_plugin_class
+from entity.core.plugin_utils import import_plugin_class
 from pipeline.base_plugins import ResourcePlugin
 from pipeline.cache import CacheBackend, InMemoryCache
 from pipeline.context import PluginContext
