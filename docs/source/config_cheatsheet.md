@@ -3,33 +3,27 @@
 Minimal YAML layout for a working agent.
 
 ```yaml
-entity:
-  entity_id: "demo"
-  name: "Demo Agent"
+server:
+  host: "0.0.0.0"
+  port: 8000
 
 plugins:
   resources:
     database:
-      type: plugins.builtin.resources.sqlite_storage:SQLiteStorage
+      type: plugins.builtin.resources.sqlite_storage:SQLiteStorageResource
       path: ./entity.db
     llm:
       provider: openai
       model: gpt-4
-  tools:
-    search:
-      type: plugins.builtin.tools.search:SearchTool
   prompts:
     main:
       type: user_plugins.prompts.simple:SimplePrompt
   adapters:
     http:
       type: plugins.builtin.adapters.http:HTTPAdapter
-    cli:
-      type: plugins.builtin.adapters.cli:CLIAdapter
-    logging:
-      type: plugins.builtin.adapters.logging:LoggingAdapter
+      stages: [parse, deliver]
 ```
 
-Use `poetry run python src/cli.py --config config.yaml` to start the agent.
+Use `poetry run entity-cli --config config.yaml` to start the agent.
 This example references a plugin under the `user_plugins` package to
-demonstrate how custom modules can be loaded.
+show how custom modules can be loaded.
