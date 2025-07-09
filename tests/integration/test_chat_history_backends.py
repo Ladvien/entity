@@ -6,11 +6,19 @@ from pathlib import Path
 import pytest
 
 from entity_config.environment import load_env
-from pipeline import (ConversationEntry, MetricsCollector, PipelineStage,
-                      PipelineState, PluginContext, PluginRegistry,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineStage,
+    PipelineState,
+    PluginContext,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from pipeline.resources import ResourceContainer
 from pipeline.resources.memory import Memory
+from pipeline.resources.memory_resource import MemoryResource
 from plugins.builtin.resources.duckdb_database import DuckDBDatabaseResource
 from plugins.builtin.resources.memory_storage import MemoryStorage
 from plugins.builtin.resources.postgres import PostgresResource

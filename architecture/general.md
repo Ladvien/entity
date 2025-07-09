@@ -95,8 +95,8 @@ similar = await memory.search_similar("user question", k=5)
 memory.remember("user_preference", "concise")
 preference = memory.recall("user_preference")
 
-# ConversationManager is part of Memory resource
-conversation_manager = memory.get_conversation_manager()
+# Start a conversation session
+conversation = memory.start_conversation()
 ```
 
 #### Storage Resource
@@ -231,7 +231,7 @@ class PluginContext:
 - **PipelineState**: Cleared after each pipeline execution (ephemeral)
 - **ConversationHistory**: Persisted via Memory resource across interactions
 - **Resource State**: Managed by individual resource lifecycles
-- **ConversationManager**: Integrated into Memory resource, not separate component
+- **Conversation sessions**: Created via `memory.start_conversation()`
 
 ## Runtime Reconfiguration
 
