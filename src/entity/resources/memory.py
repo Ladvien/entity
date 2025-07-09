@@ -25,8 +25,8 @@ class Memory(ResourcePlugin):
     # Key-value helpers
     # ------------------------------------------------------------------
 
-    def memory(self, key: str, default: Any | None = None) -> Any:
-        """Retrieve a persisted value."""
+    def get(self, key: str, default: Any | None = None) -> Any:
+        """Return ``key`` from memory or ``default`` when missing."""
         return self._kv.get(key, default)
 
     def remember(self, key: str, value: Any) -> None:
@@ -34,7 +34,7 @@ class Memory(ResourcePlugin):
         self._kv[key] = value
 
     # Backwards compatibility
-    get = memory
+    memory = get
     set = remember
 
     def clear(self) -> None:

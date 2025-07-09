@@ -125,4 +125,4 @@ Start the CLI adapter for a basic text interface:
 
 ```bash
 
-`CacheResource` lets plugins store intermediate results between stages. Configure it with `InMemoryCache` or your own backend. Run `user_plugins/examples/cache_example.py` for a minimal setup.
+`Memory` stores conversation history and key-value data. See `user_plugins/examples/cache_example.py` for a basic example.

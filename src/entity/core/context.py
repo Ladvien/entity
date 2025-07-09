@@ -163,7 +163,7 @@ class PluginContext:
         """Retrieve a value from persistent memory."""
         if self._memory is None:
             return default
-        return self._memory.memory(key, default)
+        return self._memory.get(key, default)
 
     def load(self, key: str, default: Any | None = None) -> Any:
         """Return ``key`` from the internal store or ``default`` when missing."""

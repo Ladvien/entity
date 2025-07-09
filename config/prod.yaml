@@ -52,10 +52,6 @@ plugins:
 #       type: plugins.builtin.resources.s3_filesystem:S3FileSystem
 #       bucket: agent-files
 #       region: us-east-1
-    cache:
-      type: user_plugins.resources.cache:CacheResource
-      backend:
-        type: user_plugins.resources.cache_backends.redis:RedisCache
   tools:
     weather:
       type: user_plugins.tools.weather_api_tool:WeatherApiTool

@@ -21,11 +21,6 @@ plugins:
       type: entity.resources.memory:Memory
     # storage:
     #   type: pipeline.resources.storage_resource:StorageResource
-      
-    cache:
-      type: user_plugins.resources.cache:CacheResource
-      backend:
-        type: pipeline.cache.memory:InMemoryCache
   tools:
     weather:
       type: user_plugins.tools.weather_api_tool:WeatherApiTool

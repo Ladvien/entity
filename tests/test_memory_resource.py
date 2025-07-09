@@ -22,7 +22,7 @@ class IncrementPlugin(PromptPlugin):
     async def _execute_impl(self, context):
         memory: Memory = context.get_resource("memory")
         count = memory.get("count", 0) + 1
-        memory.set("count", count)
+        memory.remember("count", count)
         context.set_response(count)
 
 
