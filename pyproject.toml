@@ -82,8 +82,8 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poe.tasks]
-docs = { cmd = "sphinx-build docs/source docs/build/html" }
-docs_view = { cmd = "sphinx-autobuild docs/source docs/build/html" }
+docs = { cmd = "sphinx-build -c src/docs_build docs/source docs/build/html" }
+docs_view = { cmd = "sphinx-autobuild -c src/docs_build docs/source docs/build/html" }
 patch = { cmd = "poetry version patch" }
 _publish = { cmd = "poetry publish --build" }
 release = ["docs", "patch", "_publish"]
