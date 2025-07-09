@@ -69,7 +69,19 @@ class PluginAutoClassifier:
             )
 
         hints = user_hints or {}
-        base = cast(Type, plugin_base_registry.prompt_plugin)
+        try:
+            source = inspect.getsource(plugin_func)
+        except OSError:
+            source = ""
+
+        if any(k in source for k in ["think", "reason", "analyze"]):
+            base = cast(Type, plugin_base_registry.prompt_plugin)
+        elif any(k in source for k in ["parse", "validate", "check"]):
+            base = cast(Type, plugin_base_registry.adapter_plugin)
+        elif any(k in source for k in ["return", "response", "answer"]):
+            base = cast(Type, plugin_base_registry.prompt_plugin)
+        else:
+            base = cast(Type, plugin_base_registry.prompt_plugin)
 
         def _default_stages(plugin_base: Type) -> list[PipelineStage]:
             if issubclass(plugin_base, plugin_base_registry.tool_plugin):
