@@ -56,50 +56,57 @@ Here is the architecture directory.  Below are references to architectural notes
 * **18. Configuration Validation Consolidation**: Mandates the exclusive use of Pydantic for configuration validation, replacing JSON Schema and improving type safety, error messages, and tooling support.
 
 
-## Repository / Folder Structure
-```sh
-entity/                 # Project root (could also contain README, pyproject.toml, etc.)
+## Repository Layout
+
+Folder structure:
+```plaintext
+entity/
+├── user_plugins/                # Example or custom plugins (used by AgentBuilder or CLI)
+│   ├── my_prompt.py            # Example PromptPlugin
+│   └── my_tool.py              # Example ToolPlugin
+│
 ├── src/
-│   └── entity/         # Main package for the framework
+│   └── entity/                 # Main package
 │       ├── __init__.py
-│       ├── core/       # Core framework logic (execution engine, context, agent)
+│       ├── core/               # Core execution engine and orchestration
 │       │   ├── __init__.py
-│       │   ├── agent.py            # `Agent` class (config-driven initialization):contentReference[oaicite:0]{index=0}
-│       │   ├── builder.py          # `AgentBuilder` class (programmatic agent construction)
-│       │   ├── context.py          # Pipeline context (store/load results, get_resource, tool usage)
-│       │   ├── pipeline.py         # Pipeline executor/worker (stage loop, stateless execution):contentReference[oaicite:2]{index=2}:contentReference[oaicite:3]{index=3}
-│       │   ├── state.py           # Data structures for pipeline state (e.g. `PipelineState`)
-│       │   ├── registry.py         # Plugin registry (manages plugins by stage, YAML order):contentReference[oaicite:5]{index=5}
-│       │   └── container.py        # Dependency container for ResourcePlugins (initialization order):contentReference[oaicite:6]{index=6}
-│       ├── plugins/    # Plugin definitions, categorized by type (all inherit from Plugin base):contentReference[oaicite:7]{index=7}
-│       │   ├── __init__.py         # May import common plugin classes for convenience
-│       │   ├── base.py             # Defines `Plugin` ABC base class and shared plugin logic:contentReference[oaicite:8]{index=8}
-│       │   ├── resource_plugin.py  # `ResourcePlugin` base class and subclasses (LLMResourcePlugin, etc.):contentReference[oaicite:9]{index=9}
-│       │   ├── prompt_plugin.py    # `PromptPlugin` base (LLM reasoning plugins):contentReference[oaicite:10]{index=10}
-│       │   ├── tool_plugin.py      # `ToolPlugin` base (external action plugins):contentReference[oaicite:11]{index=11}
-│       │   ├── adapter_plugin.py   # `AdapterPlugin` base and I/O plugin classes (InputAdapter, OutputAdapter):contentReference[oaicite:12]{index=12}:contentReference[oaicite:13]{index=13}
-│       │   ├── failure_plugin.py   # `FailurePlugin` class (error handling plugins):contentReference[oaicite:14]{index=14}
-│       │   └── infra_plugin.py     # `InfrastructurePlugin` class (operational/monitoring plugins):contentReference[oaicite:15]{index=15}
-│       ├── resources/  # Core resource classes and composition (unified Memory, Storage, etc.)
+│       │   ├── agent.py         # Agent: config-based runner
+│       │   ├── builder.py       # AgentBuilder: programmatic plugin composition
+│       │   ├── context.py       # PipelineContext: runtime data, resource access, tool calls
+│       │   ├── pipeline.py      # PipelineWorker: stage loop executor
+│       │   ├── state.py         # PipelineState: transient run state container
+│       │   ├── registry.py      # PluginRegistry: maps plugins to pipeline stages
+│       │   └── container.py     # DependencyContainer: initializes and wires ResourcePlugins
+│       ├── plugins/            # Plugin type definitions and bases
 │       │   ├── __init__.py
-│       │   ├── memory.py           # Unified `Memory` resource (conv. history, key-value store):contentReference[oaicite:16]{index=16}
-│       │   ├── storage.py          # `Storage` resource (file systems, etc.)
-│       │   └── llm.py              # Unified `LLM` resource (composed from LLM providers, if applicable)
-│       ├── config/     # Configuration models and validation
+│       │   ├── base.py              # Plugin ABC: lifecycle and stage contract
+│       │   ├── resource_plugin.py   # ResourcePlugin base: systems like LLMs, DBs, memory
+│       │   ├── prompt_plugin.py     # PromptPlugin base: THINK stage logic
+│       │   ├── tool_plugin.py       # ToolPlugin base: DO stage tools
+│       │   ├── adapter_plugin.py    # AdapterPlugin base: input/output for PARSE/DELIVER
+│       │   ├── failure_plugin.py    # FailurePlugin base: ERROR stage fallbacks
+│       │   └── infra_plugin.py      # InfrastructurePlugin base: metrics, tracing, health
+│       ├── resources/          # Composed system resources
 │       │   ├── __init__.py
-│       │   └── models.py          # Pydantic models for plugin configs (consolidated):contentReference[oaicite:17]{index=17}:contentReference[oaicite:18]{index=18}
-│       ├── cli/        # Command-line interface tools for developers
+│       │   ├── memory.py          # Unified memory (e.g. history + vector store)
+│       │   ├── storage.py         # Filesystem or cloud storage abstraction
+│       │   └── llm.py             # Unified LLM interface and access layer
+│       ├── config/             # Configuration and validation
 │       │   ├── __init__.py
-│       │   ├── main.py            # CLI entry point (argument parsing, command dispatch)
-│       │   ├── validate.py        # CLI command: validate config and plugins:contentReference[oaicite:19]{index=19}
-│       │   ├── analyze_plugin.py  # CLI command: analyze plugin function for stage hints:contentReference[oaicite:20]{index=20}
-│       │   └── graph_dep.py       # CLI command: visualize dependency graph:contentReference[oaicite:21]{index=21}
-│       └── utils/ (optional)      # Misc utilities (e.g., logging setup, common helpers)
-│           └── __init__.py 
-└── tests/               # Test suite organized parallel to src structure
-    ├── test_core/      # Tests for core components (Agent, pipeline, context, etc.)
-    ├── test_plugins/   # Tests for plugin base classes and sample plugins
-    ├── test_resources/ # Tests for resource initialization and memory persistence
-    ├── test_config/    # Tests for config validation (Pydantic models, hot-reload cases)
-    └── test_cli/       # Tests for CLI commands and developer tools
+│       │   └── models.py         # Pydantic models for plugin/resource config
+│       ├── cli/                # CLI tools for validation, debugging, analysis
+│       │   ├── __init__.py
+│       │   ├── main.py            # CLI entry point
+│       │   ├── validate.py        # Config/schema validator
+│       │   ├── analyze_plugin.py  # Suggest stage for user-defined plugin
+│       │   └── graph_dep.py       # Resource dependency graph visualizer
+│       └── utils/              # Misc shared helpers
+│           └── __init__.py
+│
+└── tests/                     # Unit test suite
+    ├── test_core/              # Agent, builder, context, pipeline
+    ├── test_plugins/           # Plugin behavior and integration
+    ├── test_resources/         # Memory, storage, LLM resource tests
+    ├── test_config/            # Config parsing, validation edge cases
+    └── test_cli/               # CLI command behavior and error handling
 ```
