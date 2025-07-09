@@ -18,8 +18,10 @@ from registry import PluginRegistry, ToolRegistry
 
 from .base_plugins import BasePlugin, ResourcePlugin, ToolPlugin
 from .defaults import DEFAULT_CONFIG
-from .logging import configure_logging
+from .logging import configure_logging, get_logger
 from .stages import PipelineStage
+
+logger = get_logger(__name__)
 
 
 class ClassRegistry:
@@ -186,6 +188,51 @@ class SystemInitializer:
     def get_prompt_config(self, name: str) -> Dict:
         return self.config["plugins"]["prompts"][name]
 
+    def _type_default_stages(self, cls: type[BasePlugin]) -> List[PipelineStage]:
+        """Return default stages for the given plugin class."""
+
+        from .base_plugins import AdapterPlugin, PromptPlugin
+
+        if issubclass(cls, ToolPlugin):
+            return [PipelineStage.DO]
+        if issubclass(cls, PromptPlugin):
+            return [PipelineStage.THINK]
+        if issubclass(cls, AdapterPlugin):
+            return [PipelineStage.PARSE, PipelineStage.DELIVER]
+        return []
+
+    def _resolve_plugin_stages(
+        self, cls: type[BasePlugin], instance: BasePlugin, config: Dict
+    ) -> tuple[List[PipelineStage], bool]:
+        """Determine final stages and whether they were explicit."""
+
+        cfg_value = config.get("stages") or config.get("stage")
+        if cfg_value is not None:
+            stages = cfg_value if isinstance(cfg_value, list) else [cfg_value]
+            stages = [PipelineStage.ensure(s) for s in stages]
+            explicit = True
+        else:
+            stages = getattr(instance, "stages", []) or []
+            stages = [PipelineStage.ensure(s) for s in stages]
+            explicit = getattr(instance, "_explicit_stages", "stages" in cls.__dict__)
+
+        if not stages:
+            stages = self._type_default_stages(cls)
+            explicit = False
+
+        type_defaults = self._type_default_stages(cls)
+        if explicit and type_defaults and set(stages) != set(type_defaults):
+            logger.warning(
+                "Plugin '%s' stages %s override type defaults %s",
+                cls.__name__,
+                [str(s) for s in stages],
+                [str(s) for s in type_defaults],
+            )
+
+        if not stages:
+            raise SystemError(f"No stage specified for {cls.__name__}")
+        return stages, explicit
+
     async def initialize(self):
         self._discover_plugins()
 
@@ -274,13 +321,7 @@ class SystemInitializer:
             if any(dep in degraded for dep in getattr(cls, "dependencies", [])):
                 continue
             instance = cls(config)
-            stages_cfg = config.get("stages") or config.get("stage")
-            if stages_cfg is None:
-                stages = getattr(cls, "stages", []) or []
-            else:
-                stages = stages_cfg if isinstance(stages_cfg, list) else [stages_cfg]
-            if not stages:
-                raise SystemError(f"No stage specified for {cls.__name__}")
+            stages, _ = self._resolve_plugin_stages(cls, instance, config)
             for stage in stages:
                 await plugin_registry.register_plugin_for_stage(
                     instance, PipelineStage.ensure(stage)

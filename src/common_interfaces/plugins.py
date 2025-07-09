@@ -70,31 +70,47 @@ class PluginAutoClassifier:
             source = ""
 
         if any(k in source for k in ["think", "reason", "analyze"]):
-            stage = PipelineStage.THINK
             base = cast(Type, plugin_base_registry.prompt_plugin)
         elif any(k in source for k in ["parse", "validate", "check"]):
-            stage = PipelineStage.PARSE
             base = cast(Type, plugin_base_registry.adapter_plugin)
         elif any(k in source for k in ["return", "response", "answer"]):
-            stage = PipelineStage.DO
             base = cast(Type, plugin_base_registry.prompt_plugin)
         else:
-            stage = PipelineStage.DO
             base = cast(Type, plugin_base_registry.prompt_plugin)
 
-        if "stage" in hints:
-            stage = PipelineStage.from_str(str(hints["stage"]))
+        def _default_stages(plugin_base: Type) -> list[PipelineStage]:
+            from pipeline.base_plugins import (AdapterPlugin, PromptPlugin,
+                                               ToolPlugin)
+
+            if issubclass(plugin_base, ToolPlugin):
+                return [PipelineStage.DO]
+            if issubclass(plugin_base, PromptPlugin):
+                return [PipelineStage.THINK]
+            if issubclass(plugin_base, AdapterPlugin):
+                return [PipelineStage.PARSE, PipelineStage.DELIVER]
+            return []
+
+        explicit = False
+        stages = _default_stages(base)
+        if "stage" in hints or "stages" in hints:
+            hint = hints.get("stages") or hints.get("stage")
+            stages = hint if isinstance(hint, list) else [hint]
+            stages = [PipelineStage.from_str(str(s)) for s in stages]
+            explicit = True
 
         priority = int(hints.get("priority", 50))
         name = hints.get("name", plugin_func.__name__)
 
-        return plugin_base_registry.auto_plugin(
+        plugin_obj = plugin_base_registry.auto_plugin(
             func=plugin_func,
-            stages=[stage],
+            stages=stages,
             priority=priority,
             name=name,
             base_class=base,
         )
+        plugin_obj._explicit_stages = explicit
+        plugin_obj._type_default_stages = _default_stages(base)
+        return plugin_obj
 
     @staticmethod
     def classify_and_route(
