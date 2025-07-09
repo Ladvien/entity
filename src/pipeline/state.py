@@ -2,7 +2,6 @@ from __future__ import annotations
 
 """Pipeline component: state."""
 
-import dataclasses
 from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -191,9 +190,3 @@ class PipelineState:
     def snapshot(self) -> "PipelineState":
         """Return a deep copy of the current pipeline state."""
         return deepcopy(self)
-
-    def restore(self, other: "PipelineState") -> "PipelineState":
-        """Replace all attributes with those from ``other`` and return a copy."""
-        for field_obj in dataclasses.fields(self):
-            setattr(self, field_obj.name, deepcopy(getattr(other, field_obj.name)))
-        return self.snapshot()

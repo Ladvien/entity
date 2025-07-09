@@ -34,7 +34,7 @@ This spike investigates strategies for protecting the pipeline from repeated fai
 - **Cons**: Requires schema management and increases latency.
 
 ### 3. In-Memory Checkpointing
-- Keep a recent state copy in memory using `PipelineState.snapshot()` and restore with `restore()` if a plugin fails.
+- Keep a recent state copy in memory using `PipelineState.snapshot()` if a plugin fails.
 - **Pros**: Fastest recovery path for transient errors.
 - **Cons**: Does not help when the process is terminated.
 
