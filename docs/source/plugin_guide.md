@@ -180,7 +180,7 @@ Several example pipelines in the `user_plugins/examples/` directory showcase mor
 
 ### StorageResource Composition
 
-`StorageResource` composes `DatabaseResource`, `VectorStoreResource`, and `FileSystemResource` behind one interface for handling files. The pipeline at `user_plugins/examples/pipelines/memory_composition_pipeline.py` demonstrates the same pattern using the unified `Memory` resource. `Memory` persists conversation history and vectors and is configured in [config/dev.yaml](../../config/dev.yaml). Use `StorageResource` when your plugins need to create or read files. With the plugin configured the code looks like:
+`StorageResource` composes `DatabaseResource`, `VectorStoreResource`, and `FileSystemResource` behind one interface for handling files. Memory persists conversation history and vectors and is configured in [config/dev.yaml](../../config/dev.yaml). Use `StorageResource` when your plugins need to create or read files. With the plugin configured the code looks like:
 
 ```python
 resources = ResourceContainer()
@@ -225,12 +225,12 @@ results.
 
 The repository also includes short examples for adapter usage and basic
 failure handling. See [`user_plugins/examples/servers/cli_adapter.py`](../../user_plugins/examples/servers/cli_adapter.py)
-for how to expose an `Agent` through a command line interface. Use `src/cli.py`
+for how to expose an `Agent` through a command line interface. Use `entity-cli`
 to run the agent interactively or over a WebSocket connection:
 
 ```bash
-poetry run python src/cli.py --config config/dev.yaml
-poetry run python src/cli.py serve-websocket --config config/dev.yaml
+poetry run entity-cli --config config/dev.yaml
+poetry run entity-cli serve-websocket --config config/dev.yaml
 ```
 
 When implementing custom error handling, refer to

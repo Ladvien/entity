@@ -72,7 +72,7 @@ advanced storage without sacrificing the simple default setup.
 Update plugin settings without restarting the agent:
 
 ```bash
-poetry run python src/cli.py reload-config updated.yaml
+poetry run entity-cli reload-config updated.yaml
 ```
 
 The command waits for active pipelines to finish, then applies the new YAML
@@ -123,24 +123,11 @@ python user_plugins/examples/servers/http_server.py
 For a WebSocket server use the CLI:
 
 ```bash
-poetry run python src/cli.py serve-websocket --config config/dev.yaml
+poetry run entity-cli serve-websocket --config config/dev.yaml
 ```
 
 Start the CLI adapter for a basic text interface:
 
 ```bash
-python user_plugins/examples/servers/cli_adapter.py
-```
-
-### DuckDB Pipeline Example
-
-The `user_plugins/examples/pipelines/duckdb_pipeline.py` script demonstrates a local vector
-store backed by DuckDB:
-
-```bash
-python user_plugins/examples/pipelines/duckdb_pipeline.py
-```
-
-### Caching Pipeline Data
 
 `CacheResource` lets plugins store intermediate results between stages. Configure it with `InMemoryCache` or your own backend. Run `user_plugins/examples/cache_example.py` for a minimal setup.

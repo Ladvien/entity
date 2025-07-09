@@ -26,7 +26,7 @@ secrets into the image.
 Run the agent under a process supervisor to handle restarts:
 
 ```bash
-poetry run python src/cli.py --config config/prod.yaml
+poetry run entity-cli --config config/prod.yaml
 ```
 
 Use `systemd` or a container orchestrator such as Kubernetes to keep the process

@@ -19,7 +19,7 @@ with a YAML file:
 
 ```bash
 poetry install --with dev
-poetry run python src/cli.py --config config.yaml
+poetry run entity-cli --config config.yaml
 ```
 This project relies on `httpx==0.27.*`, which Poetry will install automatically.
 <!-- end quick_start -->
@@ -134,7 +134,7 @@ def hello(context):
 Update plugin settings without restarting the agent.
 
 ```bash
-poetry run python src/cli.py reload-config updated.yaml
+poetry run entity-cli reload-config updated.yaml
 ```
 
 See [the architecture overview](architecture/general.md#%F0%9F%94%84-reconfigurable-agent-infrastructure) for details on dynamic reconfiguration.
@@ -335,7 +335,7 @@ requires the `websockets` package, which is now listed in `pyproject.toml`.
 
 ```bash
 python user_plugins/examples/servers/http_server.py
-poetry run python src/cli.py serve-websocket --config config/dev.yaml
+poetry run entity-cli serve-websocket --config config/dev.yaml
 python user_plugins/examples/servers/grpc_server.py
 python user_plugins/examples/servers/cli_adapter.py
 ```

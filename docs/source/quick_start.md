@@ -8,7 +8,7 @@
 Run an agent from a YAML configuration file:
 
 ```bash
-python src/cli.py --config config.yaml
+entity-cli --config config.yaml
 ```
 
 ### Using the SearchTool
@@ -51,7 +51,7 @@ contributors a working agent almost immediately.
 Reload parameter values for existing plugins while the agent is running:
 
 ```bash
-poetry run python src/cli.py reload-config updated.yaml
+poetry run entity-cli reload-config updated.yaml
 ```
 
 Only updates to plugin parameters can be reloaded. Structural changes—adding or
