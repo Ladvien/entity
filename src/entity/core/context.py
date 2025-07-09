@@ -2,14 +2,15 @@ from __future__ import annotations
 
 """Minimal plugin context objects."""
 
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 import time
 from typing import Any, Dict, List, Optional
 import asyncio
 
-from .stages import PipelineStage
-from .state import ConversationEntry, PipelineState, ToolCall
+from pipeline.stages import PipelineStage
+from pipeline.state import ConversationEntry, PipelineState
 
 
 class PluginContext:
@@ -18,9 +19,8 @@ class PluginContext:
     def __init__(self, state: PipelineState, registries: Any) -> None:
         self._state = state
         self._registries = registries
-        self._store = state.stage_results
         self._cache: Dict[str, Any] = {}
-        self._memory = registries.resources.get("memory") if registries else None
+        self._memory = getattr(registries.resources, "memory", None)
 
     # ------------------------------------------------------------------
     @property
@@ -138,10 +138,6 @@ class PluginContext:
         """Return True if ``key`` exists in the cache."""
         return key in self._cache
 
-    # Backwards compatibility
-    store = cache
-    load = recall
-
     # ------------------------------------------------------------------
     # Persistent memory helpers
     # ------------------------------------------------------------------
@@ -156,19 +152,6 @@ class PluginContext:
         if self._memory is None:
             return default
         return self._memory.get(key, default)
-
-    def load(self, key: str, default: Any | None = None) -> Any:
-        """Return ``key`` from the internal store or ``default`` when missing."""
-
-        return self._store.get(key, default)
-
-    def has(self, key: str) -> bool:
-        """Return ``True`` when ``key`` is stored."""
-
-        return key in self._store
-
-    def load(self, key: str, default: Any | None = None) -> Any:
-        return self._store.get(key, default)
 
     def set_metadata(self, key: str, value: Any) -> None:
         self._state.metadata[key] = value

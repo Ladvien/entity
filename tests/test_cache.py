@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import pipeline.context as context_module
+from entity.core.resources.container import ResourceContainer
 from pipeline import (
     ConversationEntry,
     MetricsCollector,
@@ -16,8 +17,6 @@ from pipeline.cache import InMemoryCache
 from pipeline.state import ToolCall
 from pipeline.tools.execution import execute_pending_tools
 from plugins.builtin.resources.llm_base import LLM
-
-from entity.core.resources.container import ResourceContainer
 from user_plugins.resources.cache import CacheResource
 
 context_module.LLM = LLM
@@ -91,4 +90,4 @@ async def test_tool_results_are_cached():
     await execute_pending_tools(state, capabilities)
 
     assert tool.calls == 1
-    assert ctx.load("r1") == ctx.load("r2")
+    assert ctx.recall("r1") == ctx.recall("r2")

@@ -3,14 +3,14 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
+
+from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
+from entity.core.state_logger import LogReplayer, StateLogger
 from pipeline import PipelineStage, execute_pipeline
 from pipeline.base_plugins import BasePlugin
 from pipeline.pipeline import generate_pipeline_id
 from pipeline.resources import ResourceContainer
 from pipeline.state import ConversationEntry, MetricsCollector, PipelineState
-from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
-
-from entity.core.state_logger import LogReplayer, StateLogger
 
 
 class RespondPlugin(BasePlugin):
@@ -28,7 +28,7 @@ def make_failing_plugin(stage: PipelineStage):
             if not context.get_metadata("failed"):
                 context.set_metadata("failed", True)
                 raise RuntimeError("boom")
-            context.store(str(stage), True)
+            context.cache(str(stage), True)
 
     return FailingPlugin()
 
