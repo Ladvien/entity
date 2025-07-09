@@ -62,7 +62,7 @@ def test_initializer_preserves_yaml_order(tmp_path):
         }
     }
     path = tmp_path / "config.yaml"
-    path.write_text(yaml.dump(config))
+    path.write_text(yaml.dump(config, sort_keys=False))
 
     initializer = SystemInitializer.from_yaml(str(path))
     plugin_reg, _, _ = asyncio.run(initializer.initialize())

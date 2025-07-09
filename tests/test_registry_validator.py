@@ -64,7 +64,7 @@ class ComplexPrompt(PromptPlugin):
 
 def _write_config(tmp_path, plugins):
     path = tmp_path / "config.yaml"
-    path.write_text(yaml.dump({"plugins": plugins}))
+    path.write_text(yaml.dump({"plugins": plugins}, sort_keys=False))
     return path
 
 

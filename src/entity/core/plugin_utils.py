@@ -80,7 +80,7 @@ class PluginAutoClassifier:
         else:
             base = cast(Type, plugin_base_registry.prompt_plugin)
 
-        from .plugins import AdapterPlugin, PromptPlugin, ToolPlugin
+        from .plugins.base import AdapterPlugin, PromptPlugin, ToolPlugin
 
         def _default_stages(plugin_base: Type) -> list[PipelineStage]:
             if issubclass(plugin_base, ToolPlugin):

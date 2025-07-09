@@ -83,7 +83,7 @@ def test_initializer_env_and_dependencies(tmp_path):
         }
     }
     path = tmp_path / "config.yaml"
-    path.write_text(yaml.dump(config))
+    path.write_text(yaml.dump(config, sort_keys=False))
 
     initializer = SystemInitializer.from_yaml(str(path))
     assert initializer.get_resource_config("a")["val"] == "ok"
@@ -98,7 +98,7 @@ def test_initializer_env_and_dependencies(tmp_path):
 def test_validate_dependencies_missing(tmp_path):
     config = {"plugins": {"prompts": {"d": {"type": "tests.test_initializer:D"}}}}
     path = tmp_path / "config.yaml"
-    path.write_text(yaml.dump(config))
+    path.write_text(yaml.dump(config, sort_keys=False))
 
     initializer = SystemInitializer.from_yaml(str(path))
     with pytest.raises(SystemError, match="missing dependency 'a'"):
@@ -119,7 +119,7 @@ def test_initializer_from_json_and_dict(tmp_path):
 
     yaml_path = tmp_path / "cfg.yml"
     json_path = tmp_path / "cfg.json"
-    yaml_path.write_text(yaml.dump(config))
+    yaml_path.write_text(yaml.dump(config, sort_keys=False))
     json_path.write_text(json.dumps(config))
 
     init_yaml = SystemInitializer.from_yaml(str(yaml_path))
@@ -155,7 +155,7 @@ def test_llm_resource_registration(tmp_path):
     }
 
     path = tmp_path / "cfg.yml"
-    path.write_text(yaml.dump(config))
+    path.write_text(yaml.dump(config, sort_keys=False))
 
     initializer = SystemInitializer.from_yaml(str(path))
     _, resources, _ = asyncio.run(initializer.initialize())
@@ -170,7 +170,7 @@ def test_runtime_validation_failure(tmp_path):
     }
 
     path = tmp_path / "cfg.yml"
-    path.write_text(yaml.dump(config))
+    path.write_text(yaml.dump(config, sort_keys=False))
 
     initializer = SystemInitializer.from_yaml(str(path))
     with pytest.raises(SystemError, match="Runtime validation failed"):
@@ -185,7 +185,7 @@ def test_health_check_failure(tmp_path):
     }
 
     path = tmp_path / "cfg.yml"
-    path.write_text(yaml.dump(config))
+    path.write_text(yaml.dump(config, sort_keys=False))
 
     initializer = SystemInitializer.from_yaml(str(path))
     with pytest.raises(SystemError, match="failed health check"):
