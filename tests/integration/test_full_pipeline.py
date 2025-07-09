@@ -10,14 +10,14 @@ class ParsePlugin(BasePlugin):
     stages = [PipelineStage.PARSE]
 
     async def _execute_impl(self, context):
-        context.set_stage_result("parsed", True)
+        context.store("parsed", True)
 
 
 class ThinkPlugin(BasePlugin):
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context):
-        context.set_stage_result("thought", True)
+        context.store("thought", True)
 
 
 class RespondPlugin(BasePlugin):
