@@ -30,10 +30,6 @@ class MemoryConfig(PluginConfig):
     vector_store: PluginConfig | None = None
 
 
-class CacheConfig(PluginConfig):
-    backend: BackendConfig | None = None
-
-
 class EmbeddingModelConfig(BaseModel):
     name: str
     dimensions: int | None = None
@@ -60,8 +56,6 @@ class PluginsSection(BaseModel):
         resources = values.get("resources", {}) or {}
         if "memory" in resources:
             resources["memory"] = MemoryConfig.model_validate(resources["memory"])
-        if "cache" in resources:
-            resources["cache"] = CacheConfig.model_validate(resources["cache"])
         if "vector_store" in resources:
             resources["vector_store"] = VectorMemoryConfig.model_validate(
                 resources["vector_store"]
@@ -116,7 +110,6 @@ __all__ = [
     "PluginConfig",
     "BackendConfig",
     "MemoryConfig",
-    "CacheConfig",
     "EmbeddingModelConfig",
     "VectorMemoryConfig",
     "PluginsSection",
