@@ -28,7 +28,8 @@ def test_cli_reload_success(tmp_path):
     result = subprocess.run(
         [
             sys.executable,
-            "src/cli.py",
+            "-m",
+            "entity.cli",
             "--config",
             str(base),
             "reload-config",
@@ -49,7 +50,8 @@ def test_cli_reload_failure(tmp_path):
     result = subprocess.run(
         [
             sys.executable,
-            "src/cli.py",
+            "-m",
+            "entity.cli",
             "--config",
             str(base),
             "reload-config",
@@ -71,7 +73,8 @@ def test_cli_reload_add_tool(tmp_path):
     result = subprocess.run(
         [
             sys.executable,
-            "src/cli.py",
+            "-m",
+            "entity.cli",
             "--config",
             str(base),
             "reload-config",
@@ -92,7 +95,8 @@ def test_cli_reload_remove_plugin(tmp_path):
     result = subprocess.run(
         [
             sys.executable,
-            "src/cli.py",
+            "-m",
+            "entity.cli",
             "--config",
             str(base),
             "reload-config",

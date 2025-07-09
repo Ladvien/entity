@@ -2,7 +2,7 @@ import sys
 
 from plugins.builtin.adapters.websocket import WebSocketAdapter
 
-from cli import CLI
+from entity.cli import EntityCLI as CLI
 
 
 def test_cli_websocket(monkeypatch, tmp_path):
