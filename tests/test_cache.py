@@ -94,4 +94,4 @@ async def test_tool_results_are_cached():
     await execute_pending_tools(state, registries)
 
     assert tool.calls == 1
-    assert state.stage_results["r1"] == state.stage_results["r2"]
+    assert ctx.load("r1") == ctx.load("r2")

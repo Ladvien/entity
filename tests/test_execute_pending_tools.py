@@ -12,6 +12,7 @@ from pipeline import (
 )
 from pipeline.resources import ResourceContainer
 from pipeline.tools.execution import execute_pending_tools
+from pipeline.context import PluginContext
 
 
 class EchoTool:
@@ -41,4 +42,5 @@ def test_execute_pending_tools_returns_mapping_by_result_key():
     results = asyncio.run(execute_pending_tools(state, registries))
 
     assert results == {"echo1": "hello"}
-    assert state.stage_results["echo1"] == "hello"
+    ctx = PluginContext(state, registries)
+    assert ctx.load("echo1") == "hello"
