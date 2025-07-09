@@ -207,18 +207,21 @@ class SystemInitializer:
 
         cfg_value = config.get("stages") or config.get("stage")
         explicit_source = None
-        attr_stages = getattr(instance, "stages", []) or []
-        attr_stages = [PipelineStage.ensure(s) for s in attr_stages]
+
+        attr_stages = [PipelineStage.ensure(s) for s in getattr(instance, "stages", [])]
         attr_explicit = getattr(instance, "_explicit_stages", False)
         auto_inferred = getattr(instance, "_auto_inferred_stages", False)
         type_defaults = self._type_default_stages(cls)
+
+        stages: list[PipelineStage] = []
+        explicit = False
 
         if cfg_value is not None:
             stages = cfg_value if isinstance(cfg_value, list) else [cfg_value]
             stages = [PipelineStage.ensure(s) for s in stages]
             explicit = True
             explicit_source = "config"
-            if attr_stages and set(stages) != set(attr_stages):
+            if attr_explicit and set(stages) != set(attr_stages):
                 logger.warning(
                     "Plugin '%s' config stages %s override class stages %s",
                     cls.__name__,
@@ -231,19 +234,12 @@ class SystemInitializer:
             explicit_source = "class"
         elif type_defaults:
             stages = type_defaults
-            explicit = False
         elif auto_inferred:
             stages = attr_stages
-            explicit = False
-        else:
-            stages = attr_stages or type_defaults
-            explicit = False
 
         if not stages:
-            stages = self._type_default_stages(cls)
-            explicit = False
+            stages = attr_stages or type_defaults
 
-        type_defaults = self._type_default_stages(cls)
         if explicit and type_defaults and set(stages) != set(type_defaults):
             source = explicit_source or "config"
             logger.warning(

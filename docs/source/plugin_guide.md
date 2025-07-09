@@ -80,7 +80,7 @@ Plugin stages are resolved in a predictable order:
 3. Defaults based on plugin type (``ToolPlugin`` → ``DO``, ``PromptPlugin`` → ``THINK``, ``AdapterPlugin`` → ``PARSE`` + ``DELIVER``).
 4. Stages inferred by ``PluginAutoClassifier``.
 
-When configuration or class-defined stages override the plugin type defaults, the initializer logs a warning so you can confirm the override is intentional.
+Explicit configuration always wins. If a plugin class declares stages that differ from its type defaults the initializer emits a warning. The same warning appears when configuration overrides either the class stages or the defaults so you can double‑check the override is intentional.
 
 ## Loading Plugins Automatically
 
