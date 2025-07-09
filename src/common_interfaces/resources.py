@@ -13,6 +13,7 @@ class BaseResource:
     """Minimal async resource with lifecycle hooks."""
 
     name: str = "resource"
+    dependencies: list[str] = []
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
         self.config: Dict[str, Any] = config or {}
