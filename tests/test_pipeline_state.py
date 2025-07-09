@@ -1,6 +1,25 @@
+import asyncio
 from datetime import datetime
 
-from pipeline import ConversationEntry, MetricsCollector, PipelineState
+from pipeline import (
+    ConversationEntry,
+    MetricsCollector,
+    PipelineStage,
+    PipelineState,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
+from pipeline.resources import ResourceContainer
+
+
+class RespondPlugin(PromptPlugin):
+    stages = [PipelineStage.DELIVER]
+
+    async def _execute_impl(self, context):  # pragma: no cover - simple
+        context.set_response("ok")
 
 
 def make_state() -> PipelineState:

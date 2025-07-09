@@ -19,8 +19,9 @@ from pipeline.config import ConfigLoader
 from pipeline.context import PluginContext  # noqa: E402
 from plugins.builtin.resources.pg_vector_store import PgVectorStore
 from plugins.builtin.resources.postgres import PostgresResource
-from plugins.builtin.resources.sqlite_storage import \
-    SQLiteStorageResource as SQLiteDatabaseResource
+from plugins.builtin.resources.sqlite_storage import (
+    SQLiteStorageResource as SQLiteDatabaseResource,
+)
 from user_plugins.memory_resource import MemoryResource
 from user_plugins.resources import DuckDBVectorStore
 

@@ -28,7 +28,7 @@ CONN = {
 def test_save_and_load_history(pg_env):
     async def run():
         db = PostgresResource(CONN)
-        memory = MemoryResource({})
+        memory = Memory(config={})
         memory.database = db
         try:
             await db.initialize()

@@ -22,7 +22,7 @@ async def make_context(tmp_path):
         {"path": tmp_path / "hist.duckdb", "history_table": "h"}
     )
     await db.initialize()
-    memory = MemoryResource({})
+    memory = Memory(config={})
     memory.database = db
     state = PipelineState(
         conversation=[
