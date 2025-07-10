@@ -9,7 +9,7 @@ Ready-made agents live in the new `examples/` directory. Run them with
 
 ### Programmatic Configuration
 Build the same configuration in Python using the models from
-`entity.config`:
+`entity.config`. The `Memory` resource sets up an in-memory DuckDB database by default so no database server is required:
 
 ```python
 from entity.config.models import EntityConfig, PluginsSection, PluginConfig
@@ -19,7 +19,10 @@ config = EntityConfig(
     plugins=PluginsSection(
         prompts={"main": PluginConfig(type="user_plugins.prompts.simple:SimplePrompt")},
         adapters={"http": PluginConfig(type="plugins.builtin.adapters.http:HTTPAdapter", stages=["parse", "deliver"])},
-        resources={"llm": PluginConfig(provider="openai", model="gpt-4")},
+        resources={
+            "llm": PluginConfig(provider="openai", model="gpt-4"),
+            "memory": PluginConfig(type="entity.resources.memory:Memory"),
+        },
     ),
 )
 ```
@@ -52,6 +55,8 @@ curl -X POST -H "Content-Type: application/json" \
 ```
 
 You should see a simple reply from the example pipeline.
+
+The generated configuration stores conversation history in an in-memory DuckDB database. You can switch to a file-based or server database later by editing `config/dev.yaml`.
 
 ## Troubleshooting
 
