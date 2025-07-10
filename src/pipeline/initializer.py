@@ -8,21 +8,18 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple, Type
 
-from entity.core.plugin_utils import import_plugin_class
 from entity.config.environment import load_env
-from pipeline.config import ConfigLoader
-from entity.core.resources.container import ResourceContainer
 from entity.config.models import EntityConfig, asdict
-from pipeline.utils import DependencyGraph
-from entity.core.registries import PluginRegistry, ToolRegistry
-from entity.workflows.discovery import (
-    discover_workflows,
-    register_module_workflows,
-)
-
+from entity.core.plugin_utils import import_plugin_class
 from entity.core.plugins import BasePlugin, ResourcePlugin, ToolPlugin
-from .defaults import DEFAULT_CONFIG
+from entity.core.registries import PluginRegistry, ToolRegistry
+from entity.core.resources.container import ResourceContainer
 from entity.utils.logging import configure_logging, get_logger
+from entity.workflows.discovery import discover_workflows, register_module_workflows
+from pipeline.config import ConfigLoader
+from pipeline.utils import DependencyGraph
+
+from .defaults import DEFAULT_CONFIG
 from .stages import PipelineStage
 from .workflow import Workflow
 
@@ -57,11 +54,9 @@ class ClassRegistry:
             yield cls, self._configs[name]
 
     def resource_classes(self) -> Iterable[Tuple[type, Dict]]:
-        from pipeline.resources import Resource
-
         for name in self._order:
             cls = self._classes[name]
-            if issubclass(cls, ResourcePlugin) or issubclass(cls, Resource):
+            if issubclass(cls, ResourcePlugin):
                 yield name, cls, self._configs[name]
 
     def tool_classes(self) -> Iterable[Tuple[type[ToolPlugin], Dict]]:
@@ -78,16 +73,12 @@ class ClassRegistry:
             if issubclass(cls, ToolPlugin):
                 yield name, cls, self._configs[name]
 
-    def non_resource_non_tool_classes(self) -> Iterable[Tuple[type[BasePlugin], Dict]]:
-        from pipeline.resources import Resource
-
+    def non_resource_non_tool_classes(
+        self,
+    ) -> Iterable[Tuple[type[BasePlugin], Dict]]:
         for name in self._order:
             cls = self._classes[name]
-            if (
-                not issubclass(cls, ResourcePlugin)
-                and not issubclass(cls, ToolPlugin)
-                and not issubclass(cls, Resource)
-            ):
+            if not issubclass(cls, ResourcePlugin) and not issubclass(cls, ToolPlugin):
                 yield cls, self._configs[name]
 
     def _type_default_stages(self, cls: type[BasePlugin]) -> List[PipelineStage]:
@@ -158,9 +149,7 @@ class ClassRegistry:
     def _validate_stage_assignment(
         self, name: str, cls: type[BasePlugin], config: Dict
     ) -> None:
-        from pipeline.resources import Resource
-
-        if issubclass(cls, (ResourcePlugin, Resource, ToolPlugin)):
+        if issubclass(cls, (ResourcePlugin, ToolPlugin)):
             return
 
         stages, _ = self._resolve_plugin_stages(cls, config)
