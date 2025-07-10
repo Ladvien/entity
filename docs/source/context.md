@@ -4,7 +4,7 @@
 
 - conversation history and other pipeline state
 - registered resources via `get_resource`
-- temporary data with `cache()`, `recall()`, and `has()`
+- temporary data with `store()`, `load()`, and `has()`
 - tool execution through `tool_use()` and `queue_tool_use()`
 - helpers for adding conversation entries
 
@@ -22,7 +22,7 @@ class ExamplePlugin(PromptPlugin):
 
 - `say()` to set the pipeline response
 - `ask_llm()` to call the configured LLM
-- `cache()`, `recall()`, and `has()` for sharing data between stages
+- `store()`, `load()`, and `has()` for sharing data between stages
 - `tool_use()` to run a tool and wait for the result
 - `queue_tool_use()` to defer tool execution until later
 
@@ -30,23 +30,23 @@ class ExamplePlugin(PromptPlugin):
 class MyPrompt(PromptPlugin):
     async def _execute_impl(self, context: PluginContext) -> None:
         if context.has("summary"):
-            context.say(context.recall("summary"))
+            context.say(context.load("summary"))
             return
 
         summary = await context.tool_use("summarize", text=context.message)
-        context.cache("summary", summary)
+        context.store("summary", summary)
         context.queue_tool_use("log_summary", {"text": summary})
         context.say(summary)
 ```
 
 ## Stage Results
 
-Use `cache()` to save intermediate data that later stages can retrieve.
+Use `store()` to save intermediate data that later stages can retrieve.
 
 ```python
-context.cache("answer", "The Eiffel Tower is in Paris")
+context.store("answer", "The Eiffel Tower is in Paris")
 if context.has("answer"):
-    result = context.recall("answer")
+    result = context.load("answer")
 ```
 
 ## Advanced API

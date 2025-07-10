@@ -39,7 +39,7 @@ def test_intent_classifier_success():
 
     asyncio.run(plugin.execute(ctx))
 
-    assert ctx.recall("intent") == "greeting"
+    assert ctx.load("intent") == "greeting"
 
 
 def test_intent_classifier_validate_error():

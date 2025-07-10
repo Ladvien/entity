@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import time
-from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from pipeline.stages import PipelineStage
+from pipeline.errors import PluginContextError
 from entity.core.state import ConversationEntry, PipelineState
 
 
@@ -18,7 +18,6 @@ class PluginContext:
     def __init__(self, state: PipelineState, registries: Any) -> None:
         self._state = state
         self._registries = registries
-        self._cache: Dict[str, Any] = {}
         self._memory = getattr(registries.resources, "memory", None)
 
     # ------------------------------------------------------------------
@@ -122,20 +121,30 @@ class PluginContext:
         return result_key
 
     # ------------------------------------------------------------------
-    # Temporary cache helpers
+    # Stage result helpers
     # ------------------------------------------------------------------
 
-    def cache(self, key: str, value: Any) -> None:
-        """Store a temporary value for this pipeline run."""
-        self._cache[key] = value
+    def store(self, key: str, value: Any) -> None:
+        """Persist ``value`` for later pipeline stages."""
+        if (
+            self._state.max_stage_results is not None
+            and len(self._state.stage_results) >= self._state.max_stage_results
+        ):
+            oldest = next(iter(self._state.stage_results))
+            del self._state.stage_results[oldest]
+        self._state.stage_results[key] = value
 
-    def recall(self, key: str, default: Any | None = None) -> Any:
-        """Retrieve a cached value."""
-        return self._cache.get(key, default)
+    def load(self, key: str, default: Any | None = None) -> Any:
+        """Retrieve a stored value."""
+        return self._state.stage_results.get(key, default)
 
     def has(self, key: str) -> bool:
-        """Return True if ``key`` exists in the cache."""
-        return key in self._cache
+        """Return ``True`` if ``key`` exists in stage results."""
+        return key in self._state.stage_results
+
+    # Backwards compatibility
+    cache = store
+    recall = load
 
     # ------------------------------------------------------------------
     # Persistent memory helpers

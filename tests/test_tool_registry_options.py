@@ -64,6 +64,6 @@ def test_cache_ttl():
     asyncio.run(execute_pending_tools(state, capabilities))
     assert tool.calls == 1
     ctx = PluginContext(state, capabilities)
-    assert ctx.recall("b") == 0
+    assert ctx.load("b") == 0
     key = f"{PipelineStage.DO}:sleep"
     assert key in state.metrics.tool_durations

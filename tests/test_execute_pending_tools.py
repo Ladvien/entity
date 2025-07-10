@@ -41,4 +41,4 @@ def test_execute_pending_tools_returns_mapping_by_result_key():
 
     assert results == {"echo1": "hello"}
     ctx = PluginContext(state, capabilities)
-    assert ctx.recall("echo1") == "hello"
+    assert ctx.load("echo1") == "hello"

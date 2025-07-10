@@ -20,9 +20,9 @@ class {class_name}(PromptPlugin):
 
     async def _execute_impl(self, context):
         if context.has("answer"):
-            context.say(context.recall("answer"))
+            context.say(context.load("answer"))
             return
 
         result = await context.tool_use("some_tool", query=context.message)
-        context.cache("answer", result)
+        context.store("answer", result)
         context.say(result)

@@ -35,4 +35,4 @@ class IntentClassifierPrompt(PromptPlugin):
         last_message = context.conversation()[-1].content
         prompt = "Classify the user's intent in one word.\n" f"Message: {last_message}"
         response = await self.call_llm(context, prompt, purpose="intent_classification")
-        context.cache("intent", response.content)
+        context.store("intent", response.content)

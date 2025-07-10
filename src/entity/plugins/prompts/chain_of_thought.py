@@ -49,8 +49,8 @@ class ChainOfThoughtPrompt(PromptPlugin):
             if "final answer" in reasoning.content.lower():
                 break
 
-        context.cache("reasoning_complete", True)
-        context.cache("reasoning_steps", steps)
+        context.store("reasoning_complete", True)
+        context.store("reasoning_steps", steps)
 
     def _needs_tools(self, reasoning_text: str) -> bool:
         indicators = ["need to calculate", "should look up", "requires analysis"]

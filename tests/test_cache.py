@@ -87,4 +87,4 @@ async def test_tool_results_are_cached():
     await execute_pending_tools(state, capabilities)
 
     assert tool.calls == 1
-    assert ctx.recall("r1") == ctx.recall("r2")
+    assert ctx.load("r1") == ctx.load("r2")
