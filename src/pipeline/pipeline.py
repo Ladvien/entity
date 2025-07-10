@@ -28,7 +28,6 @@ from .exceptions import (
     ToolExecutionError,
 )
 from entity.utils.logging import get_logger
-from .manager import PipelineManager
 from .observability.metrics import MetricsServerManager
 from .observability.tracing import start_span
 from .stages import PipelineStage

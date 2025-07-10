@@ -35,8 +35,8 @@ and mental models stay easy to grasp.
 4. Clear stage boundaries and structured logging
 5. One canonical name per resource
 
-A small example of structured logging lives in `user_plugins/examples/structured_logging_example.py`.
-It initializes ``LoggingAdapter`` and emits one log entry.
+Structured logging is enabled through ``LoggingAdapter`` which writes JSON lines
+for each pipeline stage.
 
 ## Network Architecture
 Backend services communicate over HTTP using JSON messages. Web
@@ -68,9 +68,9 @@ timing metrics for each pipeline stage.
 
 ## Zero-Config AWS Startup
 
-The framework includes helper scripts that spin up a minimal AWS stack and run a
-pipeline with almost no configuration. Run `python user_plugins/examples/bedrock_deploy.py`
-to create an S3 bucket and IAM role, then start the agent. Behavior is defined by
+a helper script can spin up a minimal AWS stack and run a pipeline with almost
+no configuration. It provisions an S3 bucket and IAM role before starting the
+agent. Behavior is defined by
 a **Workflow** object:
 
 ```python

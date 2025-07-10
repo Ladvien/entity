@@ -23,11 +23,5 @@ docker run -p 8000:8000 entity-agent
 
 ## 3. Deploy to AWS
 
-Use `AwsDeployer` or Terraform scripts to launch the container on AWS.
-For a quick demonstration:
-
-```bash
-python user_plugins/examples/bedrock_deploy.py
-```
-
-See [AWS deployment](deploy_aws.md) for details.
+Use `AwsDeployer` or Terraform scripts to launch the container on AWS. See
+[AWS deployment](deploy_aws.md) for details.

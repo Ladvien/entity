@@ -286,7 +286,7 @@ This taxonomy provides a clear mental model for developers while maintaining the
 
 **Enhancements**:
 - Automated upgrade suggestions when functions become complex
-- Template generators via CLI: `poetry run python src/cli.py upgrade-plugin my_function`
+- Template generators via CLI: `poetry run entity-cli plugin generate my_function --type prompt`
 - Interactive stage assignment guidance
 - Progressive Context API reveal: hide advanced methods behind `context.advanced.*`
 
@@ -410,8 +410,8 @@ class BasePlugin:
 - All failures surface with full technical details for debugging
 
 **Developer Experience Features**:
-- CLI validation tools: `poetry run python src/cli.py validate --config config.yaml`
-- Dependency graph visualization: `poetry run python src/cli.py graph-dependencies`
+- CLI validation tools: `poetry run entity-cli validate --config config.yaml`
+- Dependency graph visualization: `poetry run entity-cli workflow visualize config.yaml`
 - Actionable error messages with specific remediation steps
 - Progressive validation during development with hot-reload
 

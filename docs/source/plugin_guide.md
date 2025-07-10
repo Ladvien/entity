@@ -177,7 +177,7 @@ methods, enabling a consistent storage interface across resources.
 
 ## Example Pipelines
 
-Several example pipelines in the `user_plugins/examples/` directory showcase more advanced patterns.
+Several example pipelines once lived in ``user_plugins/examples`` to showcase more advanced patterns.
 
 ### StorageResource Composition
 
@@ -205,7 +205,7 @@ await resources.build_all()
 
 ### Vector Memory
 
-`user_plugins/examples/pipelines/vector_memory_pipeline.py` shows a custom `ResourcePlugin` that stores vectors in memory. A prompt plugin retrieves vectors and interacts with the LLM:
+An archived example demonstrated a custom ``ResourcePlugin`` that stored vectors in memory and a prompt plugin that retrieved them:
 
 ```python
 class VectorMemoryResource(ResourcePlugin):
@@ -216,16 +216,12 @@ class VectorMemoryResource(ResourcePlugin):
         self.vectors[key] = vector
 ```
 
-These scripts are great starting points when designing your own plugins.
-The `user_plugins/examples/tools/search_weather_example.py` script demonstrates
-registering built-in tools directly with an `Agent` and combining their
-results.
+Those scripts were good starting points when designing plugins. One example showed registering built‑in tools directly with an ``Agent`` and combining their results.
 
 ### Adapter and Failure Examples
 
-The repository also includes short examples for adapter usage and basic
-failure handling. See [`user_plugins/examples/servers/cli_adapter.py`](../../user_plugins/examples/servers/cli_adapter.py)
-for how to expose an `Agent` through a command line interface. Use `entity-cli`
+Short examples also demonstrated adapter usage and basic failure handling.
+They exposed an ``Agent`` through a command line interface. Use ``entity-cli``
 to run the agent interactively or over a WebSocket connection:
 
 ```bash

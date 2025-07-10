@@ -81,11 +81,6 @@ from infrastructure.aws_bedrock import deploy
 deploy()
 ```
 
-For a hands-on demonstration, run `user_plugins/examples/bedrock_deploy.py`:
-
-```bash
-python user_plugins/examples/bedrock_deploy.py
-```
 
 ## Deployment Mental Model
 
