@@ -29,7 +29,6 @@ from .exceptions import (
     ResourceError,
     ToolExecutionError,
 )
-from .observability.metrics import MetricsServerManager
 from .observability.tracing import start_span
 from .stages import PipelineStage
 from .tools.execution import execute_pending_tools
@@ -350,9 +349,6 @@ async def execute_pipeline(
     finally:
         if state.metrics:
             state.metrics.record_pipeline_duration(time.time() - start)
-        server = MetricsServerManager.get()
-        if server is not None and state.metrics:
-            server.update(state.metrics)
 
 
 __all__ = [
