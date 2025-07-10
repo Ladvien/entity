@@ -22,3 +22,15 @@ curl -X POST -H "Content-Type: application/json" \
 ```
 
 The response comes from the default EchoLLMResource.
+
+Run the DuckDB memory example to see persistence:
+
+```bash
+poetry run python examples/duckdb_memory_agent/main.py
+```
+
+After running it twice inspect the `agent.duckdb` file:
+
+```bash
+duckdb agent.duckdb "SELECT * FROM kv;"
+```
