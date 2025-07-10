@@ -7,6 +7,13 @@ Run an agent from a YAML configuration file:
 entity-cli --config config.yaml
 ```
 
+Scaffold a minimal agent project:
+
+```bash
+entity-cli create-agent my_agent
+cd my_agent && python src/main.py
+```
+
 ### Programmatic Configuration
 Build the same configuration in Python using the models from
 `entity.config`:

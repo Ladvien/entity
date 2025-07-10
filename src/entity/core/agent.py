@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Optional, cast, Mapping, Iterable
 
 from .builder import _AgentBuilder
-from .exceptions import PipelineError
+from pipeline.exceptions import PipelineError
 from .registries import PluginRegistry, SystemRegistries
 from .runtime import AgentRuntime
 from pipeline.workflow import Pipeline, WorkflowMapping

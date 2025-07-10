@@ -16,7 +16,6 @@ import yaml
 from entity.core.agent import Agent
 from entity.core.plugins import BasePlugin, ValidationResult
 from entity.utils.logging import get_logger
-from plugins.builtin.adapters.server import AgentServer
 from cli.plugin_tool.generate import generate_plugin
 from cli.plugin_tool.utils import load_plugin
 from cli.plugin_tool.main import PLUGIN_TYPES
@@ -73,6 +72,9 @@ class EntityCLI:
 
         new_p = sub.add_parser("new", help="Scaffold a new project")
         new_p.add_argument("path")
+
+        create_agent = sub.add_parser("create-agent", help="Create a new agent project")
+        create_agent.add_argument("name")
 
         workflow = sub.add_parser("workflow", help="Workflow utilities")
         wf_sub = workflow.add_subparsers(dest="workflow_cmd", required=True)
@@ -143,6 +145,9 @@ class EntityCLI:
         cmd = self.args.command
         if cmd == "plugin":
             return self._handle_plugin()
+        if cmd == "create-agent":
+            assert self.args.name is not None
+            return self._create_agent(self.args.name)
         if cmd == "new":
             assert self.args.path is not None
             return self._create_project(self.args.path)
@@ -170,6 +175,8 @@ class EntityCLI:
 
                 state_logger = StateLogger(self.args.state_log)
                 agent.runtime.manager.state_logger = state_logger
+            from plugins.builtin.adapters.server import AgentServer
+
             server = AgentServer(agent.runtime)
             try:
                 if cmd == "serve-websocket":
@@ -423,7 +430,9 @@ class EntityCLI:
         (target / "config").mkdir(parents=True, exist_ok=True)
         (target / "src").mkdir(parents=True, exist_ok=True)
         template = (
-            Path(__file__).resolve().parent.parent.parent / "config" / "template.yaml"
+            Path(__file__).resolve().parent.parent.parent.parent
+            / "config"
+            / "template.yaml"
         )
         shutil.copy(template, target / "config" / "dev.yaml")
         main_path = target / "src" / "main.py"
@@ -435,6 +444,37 @@ class EntityCLI:
             "    main()\n"
         )
         logger.info("Created project at %s", target)
+        return 0
+
+    def _create_agent(self, name: str) -> int:
+        """Scaffold a simple agent project."""
+        target = Path(name)
+        if target.exists() and any(target.iterdir()):
+            logger.error("%s already exists and is not empty", name)
+            return 1
+
+        (target / "config").mkdir(parents=True, exist_ok=True)
+        (target / "src").mkdir(parents=True, exist_ok=True)
+
+        template = (
+            Path(__file__).resolve().parent.parent.parent.parent
+            / "config"
+            / "template.yaml"
+        )
+        shutil.copy(template, target / "config" / "dev.yaml")
+
+        main_path = target / "src" / "main.py"
+        main_code = (
+            "from entity.core.agent import Agent\n\n"
+            "def main() -> None:\n"
+            "    agent = Agent('config/dev.yaml')\n"
+            "    agent.run_http()\n\n"
+            "if __name__ == '__main__':\n"
+            "    main()\n"
+        )
+        main_path.write_text(main_code)
+
+        logger.info("Created agent project at %s", target)
         return 0
 
 
