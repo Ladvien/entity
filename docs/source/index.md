@@ -16,7 +16,7 @@ Welcome to the Entity Pipeline framework. These pages explain how to configure a
 - [Workflows](workflows.md)
 
 ### Architecture
-- [Architecture overview](../../architecture/overview.md)
+- [Architecture overview](../../architecture/general.md)
 - [Components overview](components_overview.md)
 - [Deliver-stage adapters](components_overview.md#deliver-stage-adapters)
 
