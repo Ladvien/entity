@@ -18,6 +18,7 @@ extensions = [
     "myst_parser",  # Allows Markdown files
     "sphinx.ext.autosectionlabel",  # Adds links to different sections of document
     "autodoc2",
+    "sphinxcontrib.mermaid",
 ]
 
 
