@@ -7,7 +7,8 @@ These classes mirror the minimal architecture described in
 They offer a small, easy to understand surface for plugin authors.
 """
 
-import asyncio
+from dataclasses import dataclass
+from typing import Any, Dict, List, Type
 import time
 from dataclasses import dataclass
 from typing import Any, Dict, List
@@ -26,8 +27,6 @@ class BasePlugin:
 
     stages: List[PipelineStage]
     dependencies: List[str] = []
-    max_retries: int = 1
-    retry_delay: float = 0.0
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
         self.config = config or {}
@@ -51,14 +50,7 @@ class BasePlugin:
         self._config_history = self._config_history[:version]
 
     async def execute(self, context: Any) -> Any:
-        for attempt in range(self.max_retries + 1):
-            try:
-                return await self._execute_impl(context)
-            except Exception:  # noqa: BLE001 - propagate after retries
-                if attempt >= self.max_retries:
-                    raise
-                await asyncio.sleep(self.retry_delay)
-        return None
+        return await self._execute_impl(context)
 
     async def _execute_impl(self, context: Any) -> Any:
         """Execute plugin logic in the pipeline."""
@@ -102,14 +94,7 @@ class ToolPlugin(BasePlugin):
         for name in self.required_params:
             if name not in params:
                 raise ToolExecutionError(f"Missing parameter: {name}")
-        for attempt in range(self.max_retries + 1):
-            try:
-                return await self.execute_function(params)
-            except Exception:
-                if attempt >= self.max_retries:
-                    raise
-                await asyncio.sleep(self.retry_delay)
-        raise RuntimeError("unreachable")
+        return await self.execute_function(params)
 
 
 class PromptPlugin(BasePlugin):
