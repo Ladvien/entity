@@ -49,21 +49,3 @@ def test_concurrency_limit():
     duration = time.time() - start
     assert tool.calls == 4
     assert duration >= 0.2
-
-
-def test_cache_ttl():
-    state = _make_state()
-    tool = SleepTool()
-    tools = ToolRegistry(cache_ttl=5)
-    asyncio.run(tools.add("sleep", tool))
-    capabilities = SystemRegistries(ResourceContainer(), tools, PluginRegistry())
-    ctx = PluginContext(state, capabilities)
-    asyncio.run(ctx.queue_tool_use("sleep", result_key="a", delay=0))
-    asyncio.run(execute_pending_tools(state, capabilities))
-    asyncio.run(ctx.queue_tool_use("sleep", result_key="b", delay=0))
-    asyncio.run(execute_pending_tools(state, capabilities))
-    assert tool.calls == 1
-    ctx = PluginContext(state, capabilities)
-    assert ctx.load("b") == 0
-    key = f"{PipelineStage.DO}:sleep"
-    assert key in state.metrics.tool_durations

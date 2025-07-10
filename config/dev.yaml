@@ -6,7 +6,6 @@ server:
 
 tool_registry:
   concurrency_limit: 5
-  cache_ttl: 300
 
 plugins:
   resources:

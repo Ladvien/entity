@@ -75,7 +75,6 @@ class ToolRegistryConfig(BaseModel):
     """Options controlling tool execution."""
 
     concurrency_limit: int = 5
-    cache_ttl: int | None = None
 
 
 class EntityConfig(BaseModel):

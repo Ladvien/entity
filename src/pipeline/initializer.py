@@ -440,8 +440,7 @@ class SystemInitializer:
             # Phase 3.5: register tools
             tr_cfg = self.config.get("tool_registry", {})
             tool_registry = self.tool_registry_cls(
-                concurrency_limit=tr_cfg.get("concurrency_limit", 5),
-                cache_ttl=tr_cfg.get("cache_ttl"),
+                concurrency_limit=tr_cfg.get("concurrency_limit", 5)
             )
             for name, cls, config in registry.named_tool_classes():
                 instance = cls(config)
