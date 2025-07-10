@@ -54,7 +54,7 @@ __all__ = [
     "AgentRuntime",
     "Pipeline",
     "Workflow",
-    "InMemoryCache",
+    "execute_with_observability",
 ]
 
 

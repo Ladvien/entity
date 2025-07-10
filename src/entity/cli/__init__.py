@@ -16,9 +16,21 @@ import yaml
 from entity.core.agent import Agent
 from entity.core.plugins import BasePlugin, ValidationResult
 from entity.utils.logging import get_logger
-from cli.plugin_tool.generate import generate_plugin
-from cli.plugin_tool.utils import load_plugin
-from cli.plugin_tool.main import PLUGIN_TYPES
+from importlib import import_module
+from pathlib import Path
+import sys
+
+try:  # Resolve plugin helpers from installed "cli" package
+    generate_plugin = import_module("cli.plugin_tool.generate").generate_plugin
+    load_plugin = import_module("cli.plugin_tool.utils").load_plugin
+    PLUGIN_TYPES = import_module("cli.plugin_tool.main").PLUGIN_TYPES
+except ModuleNotFoundError:  # Fallback for local executions without package mode
+    cli_path = Path(__file__).resolve().parents[2] / "cli"
+    if str(cli_path) not in sys.path:
+        sys.path.insert(0, str(cli_path))
+    generate_plugin = import_module("plugin_tool.generate").generate_plugin
+    load_plugin = import_module("plugin_tool.utils").load_plugin
+    PLUGIN_TYPES = import_module("plugin_tool.main").PLUGIN_TYPES
 
 logger = get_logger(__name__)
 

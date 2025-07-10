@@ -1,5 +1,3 @@
 """User resource package."""
 
-from .cache import CacheResource
-
-__all__ = ["CacheResource"]
+__all__: list[str] = []
