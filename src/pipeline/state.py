@@ -3,12 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
-from entity.core.state import (
-    ConversationEntry,
-    FailureInfo,
-    LLMResponse,
-    MetricsCollector,
-)
+from entity.core.state import ConversationEntry, FailureInfo, LLMResponse
 from entity.core.state import PipelineState as CoreState
 from entity.core.state import ToolCall
 
@@ -16,7 +11,6 @@ __all__ = [
     "ConversationEntry",
     "FailureInfo",
     "LLMResponse",
-    "MetricsCollector",
     "PipelineState",
     "ToolCall",
 ]

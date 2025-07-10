@@ -2,7 +2,6 @@ import asyncio
 from datetime import datetime
 
 from entity.core.resources.container import ResourceContainer
-from entity.core.state import MetricsCollector
 from pipeline import (
     ConversationEntry,
     PipelineState,
@@ -24,7 +23,6 @@ def make_context():
             )
         ],
         pipeline_id="1",
-        metrics=MetricsCollector(),
     )
     state.response = "Contact admin@example.com at (123) 456-7890"
     capabilities = SystemRegistries(

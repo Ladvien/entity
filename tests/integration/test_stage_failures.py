@@ -10,7 +10,7 @@ from pipeline import PipelineStage, execute_pipeline
 from entity.core.plugins import BasePlugin
 from pipeline.pipeline import generate_pipeline_id
 from entity.core.resources.container import ResourceContainer
-from entity.core.state import ConversationEntry, MetricsCollector, PipelineState
+from entity.core.state import ConversationEntry, PipelineState
 
 
 class RespondPlugin(BasePlugin):
@@ -61,7 +61,6 @@ def test_pipeline_recovers_from_stage_failure(
                 ConversationEntry(content="hi", role="user", timestamp=datetime.now())
             ],
             pipeline_id=generate_pipeline_id(),
-            metrics=MetricsCollector(),
         )
 
         await execute_pipeline("hi", capabilities, state_logger=logger, state=state)

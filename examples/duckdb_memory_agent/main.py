@@ -14,7 +14,7 @@ from pipeline.stages import PipelineStage
 from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
 from entity.core.resources.container import ResourceContainer
 from pipeline.pipeline import execute_pipeline, generate_pipeline_id
-from pipeline.state import PipelineState, MetricsCollector
+from pipeline.state import PipelineState
 
 
 class DuckDBMemory(ResourcePlugin):
@@ -118,7 +118,6 @@ async def main() -> None:
             ConversationEntry(content="hi", role="user", timestamp=datetime.now())
         ],
         pipeline_id=generate_pipeline_id(),
-        metrics=MetricsCollector(),
     )
     first = await execute_pipeline("hi", caps, state=state)
 
@@ -127,7 +126,6 @@ async def main() -> None:
             ConversationEntry(content="again", role="user", timestamp=datetime.now())
         ],
         pipeline_id=generate_pipeline_id(),
-        metrics=MetricsCollector(),
     )
     second = await execute_pipeline("again", caps, state=state2)
 

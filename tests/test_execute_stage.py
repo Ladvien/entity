@@ -4,7 +4,6 @@ from datetime import datetime
 import pytest
 
 from entity.core.resources.container import ResourceContainer
-from entity.core.state import MetricsCollector
 from pipeline import (
     ConversationEntry,
     PipelineStage,
@@ -36,7 +35,6 @@ def make_state():
             ConversationEntry(content="hi", role="user", timestamp=datetime.now())
         ],
         pipeline_id="123",
-        metrics=MetricsCollector(),
     )
 
 

@@ -7,7 +7,6 @@ import pytest
 
 from entity.config.environment import load_env
 from entity.core.resources.container import ResourceContainer
-from entity.core.state import MetricsCollector
 from entity.resources.memory import Memory
 from pipeline import (
     ConversationEntry,
@@ -98,7 +97,6 @@ def test_vector_memory_integration(pg_env):
                 )
             ],
             pipeline_id="conv1",
-            metrics=MetricsCollector(),
         )
         ctx = PluginContext(state, capabilities)
         plugin = ComplexPrompt({"k": 1})

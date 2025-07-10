@@ -23,7 +23,6 @@ def make_state():
             ConversationEntry(content="hi", role="user", timestamp=datetime.now())
         ],
         pipeline_id="1",
-        metrics=MetricsCollector(),
     )
     return state
 

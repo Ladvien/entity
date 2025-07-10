@@ -5,7 +5,6 @@ from datetime import datetime
 from entity.core.resources.container import ResourceContainer
 from entity.core.state import (
     ConversationEntry,
-    MetricsCollector,
     PipelineState,
     ToolCall,
 )
@@ -30,7 +29,6 @@ def _make_state() -> PipelineState:
             ConversationEntry(content="hi", role="user", timestamp=datetime.now()),
         ],
         pipeline_id="1",
-        metrics=MetricsCollector(),
         current_stage=PipelineStage.DO,
     )
 
@@ -65,5 +63,4 @@ def test_cache_ttl():
     assert tool.calls == 1
     ctx = PluginContext(state, capabilities)
     assert ctx.load("b") == 0
-    key = f"{PipelineStage.DO}:sleep"
-    assert key in state.metrics.tool_durations
+    # Removed metrics check since metrics have been deprecated

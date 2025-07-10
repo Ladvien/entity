@@ -17,7 +17,7 @@ from entity.resources.memory import Memory
 from pipeline.pipeline import execute_pipeline, generate_pipeline_id
 
 sys.path.append(str(Path(__file__).resolve().parents[2]))
-from pipeline.state import ConversationEntry, MetricsCollector, PipelineState
+from pipeline.state import ConversationEntry, PipelineState
 
 
 class EchoPrompt(PromptPlugin):
@@ -51,7 +51,6 @@ async def main() -> None:
             ConversationEntry(content="Hello", role="user", timestamp=datetime.now())
         ],
         pipeline_id=generate_pipeline_id(),
-        metrics=MetricsCollector(),
     )
     result: dict[str, Any] = await execute_pipeline("Hello", caps, state=state)
     print(result)
