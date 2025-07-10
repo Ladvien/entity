@@ -1,6 +1,14 @@
 # Entity Pipeline Documentation
 
-Welcome to the Entity Pipeline framework. These pages explain how to configure an agent, write plugins, and deploy the system.
+Build production AI agents in minutes, not months.
+
+![Agent creation demo](https://entitypipeline.ai/assets/agent-demo.gif)
+
+| Simple | Powerful | Production\-Ready |
+| ------ | -------- | ----------------- |
+| Start with a single config file. | Compose plugins and tools for complex workflows. | Use the same config from local dev to cloud deployment. |
+
+Get started with our [Quick start](quick_start.md) or jump straight to the [2‑Minute Magic tool](https://entitypipeline.ai/2-minute-magic).
 
 ## Documentation Map
 
