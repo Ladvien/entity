@@ -5,10 +5,13 @@ from typing import Iterable, Mapping, Optional
 
 from entity.core.builder import _AgentBuilder
 from entity.core.runtime import AgentRuntime
+from entity.workflows.base import Workflow as BaseWorkflow
 
 from .stages import PipelineStage
 
 WorkflowMapping = Mapping[PipelineStage | str, Iterable[str]]
+
+Workflow = BaseWorkflow
 
 __all__ = ["Pipeline", "Workflow"]
 
