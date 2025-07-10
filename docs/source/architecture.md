@@ -28,6 +28,9 @@ be overridden by passing a different value for `max_iterations` to
 Every resource is registered under a single name so configuration remains small
 and mental models stay easy to grasp.
 
+## Plugin Lifecycle and Pipeline Stages
+.. mermaid:: diagrams/plugin_lifecycle.mmd
+
 ## Design Principles
 1. Progressive disclosure: simple things stay simple, complex things are possible
 2. Async-first with predictable execution order. YAML order determines plugin execution.
@@ -46,15 +49,8 @@ standard input and output.
 For additional diagrams and examples see the ADRs in `docs/adr/`.
 
 ## Framework Overview Diagram
-```mermaid
-flowchart LR
-    A[User Input] --> B[Input Adapter]
-    B --> C[Processing Pipeline]
-    C --> D[Resource Container]
-    C --> E[Tool Registry]
-    C --> F[Plugins]
-    C --> G[Response]
-```
+.. mermaid:: diagrams/overall_architecture.mmd
+
 
 ## Benchmark Results
 The performance suite currently fails to run due to circular import errors.

@@ -4,6 +4,8 @@ This document describes a minimal production setup for running the Entity Pipeli
 It assumes you already tested your configuration locally and want to move it to a
 reliable environment. Provide your own `Dockerfile` for building the image.
 
+.. mermaid:: diagrams/deployment_patterns.mmd
+
 ## Container Image
 
 Build a Docker image containing your plugins and configuration:

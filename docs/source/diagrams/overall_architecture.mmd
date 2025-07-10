@@ -1,0 +1,14 @@
+flowchart TD
+    User((User)) --> |input| Adapter[Input Adapter]
+    Adapter --> Pipeline[Processing Pipeline]
+    Pipeline --> Resources[Resource Container]
+    Pipeline --> Tools[Tool Registry]
+    Pipeline --> Plugins[Plugins]
+    Pipeline --> Stages{Pipeline Stages}
+    Stages --> Parse[Parse]
+    Stages --> Think[Think]
+    Stages --> Do[Do]
+    Stages --> Review[Review]
+    Stages --> Deliver[Deliver]
+    Stages --> Error[Error]
+    Deliver --> Output((Response))
