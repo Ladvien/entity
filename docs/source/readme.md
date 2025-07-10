@@ -1,3 +1,3 @@
-```{include} ../../README.md
-:relative-images:
-```
+# Entity Pipeline Framework
+
+Refer to the [README](../../README.md) for full details.

@@ -3,8 +3,13 @@ import asyncio
 import pytest
 
 from entity.core.resources.container import ResourceContainer
-from pipeline import (PipelineStage, PluginRegistry, SystemRegistries,
-                      ToolRegistry, execute_pipeline)
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
 
 
 class RespondPlugin:

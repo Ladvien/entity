@@ -3,8 +3,14 @@ import asyncio
 import pytest
 
 from entity.core.resources.container import ResourceContainer
-from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      SystemRegistries, ToolRegistry, execute_pipeline)
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+    execute_pipeline,
+)
 
 
 class NoOpPlugin(PromptPlugin):

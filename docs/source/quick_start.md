@@ -1,8 +1,4 @@
-```{include} ../../README.md
-:relative-images:
-:start-after: <!-- start quick_start -->
-:end-before: <!-- end quick_start -->
-```
+# Quick Start
 
 ### CLI Usage
 Run an agent from a YAML configuration file:
