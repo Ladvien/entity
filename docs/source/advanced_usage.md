@@ -100,20 +100,11 @@ await reg.get_plugin("my_plugin").rollback_config()
 ### Streaming and Function Calling
 
 UnifiedLLMResource now exposes streaming via Server-Sent Events and optional
-function calling. Run the `user_plugins/examples/advanced_llm.py` script to see these
-features in action:
+function calling. Earlier versions included a demo script showing these
+features:
 
-```bash
-python user_plugins/examples/advanced_llm.py
-```
 
 ### Running the Example Servers
-
-Start the demo HTTP server:
-
-```bash
-python user_plugins/examples/servers/http_server.py
-```
 
 For a WebSocket server use the CLI:
 
@@ -125,4 +116,4 @@ Start the CLI adapter for a basic text interface:
 
 ```bash
 
-`Memory` stores conversation history and key-value data. See `user_plugins/examples/cache_example.py` for a basic example.
+`Memory` stores conversation history and key-value data. A removed example demonstrated a simple in-memory cache.
