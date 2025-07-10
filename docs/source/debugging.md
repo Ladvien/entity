@@ -24,6 +24,3 @@ Debug logs include the request ID, plugin name, and stage so you can trace a sin
 
 When unsure, run the unit tests with `poetry run pytest -vv` to reproduce issues locally.
 
-## Monitoring performance and resource usage
-
-Use `MetricsServerManager.start()` to expose Prometheus metrics and CPU/memory gauges. The `/dashboard` endpoint offers a lightweight UI for development. For more details, see [Monitoring the Pipeline](monitoring.md).

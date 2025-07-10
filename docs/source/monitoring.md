@@ -2,30 +2,6 @@
 
 This guide shows how to collect metrics and traces from an Entity deployment.
 
-## Prometheus Metrics
-
-Call `MetricsServerManager.start()` at application startup to expose metrics on
-`/metrics`:
-
-```python
-from pipeline.observability import MetricsServerManager
-
-MetricsServerManager.start(port=9001)
-```
-
-The exporter provides stage latency, LLM latency and failure counters along with
-CPU and memory usage. Point Prometheus at the server to scrape these metrics.
-
-### Built-in Dashboard
-
-Enable the HTTP adapter dashboard to visualize metrics without extra tooling.
-When `dashboard: true` is configured, the adapter starts the metrics server and
-exposes:
-
-* `/dashboard` – basic HTML dashboard with charts for LLM latency and failures
-* `/metrics` – Prometheus endpoint consumed by the dashboard
-
-Navigate to `/dashboard` during development to quickly inspect pipeline health.
 
 ## OpenTelemetry Tracing
 

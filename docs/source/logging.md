@@ -46,8 +46,7 @@ starts, finishes or fails, a structured log entry is emitted describing the
 result.
 
 Metrics are recorded alongside these logs. Duration and error counts are stored
-in ``context.metrics`` and can be exported to Prometheus using
-``pipeline.observability.MetricsServerManager.start()``.
+in ``context.metrics``.
 
 For production deployments, `config/logging_prod.yaml` contains a recommended
 configuration enabling JSON formatted logs and file rotation.
