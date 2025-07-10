@@ -179,7 +179,7 @@ methods, enabling a consistent storage interface across resources.
 
 ## Example Pipelines
 
-Several example pipelines once lived in ``user_plugins/examples`` to showcase more advanced patterns.
+Additional pipelines are available in a dedicated examples repository.
 
 ### StorageResource Composition
 
@@ -222,7 +222,7 @@ Those scripts were good starting points when designing plugins. One example show
 
 ### Adapter and Failure Examples
 
-Short examples also demonstrated adapter usage and basic failure handling.
+Other examples cover adapter usage and basic failure handling.
 They exposed an ``Agent`` through a command line interface. Use ``entity-cli``
 to run the agent interactively or over a WebSocket connection:
 
