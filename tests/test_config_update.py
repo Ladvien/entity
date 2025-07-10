@@ -1,9 +1,16 @@
 import asyncio
 
 from entity.core.resources.container import ResourceContainer
-from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      SystemRegistries, ToolRegistry, ValidationResult,
-                      execute_pipeline, update_plugin_configuration)
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+    ValidationResult,
+    execute_pipeline,
+    update_plugin_configuration,
+)
 
 
 class TestReconfigPlugin(PromptPlugin):

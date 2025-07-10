@@ -4,8 +4,13 @@ import httpx
 
 from entity.core.resources.container import ResourceContainer
 from entity.core.runtime import _AgentRuntime
-from pipeline import (PipelineStage, PluginRegistry, PromptPlugin,
-                      SystemRegistries, ToolRegistry)
+from pipeline import (
+    PipelineStage,
+    PluginRegistry,
+    PromptPlugin,
+    SystemRegistries,
+    ToolRegistry,
+)
 from plugins.builtin.adapters import HTTPAdapter
 
 

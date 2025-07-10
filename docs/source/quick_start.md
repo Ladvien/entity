@@ -76,7 +76,7 @@ poetry run entity-cli reload-config updated.yaml
 Only updates to plugin parameters can be reloaded. Structural changes—adding or
 removing plugins, changing stage assignments, or altering dependencies—require a
 restart. For more on dynamic configuration see the
-[architecture overview](../../architecture/general.md#%F0%9F%94%84-reconfigurable-agent-infrastructure).
+[architecture overview](https://github.com/Ladvien/entity/blob/main/architecture/general.md#%F0%9F%94%84-reconfigurable-agent-infrastructure).
 
 ### Using the "llm" Resource Key
 Configure a shared LLM resource in YAML:
