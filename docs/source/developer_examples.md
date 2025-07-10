@@ -1,7 +1,13 @@
 # Developer Examples
 
-The repository previously included a set of demonstration scripts under
-``user_plugins/examples``. Those examples have been removed to simplify the code
-base, but the documentation still references them for historical context.
+This repository ships a few self-contained example agents under ``examples/``.
+
+| Example | Description |
+| ------- | ----------- |
+| ``basic_agent`` | Minimal echo agent |
+| ``intermediate_agent`` | Chain-of-thought reasoning with an echo LLM |
+| ``advanced_agent`` | ReAct loop using the calculator tool |
+
+Run any example with ``poetry run python examples/<name>/main.py``.
 
 

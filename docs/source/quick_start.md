@@ -7,6 +7,9 @@ Run an agent from a YAML configuration file:
 entity-cli --config config.yaml
 ```
 
+Ready-made agents live in the new `examples/` directory. Run them with
+`poetry run python examples/<name>/main.py` to see the framework in action.
+
 ### Programmatic Configuration
 Build the same configuration in Python using the models from
 `entity.config`:
