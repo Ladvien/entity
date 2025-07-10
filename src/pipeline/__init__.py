@@ -57,6 +57,7 @@ __all__ = [
     "Pipeline",
     "Workflow",
     "execute_with_observability",
+    "InMemoryCache",
 ]
 
 
