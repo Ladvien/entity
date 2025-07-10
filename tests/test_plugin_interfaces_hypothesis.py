@@ -1,7 +1,7 @@
 from hypothesis import given
 from hypothesis import strategies as st
 from pipeline import PipelineStage
-from pipeline.interfaces import PluginAutoClassifier
+from entity.core.plugin_utils import PluginAutoClassifier
 
 
 @given(st.sampled_from([s.name for s in PipelineStage]))
