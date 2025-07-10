@@ -64,6 +64,8 @@ class EntityCLI:
         sub.add_parser("run", help="Start the agent")
         sub.add_parser("serve-websocket", help="Start the agent via WebSocket")
         sub.add_parser("verify", help="Load plugins and exit")
+        search = sub.add_parser("search-plugin", help="Search the plugin marketplace")
+        search.add_argument("name")
         replay = sub.add_parser("replay-log", help="Replay a state log file")
         replay.add_argument("file")
         reload_p = sub.add_parser(
@@ -149,6 +151,9 @@ class EntityCLI:
         if cmd == "verify":
             assert self.args.config is not None
             return self._verify_plugins(self.args.config)
+        if cmd == "search-plugin":
+            assert self.args.name is not None
+            return self._search_plugin(self.args.name)
         if cmd == "workflow":
             return self._handle_workflow()
         if cmd == "replay-log":
@@ -310,6 +315,11 @@ class EntityCLI:
         if not found:
             logger.error("No async plugin functions found in %s", path)
             return 1
+        return 0
+
+    def _search_plugin(self, name: str) -> int:
+        """Placeholder for future plugin marketplace search."""
+        logger.info("search-plugin '%s' is not implemented yet", name)
         return 0
 
     @staticmethod
