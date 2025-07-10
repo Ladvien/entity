@@ -5,7 +5,7 @@ from entity.core.plugins import (
     ToolPlugin,
     PromptPlugin,
 )
-from pipeline.interfaces import PluginAutoClassifier
+from entity.core.plugin_utils import PluginAutoClassifier
 
 from entity.core.plugin_utils import configure_plugins
 
