@@ -27,6 +27,7 @@ Welcome to the Entity Pipeline framework. These pages explain how to configure a
 - [Module map](module_map.md)
 - [Error handling](error_handling.md)
 - [Troubleshooting](troubleshooting.md)
+- [Debugging](debugging.md)
 
 ### Deployment
 - [AWS deployment](deploy_aws.md)
@@ -53,10 +54,11 @@ security_config
 logging
 state_logging
 advanced_usage
-module_map
-error_handling
-troubleshooting
-deploy_aws
+  module_map
+  error_handling
+  troubleshooting
+  debugging
+  deploy_aws
 deploy_local
 deploy_docker
 deploy_cloud
