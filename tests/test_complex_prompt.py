@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from entity.core.resources.container import ResourceContainer
 from entity.core.state import MetricsCollector
+from entity.resources.memory import Memory
 from pipeline import (
     ConversationEntry,
     PipelineState,
@@ -12,7 +13,6 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from pipeline.resources.memory import Memory
 from user_plugins.prompts.complex_prompt import ComplexPrompt
 
 
