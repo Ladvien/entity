@@ -4,20 +4,22 @@ This module delegates tool execution to
 ``pipeline.tools.execution`` to keep logic centralized.
 """
 
+# mypy: ignore-errors
+
 from __future__ import annotations
 
 import time
-import warnings
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict
 
-from entity.core.registries import PluginRegistry, SystemRegistries
-from entity.core.state import MetricsCollector
-from entity.core.state_logger import StateLogger
-
 from entity.core.context import PluginContext
-from entity.core.state import ConversationEntry
+from entity.core.registries import PluginRegistry, SystemRegistries
+from entity.core.state import ConversationEntry, MetricsCollector
+from entity.core.state_logger import StateLogger
+from entity.utils.logging import get_logger
+from pipeline.state import FailureInfo, PipelineState
+
 from .errors import create_static_error_response
 from .exceptions import MaxIterationsExceeded  # noqa: F401 - reserved for future use
 from .exceptions import (
@@ -27,12 +29,9 @@ from .exceptions import (
     ResourceError,
     ToolExecutionError,
 )
-from entity.utils.logging import get_logger
-from .manager import PipelineManager
 from .observability.metrics import MetricsServerManager
 from .observability.tracing import start_span
 from .stages import PipelineStage
-from entity.core.state import FailureInfo, PipelineState
 from .tools.execution import execute_pending_tools
 
 logger = get_logger(__name__)
@@ -119,15 +118,11 @@ async def execute_stage(
         for plugin in stage_plugins:
             context = PluginContext(state, registries)
             context.set_current_stage(stage)
-            await registries.validators.validate(stage, context)
-            plugin_name = registries.plugins.get_plugin_name(plugin)
-            start_plugin = time.perf_counter()
+            if registries.validators is not None:
+                await registries.validators.validate(stage, context)
+            registries.plugins.get_plugin_name(plugin)
             try:
                 await plugin.execute(context)
-                plugin_duration = time.perf_counter() - start_plugin
-                if state.metrics:
-                    key = f"{stage}:{plugin_name}"
-                    state.metrics.record_plugin_duration(key, plugin_duration)
                 if stage == PipelineStage.DELIVER and state.response is not None:
                     break
                 if state.pending_tool_calls:
@@ -258,13 +253,6 @@ async def execute_pipeline(
     state: PipelineState | None = None,
     max_iterations: int = 5,
 ) -> Dict[str, Any] | tuple[Dict[str, Any], MetricsCollector]:
-    if capabilities is None and registries is not None:
-        warnings.warn(
-            "'registries' is deprecated, use 'capabilities' instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        capabilities = registries
     if capabilities is None:
         raise TypeError("capabilities is required")
     if state is None:

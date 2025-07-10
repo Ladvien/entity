@@ -71,8 +71,11 @@ def __getattr__(name: str) -> Any:
         "SystemInitializer",
         "initialization_cleanup_context",
     }:
-        from entity.core.registries import (PluginRegistry, SystemRegistries,
-                                            ToolRegistry)
+        from entity.core.registries import (
+            PluginRegistry,
+            SystemRegistries,
+            ToolRegistry,
+        )
         from entity.core.resources.container import ResourceContainer
 
         from .initializer import (
@@ -97,8 +100,8 @@ def __getattr__(name: str) -> Any:
         "execute_pipeline": "pipeline.pipeline",
         "create_default_response": "pipeline.pipeline",
         "create_static_error_response": "pipeline.errors",
-        "ConfigUpdateResult": "pipeline.config_update",
-        "update_plugin_configuration": "pipeline.config_update",
+        "ConfigUpdateResult": "pipeline.config.config_update",
+        "update_plugin_configuration": "pipeline.config.config_update",
         "StateLogger": "entity.core.state_logger",
         "LogReplayer": "entity.core.state_logger",
         "ClassRegistry": "pipeline.initializer",
