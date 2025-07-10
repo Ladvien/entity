@@ -19,9 +19,8 @@ Each adapter validates the provided bearer token and ensures the role is allowed
 
 ## Input Validation Hooks
 
-Use `StageInputValidator` to register callbacks that inspect or modify the
-`PluginContext` before each stage plugin runs. Hooks are registered on the
-`SystemRegistries.validators` object.
+Register callbacks on `SystemRegistries.validators` to inspect or modify the
+`PluginContext` before each stage plugin runs.
 
 ```python
 capabilities.validators.register(PipelineStage.PARSE, my_validator)
