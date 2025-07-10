@@ -1,10 +1,11 @@
 import asyncio
+
 import pytest
+
+from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
+from entity.core.resources.container import ResourceContainer
 from pipeline import PipelineStage, PipelineState, PluginContext, PromptPlugin
 from pipeline.errors import PluginContextError
-from registry import PluginRegistry, SystemRegistries, ToolRegistry
-
-from entity.core.resources.container import ResourceContainer
 
 
 def make_context(stage: PipelineStage) -> PluginContext:
