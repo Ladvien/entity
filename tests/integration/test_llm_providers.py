@@ -1,5 +1,5 @@
 import pytest
-from pipeline.resources.llm import UnifiedLLMResource
+from plugins.builtin.resources.llm.unified import UnifiedLLMResource
 
 PROVIDER_CONFIGS = {
     "openai": {

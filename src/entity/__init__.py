@@ -15,7 +15,7 @@ def __getattr__(name: str):
 
         return _Agent
     if name == "AgentBuilder":
-        from .core.builder import AgentBuilder as _AgentBuilder
+        from .core.builder import _AgentBuilder
 
         return _AgentBuilder
     raise AttributeError(name)

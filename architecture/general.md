@@ -339,7 +339,7 @@ relevant_context = await memory.get_memory(context.message)  # Similarity search
 plugins:
   resources:
     llm:
-      type: pipeline.resources.llm.unified:UnifiedLLMResource
+      type: plugins.builtin.resources.llm.unified:UnifiedLLMResource
       provider: ollama
       model: llama3:8b
       base_url: http://localhost:11434

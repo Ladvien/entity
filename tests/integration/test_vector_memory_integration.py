@@ -17,7 +17,7 @@ from pipeline import (
     SystemRegistries,
     ToolRegistry,
 )
-from pipeline.resources.llm import UnifiedLLMResource
+from plugins.builtin.resources.llm.unified import UnifiedLLMResource
 from plugins.builtin.resources.pg_vector_store import PgVectorStore
 from plugins.builtin.resources.postgres import PostgresResource
 from user_plugins.prompts.complex_prompt import ComplexPrompt
