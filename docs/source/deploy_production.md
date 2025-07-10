@@ -39,7 +39,7 @@ the orchestrator can restart the container on failures.
 
 For horizontal scaling you can run multiple agent replicas behind a load
 balancer. Use a shared database and file store so each instance has access to
-conversation history and uploaded files. Enable monitoring and metrics (see
+conversation history and uploaded files. Enable tracing (see
 `monitoring.md`) to gain visibility into resource usage.
 
 

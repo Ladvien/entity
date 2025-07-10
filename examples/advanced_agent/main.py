@@ -18,7 +18,7 @@ from entity.core.resources.container import ResourceContainer
 from plugins.builtin.resources.duckdb_database import DuckDBDatabaseResource
 from entity.resources.memory import Memory
 from pipeline.pipeline import execute_pipeline, generate_pipeline_id
-from pipeline.state import ConversationEntry, MetricsCollector, PipelineState
+from pipeline.state import ConversationEntry, PipelineState
 
 
 class EchoLLMResource(ResourcePlugin):
@@ -79,7 +79,6 @@ async def main() -> None:
             )
         ],
         pipeline_id=generate_pipeline_id(),
-        metrics=MetricsCollector(),
     )
     result: dict[str, Any] = await execute_pipeline("What is 2 + 2?", caps, state=state)
     print(result)

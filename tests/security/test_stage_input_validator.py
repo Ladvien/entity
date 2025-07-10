@@ -4,7 +4,6 @@ import asyncio
 from datetime import datetime
 
 from entity.core.resources.container import ResourceContainer
-from entity.core.state import MetricsCollector
 from pipeline import (
     ConversationEntry,
     PipelineStage,
@@ -29,7 +28,6 @@ def test_validator_runs_before_plugin():
             ConversationEntry(content="hi", role="user", timestamp=datetime.now())
         ],
         pipeline_id="1",
-        metrics=MetricsCollector(),
     )
     plugins = PluginRegistry()
     asyncio.run(plugins.register_plugin_for_stage(DummyPlugin(), PipelineStage.DO))

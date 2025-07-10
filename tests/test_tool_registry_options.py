@@ -5,7 +5,6 @@ from datetime import datetime
 from entity.core.resources.container import ResourceContainer
 from entity.core.state import (
     ConversationEntry,
-    MetricsCollector,
     PipelineState,
     ToolCall,
 )
@@ -30,7 +29,6 @@ def _make_state() -> PipelineState:
             ConversationEntry(content="hi", role="user", timestamp=datetime.now()),
         ],
         pipeline_id="1",
-        metrics=MetricsCollector(),
         current_stage=PipelineStage.DO,
     )
 
@@ -49,3 +47,20 @@ def test_concurrency_limit():
     duration = time.time() - start
     assert tool.calls == 4
     assert duration >= 0.2
+
+
+def test_cache_ttl():
+    state = _make_state()
+    tool = SleepTool()
+    tools = ToolRegistry(cache_ttl=5)
+    asyncio.run(tools.add("sleep", tool))
+    capabilities = SystemRegistries(ResourceContainer(), tools, PluginRegistry())
+    ctx = PluginContext(state, capabilities)
+    asyncio.run(ctx.queue_tool_use("sleep", result_key="a", delay=0))
+    asyncio.run(execute_pending_tools(state, capabilities))
+    asyncio.run(ctx.queue_tool_use("sleep", result_key="b", delay=0))
+    asyncio.run(execute_pending_tools(state, capabilities))
+    assert tool.calls == 1
+    ctx = PluginContext(state, capabilities)
+    assert ctx.load("b") == 0
+    # Removed metrics check since metrics have been deprecated

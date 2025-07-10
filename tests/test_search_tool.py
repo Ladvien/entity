@@ -2,7 +2,6 @@ import asyncio
 from datetime import datetime
 
 from entity.core.resources.container import ResourceContainer
-from entity.core.state import MetricsCollector
 from pipeline import (
     ConversationEntry,
     PipelineState,
@@ -20,7 +19,6 @@ async def run_search() -> str:
             ConversationEntry(content="hi", role="user", timestamp=datetime.now())
         ],
         pipeline_id="1",
-        metrics=MetricsCollector(),
     )
     tools = ToolRegistry()
     await tools.add("search", SearchTool())

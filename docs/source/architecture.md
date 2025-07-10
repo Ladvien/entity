@@ -61,8 +61,8 @@ Example output:
 ImportError: cannot import name 'Resource' from partially initialized module 'entity.core.resources'
 ```
 
-Once the imports are resolved, the `pytest-benchmark` plugin can capture
-timing metrics for each pipeline stage.
+Once the imports are resolved, the `pytest-benchmark` plugin can measure
+pipeline stage timings.
 
 ## Zero-Config AWS Startup
 

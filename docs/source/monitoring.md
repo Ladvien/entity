@@ -1,6 +1,6 @@
 # Monitoring the Pipeline
 
-This guide shows how to collect metrics and traces from an Entity deployment.
+This guide explains how to enable tracing for an Entity deployment.
 
 
 ## OpenTelemetry Tracing

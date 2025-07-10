@@ -1,7 +1,6 @@
 import asyncio
 import json
 
-from entity.core.state import MetricsCollector
 from pipeline import PipelineState, PluginContext, SystemInitializer, SystemRegistries
 from plugins.builtin.resources.llm.unified import UnifiedLLMResource
 
@@ -45,6 +44,6 @@ def test_context_get_llm_with_provider():
     }
     initializer = SystemInitializer.from_dict(cfg)
     plugin_reg, resource_reg, tool_reg, _ = asyncio.run(initializer.initialize())
-    state = PipelineState(conversation=[], pipeline_id="1", metrics=MetricsCollector())
+    state = PipelineState(conversation=[], pipeline_id="1")
     ctx = PluginContext(state, SystemRegistries(resource_reg, tool_reg, plugin_reg))
     assert isinstance(ctx.get_llm(), UnifiedLLMResource)

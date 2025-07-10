@@ -15,7 +15,7 @@ from typing import Any, Dict
 
 from entity.core.context import PluginContext
 from entity.core.registries import PluginRegistry, SystemRegistries
-from entity.core.state import ConversationEntry, FailureInfo, MetricsCollector
+from entity.core.state import ConversationEntry, FailureInfo
 from entity.core.state_logger import StateLogger
 from entity.utils.logging import get_logger
 from pipeline.state import PipelineState
@@ -66,10 +66,9 @@ class Pipeline:
         capabilities: SystemRegistries,
         *,
         state_logger: StateLogger | None = None,
-        return_metrics: bool = False,
         state: PipelineState | None = None,
         max_iterations: int = 5,
-    ) -> Dict[str, Any] | tuple[Dict[str, Any], MetricsCollector]:
+    ) -> Dict[str, Any]:
         plugin_reg = PluginRegistry()
         for stage, plugin_names in self.workflow.stage_map.items():
             for name in plugin_names:
@@ -88,7 +87,6 @@ class Pipeline:
             message,
             regs,
             state_logger=state_logger,
-            return_metrics=return_metrics,
             state=state,
             max_iterations=max_iterations,
         )
@@ -239,8 +237,6 @@ async def execute_stage(
             await execute_stage(PipelineStage.ERROR, state, registries)
             state.last_completed_stage = PipelineStage.ERROR
     duration = time.perf_counter() - start
-    if state.metrics:
-        state.metrics.record_stage_duration(str(stage), duration)
 
 
 async def execute_pipeline(
@@ -248,84 +244,80 @@ async def execute_pipeline(
     capabilities: SystemRegistries,
     *,
     state_logger: "StateLogger" | None = None,
-    return_metrics: bool = False,
     state: PipelineState | None = None,
     max_iterations: int = 5,
-) -> Dict[str, Any] | tuple[Dict[str, Any], MetricsCollector]:
+) -> Dict[str, Any]:
     if capabilities is None:
         raise TypeError("capabilities is required")
     if state is None:
         state = PipelineState(
             conversation=[
                 ConversationEntry(
-                    content=user_message, role="user", timestamp=datetime.now()
+                    content=user_message,
+                    role="user",
+                    timestamp=datetime.now(),
                 )
             ],
             pipeline_id=generate_pipeline_id(),
-            metrics=MetricsCollector(),
         )
     start = time.time()
-    try:
-        async with capabilities.resources:
-            async with start_span("pipeline.execute"):
-                while True:
-                    state.iteration += 1
-                    for stage in [
-                        PipelineStage.PARSE,
-                        PipelineStage.THINK,
-                        PipelineStage.DO,
-                        PipelineStage.REVIEW,
-                        PipelineStage.DELIVER,
-                    ]:
-                        if (
-                            state.last_completed_stage is not None
-                            and stage.value <= state.last_completed_stage.value
-                        ):
-                            continue
-                        try:
-                            await execute_stage(stage, state, capabilities)
-                        finally:
-                            if state_logger is not None:
-                                state_logger.log(state, stage)
-                            logger.info(
-                                "stage complete",
-                                extra={
-                                    "stage": str(stage),
-                                    "pipeline_id": state.pipeline_id,
-                                    "iteration": state.iteration,
-                                },
-                            )
-                        if state.failure_info:
-                            break
-                        state.last_completed_stage = stage
-
+    async with capabilities.resources:
+        async with start_span("pipeline.execute"):
+            while True:
+                state.iteration += 1
+                for stage in [
+                    PipelineStage.PARSE,
+                    PipelineStage.THINK,
+                    PipelineStage.DO,
+                    PipelineStage.REVIEW,
+                    PipelineStage.DELIVER,
+                ]:
                     if (
-                        state.response is not None
-                        and state.last_completed_stage == PipelineStage.DELIVER
+                        state.last_completed_stage is not None
+                        and stage.value <= state.last_completed_stage.value
                     ):
+                        continue
+                    try:
+                        await execute_stage(stage, state, capabilities)
+                    finally:
+                        if state_logger is not None:
+                            state_logger.log(state, stage)
+                        logger.info(
+                            "stage complete",
+                            extra={
+                                "stage": str(stage),
+                                "pipeline_id": state.pipeline_id,
+                                "iteration": state.iteration,
+                            },
+                        )
+                    if state.failure_info:
                         break
+                    state.last_completed_stage = stage
 
+                if (
+                    state.response is not None
+                    and state.last_completed_stage == PipelineStage.DELIVER
+                ):
+                    break
+
+                if state.failure_info is not None or state.iteration >= max_iterations:
                     if (
-                        state.failure_info is not None
-                        or state.iteration >= max_iterations
+                        state.response is None
+                        and state.failure_info is None
+                        and state.iteration >= max_iterations
                     ):
-                        if (
-                            state.response is None
-                            and state.failure_info is None
-                            and state.iteration >= max_iterations
-                        ):
-                            state.failure_info = FailureInfo(
-                                stage="iteration_guard",
-                                plugin_name="pipeline",
-                                error_type="max_iterations",
-                                error_message=f"Reached {max_iterations} iterations",
-                                original_exception=RuntimeError(
-                                    "max iteration limit reached"
-                                ),
-                            )
-                        break
+                        state.failure_info = FailureInfo(
+                            stage="iteration_guard",
+                            plugin_name="pipeline",
+                            error_type="max_iterations",
+                            error_message=f"Reached {max_iterations} iterations",
+                            original_exception=RuntimeError(
+                                "max iteration limit reached"
+                            ),
+                        )
+                    break
 
-                    state.last_completed_stage = None
+                state.last_completed_stage = None
 
         if state.failure_info:
             try:
@@ -336,7 +328,7 @@ async def execute_pipeline(
                 await execute_stage(PipelineStage.DELIVER, state, capabilities)
             except Exception:
                 result = create_static_error_response(state.pipeline_id).to_dict()
-                return (result, state.metrics) if return_metrics else result
+                return result
             if state.response is None:
                 result = create_static_error_response(state.pipeline_id).to_dict()
             else:
@@ -345,10 +337,7 @@ async def execute_pipeline(
             result = create_default_response("No response generated", state.pipeline_id)
         else:
             result = state.response
-        return (result, state.metrics) if return_metrics else result
-    finally:
-        if state.metrics:
-            state.metrics.record_pipeline_duration(time.time() - start)
+        return result
 
 
 __all__ = [

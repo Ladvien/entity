@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from entity.core.state import MetricsCollector
 from pipeline import ConversationEntry, PipelineStage, PipelineState, PromptPlugin
 
 
@@ -17,7 +16,6 @@ def make_state() -> PipelineState:
             ConversationEntry(content="hi", role="user", timestamp=datetime.now())
         ],
         pipeline_id="123",
-        metrics=MetricsCollector(),
     )
 
 
