@@ -1,7 +1,11 @@
 import sys
 
+import sys
+from pathlib import Path
+
 from plugins.builtin.adapters.websocket import WebSocketAdapter
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from entity.cli import EntityCLI as CLI
 
 

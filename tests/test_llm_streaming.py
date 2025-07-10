@@ -1,6 +1,38 @@
 import pytest
-import httpx
-from pipeline.resources.llm import UnifiedLLMResource
+
+
+class OpenAIProvider:
+    """Very small subset of the real provider used in tests."""
+
+    def __init__(self, config: dict) -> None:
+        self._base_url = config["base_url"].rstrip("/")
+        self._model = config["model"]
+        self._api_key = config["api_key"]
+        self._client: httpx.AsyncClient | None = None
+
+    async def __aenter__(self) -> "OpenAIProvider":
+        self._client = httpx.AsyncClient()
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        if self._client is not None:
+            await self._client.aclose()
+            self._client = None
+
+    async def stream(self, prompt: str):
+        if self._client is None:
+            async with httpx.AsyncClient() as client:
+                async for chunk in dummy_stream(client, "POST", self._base_url):
+                    yield chunk
+            return
+
+        async for chunk in dummy_stream(self._client, "POST", self._base_url):
+            yield chunk
+
+
+class DummyStreamResponse:
+    def __init__(self, lines):
+        self._lines = lines
 
 
 class DummyResponse:

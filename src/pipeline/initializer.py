@@ -71,12 +71,10 @@ class ClassRegistry:
             if issubclass(cls, ToolPlugin):
                 yield name, cls, self._configs[name]
 
-    def non_resource_non_tool_classes(
-        self,
-    ) -> Iterable[Tuple[type[BasePlugin], Dict]]:
+    def non_resource_non_tool_classes(self) -> Iterable[Tuple[type[BasePlugin], Dict]]:
         for name in self._order:
             cls = self._classes[name]
-            if not issubclass(cls, ResourcePlugin) and not issubclass(cls, ToolPlugin):
+            if not issubclass(cls, (ResourcePlugin, ToolPlugin)):
                 yield cls, self._configs[name]
 
     def _type_default_stages(self, cls: type[BasePlugin]) -> List[PipelineStage]:

@@ -71,32 +71,8 @@ def test_health_report():
 
 
 # Resource pool tests using dynamic import to avoid package path issues
-root = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location(
-    "entity.core.resources.container",
-    root / "src" / "entity" / "core" / "resources" / "container.py",
-)
-
-_orig_pipeline = sys.modules.get("pipeline")
-_orig_resources = sys.modules.get("entity.core.resources")
-
-module = importlib.util.module_from_spec(spec)
-sys.modules["entity.core.resources.container"] = module
-try:
-    sys.modules["pipeline"] = ModuleType("pipeline")
-    sys.modules["entity.core.resources"] = ModuleType("entity.core.resources")
-    spec.loader.exec_module(module)  # type: ignore[arg-type]
-finally:
-    if _orig_pipeline is not None:
-        sys.modules["pipeline"] = _orig_pipeline
-    else:
-        sys.modules.pop("pipeline", None)
-
-    if _orig_resources is not None:
-        sys.modules["entity.core.resources"] = _orig_resources
-    else:
-        sys.modules.pop("entity.core.resources", None)
-
+module = importlib.import_module("entity.core.resources.container")
+sys.modules["plugins.builtin.resources.container"] = module
 ResourceContainerDynamic = module.ResourceContainer
 
 

@@ -18,12 +18,6 @@ from experiments.storage.resource import StorageResource
 # from entity.plugins.builtin.resources.storage import StorageResource  # placeholder
 ```
 
-The memory resource moved from `pipeline.resources.memory` to
-`entity.resources.memory`. Update any imports accordingly:
-
-```python
-from entity.resources.memory import Memory
-```
 
 ## 2. Check Configuration Files
 
