@@ -4,6 +4,8 @@ Here’s a cleaned-up and deduplicated version of your `CONTRIBUTING.md` section
 
 Thank you for helping improve the Entity Pipeline Framework!
 
+See [Contribution Guidelines](docs/source/contribution_guidelines.md) for project standards.
+
 Start by setting up your development environment:
 
 ```bash

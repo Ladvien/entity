@@ -54,6 +54,8 @@ config
 config_cheatsheet
 plugin_cheatsheet
 plugin_guide
+plugin_marketplace
+contribution_guidelines
 developer_examples
 workflows
 context
