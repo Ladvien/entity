@@ -122,6 +122,41 @@ class _AgentBuilder:
                 continue
             self._register_module_plugins(module)
 
+    # ------------------------------ config helpers -----------------------------
+    @classmethod
+    def from_yaml(cls, yaml_path: str) -> "_AgentBuilder":
+        """Create a builder from a YAML configuration file."""
+
+        import yaml
+
+        with open(yaml_path, "r", encoding="utf-8") as handle:
+            data = yaml.safe_load(handle) or {}
+        builder = cls()
+        builder.load_from_dict(data)
+        return builder
+
+    def load_from_dict(self, cfg: Mapping[str, Any]) -> None:
+        """Register plugins from a configuration mapping in listed order."""
+
+        plugins_cfg = cfg.get("plugins", {})
+        for _section, entries in plugins_cfg.items():
+            if not isinstance(entries, Mapping):
+                continue
+            for _name, meta in entries.items():
+                if isinstance(meta, str):
+                    cls_path = meta
+                    plugin_cfg = {}
+                elif isinstance(meta, Mapping):
+                    cls_path = meta.get("type") or meta.get("class")
+                    plugin_cfg = {
+                        k: v for k, v in meta.items() if k not in {"type", "class"}
+                    }
+                else:  # pragma: no cover - defensive
+                    continue
+                plugin_cls = plugin_utils.import_plugin_class(cls_path)
+                instance = plugin_cls(plugin_cfg)
+                self.add_plugin(instance)
+
     # ------------------------------ runtime build -----------------------------
     def build_runtime(
         self, workflow: Mapping[PipelineStage | str, Iterable[str]] | None = None
