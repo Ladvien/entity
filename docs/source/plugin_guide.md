@@ -183,7 +183,7 @@ Several example pipelines once lived in ``user_plugins/examples`` to showcase mo
 
 ### StorageResource Composition
 
-`StorageResource` composes `DatabaseResource`, `VectorStoreResource`, and `FileSystemResource` behind one interface for handling files. Memory persists conversation history and vectors and is configured in [config/dev.yaml](../../config/dev.yaml). Use `StorageResource` when your plugins need to create or read files. With the plugin configured the code looks like:
+`StorageResource` composes `DatabaseResource`, `VectorStoreResource`, and `FileSystemResource` behind one interface for handling files. Memory persists conversation history and vectors and is configured in [config/dev.yaml](https://github.com/Ladvien/entity/blob/main/config/dev.yaml). Use `StorageResource` when your plugins need to create or read files. With the plugin configured the code looks like:
 
 ```python
 resources = ResourceContainer()
