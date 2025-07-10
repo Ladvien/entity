@@ -1,8 +1,22 @@
 # Entity Pipeline Framework
 
-Build agents once and run them anywhere. The same configuration file powers
-both local development and production deployments. Start with
-``config/dev.yaml`` on your laptop and swap in ``config/prod.yaml`` when
-deploying. See the
-[dev-to-production guide](docs/source/dev_to_production.md) for a short
-walkthrough.
+[![Build Status](https://github.com/Ladvien/entity/actions/workflows/test.yml/badge.svg)](https://github.com/Ladvien/entity/actions/workflows/test.yml)
+[![Docs](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://entity.readthedocs.io/en/latest/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+Entity lets you craft agent pipelines using a single configuration file. The same YAML works locally and in production, so iteration stays simple.
+
+## Key Features
+- Three-layer plugin system for progressive complexity
+- Hot-reloadable YAML config with validation
+- Stateless workers that scale horizontally
+- Unified memory resource for chat, search, and storage
+
+Check the [hero landing page](https://entity.readthedocs.io/en/latest/) for a visual overview.
+
+## Minimal Example
+```bash
+poetry run entity-cli --config config/dev.yaml
+```
+
+See the [Quick Start](docs/source/quick_start.md) for step-by-step setup or browse the [full documentation](https://entity.readthedocs.io/en/latest/).
