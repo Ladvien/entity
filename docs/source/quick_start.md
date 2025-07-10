@@ -4,7 +4,25 @@ Follow these steps to get a basic agent running.
 
 ## 1. Install
 
-Install the framework with pip or add it to your Poetry project:
+Ready-made agents live in the new `examples/` directory. Run them with
+`poetry run python examples/<name>/main.py` to see the framework in action.
+
+### Programmatic Configuration
+Build the same configuration in Python using the models from
+`entity.config`:
+
+```python
+from entity.config.models import EntityConfig, PluginsSection, PluginConfig
+
+config = EntityConfig(
+    workflow={"think": ["main"], "deliver": ["http"]},
+    plugins=PluginsSection(
+        prompts={"main": PluginConfig(type="user_plugins.prompts.simple:SimplePrompt")},
+        adapters={"http": PluginConfig(type="plugins.builtin.adapters.http:HTTPAdapter", stages=["parse", "deliver"])},
+        resources={"llm": PluginConfig(provider="openai", model="gpt-4")},
+    ),
+)
+```
 
 ```bash
 pip install entity

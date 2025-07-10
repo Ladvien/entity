@@ -1,6 +1,14 @@
 # Developer Examples
 
-This project no longer bundles the old `user_plugins/examples` directory. The docs now include a minimal example so you can experiment quickly.
+This repository ships a few self-contained example agents under ``examples/``.
+
+| Example | Description |
+| ------- | ----------- |
+| ``basic_agent`` | Minimal echo agent |
+| ``intermediate_agent`` | Chain-of-thought reasoning with an echo LLM |
+| ``advanced_agent`` | ReAct loop using the calculator tool |
+
+Run any example with ``poetry run python examples/<name>/main.py``.
 
 ## Minimal Pipeline
 
