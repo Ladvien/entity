@@ -1,6 +1,6 @@
 # Component Overview
 
-This page explains the main building blocks of the Entity Pipeline framework. Use it alongside the [architecture overview](https://github.com/Ladvien/entity/blob/main/architecture/general.md), [plugin guide](plugin_guide.md) and [plugin cheat sheet](plugin_cheatsheet.md). A working configuration is available in [`config/dev.yaml`](https://github.com/Ladvien/entity/blob/main/config/dev.yaml).
+This page explains the main building blocks of the Entity Pipeline framework. Use it alongside the [architecture overview](https://github.com/Ladvien/entity/blob/main/architecture/general.md), [plugin guide](plugin_guide.md) and [plugin cheat sheet](plugin_cheatsheet.md). A working configuration is available in [`config/dev.yaml`](https://github.com/Ladvien/entity/blob/main/config/dev.yaml). The sample configuration stores history in an in-memory DuckDB database so you can experiment immediately.
 
 ## Pipelines and Stages
 
