@@ -1,9 +1,9 @@
 import asyncio
 import pytest
 
-from pipeline import PipelineStage
+from pipeline import PipelineStage, execute_pipeline
 from entity.core.plugins import BasePlugin
-from entity import AgentBuilder
+from entity.core.builder import _AgentBuilder
 
 
 class ReplyPlugin(BasePlugin):
@@ -15,8 +15,8 @@ class ReplyPlugin(BasePlugin):
 
 @pytest.mark.integration
 def test_legacy_config_without_workflow_executes():
-    builder = AgentBuilder()
+    builder = _AgentBuilder()
     builder.add_plugin(ReplyPlugin({}))
     runtime = builder.build_runtime()
-    result = asyncio.run(runtime.run_pipeline("hi"))
+    result = asyncio.run(execute_pipeline("hi", runtime.capabilities))
     assert result == "ok"
