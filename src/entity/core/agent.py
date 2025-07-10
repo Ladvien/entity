@@ -3,13 +3,14 @@ from __future__ import annotations
 """Pipeline component: agent."""
 
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Optional, cast, Mapping, Iterable
+from typing import Any, Callable, Dict, Iterable, Mapping, Optional, cast
+
+from pipeline.exceptions import PipelineError
+from pipeline.workflow import Pipeline, WorkflowMapping
 
 from .builder import _AgentBuilder
-from pipeline.exceptions import PipelineError
 from .registries import PluginRegistry, SystemRegistries
 from .runtime import AgentRuntime
-from pipeline.workflow import Pipeline, WorkflowMapping
 
 
 @dataclass
@@ -111,8 +112,9 @@ class Agent:
     ) -> "Agent":
         """Instantiate an agent from a YAML/JSON path or mapping."""
 
-        from pathlib import Path
         import asyncio
+        from pathlib import Path
+
         from pipeline.initializer import SystemInitializer
 
         if isinstance(cfg, Mapping):
@@ -170,18 +172,3 @@ class Agent:
         if self._runtime is None:
             raise PipelineError("Agent not initialized")
         return self._runtime.capabilities
-
-    # ------------------------------------------------------------------
-    # Compatibility helpers
-    # ------------------------------------------------------------------
-    @property
-    def plugin_registry(self) -> "PluginRegistry":  # pragma: no cover - passthrough
-        if self._runtime is not None:
-            return self._runtime.capabilities.plugins
-        return self.builder.plugin_registry
-
-    @property
-    def plugins(self) -> "PluginRegistry":  # pragma: no cover - passthrough
-        if self._runtime is not None:
-            return self._runtime.capabilities.plugins
-        return self.builder.plugin_registry

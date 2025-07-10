@@ -1,4 +1,5 @@
 import asyncio
+
 import yaml
 
 from entity.core.agent import Agent
@@ -63,5 +64,7 @@ def test_agent_initializer_preserves_yaml_order(tmp_path):
 
     agent = Agent(config_path=str(path))
     asyncio.run(agent._ensure_runtime())
-    plugins = agent.plugins.get_plugins_for_stage(PipelineStage.DELIVER)
+    plugins = agent.runtime.capabilities.plugins.get_plugins_for_stage(
+        PipelineStage.DELIVER
+    )
     assert [p.__class__ for p in plugins] == [Second, First, Third]
