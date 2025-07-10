@@ -13,7 +13,7 @@ SRC_PATH = pathlib.Path(__file__).resolve().parents[1]
 if str(SRC_PATH) not in sys.path:
     sys.path.insert(0, str(SRC_PATH))
 
-from entity.core.plugin_utils import import_plugin_class
+from entity.core.plugin_utils import import_plugin_class  # noqa: E402
 
 
 class ClassRegistry:
@@ -52,7 +52,8 @@ class SystemInitializer:
 
 
 from entity.utils.logging import get_logger  # noqa: E402
-from .stages import PipelineStage
+
+from .stages import PipelineStage  # noqa: E402
 
 logger = get_logger(__name__)
 
@@ -109,15 +110,7 @@ class RegistryValidator:
 
                 result = ValidationResult.success_result()
             else:
-                try:
-                    result = validate(self.registry)
-                except NameError as exc:  # pragma: no cover - legacy plugins
-                    if "ValidationResult" in str(exc):
-                        from entity.core.plugins import ValidationResult
-
-                        result = ValidationResult.success_result()
-                    else:
-                        raise
+                result = validate(self.registry)
             if not result.success:
                 raise SystemError(
                     f"Dependency validation failed for {cls.__name__}: {result.error_message}"
