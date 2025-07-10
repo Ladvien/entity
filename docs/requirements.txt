@@ -4,3 +4,4 @@ sphinx-autobuild==2024.10.3
 furo==2024.8.6
 sphinx-autoapi==3.5.0
 sphinx-autodoc2==0.5.0
+sphinxcontrib-mermaid==1.0.0
