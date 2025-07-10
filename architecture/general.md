@@ -298,7 +298,7 @@ STATIC_ERROR_RESPONSE = {
 ```python
 from pipeline.errors.response import ErrorResponse
 
-info = ctx.get_failure_info()
+info = ctx.failure_info
 payload = ErrorResponse(
     error=info.error_message,
     message="Unable to complete request",

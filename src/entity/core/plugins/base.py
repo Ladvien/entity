@@ -7,11 +7,9 @@ These classes mirror the minimal architecture described in
 They offer a small, easy to understand surface for plugin authors.
 """
 
-from dataclasses import dataclass
-from typing import Any, Dict, List, Type
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Type
 
 from entity.utils.logging import get_logger
 
@@ -60,7 +58,7 @@ class BasePlugin:
         start = time.perf_counter()
         response = await context.call_llm(context, prompt, purpose=purpose)
         duration = time.perf_counter() - start
-        if context.get_failure_info() is None and hasattr(context._state, "metrics"):
+        if context.failure_info is None and hasattr(context._state, "metrics"):
             key = f"{context.current_stage}:{self.__class__.__name__}:{purpose}"
             context._state.metrics.record_llm_duration(key, duration)
         self.logger.info(

@@ -7,9 +7,9 @@ import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pipeline.stages import PipelineStage
-from pipeline.errors import PluginContextError
 from entity.core.state import ConversationEntry, PipelineState
+from pipeline.errors import PluginContextError
+from pipeline.stages import PipelineStage
 
 
 class PluginContext:
@@ -145,10 +145,6 @@ class PluginContext:
         """Return ``True`` if ``key`` exists in stage results."""
         return key in self._state.stage_results
 
-    # Backwards compatibility
-    cache = store
-    recall = load
-
     # ------------------------------------------------------------------
     # Persistent memory helpers
     # ------------------------------------------------------------------
@@ -172,11 +168,6 @@ class PluginContext:
 
     @property
     def failure_info(self) -> Any:
-        """Return information about the most recent failure."""
-        return self._state.failure_info
-
-    # Backwards compatibility
-    def get_failure_info(self) -> Any:
         """Return information about the most recent failure."""
         return self._state.failure_info
 

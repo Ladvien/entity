@@ -19,7 +19,7 @@ class BasicLogger(FailurePlugin):
     async def _execute_impl(self, context: PluginContext) -> Any:
         logger = logging.getLogger(self.__class__.__name__)
         try:
-            info = context.get_failure_info()
+            info = context.failure_info
             if info is not None:
                 snapshot = getattr(info, "context_snapshot", None)
                 logger.error(

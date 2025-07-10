@@ -48,7 +48,7 @@ class RecordFailurePlugin(FailurePlugin):
         self.store = store
 
     async def _execute_impl(self, context):
-        info = context.get_failure_info()
+        info = context.failure_info
         if info:
             self.store.append(info)
 
