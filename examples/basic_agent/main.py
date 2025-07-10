@@ -12,6 +12,8 @@ from datetime import datetime
 
 from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
 from entity.core.resources.container import ResourceContainer
+from plugins.builtin.resources.duckdb_database import DuckDBDatabaseResource
+from entity.resources.memory import Memory
 from pipeline.pipeline import execute_pipeline, generate_pipeline_id
 
 sys.path.append(str(Path(__file__).resolve().parents[2]))
@@ -37,6 +39,9 @@ async def main() -> None:
     await plugins.register_plugin_for_stage(EchoPrompt(), PipelineStage.DELIVER, "echo")
 
     resources = ResourceContainer()
+    Memory.dependencies = ["database"]
+    resources.register("database", DuckDBDatabaseResource, {"path": "./agent.duckdb"})
+    resources.register("memory", Memory, {})
     await resources.build_all()
 
     caps = SystemRegistries(resources=resources, tools=ToolRegistry(), plugins=plugins)
