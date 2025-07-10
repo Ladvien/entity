@@ -15,12 +15,8 @@ from typing import Any, Dict
 
 from entity.core.context import PluginContext
 from entity.core.registries import PluginRegistry, SystemRegistries
-from entity.core.state import (
-    ConversationEntry,
-    FailureInfo,
-    MetricsCollector,
-    PipelineState,
-)
+from entity.core.state import ConversationEntry, FailureInfo, MetricsCollector
+from pipeline.state import PipelineState
 from entity.core.state_logger import StateLogger
 from entity.utils.logging import get_logger
 
