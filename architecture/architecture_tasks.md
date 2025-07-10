@@ -62,5 +62,6 @@
 - **Add structured logging** for stage completion with full context using `StateLogger`
 - **Clean up state serialization utilities** if no longer needed elsewhere
 - **Update `execute_pipeline`** to remove file-based state persistence
-
-### 11. Plugin Execution Order Simplification- **Update plugin registration** to use YAML/list order- **Update documentation** to emphasize execution order through configuration order
+### 11. Plugin Execution Order Simplification
+- **Update plugin registration** to use YAML/list order
+- **Update documentation** to emphasize execution order through configuration order
