@@ -2,12 +2,6 @@
 
 Welcome to the Entity Pipeline framework. These pages explain how to configure an agent, write plugins, and deploy the system.
 
-```{include} ../../README.md
-:relative-images:
-:start-after: <!-- start quick_start -->
-:end-before: <!-- end quick_start -->
-```
-
 ## Documentation Map
 
 ### Getting Started
