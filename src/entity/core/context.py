@@ -95,7 +95,9 @@ class PluginContext:
         tool = self._registries.tools.get(name)
         if tool is None:
             raise ValueError(f"Tool '{name}' not found")
-        cached = await self._registries.tools.get_cached_result(name, params)
+        get_cached = getattr(self._registries.tools, "get_cached_result", None)
+        cache_result = getattr(self._registries.tools, "cache_result", None)
+        cached = await get_cached(name, params) if get_cached else None
         if cached is not None:
             result = cached
             duration = 0.0
@@ -103,7 +105,8 @@ class PluginContext:
             start = time.perf_counter()
             result = await tool.execute_function(params)
             duration = time.perf_counter() - start
-            await self._registries.tools.cache_result(name, params, result)
+            if cache_result:
+                await cache_result(name, params, result)
         if self._state.metrics:
             key = f"{self.current_stage}:{name}"
             self._state.metrics.record_tool_duration(key, duration)
@@ -173,7 +176,9 @@ class PluginContext:
         return self._state.failure_info
 
     # Backwards compatibility
-    get_failure_info = failure_info
+    def get_failure_info(self) -> Any:
+        """Return information about the most recent failure."""
+        return self._state.failure_info
 
     def set_response(self, value: Any) -> None:
         if self.current_stage is not PipelineStage.DELIVER:
