@@ -60,7 +60,7 @@ from pipeline.errors.response import ErrorResponse
 class ErrorFormatter(FailurePlugin):
     stages = [PipelineStage.DELIVER]
     async def _execute_impl(self, ctx: PluginContext) -> None:
-        info = ctx.get_failure_info()
+        info = ctx.failure_info
         ctx.set_response(
             ErrorResponse(
                 error=info.error_message,
@@ -111,7 +111,7 @@ class BasicLogger(FailurePlugin):
     stages = [PipelineStage.ERROR]
 
     async def _execute_impl(self, ctx: PluginContext) -> None:
-        info = ctx.get_failure_info()
+        info = ctx.failure_info
         logging.error(
             "Stage %s plugin %s failed: %s",
             info.stage,

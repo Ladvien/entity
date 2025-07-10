@@ -496,15 +496,15 @@ class MemoryResource:
 
 **Implementation**: 
 - `context.set_response()` method restricted to DELIVER stage plugins only
-- Pipeline continues looping (PARSE → THINK → DO → REVIEW → DELIVER) until a DELIVER plugin calls `set_response()`
- - Earlier stages use `context.cache()` to store intermediate outputs for DELIVER plugins to access
+ - Pipeline continues looping (PARSE → THINK → DO → REVIEW → DELIVER) until a DELIVER plugin calls `set_response()`
+ - Earlier stages use `context.store()` to cache intermediate outputs for DELIVER plugins to access
 - Maximum iteration limit (default 5) prevents infinite loops when no DELIVER plugin sets a response
 
 **Benefits**: Ensures consistent output processing, logging, and formatting while maintaining the hybrid pipeline-state machine mental model.
 
 ## 8. Stage Results Accumulation Pattern
 
-**Decision**: Use stage results accumulation with `context.cache()`, `context.recall()`, and `context.has()` methods for inter-stage communication.
+**Decision**: Use stage results accumulation with `context.store()`, `context.load()`, and `context.has()` methods for inter-stage communication.
 
 **Rationale**:
 - Builds on existing stage results infrastructure with intuitive naming
@@ -513,9 +513,9 @@ class MemoryResource:
 - Provides explicit traceability for debugging and observability
 - Allows flexible composition patterns in DELIVER plugins
 
-**Implementation**:
-- Earlier stages use `context.cache(key, value)` to save intermediate outputs
-- DELIVER plugins use `context.recall(key)` to access stored results for response composition
+-**Implementation**:
+- Earlier stages use `context.store(key, value)` to save intermediate outputs
+- DELIVER plugins use `context.load(key)` to access stored results for response composition
 - `context.has(key)` enables conditional logic based on available results
 - Stage results are cleared between separate pipeline executions but persist across iterations within the same execution
 
@@ -808,8 +808,8 @@ class PersonalPreferencesPlugin(PromptPlugin):
         prefs = await memory.database.query("SELECT style FROM user_prefs WHERE user_id=?", [context.user])
         # Vector for semantic context
         similar = await memory.vector_store.query_similar(context.message, k=3)
-        context.cache("user_style", prefs[0]["style"])
-        context.cache("relevant_context", similar)
+        context.store("user_style", prefs[0]["style"])
+        context.store("relevant_context", similar)
 ```
 
 **Rationale**: Maintains framework focus on providing powerful primitives rather than opinionated solutions. Enables unlimited memory patterns while keeping core simple.
@@ -891,7 +891,7 @@ This approach provides rapid development for common scenarios while maintaining 
 ### Rationale
 
 **Eliminated Complexity** from the previous system:
- - Four overlapping storage mechanisms (`context.cache()`, `context.set_metadata()`, `memory.remember()`, conversation history)
+ - Four overlapping storage mechanisms (`context.store()`, `context.set_metadata()`, `memory.remember()`, conversation history)
 - Unclear boundaries between temporary vs persistent data
 - Data duplication with conversation history in multiple locations
 - High cognitive overhead deciding which storage method to use
@@ -900,8 +900,8 @@ This approach provides rapid development for common scenarios while maintaining 
 
 ```python
 # In PluginContext - simple, intuitive verbs:
-context.cache("analysis", result)     # Temporary data (dies with pipeline run)
-context.recall("analysis")            # Retrieve temporary data
+context.store("analysis", result)     # Temporary data (dies with pipeline run)
+context.load("analysis")              # Retrieve temporary data
 
 context.remember("user_prefs", data)  # Persistent data (survives sessions)
 context.memory("user_prefs")           # Retrieve persistent data

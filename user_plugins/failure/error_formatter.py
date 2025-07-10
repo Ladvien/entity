@@ -15,7 +15,7 @@ class ErrorFormatter(FailurePlugin):
     stages = [PipelineStage.DELIVER]
 
     async def _execute_impl(self, context: PluginContext) -> None:
-        info = context.get_failure_info()
+        info = context.failure_info
         if info is None:
             context.set_response(create_static_error_response(context.pipeline_id))
             return
