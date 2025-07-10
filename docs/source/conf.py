@@ -38,4 +38,4 @@ html_static_path = ["_static"]
 
 # https://sphinx-autoapi.readthedocs.io/en/latest/reference/config.html
 # autoapi_dirs = ['../../entity']
-autodoc2_packages = ["../entity"]
+autodoc2_packages = ["../../src/entity"]
