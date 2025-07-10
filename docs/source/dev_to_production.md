@@ -3,6 +3,9 @@
 Use the same configuration file from your laptop to the cloud. Start locally,
 containerize when ready, then deploy to AWS.
 
+## Deployment Patterns
+.. mermaid:: diagrams/deployment_patterns.mmd
+
 ## 1. Local prototyping
 
 Install dependencies and run the agent:

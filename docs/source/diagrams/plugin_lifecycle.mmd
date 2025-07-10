@@ -1,0 +1,9 @@
+flowchart LR
+    Init[Agent Startup] --> Load[Load Plugins]
+    Load --> Validate[Validate Configuration]
+    Validate --> Parse[Run Parse Stage]
+    Parse --> Think[Run Think Stage]
+    Think --> Do[Run Do Stage]
+    Do --> Review[Run Review Stage]
+    Review --> Deliver[Run Deliver Stage]
+    Deliver --> Teardown[Teardown Plugins]
