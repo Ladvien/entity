@@ -1,48 +1,51 @@
-import httpx
 import pytest
-from plugins.builtin.resources.llm.providers.openai import OpenAIProvider
+import httpx
+from pipeline.resources.llm import UnifiedLLMResource
 
 
-class DummyStreamResponse:
-    def __init__(self, lines):
-        self._lines = lines
+class DummyResponse:
+    def __init__(self, data: dict) -> None:
+        self._data = data
 
-    async def __aenter__(self):
+    def json(self) -> dict:
+        return self._data
+
+
+class DummyAsyncClient:
+    def __init__(self) -> None:
+        self.is_closed = False
+        self.requests = []
+
+    async def __aenter__(self) -> "DummyAsyncClient":
         return self
 
-    async def __aexit__(self, exc_type, exc, tb):
-        pass
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        self.is_closed = True
 
-    def raise_for_status(self) -> None:
-        pass
-
-    async def aiter_lines(self):
-        for line in self._lines:
-            yield line
+    async def post(self, url: str, json: dict | None = None):
+        self.requests.append((url, json))
+        return DummyResponse({"candidates": [{"content": {"parts": [{"text": "hi"}]}}]})
 
 
-def dummy_stream(self, method, url, json=None, headers=None, params=None):
-    return DummyStreamResponse(
-        ['data: {"choices": [{"delta": {"content": "hi"}}]}', "[DONE]"]
+@pytest.mark.asyncio
+async def test_client_closed_after_generate(monkeypatch):
+    client = DummyAsyncClient()
+    monkeypatch.setattr(httpx, "AsyncClient", lambda: client)
+    llm = UnifiedLLMResource(
+        {
+            "provider": "gemini",
+            "api_key": "key",
+            "model": "gemini-pro",
+            "base_url": "http://x",
+        }
     )
+    result = await llm.generate("hello")
 
-
-@pytest.mark.asyncio
-async def test_client_closed_after_stream_context_manager(monkeypatch):
-    provider = OpenAIProvider({"base_url": "http://x", "model": "gpt", "api_key": "k"})
-    monkeypatch.setattr(httpx.AsyncClient, "stream", dummy_stream)
-    async with provider:
-        chunks = [chunk async for chunk in provider.stream("test")]
-        assert chunks == ["hi"]
-        assert provider._client is not None
-        assert not provider._client.is_closed
-    assert provider._client is None
-
-
-@pytest.mark.asyncio
-async def test_client_closed_after_stream_no_context(monkeypatch):
-    provider = OpenAIProvider({"base_url": "http://x", "model": "gpt", "api_key": "k"})
-    monkeypatch.setattr(httpx.AsyncClient, "stream", dummy_stream)
-    chunks = [chunk async for chunk in provider.stream("test")]
-    assert chunks == ["hi"]
-    assert provider._client is None
+    assert result == "hi"
+    assert client.is_closed
+    assert client.requests == [
+        (
+            "http://x/v1beta/models/gemini-pro:generateContent?key=key",
+            {"contents": [{"parts": [{"text": "hello"}]}]},
+        )
+    ]
