@@ -2,7 +2,6 @@ from __future__ import annotations
 
 """Pipeline component: initializer."""
 
-import copy
 import tomllib
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -19,7 +18,6 @@ from entity.workflows.discovery import discover_workflows, register_module_workf
 from pipeline.config import ConfigLoader
 from pipeline.utils import DependencyGraph
 
-from .defaults import DEFAULT_CONFIG
 from .stages import PipelineStage
 from .workflow import Workflow
 
@@ -187,9 +185,8 @@ class SystemInitializer:
             self._config_model = config
             self.config = asdict(config)
         else:
-            self._config_model = EntityConfig.from_dict(
-                config or copy.deepcopy(DEFAULT_CONFIG)
-            )
+            cfg = config or {}
+            self._config_model = EntityConfig.from_dict(cfg)
             self.config = asdict(self._config_model)
         self.plugin_registry_cls = plugin_registry_cls
         self.tool_registry_cls = tool_registry_cls
@@ -380,8 +377,7 @@ class SystemInitializer:
         # Phase 1: register all plugin classes
         resources = self.config.get("plugins", {}).get("resources", {})
         for name, config in resources.items():
-            default_cfg = DEFAULT_CONFIG["plugins"]["resources"].get(name, {})
-            cls_path = config.get("type", default_cfg.get("type"))
+            cls_path = config.get("type")
             if not cls_path:
                 raise ValueError(f"Resource '{name}' must specify a full class path")
             cls = import_plugin_class(cls_path)
@@ -390,8 +386,7 @@ class SystemInitializer:
 
         for section in ["tools", "adapters", "prompts"]:
             for name, config in self.config.get("plugins", {}).get(section, {}).items():
-                default_cfg = DEFAULT_CONFIG["plugins"].get(section, {}).get(name, {})
-                cls_path = config.get("type", default_cfg.get("type"))
+                cls_path = config.get("type")
                 if not cls_path:
                     raise ValueError(
                         f"{section[:-1].capitalize()} '{name}' must specify a full class path"
