@@ -52,3 +52,12 @@ as needed.
 
 By following these steps you can remove all deprecated experimental features and
 rely on the stable interfaces going forward.
+## 5. Check for Merge Artifacts
+
+After merging branches, search the repository for Git conflict markers before running the test suite. A quick scan prevents leftover markers from slipping into main:
+
+```bash
+grep -R "<<<<<<<" -n
+```
+
+Once the search returns no results, run `poetry run pytest` to ensure the repository state is sound.
