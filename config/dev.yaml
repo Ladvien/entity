@@ -34,9 +34,9 @@ plugins:
     #   bucket: agent-files
     #   region: us-east-1
     # storage:
-    #   type: pipeline.resources.storage_resource:StorageResource
+    #   type: plugins.builtin.resources.storage_resource:StorageResource
 #   storage:
-#     type: pipeline.resources.storage_resource:StorageResource
+#     type: plugins.builtin.resources.storage_resource:StorageResource
 #     database:
 #       type: plugins.builtin.resources.postgres:PostgresResource
 #       host: localhost

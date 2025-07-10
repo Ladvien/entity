@@ -339,7 +339,7 @@ relevant_context = await memory.get_memory(context.message)  # Similarity search
 plugins:
   resources:
     llm:
-      type: pipeline.resources.llm.unified:UnifiedLLMResource
+      type: plugins.builtin.resources.llm.unified:UnifiedLLMResource
       provider: ollama
       model: llama3:8b
       base_url: http://localhost:11434
@@ -355,7 +355,7 @@ plugins:
         dimensions: 768
         
     storage:
-      type: pipeline.resources.storage_resource:StorageResource
+      type: plugins.builtin.resources.storage_resource:StorageResource
       filesystem:
         type: plugins.builtin.resources.s3_filesystem:S3FileSystem
         bucket: agent-files

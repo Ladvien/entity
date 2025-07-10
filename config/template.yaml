@@ -17,7 +17,7 @@ plugins:
       type: entity.resources.memory:Memory
       dependencies: [database]
     # storage:
-    #   type: pipeline.resources.storage_resource:StorageResource
+    #   type: plugins.builtin.resources.storage_resource:StorageResource
   tools:
     weather:
       type: user_plugins.tools.weather_api_tool:WeatherApiTool
