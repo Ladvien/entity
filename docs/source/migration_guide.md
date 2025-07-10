@@ -43,3 +43,10 @@ as needed.
 By following these steps you can remove all deprecated experimental features and
 rely on the stable interfaces going forward.
 
+## 5. Runtime Configuration Reload Limitations
+
+Hot reloading now only updates parameters on existing plugins. Any structural
+changes—adding or removing plugins, altering stage assignments, or modifying
+dependencies—require a full restart. The `update_plugin_configuration()` helper
+raises a validation error when such topology changes are detected.
+

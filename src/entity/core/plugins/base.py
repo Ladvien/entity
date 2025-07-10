@@ -7,13 +7,13 @@ These classes mirror the minimal architecture described in
 They offer a small, easy to understand surface for plugin authors.
 """
 
-from dataclasses import dataclass
-from typing import Any, Dict, List, Type
-
 import asyncio
 import time
+from dataclasses import dataclass
+from typing import Any, Dict, List
 
 from entity.utils.logging import get_logger
+
 from ..stages import PipelineStage
 
 
@@ -29,9 +29,26 @@ class BasePlugin:
     max_retries: int = 1
     retry_delay: float = 0.0
 
-    def __init__(self, config: Dict | None = None) -> None:
+    def __init__(self, config: Dict[str, Any] | None = None) -> None:
         self.config = config or {}
         self.logger = get_logger(self.__class__.__name__)
+        self._config_history: list[Dict[str, Any]] = [self.config.copy()]
+        self.config_version: int = 1
+
+    # -----------------------------------------------------
+    def supports_runtime_reconfiguration(self) -> bool:
+        """Return ``True`` if the plugin can be reconfigured without restart."""
+
+        return True
+
+    async def rollback_config(self, version: int) -> None:
+        """Revert to the specified configuration version."""
+
+        if version < 1 or version > len(self._config_history):
+            raise ValueError("invalid version")
+        self.config = self._config_history[version - 1].copy()
+        self.config_version = version
+        self._config_history = self._config_history[:version]
 
     async def execute(self, context: Any) -> Any:
         for attempt in range(self.max_retries + 1):
@@ -88,7 +105,7 @@ class ToolPlugin(BasePlugin):
         for attempt in range(self.max_retries + 1):
             try:
                 return await self.execute_function(params)
-            except Exception as exc:
+            except Exception:
                 if attempt >= self.max_retries:
                     raise
                 await asyncio.sleep(self.retry_delay)
