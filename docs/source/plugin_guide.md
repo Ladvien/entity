@@ -239,4 +239,9 @@ When implementing custom error handling, see the failure plugin template at
 - **Missing dependency** – ensure the plugin name appears in `plugins.resources` or `plugins.tools`.
 - **Runtime errors** – run with `LOG_LEVEL=DEBUG` to see the full traceback.
 
+## Visualize Plugin Pipeline
+The following widget lets you experiment with plugin ordering across stages.
+
+.. plugin-visualizer::
+
 
