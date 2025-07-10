@@ -74,7 +74,6 @@ apidocs/index
 api_reference
 components_overview
 architecture
-components_overview
 plugins
 tools
 ```
