@@ -4,7 +4,10 @@ import os
 
 import pytest
 import yaml
+
 from pipeline import (
+    CircuitBreaker,
+    CircuitBreakerTripped,
     PipelineStage,
     PromptPlugin,
     ResourcePlugin,
@@ -72,6 +75,20 @@ class UnhealthyRes(ResourcePlugin):
 
     async def health_check(self) -> bool:
         return False
+
+
+class BreakerRes(ResourcePlugin):
+    stages = [PipelineStage.PARSE]
+    breaker = CircuitBreaker(failure_threshold=2, recovery_timeout=60)
+
+    async def _execute_impl(self, context):
+        pass
+
+    async def initialize(self) -> None:
+        async def fail() -> None:
+            raise RuntimeError("boom")
+
+        await self.breaker.call(fail)
 
 
 def test_initializer_env_and_dependencies(tmp_path):
@@ -195,3 +212,25 @@ def test_health_check_failure(tmp_path):
     initializer = SystemInitializer.from_yaml(str(path))
     with pytest.raises(SystemError, match="failed health check"):
         asyncio.run(initializer.initialize())
+
+
+def test_initialization_breaker(tmp_path):
+    config = {
+        "plugins": {
+            "resources": {"boom": {"type": "tests.test_initializer:BreakerRes"}}
+        }
+    }
+
+    path = tmp_path / "cfg.yml"
+    path.write_text(yaml.dump(config, sort_keys=False))
+
+    for _ in range(2):
+        init = SystemInitializer.from_yaml(str(path))
+        with pytest.raises(RuntimeError):
+            asyncio.run(init.initialize())
+
+    init = SystemInitializer.from_yaml(str(path))
+    with pytest.raises(CircuitBreakerTripped):
+        asyncio.run(init.initialize())
+
+    BreakerRes.breaker.reset()
