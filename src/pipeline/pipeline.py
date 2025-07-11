@@ -32,24 +32,9 @@ from .exceptions import (
 from .observability.tracing import start_span
 from .stages import PipelineStage
 from .tools.execution import execute_pending_tools
+from .workflow import Workflow
 
 logger = get_logger(__name__)
-
-
-@dataclass
-class Workflow:
-    """Simple stage to plugin name mapping."""
-
-    stage_map: dict[PipelineStage, list[str]]
-
-    @classmethod
-    def from_dict(cls, data: Dict[Any, Any]) -> "Workflow":
-        mapping: dict[PipelineStage, list[str]] = {}
-        for stage, plugins in data.items():
-            stage_enum = PipelineStage.ensure(stage)
-            names = plugins if isinstance(plugins, list) else [plugins]
-            mapping[stage_enum] = [str(p) for p in names]
-        return cls(mapping)
 
 
 class Pipeline:

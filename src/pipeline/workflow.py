@@ -27,19 +27,3 @@ class Pipeline:
         """Build an AgentRuntime using the stored builder and workflow."""
 
         return self.builder.build_runtime(workflow=self.workflow)
-
-
-@dataclass
-class Workflow:
-    """Mapping of pipeline stages to plugin names."""
-
-    stage_map: WorkflowMapping
-
-    @classmethod
-    def from_dict(cls, data: Mapping[str, Iterable[str]]) -> "Workflow":
-        mapping: dict[PipelineStage, list[str]] = {}
-        for stage, plugins in data.items():
-            stage_enum = PipelineStage.ensure(stage)
-            names = list(plugins)
-            mapping[stage_enum] = [str(p) for p in names]
-        return cls(mapping)
