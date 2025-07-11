@@ -3,7 +3,6 @@ from __future__ import annotations
 """Minimal plugin context objects."""
 
 import asyncio
-import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -114,19 +113,7 @@ class PluginContext:
         tool = self._registries.tools.get(name)
         if tool is None:
             raise ValueError(f"Tool '{name}' not found")
-        get_cached = getattr(self._registries.tools, "get_cached_result", None)
-        cache_result = getattr(self._registries.tools, "cache_result", None)
-        cached = await get_cached(name, params) if get_cached else None
-        if cached is not None:
-            result = cached
-            duration = 0.0
-        else:
-            start = time.perf_counter()
-            result = await tool.execute_function(params)
-            duration = time.perf_counter() - start
-            if cache_result:
-                await cache_result(name, params, result)
-        # Tool duration metrics removed
+        result = await tool.execute_function(params)
         return result
 
     async def queue_tool_use(
