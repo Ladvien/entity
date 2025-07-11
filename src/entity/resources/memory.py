@@ -35,6 +35,21 @@ def _cosine_similarity(a: Iterable[float], b: Iterable[float]) -> float:
     return num / (denom_a * denom_b)
 
 
+class ConversationHistory:
+    """Helper managing conversation histories."""
+
+    def __init__(self, store: Dict[str, List[ConversationEntry]]) -> None:
+        self._store = store
+
+    async def save(
+        self, conversation_id: str, history: List[ConversationEntry]
+    ) -> None:
+        self._store[conversation_id] = list(history)
+
+    async def load(self, conversation_id: str) -> List[ConversationEntry]:
+        return list(self._store.get(conversation_id, []))
+
+
 class Memory(ResourcePlugin):
     """Store key/value pairs, conversation history, and vectors."""
 
@@ -46,6 +61,9 @@ class Memory(ResourcePlugin):
         self._kv: Dict[str, Any] = {}
         self._conversations: Dict[str, List[ConversationEntry]] = {}
         self._vectors: Dict[str, List[float]] = {}
+        self._history = ConversationHistory(self._conversations)
+        self.database: Any | None = None
+        self.vector_store: Any | None = None
 
     async def _execute_impl(self, context: Any) -> None:  # noqa: D401, ARG002
         return None
@@ -57,9 +75,12 @@ class Memory(ResourcePlugin):
         """Return ``key`` from memory or ``default`` when missing."""
         return self._kv.get(key, default)
 
-    def remember(self, key: str, value: Any) -> None:
+    def set(self, key: str, value: Any) -> None:
         """Persist ``value`` for later retrieval."""
         self._kv[key] = value
+
+    # Backwards compatibility
+    remember = set
 
     def clear(self) -> None:
         self._kv.clear()
@@ -70,10 +91,15 @@ class Memory(ResourcePlugin):
     async def save_conversation(
         self, conversation_id: str, history: List[ConversationEntry]
     ) -> None:
-        self._conversations[conversation_id] = list(history)
+        await self._history.save(conversation_id, history)
 
     async def load_conversation(self, conversation_id: str) -> List[ConversationEntry]:
-        return list(self._conversations.get(conversation_id, []))
+        return await self._history.load(conversation_id)
+
+    @property
+    def conversation_history(self) -> ConversationHistory:
+        """Return the conversation history manager."""
+        return self._history
 
     # ------------------------------------------------------------------
     # Vector helpers
