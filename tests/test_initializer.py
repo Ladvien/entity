@@ -171,15 +171,32 @@ def test_llm_resource_registration(tmp_path):
 
 def test_runtime_validation_failure(tmp_path):
     config = {
-        "plugins": {"resources": {"bad": {"type": "tests.test_initializer:BadRes"}}}
+        "runtime_validation_breaker": {"failure_threshold": 1},
+        "plugins": {"resources": {"bad": {"type": "tests.test_initializer:BadRes"}}},
     }
 
     path = tmp_path / "cfg.yml"
     path.write_text(yaml.dump(config, sort_keys=False))
 
     initializer = SystemInitializer.from_yaml(str(path))
-    with pytest.raises(SystemError, match="Runtime validation failed"):
+    with pytest.raises(
+        SystemError, match="Runtime validation failure threshold exceeded"
+    ):
         asyncio.run(initializer.initialize())
+
+
+def test_runtime_validation_threshold_allows_pass(tmp_path):
+    config = {
+        "runtime_validation_breaker": {"failure_threshold": 2},
+        "plugins": {"resources": {"bad": {"type": "tests.test_initializer:BadRes"}}},
+    }
+
+    path = tmp_path / "cfg.yml"
+    path.write_text(yaml.dump(config, sort_keys=False))
+
+    initializer = SystemInitializer.from_yaml(str(path))
+    regs = asyncio.run(initializer.initialize())
+    assert regs[1].get("bad") is not None
 
 
 def test_health_check_failure(tmp_path):

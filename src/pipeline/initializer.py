@@ -17,6 +17,8 @@ from entity.utils.logging import configure_logging, get_logger
 from entity.workflows.discovery import discover_workflows, register_module_workflows
 from pipeline.config import ConfigLoader
 from pipeline.utils import DependencyGraph
+from pipeline.reliability import CircuitBreaker
+from pipeline.exceptions import CircuitBreakerTripped
 
 from .stages import PipelineStage
 from .workflow import Workflow
@@ -428,14 +430,33 @@ class SystemInitializer:
         async with initialization_cleanup_context(resource_container):
             await resource_container.build_all()
 
+            breaker_cfg = self.config.get("runtime_validation_breaker", {})
+            breaker = CircuitBreaker(
+                failure_threshold=breaker_cfg.get("failure_threshold", 3),
+                recovery_timeout=breaker_cfg.get("recovery_timeout", 60.0),
+            )
             for name, resource in resource_container._resources.items():
                 validate = getattr(resource, "validate_runtime", None)
-                if callable(validate):
+                if not callable(validate):
+                    continue
+
+                async def _run_validation() -> None:
                     result = await validate()
                     if not result.success:
+                        raise RuntimeError(result.error_message)
+
+                try:
+                    await breaker.call(_run_validation)
+                except CircuitBreakerTripped as exc:
+                    raise SystemError(
+                        "Runtime validation failure threshold exceeded"
+                    ) from exc
+                except Exception as exc:
+                    logger.error("Runtime validation failed for %s: %s", name, exc)
+                    if breaker._failure_count >= breaker.failure_threshold:
                         raise SystemError(
-                            f"Runtime validation failed for {name}: {result.error_message}"
-                        )
+                            "Runtime validation failure threshold exceeded"
+                        ) from exc
 
             # Phase 3.5: register tools
             tr_cfg = self.config.get("tool_registry", {})
