@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from math import sqrt
 from typing import Any, Dict, Iterable, List
+from datetime import datetime
+import json
+import inspect
 
 from entity.core.registries import SystemRegistries
 from pipeline.pipeline import execute_pipeline
@@ -50,6 +53,45 @@ class ConversationHistory:
         return list(self._store.get(conversation_id, []))
 
 
+def _normalize_args(args: tuple[Any, ...]) -> Any:
+    if not args:
+        return ()
+    if len(args) == 1 and not isinstance(args[0], (list, tuple, dict)):
+        return (args[0],)
+    return args
+
+
+async def _exec(conn: Any, query: str, *args: Any) -> Any:
+    """Execute query supporting sync or async connections."""
+    fn = getattr(conn, "execute", None)
+    if fn is None:
+        return None
+    params = _normalize_args(args)
+    result = fn(query, params)
+    if inspect.isawaitable(result):
+        result = await result
+    return result
+
+
+async def _fetchall(conn: Any, query: str, *args: Any) -> List[Any]:
+    """Fetch all rows from the given query."""
+    params = _normalize_args(args)
+    if hasattr(conn, "fetch"):
+        result = conn.fetch(query, params)
+        if inspect.isawaitable(result):
+            result = await result
+        return list(result)
+    result = conn.execute(query, params)
+    if inspect.isawaitable(result):
+        result = await result
+    if hasattr(result, "fetchall"):
+        rows = result.fetchall()
+        if inspect.isawaitable(rows):
+            rows = await rows
+        return list(rows)
+    return []
+
+
 class Memory(ResourcePlugin):
     """Store key/value pairs, conversation history, and vectors."""
 
@@ -91,9 +133,55 @@ class Memory(ResourcePlugin):
     async def save_conversation(
         self, conversation_id: str, history: List[ConversationEntry]
     ) -> None:
+        if self.database is not None:
+            table = self.database.config.get("history_table", "conversation_history")
+            async with self.database.connection() as conn:
+                await _exec(
+                    conn,
+                    f"DELETE FROM {table} WHERE conversation_id = ?",
+                    conversation_id,
+                )
+                for entry in history:
+                    await _exec(
+                        conn,
+                        f"INSERT INTO {table} VALUES (?, ?, ?, ?, ?)",
+                        conversation_id,
+                        entry.role,
+                        entry.content,
+                        json.dumps(entry.metadata),
+                        entry.timestamp.isoformat(),
+                    )
+            return None
         await self._history.save(conversation_id, history)
 
     async def load_conversation(self, conversation_id: str) -> List[ConversationEntry]:
+        if self.database is not None:
+            table = self.database.config.get("history_table", "conversation_history")
+            async with self.database.connection() as conn:
+                rows = await _fetchall(
+                    conn,
+                    f"SELECT role, content, metadata, timestamp FROM {table} WHERE conversation_id = ? ORDER BY timestamp",
+                    conversation_id,
+                )
+            result: List[ConversationEntry] = []
+            for row in rows:
+                role = row[0] if not isinstance(row, dict) else row["role"]
+                content = row[1] if not isinstance(row, dict) else row["content"]
+                metadata = (
+                    row[2] if not isinstance(row, dict) else row.get("metadata", {})
+                )
+                timestamp = row[3] if not isinstance(row, dict) else row["timestamp"]
+                if isinstance(timestamp, str):
+                    timestamp = datetime.fromisoformat(timestamp)
+                result.append(
+                    ConversationEntry(
+                        content=content,
+                        role=role,
+                        timestamp=timestamp,
+                        metadata=metadata,
+                    )
+                )
+            return result
         return await self._history.load(conversation_id)
 
     @property
