@@ -27,6 +27,7 @@ The following architecture decisions were made through systematic analysis of th
   - [3. Resource Management: Core Canonical + Simple Flexible Keys](#3-resource-management-core-canonical--simple-flexible-keys)
   - [4. Plugin Stage Assignment: Guided Explicit Declaration with Smart Defaults](#4-plugin-stage-assignment-guided-explicit-declaration-with-smart-defaults)
   - [5. Error Handling and Validation: Fail-Fast with Multi-Layered Validation](#5-error-handling-and-validation-fail-fast-with-multi-layered-validation)
+  - [6. Scalability Architecture: Persistent State with Stateless Workers](#6-scalability-architecture-persistent-state-with-stateless-workers)
   - [7. Response Termination Control](#7-response-termination-control)
   - [8. Stage Results Accumulation Pattern](#8-stage-results-accumulation-pattern)
   - [9. Tool Execution Patterns](#9-tool-execution-patterns)
@@ -462,59 +463,67 @@ For configuration examples see
 **Rationale**: Research shows staged validation pipelines with fail-fast philosophy provide optimal balance of startup performance, system reliability, and developer experience. Aggressive circuit breakers prevent cascading failures while maintaining transparency about system health.
 
 
-```markdown
-## 6. Scalability Architecture: Stateless Workers with External State
+## 6. Scalability Architecture: Persistent State with Stateless Workers
 
-**Decision**: Framework implements stateless worker pattern where pipeline execution maintains no local state between requests.
+**Decision**: Framework implements stateless worker processes with externally-persistent conversation state for horizontal scalability.
+
+**Core Principle**: Worker processes hold no conversation state between requests, but the system maintains rich persistent state through external storage. Any worker instance can process any user conversation by loading state from external persistence.
 
 **Implementation Pattern**:
 ```python
-# Pipeline workers are stateless - no instance variables for conversation data
+# Worker processes are stateless - no conversation data in instance variables
 class PipelineWorker:
     def __init__(self, registries: SystemRegistries):
-        self.registries = registries  # Shared resource pools only
+        self.registries = registries  # Shared resource pools only - no user data
     
     async def execute_pipeline(self, pipeline_id: str, message: str) -> Any:
-        # Load all context from external storage each request
+        # Load conversation state from external storage each request
         memory = self.registries.resources.get("memory")
         conversation = await memory.load_conversation(pipeline_id)
         
-        # Execute pipeline with ephemeral state
+        # Execute with ephemeral state (discarded after response)
         state = PipelineState(conversation=conversation, pipeline_id=pipeline_id)
         result = await self.run_stages(state)
         
-        # Save updated context to external storage
+        # Persist updated state back to external storage
         await memory.save_conversation(pipeline_id, state.conversation)
         return result
 ```
 
 **Resource Implementation**:
 ```python
-# Resources manage connection pooling, not conversation state
+# Resources manage connection pooling and external persistence, not in-memory conversation state
 class MemoryResource:
     def __init__(self, database: DatabaseResource):
-        self.db_pool = database.get_connection_pool()  # Shared pool
+        self.db_pool = database.get_connection_pool()  # Shared connection pool
     
     async def load_conversation(self, pipeline_id: str) -> List[ConversationEntry]:
-        # Load from external store each time
+        # Load conversation history from external database each request
         async with self.db_pool.acquire() as conn:
             return await conn.fetch_conversation(pipeline_id)
     
     async def save_conversation(self, pipeline_id: str, conversation: List[ConversationEntry]):
-        # Persist to external store
+        # Persist conversation updates to external database
         async with self.db_pool.acquire() as conn:
             await conn.store_conversation(pipeline_id, conversation)
 ```
 
 **Key Requirements**:
-- Workers hold no conversation state between requests
-- All context loaded fresh from `MemoryResource` per pipeline execution
-- `PipelineState` cleared after each execution
-- Resources provide connection pooling, not data persistence
-- Any worker instance can process any conversation through external state loading
+- Worker processes hold no conversation state between requests
+- All user/conversation context loaded fresh from external storage per execution
+- `PipelineState` created and discarded for each pipeline execution
+- External persistence (MemoryResource) manages conversation continuity
+- Any worker instance can process any user conversation through state loading
+- Resources provide connection pooling and external persistence, not in-memory data storage
 
-**Benefits**: Linear horizontal scaling, worker processes are disposable, conversation continuity through external persistence, standard container orchestration patterns applicable.
+**Benefits**: 
+- **Horizontal scaling**: Add worker processes without state coordination
+- **Process resilience**: Workers can be restarted/killed without data loss
+- **Load balancing**: Any worker can handle any user request
+- **Conversation continuity**: Rich conversation history through external persistence
+- **Standard deployment patterns**: Stateless worker pools with shared database
 
+**Related Decisions**: See [Memory Resource Consolidation](#10-memory-resource-consolidation) for how conversation state is structured, and [Multi-User Support](#29-multi-user-support-user_id-parameter-pattern) for user isolation patterns within this architecture.
 
 
 ## 7. Response Termination Control
@@ -576,27 +585,54 @@ class MemoryResource:
 - Both patterns support the same tool interface and retry mechanisms
 
 **Usage Guidance**: Use `tool_use()` by default for simplicity. Use `queue_tool_use()` when you need multiple independent tool calls that can run in parallel or when processing results collectively.
- 
-## 10. Memory Resource Consolidation
+ ## 10. Memory Resource Consolidation
 
-**Decision**: Consolidate all memory-related components into a single unified `Memory` resource with embedded `ConversationHistory`.
+**Decision**: Consolidate all memory-related components into a single unified `Memory` resource that provides external persistence for the stateless worker architecture.
 
 **Rationale**:
 - Eliminates architectural ambiguity between separate memory components
-- Single responsibility for all memory concerns (key-value, conversations, search)
+- Single responsibility for all external persistence concerns (key-value, conversations, search)
 - Simplifies resource dependencies - plugins only need "memory" resource
 - Cleaner configuration with one memory section instead of multiple
 - Natural API progression from simple to advanced usage patterns
+- **Supports stateless workers**: Provides the external persistence layer that enables any worker to load/save conversation state
 
 **Implementation**:
-- `Memory` class provides `get()`, `set()`, `clear()` for key-value storage
-- `memory.conversation_history` property exposes advanced conversation management
-- Convenience methods `save_conversation()` and `load_conversation()` delegate to embedded ConversationHistory
-- Optional database and vector_store backends for persistence and similarity search
+- `Memory` class provides `get()`, `set()`, `clear()` for key-value external storage
+- `memory.conversation_history` property exposes advanced conversation persistence management
+- Core methods `save_conversation()` and `load_conversation()` handle external conversation persistence
+- Required database and vector_store backends for durable persistence and similarity search
 - Replaces SimpleMemoryResource, MemoryResource, ConversationManager, and Memory interface
+- **External persistence guarantee**: All data persisted to database/storage, never held in Memory resource instance variables
 
-**Usage**: `memory = context.get_resource("memory")` provides access to all memory functionality through a single resource interface.
+**External Persistence Architecture**:
+```python
+class Memory(ResourcePlugin):
+    def __init__(self, database: DatabaseResource, vector_store: VectorStoreResource):
+        self.database = database      # External SQL persistence
+        self.vector_store = vector_store  # External vector persistence
+        # No instance variables for conversation data
+    
+    async def load_conversation(self, conversation_id: str) -> List[ConversationEntry]:
+        # Always load from external database
+        return await self.database.fetch_conversation(conversation_id)
+    
+    async def save_conversation(self, conversation_id: str, conversation: List[ConversationEntry]):
+        # Always persist to external database
+        await self.database.store_conversation(conversation_id, conversation)
+    
+    def get(self, key: str, default: Any = None) -> Any:
+        # Load from external storage, not instance variables
+        return await self.database.fetch_key_value(key, default)
+    
+    def set(self, key: str, value: Any) -> None:
+        # Persist to external storage
+        await self.database.store_key_value(key, value)
+```
 
+**Usage**: `memory = context.get_resource("memory")` provides access to all external persistence functionality through a single resource interface.
+
+**Related Decisions**: This decision provides the external persistence layer that supports [Persistent State with Stateless Workers](#6-scalability-architecture-persistent-state-with-stateless-workers) architecture, enabling conversation continuity across worker processes.
 
 ## 11. Resource Dependency Injection Pattern
 
