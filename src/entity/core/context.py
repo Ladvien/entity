@@ -47,6 +47,10 @@ class PluginContext:
         """Return the current conversation history."""
         return self.get_conversation_history()
 
+    def get_resource(self, name: str) -> Any | None:
+        """Return the registered resource ``name`` or ``None`` when missing."""
+        return self._registries.resources.get(name)
+
     def say(self, content: str, *, metadata: Dict[str, Any] | None = None) -> None:
         """Append an assistant message to the conversation."""
         self.add_conversation_entry(
