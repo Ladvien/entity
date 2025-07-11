@@ -246,7 +246,18 @@ class PluginToolCLI:
             if inspect.iscoroutinefunction(obj):
                 plugin = PluginAutoClassifier.classify(obj)
                 stages = ", ".join(str(s) for s in plugin.stages)
-                logger.info("%s -> %s", name, stages)
+
+                reasons: list[str] = []
+                if getattr(plugin, "_explicit_stages", False):
+                    reasons.append("explicit hints")
+                else:
+                    if getattr(plugin, "_auto_inferred_stages", False):
+                        reasons.append("source heuristics")
+                    if plugin.stages == getattr(plugin, "_type_default_stages", []):
+                        reasons.append("type defaults")
+                reason = ", ".join(reasons) if reasons else "unknown"
+
+                logger.info("%s -> %s (%s)", name, stages, reason)
                 found = True
 
         if not found:
