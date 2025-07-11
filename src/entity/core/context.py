@@ -22,6 +22,7 @@ class PluginContext:
         self._registries = registries
         self._user_id = user_id or "default"
         self._memory = getattr(registries.resources, "memory", None)
+        self._plugin_name: str | None = None
 
     # ------------------------------------------------------------------
     @property
@@ -30,6 +31,13 @@ class PluginContext:
 
     def set_current_stage(self, stage: PipelineStage) -> None:
         self._state.current_stage = stage
+
+    def set_current_plugin(self, name: str) -> None:
+        self._plugin_name = name
+
+    @property
+    def current_plugin(self) -> str | None:
+        return self._plugin_name
 
     @property
     def pipeline_id(self) -> str:
@@ -191,6 +199,8 @@ class PluginContext:
     def set_response(self, value: Any) -> None:
         if self.current_stage is not PipelineStage.DELIVER:
             raise PluginContextError(
-                f"set_response may only be called in DELIVER stage, not {self.current_stage}"
+                self.current_stage,
+                self.current_plugin or "unknown",
+                f"set_response may only be called in DELIVER stage, not {self.current_stage}",
             )
         self._state.response = value

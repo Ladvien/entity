@@ -103,9 +103,10 @@ async def execute_stage(
         for plugin in stage_plugins:
             context = PluginContext(state, registries, user_id)
             context.set_current_stage(stage)
+            name = registries.plugins.get_plugin_name(plugin)
+            context.set_current_plugin(name)
             if registries.validators is not None:
                 await registries.validators.validate(stage, context)
-            registries.plugins.get_plugin_name(plugin)
             try:
                 await plugin.execute(context)
                 if stage == PipelineStage.DELIVER and state.response is not None:
