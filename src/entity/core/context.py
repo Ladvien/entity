@@ -133,6 +133,8 @@ class PluginContext:
         self, name: str, *, result_key: str | None = None, **params: Any
     ) -> str:
         """Queue ``name`` for later execution and return its result key."""
+        if self._registries.tools.get(name) is None:
+            raise ValueError(f"Tool '{name}' not found")
         if result_key is None:
             result_key = f"{name}_{len(self._state.pending_tool_calls)}"
         self._state.pending_tool_calls.append(
