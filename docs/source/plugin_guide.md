@@ -49,9 +49,32 @@ async def summarizer(ctx):
         return ctx.load("summary")
     result_key = ctx.queue_tool_use("search", {"query": ctx.message})
     summary = await ctx.tool_use("summarize", text=ctx.message)
-ctx.store("summary", summary)
+    ctx.store("summary", summary)
     return summary
 ```
+
+Queued tools run after the stage completes. Their results are stored using the
+returned key and can be loaded later:
+
+```python
+@agent.plugin
+async def follow_up(ctx):
+    key = ctx.queue_tool_use("search", {"query": ctx.message})
+    await ctx.tool_use("summarize", text=ctx.message)
+    ctx.say(ctx.load(key))
+```
+
+### ToolRegistry Options
+
+Tools are managed by ``ToolRegistry`` which exposes two knobs:
+
+* ``concurrency_limit`` – maximum number of queued tools that execute in
+  parallel.
+* ``cache_ttl`` – time-to-live in seconds for cached tool results. Calls with the
+  same parameters return the cached result while valid.
+
+Specify these options in your YAML configuration or when constructing
+``Agent`` programmatically.
 
 ## Built-in Reasoning Plugins
 
