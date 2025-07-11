@@ -3,13 +3,13 @@ from __future__ import annotations
 """Pipeline component: agent."""
 
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Iterable, Mapping, Optional, cast
+from typing import Any, Callable, Dict, Mapping, Optional, cast
 
 from pipeline.exceptions import PipelineError
-from pipeline.workflow import Pipeline, WorkflowMapping
+from pipeline.workflow import Pipeline
 
 from .builder import _AgentBuilder
-from .registries import PluginRegistry, SystemRegistries
+from .registries import SystemRegistries
 from .runtime import AgentRuntime
 
 
@@ -172,3 +172,30 @@ class Agent:
         if self._runtime is None:
             raise PipelineError("Agent not initialized")
         return self._runtime.capabilities
+
+    async def serve_http(self, **config: Any) -> None:
+        """Run the agent via the built-in HTTP adapter."""
+
+        await self._ensure_runtime()
+        from plugins.builtin.adapters.server import AgentServer
+
+        server = AgentServer(self.runtime)
+        await server.serve_http(**config)
+
+    async def serve_websocket(self, **config: Any) -> None:
+        """Run the agent via the built-in WebSocket adapter."""
+
+        await self._ensure_runtime()
+        from plugins.builtin.adapters.server import AgentServer
+
+        server = AgentServer(self.runtime)
+        await server.serve_websocket(**config)
+
+    async def serve_cli(self, **config: Any) -> None:
+        """Run the agent via the built-in CLI adapter."""
+
+        await self._ensure_runtime()
+        from plugins.builtin.adapters.server import AgentServer
+
+        server = AgentServer(self.runtime)
+        await server.serve_cli(**config)
