@@ -58,6 +58,10 @@ The following architecture decisions were made through systematic analysis of th
   - [25. Workflow Objects with Progressive Complexity](#25-workflow-objects-with-progressive-complexity)
   - [26. Workflow Objects: Composable Agent Blueprints](#26-workflow-objects-composable-agent-blueprints)
   - [27. Layer 0: Zero-Config Developer Experience](#27-layer-0-zero-config-developer-experience)
+  - [28. Infrastructure Components: Docker + OpenTofu Architecture](#28-infrastructure-components-docker--opentofu-architecture)
+  - [29. Multi-User Support: user\_id Parameter Pattern](#29-multi-user-support-user_id-parameter-pattern)
+  - [30. LoggingResource: Unified Agent Component Logging](#30-loggingresource-unified-agent-component-logging)
+  - [31. PipelineMetricsResource: Performance and Usage Tracking](#31-pipelinemetricsresource-performance-and-usage-tracking)
   - [Architectural Decisions not Reviewed](#architectural-decisions-not-reviewed)
 
 ## 0. Folder Structure and Naming Conventions
@@ -1231,8 +1235,1015 @@ class AdvancedChatPlugin(PromptPlugin):
 
 This Layer 0 positions the framework as the **"local-first AI agent framework"** while maintaining full architectural compatibility with enterprise-scale deployments through existing progressive disclosure layers.
 
+Perfect! OpenTofu + Terragrunt + extensible templates through plugins - that's a much more robust and future-proof approach. Let me design this architecture.
+
+## 28. Infrastructure Components: Docker + OpenTofu Architecture
+
+**Decision**: Implement Infrastructure as composable components using Docker for local development and OpenTofu with Terragrunt for cloud deployment, with extensible template system via InfrastructurePlugins.
+
+**Core Purpose:**
+- **Consistent deployment pipeline**: Same agent config from laptop to production
+- **Local development**: Docker for fast iteration and testing
+- **Cloud deployment**: OpenTofu + Terragrunt for robust, reproducible infrastructure
+- **Extensible templates**: InfrastructurePlugin system for custom deployment patterns
+- **Zero infrastructure knowledge required**: Developers focus on agent logic, not DevOps
+
+**How it works:**
+```python
+# Same agent config everywhere
+agent = Agent.from_config("agent.yaml")
+
+# Local development
+docker_infra = DockerInfrastructure()
+await docker_infra.deploy(agent)
+
+# Production deployment (same agent)
+aws_infra = AWSStandardInfrastructure()
+await aws_infra.deploy(agent)
+
+# Custom infrastructure via plugins
+custom_infra = CustomInfrastructurePlugin("my-company-template")
+await custom_infra.deploy(agent)
+```
+
+**Infrastructure Component Architecture:**
+
+**1. Base Infrastructure Plugin Interface**
+```python
+class InfrastructurePlugin(ABC):
+    """Base class for all infrastructure providers"""
+    
+    name: str
+    provider: str  # aws, gcp, azure, docker, kubernetes
+    
+    @abstractmethod
+    async def deploy(self, agent: Agent) -> DeploymentResult:
+        """Deploy agent using this infrastructure"""
+        
+    @abstractmethod
+    async def destroy(self) -> None:
+        """Clean up all infrastructure resources"""
+        
+    @abstractmethod
+    def generate_config(self, agent: Agent) -> InfrastructureConfig:
+        """Generate infrastructure-specific configuration"""
+        
+    @abstractmethod
+    def validate_requirements(self, agent: Agent) -> ValidationResult:
+        """Validate agent config is compatible with this infrastructure"""
+```
+
+**2. Docker Infrastructure Plugin (Local Development)**
+```python
+class DockerInfrastructure(InfrastructurePlugin):
+    """Docker-based local development with full service simulation"""
+    
+    name = "docker-local"
+    provider = "docker"
+    
+    def __init__(self, profile: str = "development"):
+        self.profile = profile
+        self.services = {}
+        self.compose_config = None
+    
+    async def deploy(self, agent: Agent) -> DeploymentResult:
+        # 1. Analyze agent config for required services
+        required_services = self._extract_services(agent.config)
+        
+        # 2. Generate docker-compose with service simulation
+        self.compose_config = self._generate_compose_file(required_services, agent)
+        
+        # 3. Write compose file and Dockerfile
+        self._write_docker_files(agent)
+        
+        # 4. Build agent container
+        await self._build_agent_container(agent)
+        
+        # 5. Start infrastructure services with health checks
+        await self._start_infrastructure_services()
+        
+        # 6. Start agent container
+        await self._start_agent_container()
+        
+        return DeploymentResult(
+            endpoint="http://localhost:8000",
+            admin_dashboard="http://localhost:8001",
+            services=list(self.services.keys()),
+            logs_command="docker compose logs -f",
+            metrics_endpoint="http://localhost:3000"  # Grafana
+        )
+    
+    def _generate_compose_file(self, services: List[str], agent: Agent) -> Dict:
+        """Generate docker-compose.yml with all required services"""
+        
+        compose = {
+            "version": "3.8",
+            "services": {},
+            "volumes": {
+                "agent_data": {},
+                "ollama_data": {},
+                "postgres_data": {},
+                "minio_data": {},
+                "grafana_data": {}
+            },
+            "networks": {
+                "agent_network": {"driver": "bridge"}
+            }
+        }
+        
+        # Ollama service (if LLM resource needed)
+        if self._needs_llm_service(agent.config):
+            compose["services"]["ollama"] = {
+                "image": "ollama/ollama:latest",
+                "container_name": "agent-ollama",
+                "ports": ["11434:11434"],
+                "volumes": ["ollama_data:/root/.ollama"],
+                "networks": ["agent_network"],
+                "healthcheck": {
+                    "test": ["CMD", "curl", "-f", "http://localhost:11434/api/tags"],
+                    "interval": "10s",
+                    "timeout": "5s",
+                    "retries": 5,
+                    "start_period": "30s"
+                },
+                "restart": "unless-stopped"
+            }
+        
+        # PostgreSQL service (if SQL database needed)
+        if self._needs_sql_database(agent.config):
+            compose["services"]["postgres"] = {
+                "image": "postgres:15-alpine",
+                "container_name": "agent-postgres", 
+                "environment": {
+                    "POSTGRES_DB": "agent_db",
+                    "POSTGRES_USER": "agent_user",
+                    "POSTGRES_PASSWORD": "dev_password_123"
+                },
+                "ports": ["5432:5432"],
+                "volumes": [
+                    "postgres_data:/var/lib/postgresql/data",
+                    "./infrastructure/docker/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql"
+                ],
+                "networks": ["agent_network"],
+                "healthcheck": {
+                    "test": ["CMD-SHELL", "pg_isready -U agent_user -d agent_db"],
+                    "interval": "5s",
+                    "timeout": "3s",
+                    "retries": 5
+                }
+            }
+        
+        # MinIO service (S3-compatible storage)
+        if self._needs_object_storage(agent.config):
+            compose["services"]["minio"] = {
+                "image": "minio/minio:latest",
+                "container_name": "agent-minio",
+                "command": "server /data --console-address ':9001'",
+                "environment": {
+                    "MINIO_ROOT_USER": "minioadmin",
+                    "MINIO_ROOT_PASSWORD": "minioadmin123"
+                },
+                "ports": ["9000:9000", "9001:9001"],
+                "volumes": ["minio_data:/data"],
+                "networks": ["agent_network"],
+                "healthcheck": {
+                    "test": ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"],
+                    "interval": "10s",
+                    "timeout": "3s",
+                    "retries": 3
+                }
+            }
+        
+        # Observability stack
+        if self.profile in ["development", "testing"]:
+            self._add_observability_services(compose)
+        
+        # Main agent service
+        compose["services"]["agent"] = {
+            "build": {
+                "context": ".",
+                "dockerfile": "Dockerfile"
+            },
+            "container_name": "agent-main",
+            "depends_on": {
+                service: {"condition": "service_healthy"} 
+                for service in compose["services"].keys()
+            },
+            "environment": self._generate_agent_env_vars(agent.config),
+            "ports": ["8000:8000"],
+            "volumes": ["agent_data:/app/data"],
+            "networks": ["agent_network"],
+            "restart": "unless-stopped"
+        }
+        
+        return compose
+```
+
+**3. OpenTofu Infrastructure Plugins (Cloud Deployment)**
+```python
+class OpenTofuInfrastructure(InfrastructurePlugin):
+    """Base class for OpenTofu-based cloud infrastructure"""
+    
+    def __init__(self, 
+                 provider: str,
+                 template: str,
+                 region: str = "us-east-1"):
+        self.provider = provider
+        self.template = template
+        self.region = region
+        self.terragrunt_config = None
+        self.tofu_modules = {}
+    
+    async def deploy(self, agent: Agent) -> DeploymentResult:
+        # 1. Generate Terragrunt configuration
+        self.terragrunt_config = self._generate_terragrunt_config(agent)
+        
+        # 2. Create OpenTofu modules
+        self.tofu_modules = self._generate_tofu_modules(agent.config)
+        
+        # 3. Write infrastructure files
+        self._write_infrastructure_files(agent)
+        
+        # 4. Build and push agent container to registry
+        image_uri = await self._build_and_push_agent_image(agent)
+        
+        # 5. Deploy infrastructure with Terragrunt
+        result = await self._run_terragrunt_deploy(image_uri)
+        
+        return result
+
+class AWSStandardInfrastructure(OpenTofuInfrastructure):
+    """Standard AWS deployment: ECS + RDS + S3 + ALB"""
+    
+    name = "aws-standard"
+    provider = "aws"
+    
+    def __init__(self, region: str = "us-east-1"):
+        super().__init__("aws", "standard", region)
+    
+    def _generate_tofu_modules(self, agent_config: Dict) -> Dict[str, str]:
+        """Generate OpenTofu modules for standard AWS deployment"""
+        
+        return {
+            # Core networking
+            "vpc": self._generate_vpc_module(),
+            
+            # Container infrastructure
+            "ecr": self._generate_ecr_module(),
+            "ecs": self._generate_ecs_module(agent_config),
+            "load_balancer": self._generate_alb_module(),
+            
+            # Data services
+            "rds": self._generate_rds_module(agent_config),
+            "s3": self._generate_s3_module(agent_config),
+            
+            # Security
+            "iam": self._generate_iam_module(),
+            "security_groups": self._generate_security_groups_module(),
+            
+            # Observability
+            "cloudwatch": self._generate_cloudwatch_module(),
+            "logs": self._generate_logs_module()
+        }
+    
+    def _generate_ecs_module(self, agent_config: Dict) -> str:
+        """Generate ECS service configuration"""
+        
+        # Determine resource requirements based on agent config
+        cpu_units, memory_mb = self._calculate_resource_requirements(agent_config)
+        
+        return f"""
+        module "ecs_service" {{
+          source = "terraform-aws-modules/ecs/aws//modules/service"
+          version = "~> 5.0"
+          
+          name = "agent-{agent_config['name']}"
+          cluster_arn = module.ecs_cluster.cluster_arn
+          
+          cpu    = {cpu_units}
+          memory = {memory_mb}
+          
+          container_definitions = {{
+            agent = {{
+              image = var.agent_image_uri
+              port_mappings = [{{
+                name          = "agent-http"
+                containerPort = 8000
+                protocol      = "tcp"
+              }}]
+              
+              environment = [
+                {{
+                  name  = "DATABASE_URL"
+                  value = module.rds.db_instance_endpoint
+                }},
+                {{
+                  name  = "S3_BUCKET"
+                  value = module.s3.s3_bucket_id
+                }},
+                # ... more environment variables
+              ]
+              
+              secrets = [
+                {{
+                  name      = "DB_PASSWORD"
+                  valueFrom = module.rds.db_instance_master_user_secret_arn
+                }}
+              ]
+              
+              log_configuration = {{
+                log_driver = "awslogs"
+                log_group  = module.logs.cloudwatch_log_group_name
+              }}
+            }}
+          }}
+          
+          load_balancer = {{
+            service = {{
+              target_group_arn = module.load_balancer.target_groups["agent"].arn
+              container_name   = "agent"
+              container_port   = 8000
+            }}
+          }}
+          
+          subnet_ids = module.vpc.private_subnets
+          security_group_ids = [module.security_groups.agent_sg_id]
+        }}
+        """
+
+class AWSGPUInfrastructure(OpenTofuInfrastructure):
+    """GPU-enabled AWS deployment for local LLM inference"""
+    
+    name = "aws-gpu-enabled" 
+    provider = "aws"
+    
+    def _generate_tofu_modules(self, agent_config: Dict) -> Dict[str, str]:
+        """Generate OpenTofu modules for GPU-enabled deployment"""
+        
+        modules = super()._generate_tofu_modules(agent_config)
+        
+        # Replace ECS with EC2 GPU instances
+        del modules["ecs"]
+        modules["ec2_gpu"] = self._generate_gpu_ec2_module(agent_config)
+        modules["auto_scaling"] = self._generate_asg_module()
+        
+        return modules
+
+class CustomInfrastructurePlugin(InfrastructurePlugin):
+    """User-defined infrastructure plugin loaded from external modules"""
+    
+    def __init__(self, template_path: str):
+        self.template_path = template_path
+        self.template_module = self._load_template_module()
+    
+    def _load_template_module(self):
+        """Load custom infrastructure template from user-defined module"""
+        # Import user's custom infrastructure definition
+        # Support both Python modules and declarative YAML/JSON
+        pass
+```
+
+**CLI Integration:**
+```bash
+# Local development
+entity-cli infra init docker --profile development
+entity-cli infra deploy --local
+entity-cli infra logs --service ollama
+entity-cli infra destroy --local
+
+# Cloud deployment
+entity-cli infra init aws-standard --region us-east-1
+entity-cli infra plan --cloud                    # OpenTofu plan
+entity-cli infra deploy --cloud                  # Terragrunt apply
+entity-cli infra status --cloud                  # Check deployment status
+entity-cli infra destroy --cloud --auto-approve  # Clean up
+
+# Custom infrastructure
+entity-cli infra init custom --template ./my-company/k8s-template
+entity-cli infra deploy --template my-company-k8s
+
+# Workflow: Test locally → Deploy to cloud
+entity-cli infra test --local                    # Test with Docker
+entity-cli infra migrate --from docker --to aws-standard  # Deploy same config
+```
+
+**Key Design Principles:**
+1. **OpenTofu + Terragrunt**: Modern, open-source infrastructure as code
+2. **Automatic ECR management**: Framework creates and manages container registries
+3. **Template extensibility**: InfrastructurePlugin system for custom deployments
+4. **Environment parity**: Same agent config works across all infrastructure
+5. **Zero DevOps knowledge**: Developers focus on agent logic, infrastructure is automated
+6. **Production ready**: Built-in observability, security, and scalability
+
+This architecture gives you **"commit to production"** - developers can test locally with Docker, then deploy to AWS with a single command using battle-tested OpenTofu modules.
+
+## 29. Multi-User Support: user_id Parameter Pattern
+
+**Decision**: Implement multi-user support through a simple `user_id` parameter in pipeline execution, using conversation namespacing for user isolation.
+
+**Core Purpose:**
+- **User isolation**: Separate conversation state per user within same agent instance
+- **Resource efficiency**: Share agent logic and resources across users
+- **Simplicity**: Minimal architectural complexity with maximum functionality
+- **Clear security model**: Different user bases use separate deployments
+
+**How it works:**
+```python
+# Same agent instance handles multiple users
+agent = Agent.from_config("support-bot.yaml")
+
+# User 1's conversation
+response1 = await agent.chat("Hello, I need help", user_id="user123")
+
+# User 2's conversation (completely isolated)
+response2 = await agent.chat("Hi there", user_id="user456") 
+
+# User 1 continues their conversation
+response3 = await agent.chat("Thanks for the help", user_id="user123")
+```
+
+**Implementation Pattern:**
+
+**Pipeline Execution Signature**
+```python
+async def execute_pipeline(
+    user_message: str,
+    capabilities: SystemRegistries,
+    *,
+    user_id: str,                    # User identifier for conversation isolation
+    state_logger: StateLogger | None = None,
+    return_metrics: bool = False,
+    state: PipelineState | None = None,
+    max_iterations: int = 5,
+) -> Dict[str, Any] | tuple[Dict[str, Any], MetricsCollector]:
+```
+
+**Memory Resource Integration**
+```python
+class Memory(ResourcePlugin):
+    async def save_conversation(self, conversation_id: str, history: List[ConversationEntry]) -> None:
+        # conversation_id format: "{user_id}_{pipeline_id}"
+        self._conversations[conversation_id] = list(history)
+
+    async def load_conversation(self, conversation_id: str) -> List[ConversationEntry]:
+        # Automatic user isolation through namespaced conversation_id
+        return list(self._conversations.get(conversation_id, []))
+        
+    def remember(self, key: str, value: Any) -> None:
+        """Store user-specific persistent data with automatic namespacing"""
+        # Key automatically includes user context when called from pipeline
+        self._kv[key] = value
+
+    def get(self, key: str, default: Any | None = None) -> Any:
+        """Retrieve user-specific persistent data"""
+        return self._kv.get(key, default)
+```
+
+**Agent-Level API**
+```python
+class Agent:
+    async def chat(self, message: str, *, user_id: str) -> Dict[str, Any]:
+        """Chat with the agent using user-specific conversation context"""
+        return await self.run_message(message, user_id=user_id)
+        
+    async def run_message(self, message: str, *, user_id: str) -> Dict[str, Any]:
+        """Run message through the runtime pipeline with user isolation"""
+        await self._ensure_runtime()
+        if self._runtime is None:
+            raise RuntimeError("Runtime not initialized")
+        
+        # Create user-specific pipeline_id
+        pipeline_id = f"{user_id}_{generate_pipeline_id()}"
+        
+        # Load user's conversation history
+        memory = self._runtime.capabilities.resources.get("memory")
+        conversation_history = await memory.load_conversation(pipeline_id)
+        
+        # Create pipeline state with user context
+        state = PipelineState(
+            conversation=conversation_history + [ConversationEntry(
+                content=message, 
+                role="user", 
+                timestamp=datetime.now()
+            )],
+            pipeline_id=pipeline_id,
+            metrics=MetricsCollector(),
+        )
+        
+        # Execute pipeline
+        result = await execute_pipeline(
+            message, 
+            self._runtime.capabilities,
+            user_id=user_id,
+            state=state
+        )
+        
+        # Save updated conversation
+        await memory.save_conversation(pipeline_id, state.conversation)
+        
+        return result
+```
+
+**PluginContext Integration**
+```python
+class PluginContext:
+    def __init__(self, state: PipelineState, registries: Any, user_id: str) -> None:
+        self._state = state
+        self._registries = registries
+        self._user_id = user_id
+        self._memory = getattr(registries.resources, "memory", None)
+
+    @property
+    def user_id(self) -> str:
+        """Get the current user ID for this pipeline execution"""
+        return self._user_id
+
+    def remember(self, key: str, value: Any) -> None:
+        """Persist user-specific value in the configured memory resource"""
+        if self._memory is not None:
+            # Automatically namespace key with user_id
+            namespaced_key = f"{self._user_id}:{key}"
+            self._memory.remember(namespaced_key, value)
+
+    def memory(self, key: str, default: Any | None = None) -> Any:
+        """Retrieve user-specific value from persistent memory"""
+        if self._memory is None:
+            return default
+        namespaced_key = f"{self._user_id}:{key}"
+        return self._memory.get(namespaced_key, default)
+```
+
+**User Isolation Strategy:**
+- **Conversation namespacing**: `pipeline_id = f"{user_id}_{generate_pipeline_id()}"`
+- **Memory isolation**: Memory keys automatically prefixed with `user_id:`
+- **Shared resources**: LLM, tools, and plugin logic shared across users
+- **No cross-user data leakage**: User isolation enforced at memory and context layers
+
+**Deployment Patterns:**
+
+**Single Organization Multi-User**
+```python
+# One agent instance serves multiple users within organization
+agent = Agent.from_config("company-assistant.yaml")
+# Users: employee1, employee2, employee3, etc.
+```
+
+**Multi-Organization Isolation**
+```python
+# Separate deployments for different organizations
+customer_a_agent = Agent.from_config("customer-a-config.yaml")
+customer_b_agent = Agent.from_config("customer-b-config.yaml")
+# Complete separation for security and customization
+```
+
+**Key Design Principles:**
+1. **Minimal complexity**: Single parameter addition to existing architecture
+2. **Natural isolation**: user_id becomes conversation and memory namespace
+3. **Resource sharing**: Efficient use of LLM and infrastructure resources
+4. **Clear boundaries**: Different user bases require separate deployments
+5. **Zero overhead**: No runtime performance impact for user isolation
+6. **Backward compatibility**: Existing single-user agents continue working
+
+**Benefits:**
+- **Cost efficiency**: Multiple users share same agent infrastructure
+- **Simple scaling**: Add more users until resource limits, then scale instances
+- **Security by design**: User data automatically isolated through namespacing
+- **Operational simplicity**: No complex multi-tenant management required
+- **Clear upgrade path**: Easy to move users to dedicated instances if needed
+
+This pattern provides robust multi-user support with essentially zero architectural overhead while maintaining clear security boundaries and operational simplicity.
+
+## 30. LoggingResource: Unified Agent Component Logging
+
+**Decision**: Implement a `LoggingResource` that provides unified, multi-output logging for all agent components with real-time streaming capabilities.
+
+**Core Purpose:**
+- **Unified logging interface**: Single logging API for all plugins, resources, and pipeline stages
+- **Multi-output support**: Simultaneous logging to console, files, and real-time streams
+- **Component traceability**: Track log entries across plugins, stages, and resource operations
+- **Real-time monitoring**: WebSocket streaming for live dashboards and debugging
+- **Zero dependencies**: Critical infrastructure that must always function
+
+**How it works:**
+```python
+# All components use the same logging interface
+logger = context.get_resource("logging")
+
+await logger.log("info", "Plugin execution started",
+                 component="plugin",
+                 user_id=context.user_id,
+                 pipeline_id=context.pipeline_id,
+                 stage=context.current_stage,
+                 plugin_name=self.__class__.__name__)
+```
+
+**Implementation Architecture:**
+
+**LoggingResource Base**
+```python
+class LoggingResource(ResourcePlugin):
+    """Unified logging for all agent components with multi-output support"""
+    
+    name = "logging"
+    dependencies = []  # Critical: logging must never depend on other resources
+    
+    async def log(self, 
+                  level: str, 
+                  message: str, 
+                  *, 
+                  component: str,           # "plugin", "resource", "pipeline", "tool"
+                  user_id: str | None = None,
+                  pipeline_id: str | None = None,
+                  stage: PipelineStage | None = None,
+                  plugin_name: str | None = None,
+                  resource_name: str | None = None,
+                  **extra_context) -> None:
+        """Send log entry to all configured outputs simultaneously"""
+```
+
+**Multi-Output System**
+```python
+class LogOutput(ABC):
+    """Base class for logging destinations"""
+    
+    @abstractmethod
+    async def write(self, entry: LogEntry) -> None:
+        """Write log entry to destination"""
+
+# Simultaneous outputs
+outputs = [
+    ConsoleLogOutput(),           # Human-readable console
+    StructuredFileOutput(),       # JSON Lines for analysis
+    RealTimeStreamOutput(),       # WebSocket for dashboards
+    ElasticsearchOutput(),        # Optional: centralized logging
+]
+```
+
+**Automatic Integration Points:**
+
+**Plugin Execution Logging**
+```python
+# Automatic wrapping in BasePlugin.execute()
+async def execute(self, context: PluginContext) -> Any:
+    logger = context.get_resource("logging")
+    
+    await logger.log("info", f"Plugin {self.__class__.__name__} starting",
+                     component="plugin",
+                     user_id=context.user_id,
+                     pipeline_id=context.pipeline_id,
+                     stage=context.current_stage,
+                     plugin_name=self.__class__.__name__)
+    
+    start_time = time.perf_counter()
+    try:
+        result = await self._execute_impl(context)
+        duration = time.perf_counter() - start_time
+        
+        await logger.log("info", f"Plugin completed successfully",
+                         component="plugin",
+                         duration_ms=duration * 1000,
+                         success=True,
+                         **context_info)
+        return result
+    except Exception as e:
+        await logger.log("error", f"Plugin failed: {str(e)}",
+                         component="plugin",
+                         duration_ms=(time.perf_counter() - start_time) * 1000,
+                         success=False,
+                         error_type=e.__class__.__name__,
+                         **context_info)
+        raise
+```
+
+**Resource Operation Logging**
+```python
+# Automatic logging in resource operations
+class LLMResource(ResourcePlugin):
+    async def generate(self, prompt: str, context: PluginContext) -> LLMResponse:
+        logger = context.get_resource("logging")
+        
+        await logger.log("debug", "LLM request initiated",
+                         component="resource",
+                         resource_name="llm",
+                         user_id=context.user_id,
+                         pipeline_id=context.pipeline_id,
+                         prompt_length=len(prompt),
+                         model=self.model_name)
+        
+        start_time = time.perf_counter()
+        response = await self._actual_generate(prompt)
+        duration = time.perf_counter() - start_time
+        
+        await logger.log("info", "LLM response completed",
+                         component="resource",
+                         resource_name="llm",
+                         duration_ms=duration * 1000,
+                         prompt_length=len(prompt),
+                         response_length=len(response.content),
+                         estimated_tokens=self._estimate_tokens(prompt, response))
+        
+        return response
+```
+
+**Configuration Pattern:**
+```yaml
+plugins:
+  resources:
+    logging:
+      type: entity.resources.logging:LoggingResource
+      outputs:
+        - type: console
+          level: info
+          format: human_readable
+          
+        - type: structured_file
+          level: debug
+          path: ./logs/agent.jsonl
+          max_size: "100MB"
+          backup_count: 5
+          rotation: daily
+          
+        - type: real_time_stream
+          level: info
+          websocket_port: 8001
+          max_clients: 50
+          
+      context_enrichment:
+        include_hostname: true
+        include_process_id: true
+        correlation_header: "X-Trace-ID"
+        
+      filters:
+        - component: resource
+          resource_name: llm
+          min_level: debug
+        - component: plugin
+          min_level: info
+```
+
+**Key Design Principles:**
+1. **Zero dependencies**: Logging must work even if other resources fail
+2. **Automatic integration**: Components get logging without manual setup
+3. **Multi-output simultaneous**: Console + file + real-time + external systems
+4. **Structured data**: Consistent fields for filtering and analysis
+5. **Real-time streaming**: WebSocket support for live monitoring dashboards
+6. **Context preservation**: Full traceability across pipeline execution
+
+## 31. PipelineMetricsResource: Performance and Usage Tracking
+
+**Decision**: Implement a `PipelineMetricsResource` that collects detailed performance metrics at pipeline, stage, plugin, and resource levels with real-time access and automatic retention management.
+
+**Core Purpose:**
+- **Multi-level granularity**: Track metrics at pipeline, stage, plugin, and resource levels
+- **Performance optimization**: Identify bottlenecks and optimization opportunities  
+- **Usage analytics**: Understand user patterns and resource utilization
+- **Real-time monitoring**: Live access to active pipeline metrics
+- **Automatic retention**: Built-in data lifecycle management
+
+**How it works:**
+```python
+# Automatic metric collection throughout pipeline execution
+metrics = context.get_resource("pipeline_metrics")
+
+# Pipeline level
+await metrics.record_pipeline_start(pipeline_id, user_id, agent_name, message_length)
+
+# Stage level  
+await metrics.record_stage_completion(pipeline_id, stage, duration_ms, plugins_executed, success)
+
+# Plugin level
+await metrics.record_plugin_execution(pipeline_id, stage, plugin_name, duration_ms, success)
+
+# Resource level (duration-based)
+await metrics.record_resource_usage(pipeline_id, "llm", "generate", duration_ms, success, metadata)
+```
+
+**Database Schema Design:**
+
+**Pipeline Executions Table**
+```sql
+CREATE TABLE pipeline_executions (
+    pipeline_id VARCHAR PRIMARY KEY,
+    user_id VARCHAR NOT NULL,
+    agent_name VARCHAR NOT NULL,
+    started_at TIMESTAMP NOT NULL,
+    completed_at TIMESTAMP,
+    total_duration_ms REAL,
+    message_length INTEGER,
+    response_length INTEGER,
+    status VARCHAR NOT NULL DEFAULT 'running', -- running, completed, failed
+    current_stage VARCHAR,
+    error_type VARCHAR,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**Stage Metrics Table**
+```sql
+CREATE TABLE stage_metrics (
+    id SERIAL PRIMARY KEY,
+    pipeline_id VARCHAR NOT NULL REFERENCES pipeline_executions(pipeline_id),
+    stage VARCHAR NOT NULL,
+    duration_ms REAL NOT NULL,
+    plugins_executed TEXT[], -- JSON array of plugin names
+    success BOOLEAN NOT NULL,
+    completed_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**Plugin Metrics Table**
+```sql
+CREATE TABLE plugin_metrics (
+    id SERIAL PRIMARY KEY,
+    pipeline_id VARCHAR NOT NULL REFERENCES pipeline_executions(pipeline_id),
+    stage VARCHAR NOT NULL,
+    plugin_name VARCHAR NOT NULL,
+    duration_ms REAL NOT NULL,
+    success BOOLEAN NOT NULL,
+    error_type VARCHAR,
+    executed_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**Resource Metrics Table**
+```sql
+CREATE TABLE resource_metrics (
+    id SERIAL PRIMARY KEY,
+    pipeline_id VARCHAR NOT NULL REFERENCES pipeline_executions(pipeline_id),
+    resource_name VARCHAR NOT NULL, -- "llm", "memory", "storage"
+    operation VARCHAR NOT NULL,     -- "generate", "query", "store", "search"
+    duration_ms REAL NOT NULL,
+    success BOOLEAN NOT NULL,
+    metadata JSONB,                 -- Flexible data: tokens, file_size, etc.
+    executed_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**Real-Time Access Layer:**
+```python
+class PipelineMetricsResource(ResourcePlugin):
+    """Real-time pipeline metrics with automatic retention management"""
+    
+    name = "pipeline_metrics"
+    dependencies = ["database"]
+    
+    def __init__(self, config: Dict | None = None):
+        super().__init__(config or {})
+        self.database = None  # Injected by container
+        self.real_time_buffer = {}  # In-memory for active pipelines
+        self.retention_days = config.get("retention_days", 90)
+        
+    # Real-time monitoring methods
+    async def get_active_pipelines(self) -> List[Dict[str, Any]]:
+        """Get currently running pipelines for live monitoring"""
+        return [
+            execution.to_dict() 
+            for execution in self.real_time_buffer.values()
+            if execution.status == "running"
+        ]
+    
+    async def get_pipeline_status(self, pipeline_id: str) -> Dict[str, Any] | None:
+        """Get real-time status of specific pipeline"""
+        execution = self.real_time_buffer.get(pipeline_id)
+        return execution.to_dict() if execution else None
+        
+    # Analytics methods
+    async def get_user_stats(self, user_id: str, days: int = 30) -> Dict[str, Any]:
+        """User usage statistics over time period"""
+        
+    async def get_performance_summary(self, hours: int = 24) -> Dict[str, Any]:
+        """Recent performance metrics summary"""
+        
+    async def get_resource_utilization(self, resource_name: str = None) -> Dict[str, Any]:
+        """Resource usage patterns and bottlenecks"""
+        
+    async def get_slow_operations(self, threshold_ms: float = 5000) -> List[Dict[str, Any]]:
+        """Operations exceeding performance threshold"""
+```
+
+**Automatic Integration Points:**
+
+**Resource Usage Tracking**
+```python
+# Automatic wrapper in all resource operations
+class ResourcePlugin:
+    async def _track_operation(self, operation: str, func: Callable, context: PluginContext, **metadata):
+        metrics = context.get_resource("pipeline_metrics")
+        if not metrics:
+            return await func()
+            
+        start_time = time.perf_counter()
+        try:
+            result = await func()
+            duration_ms = (time.perf_counter() - start_time) * 1000
+            
+            await metrics.record_resource_usage(
+                pipeline_id=context.pipeline_id,
+                resource_name=self.name,
+                operation=operation,
+                duration_ms=duration_ms,
+                success=True,
+                metadata=metadata
+            )
+            return result
+        except Exception as e:
+            duration_ms = (time.perf_counter() - start_time) * 1000
+            await metrics.record_resource_usage(
+                pipeline_id=context.pipeline_id,
+                resource_name=self.name,
+                operation=operation,
+                duration_ms=duration_ms,
+                success=False,
+                metadata={**metadata, "error": str(e)}
+            )
+            raise
+
+# Usage in LLM resource
+class LLMResource(ResourcePlugin):
+    async def generate(self, prompt: str, context: PluginContext) -> LLMResponse:
+        return await self._track_operation(
+            operation="generate",
+            func=lambda: self._actual_generate(prompt),
+            context=context,
+            prompt_length=len(prompt),
+            model=self.model_name,
+            estimated_tokens=len(prompt.split())
+        )
+```
+
+**Automatic Retention Management**
+```python
+# Built-in cleanup scheduler
+class PipelineMetricsResource:
+    async def _start_cleanup_scheduler(self):
+        """Start automatic cleanup of old metrics"""
+        async def cleanup_task():
+            while True:
+                await asyncio.sleep(self.cleanup_interval * 3600)  # Convert hours to seconds
+                await self._cleanup_old_metrics()
+                
+        asyncio.create_task(cleanup_task())
+        
+    async def _cleanup_old_metrics(self):
+        """Remove metrics older than retention period"""
+        cutoff_date = datetime.utcnow() - timedelta(days=self.retention_days)
+        
+        async with self.database.connection() as conn:
+            await conn.execute(
+                "DELETE FROM pipeline_executions WHERE created_at < ?",
+                [cutoff_date]
+            )
+            # Cascading deletes handle related tables automatically
+```
+
+**Configuration Pattern:**
+```yaml
+plugins:
+  resources:
+    pipeline_metrics:
+      type: entity.resources.pipeline_metrics:PipelineMetricsResource
+      dependencies: [database]
+      retention_days: 90
+      cleanup_interval_hours: 24
+      buffer_size: 1000
+      
+      # Real-time thresholds
+      slow_operation_threshold_ms: 5000
+      error_rate_alert_threshold: 0.1
+      
+      # Analytics settings
+      default_aggregation_window_hours: 24
+      max_results_per_query: 1000
+```
+
+**Key Design Principles:**
+1. **Four-level granularity**: Pipeline → Stage → Plugin → Resource metrics
+2. **Duration-based resource tracking**: Focus on execution time rather than complex cost models
+3. **Real-time buffer**: In-memory active pipeline tracking for live monitoring
+4. **Automatic retention**: Built-in lifecycle management prevents database bloat
+5. **Flexible metadata**: JSONB storage for resource-specific metrics (tokens, file sizes, etc.)
+6. **Performance alerting**: Built-in thresholds for identifying bottlenecks
+
+This metrics architecture provides comprehensive performance visibility from high-level pipeline execution down to individual resource operations, enabling both real-time monitoring and historical analysis for optimization.
+
+
+
+
+
+
+
+
+
+
 
 ## Architectural Decisions not Reviewed
+Future Features List
+
+- Agent-to-Agent Communication Architecture - Multi-agent coordination, message buses, agent registries, and swarms
+- Plugin Discovery and Distribution Architecture - Plugin registry, search, installation, versioning, and security validation
 - Logging
 - Docker
 - .env credential interpolation
