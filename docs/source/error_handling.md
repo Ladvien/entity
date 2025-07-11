@@ -50,6 +50,26 @@ When any plugin raises an exception the framework stops executing the rest of th
 The failure is captured in `FailureInfo` and the `ERROR` stage runs immediately
 to handle the problem. No additional plugins from the failed stage are invoked.
 
+## Tuning Circuit Breaker Thresholds
+
+You can modify circuit breaker limits directly in plugin configuration. The
+`init_failure_threshold` option controls how many initialization attempts are
+allowed before the startup breaker opens.
+
+```yaml
+plugins:
+  - db:
+      type: Postgres
+      failure_threshold: 5
+      failure_reset_timeout: 120
+      init_failure_threshold: 2
+```
+
+Shorter reset windows speed up feedback during development, while production
+deployments usually set higher thresholds. See
+[Architecture Section 5](../ARCHITECTURE.md#5-error-handling-and-validation-fail-fast-with-multi-layered-validation)
+for the design rationale.
+
 ## Error Responses and Failure Plugins
 
 When a stage fails the pipeline records a `FailureInfo` object and runs plugins assigned to the `ERROR` stage. These plugins can attempt recovery, log the error or present a fallback message. A common pattern is to convert the failure info into a user-facing error response:

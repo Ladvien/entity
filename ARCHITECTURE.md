@@ -439,9 +439,12 @@ class BasePlugin:
 
 **Circuit Breaker Integration**:
 - Database connections: 3 failures = circuit open
-- External APIs: 5 failures = circuit open  
+- External APIs: 5 failures = circuit open
 - File systems: 2 failures = circuit open
 - All failures surface with full technical details for debugging
+
+For configuration examples see
+[Tuning Circuit Breaker Thresholds](docs/source/error_handling.md#tuning-circuit-breaker-thresholds).
 
 **Developer Experience Features**:
 - CLI validation tools: `poetry run entity-cli validate --config config.yaml`
