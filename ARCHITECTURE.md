@@ -549,24 +549,78 @@ class MemoryResource:
 
 **Benefits**: Ensures consistent output processing, logging, and formatting while maintaining the hybrid pipeline-state machine mental model.
 
+
+
+
+
+
 ## 8. Stage Results Accumulation Pattern
 
-**Decision**: Use stage results accumulation with `context.store()`, `context.load()`, and `context.has()` methods for inter-stage communication.
+**Decision**: Use stage results accumulation with anthropomorphic cognitive methods (`context.think()`, `context.reflect()`) for inter-stage communication within pipeline execution.
 
 **Rationale**:
-- Builds on existing stage results infrastructure with intuitive naming
-- Maintains pipeline mental model where each stage produces discrete outputs
-- Stage results persist across pipeline iterations, enabling context accumulation
+- Builds on unified state management with intuitive anthropomorphic naming
+- Maintains pipeline mental model where each stage produces discrete cognitive outputs
+- Temporary thoughts persist across pipeline iterations, enabling context accumulation
 - Provides explicit traceability for debugging and observability
 - Allows flexible composition patterns in DELIVER plugins
+- Natural metaphor: agents "think" during processing and "reflect" on previous thoughts
 
--**Implementation**:
-- Earlier stages use `context.store(key, value)` to save intermediate outputs
-- DELIVER plugins use `context.load(key)` to access stored results for response composition
-- `context.has(key)` enables conditional logic based on available results
-- Stage results are cleared between separate pipeline executions but persist across iterations within the same execution
+**Implementation**:
+- Earlier stages use `await context.think(key, value)` to save intermediate thoughts
+- DELIVER plugins use `await context.reflect(key)` to access stored thoughts for response composition
+- `await context.reflect(key, default)` enables conditional logic based on available thoughts
+- Temporary thoughts are cleared between separate pipeline executions but persist across iterations within the same execution
+- Distinguished from persistent memory (`context.remember()`/`context.recall()`) which survives across sessions
 
-**Benefits**: Clear data flow, debugging visibility, flexible response composition, and natural support for iterative pipeline execution.
+**Usage Examples**:
+```python
+# THINK stage - analyze and store thoughts
+class AnalysisPlugin(PromptPlugin):
+    async def _execute_impl(self, context: PluginContext) -> None:
+        analysis = await self.call_llm(context, "Analyze this request...")
+        await context.think("request_analysis", analysis.content)
+        await context.think("complexity_score", self._calculate_complexity(context.message))
+
+# DO stage - use previous thoughts
+class ActionPlugin(ToolPlugin):
+    async def _execute_impl(self, context: PluginContext) -> None:
+        analysis = await context.reflect("request_analysis", "")
+        complexity = await context.reflect("complexity_score", 1)
+        
+        if complexity > 5:
+            result = await context.tool_use("advanced_search", query=analysis)
+        else:
+            result = await context.tool_use("simple_search", query=analysis)
+        
+        await context.think("search_results", result)
+
+# DELIVER stage - compose final response using all thoughts
+class ResponsePlugin(PromptPlugin):
+    async def _execute_impl(self, context: PluginContext) -> None:
+        analysis = await context.reflect("request_analysis", "")
+        results = await context.reflect("search_results", {})
+        
+        response = await self.call_llm(
+            context, 
+            f"Create response based on analysis: {analysis} and results: {results}"
+        )
+        
+        await context.say(response.content)
+```
+
+**Benefits**: 
+- **Intuitive naming**: `think()` and `reflect()` match natural cognitive processes
+- **Clear data flow**: Explicit thought storage and retrieval for debugging visibility
+- **Flexible response composition**: DELIVER plugins can access any previous thoughts
+- **Natural support for iterative pipeline execution**: Thoughts accumulate across iterations
+- **Separation of concerns**: Temporary thoughts vs persistent memory clearly distinguished
+
+
+
+
+
+
 
 ## 9. Tool Execution Patterns
 
@@ -870,40 +924,6 @@ class PersonalizationPlugin(PromptPlugin):
 - **Horizontal scalability**: Any worker can handle any user through external state loading
 
 **Related Decisions**: This decision builds on [Persistent State with Stateless Workers](#6-scalability-architecture-persistent-state-with-stateless-workers) and [Memory Resource Consolidation](#10-memory-resource-consolidation) to provide user isolation through external persistence namespacing, using the anthropomorphic API from [State Management Consolidation](#23-state-management-consolidation-dual-interface-pattern).
-```
-
-## **4. Update Examples Throughout Document**
-
-Now we need to find and update any code examples that use the old naming. Here are the key examples I spotted:
-
-**In Decision 8 (Stage Results Accumulation Pattern):**
-```markdown
-# OLD:
-- Earlier stages use `context.store(key, value)` to save intermediate outputs
-- DELIVER plugins use `context.load(key)` to access stored results
-
-# NEW:
-- Earlier stages use `await context.think(key, value)` to save intermediate thoughts
-- DELIVER plugins use `await context.reflect(key)` to access stored thoughts
-```
-
-**In Decision 20 (Memory Architecture):**
-```python
-# OLD:
-memory = context.get_resource("memory")
-prefs = await memory.database.query("SELECT style FROM user_prefs WHERE user_id=?", [context.user])
-context.store("user_style", prefs[0]["style"])
-
-# NEW:
-# Simple anthropomorphic approach:
-user_style = await context.recall("communication_style", "professional")
-await context.think("user_style", user_style)
-
-# Or advanced technical approach:
-memory = context.get_resource("memory")
-prefs = await memory.query("SELECT style FROM user_prefs WHERE user_id=?", [context.user_id])
-await context.think("user_style", prefs[0]["style"])
-```
 
 ## 11. Resource Dependency Injection Pattern
 
@@ -1134,6 +1154,12 @@ class NovelReasoningPattern(PromptPlugin):
 
 **Rationale**: Aligns with progressive disclosure philosophy - simple defaults for common cases, unlimited flexibility for advanced use cases.
 
+
+
+
+
+
+
 ## 20. Memory Architecture: Primitive Resources + Custom Plugins
 
 **Decision**: Provide foundational memory primitives through unified Memory resource; users implement domain-specific memory patterns as plugins.
@@ -1148,15 +1174,31 @@ class NovelReasoningPattern(PromptPlugin):
 class PersonalPreferencesPlugin(PromptPlugin):
     async def _execute_impl(self, context):
         memory = context.get_resource("memory")
-        # SQL for structured user data
-        prefs = await memory.database.query("SELECT style FROM user_prefs WHERE user_id=?", [context.user])
-        # Vector for semantic context
-        similar = await memory.vector_store.query_similar(context.message, k=3)
-        context.store("user_style", prefs[0]["style"])
-        context.store("relevant_context", similar)
+        
+        # Simple anthropomorphic approach for user preferences:
+        user_style = await context.recall("communication_style", "professional")
+        await context.think("user_style", user_style)
+        
+        # Or advanced technical approach for complex queries:
+        prefs = await memory.query("SELECT style FROM user_prefs WHERE user_id=?", [context.user_id])
+        similar = await memory.vector_search(context.message, k=3)
+        await context.think("user_style", prefs[0]["style"])
+        await context.think("relevant_context", similar)
+        
+        # Generate personalized response
+        response = await self.call_llm(
+            context, 
+            f"Respond in {await context.reflect('user_style')} style to: {context.message}"
+        )
+        
+        # Update user preferences and respond
+        await context.remember("last_topic", self._extract_topic(context.message))
+        await context.say(response.content)
 ```
 
-**Rationale**: Maintains framework focus on providing powerful primitives rather than opinionated solutions. Enables unlimited memory patterns while keeping core simple.
+**Rationale**: Maintains framework focus on providing powerful primitives rather than opinionated solutions. Enables unlimited memory patterns while keeping core simple. The anthropomorphic API (`remember()`, `recall()`, `think()`, `reflect()`) provides intuitive access for common cases, while direct memory resource access enables complex operations.
+
+
 
 ## 21. Tool Discovery Architecture: Lightweight Registry Query + Plugin-Level Orchestration
 
