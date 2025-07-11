@@ -25,7 +25,7 @@ The following architecture decisions were made through systematic analysis of th
     - [**Plugin Validation and Discovery**](#plugin-validation-and-discovery)
   - [2. Progressive Disclosure: Enhanced 3-Layer Plugin System](#2-progressive-disclosure-enhanced-3-layer-plugin-system)
   - [3. Resource Management: Core Canonical + Simple Flexible Keys](#3-resource-management-core-canonical--simple-flexible-keys)
-  - [4. Plugin Stage Assignment: Guided Explicit Declaration with Smart Defaults](#4-plugin-stage-assignment-guided-explicit-declaration-with-smart-defaults)
+  - [4. Plugin Stage Assignment: Explicit Declaration with Simple Defaults](#4-plugin-stage-assignment-explicit-declaration-with-simple-defaults)
   - [5. Error Handling and Validation: Fail-Fast with Multi-Layered Validation](#5-error-handling-and-validation-fail-fast-with-multi-layered-validation)
   - [6. Scalability Architecture: Persistent State with Stateless Workers](#6-scalability-architecture-persistent-state-with-stateless-workers)
   - [7. Response Termination Control](#7-response-termination-control)
@@ -354,63 +354,166 @@ embedding_llm = context.get_resource("local_embeddings")
 prod_db = context.get_resource("postgres_prod")
 ```
 
-## 4. Plugin Stage Assignment: Guided Explicit Declaration with Smart Defaults
 
-**Decision**: Use explicit stage declaration with intelligent guidance and automation to reduce cognitive load.
 
-**Core Strategy**: Balance predictability with simplicity through smart defaults and interactive guidance.
+
+
+## 4. Plugin Stage Assignment: Explicit Declaration with Simple Defaults
+
+**Decision**: Use explicit stage declaration with simple, predictable defaults that prioritize developer clarity over magic.
+
+**Core Strategy**: Make stage assignment obvious and predictable - no surprises, no complex precedence hierarchies.
+
+**New Stage Flow**:
+```
+INPUT → PARSE → THINK → DO → REVIEW → OUTPUT
+```
+
+**Simple Assignment Rules**:
+1. **Config always wins**: `stage: DO` or `stages: [THINK, DO]` in configuration
+2. **Class provides default**: `stage = DO` or `stages = [INPUT, OUTPUT]` in plugin class
+3. **Fallback to THINK**: Safe default if nothing specified
 
 **Implementation Pattern**:
 
-**1. Smart Default Assignment Based on Plugin Type**:
+**1. Single Stage Assignment (Most Common)**:
 ```python
 # ToolPlugin auto-defaults to DO stage
 class WeatherPlugin(ToolPlugin):
-    # stages = [PipelineStage.DO]  # Implicit default
+    stage = DO  # Simple, explicit default
     
 # PromptPlugin auto-defaults to THINK stage  
 class ReasoningPlugin(PromptPlugin):
-    # stages = [PipelineStage.THINK]  # Implicit default
-    
-# AdapterPlugin auto-defaults to PARSE + DELIVER
-class HTTPAdapter(AdapterPlugin):
-    # stages = [PipelineStage.PARSE, PipelineStage.DELIVER]  # Implicit default
+    stage = THINK  # Clear default
 
-# Explicit override when needed
-class ComplexPlugin(ToolPlugin):
-    stages = [PipelineStage.THINK, PipelineStage.DO]  # Override default
+# Override in config when needed
+plugins:
+  weather:
+    type: WeatherPlugin
+    stage: REVIEW  # Config override - now runs in REVIEW instead of DO
 ```
 
--**2. Interactive Stage Discovery**:
-- CLI command: `poetry run python src/cli/plugin_tool/main.py analyze-plugin my_plugin.py`
-- The tool inspects async functions and suggests stages based on `PluginAutoClassifier` heuristics.
-- Provides stage recommendations with clear reasoning
+**2. Multi-Stage Assignment (When Needed)**:
+```python
+# InputAdapterPlugin handles input and output
+class HTTPAdapter(InputAdapterPlugin):
+    stages = [INPUT, OUTPUT]  # List for multiple stages
+    
+# Complex plugins can span multiple stages
+class WorkflowPlugin(PromptPlugin):
+    stages = [THINK, DO, REVIEW]  # Override default with multiple stages
+
+# Config can override multi-stage too
+plugins:
+  http_adapter:
+    type: HTTPAdapter  
+    stages: [INPUT]  # Override to only handle input, not output
+```
 
 **3. Clear Stage Mental Model**:
-- **PARSE**: "What do I need to understand the input?"
-- **THINK**: "What should I decide or plan?"
-- **DO**: "What actions should I take?"
-- **REVIEW**: "Is my response good enough?"
-- **DELIVER**: "How should I send the output?"
+- **INPUT**: "How do I receive and initial process the user's request?"
+- **PARSE**: "How do I extract and structure the important information?"
+- **THINK**: "What should I decide, plan, or reason about?"
+- **DO**: "What actions or tools should I execute?"
+- **REVIEW**: "Is my work good enough or does it need changes?"
+- **OUTPUT**: "How should I format and deliver the final response?"
 
-**Progressive Complexity Path**:
-1. **Level 1**: Function decorators with auto-assignment based on behavior analysis
-2. **Level 2**: Explicit stage declaration with validation and smart defaults
-3. **Level 3**: Multi-stage plugins with conditional execution logic
+**4. Layer 0 Magic with Explicit Stages**:
+```python
+@agent.input     # → INPUT stage
+@agent.parse     # → PARSE stage
+@agent.prompt    # → THINK stage  
+@agent.tool      # → DO stage
+@agent.review    # → REVIEW stage
+@agent.output    # → OUTPUT stage
 
-**Validation and Safety**:
-- **Dependency validation**: Ensure PARSE plugins don't depend on DO stage results
-- **Circular dependency detection**: Prevent infinite loops in multi-stage plugins
-- **Stage conflict resolution**: Handle plugins that want the same stage with different priorities
+# Generic with explicit stage
+@agent.plugin(stage=DO)
+def my_function():
+    pass
+```
+
+**5. Progressive Complexity Path**:
+1. **Level 1**: Decorators with automatic stage assignment (`@agent.tool` → DO)
+2. **Level 2**: Class-based plugins with simple defaults (`stage = DO`)
+3. **Level 3**: Multi-stage plugins with explicit lists (`stages = [THINK, DO]`)
+4. **Level 4**: Config-driven stage overrides for environment-specific behavior
+
+**Configuration Examples**:
+```yaml
+plugins:
+  # Simple single stage
+  weather_tool:
+    type: WeatherPlugin  # Uses stage = DO from class
+    
+  # Override single stage  
+  reasoning:
+    type: ReasoningPlugin
+    stage: REVIEW  # Override class default of THINK
+    
+  # Multi-stage plugin
+  http_interface:
+    type: HTTPAdapter
+    stages: [INPUT, OUTPUT]  # Handle both input and output
+    
+  # Complex workflow
+  data_processor:
+    type: DataPlugin
+    stages: [PARSE, THINK, DO]  # Multi-stage processing
+```
+
+**Simple Resolution Logic**:
+```python
+def get_plugin_stages(plugin_class, config):
+    # 1. Config always wins (explicit override)
+    config_stages = config.get('stages') or config.get('stage')
+    if config_stages:
+        return normalize_to_list(config_stages)
+    
+    # 2. Class default (explicit declaration)
+    class_stages = getattr(plugin_class, 'stages', None) or getattr(plugin_class, 'stage', None)
+    if class_stages:
+        return normalize_to_list(class_stages)
+    
+    # 3. Safe fallback
+    return [THINK]
+
+def normalize_to_list(stages):
+    """Convert single stage or list to consistent list format"""
+    if isinstance(stages, str):
+        return [PipelineStage.ensure(stages)]
+    return [PipelineStage.ensure(s) for s in stages]
+```
 
 **Benefits**:
-- **Familiar patterns**: Explicit declaration aligns with successful frameworks (Airflow, Prefect)
-- **Reduced cognitive load**: Smart defaults handle 80% of cases correctly
-- **Debugging clarity**: Developers know exactly when and why plugins run
-- **Scalability**: Clear stage boundaries prevent architectural complexity
-- **Compliance ready**: Explicit flows support audit trails and regulatory requirements
+- **Predictable**: Same config always produces same stage assignment
+- **Simple**: Two-level hierarchy (config → class → fallback)
+- **Flexible**: Single stage for simple cases, list for complex cases
+- **Debuggable**: Easy to trace why a plugin runs in specific stages
+- **Intuitive**: Stage names match natural workflow progression
 
-**Rationale**: Research shows that explicit declaration with intelligent assistance provides the best balance of control, predictability, and developer experience. Avoids complexity overhead of automatic routing while reducing learning curve of pure manual assignment.
+**No More Complex Precedence**: We eliminated the complex 5-level precedence hierarchy in favor of simple, predictable rules that developers can understand at a glance.
+
+**Rationale**: Simplicity and predictability trump magic. Developers should never be surprised by when their plugin runs.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## 5. Error Handling and Validation: Fail-Fast with Multi-Layered Validation
 
@@ -527,60 +630,98 @@ class MemoryResource:
 
 
 
-
-
-
-
-
 ## 7. Response Termination Control
 
-**Decision**: Only DELIVER stage plugins can set the final pipeline response that terminates the iteration loop.
+**Decision**: Only OUTPUT stage plugins can set the final pipeline response that terminates the iteration loop.
 
-**Rationale**: 
+**Rationale**:
 - Creates clear separation of concerns across pipeline stages
-- PARSE validates and loads context
-- THINK performs reasoning and planning  
+- INPUT handles incoming requests and initial processing
+- PARSE extracts and structures important information
+- THINK performs reasoning and planning
 - DO executes tools and actions
 - REVIEW validates and formats intermediate results
-- DELIVER handles final response composition and output transmission
+- OUTPUT handles final response composition and delivery
 - Prevents early termination from skipping important downstream processing
 - Makes pipeline flow predictable and debuggable
 
-**Implementation**: 
-- `context.say()` method restricted to DELIVER stage plugins only (sets final response)
-- Pipeline continues looping (PARSE → THINK → DO → REVIEW → DELIVER) until a DELIVER plugin calls `say()`
-- Earlier stages use `context.think()` to store intermediate thoughts for DELIVER plugins to access via `context.reflect()`
-- Maximum iteration limit (default 5) prevents infinite loops when no DELIVER plugin sets a response
+**Implementation**:
+- `context.say()` method restricted to OUTPUT stage plugins only (sets final response)
+- Pipeline continues looping (INPUT → PARSE → THINK → DO → REVIEW → OUTPUT) until an OUTPUT plugin calls `say()`
+- Earlier stages use `context.think()` to store intermediate thoughts for OUTPUT plugins to access via `context.reflect()`
+- Maximum iteration limit (default 5) prevents infinite loops when no OUTPUT plugin sets a response
 
 **Usage Pattern**:
 ```python
 # THINK stage - store analysis for later use
 class ReasoningPlugin(PromptPlugin):
-    stages = [PipelineStage.THINK]
+    stage = THINK
     
     async def _execute_impl(self, context: PluginContext) -> None:
         analysis = await self.call_llm(context, "Analyze this request...")
         await context.think("reasoning_result", analysis.content)
         # No context.say() - plugin cannot terminate pipeline
 
-# DELIVER stage - compose final response
-class ResponsePlugin(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+# DO stage - execute actions and store results
+class ActionPlugin(ToolPlugin):
+    stage = DO
     
     async def _execute_impl(self, context: PluginContext) -> None:
         reasoning = await context.reflect("reasoning_result", "")
+        result = await context.tool_use("search", query=reasoning)
+        await context.think("action_result", result)
+        # No context.say() - plugin cannot terminate pipeline
+
+# OUTPUT stage - compose final response
+class ResponsePlugin(PromptPlugin):
+    stage = OUTPUT
+    
+    async def _execute_impl(self, context: PluginContext) -> None:
+        reasoning = await context.reflect("reasoning_result", "")
+        action_result = await context.reflect("action_result", "")
         
         final_response = await self.call_llm(
             context,
-            f"Based on analysis: {reasoning}, provide final response"
+            f"Based on analysis: {reasoning} and results: {action_result}, provide final response"
         )
         
         await context.say(final_response.content)  # This terminates the pipeline
 ```
 
-**Benefits**: Ensures consistent output processing, logging, and formatting while maintaining the hybrid pipeline-state machine mental model.
+**Configuration Example**:
+```yaml
+plugins:
+  reasoning:
+    type: ReasoningPlugin
+    stage: THINK
+    
+  search_action:
+    type: ActionPlugin  
+    stage: DO
+    
+  response_formatter:
+    type: ResponsePlugin
+    stage: OUTPUT  # Only OUTPUT plugins can call context.say()
+```
 
+**Pipeline Flow**:
+```
+INPUT → PARSE → THINK → DO → REVIEW → OUTPUT
+  ↓       ↓       ↓     ↓      ↓        ↓
+ process extract reason act   validate  say() ← TERMINATES
+```
 
+**Error Handling**:
+- If `context.say()` is called from non-OUTPUT stage: Immediate error with clear message
+- If no OUTPUT plugin calls `say()` after max iterations: Pipeline fails with timeout error
+- If multiple OUTPUT plugins call `say()`: First call wins, subsequent calls are warnings
+
+**Benefits**: 
+- **Clear responsibility**: Only OUTPUT stage handles final responses
+- **Predictable flow**: Pipeline always completes full cycle before terminating
+- **Debugging clarity**: Easy to find where responses are generated
+- **Consistent processing**: All validation and formatting happens before output
+- **Natural separation**: INPUT gets data in, OUTPUT sends data out
 
 
 
@@ -594,29 +735,61 @@ class ResponsePlugin(PromptPlugin):
 - Maintains pipeline mental model where each stage produces discrete cognitive outputs
 - Temporary thoughts persist across pipeline iterations, enabling context accumulation
 - Provides explicit traceability for debugging and observability
-- Allows flexible composition patterns in DELIVER plugins
+- Allows flexible composition patterns in OUTPUT plugins
 - Natural metaphor: agents "think" during processing and "reflect" on previous thoughts
 
 **Implementation**:
 - Earlier stages use `await context.think(key, value)` to save intermediate thoughts
-- DELIVER plugins use `await context.reflect(key)` to access stored thoughts for response composition
+- OUTPUT plugins use `await context.reflect(key)` to access stored thoughts for response composition
 - `await context.reflect(key, default)` enables conditional logic based on available thoughts
 - Temporary thoughts are cleared between separate pipeline executions but persist across iterations within the same execution
 - Distinguished from persistent memory (`context.remember()`/`context.recall()`) which survives across sessions
 
+**Stage Flow with Thought Accumulation**:
+```
+INPUT → PARSE → THINK → DO → REVIEW → OUTPUT
+  ↓       ↓       ↓     ↓      ↓        ↓
+think() think() think() think() think() reflect() + say()
+```
+
 **Usage Examples**:
 ```python
+# INPUT stage - capture and process initial request
+class HTTPInputPlugin(InputAdapterPlugin):
+    stage = INPUT
+    
+    async def _execute_impl(self, context: PluginContext) -> None:
+        request_data = await self.parse_http_request(context)
+        await context.think("raw_request", request_data)
+        await context.think("user_intent", self._extract_intent(request_data))
+
+# PARSE stage - extract structured information
+class DataParserPlugin(PromptPlugin):
+    stage = PARSE
+    
+    async def _execute_impl(self, context: PluginContext) -> None:
+        raw_request = await context.reflect("raw_request", {})
+        parsed_data = await self.call_llm(context, f"Extract key information from: {raw_request}")
+        await context.think("parsed_entities", parsed_data.content)
+
 # THINK stage - analyze and store thoughts
 class AnalysisPlugin(PromptPlugin):
+    stage = THINK
+    
     async def _execute_impl(self, context: PluginContext) -> None:
-        analysis = await self.call_llm(context, "Analyze this request...")
-        await context.think("request_analysis", analysis.content)
-        await context.think("complexity_score", self._calculate_complexity(context.message))
+        user_intent = await context.reflect("user_intent", "")
+        entities = await context.reflect("parsed_entities", "")
+        
+        analysis = await self.call_llm(context, f"Analyze intent: {user_intent} with entities: {entities}")
+        await context.think("analysis_result", analysis.content)
+        await context.think("complexity_score", self._calculate_complexity(user_intent))
 
-# DO stage - use previous thoughts
+# DO stage - use previous thoughts for actions
 class ActionPlugin(ToolPlugin):
+    stage = DO
+    
     async def _execute_impl(self, context: PluginContext) -> None:
-        analysis = await context.reflect("request_analysis", "")
+        analysis = await context.reflect("analysis_result", "")
         complexity = await context.reflect("complexity_score", 1)
         
         if complexity > 5:
@@ -624,30 +797,103 @@ class ActionPlugin(ToolPlugin):
         else:
             result = await context.tool_use("simple_search", query=analysis)
         
-        await context.think("search_results", result)
+        await context.think("action_results", result)
 
-# DELIVER stage - compose final response using all thoughts
-class ResponsePlugin(PromptPlugin):
+# REVIEW stage - validate and enhance results
+class ReviewPlugin(PromptPlugin):
+    stage = REVIEW
+    
     async def _execute_impl(self, context: PluginContext) -> None:
-        analysis = await context.reflect("request_analysis", "")
-        results = await context.reflect("search_results", {})
+        action_results = await context.reflect("action_results", {})
+        analysis = await context.reflect("analysis_result", "")
         
-        response = await self.call_llm(
+        validation = await self.call_llm(
             context, 
-            f"Create response based on analysis: {analysis} and results: {results}"
+            f"Review if results {action_results} properly address the analysis {analysis}"
         )
         
-        await context.say(response.content)
+        await context.think("validation_result", validation.content)
+        await context.think("confidence_score", self._extract_confidence(validation.content))
+
+# OUTPUT stage - compose final response using all thoughts
+class ResponsePlugin(PromptPlugin):
+    stage = OUTPUT
+    
+    async def _execute_impl(self, context: PluginContext) -> None:
+        # Gather all accumulated thoughts
+        analysis = await context.reflect("analysis_result", "")
+        action_results = await context.reflect("action_results", {})
+        validation = await context.reflect("validation_result", "")
+        confidence = await context.reflect("confidence_score", 0.5)
+        
+        # Compose final response
+        response = await self.call_llm(
+            context, 
+            f"Create final response based on:\n"
+            f"Analysis: {analysis}\n"
+            f"Results: {action_results}\n"
+            f"Validation: {validation}\n"
+            f"Confidence: {confidence}"
+        )
+        
+        await context.say(response.content)  # Terminate pipeline
 ```
 
-**Benefits**: 
+**Configuration Example**:
+```yaml
+plugins:
+  http_input:
+    type: HTTPInputPlugin
+    stage: INPUT
+    
+  data_parser:
+    type: DataParserPlugin  
+    stage: PARSE
+    
+  analyzer:
+    type: AnalysisPlugin
+    stage: THINK
+    
+  search_tool:
+    type: ActionPlugin
+    stage: DO
+    
+  reviewer:
+    type: ReviewPlugin
+    stage: REVIEW
+    
+  response_formatter:
+    type: ResponsePlugin
+    stage: OUTPUT
+```
+
+**Thought Lifecycle**:
+```python
+# Thoughts persist within single pipeline execution
+Pipeline Execution 1:
+  INPUT:  think("user_intent", "weather query")
+  PARSE:  reflect("user_intent") → "weather query"
+          think("location", "San Francisco") 
+  THINK:  reflect("location") → "San Francisco"
+          think("analysis", "need current weather")
+  DO:     reflect("analysis") → "need current weather"
+          think("weather_data", {...})
+  OUTPUT: reflect("weather_data") → {...}
+          say("It's 72°F in San Francisco")
+
+# Thoughts cleared between executions
+Pipeline Execution 2:
+  INPUT:  reflect("user_intent") → None (cleared from previous execution)
+```
+
+**Benefits**:
 - **Intuitive naming**: `think()` and `reflect()` match natural cognitive processes
 - **Clear data flow**: Explicit thought storage and retrieval for debugging visibility
-- **Flexible response composition**: DELIVER plugins can access any previous thoughts
+- **Flexible response composition**: OUTPUT plugins can access any previous thoughts
 - **Natural support for iterative pipeline execution**: Thoughts accumulate across iterations
 - **Separation of concerns**: Temporary thoughts vs persistent memory clearly distinguished
-
-
+- **Complete pipeline visibility**: Each stage's contributions are traceable
+- **Conditional logic**: Plugins can adapt behavior based on previous stage results
 
 
 
