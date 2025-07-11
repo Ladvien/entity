@@ -92,6 +92,11 @@ entity/
 ```
 
 
+
+
+
+
+
 ## 1. Core Mental Model: Plugin Taxonomy and Architecture
 
 The Entity Pipeline Framework uses a unified plugin architecture where all extensions inherit from a single `Plugin` base class. This design follows the universal extension pattern found in frameworks like Blender's Node system, providing a consistent interface while supporting diverse functionality.
@@ -151,7 +156,7 @@ Functional units that execute during specific pipeline stages to transform data,
 ```python
 class PromptPlugin(Plugin):
     """LLM-based reasoning and processing logic"""
-    stages = [PipelineStage.THINK]  # Default stage assignment
+    stage = THINK  # Default stage assignment
     
     # Examples: ConversationHistory, ComplexPrompt, MemoryRetrieval
 ```
@@ -160,7 +165,7 @@ class PromptPlugin(Plugin):
 ```python
 class ToolPlugin(Plugin):
     """External API calls and function execution"""
-    stages = [PipelineStage.DO]  # Default stage assignment
+    stage = DO  # Default stage assignment
     
     async def execute_function(self, params: Dict[str, Any]) -> Any: ...
     
@@ -174,7 +179,7 @@ Handle input/output transformation and protocol adaptation between external syst
 ```python
 class InputAdapterPlugin(AdapterPlugin):
     """Convert external input into pipeline messages"""
-    stages = [PipelineStage.PARSE]  # Default stage assignment
+    stage = INPUT  # Default stage assignment
     
     # Examples: HTTPAdapter, CLIAdapter, STTAdapter, WebSocketAdapter
 ```
@@ -183,7 +188,7 @@ class InputAdapterPlugin(AdapterPlugin):
 ```python
 class OutputAdapterPlugin(AdapterPlugin):
     """Convert pipeline responses to external formats"""
-    stages = [PipelineStage.DELIVER]  # Default stage assignment
+    stage = OUTPUT  # Default stage assignment
     
     # Examples: JSONFormatter, TTSAdapter, LoggingAdapter
 ```
@@ -194,7 +199,7 @@ class OutputAdapterPlugin(AdapterPlugin):
 ```python
 class FailurePlugin(Plugin):
     """Error recovery and user-friendly error responses"""
-    stages = [PipelineStage.ERROR]
+    stage = ERROR
     
     # Examples: BasicLogger, ErrorFormatter, FallbackErrorPlugin
 ```
@@ -250,7 +255,7 @@ for resource_plugin in dependency_order:
     container.register(resource_plugin)
 
 # Phase 2: Pipeline Execution (Processing Plugins)
-for stage in [PARSE, THINK, DO, REVIEW, DELIVER]:
+for stage in [INPUT, PARSE, THINK, DO, REVIEW, OUTPUT]:
     plugins = registry.get_plugins_for_stage(stage) 
     for plugin in plugins:
         await plugin.execute(context)
@@ -264,9 +269,9 @@ for stage in [PARSE, THINK, DO, REVIEW, DELIVER]:
 ### **Plugin Development Patterns**
 
 #### **Stage Assignment Precedence**
-1. **Explicit declaration**: `stages = [PipelineStage.THINK]` always wins
-2. **Type defaults**: ToolPlugin → DO, PromptPlugin → THINK, etc.
-3. **Auto-classification**: Analyze function source for stage hints
+1. **Config override**: `stage: DO` or `stages: [THINK, DO]` in configuration always wins
+2. **Class default**: `stage = THINK` or `stages = [INPUT, OUTPUT]` in plugin class
+3. **Safe fallback**: `THINK` stage if nothing else specified
 
 #### **Dependency Declaration**
 ```python
@@ -308,6 +313,20 @@ The framework automatically validates plugin configurations to ensure:
 - Configuration parameters match plugin requirements
 
 This taxonomy provides a clear mental model for developers while maintaining the flexibility to extend the framework in any direction through the universal Plugin interface.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## 2. Progressive Disclosure: Enhanced 3-Layer Plugin System
 
@@ -1108,29 +1127,152 @@ stats = await memory.conversation_statistics(context.user_id)
 
 **Benefits**: Startup validation, clear architecture visibility, hot-reload support, and robust dependency management across the entire resource system.
 
+
+
+
+
 ## 12. Plugin Stage Assignment Precedence
 
-**Decision**: Use layered approach with strict precedence hierarchy for plugin stage assignment.
+**Decision**: Use simple, predictable precedence with no complex hierarchies or auto-classification magic.
 
-**Precedence Order (highest to lowest)**:
-1. **Explicit `stages` attribute** - declared in plugin class always wins
-2. **Plugin type defaults** - ToolPlugin → DO, PromptPlugin → THINK, AdapterPlugin → PARSE+DELIVER
-3. **Auto-classification** - analyze function source code for stage hints (function-based plugins only)
+**Simple Precedence Order**:
+1. **Config override** - `stage: DO` or `stages: [THINK, DO]` in configuration always wins
+2. **Class default** - `stage = THINK` or `stages = [INPUT, OUTPUT]` in plugin class
+3. **Safe fallback** - `THINK` stage if nothing else specified
 
 **Rationale**:
-- Supports progressive disclosure from simple defaults to explicit control
-- Predictable override behavior - developers know explicit declarations always win
-- Enables flexible patterns like planning tools in THINK stage or validation tools in REVIEW
-- Clear debugging path - easy to trace why plugins are assigned to specific stages
-- Maintains backward compatibility with existing auto-classification
+- **Predictable**: Same configuration always produces same stage assignment
+- **Simple**: Only 3 levels, no complex analysis or heuristics
+- **Debuggable**: Easy to trace exactly why a plugin runs in specific stages
+- **No surprises**: Developers know exactly what will happen
 
 **Implementation**:
-- Allow explicit stage overrides even when they conflict with type conventions
-- Log warnings when explicit stages deviate from type defaults for visibility
-- Auto-classification only applies to function-based plugins without explicit stages
-- Document common override patterns and use cases
+```python
+def get_plugin_stages(plugin_class, config):
+    # 1. Config always wins
+    config_stages = config.get('stages') or config.get('stage')
+    if config_stages:
+        return normalize_to_list(config_stages)
+    
+    # 2. Class default
+    class_stages = getattr(plugin_class, 'stages', None) or getattr(plugin_class, 'stage', None)
+    if class_stages:
+        return normalize_to_list(class_stages)
+    
+    # 3. Safe fallback
+    return [THINK]
+```
 
-**Benefits**: Flexibility for advanced use cases while maintaining simple defaults and predictable behavior for debugging and system understanding.
+**Plugin Type Defaults**:
+```python
+# Input/Output plugins
+class InputAdapterPlugin(AdapterPlugin):
+    stage = INPUT  # Single stage for input processing
+
+class OutputAdapterPlugin(AdapterPlugin):
+    stage = OUTPUT  # Single stage for output formatting
+
+class FullAdapterPlugin(AdapterPlugin):
+    stages = [INPUT, OUTPUT]  # Both input and output
+
+# Processing plugins  
+class ToolPlugin(Plugin):
+    stage = DO  # Execute actions and tools
+
+class PromptPlugin(Plugin):
+    stage = THINK  # Reasoning and analysis
+
+# Multi-stage plugins
+class WorkflowPlugin(Plugin):
+    stages = [PARSE, THINK, DO]  # Custom multi-stage flow
+```
+
+**Configuration Examples**:
+```yaml
+plugins:
+  # Use class default
+  weather_tool:
+    type: WeatherPlugin  # Uses stage = DO from ToolPlugin
+    
+  # Override single stage
+  special_reasoning:
+    type: PromptPlugin
+    stage: REVIEW  # Override default THINK → REVIEW
+    
+  # Override to multi-stage
+  data_processor:
+    type: ToolPlugin  
+    stages: [PARSE, DO]  # Override default DO → PARSE+DO
+    
+  # Multi-stage with config override
+  http_adapter:
+    type: FullAdapterPlugin  # Class has stages = [INPUT, OUTPUT]
+    stages: [INPUT]  # Config override to only INPUT
+```
+
+**Warning System**:
+```python
+# Log when config overrides class defaults
+if config_stages and class_stages and config_stages != class_stages:
+    logger.warning(
+        f"Plugin '{plugin_name}' config stages {config_stages} "
+        f"override class stages {class_stages}"
+    )
+
+# Log when class overrides type defaults  
+if class_stages and type_defaults and class_stages != type_defaults:
+    logger.warning(
+        f"Plugin '{plugin_class.__name__}' explicit stages {class_stages} "
+        f"override type default {type_defaults}"
+    )
+```
+
+**No Auto-Classification**:
+- **Removed**: Function name analysis and source code inspection
+- **Removed**: Complex precedence with 5+ levels
+- **Removed**: Magic stage assignment based on behavior detection
+- **Reason**: Simplicity and predictability over clever automation
+
+**Stage Assignment Examples**:
+```python
+# Example 1: Type default
+class WeatherTool(ToolPlugin):
+    pass  # Gets stage = DO from ToolPlugin
+
+# Example 2: Explicit class override
+class PlanningTool(ToolPlugin):
+    stage = THINK  # Override ToolPlugin default of DO
+
+# Example 3: Multi-stage class
+class DataFlow(Plugin):
+    stages = [PARSE, THINK, DO]  # Custom workflow
+
+# Example 4: Config override
+plugins:
+  weather:
+    type: WeatherTool
+    stage: REVIEW  # Override class default DO → REVIEW
+```
+
+**Benefits**:
+- **No surprises**: Developers know exactly when their plugins run
+- **Easy debugging**: Clear path from config → class → fallback
+- **Simple mental model**: Just 3 rules, no complex precedence
+- **Flexible**: Both single and multi-stage assignments supported
+- **Warning system**: Clear notifications when overrides happen
+
+**Eliminated Complexity**:
+- No auto-classification of function behavior
+- No complex 5-level precedence hierarchies  
+- No source code analysis or heuristics
+- No type inference or magic stage detection
+
+This approach prioritizes **developer clarity** over **framework cleverness**.
+
+
+
+
+
 
 ## 13. Resource Lifecycle Management
 
@@ -1607,9 +1749,16 @@ await agent.serve_cli()                   # CLI interface
 
 This unification provides a single, learnable interface while maintaining all current functionality and flexibility.
 
+
+
+
+
+
+
+
 ## 25. Workflow Objects with Progressive Complexity
 
-We will introduce **Workflow objects** that get passed to Pipeline for execution, maintaining the existing stage system as the foundation. 
+We will introduce **Workflow objects** that get passed to Pipeline for execution, maintaining the existing stage system as the foundation.
 
 **Implementation approach:**
 - **Start with simple stage→plugin mappings** (Option A) for v1 implementation
@@ -1618,7 +1767,7 @@ We will introduce **Workflow objects** that get passed to Pipeline for execution
 
 **Key benefits:**
 - Maintains alignment with stateless execution model
-- Preserves YAML configuration compatibility  
+- Preserves YAML configuration compatibility
 - Enables workflow reusability and testing
 - Provides clear upgrade path from simple to complex workflows
 
@@ -1626,10 +1775,12 @@ We will introduce **Workflow objects** that get passed to Pipeline for execution
 ```python
 # Simple v1 workflow
 CustomerWorkflow = {
+    Stage.INPUT: ["http_input", "validate_request"],
     Stage.PARSE: ["extract_info", "validate_account"],
     Stage.THINK: ["classify_issue", "route_specialist"],
-    Stage.DO: ["resolution_tools"],
-    Stage.DELIVER: ["format_response"]
+    Stage.DO: ["resolution_tools", "gather_data"],
+    Stage.REVIEW: ["validate_solution", "check_policy"],
+    Stage.OUTPUT: ["format_response", "send_notification"]
 }
 
 pipeline = Pipeline(workflow=CustomerWorkflow)
@@ -1638,13 +1789,11 @@ agent = Agent(pipeline=pipeline)
 
 This gives us the composability and reusability benefits immediately while maintaining the simplicity and reliability of the current stage-based execution model.
 
-**Decisions Made So Far**: 
-- ✅ Hybrid stateless/stateful lifecycle model  
+**Decisions Made So Far**:
+- ✅ Hybrid stateless/stateful lifecycle model
 - ✅ Need dev-to-prod documentation clarity
 - ✅ Add Workflow objects with progressive complexity (simple→rich)
 - ✅ Maintain existing stage system as foundation
-
-Ready for the next architectural concern?
 
 ## 26. Workflow Objects: Composable Agent Blueprints
 
@@ -1652,7 +1801,7 @@ A **Workflow** is a reusable blueprint that defines which plugins execute in whi
 
 **Core Purpose:**
 - **Composition**: Mix and match different agent behaviors without rebuilding pipelines
-- **Reusability**: Share common workflows across teams, projects, and deployments  
+- **Reusability**: Share common workflows across teams, projects, and deployments
 - **Testability**: Test workflow logic independently from execution infrastructure
 - **Configurability**: Parameterize workflows for different environments or use cases
 
@@ -1661,11 +1810,90 @@ A **Workflow** is a reusable blueprint that defines which plugins execute in whi
 # Define what happens
 workflow = CustomerServiceWorkflow()
 
-# Define how it executes  
-pipeline = Pipeline(approach=workflow)
+# Define how it executes
+pipeline = Pipeline(workflow=workflow)
 
 # Combine them
 agent = Agent(pipeline=pipeline)
+```
+
+**Complete Workflow Examples:**
+
+**Basic Support Workflow:**
+```python
+SupportWorkflow = {
+    Stage.INPUT: ["web_interface", "email_intake"],
+    Stage.PARSE: ["extract_customer_info", "categorize_request"],
+    Stage.THINK: ["analyze_issue", "check_knowledge_base"],
+    Stage.DO: ["search_solutions", "escalate_if_needed"],
+    Stage.REVIEW: ["validate_response", "ensure_completeness"],
+    Stage.OUTPUT: ["format_reply", "update_ticket", "send_response"]
+}
+```
+
+**Data Analysis Workflow:**
+```python
+AnalysisWorkflow = {
+    Stage.INPUT: ["file_upload", "api_data_fetch"],
+    Stage.PARSE: ["clean_data", "validate_schema"],
+    Stage.THINK: ["identify_patterns", "select_analysis_method"],
+    Stage.DO: ["run_analysis", "generate_charts"],
+    Stage.REVIEW: ["verify_results", "check_statistical_significance"],
+    Stage.OUTPUT: ["create_report", "export_visualizations"]
+}
+```
+
+**Multi-Environment Workflow:**
+```python
+class ProductionWorkflow:
+    """Full 6-stage workflow for production environments"""
+    stages = {
+        Stage.INPUT: ["secure_input", "rate_limiting"],
+        Stage.PARSE: ["validate_input", "extract_entities"],
+        Stage.THINK: ["complex_reasoning", "multi_step_planning"],
+        Stage.DO: ["execute_actions", "external_api_calls"],
+        Stage.REVIEW: ["quality_check", "compliance_validation"],
+        Stage.OUTPUT: ["format_output", "audit_logging", "response_delivery"]
+    }
+
+class DevelopmentWorkflow:
+    """Simplified workflow for development/testing"""
+    stages = {
+        Stage.INPUT: ["simple_input"],
+        Stage.THINK: ["basic_reasoning"],
+        Stage.DO: ["mock_actions"],
+        Stage.OUTPUT: ["debug_output"]
+    }
+```
+
+**Progressive Complexity Examples:**
+
+**Level 1: Simple Stage Mapping**
+```python
+# Just map stages to plugin lists
+SimpleWorkflow = {
+    Stage.THINK: ["reasoning_plugin"],
+    Stage.DO: ["action_plugin"],
+    Stage.OUTPUT: ["response_plugin"]
+}
+```
+
+**Level 2: Conditional Logic (Future)**
+```python
+# Future: workflows with conditional execution
+class ConditionalWorkflow:
+    def get_stages(self, context):
+        if context.user_type == "premium":
+            return {
+                Stage.THINK: ["advanced_reasoning"],
+                Stage.DO: ["premium_tools"],
+                Stage.OUTPUT: ["detailed_response"]
+            }
+        else:
+            return {
+                Stage.THINK: ["basic_reasoning"],
+                Stage.OUTPUT: ["simple_response"]
+            }
 ```
 
 **Key Design Principles:**
@@ -1674,8 +1902,44 @@ agent = Agent(pipeline=pipeline)
 3. **Clean separation of concerns** - workflow logic separate from infrastructure concerns
 4. **Backward compatible** - existing stage-based configurations continue to work
 5. **Progressive complexity** - simple stage mappings initially, conditional logic later
+6. **Complete stage coverage** - workflows can utilize all 6 stages (INPUT → PARSE → THINK → DO → REVIEW → OUTPUT)
 
-This architecture maintains your existing stateless execution model while providing the higher-level abstractions developers need for complex agent behaviors.
+**Configuration Integration:**
+```yaml
+# Workflow can be defined in YAML and referenced
+workflows:
+  customer_support:
+    input: ["web_interface"]
+    parse: ["extract_customer_info"]
+    think: ["analyze_issue"]
+    do: ["search_solutions"]
+    review: ["validate_response"]
+    output: ["format_reply"]
+
+agents:
+  support_bot:
+    workflow: customer_support
+    resources:
+      llm: openai
+      memory: postgres
+```
+
+This architecture maintains your existing stateless execution model while providing the higher-level abstractions developers need for complex agent behaviors across all 6 pipeline stages.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## 27. Layer 0: Zero-Config Developer Experience
 
