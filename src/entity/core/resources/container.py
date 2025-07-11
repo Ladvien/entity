@@ -152,28 +152,25 @@ class ResourceContainer:
         self._deps[name] = list(getattr(cls, "dependencies", []))
 
     async def build_all(self) -> None:
+        """Instantiate and initialize resources sequentially."""
+
         self._order = self._resolve_order()
         self._init_order = []
-        # Instantiate resources without dependencies first
-        instances: Dict[str, Any] = {}
+
         for name in self._order:
             cls = self._classes[name]
             cfg = self._configs[name]
+
             instance = self._create_instance(cls, cfg)
             await self.add(name, instance)
-            instances[name] = instance
 
-        # Inject dependencies after all instances exist
-        for name, instance in instances.items():
             self._inject_dependencies(name, instance)
 
-        # Initialize resources in topological order
-        for name in self._order:
-            instance = instances[name]
             init = getattr(instance, "initialize", None)
             if callable(init):
                 await init()
             self._init_order.append(name)
+
             check = getattr(instance, "health_check", None)
             if callable(check) and not await check():
                 raise SystemError(f"Resource '{name}' failed health check")
