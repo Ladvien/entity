@@ -82,11 +82,11 @@ class ToolRegistry:
         if self.cache_ttl is None:
             return None
         key = (name, frozenset(params.items()))
-        item = self._cache.get(key)
-        if not item:
+        cached = self._cache.get(key)
+        if cached is None:
             return None
-        result, timestamp = item
-        if time.time() - timestamp > self.cache_ttl:
+        result, expiry = cached
+        if expiry < time.time():
             self._cache.pop(key, None)
             return None
         return result
@@ -97,7 +97,7 @@ class ToolRegistry:
         if self.cache_ttl is None:
             return
         key = (name, frozenset(params.items()))
-        self._cache[key] = (result, time.time())
+        self._cache[key] = (result, time.time() + self.cache_ttl)
 
 
 @dataclass

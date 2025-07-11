@@ -7,7 +7,7 @@ import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from entity.core.state import ConversationEntry, PipelineState
+from entity.core.state import ConversationEntry, PipelineState, ToolCall
 from pipeline.errors import PluginContextError
 from pipeline.stages import PipelineStage
 
