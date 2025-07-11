@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import time
 from typing import Any, Dict
 
 from entity.core.plugins import ToolExecutionError
@@ -23,19 +22,11 @@ async def execute_pending_tools(
     context = PluginContext(state, registries)
 
     async def run_call(call: ToolCall) -> None:
-        cached = await tools.get_cached_result(call.name, call.params)
-        if cached is not None:
-            result = cached
-            duration = 0.0
-        else:
-            tool = tools.get(call.name)
-            if tool is None:
-                raise ToolExecutionError(f"Tool '{call.name}' not found")
-            start = time.perf_counter()
-            async with sem:
-                result = await tool.execute_function(call.params)
-            duration = time.perf_counter() - start
-            await tools.cache_result(call.name, call.params, result)
+        tool = tools.get(call.name)
+        if tool is None:
+            raise ToolExecutionError(f"Tool '{call.name}' not found")
+        async with sem:
+            result = await tool.execute_function(call.params)
         results[call.result_key] = result
         context.store(call.result_key, result)
 

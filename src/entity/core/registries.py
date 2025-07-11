@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Dict, List
-import time
 
 
 class PluginRegistry:
@@ -43,17 +42,11 @@ class PluginRegistry:
 
 
 class ToolRegistry:
-    """Store registered tools with basic caching and discovery."""
+    """Store registered tools and handle discovery."""
 
-    def __init__(
-        self, *, concurrency_limit: int = 5, cache_ttl: int | None = None
-    ) -> None:
+    def __init__(self, *, concurrency_limit: int = 5) -> None:
         self._tools: Dict[str, Callable[..., Awaitable[Any]]] = {}
         self.concurrency_limit = concurrency_limit
-        self.cache_ttl = cache_ttl
-        self._cache: Dict[tuple[str, frozenset[tuple[str, Any]]], tuple[Any, float]] = (
-            {}
-        )
 
     async def add(self, name: str, tool: Callable[..., Awaitable[Any]]) -> None:
         self._tools[name] = tool
@@ -77,27 +70,6 @@ class ToolRegistry:
                 if any(i in t.lower() for t in getattr(v, "intents", []))
             ]
         return items
-
-    async def get_cached_result(self, name: str, params: Dict[str, Any]) -> Any | None:
-        if self.cache_ttl is None:
-            return None
-        key = (name, frozenset(params.items()))
-        cached = self._cache.get(key)
-        if cached is None:
-            return None
-        result, expiry = cached
-        if expiry < time.time():
-            self._cache.pop(key, None)
-            return None
-        return result
-
-    async def cache_result(
-        self, name: str, params: Dict[str, Any], result: Any
-    ) -> None:
-        if self.cache_ttl is None:
-            return
-        key = (name, frozenset(params.items()))
-        self._cache[key] = (result, time.time() + self.cache_ttl)
 
 
 @dataclass
