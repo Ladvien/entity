@@ -86,7 +86,19 @@ class PluginAutoClassifier:
         except OSError:
             source = ""
 
-        if any(k in source for k in ["think", "reason", "analyze"]):
+        sig = inspect.signature(plugin_func)
+        param_names = [p.name.lower() for p in sig.parameters.values()]
+
+        action_keywords = {"action", "tool", "command"}
+        named_like_tool = any(
+            any(key in name for key in action_keywords) for name in param_names[1:]
+        )
+
+        calls_tool = any(k in source for k in ["tool_use(", "queue_tool_use("])
+
+        if calls_tool or named_like_tool:
+            base = cast(Type, plugin_base_registry.tool_plugin)
+        elif any(k in source for k in ["think", "reason", "analyze"]):
             base = cast(Type, plugin_base_registry.prompt_plugin)
         elif any(k in source for k in ["parse", "validate", "check"]):
             base = cast(Type, plugin_base_registry.adapter_plugin)
