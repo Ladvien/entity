@@ -672,6 +672,16 @@ class ResponsePlugin(PromptPlugin):
 
 **Usage Guidance**: Use `tool_use()` by default for simplicity. Use `queue_tool_use()` when you need multiple independent tool calls that can run in parallel or when processing results collectively.
 
+
+
+
+
+
+
+
+
+
+
 ## 10. Memory Resource Consolidation
 
 **Decision**: Consolidate all memory-related components into a single unified `Memory` resource that provides external persistence for the stateless worker architecture and serves as the backend for both simple and advanced memory operations.
@@ -693,13 +703,25 @@ class ResponsePlugin(PromptPlugin):
 - Replaces SimpleMemoryResource, MemoryResource, ConversationManager, and Memory interface
 - **External persistence guarantee**: All data persisted to database/storage, never held in Memory resource instance variables
 
-**External Persistence Architecture**:
+**External Persistence Architecture with Post-Construction Dependency Injection**:
 ```python
 class Memory(ResourcePlugin):
-    def __init__(self, database: DatabaseResource, vector_store: VectorStoreResource):
-        self.database = database      # External SQL persistence
-        self.vector_store = vector_store  # External vector persistence
+    dependencies = ["database", "vector_store"]
+    
+    def __init__(self, config: Dict | None = None):
+        super().__init__(config or {})
+        # Dependencies injected by container after construction
+        self.database = None      # Set by container
+        self.vector_store = None  # Set by container
         # No instance variables for conversation data
+    
+    async def initialize(self) -> None:
+        """Called after dependency injection is complete"""
+        # Validation that required dependencies were injected
+        if self.database is None:
+            raise ResourceInitializationError("Database dependency not injected")
+        if self.vector_store is None:
+            raise ResourceInitializationError("VectorStore dependency not injected")
     
     # Advanced technical interface for complex operations
     async def query(self, sql: str, params: list = None) -> List[Dict]:
@@ -752,6 +774,45 @@ class Memory(ResourcePlugin):
         return await self.database.conversation_stats(user_id)
 ```
 
+**Container Injection Pattern**:
+```python
+# Container handles dependency injection after construction
+class ResourceContainer:
+    async def build_all(self):
+        # 1. Instantiate all resources with config only
+        memory = Memory(config)
+        database = DatabaseResource(config)
+        vector_store = VectorStoreResource(config)
+        
+        # 2. Inject dependencies as attributes (post-construction)
+        memory.database = database
+        memory.vector_store = vector_store
+        
+        # 3. Initialize in dependency order
+        await database.initialize()
+        await vector_store.initialize()
+        await memory.initialize()  # Validates dependencies were injected
+```
+
+**Configuration Example**:
+```yaml
+plugins:
+  resources:
+    database:
+      type: entity.resources.database:PostgresResource
+      host: localhost
+      port: 5432
+      
+    vector_store:
+      type: entity.resources.vector:PgVectorStore
+      dimensions: 768
+      
+    memory:
+      type: entity.resources.memory:Memory
+      # Dependencies automatically injected by container
+      # No need to specify database/vector_store config here
+```
+
 **Usage Patterns**:
 ```python
 # Simple anthropomorphic access (most common)
@@ -766,195 +827,19 @@ similar_conversations = await memory.conversation_search("customer complaints", 
 stats = await memory.conversation_statistics(context.user_id)
 ```
 
-**Related Decisions**: This decision provides the external persistence layer that supports [Persistent State with Stateless Workers](#6-scalability-architecture-persistent-state-with-stateless-workers) architecture and serves as the unified backend for [State Management Consolidation](#23-state-management-consolidation-dual-interface-pattern).
-```
+**Key Benefits of Consistent Dependency Injection**:
+1. **Circular dependency safe**: Topological sorting handles complex dependency graphs
+2. **Container-friendly**: Standardized injection pattern across all resources
+3. **Test-friendly**: Easy to mock dependencies by setting attributes
+4. **Validation-ready**: `initialize()` method can validate all dependencies are present
+5. **Hot-reload compatible**: Dependencies can be re-injected during configuration updates
 
-## **3. Decision 29: Multi-User Support - Updated**
+**Related Decisions**: This decision provides the external persistence layer that supports [Persistent State with Stateless Workers](#6-scalability-architecture-persistent-state-with-stateless-workers) architecture and serves as the unified backend for [State Management Consolidation](#23-state-management-consolidation-dual-interface-pattern), using the consistent dependency injection pattern from [Resource Dependency Injection Pattern](#11-resource-dependency-injection-pattern).
 
-```markdown
-## 29. Multi-User Support: user_id Parameter Pattern
 
-**Decision**: Implement multi-user support through a simple `user_id` parameter in pipeline execution, using conversation namespacing for user isolation within the stateless worker architecture and anthropomorphic memory operations.
 
-**Core Purpose:**
-- **User isolation**: Separate conversation state per user within same agent instance
-- **Resource efficiency**: Share agent logic and resources across users
-- **Simplicity**: Minimal architectural complexity with maximum functionality
-- **Clear security model**: Different user bases use separate deployments
-- **Stateless worker compatibility**: User isolation through external persistence namespacing
-- **Anthropomorphic API**: Natural memory operations with automatic user namespacing
 
-**How it works:**
-```python
-# Same agent instance handles multiple users
-agent = Agent.from_config("support-bot.yaml")
 
-# User 1's conversation
-response1 = await agent.chat("Hello, I need help", user_id="user123")
-
-# User 2's conversation (completely isolated)
-response2 = await agent.chat("Hi there", user_id="user456") 
-
-# User 1 continues their conversation
-response3 = await agent.chat("Thanks for the help", user_id="user123")
-```
-
-**Implementation Pattern:**
-
-**Pipeline Execution Signature**
-```python
-async def execute_pipeline(
-    user_message: str,
-    capabilities: SystemRegistries,
-    *,
-    user_id: str,                    # User identifier for conversation isolation
-    state_logger: StateLogger | None = None,
-    return_metrics: bool = False,
-    state: PipelineState | None = None,
-    max_iterations: int = 5,
-) -> Dict[str, Any] | tuple[Dict[str, Any], MetricsCollector]:
-```
-
-**Memory Resource Integration with External Persistence**
-```python
-class Memory(ResourcePlugin):
-    async def save_conversation(self, conversation_id: str, history: List[ConversationEntry]) -> None:
-        # conversation_id format: "{user_id}_{pipeline_id}"
-        # Persist to external database, not instance variables
-        await self.database.store_conversation(conversation_id, history)
-
-    async def load_conversation(self, conversation_id: str) -> List[ConversationEntry]:
-        # Load from external database each request
-        # Automatic user isolation through namespaced conversation_id
-        return await self.database.fetch_conversation(conversation_id)
-        
-    async def store_persistent(self, key: str, value: Any) -> None:
-        """Store persistent data with user namespacing (backend for context.remember())"""
-        # Key already includes user namespace from PluginContext
-        await self.database.store_key_value(key, value)
-
-    async def fetch_persistent(self, key: str, default: Any = None) -> Any:
-        """Retrieve persistent data (backend for context.recall())"""
-        return await self.database.fetch_key_value(key, default)
-```
-
-**PluginContext Integration with Anthropomorphic API**
-```python
-class PluginContext:
-    def __init__(self, state: PipelineState, registries: Any, user_id: str) -> None:
-        self._state = state
-        self._registries = registries
-        self._user_id = user_id
-        self._memory = getattr(registries.resources, "memory", None)
-        self._conversation_id = state.pipeline_id  # Already includes user_id
-        self._temporary_thoughts = {}
-
-    @property
-    def user_id(self) -> str:
-        """Get the current user ID for this pipeline execution"""
-        return self._user_id
-
-    # Anthropomorphic persistent memory operations (automatically user-namespaced)
-    async def remember(self, key: str, value: Any) -> None:
-        """Store user-specific persistent data with automatic namespacing"""
-        if self._memory is not None:
-            # Automatically namespace key with user_id for external persistence
-            namespaced_key = f"{self._user_id}:{key}"
-            await self._memory.store_persistent(namespaced_key, value)
-
-    async def recall(self, key: str, default: Any = None) -> Any:
-        """Retrieve user-specific persistent data"""
-        if self._memory is None:
-            return default
-        namespaced_key = f"{self._user_id}:{key}"
-        return await self._memory.fetch_persistent(namespaced_key, default)
-    
-    async def forget(self, key: str) -> None:
-        """Delete user-specific persistent data"""
-        if self._memory is not None:
-            namespaced_key = f"{self._user_id}:{key}"
-            await self._memory.delete_persistent(namespaced_key)
-
-    # Temporary cognitive operations (user-isolated by pipeline instance)
-    async def think(self, key: str, value: Any) -> None:
-        """Store temporary thought (pipeline execution only)"""
-        self._temporary_thoughts[key] = value
-
-    async def reflect(self, key: str, default: Any = None) -> Any:
-        """Retrieve temporary thought"""
-        return self._temporary_thoughts.get(key, default)
-
-    # Conversation operations (automatically user-isolated)
-    async def say(self, message: str) -> None:
-        """Add agent response to user's conversation"""
-        if self._memory is not None:
-            await self._memory.add_conversation_entry(
-                self._conversation_id,  # Already user-namespaced
-                ConversationEntry(content=message, role="assistant")
-            )
-
-    async def conversation(self) -> List[ConversationEntry]:
-        """Get user's conversation history"""
-        if self._memory is None:
-            return []
-        return await self._memory.load_conversation(self._conversation_id)
-
-    async def listen(self) -> str | None:
-        """Get user's last message"""
-        history = await self.conversation()
-        user_messages = [entry for entry in history if entry.role == "user"]
-        return user_messages[-1].content if user_messages else None
-```
-
-**User Isolation Strategy:**
-- **Conversation namespacing**: `pipeline_id = f"{user_id}_{generate_pipeline_id()}"`
-- **Memory isolation**: Memory keys automatically prefixed with `user_id:` in external storage
-- **Shared resources**: LLM, tools, and plugin logic shared across users
-- **No cross-user data leakage**: User isolation enforced at external persistence layer
-- **External persistence**: All user data stored in database/external storage, never in worker memory
-- **Anthropomorphic operations**: All `remember()`, `recall()`, `say()` operations automatically user-isolated
-
-**Example Usage with Anthropomorphic API:**
-```python
-class PersonalizationPlugin(PromptPlugin):
-    async def _execute_impl(self, context: PluginContext) -> None:
-        # User-specific persistent preferences (automatically isolated)
-        user_style = await context.recall("communication_style", "professional")
-        
-        # Temporary analysis (isolated to this pipeline execution)
-        await context.think("message_complexity", self._analyze_complexity(context.message))
-        
-        # Generate personalized response
-        response = await self.call_llm(
-            context, 
-            f"Respond in {user_style} style to: {context.message}"
-        )
-        
-        # Store user preference updates and respond
-        await context.remember("last_topic", self._extract_topic(context.message))
-        await context.say(response.content)
-```
-
-**Key Design Principles:**
-1. **Minimal complexity**: Single parameter addition to existing architecture
-2. **Natural isolation**: user_id becomes conversation and memory namespace in external storage
-3. **Anthropomorphic simplicity**: Natural language operations reduce cognitive load
-4. **Automatic namespacing**: Developers don't think about user isolation - it's automatic
-5. **Resource sharing**: Efficient use of LLM and infrastructure resources
-6. **Clear boundaries**: Different user bases require separate deployments
-7. **Zero overhead**: No runtime performance impact for user isolation
-8. **External persistence**: All user state stored externally, supporting stateless worker architecture
-
-**Benefits:**
-- **Intuitive API**: `remember()`, `recall()`, `say()` feel natural to developers
-- **Automatic isolation**: User data separation happens transparently
-- **Cost efficiency**: Multiple users share same agent infrastructure
-- **Simple scaling**: Add more users until resource limits, then scale instances
-- **Security by design**: User data automatically isolated through external storage namespacing
-- **Operational simplicity**: No complex multi-tenant management required
-- **Horizontal scalability**: Any worker can handle any user through external state loading
-
-**Related Decisions**: This decision builds on [Persistent State with Stateless Workers](#6-scalability-architecture-persistent-state-with-stateless-workers) and [Memory Resource Consolidation](#10-memory-resource-consolidation) to provide user isolation through external persistence namespacing, using the anthropomorphic API from [State Management Consolidation](#23-state-management-consolidation-dual-interface-pattern).
 
 ## 11. Resource Dependency Injection Pattern
 
