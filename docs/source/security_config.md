@@ -17,14 +17,6 @@ plugins:
 
 Each adapter validates the provided bearer token and ensures the role is allowed.
 
-## Input Validation Hooks
-
-Register callbacks on `SystemRegistries.validators` to inspect or modify the
-`PluginContext` before each stage plugin runs.
-
-```python
-capabilities.validators.register(PipelineStage.PARSE, my_validator)
-```
 
 ## Best Practices
 
