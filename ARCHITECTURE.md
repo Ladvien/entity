@@ -48,13 +48,14 @@ The following architecture decisions were made through systematic analysis of th
     - [Rationale](#rationale)
     - [Implementation Pattern](#implementation-pattern)
     - [Key Principles](#key-principles)
-  - [23. State Management Consolidation: Unified Cache/Memory Pattern](#23-state-management-consolidation-unified-cachememory-pattern)
+  - [23. State Management Consolidation: Dual Interface Pattern](#23-state-management-consolidation-dual-interface-pattern)
     - [Rationale](#rationale-1)
-    - [Unified API Pattern](#unified-api-pattern)
+    - [Dual Interface Pattern](#dual-interface-pattern)
     - [Key Principles](#key-principles-1)
+    - [Implementation Architecture](#implementation-architecture)
   - [24. Agent Instantiation Unification: Single Agent Class Pattern](#24-agent-instantiation-unification-single-agent-class-pattern)
     - [Rationale](#rationale-2)
-    - [Unified API Pattern](#unified-api-pattern-1)
+    - [Unified API Pattern](#unified-api-pattern)
     - [Key Principles](#key-principles-2)
   - [25. Workflow Objects with Progressive Complexity](#25-workflow-objects-with-progressive-complexity)
   - [26. Workflow Objects: Composable Agent Blueprints](#26-workflow-objects-composable-agent-blueprints)
@@ -957,42 +958,136 @@ plugins:
 
 This approach provides rapid development for common scenarios while maintaining full control and transparency for complex enterprise deployments.
 
-## 23. State Management Consolidation: Unified Cache/Memory Pattern
+## 23. State Management Consolidation: Dual Interface Pattern
 
-**Decision**: Replace the multi-layered state management system (PipelineState + PluginContext + Memory + Stage Results) with a unified StateManager using intuitive verb-based APIs.
+**Decision**: Implement a dual interface system with anthropomorphic PluginContext methods for simple use cases and advanced Memory resource access for complex operations.
 
 ### Rationale
 
-**Eliminated Complexity** from the previous system:
- - Four overlapping storage mechanisms (`context.store()`, `context.set_metadata()`, `memory.remember()`, conversation history)
-- Unclear boundaries between temporary vs persistent data
-- Data duplication with conversation history in multiple locations
-- High cognitive overhead deciding which storage method to use
+**Eliminated Complexity** from multi-layered state management:
+- Four overlapping storage mechanisms consolidated into two clear interfaces
+- Unclear boundaries between temporary vs persistent data resolved
+- Data duplication eliminated through unified backend storage
+- Reduced cognitive overhead through anthropomorphic method naming
 
-### Unified API Pattern
+### Dual Interface Pattern
 
+**Simple Interface (PluginContext) - Anthropomorphic Methods:**
 ```python
-# In PluginContext - simple, intuitive verbs:
-context.store("analysis", result)     # Temporary data (dies with pipeline run)
-context.load("analysis")              # Retrieve temporary data
+# Human-like memory operations (persistent data)
+await context.remember("user_prefs", data)     # Store persistent data
+await context.recall("user_prefs")             # Retrieve persistent data  
+await context.forget("user_prefs")             # Delete persistent data
 
-context.remember("user_prefs", data)  # Persistent data (survives sessions)
-context.memory("user_prefs")           # Retrieve persistent data
+# Cognitive operations (temporary data - dies with pipeline run)
+await context.think("analysis", result)        # Store temporary thoughts
+await context.reflect("analysis")              # Retrieve temporary thoughts
+await context.clear_thoughts()                 # Clear all temporary data
 
-context.say("Here's my response")      # Add to conversation history
-context.conversation()                 # Get conversation history
+# Communication operations (conversation history)
+await context.say("Here's my response")        # Add to conversation
+await context.conversation()                   # Get conversation history
+await context.listen()                         # Get last user message
+```
+
+**Advanced Interface (Memory Resource) - Technical Operations:**
+```python
+# Direct memory resource access for complex operations
+memory = context.get_resource("memory")
+
+# Advanced persistent storage operations
+await memory.query("SELECT * FROM user_prefs WHERE...")  # SQL queries
+await memory.vector_search("similar content", k=5)       # Vector operations
+await memory.batch_store(key_value_pairs)                # Bulk operations
+await memory.conversation_search("topic", days=30)       # Conversation analysis
+
+# Low-level conversation management
+await memory.load_conversation(conversation_id)
+await memory.save_conversation(conversation_id, history)
+await memory.conversation_statistics(user_id)
 ```
 
 ### Key Principles
 
-1. **Two-Tier Model**: Only temporary (cache/recall) vs persistent (remember/memory) storage
-2. **Intuitive Verbs**: Method names match natural language for cognitive ease
-3. **Single Responsibility**: Each method has one clear purpose and scope
-4. **Conversation Special Case**: Chat history as a specialized persistent type
-5. **No Overlap**: Eliminated redundant storage mechanisms and data duplication
+1. **Progressive Disclosure**: Simple anthropomorphic methods for common cases, advanced resource for complex operations
+2. **Unified Backend**: Both interfaces operate on the same external storage
+3. **All Async**: Every operation that touches external storage is async
+4. **Anthropomorphic Simplicity**: Natural language methods reduce cognitive load
+5. **Technical Power**: Advanced interface provides full database/vector capabilities
+6. **Single Source of Truth**: All data flows through unified Memory resource backend
 
-This consolidation reduces four overlapping concepts to two clear patterns, dramatically simplifying the developer mental model while maintaining all necessary functionality.
+### Implementation Architecture
 
+```python
+class PluginContext:
+    def __init__(self, state: PipelineState, registries: Any, user_id: str):
+        self._memory = registries.resources.get("memory")
+        self._user_id = user_id
+        self._temporary_thoughts = {}  # Cleared after pipeline execution
+    
+    # Anthropomorphic persistent memory operations
+    async def remember(self, key: str, value: Any) -> None:
+        """Store user-specific persistent data"""
+        namespaced_key = f"{self._user_id}:{key}"
+        await self._memory.store_persistent(namespaced_key, value)
+    
+    async def recall(self, key: str, default: Any = None) -> Any:
+        """Retrieve user-specific persistent data"""
+        namespaced_key = f"{self._user_id}:{key}"
+        return await self._memory.fetch_persistent(namespaced_key, default)
+    
+    async def forget(self, key: str) -> None:
+        """Delete user-specific persistent data"""
+        namespaced_key = f"{self._user_id}:{key}"
+        await self._memory.delete_persistent(namespaced_key)
+    
+    # Cognitive temporary operations
+    async def think(self, key: str, value: Any) -> None:
+        """Store temporary thought (pipeline execution only)"""
+        self._temporary_thoughts[key] = value
+    
+    async def reflect(self, key: str, default: Any = None) -> Any:
+        """Retrieve temporary thought"""
+        return self._temporary_thoughts.get(key, default)
+    
+    async def clear_thoughts(self) -> None:
+        """Clear all temporary thoughts"""
+        self._temporary_thoughts.clear()
+    
+    # Conversation operations
+    async def say(self, message: str) -> None:
+        """Add agent response to conversation"""
+        await self._memory.add_conversation_entry(
+            self._conversation_id, 
+            ConversationEntry(content=message, role="assistant")
+        )
+    
+    async def conversation(self) -> List[ConversationEntry]:
+        """Get full conversation history"""
+        return await self._memory.load_conversation(self._conversation_id)
+    
+    async def listen(self) -> str | None:
+        """Get the last user message"""
+        history = await self.conversation()
+        user_messages = [entry for entry in history if entry.role == "user"]
+        return user_messages[-1].content if user_messages else None
+
+# Advanced Memory Resource remains technical
+class Memory(ResourcePlugin):
+    async def store_persistent(self, key: str, value: Any) -> None:
+        await self.database.store_key_value(key, value)
+    
+    async def fetch_persistent(self, key: str, default: Any = None) -> Any:
+        return await self.database.fetch_key_value(key, default)
+    
+    async def query(self, sql: str, params: list = None) -> List[Dict]:
+        return await self.database.execute_query(sql, params)
+    
+    async def vector_search(self, query: str, k: int = 5) -> List[Dict]:
+        return await self.vector_store.similarity_search(query, k)
+```
+
+This dual interface provides **anthropomorphic simplicity** for 80% of use cases while maintaining **technical power** for complex scenarios, all built on the same unified external storage backend.
 
 ## 24. Agent Instantiation Unification: Single Agent Class Pattern
 
@@ -1679,13 +1774,14 @@ This architecture gives you **"commit to production"** - developers can test loc
 
 ## 29. Multi-User Support: user_id Parameter Pattern
 
-**Decision**: Implement multi-user support through a simple `user_id` parameter in pipeline execution, using conversation namespacing for user isolation.
+**Decision**: Implement multi-user support through a simple `user_id` parameter in pipeline execution, using conversation namespacing for user isolation within the stateless worker architecture.
 
 **Core Purpose:**
 - **User isolation**: Separate conversation state per user within same agent instance
 - **Resource efficiency**: Share agent logic and resources across users
 - **Simplicity**: Minimal architectural complexity with maximum functionality
 - **Clear security model**: Different user bases use separate deployments
+- **Stateless worker compatibility**: User isolation through external persistence namespacing
 
 **How it works:**
 ```python
@@ -1718,25 +1814,27 @@ async def execute_pipeline(
 ) -> Dict[str, Any] | tuple[Dict[str, Any], MetricsCollector]:
 ```
 
-**Memory Resource Integration**
+**Memory Resource Integration with External Persistence**
 ```python
 class Memory(ResourcePlugin):
     async def save_conversation(self, conversation_id: str, history: List[ConversationEntry]) -> None:
         # conversation_id format: "{user_id}_{pipeline_id}"
-        self._conversations[conversation_id] = list(history)
+        # Persist to external database, not instance variables
+        await self.database.store_conversation(conversation_id, history)
 
     async def load_conversation(self, conversation_id: str) -> List[ConversationEntry]:
+        # Load from external database each request
         # Automatic user isolation through namespaced conversation_id
-        return list(self._conversations.get(conversation_id, []))
+        return await self.database.fetch_conversation(conversation_id)
         
-    def remember(self, key: str, value: Any) -> None:
+    async def remember(self, key: str, value: Any) -> None:
         """Store user-specific persistent data with automatic namespacing"""
-        # Key automatically includes user context when called from pipeline
-        self._kv[key] = value
+        # Persist to external storage with user namespace
+        await self.database.store_key_value(key, value)
 
-    def get(self, key: str, default: Any | None = None) -> Any:
-        """Retrieve user-specific persistent data"""
-        return self._kv.get(key, default)
+    async def get(self, key: str, default: Any | None = None) -> Any:
+        """Retrieve user-specific value from external persistent storage"""
+        return await self.database.fetch_key_value(key, default)
 ```
 
 **Agent-Level API**
@@ -1752,14 +1850,14 @@ class Agent:
         if self._runtime is None:
             raise RuntimeError("Runtime not initialized")
         
-        # Create user-specific pipeline_id
+        # Create user-specific pipeline_id for external persistence
         pipeline_id = f"{user_id}_{generate_pipeline_id()}"
         
-        # Load user's conversation history
+        # Load user's conversation history from external storage
         memory = self._runtime.capabilities.resources.get("memory")
         conversation_history = await memory.load_conversation(pipeline_id)
         
-        # Create pipeline state with user context
+        # Create ephemeral pipeline state (discarded after execution)
         state = PipelineState(
             conversation=conversation_history + [ConversationEntry(
                 content=message, 
@@ -1770,7 +1868,7 @@ class Agent:
             metrics=MetricsCollector(),
         )
         
-        # Execute pipeline
+        # Execute pipeline with stateless worker
         result = await execute_pipeline(
             message, 
             self._runtime.capabilities,
@@ -1778,7 +1876,7 @@ class Agent:
             state=state
         )
         
-        # Save updated conversation
+        # Persist updated conversation to external storage
         await memory.save_conversation(pipeline_id, state.conversation)
         
         return result
@@ -1798,26 +1896,27 @@ class PluginContext:
         """Get the current user ID for this pipeline execution"""
         return self._user_id
 
-    def remember(self, key: str, value: Any) -> None:
-        """Persist user-specific value in the configured memory resource"""
+    async def remember(self, key: str, value: Any) -> None:
+        """Persist user-specific value in external storage via memory resource"""
         if self._memory is not None:
-            # Automatically namespace key with user_id
+            # Automatically namespace key with user_id for external persistence
             namespaced_key = f"{self._user_id}:{key}"
-            self._memory.remember(namespaced_key, value)
+            await self._memory.remember(namespaced_key, value)
 
-    def memory(self, key: str, default: Any | None = None) -> Any:
-        """Retrieve user-specific value from persistent memory"""
+    async def memory(self, key: str, default: Any | None = None) -> Any:
+        """Retrieve user-specific value from external persistent storage"""
         if self._memory is None:
             return default
         namespaced_key = f"{self._user_id}:{key}"
-        return self._memory.get(namespaced_key, default)
+        return await self._memory.get(namespaced_key, default)
 ```
 
 **User Isolation Strategy:**
 - **Conversation namespacing**: `pipeline_id = f"{user_id}_{generate_pipeline_id()}"`
-- **Memory isolation**: Memory keys automatically prefixed with `user_id:`
+- **Memory isolation**: Memory keys automatically prefixed with `user_id:` in external storage
 - **Shared resources**: LLM, tools, and plugin logic shared across users
-- **No cross-user data leakage**: User isolation enforced at memory and context layers
+- **No cross-user data leakage**: User isolation enforced at external persistence layer
+- **External persistence**: All user data stored in database/external storage, never in worker memory
 
 **Deployment Patterns:**
 
@@ -1838,20 +1937,24 @@ customer_b_agent = Agent.from_config("customer-b-config.yaml")
 
 **Key Design Principles:**
 1. **Minimal complexity**: Single parameter addition to existing architecture
-2. **Natural isolation**: user_id becomes conversation and memory namespace
+2. **Natural isolation**: user_id becomes conversation and memory namespace in external storage
 3. **Resource sharing**: Efficient use of LLM and infrastructure resources
 4. **Clear boundaries**: Different user bases require separate deployments
 5. **Zero overhead**: No runtime performance impact for user isolation
 6. **Backward compatibility**: Existing single-user agents continue working
+7. **External persistence**: All user state stored externally, supporting stateless worker architecture
 
 **Benefits:**
 - **Cost efficiency**: Multiple users share same agent infrastructure
 - **Simple scaling**: Add more users until resource limits, then scale instances
-- **Security by design**: User data automatically isolated through namespacing
+- **Security by design**: User data automatically isolated through external storage namespacing
 - **Operational simplicity**: No complex multi-tenant management required
 - **Clear upgrade path**: Easy to move users to dedicated instances if needed
+- **Horizontal scalability**: Any worker can handle any user through external state loading
 
-This pattern provides robust multi-user support with essentially zero architectural overhead while maintaining clear security boundaries and operational simplicity.
+**Related Decisions**: This decision builds on [Persistent State with Stateless Workers](#6-scalability-architecture-persistent-state-with-stateless-workers) and [Memory Resource Consolidation](#10-memory-resource-consolidation) to provide user isolation through external persistence namespacing.
+
+This pattern provides robust multi-user support with essentially zero architectural overhead while maintaining clear security boundaries, operational simplicity, and full compatibility with the stateless worker scaling architecture.
 
 ## 30. LoggingResource: Unified Agent Component Logging
 
