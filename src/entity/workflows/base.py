@@ -2,36 +2,49 @@ from __future__ import annotations
 
 """Workflow definitions for pipeline execution."""
 
-from dataclasses import dataclass, field
-from typing import ClassVar, Dict, Iterable, List
+from typing import ClassVar, Dict, Iterable, List, Mapping
+
+from pydantic import BaseModel, Field
 
 from pipeline.stages import PipelineStage
 
 
-@dataclass
-class Workflow:
+class Workflow(BaseModel):
     """Reusable mapping from :class:`PipelineStage` to plugin names."""
 
     stage_map: ClassVar[Dict[PipelineStage | str, Iterable[str]]] = {}
-    stages: Dict[PipelineStage, List[str]] = field(default_factory=dict)
+    stages: Dict[PipelineStage, List[str]] = Field(default_factory=dict)
+
+    model_config = {"arbitrary_types_allowed": True}
 
     def __init__(
         self,
-        mapping: Dict[PipelineStage | str, Iterable[str]] | None = None,
+        mapping: Mapping[PipelineStage | str, Iterable[str]] | None = None,
         **params: str,
     ) -> None:
-        self.stages = {}
+        values = {}
         mapping = mapping or self.stage_map
-        for stage, plugins in (mapping or {}).items():
+        processed: Dict[PipelineStage, List[str]] = {}
+        for stage, plugins in mapping.items():
             formatted = [str(p).format(**params) for p in plugins]
-            self._assign(stage, formatted)
+            self._assign_to(processed, stage, formatted)
+        values["stages"] = processed
+        super().__init__(**values)
 
-    def _assign(self, stage: PipelineStage | str, plugins: Iterable[str]) -> None:
+    @staticmethod
+    def _assign_to(
+        dest: Dict[PipelineStage, List[str]],
+        stage: PipelineStage | str,
+        plugins: Iterable[str],
+    ) -> None:
         stage_obj = PipelineStage.ensure(stage)
         names = [str(p) for p in plugins]
         if not all(names):
             raise ValueError("Plugin names must be non-empty strings")
-        self.stages[stage_obj] = names
+        dest[stage_obj] = names
+
+    def _assign(self, stage: PipelineStage | str, plugins: Iterable[str]) -> None:
+        self._assign_to(self.stages, stage, plugins)
 
     def to_dict(self) -> Dict[str, List[str]]:
         return {str(stage).lower(): list(names) for stage, names in self.stages.items()}
