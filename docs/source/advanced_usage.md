@@ -93,6 +93,22 @@ if not result.success:
 await reg.get_plugin("my_plugin").rollback_config()
 ```
 
+### Resource Dependency Injection
+
+Declare dependencies on other resources in each plugin. The container verifies
+the dependency graph, injects available objects and only then calls
+`initialize()`.
+
+```python
+class LoggingStorage(StorageResource):
+    dependencies = ["database"]          # required
+    optional_dependencies = ["metrics"]  # injected when defined
+
+    async def initialize(self) -> None:
+        if hasattr(self, "metrics"):
+            self.metrics.register("storage_ready")
+```
+
 ### Streaming and Function Calling
 
 UnifiedLLMResource now exposes streaming via Server-Sent Events and optional

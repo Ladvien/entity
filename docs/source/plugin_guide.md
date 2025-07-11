@@ -137,6 +137,22 @@ plugin_dirs:
 3. Validate the YAML using `SystemInitializer.from_yaml("your.yaml")`.
 4. Write unit tests and run `pytest` before committing changes.
 
+### Resource Dependency Injection
+
+Resources declare required dependencies with `dependencies`. The container
+validates the graph, injects each dependency attribute and then calls
+`initialize()`.
+
+```python
+class UsesMemory(ResourcePlugin):
+    dependencies = ["memory"]          # mandatory
+    optional_dependencies = ["tracer"]  # injected if present
+
+    async def initialize(self) -> None:
+        if hasattr(self, "tracer"):
+            await self.tracer.record("ready")
+```
+
 ## Implementing Storage Backends
 
 Storage resources persist conversation history and other agent data. To add a
