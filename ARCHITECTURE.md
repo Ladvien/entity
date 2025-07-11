@@ -61,7 +61,6 @@ The following architecture decisions were made through systematic analysis of th
   - [28. Infrastructure Components: Docker + OpenTofu Architecture](#28-infrastructure-components-docker--opentofu-architecture)
   - [29. Multi-User Support: user\_id Parameter Pattern](#29-multi-user-support-user_id-parameter-pattern)
   - [30. LoggingResource: Unified Agent Component Logging](#30-loggingresource-unified-agent-component-logging)
-  - [31. MetricsCollectorResource: Shared Performance Tracking](#31-metricscollectorresource-shared-performance-tracking)
   - [Architectural Decisions not Reviewed](#architectural-decisions-not-reviewed)
 
 ## 0. Folder Structure and Naming Conventions
@@ -202,7 +201,7 @@ class FailurePlugin(Plugin):
 ```python
 class InfrastructurePlugin(Plugin):
     """Deployment, monitoring, and operational support"""
-    # Examples: MetricsCollector, DockerDeployment, TerraformProvisioning
+    # Examples: DockerDeployment, TerraformProvisioning
 ```
 
 ### **Resource Composition Architecture**
@@ -1673,10 +1672,9 @@ async def execute_pipeline(
     *,
     user_id: str,                    # User identifier for conversation isolation
     state_logger: StateLogger | None = None,
-    return_metrics: bool = False,
     state: PipelineState | None = None,
     max_iterations: int = 5,
-) -> Dict[str, Any] | tuple[Dict[str, Any], MetricsCollector]:
+) -> Dict[str, Any]:
 ```
 
 **Memory Resource Integration**
@@ -1728,7 +1726,6 @@ class Agent:
                 timestamp=datetime.now()
             )],
             pipeline_id=pipeline_id,
-            metrics=MetricsCollector(),
         )
         
         # Execute pipeline
@@ -1990,268 +1987,6 @@ plugins:
 5. **Real-time streaming**: WebSocket support for live monitoring dashboards
 6. **Context preservation**: Full traceability across pipeline execution
 
-## 31. MetricsCollectorResource: Shared Performance Tracking
-
-**Decision**: Implement `MetricsCollectorResource` as a shared resource automatically injected into all plugins, providing unified metrics collection across the entire agent execution.
-
-**Core Purpose:**
-- **Shared injection**: Automatically available to all plugins via dependency injection
-- **Unified collection**: Single point for all agent metrics regardless of plugin type
-- **Zero configuration**: Plugins get metrics collection without manual setup
-- **Consistent data model**: Standardized metrics across all agent components
-- **Centralized analytics**: Complete agent performance picture in one place
-
-**How it works:**
-```python
-# Automatically injected into all plugins
-class BasePlugin:
-    dependencies = ["metrics_collector"]  # Automatic for all plugins
-    
-    def __init__(self, config: Dict[str, Any] | None = None) -> None:
-        super().__init__(config)
-        self.metrics_collector = None  # Injected by container
-        
-    async def execute(self, context: PluginContext) -> Any:
-        # Automatic metric collection wrapper
-        start_time = time.perf_counter()
-        try:
-            result = await self._execute_impl(context)
-            duration_ms = (time.perf_counter() - start_time) * 1000
-            
-            await self.metrics_collector.record_plugin_execution(
-                pipeline_id=context.pipeline_id,
-                stage=context.current_stage,
-                plugin_name=self.__class__.__name__,
-                duration_ms=duration_ms,
-                success=True
-            )
-            return result
-        except Exception as e:
-            duration_ms = (time.perf_counter() - start_time) * 1000
-            await self.metrics_collector.record_plugin_execution(
-                pipeline_id=context.pipeline_id,
-                stage=context.current_stage,
-                plugin_name=self.__class__.__name__,
-                duration_ms=duration_ms,
-                success=False,
-                error_type=e.__class__.__name__
-            )
-            raise
-```
-
-**Plugin-Level Usage:**
-```python
-class MyPromptPlugin(PromptPlugin):
-    # metrics_collector automatically injected
-    
-    async def _execute_impl(self, context: PluginContext) -> None:
-        # Plugin can record custom metrics
-        await self.metrics_collector.record_custom_metric(
-            pipeline_id=context.pipeline_id,
-            metric_name="prompt_complexity",
-            value=self._calculate_complexity(context.message),
-            metadata={"reasoning_type": "chain_of_thought"}
-        )
-        
-        # Call LLM (metrics automatically collected)
-        response = await self.call_llm(context, "Analyze this...", purpose="analysis")
-        
-        # Record business metric
-        await self.metrics_collector.record_custom_metric(
-            pipeline_id=context.pipeline_id,
-            metric_name="analysis_confidence",
-            value=self._extract_confidence(response.content)
-        )
-        
-        context.say(response.content)
-
-class WeatherToolPlugin(ToolPlugin):
-    # metrics_collector automatically injected
-    
-    async def execute_function(self, params: Dict[str, Any]) -> Any:
-        # Record tool-specific metrics
-        await self.metrics_collector.record_custom_metric(
-            pipeline_id=self._current_pipeline_id,  # Available via context
-            metric_name="api_calls",
-            value=1,
-            metadata={
-                "tool_name": "weather",
-                "location": params.get("location"),
-                "cache_hit": False
-            }
-        )
-        
-        return await self._fetch_weather(params["location"])
-```
-
-**MetricsCollectorResource Implementation:**
-```python
-class MetricsCollectorResource(ResourcePlugin):
-    """Shared metrics collection resource injected into all plugins"""
-    
-    name = "metrics_collector"
-    dependencies = ["database"]
-    
-    def __init__(self, config: Dict | None = None):
-        super().__init__(config or {})
-        self.database = None  # Injected by container
-        self.active_pipelines = {}  # Real-time tracking
-        self.metric_buffer = []  # Batch collection
-        
-    # Core collection methods used by framework
-    async def record_plugin_execution(self,
-                                    pipeline_id: str,
-                                    stage: PipelineStage,
-                                    plugin_name: str,
-                                    duration_ms: float,
-                                    success: bool,
-                                    error_type: str = None) -> None:
-        """Record plugin execution (called automatically by BasePlugin)"""
-        
-    async def record_resource_operation(self,
-                                      pipeline_id: str,
-                                      resource_name: str,
-                                      operation: str,
-                                      duration_ms: float,
-                                      success: bool,
-                                      metadata: Dict[str, Any] = None) -> None:
-        """Record resource usage (called by resource wrappers)"""
-        
-    # Plugin-facing methods for custom metrics
-    async def record_custom_metric(self,
-                                 pipeline_id: str,
-                                 metric_name: str,
-                                 value: float,
-                                 metadata: Dict[str, Any] = None) -> None:
-        """Allow plugins to record domain-specific metrics"""
-        
-    async def increment_counter(self,
-                              pipeline_id: str,
-                              counter_name: str,
-                              increment: int = 1,
-                              metadata: Dict[str, Any] = None) -> None:
-        """Increment a named counter (e.g., API calls, tool uses)"""
-        
-    # Analytics and querying
-    async def get_unified_agent_log(self, 
-                                   pipeline_id: str = None,
-                                   user_id: str = None,
-                                   time_range: tuple = None) -> List[Dict[str, Any]]:
-        """Get complete unified log for agent execution"""
-        
-    async def get_performance_summary(self, agent_name: str, hours: int = 24) -> Dict[str, Any]:
-        """Complete agent performance summary"""
-```
-
-**Automatic Dependency Injection:**
-```python
-# In SystemInitializer
-class SystemInitializer:
-    def _register_plugins(self):
-        # Automatically add metrics_collector to all plugin dependencies
-        for plugin_class in self.plugin_classes:
-            if "metrics_collector" not in plugin_class.dependencies:
-                plugin_class.dependencies.append("metrics_collector")
-    
-    async def initialize(self):
-        # Ensure metrics_collector is always available
-        if "metrics_collector" not in self.config["plugins"]["resources"]:
-            self.config["plugins"]["resources"]["metrics_collector"] = {
-                "type": "entity.resources.metrics_collector:MetricsCollectorResource"
-            }
-        
-        # Standard initialization continues...
-```
-
-**Resource Operation Wrapping:**
-```python
-# All resources automatically track operations
-class ResourcePlugin:
-    dependencies = ["metrics_collector"]  # Automatic for all resources
-    
-    async def _track_operation(self, operation: str, func: Callable, context: PluginContext = None, **metadata):
-        """Automatic operation tracking for all resources"""
-        start_time = time.perf_counter()
-        try:
-            result = await func()
-            duration_ms = (time.perf_counter() - start_time) * 1000
-            
-            await self.metrics_collector.record_resource_operation(
-                pipeline_id=context.pipeline_id if context else "system",
-                resource_name=self.name,
-                operation=operation,
-                duration_ms=duration_ms,
-                success=True,
-                metadata=metadata
-            )
-            return result
-        except Exception as e:
-            duration_ms = (time.perf_counter() - start_time) * 1000
-            await self.metrics_collector.record_resource_operation(
-                pipeline_id=context.pipeline_id if context else "system",
-                resource_name=self.name,
-                operation=operation,
-                duration_ms=duration_ms,
-                success=False,
-                metadata={**metadata, "error": str(e), "error_type": e.__class__.__name__}
-            )
-            raise
-
-# LLM usage automatically tracked
-class LLMResource(ResourcePlugin):
-    async def generate(self, prompt: str, context: PluginContext) -> LLMResponse:
-        return await self._track_operation(
-            operation="generate",
-            func=lambda: self._actual_generate(prompt),
-            context=context,
-            prompt_length=len(prompt),
-            model=self.model_name,
-            estimated_tokens=len(prompt.split())
-        )
-```
-
-**Unified Agent Log Query:**
-```python
-# Get complete picture of agent execution
-metrics = agent.get_resource("metrics_collector")
-
-# Complete agent activity log
-unified_log = await metrics.get_unified_agent_log(
-    user_id="user123",
-    time_range=(start_time, end_time)
-)
-
-# Results include:
-# - Pipeline executions with stages
-# - Plugin executions with performance
-# - Resource operations with metadata  
-# - Custom metrics from plugins
-# - Error tracking and success rates
-# - Complete traceability per user/pipeline
-```
-
-**Configuration (Minimal):**
-```yaml
-plugins:
-  resources:
-    # metrics_collector automatically added if not present
-    metrics_collector:
-      type: entity.resources.metrics_collector:MetricsCollectorResource
-      # No explicit dependencies needed - auto-configured
-      retention_days: 90
-      buffer_size: 1000
-```
-
-**Key Benefits:**
-1. **Zero plugin overhead**: Automatic injection, no manual setup required
-2. **Unified data model**: All metrics flow through single collection point
-3. **Complete agent visibility**: Every operation tracked automatically
-4. **Custom metrics support**: Plugins can add domain-specific measurements
-5. **Consistent performance data**: Same collection mechanism across all components
-6. **Simplified analytics**: Single source of truth for agent performance
-
-This approach creates a **unified agent execution log** where every operation, from high-level pipeline stages down to individual resource calls, flows through the same metrics collector. Plugin developers get rich metrics automatically while having the option to add custom business metrics as needed.
-
 
 ## Architectural Decisions not Reviewed
 Future Features List
@@ -2260,6 +1995,5 @@ Future Features List
 - Plugin Discovery and Distribution Architecture - Plugin registry, search, installation, versioning, and security validation
 - Logging
 - .env credential interpolation
-- `MetricsCollector` and telemetry
 - `core` versus `community` plugin separation
 - Import paths / circular imports

@@ -1,6 +1,19 @@
 import logging
+import sys
+from importlib import util
+from pathlib import Path
 
-from cli.plugin_tool.main import PluginToolArgs, PluginToolCLI
+module_name = "cli.plugin_tool.main"
+module_path = Path(__file__).resolve().parents[1] / "src/cli/plugin_tool/main.py"
+spec = util.spec_from_file_location(
+    module_name, module_path, submodule_search_locations=[str(module_path.parent)]
+)
+plugin_module = util.module_from_spec(spec)
+assert spec is not None and spec.loader is not None
+sys.modules[module_name] = plugin_module
+spec.loader.exec_module(plugin_module)
+PluginToolArgs = plugin_module.PluginToolArgs
+PluginToolCLI = plugin_module.PluginToolCLI
 
 
 def _create_tmp_plugin(tmp_path):
