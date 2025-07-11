@@ -95,7 +95,7 @@ def __getattr__(name: str) -> Any:
     heavy_imports = {
         "Agent": "pipeline.agent",
         "Pipeline": "pipeline.workflow",
-        "Workflow": "pipeline.pipeline",
+        "Workflow": "pipeline.workflow",
         "execute_pipeline": "pipeline.pipeline",
         "create_default_response": "pipeline.pipeline",
         "create_static_error_response": "pipeline.errors",

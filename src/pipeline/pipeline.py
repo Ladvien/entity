@@ -31,6 +31,7 @@ from .exceptions import (
 )
 from .observability.tracing import start_span
 from .stages import PipelineStage
+from .workflow import Workflow
 from .tools.execution import execute_pending_tools
 from .workflow import Workflow
 
