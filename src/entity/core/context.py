@@ -128,6 +128,16 @@ class PluginContext:
         )
         return result_key
 
+    def discover_tools(self, **filters: Any) -> list[tuple[str, Any]]:
+        """Return registered tools matching ``filters``."""
+        discover = getattr(self._registries.tools, "discover", None)
+        if callable(discover):
+            return discover(**filters)
+        # Fallback: return all tools if registry lacks discovery helper
+        return [
+            (n, t) for n, t in getattr(self._registries.tools, "_tools", {}).items()
+        ]
+
     # ------------------------------------------------------------------
     # Stage result helpers
     # ------------------------------------------------------------------

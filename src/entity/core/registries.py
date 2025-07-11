@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Dict, List
+import time
 
 
 class PluginRegistry:
@@ -42,16 +43,61 @@ class PluginRegistry:
 
 
 class ToolRegistry:
-    """Store registered tools."""
+    """Store registered tools with basic caching and discovery."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self, *, concurrency_limit: int = 5, cache_ttl: int | None = None
+    ) -> None:
         self._tools: Dict[str, Callable[..., Awaitable[Any]]] = {}
+        self.concurrency_limit = concurrency_limit
+        self.cache_ttl = cache_ttl
+        self._cache: Dict[tuple[str, frozenset[tuple[str, Any]]], tuple[Any, float]] = (
+            {}
+        )
 
     async def add(self, name: str, tool: Callable[..., Awaitable[Any]]) -> None:
         self._tools[name] = tool
 
     def get(self, name: str) -> Callable[..., Awaitable[Any]] | None:
         return self._tools.get(name)
+
+    def discover(
+        self, *, name: str | None = None, intent: str | None = None
+    ) -> list[tuple[str, Any]]:
+        """Return tools filtered by ``name`` or ``intent``."""
+        items = list(self._tools.items())
+        if name is not None:
+            n = name.lower()
+            items = [(k, v) for k, v in items if n in k.lower()]
+        if intent is not None:
+            i = intent.lower()
+            items = [
+                (k, v)
+                for k, v in items
+                if any(i in t.lower() for t in getattr(v, "intents", []))
+            ]
+        return items
+
+    async def get_cached_result(self, name: str, params: Dict[str, Any]) -> Any | None:
+        if self.cache_ttl is None:
+            return None
+        key = (name, frozenset(params.items()))
+        item = self._cache.get(key)
+        if not item:
+            return None
+        result, timestamp = item
+        if time.time() - timestamp > self.cache_ttl:
+            self._cache.pop(key, None)
+            return None
+        return result
+
+    async def cache_result(
+        self, name: str, params: Dict[str, Any], result: Any
+    ) -> None:
+        if self.cache_ttl is None:
+            return
+        key = (name, frozenset(params.items()))
+        self._cache[key] = (result, time.time())
 
 
 @dataclass
