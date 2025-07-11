@@ -49,6 +49,19 @@ if context.has("answer"):
     result = context.load("answer")
 ```
 
+## Queued Tool Results
+
+`queue_tool_use()` returns a key that identifies the pending call. The pipeline
+executes queued tools after the stage completes and stores each result under its
+key. Use `context.load(result_key)` in a later stage to read the value.
+
+```python
+result_key = context.queue_tool_use("search", query="open source ai")
+
+# Later, after queued tools run
+search_results = context.load(result_key)
+```
+
 ## Advanced API
 
 Some less common operations are exposed through `context.advanced`.
