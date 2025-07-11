@@ -240,6 +240,22 @@ poetry run entity-cli serve-websocket --config config/dev.yaml
 When implementing custom error handling, see the failure plugin template at
 `src/cli/templates/failure.py` and the [error handling guide](error_handling.md).
 
+## Analyze Plugin Functions
+
+Use the plugin analysis tool to see which pipeline stages a plain async function
+would run under. The tool relies on ``PluginAutoClassifier`` to infer the best
+plugin wrapper.
+
+```bash
+poetry run python src/cli/plugin_tool/main.py analyze-plugin path/to/plugin.py
+```
+
+Example output:
+
+```text
+INFO     greet -> THINK
+```
+
 ## Troubleshooting Plugins
 - **Plugin not executing** – confirm the `stages` list contains the desired pipeline stage.
 - **Missing dependency** – ensure the plugin name appears in `plugins.resources` or `plugins.tools`.

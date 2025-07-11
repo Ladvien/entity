@@ -20,4 +20,4 @@ Check the [hero landing page](https://entity.readthedocs.io/en/latest/) for a vi
 poetry run entity-cli --config config/dev.yaml
 ```
 
-See the [Quick Start](docs/source/quick_start.md) for step-by-step setup or browse the [full documentation](https://entity.readthedocs.io/en/latest/).
+See the [Quick Start](docs/source/quick_start.md) for step-by-step setup or browse the [full documentation](https://entity.readthedocs.io/en/latest/). For plugin inspection see the [Analyze Plugin Functions](docs/source/plugin_guide.md#analyze-plugin-functions) section.
