@@ -77,6 +77,16 @@ class ToolRegistryConfig(BaseModel):
     concurrency_limit: int = 5
 
 
+class CircuitBreakerConfig(BaseModel):
+    """Circuit breaker configuration."""
+
+    failure_threshold: int = 3
+    recovery_timeout: float = 60.0
+
+    class Config:
+        extra = "allow"
+
+
 class EntityConfig(BaseModel):
     server: ServerConfig = Field(
         default_factory=lambda: ServerConfig(host="localhost", port=8000)
@@ -84,6 +94,9 @@ class EntityConfig(BaseModel):
     plugins: PluginsSection = Field(default_factory=PluginsSection)
     workflow: Dict[str, list[str]] | None = Field(default=None)
     tool_registry: ToolRegistryConfig = Field(default_factory=ToolRegistryConfig)
+    runtime_validation_breaker: CircuitBreakerConfig = Field(
+        default_factory=CircuitBreakerConfig
+    )
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "EntityConfig":
@@ -111,6 +124,7 @@ __all__ = [
     "PluginsSection",
     "ServerConfig",
     "ToolRegistryConfig",
+    "CircuitBreakerConfig",
     "EntityConfig",
     "validate_config",
     "asdict",
