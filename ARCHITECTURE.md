@@ -1938,9 +1938,6 @@ This architecture maintains your existing stateless execution model while provid
 
 
 
-
-
-
 ## 27. Layer 0: Zero-Config Developer Experience
 
 **Decision**: Implement a "Layer 0" that provides immediate functionality with zero configuration, using local-first resources and decorator-based auto-magic patterns.
@@ -1967,6 +1964,44 @@ def summarizer(text: str) -> str:
 
 # Agent works immediately
 response = agent.chat("What's 15*23? Also summarize this article...")
+```
+
+**Complete Stage Decorator Set:**
+
+**Full 6-Stage Coverage**
+```python
+@agent.input     # → INPUT stage
+def http_handler(request_data: dict) -> dict:
+    return {"user_message": request_data.get("message", "")}
+
+@agent.parse     # → PARSE stage  
+def extract_entities(message: str) -> dict:
+    return {"entities": extract_important_info(message)}
+
+@agent.prompt    # → THINK stage
+def reasoning(message: str) -> str:
+    return f"Analyze this request: {message}"  # LLM automatically called
+
+@agent.tool      # → DO stage
+def weather_check(location: str) -> dict:
+    return get_weather_data(location)
+
+@agent.review    # → REVIEW stage
+def validate_response(response: str) -> str:
+    return f"Check if this response is appropriate: {response}"
+
+@agent.output    # → OUTPUT stage
+def format_json(content: str) -> dict:
+    return {"response": content, "timestamp": datetime.now()}
+
+# Generic decorator with explicit stage
+@agent.plugin(stage=THINK)
+def custom_reasoning():
+    pass
+
+@agent.plugin(stages=[PARSE, REVIEW])  # Multi-stage
+def data_validator():
+    pass
 ```
 
 **Default Resource Stack:**
@@ -2021,13 +2056,17 @@ preferred_models = [
 **Implementation Patterns:**
 
 **1. Auto-Registration Decorators**
-- `@agent.tool` functions auto-register to DO stage
+- `@agent.input` functions auto-register to INPUT stage
+- `@agent.parse` functions auto-register to PARSE stage
 - `@agent.prompt` functions auto-register to THINK stage with LLM integration
+- `@agent.tool` functions auto-register to DO stage
+- `@agent.review` functions auto-register to REVIEW stage with LLM integration
+- `@agent.output` functions auto-register to OUTPUT stage
 - Functions automatically added to global agent instance
 - No explicit plugin class creation required
 
 **2. Auto-LLM Integration**
-- Functions decorated with `@agent.prompt` automatically call LLM
+- Functions decorated with `@agent.prompt` and `@agent.review` automatically call LLM
 - Return strings treated as prompts sent to Ollama
 - LLM response becomes function's actual return value
 - Eliminates manual `await context.call_llm()` boilerplate
@@ -2037,9 +2076,48 @@ preferred_models = [
 @agent.prompt
 def contextual_chat(message: str, context) -> str:
     # Context parameter triggers auto-injection
-    history = context.memory.get("chat_history", [])
-    context.memory.remember("last_interaction", message)
+    history = await context.recall("chat_history", [])
+    await context.remember("last_interaction", message)
     return f"Given conversation history {history}, respond to: {message}"
+
+@agent.input
+def smart_input(request: dict, context) -> dict:
+    # INPUT stage can access context for preprocessing
+    user_prefs = await context.recall("user_preferences", {})
+    return {"message": request["text"], "preferences": user_prefs}
+```
+
+**Complete Pipeline Example:**
+```python
+from entity import agent
+
+@agent.input
+def web_input(request: dict) -> str:
+    return request.get("message", "")
+
+@agent.parse
+def extract_intent(message: str) -> dict:
+    return {"intent": classify_intent(message), "entities": extract_entities(message)}
+
+@agent.prompt
+def plan_response(message: str, context) -> str:
+    parsed = await context.reflect("extracted_data", {})
+    return f"Plan response for intent: {parsed.get('intent')} with message: {message}"
+
+@agent.tool
+def search_knowledge(query: str) -> dict:
+    return {"results": search_database(query)}
+
+@agent.review  
+def check_quality(response: str) -> str:
+    return f"Review this response for accuracy and helpfulness: {response}"
+
+@agent.output
+def format_response(content: str) -> dict:
+    return {"response": content, "status": "success"}
+
+# Agent automatically handles full pipeline
+response = agent.chat("What's the weather like?")
 ```
 
 **Graceful Setup Experience:**
@@ -2081,12 +2159,12 @@ def precise_chat(message: str) -> str:
 # Layer 2: Access context/resources
 @agent.prompt
 def memory_chat(message: str, context) -> str:
-    context.memory.remember("topic", extract_topic(message))
+    await context.remember("topic", extract_topic(message))
     return f"Respond to: {message}"
 
 # Layer 3: Full plugin classes
 class AdvancedChatPlugin(PromptPlugin):
-    stages = [PipelineStage.THINK]
+    stage = THINK
     dependencies = ["llm", "memory", "vector_store"]
 ```
 
@@ -2097,6 +2175,7 @@ class AdvancedChatPlugin(PromptPlugin):
 4. **Decorator-based simplicity** - familiar Python patterns, minimal learning curve
 5. **Auto-magic with escape hatches** - magic behavior with clear upgrade paths
 6. **Resource abstraction** - hide complexity while maintaining full power
+7. **Complete pipeline coverage** - decorators for all 6 stages
 
 **Benefits:**
 - **Privacy by default**: Data never leaves user's machine during development
@@ -2104,10 +2183,28 @@ class AdvancedChatPlugin(PromptPlugin):
 - **Offline development**: Works without internet connectivity
 - **Educational value**: Users learn local AI deployment patterns
 - **Production graduation**: Easy scaling to cloud resources when needed
+- **Full pipeline control**: Can build complete agents with just decorators
 
 This Layer 0 positions the framework as the **"local-first AI agent framework"** while maintaining full architectural compatibility with enterprise-scale deployments through existing progressive disclosure layers.
 
-Perfect! OpenTofu + Terragrunt + extensible templates through plugins - that's a much more robust and future-proof approach. Let me design this architecture.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## 28. Infrastructure Components: Docker + OpenTofu Architecture
 
