@@ -53,9 +53,15 @@ def test_agent_initializer_preserves_yaml_order(tmp_path):
     config = {
         "plugins": {
             "prompts": {
-                "second": {"type": "tests.test_core_plugin_registry_order:Second"},
-                "first": {"type": "tests.test_core_plugin_registry_order:First"},
-                "third": {"type": "tests.test_core_plugin_registry_order:Third"},
+                "second": {
+                    "type": "tests.test_core.test_core_plugin_registry_order:Second"
+                },
+                "first": {
+                    "type": "tests.test_core.test_core_plugin_registry_order:First"
+                },
+                "third": {
+                    "type": "tests.test_core.test_core_plugin_registry_order:Third"
+                },
             }
         }
     }
