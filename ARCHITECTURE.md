@@ -313,8 +313,9 @@ This taxonomy provides a clear mental model for developers while maintaining the
 **Decision**: Maintain current 3-layer structure with improved transitions and guided discovery.
 
 **Layer Structure**:
+- **Layer 0**: Zero-config quick start (see [Layer 0: Zero-Config Developer Experience](#27-layer-0-zero-config-developer-experience))
 - **Layer 1**: Function decorators (`@agent.plugin`) with auto-classification
-- **Layer 2**: Class-based plugins with explicit control  
+- **Layer 2**: Class-based plugins with explicit control
 - **Layer 3**: Advanced plugins with sophisticated pipeline access
 
 **Enhancements**:
