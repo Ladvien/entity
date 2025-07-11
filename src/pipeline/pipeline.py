@@ -65,6 +65,7 @@ class Pipeline:
         message: str,
         capabilities: SystemRegistries,
         *,
+        user_id: str | None = None,
         state_logger: StateLogger | None = None,
         state: PipelineState | None = None,
         max_iterations: int = 5,
@@ -86,6 +87,7 @@ class Pipeline:
         return await execute_pipeline(
             message,
             regs,
+            user_id=user_id,
             state_logger=state_logger,
             state=state,
             max_iterations=max_iterations,
@@ -113,7 +115,7 @@ async def execute_stage(
     start = time.perf_counter()
     async with start_span(f"stage.{stage.name.lower()}"):
         for plugin in stage_plugins:
-            context = PluginContext(state, registries)
+            context = PluginContext(state, registries, user_id)
             context.set_current_stage(stage)
             if registries.validators is not None:
                 await registries.validators.validate(stage, context)
@@ -243,12 +245,14 @@ async def execute_pipeline(
     user_message: str,
     capabilities: SystemRegistries,
     *,
+    user_id: str | None = None,
     state_logger: "StateLogger" | None = None,
     state: PipelineState | None = None,
     max_iterations: int = 5,
 ) -> Dict[str, Any]:
     if capabilities is None:
         raise TypeError("capabilities is required")
+    user_id = user_id or "default"
     if state is None:
         state = PipelineState(
             conversation=[
@@ -258,7 +262,7 @@ async def execute_pipeline(
                     timestamp=datetime.now(),
                 )
             ],
-            pipeline_id=generate_pipeline_id(),
+            pipeline_id=f"{user_id}_{generate_pipeline_id()}",
         )
     start = time.time()
     async with capabilities.resources:

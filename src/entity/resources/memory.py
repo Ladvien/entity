@@ -70,9 +70,11 @@ class Memory(ResourcePlugin):
     async def save_conversation(
         self, conversation_id: str, history: List[ConversationEntry]
     ) -> None:
+        """Persist a conversation history under ``conversation_id``."""
         self._conversations[conversation_id] = list(history)
 
     async def load_conversation(self, conversation_id: str) -> List[ConversationEntry]:
+        """Return the history for ``conversation_id`` or an empty list."""
         return list(self._conversations.get(conversation_id, []))
 
     # ------------------------------------------------------------------

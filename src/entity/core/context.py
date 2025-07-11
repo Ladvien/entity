@@ -15,9 +15,12 @@ from pipeline.stages import PipelineStage
 class PluginContext:
     """Runtime context passed to plugins."""
 
-    def __init__(self, state: PipelineState, registries: Any) -> None:
+    def __init__(
+        self, state: PipelineState, registries: Any, user_id: str | None = None
+    ) -> None:
         self._state = state
         self._registries = registries
+        self._user_id = user_id or "default"
         self._memory = getattr(registries.resources, "memory", None)
 
     # ------------------------------------------------------------------
@@ -31,6 +34,10 @@ class PluginContext:
     @property
     def pipeline_id(self) -> str:
         return self._state.pipeline_id
+
+    @property
+    def user_id(self) -> str:
+        return self._user_id
 
     @property
     def response(self) -> Any:
@@ -150,13 +157,15 @@ class PluginContext:
     def remember(self, key: str, value: Any) -> None:
         """Persist ``value`` in the configured memory resource."""
         if self._memory is not None:
-            self._memory.remember(key, value)
+            namespaced_key = f"{self._user_id}:{key}"
+            self._memory.remember(namespaced_key, value)
 
     def memory(self, key: str, default: Any | None = None) -> Any:
         """Retrieve a value from persistent memory."""
         if self._memory is None:
             return default
-        return self._memory.get(key, default)
+        namespaced_key = f"{self._user_id}:{key}"
+        return self._memory.get(namespaced_key, default)
 
     def set_metadata(self, key: str, value: Any) -> None:
         self._state.metadata[key] = value

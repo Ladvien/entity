@@ -154,19 +154,25 @@ class Agent:
             raise PipelineError("Agent not initialized; call an async method")
         return self._runtime
 
-    async def run_message(self, message: str) -> Dict[str, Any]:
+    async def run_message(
+        self, message: str, *, user_id: str | None = None
+    ) -> Dict[str, Any]:
         """Run ``message`` through the runtime pipeline and return results."""
 
         await self._ensure_runtime()
         if self._runtime is None:  # pragma: no cover - sanity check
             raise RuntimeError("Runtime not initialized")
         runtime = cast(AgentRuntime, self._runtime)
-        return cast(Dict[str, Any], await runtime.run_pipeline(message))
+        return cast(
+            Dict[str, Any], await runtime.run_pipeline(message, user_id=user_id)
+        )
 
-    async def handle(self, message: str) -> Dict[str, Any]:
+    async def handle(
+        self, message: str, *, user_id: str | None = None
+    ) -> Dict[str, Any]:
         """Public alias for :meth:`run_message`."""
 
-        return await self.run_message(message)
+        return await self.run_message(message, user_id=user_id)
 
     def get_capabilities(self) -> SystemRegistries:
         if self._runtime is None:

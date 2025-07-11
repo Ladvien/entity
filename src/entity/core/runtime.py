@@ -20,11 +20,15 @@ class _AgentRuntime:
     def __post_init__(self) -> None:
         self.manager = None
 
-    async def run_pipeline(self, message: str) -> Dict[str, Any]:
-        return {"message": message}
+    async def run_pipeline(
+        self, message: str, *, user_id: str | None = None
+    ) -> Dict[str, Any]:
+        return {"message": message, "user_id": user_id or "default"}
 
-    async def handle(self, message: str) -> Dict[str, Any]:
-        return await self.run_pipeline(message)
+    async def handle(
+        self, message: str, *, user_id: str | None = None
+    ) -> Dict[str, Any]:
+        return await self.run_pipeline(message, user_id=user_id)
 
 
 # Public alias for backwards compatibility and clearer imports
