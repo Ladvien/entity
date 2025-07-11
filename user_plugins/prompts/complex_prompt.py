@@ -10,10 +10,10 @@ from pipeline.stages import PipelineStage
 
 
 class ComplexPrompt(PromptPlugin):
-    """Generate responses using DB history and vector memory.
+    """Generate responses using the unified Memory resource.
 
-    Demonstrates **Plugin Composition (10)** by orchestrating multiple resources
-    and memory components to craft a single reply.
+    Demonstrates **Plugin Composition (10)** by orchestrating database,
+    vector store, and memory helpers to craft a single reply.
     """
 
     dependencies = ["llm", "memory"]
