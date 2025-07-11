@@ -40,7 +40,6 @@ The following architecture decisions were made through systematic analysis of th
   - [16. Pipeline State Management Strategy](#16-pipeline-state-management-strategy)
   - [17. Plugin Execution Order Simplification](#17-plugin-execution-order-simplification)
   - [18. Configuration Validation Consolidation](#18-configuration-validation-consolidation)
-  - [Summary So Far ✅](#summary-so-far-)
   - [19. Reasoning Pattern Abstraction Strategy](#19-reasoning-pattern-abstraction-strategy)
   - [20. Memory Architecture: Primitive Resources + Custom Plugins](#20-memory-architecture-primitive-resources--custom-plugins)
   - [21. Tool Discovery Architecture: Lightweight Registry Query + Plugin-Level Orchestration](#21-tool-discovery-architecture-lightweight-registry-query--plugin-level-orchestration)
@@ -527,6 +526,12 @@ class MemoryResource:
 **Related Decisions**: See [Memory Resource Consolidation](#10-memory-resource-consolidation) for how conversation state is structured, and [Multi-User Support](#29-multi-user-support-user_id-parameter-pattern) for user isolation patterns within this architecture.
 
 
+
+
+
+
+
+
 ## 7. Response Termination Control
 
 **Decision**: Only DELIVER stage plugins can set the final pipeline response that terminates the iteration loop.
@@ -542,10 +547,36 @@ class MemoryResource:
 - Makes pipeline flow predictable and debuggable
 
 **Implementation**: 
-- `context.set_response()` method restricted to DELIVER stage plugins only
- - Pipeline continues looping (PARSE → THINK → DO → REVIEW → DELIVER) until a DELIVER plugin calls `set_response()`
- - Earlier stages use `context.store()` to cache intermediate outputs for DELIVER plugins to access
+- `context.say()` method restricted to DELIVER stage plugins only (sets final response)
+- Pipeline continues looping (PARSE → THINK → DO → REVIEW → DELIVER) until a DELIVER plugin calls `say()`
+- Earlier stages use `context.think()` to store intermediate thoughts for DELIVER plugins to access via `context.reflect()`
 - Maximum iteration limit (default 5) prevents infinite loops when no DELIVER plugin sets a response
+
+**Usage Pattern**:
+```python
+# THINK stage - store analysis for later use
+class ReasoningPlugin(PromptPlugin):
+    stages = [PipelineStage.THINK]
+    
+    async def _execute_impl(self, context: PluginContext) -> None:
+        analysis = await self.call_llm(context, "Analyze this request...")
+        await context.think("reasoning_result", analysis.content)
+        # No context.say() - plugin cannot terminate pipeline
+
+# DELIVER stage - compose final response
+class ResponsePlugin(PromptPlugin):
+    stages = [PipelineStage.DELIVER]
+    
+    async def _execute_impl(self, context: PluginContext) -> None:
+        reasoning = await context.reflect("reasoning_result", "")
+        
+        final_response = await self.call_llm(
+            context,
+            f"Based on analysis: {reasoning}, provide final response"
+        )
+        
+        await context.say(final_response.content)  # This terminates the pipeline
+```
 
 **Benefits**: Ensures consistent output processing, logging, and formatting while maintaining the hybrid pipeline-state machine mental model.
 
@@ -1120,7 +1151,6 @@ class HTTPAdapter(AdapterPlugin):
 
 **Benefits**: Single learning curve, better error attribution, type safety with automatic coercion, and consistent validation experience across the entire framework.
 
-## Summary So Far ✅
 
 ## 19. Reasoning Pattern Abstraction Strategy
 
