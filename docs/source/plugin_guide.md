@@ -205,20 +205,26 @@ resources.register("storage", StorageResource, {})
 await resources.build_all()
 ```
 
-### Vector Memory
+### Extending the Memory Resource
 
-An archived example demonstrated a custom ``ResourcePlugin`` that stored vectors in memory and a prompt plugin that retrieved them:
+Domain-specific plugins should build on the unified ``Memory`` resource rather
+than creating separate vector-memory implementations.  Below is a minimal
+example that attaches a vector store to ``Memory`` and exposes a helper method:
 
 ```python
-class VectorMemoryResource(ResourcePlugin):
+class CustomMemoryPlugin(Memory):
     stages = [PipelineStage.PARSE]
-    name = "vector_memory"
 
-    def add(self, key: str, vector: List[float]) -> None:
-        self.vectors[key] = vector
+    def __init__(self, config: dict) -> None:
+        super().__init__(config)
+        self.vector_store = PgVectorStore(config["vector_store"])
+
+    async def add(self, key: str, vector: list[float]) -> None:
+        await self.vector_store.add_embedding(key, vector)
 ```
 
-Those scripts were good starting points when designing plugins. One example showed registering built‑in tools directly with an ``Agent`` and combining their results.
+This approach keeps the framework focused on powerful primitives while letting
+you experiment with any memory strategy.
 
 ### Adapter and Failure Examples
 

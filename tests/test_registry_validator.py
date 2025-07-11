@@ -5,7 +5,7 @@ import yaml
 from entity.core.plugins import PromptPlugin, ResourcePlugin
 from pipeline.initializer import SystemInitializer
 from pipeline.stages import PipelineStage
-from entity.core.registry_validator import RegistryValidator
+from entity.core.registry_validator import ClassRegistry, RegistryValidator
 
 
 class A(ResourcePlugin):
@@ -47,7 +47,7 @@ class E(PromptPlugin):
         pass
 
 
-class VectorMemoryResource(ResourcePlugin):
+class VectorStoreResource(ResourcePlugin):
     stages = [PipelineStage.PARSE]
 
     async def _execute_impl(self, context):
@@ -56,7 +56,7 @@ class VectorMemoryResource(ResourcePlugin):
 
 class ComplexPrompt(PromptPlugin):
     stages = [PipelineStage.THINK]
-    dependencies = ["vector_memory"]
+    dependencies = ["memory"]
 
     async def _execute_impl(self, context):
         pass
@@ -96,22 +96,25 @@ def test_validator_cycle_detection(tmp_path):
         RegistryValidator(str(path)).run()
 
 
-def test_complex_prompt_requires_vector_memory(tmp_path):
+def test_complex_prompt_requires_vector_store(tmp_path):
     plugins = {
         "prompts": {
             "complex_prompt": {"type": "tests.test_registry_validator:ComplexPrompt"}
         }
     }
     path = _write_config(tmp_path, plugins)
-    with pytest.raises(SystemError, match="vector_memory"):
+    with pytest.raises(SystemError, match="vector store"):
         RegistryValidator(str(path)).run()
 
 
-def test_complex_prompt_with_vector_memory(tmp_path):
+def test_complex_prompt_with_vector_store(tmp_path):
     plugins = {
         "resources": {
-            "vector_memory": {
-                "type": "tests.test_registry_validator:VectorMemoryResource"
+            "memory": {
+                "type": "entity.resources.memory:Memory",
+                "vector_store": {
+                    "type": "tests.test_registry_validator:VectorStoreResource"
+                },
             }
         },
         "prompts": {
@@ -122,11 +125,14 @@ def test_complex_prompt_with_vector_memory(tmp_path):
     RegistryValidator(str(path)).run()
 
 
-def test_vector_memory_requires_postgres(tmp_path):
+def test_memory_requires_postgres(tmp_path):
     plugins = {
         "resources": {
-            "vector_memory": {
-                "type": "plugins.builtin.resources.pg_vector_store:PgVectorStore"
+            "memory": {
+                "type": "entity.resources.memory:Memory",
+                "vector_store": {
+                    "type": "plugins.builtin.resources.pg_vector_store:PgVectorStore"
+                },
             },
             "database": {"type": "tests.test_registry_validator:A"},
         }
@@ -136,11 +142,14 @@ def test_vector_memory_requires_postgres(tmp_path):
         RegistryValidator(str(path)).run()
 
 
-def test_vector_memory_with_postgres(tmp_path):
+def test_memory_with_postgres(tmp_path):
     plugins = {
         "resources": {
-            "vector_memory": {
-                "type": "plugins.builtin.resources.pg_vector_store:PgVectorStore"
+            "memory": {
+                "type": "entity.resources.memory:Memory",
+                "vector_store": {
+                    "type": "plugins.builtin.resources.pg_vector_store:PgVectorStore"
+                },
             },
             "database": {"type": "plugins.builtin.resources.postgres:PostgresResource"},
         }

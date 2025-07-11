@@ -79,7 +79,13 @@ class RegistryValidator:
                 self.dep_graph[name] = list(getattr(cls, "dependencies", []))
                 self._validate_stage_assignment(name, cls)
 
-                if name == "vector_memory" or cls.__name__ == "PgVectorStore":
+                if name == "memory" and isinstance(cfg, dict):
+                    if cfg.get("vector_store"):
+                        self.has_vector_memory = True
+                        vs_type = cfg["vector_store"].get("type", "")
+                        if vs_type.endswith("PgVectorStore"):
+                            self.uses_pg_vector_store = True
+                if name == "vector_store" or cls.__name__ == "PgVectorStore":
                     self.has_vector_memory = True
                     if cls.__name__ == "PgVectorStore":
                         self.uses_pg_vector_store = True
@@ -135,7 +141,7 @@ class RegistryValidator:
         self._validate_dependencies()
         if self.has_complex_prompt and not self.has_vector_memory:
             raise SystemError(
-                "ComplexPrompt requires the 'vector_memory' resource to be registered"
+                "ComplexPrompt requires the memory resource with a vector store"
             )
         if self.uses_pg_vector_store and not self.has_postgres:
             raise SystemError(
