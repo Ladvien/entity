@@ -41,9 +41,9 @@ def test_builder_load_from_yaml_preserves_order(tmp_path):
     cfg = {
         "plugins": {
             "prompts": {
-                "second": {"type": "test_plugin_order:Second"},
-                "first": {"type": "test_plugin_order:First"},
-                "third": {"type": "test_plugin_order:Third"},
+                "second": {"type": "tests.test_core.test_plugin_order:Second"},
+                "first": {"type": "tests.test_core.test_plugin_order:First"},
+                "third": {"type": "tests.test_core.test_plugin_order:Third"},
             }
         }
     }
