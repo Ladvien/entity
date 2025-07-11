@@ -13,6 +13,7 @@ class DuckDBDatabaseResource(ResourcePlugin):
 
     name = "duckdb_database"
     stages: list = []
+    dependencies: list[str] = []
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
