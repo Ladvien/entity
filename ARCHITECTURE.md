@@ -2,34 +2,63 @@
 
 The following architecture decisions were made through systematic analysis of the Entity Pipeline Framework to optimize for developer adoption, scalability, and maintainability.
 
-* [0. Folder Structure and Naming Conventions](#0-folder-structure-and-naming-conventions)
-* [1. Core Mental Model: Plugin Taxonomy and Architecture](#1-core-mental-model-plugin-taxonomy-and-architecture)
-* [2. Progressive Disclosure: Enhanced 3-Layer Plugin System](#2-progressive-disclosure-enhanced-3-layer-plugin-system)
-* [3. Resource Management: Core Canonical + Simple Flexible Keys](#3-resource-management-core-canonical--simple-flexible-keys)
-* [4. Plugin Stage Assignment: Guided Explicit Declaration with Smart Defaults](#4-plugin-stage-assignment-guided-explicit-declaration-with-smart-defaults)
-* [5. Error Handling and Validation: Fail-Fast with Multi-Layered Validation](#5-error-handling-and-validation-fail-fast-with-multi-layered-validation)
-* [6. Scalability Architecture: Stateless Workers with External State](#6-scalability-architecture-stateless-workers-with-external-state)
-* [6. Response Termination Control](#6-response-termination-control)
-* [7. Stage Results Accumulation Pattern](#7-stage-results-accumulation-pattern)
-* [8. Tool Execution Patterns](#8-tool-execution-patterns)
-* [9. Memory Resource Consolidation](#9-memory-resource-consolidation)
-* [10. Resource Dependency Injection Pattern](#10-resource-dependency-injection-pattern)
-* [11. Plugin Stage Assignment Precedence](#11-plugin-stage-assignment-precedence)
-* [12. Resource Lifecycle Management](#12-resource-lifecycle-management)
-* [13. Configuration Hot-Reload Scope](#13-configuration-hot-reload-scope)
-* [14. Error Handling and Failure Propagation](#14-error-handling-and-failure-propagation)
-* [15. Pipeline State Management Strategy](#15-pipeline-state-management-strategy)
-* [16. Plugin Execution Order Simplification](#16-plugin-execution-order-simplification)
-* [17. Agent and AgentBuilder Separation](#17-agent-and-agentbuilder-separation)
-* [18. Configuration Validation Consolidation](#18-configuration-validation-consolidation)
-* [19. Reasoning Pattern Abstraction Strategy](#19-reasoning-pattern-abstraction-strategy)
-* [20. Memory Architecture: Primitive Resources + Custom Plugins](#20-memory-architecture-primitive-resources--custom-plugins)
-* [21. Tool Discovery Architecture: Lightweight Registry Query + Plugin-Level Orchestration](#21-tool-discovery-architecture-lightweight-registry-query--plugin-level-orchestration)
-* [22. Plugin System Architecture: Explicit Configuration with Smart Defaults](#22-plugin-system-architecture-explicit-configuration-with-smart-defaults)
-* [23. State Management Consolidation: Unified Cache/Memory Pattern](#23-state-management-consolidation-unified-cachememory-pattern)
-* [24. Agent Instantiation Unification: Single Agent Class Pattern](#24-agent-instantiation-unification-single-agent-class-pattern)
-* [25. Workflow Objects with Progressive Complexity](#25-workflow-objects-with-progressive-complexity)
-* [26. Workflow Objects: Composable Agent Blueprints](#26-workflow-objects-composable-agent-blueprints)
+- [Architecture Decisions Summary](#architecture-decisions-summary)
+  - [0. Folder Structure and Naming Conventions](#0-folder-structure-and-naming-conventions)
+  - [Repository Layout](#repository-layout)
+  - [1. Core Mental Model: Plugin Taxonomy and Architecture](#1-core-mental-model-plugin-taxonomy-and-architecture)
+    - [**Plugin Categories**](#plugin-categories)
+      - [**Infrastructure Plugins (ResourcePlugin)**](#infrastructure-plugins-resourceplugin)
+      - [**Processing Plugins (Execution Plugins)**](#processing-plugins-execution-plugins)
+      - [**Interface Plugins (AdapterPlugin)**](#interface-plugins-adapterplugin)
+      - [**Specialized Plugins**](#specialized-plugins)
+    - [**Resource Composition Architecture**](#resource-composition-architecture)
+      - [**Required Resources**](#required-resources)
+      - [**Composition Rules**](#composition-rules)
+    - [**Plugin Lifecycle Management**](#plugin-lifecycle-management)
+      - [**Two-Phase Lifecycle**](#two-phase-lifecycle)
+      - [**Lifecycle Characteristics**](#lifecycle-characteristics)
+    - [**Plugin Development Patterns**](#plugin-development-patterns)
+      - [**Stage Assignment Precedence**](#stage-assignment-precedence)
+      - [**Dependency Declaration**](#dependency-declaration)
+      - [**Plugin Registration Order**](#plugin-registration-order)
+    - [**Benefits of Unified Plugin Architecture**](#benefits-of-unified-plugin-architecture)
+    - [**Plugin Validation and Discovery**](#plugin-validation-and-discovery)
+  - [2. Progressive Disclosure: Enhanced 3-Layer Plugin System](#2-progressive-disclosure-enhanced-3-layer-plugin-system)
+  - [3. Resource Management: Core Canonical + Simple Flexible Keys](#3-resource-management-core-canonical--simple-flexible-keys)
+  - [4. Plugin Stage Assignment: Guided Explicit Declaration with Smart Defaults](#4-plugin-stage-assignment-guided-explicit-declaration-with-smart-defaults)
+  - [5. Error Handling and Validation: Fail-Fast with Multi-Layered Validation](#5-error-handling-and-validation-fail-fast-with-multi-layered-validation)
+  - [7. Response Termination Control](#7-response-termination-control)
+  - [8. Stage Results Accumulation Pattern](#8-stage-results-accumulation-pattern)
+  - [9. Tool Execution Patterns](#9-tool-execution-patterns)
+  - [10. Memory Resource Consolidation](#10-memory-resource-consolidation)
+  - [11. Resource Dependency Injection Pattern](#11-resource-dependency-injection-pattern)
+  - [12. Plugin Stage Assignment Precedence](#12-plugin-stage-assignment-precedence)
+  - [13. Resource Lifecycle Management](#13-resource-lifecycle-management)
+  - [14. Configuration Hot-Reload Scope](#14-configuration-hot-reload-scope)
+  - [15. Error Handling and Failure Propagation](#15-error-handling-and-failure-propagation)
+  - [16. Pipeline State Management Strategy](#16-pipeline-state-management-strategy)
+  - [17. Plugin Execution Order Simplification](#17-plugin-execution-order-simplification)
+  - [18. Configuration Validation Consolidation](#18-configuration-validation-consolidation)
+  - [Summary So Far ✅](#summary-so-far-)
+  - [19. Reasoning Pattern Abstraction Strategy](#19-reasoning-pattern-abstraction-strategy)
+  - [20. Memory Architecture: Primitive Resources + Custom Plugins](#20-memory-architecture-primitive-resources--custom-plugins)
+  - [21. Tool Discovery Architecture: Lightweight Registry Query + Plugin-Level Orchestration](#21-tool-discovery-architecture-lightweight-registry-query--plugin-level-orchestration)
+  - [22. Plugin System Architecture: Explicit Configuration with Smart Defaults](#22-plugin-system-architecture-explicit-configuration-with-smart-defaults)
+    - [Rationale](#rationale)
+    - [Implementation Pattern](#implementation-pattern)
+    - [Key Principles](#key-principles)
+  - [23. State Management Consolidation: Unified Cache/Memory Pattern](#23-state-management-consolidation-unified-cachememory-pattern)
+    - [Rationale](#rationale-1)
+    - [Unified API Pattern](#unified-api-pattern)
+    - [Key Principles](#key-principles-1)
+  - [24. Agent Instantiation Unification: Single Agent Class Pattern](#24-agent-instantiation-unification-single-agent-class-pattern)
+    - [Rationale](#rationale-2)
+    - [Unified API Pattern](#unified-api-pattern-1)
+    - [Key Principles](#key-principles-2)
+  - [25. Workflow Objects with Progressive Complexity](#25-workflow-objects-with-progressive-complexity)
+  - [26. Workflow Objects: Composable Agent Blueprints](#26-workflow-objects-composable-agent-blueprints)
+  - [27. Layer 0: Zero-Config Developer Experience](#27-layer-0-zero-config-developer-experience)
+  - [Architectural Decisions not Reviewed](#architectural-decisions-not-reviewed)
 
 ## 0. Folder Structure and Naming Conventions
 
@@ -1036,7 +1065,171 @@ agent = Agent(pipeline=pipeline)
 
 This architecture maintains your existing stateless execution model while providing the higher-level abstractions developers need for complex agent behaviors.
 
+## 27. Layer 0: Zero-Config Developer Experience
 
+**Decision**: Implement a "Layer 0" that provides immediate functionality with zero configuration, using local-first resources and decorator-based auto-magic patterns.
+
+**Core Purpose:**
+- **Instant gratification**: Functional AI agents with 2-3 lines of code
+- **Local-first development**: No API keys, accounts, or external dependencies required
+- **Real AI responses**: Actual LLM inference using Ollama, not mock/echo responses
+- **Friction-free onboarding**: Target "working in 5 minutes" developer experience
+- **Progressive disclosure**: Natural graduation path to advanced framework features
+
+**How it works:**
+```python
+# Zero configuration required
+from entity import agent
+
+@agent.tool
+def calculator(expression: str) -> float:
+    return eval(expression)
+
+@agent.prompt  
+def summarizer(text: str) -> str:
+    return f"Summarize this text: {text}"  # LLM automatically called
+
+# Agent works immediately
+response = agent.chat("What's 15*23? Also summarize this article...")
+```
+
+**Default Resource Stack:**
+
+**1. Ollama LLM Resource (Local AI)**
+```python
+# Auto-configured defaults
+{
+    "base_url": "http://localhost:11434",
+    "model": "llama3.2:3b",              # Balance of speed/capability
+    "temperature": 0.7,
+    "timeout": 30,
+    "retries": 3,
+    "stream": False
+}
+
+# Model selection priority
+preferred_models = [
+    "llama3.2:3b",      # Primary: fast, capable, fits most hardware
+    "llama3.2:1b",      # Fallback: lower-end hardware
+    "phi3:mini",        # Alternative: Microsoft efficient model
+    "gemma2:2b",        # Alternative: Google efficient model
+]
+```
+
+**2. DuckDB Memory Resource (Embedded Database)**
+```python
+# Auto-configured defaults
+{
+    "path": "./agent_memory.duckdb",     # Local file, zero setup
+    "memory_limit": "1GB",
+    "threads": 4,
+    "conversation_table": "conversations",
+    "vector_table": "embeddings", 
+    "vector_dimensions": 384,
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
+}
+```
+
+**3. LocalFileSystem Storage Resource**
+```python
+# Auto-configured defaults
+{
+    "base_path": "./agent_files",
+    "auto_create_dirs": True,
+    "max_file_size": "10MB",
+    "allowed_extensions": [".txt", ".json", ".csv", ".md", ".yaml", ".yml", ".log"],
+    "backup_on_overwrite": True
+}
+```
+
+**Implementation Patterns:**
+
+**1. Auto-Registration Decorators**
+- `@agent.tool` functions auto-register to DO stage
+- `@agent.prompt` functions auto-register to THINK stage with LLM integration
+- Functions automatically added to global agent instance
+- No explicit plugin class creation required
+
+**2. Auto-LLM Integration**
+- Functions decorated with `@agent.prompt` automatically call LLM
+- Return strings treated as prompts sent to Ollama
+- LLM response becomes function's actual return value
+- Eliminates manual `await context.call_llm()` boilerplate
+
+**3. Implicit Resource Access**
+```python
+@agent.prompt
+def contextual_chat(message: str, context) -> str:
+    # Context parameter triggers auto-injection
+    history = context.memory.get("chat_history", [])
+    context.memory.remember("last_interaction", message)
+    return f"Given conversation history {history}, respond to: {message}"
+```
+
+**Graceful Setup Experience:**
+
+**Auto-Discovery and Setup**
+```python
+class Layer0SetupManager:
+    def ensure_ollama(self):
+        # 1. Check Ollama accessibility at localhost:11434
+        # 2. Verify at least one model available
+        # 3. If missing: provide installation instructions
+        # 4. Auto-suggest: ollama pull llama3.2:3b
+        
+    def setup_resources(self):
+        # 1. Create ./agent_memory.duckdb if missing
+        # 2. Create ./agent_files/ directory structure
+        # 3. Initialize conversation/vector tables in DuckDB
+        # 4. Download embedding model for semantic search
+```
+
+**Error Handling Strategy**
+- **Ollama unavailable**: Clear setup instructions with download links
+- **No models installed**: Specific command suggestions (`ollama pull llama3.2:3b`)
+- **Resource creation fails**: Graceful fallback to in-memory alternatives
+- **Always actionable**: Every error includes specific next steps
+
+**Progressive Disclosure Integration:**
+```python
+# Layer 0: Zero config
+@agent.prompt
+def chat(message: str) -> str:
+    return f"Respond to: {message}"
+
+# Layer 1: Add configuration
+@agent.prompt(temperature=0.1, max_tokens=100)
+def precise_chat(message: str) -> str:
+    return f"Respond precisely to: {message}"
+
+# Layer 2: Access context/resources
+@agent.prompt
+def memory_chat(message: str, context) -> str:
+    context.memory.remember("topic", extract_topic(message))
+    return f"Respond to: {message}"
+
+# Layer 3: Full plugin classes
+class AdvancedChatPlugin(PromptPlugin):
+    stages = [PipelineStage.THINK]
+    dependencies = ["llm", "memory", "vector_store"]
+```
+
+**Key Design Principles:**
+1. **Local-first architecture** - works offline, no external services required
+2. **Real AI immediately** - actual LLM responses, not mock/echo behavior
+3. **Zero configuration burden** - sensible defaults for everything
+4. **Decorator-based simplicity** - familiar Python patterns, minimal learning curve
+5. **Auto-magic with escape hatches** - magic behavior with clear upgrade paths
+6. **Resource abstraction** - hide complexity while maintaining full power
+
+**Benefits:**
+- **Privacy by default**: Data never leaves user's machine during development
+- **Cost-free experimentation**: No API billing concerns for learning/testing
+- **Offline development**: Works without internet connectivity
+- **Educational value**: Users learn local AI deployment patterns
+- **Production graduation**: Easy scaling to cloud resources when needed
+
+This Layer 0 positions the framework as the **"local-first AI agent framework"** while maintaining full architectural compatibility with enterprise-scale deployments through existing progressive disclosure layers.
 
 
 ## Architectural Decisions not Reviewed
