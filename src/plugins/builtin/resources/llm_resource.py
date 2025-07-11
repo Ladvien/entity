@@ -11,6 +11,7 @@ class LLMResource(ResourcePlugin):
     """Base class for simple LLM resources."""
 
     name = "llm"
+    dependencies: list[str] = []
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
