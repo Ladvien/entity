@@ -61,3 +61,9 @@ grep -R "<<<<<<<" -n
 ```
 
 Once the search returns no results, run `poetry run pytest` to ensure the repository state is sound.
+
+For historical merges such as `fa36185c`, verify there are no embedded markers by inspecting the commit directly:
+
+```bash
+git show fa36185c | grep '<<<<<<<' || echo "clean"
+```
