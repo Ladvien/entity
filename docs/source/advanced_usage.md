@@ -112,4 +112,23 @@ Start the CLI adapter for a basic text interface:
 
 ```bash
 
+```
+
 `Memory` stores conversation history and key-value data. A removed example demonstrated a simple in-memory cache.
+
+### Running Pipelines with `PipelineWorker`
+
+`PipelineWorker` executes a pipeline outside the main agent process. Each call
+loads the current conversation from `MemoryResource`, runs the stages, and then
+saves the updated history back to the resource. Workers hold no state between
+invocations, so any instance can pick up the next request.
+
+```python
+from entity.core.agent import Agent
+from entity.workers import PipelineWorker
+
+agent = Agent.from_config("config/dev.yaml")
+worker = PipelineWorker(agent.get_capabilities())
+
+result = await worker.execute_pipeline("support", "Hello")
+```
