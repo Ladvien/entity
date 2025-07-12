@@ -58,10 +58,6 @@ class ComplexPrompt(PromptPlugin):
 
         response = await self.call_llm(context, prompt, purpose="complex_prompt")
 
-        context.say(
-            response.content,
-            metadata={"source": "complex_prompt"},
-        )
-        context.set_response(response.content)
+        await context.think("complex_response", response.content)
         if memory:
             await memory.save_conversation(context.pipeline_id, context.conversation())
