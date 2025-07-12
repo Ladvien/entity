@@ -22,12 +22,7 @@ class Memory(AgentResource):
     name = "memory"
     dependencies: list[str] = ["database", "vector_store"]
 
-    def __init__(
-        self,
-        database: DatabaseInterface | None = None,
-        vector_store: VectorStoreInterface | None = None,
-        config: Dict[str, Any] | None = None,
-    ) -> None:
+    def __init__(self, config: Dict[str, Any] | None = None) -> None:
         super().__init__(config or {})
         self.database: DatabaseInterface | None = None
         self.vector_store: VectorStoreInterface | None = None
@@ -36,16 +31,23 @@ class Memory(AgentResource):
         self._history_table = self.config.get("history_table", "conversation_history")
 
     async def initialize(self) -> None:
-        if self.database is not None:
-            self._pool = self.database.get_connection_pool()
-            async with self.database.connection() as conn:
-                conn.execute(
-                    f"CREATE TABLE IF NOT EXISTS {self._kv_table} (key TEXT PRIMARY KEY, value TEXT)"
-                )
-                conn.execute(
-                    f"CREATE TABLE IF NOT EXISTS {self._history_table} ("
-                    "conversation_id TEXT, role TEXT, content TEXT, metadata TEXT, timestamp TEXT)"
-                )
+        if self.database is None or self.vector_store is None:
+            raise InitializationError(
+                self.name,
+                "dependency check",
+                "Database and vector_store must be injected before initialization.",
+                kind="Resource",
+            )
+
+        self._pool = self.database.get_connection_pool()
+        async with self.database.connection() as conn:
+            conn.execute(
+                f"CREATE TABLE IF NOT EXISTS {self._kv_table} (key TEXT PRIMARY KEY, value TEXT)"
+            )
+            conn.execute(
+                f"CREATE TABLE IF NOT EXISTS {self._history_table} ("
+                "conversation_id TEXT, role TEXT, content TEXT, metadata TEXT, timestamp TEXT)"
+            )
 
     async def _execute_impl(self, context: Any) -> None:  # pragma: no cover - stub
         return None

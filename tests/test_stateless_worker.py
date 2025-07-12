@@ -49,7 +49,9 @@ class DummyDatabase(DatabaseResource):
 
 class DummyRegistries:
     def __init__(self, db: DummyDatabase) -> None:
-        self.resources = {"memory": Memory(database=db, config={})}
+        mem = Memory(config={})
+        mem.database = db
+        self.resources = {"memory": mem}
         self.tools = types.SimpleNamespace()
 
 
