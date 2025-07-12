@@ -47,6 +47,31 @@ To make a dependency optional, append `?` to its name, e.g. `vector_store?`. Opt
 
 See the [Quick Start](docs/source/quick_start.md) for step-by-step setup or browse the [full documentation](https://entity.readthedocs.io/en/latest/).
 
+### Quick Start
+
+The package exposes a default agent instance for quick experiments. It uses
+Ollama for LLM calls, persists memory in `./agent_memory.duckdb`, and stores
+files under `./agent_files`.
+
+```python
+from entity import agent
+
+@agent.tool
+async def add(a: int, b: int) -> int:
+    return a + b
+
+
+@agent.prompt
+async def respond(ctx):
+    result = await ctx.tool_use("add", a=2, b=2)
+    ctx.say(str(result))
+
+import asyncio
+asyncio.run(agent.handle("calc"))
+```
+
+Ensure [Ollama](https://ollama.ai) is installed and run `ollama pull llama3` before testing.
+
 ### Stateless Workers (Decision 6)
 
 Workers hold no conversation state between requests. Instead, the `Memory` resource persists data to an external store. Each worker loads the conversation from `Memory` at the start of a request and saves updates when finished. This allows any worker process to handle any user without coordination.

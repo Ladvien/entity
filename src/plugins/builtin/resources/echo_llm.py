@@ -4,7 +4,7 @@ from typing import Dict
 
 from entity.core.state import LLMResponse
 
-from .llm_resource import LLMResource
+from entity.resources.interfaces.llm import LLMResource
 
 
 class EchoLLMResource(LLMResource):
