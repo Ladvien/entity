@@ -9,7 +9,7 @@ The pipeline implementation now lives under the ``entity.pipeline`` package. Imp
 :hidden:
 error_handling
 logging
-environment
+configuration
 ```
 
 The following pages cover core concepts and usage patterns.
