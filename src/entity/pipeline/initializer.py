@@ -407,6 +407,15 @@ class SystemInitializer:
                     f"{result.message}. Fix plugin dependencies.",
                 )
 
+        # Register resources early so we can verify canonical ones exist
+        resource_container = self.resource_container_cls()
+        self.resource_container = resource_container
+        for name, cls, config, _layer in registry.resource_classes():
+            resource_container.register(name, cls, config)
+
+        # Ensure required canonical resources before dependency validation
+        self._ensure_canonical_resources(resource_container)
+
         # Phase 2: dependency validation
         self._validate_dependency_graph(registry, dep_graph)
         for plugin_class, config in registry.all_plugin_classes():
@@ -418,16 +427,10 @@ class SystemInitializer:
                     f"{result.message}. Update the plugin configuration.",
                 )
 
-        # Phase 3: initialize resources via container
-        resource_container = self.resource_container_cls()
-        self.resource_container = resource_container
-        for name, cls, config, _layer in registry.resource_classes():
-            resource_container.register(name, cls, config)
-
-        self._ensure_canonical_resources(resource_container)
-
         # Fail fast if any canonical resources are missing before initialization
         self._ensure_canonical_resources(resource_container)
+
+        # Phase 3: initialize resources via container
 
         async with (
             initialization_cleanup_context(resource_container),
