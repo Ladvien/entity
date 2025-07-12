@@ -6,7 +6,7 @@ from typing import Any, Dict
 from pydantic import BaseModel
 
 from entity.core.plugins import ToolPlugin
-from pipeline.stages import PipelineStage
+from entity.pipeline.stages import PipelineStage
 from entity.core.validation.input import validate_params
 
 

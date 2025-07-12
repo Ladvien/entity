@@ -6,7 +6,7 @@ from entity.core.plugins import PromptPlugin
 from entity.core.state import ConversationEntry
 from entity.core.context import PluginContext
 from entity.resources.memory import Memory
-from pipeline.stages import PipelineStage
+from entity.pipeline.stages import PipelineStage
 
 
 class ComplexPrompt(PromptPlugin):

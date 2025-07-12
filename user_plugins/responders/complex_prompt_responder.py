@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from entity.core.context import PluginContext
 from entity.core.plugins import PromptPlugin
-from pipeline.stages import PipelineStage
+from entity.pipeline.stages import PipelineStage
 
 
 class ComplexPromptResponder(PromptPlugin):

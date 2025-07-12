@@ -5,7 +5,7 @@ from typing import List
 from entity.core.plugins import PromptPlugin
 from entity.core.state import ConversationEntry
 from entity.core.context import PluginContext
-from pipeline.stages import PipelineStage
+from entity.pipeline.stages import PipelineStage
 
 
 class ChainOfThoughtPrompt(PromptPlugin):

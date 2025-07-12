@@ -5,21 +5,23 @@ from typing import Any
 from pathlib import Path
 import sys
 
-sys.path.append(str(Path(__file__).resolve().parents[2]))
+base = Path(__file__).resolve().parents[2]
+sys.path.append(str(base / "src"))
+sys.path.append(str(base))
 
 from user_plugins.tools.calculator_tool import CalculatorTool
 from user_plugins.responders import ReactResponder
 from entity.core.plugins import PromptPlugin, ResourcePlugin
 from entity.core.context import PluginContext
-from pipeline.stages import PipelineStage
+from entity.pipeline.stages import PipelineStage
 from datetime import datetime
 
 from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
 from entity.core.resources.container import ResourceContainer
 from entity.infrastructure.duckdb import DuckDBInfrastructure
 from entity.resources.memory import Memory
-from pipeline.pipeline import execute_pipeline, generate_pipeline_id
-from pipeline.state import ConversationEntry, PipelineState
+from entity.pipeline.pipeline import execute_pipeline, generate_pipeline_id
+from entity.pipeline.state import ConversationEntry, PipelineState
 
 
 class EchoLLMResource(ResourcePlugin):

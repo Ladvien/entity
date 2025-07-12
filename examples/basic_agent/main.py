@@ -5,9 +5,13 @@ from typing import Any
 from pathlib import Path
 import sys
 
+base = Path(__file__).resolve().parents[2]
+sys.path.append(str(base / "src"))
+sys.path.append(str(base))
+
 from entity.core.plugins import PromptPlugin
 from entity.core.context import PluginContext
-from pipeline.stages import PipelineStage
+from entity.pipeline.stages import PipelineStage
 from datetime import datetime
 
 from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
@@ -15,10 +19,8 @@ from entity.core.resources.container import ResourceContainer
 from entity.infrastructure.duckdb import DuckDBInfrastructure
 from entity.resources.memory import Memory
 from entity.resources.logging import LoggingResource
-from pipeline.pipeline import execute_pipeline, generate_pipeline_id
-
-sys.path.append(str(Path(__file__).resolve().parents[2]))
-from pipeline.state import ConversationEntry, PipelineState
+from entity.pipeline.pipeline import execute_pipeline, generate_pipeline_id
+from entity.pipeline.state import ConversationEntry, PipelineState
 
 
 class EchoPrompt(PromptPlugin):

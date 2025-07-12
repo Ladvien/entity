@@ -32,10 +32,6 @@ plugins:
     #   type: plugins.builtin.resources.storage_resource:StorageResource
   custom_resources: {}
   tools:
-    weather:
-      type: user_plugins.tools.weather_api_tool:WeatherApiTool
-      api_key: "${WEATHER_API_KEY}"
-      base_url: "https://api.weather.com"
     calculator:
       type: user_plugins.tools.calculator_tool:CalculatorTool
   adapters:

@@ -5,20 +5,22 @@ from typing import Any
 from pathlib import Path
 import sys
 
-from user_plugins.responders import ChainOfThoughtResponder
+base = Path(__file__).resolve().parents[2]
+sys.path.append(str(base / "src"))
+sys.path.append(str(base))
+
+from user_plugins.responders import ComplexPromptResponder
 from entity.core.plugins import PromptPlugin, ResourcePlugin
 from entity.core.context import PluginContext
-from pipeline.stages import PipelineStage
+from entity.pipeline.stages import PipelineStage
 from datetime import datetime
 
 from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
 from entity.core.resources.container import ResourceContainer
 from entity.infrastructure.duckdb import DuckDBInfrastructure
 from entity.resources.memory import Memory
-from pipeline.pipeline import execute_pipeline, generate_pipeline_id
-from pipeline.state import ConversationEntry, PipelineState
-
-sys.path.append(str(Path(__file__).resolve().parents[2]))
+from entity.pipeline.pipeline import execute_pipeline, generate_pipeline_id
+from entity.pipeline.state import ConversationEntry, PipelineState
 
 
 class EchoLLMResource(ResourcePlugin):
@@ -35,7 +37,7 @@ class ChainOfThoughtPrompt(PromptPlugin):
 
     async def _execute_impl(self, context: PluginContext) -> None:
         user = next((e.content for e in context.conversation() if e.role == "user"), "")
-        await context.think("problem_breakdown", user)
+        await context.think("complex_response", f"Problem breakdown: {user}")
 
 
 async def main() -> None:
@@ -53,7 +55,7 @@ async def main() -> None:
         ChainOfThoughtPrompt({"max_steps": 1}), PipelineStage.THINK, "cot"
     )
     await plugins.register_plugin_for_stage(
-        ChainOfThoughtResponder({}), PipelineStage.OUTPUT, "final"
+        ComplexPromptResponder({}), PipelineStage.OUTPUT, "final"
     )
 
     caps = SystemRegistries(resources=resources, tools=ToolRegistry(), plugins=plugins)
