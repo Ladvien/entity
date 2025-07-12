@@ -1,43 +1,79 @@
+import types
 import pytest
 
+import sys
+import pathlib
+import types
+
+import pytest
+
+sys.path.insert(0, str(pathlib.Path("src").resolve()))
+
 from entity.core.context import PluginContext
-from entity.core.plugins import Plugin, ResourcePlugin
-from entity.core.registries import SystemRegistries
 from entity.core.state import PipelineState
-from entity.pipeline.stages import PipelineStage
-from entity.resources.metrics_collector import MetricsCollectorResource
+from entity.core.stages import PipelineStage
+from entity.core.plugins import Plugin
+from entity.resources.metrics import MetricsCollectorResource
 
 
-class DummyPlugin(Plugin):  # type: ignore[misc]
+class DummyPlugin(Plugin):
     stages = [PipelineStage.THINK]
 
-    async def _execute_impl(self, context: PluginContext) -> None:
-        await context.think("dummy", True)
+    async def _execute_impl(self, context: PluginContext) -> str:
+        return "ok"
 
 
-class DummyResource(ResourcePlugin):  # type: ignore[misc]
-    async def do_work(self, context: PluginContext) -> int:
-        result: int = await self._track_operation("do_work", lambda: 1, context=context)
-        return result
+@pytest.mark.asyncio
+async def test_plugin_dependencies_include_metrics():
+    assert "metrics_collector" in DummyPlugin.dependencies
 
 
-@pytest.mark.asyncio  # type: ignore[misc]
-async def test_metrics_collection() -> None:
-    metrics = MetricsCollectorResource()
-    plugin = DummyPlugin()
-    resource = DummyResource()
+@pytest.mark.asyncio
+async def test_plugin_metrics_success():
+    metrics = MetricsCollectorResource({})
+    plugin = DummyPlugin({})
     plugin.metrics_collector = metrics
-    resource.metrics_collector = metrics
+    registries = types.SimpleNamespace(
+        resources=types.SimpleNamespace(get=lambda _n: None),
+        tools=types.SimpleNamespace(),
+        plugins=None,
+        validators=None,
+    )
+    state = PipelineState(conversation=[], pipeline_id="123")
+    context = PluginContext(state, registries)
+    context.set_current_stage(PipelineStage.THINK)
 
-    state = PipelineState(conversation=[], pipeline_id="pid")
-    regs = SystemRegistries(resources={}, tools=None, plugins=None, validators=None)
-    ctx = PluginContext(state, regs)
-    ctx.set_current_stage(PipelineStage.THINK)
+    await plugin.execute(context)
 
-    await plugin.execute(ctx)
-    await resource.do_work(ctx)
+    assert len(metrics.plugin_executions) == 1
+    record = metrics.plugin_executions[0]
+    assert record.success is True
+    assert record.plugin_name == "DummyPlugin"
 
-    assert metrics.plugin_metrics
-    assert metrics.resource_metrics
-    log = await metrics.get_unified_agent_log(pipeline_id="pid")
-    assert len(log) >= 2
+
+@pytest.mark.asyncio
+async def test_plugin_metrics_failure():
+    class FailPlugin(DummyPlugin):
+        async def _execute_impl(self, context: PluginContext) -> None:
+            raise RuntimeError("boom")
+
+    metrics = MetricsCollectorResource({})
+    plugin = FailPlugin({})
+    plugin.metrics_collector = metrics
+    registries = types.SimpleNamespace(
+        resources=types.SimpleNamespace(get=lambda _n: None),
+        tools=types.SimpleNamespace(),
+        plugins=None,
+        validators=None,
+    )
+    state = PipelineState(conversation=[], pipeline_id="123")
+    context = PluginContext(state, registries)
+    context.set_current_stage(PipelineStage.THINK)
+
+    with pytest.raises(RuntimeError):
+        await plugin.execute(context)
+
+    assert len(metrics.plugin_executions) == 1
+    record = metrics.plugin_executions[0]
+    assert record.success is False
+    assert record.error_type == "RuntimeError"

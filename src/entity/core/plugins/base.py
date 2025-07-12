@@ -17,6 +17,15 @@ from entity.pipeline.utils import _normalize_stages
 from ..stages import PipelineStage
 
 
+def _ensure_metrics_dependency(cls: type) -> None:
+    if cls.__name__ == "MetricsCollectorResource":
+        return
+    deps = list(getattr(cls, "dependencies", []))
+    if "metrics_collector" not in deps:
+        deps.append("metrics_collector")
+    cls.dependencies = deps
+
+
 class ToolExecutionError(Exception):
     """Raised when a tool fails during execution."""
 
@@ -26,6 +35,10 @@ class BasePlugin:
 
     stages: List[PipelineStage]
     dependencies: List[str] = ["metrics_collector"]
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        super().__init_subclass__(**kwargs)
+        _ensure_metrics_dependency(cls)
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
         self.config = config or {}
@@ -56,21 +69,40 @@ class BasePlugin:
 
     async def call_llm(self, context: Any, prompt: str, purpose: str = "") -> Any:
         start = time.perf_counter()
-        response = await context.call_llm(context, prompt, purpose=purpose)
-        duration = time.perf_counter() - start
-        self.logger.info(
-            "LLM call completed",
-            extra={
-                "plugin": self.__class__.__name__,
-                "stage": str(getattr(context, "current_stage", "")),
-                "purpose": purpose,
-                "prompt_length": len(prompt),
-                "response_length": len(getattr(response, "content", "")),
-                "pipeline_id": getattr(context, "pipeline_id", ""),
-                "duration": duration,
-            },
-        )
-        return response
+        success = True
+        response = None
+        try:
+            response = await context.call_llm(context, prompt, purpose=purpose)
+            return response
+        except Exception:
+            success = False
+            raise
+        finally:
+            duration = (time.perf_counter() - start) * 1000
+            self.logger.info(
+                "LLM call completed",
+                extra={
+                    "plugin": self.__class__.__name__,
+                    "stage": str(getattr(context, "current_stage", "")),
+                    "purpose": purpose,
+                    "prompt_length": len(prompt),
+                    "response_length": (
+                        len(getattr(response, "content", "")) if response else 0
+                    ),
+                    "pipeline_id": getattr(context, "pipeline_id", ""),
+                    "duration": duration,
+                },
+            )
+            metrics = getattr(self, "metrics_collector", None)
+            if metrics is not None:
+                await metrics.record_resource_operation(
+                    pipeline_id=getattr(context, "pipeline_id", ""),
+                    resource_name="llm",
+                    operation="generate",
+                    duration_ms=duration,
+                    success=success,
+                    metadata={"purpose": purpose, "prompt_length": len(prompt)},
+                )
 
     async def _execute_impl(self, context: Any) -> Any:
         """Execute plugin logic in the pipeline."""
@@ -104,32 +136,27 @@ class Plugin(BasePlugin):
 
     async def execute(self, context: Any) -> Any:
         start = time.perf_counter()
+        success = True
+        error_type = None
         try:
             result = await self._execute_impl(context)
-            duration_ms = (time.perf_counter() - start) * 1000
-            mc = getattr(self, "metrics_collector", None)
-            if mc is not None:
-                await mc.record_plugin_execution(
-                    pipeline_id=getattr(context, "pipeline_id", ""),
-                    stage=getattr(context, "current_stage", PipelineStage.INPUT),
-                    plugin_name=self.__class__.__name__,
-                    duration_ms=duration_ms,
-                    success=True,
-                )
             return result
         except Exception as exc:
-            duration_ms = (time.perf_counter() - start) * 1000
-            mc = getattr(self, "metrics_collector", None)
-            if mc is not None:
-                await mc.record_plugin_execution(
-                    pipeline_id=getattr(context, "pipeline_id", ""),
-                    stage=getattr(context, "current_stage", PipelineStage.INPUT),
-                    plugin_name=self.__class__.__name__,
-                    duration_ms=duration_ms,
-                    success=False,
-                    error_type=exc.__class__.__name__,
-                )
+            success = False
+            error_type = exc.__class__.__name__
             raise
+        finally:
+            duration = (time.perf_counter() - start) * 1000
+            metrics = getattr(self, "metrics_collector", None)
+            if metrics is not None:
+                await metrics.record_plugin_execution(
+                    pipeline_id=getattr(context, "pipeline_id", ""),
+                    stage=getattr(context, "current_stage", None),
+                    plugin_name=self.__class__.__name__,
+                    duration_ms=duration,
+                    success=success,
+                    error_type=error_type,
+                )
 
 
 class InfrastructurePlugin(Plugin):
@@ -150,46 +177,36 @@ class ResourcePlugin(Plugin):
 
     async def _track_operation(
         self,
-        operation: str,
-        func: Callable[[], Any | Awaitable[Any]],
         *,
+        operation: str,
+        func: Any,
         context: Any | None = None,
         **metadata: Any,
     ) -> Any:
         start = time.perf_counter()
+        success = True
         try:
-            result = (
-                await func() if callable(getattr(func, "__await__", None)) else func()
-            )
-            duration_ms = (time.perf_counter() - start) * 1000
-            mc = getattr(self, "metrics_collector", None)
-            if mc is not None:
-                await mc.record_resource_operation(
-                    pipeline_id=getattr(context, "pipeline_id", "system"),
-                    resource_name=getattr(self, "name", self.__class__.__name__),
-                    operation=operation,
-                    duration_ms=duration_ms,
-                    success=True,
-                    metadata=metadata,
-                )
+            result = await func()
             return result
         except Exception as exc:
-            duration_ms = (time.perf_counter() - start) * 1000
-            mc = getattr(self, "metrics_collector", None)
-            if mc is not None:
-                await mc.record_resource_operation(
-                    pipeline_id=getattr(context, "pipeline_id", "system"),
+            success = False
+            raise
+        finally:
+            duration = (time.perf_counter() - start) * 1000
+            metrics = getattr(self, "metrics_collector", None)
+            if metrics is not None:
+                await metrics.record_resource_operation(
+                    pipeline_id=(
+                        getattr(context, "pipeline_id", "system")
+                        if context
+                        else "system"
+                    ),
                     resource_name=getattr(self, "name", self.__class__.__name__),
                     operation=operation,
-                    duration_ms=duration_ms,
-                    success=False,
-                    metadata={
-                        **metadata,
-                        "error_type": exc.__class__.__name__,
-                        "error": str(exc),
-                    },
+                    duration_ms=duration,
+                    success=success,
+                    metadata=metadata,
                 )
-            raise
 
 
 class AgentResource(ResourcePlugin):

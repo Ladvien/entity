@@ -1,4 +1,5 @@
-AGENT NOTE - 2025-07-14: Unified builder and runtime inside Agent
+AGENT NOTE - 2025-07-12: Implement MetricsCollectorResource with plugin integration
+AGENT NOTE - 2025-07-12: Removed deprecation warnings from PluginContext memory helpers
 AGENT NOTE - 2025-07-13: Consolidated pipeline under entity.pipeline
 AGENT NOTE - 2025-07-12: Added restart check for unknown plugins in CLI reload
 AGENT NOTE - 2025-07-13: Updated tests for Memory initialization

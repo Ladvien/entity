@@ -27,8 +27,8 @@ plugins:
     #   embedding_model:
     #     name: dummy
     #     dimensions: 3
-    # metrics_collector:
-    #   type: entity.resources.metrics_collector:MetricsCollectorResource
+    metrics_collector:
+      type: entity.resources.metrics:MetricsCollectorResource
     # llm:
     #   type: plugins.builtin.resources.llm.unified:UnifiedLLMResource
     #   provider: ollama
