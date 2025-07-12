@@ -19,6 +19,8 @@ class PluginBaseRegistry:
     adapter_plugin: Type = object
     auto_plugin: Type = object
     tool_plugin: Type = object
+    failure_plugin: Type = object
+    resource_plugin: Type = object
 
 
 plugin_base_registry = PluginBaseRegistry()
@@ -27,6 +29,10 @@ plugin_base_registry = PluginBaseRegistry()
 def default_stages_for_class(plugin_class: Type) -> list[PipelineStage]:
     """Return default stages based on plugin class hierarchy."""
 
+    if issubclass(plugin_class, plugin_base_registry.failure_plugin):
+        return [PipelineStage.ERROR]
+    if issubclass(plugin_class, plugin_base_registry.resource_plugin):
+        return []
     if issubclass(plugin_class, plugin_base_registry.tool_plugin):
         return [PipelineStage.DO]
     if issubclass(plugin_class, plugin_base_registry.prompt_plugin):
@@ -42,6 +48,8 @@ def configure_plugins(
     adapter_plugin: Type,
     auto_plugin: Type,
     tool_plugin: Type,
+    failure_plugin: Type | None = None,
+    resource_plugin: Type | None = None,
 ) -> PluginBaseRegistry:
     """Override the plugin base classes used for auto classification."""
 
@@ -50,6 +58,10 @@ def configure_plugins(
     plugin_base_registry.adapter_plugin = adapter_plugin
     plugin_base_registry.auto_plugin = auto_plugin
     plugin_base_registry.tool_plugin = tool_plugin
+    if failure_plugin is not None:
+        plugin_base_registry.failure_plugin = failure_plugin
+    if resource_plugin is not None:
+        plugin_base_registry.resource_plugin = resource_plugin
     return plugin_base_registry
 
 
@@ -109,14 +121,23 @@ class PluginAutoClassifier:
 
         explicit = False
         inferred = False
-        stages = default_stages_for_class(base)
         if "stage" in hints or "stages" in hints:
             hint = hints.get("stages") or hints.get("stage")
             stages = hint if isinstance(hint, list) else [hint]
             stages = [PipelineStage.from_str(str(s)) for s in stages]
+            stage_set = set(stages)
+            if stage_set == {PipelineStage.DO}:
+                base = cast(Type, plugin_base_registry.tool_plugin)
+            elif stage_set == {PipelineStage.ERROR}:
+                base = cast(Type, plugin_base_registry.failure_plugin)
+            elif stage_set == {PipelineStage.PARSE, PipelineStage.DELIVER}:
+                base = cast(Type, plugin_base_registry.adapter_plugin)
+            else:
+                base = cast(Type, plugin_base_registry.prompt_plugin)
             explicit = True
         else:
             inferred = True
+            stages = default_stages_for_class(base)
 
         name = hints.get("name", plugin_func.__name__)
 
