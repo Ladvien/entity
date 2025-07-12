@@ -30,10 +30,12 @@ class DependencyGraph:
                     if in_degree[dep] == 0:
                         queue.append(dep)
         if len(order) != len(in_degree):
+            cycle_nodes = [n for n in in_degree if n not in order]
+            nodes = ", ".join(sorted(cycle_nodes))
             raise InitializationError(
                 "dependency graph",
                 "order resolution",
-                "Circular dependency detected. Review resource dependencies for cycles.",
+                f"Circular dependency detected among: {nodes}",
                 kind="Resource",
             )
         return order
