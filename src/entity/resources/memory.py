@@ -11,6 +11,7 @@ from .interfaces.database import DatabaseResource as DatabaseInterface
 from .interfaces.vector_store import (
     VectorStoreResource as VectorStoreInterface,
 )
+from ..core.resources.container import ResourcePool
 from ..core.plugins import ValidationResult
 from ..core.state import ConversationEntry
 from entity.pipeline.errors import InitializationError, ResourceInitializationError
@@ -26,7 +27,7 @@ class Memory(AgentResource):
         super().__init__(config or {})
         self.database: DatabaseInterface | None = None
         self.vector_store: VectorStoreInterface | None = None
-        self._pool: Any | None = None
+        self._pool: ResourcePool | None = None
         self._kv_table = self.config.get("kv_table", "memory_kv")
         self._history_table = self.config.get("history_table", "conversation_history")
 
