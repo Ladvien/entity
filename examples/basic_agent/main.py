@@ -31,7 +31,7 @@ class EchoPrompt(PromptPlugin):
             if entry.role == "user":
                 last_message = entry.content
                 break
-        context.set_response(f"You said: {last_message}")
+        context.say(f"You said: {last_message}")
 
 
 async def main() -> None:

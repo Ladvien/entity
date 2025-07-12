@@ -1,6 +1,12 @@
 from __future__ import annotations
 
-"""Minimal plugin context objects."""
+"""Minimal plugin context objects.
+
+This module exposes anthropomorphic helpers for plugins:
+
+- ``think()`` / ``reflect()`` to share intermediate results between stages.
+- ``say()`` to produce the final assistant response in OUTPUT stage.
+"""
 
 import asyncio
 from datetime import datetime
@@ -158,9 +164,18 @@ class PluginContext:
         return self.get_resource("storage")
 
     def say(self, content: str, *, metadata: Dict[str, Any] | None = None) -> None:
-        """Append an assistant message to the conversation."""
+        """Finalize the response in ``OUTPUT`` stage."""
+        if self.current_stage is not PipelineStage.OUTPUT:
+            raise PluginContextError(
+                self.current_stage,
+                self.current_plugin or "unknown",
+                f"say may only be called in OUTPUT stage, not {self.current_stage}",
+            )
+        self._state.response = content
         self.add_conversation_entry(
-            content=content, role="assistant", metadata=metadata
+            content=content,
+            role="assistant",
+            metadata=metadata,
         )
 
     async def call_llm(self, _context: Any, prompt: str, *, purpose: str = "") -> Any:
@@ -227,7 +242,7 @@ class PluginContext:
         return self.advanced.discover_tools(**filters)
 
     # ------------------------------------------------------------------
-    # Stage result helpers
+    # Stage result helpers ("think"/"reflect")
     # ------------------------------------------------------------------
 
     def store(self, key: str, value: Any) -> None:
@@ -240,9 +255,17 @@ class PluginContext:
             del self._state.stage_results[oldest]
         self._state.stage_results[key] = value
 
+    def think(self, key: str, value: Any) -> None:
+        """Alias for :meth:`store` using anthropomorphic naming."""
+        self.store(key, value)
+
     def load(self, key: str, default: Any | None = None) -> Any:
         """Retrieve a stored value."""
         return self._state.stage_results.get(key, default)
+
+    def reflect(self, key: str, default: Any | None = None) -> Any:
+        """Alias for :meth:`load` using anthropomorphic naming."""
+        return self.load(key, default)
 
     def has(self, key: str) -> bool:
         """Return ``True`` if ``key`` exists in stage results."""
@@ -290,10 +313,9 @@ class PluginContext:
         return self._state.failure_info
 
     def set_response(self, value: Any) -> None:
-        if self.current_stage is not PipelineStage.OUTPUT:
-            raise PluginContextError(
-                self.current_stage,
-                self.current_plugin or "unknown",
-                f"set_response may only be called in OUTPUT stage, not {self.current_stage}",
-            )
-        self._state.response = value
+        warnings.warn(
+            "PluginContext.set_response is deprecated; use context.say",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self.say(value)

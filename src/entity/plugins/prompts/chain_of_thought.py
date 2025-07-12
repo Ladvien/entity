@@ -20,10 +20,7 @@ class ChainOfThoughtPrompt(PromptPlugin):
         breakdown = await self.call_llm(
             context, breakdown_prompt, purpose="problem_breakdown"
         )
-        context.say(
-            f"Problem breakdown: {breakdown.content}",
-            metadata={"reasoning_step": "breakdown"},
-        )
+        context.think("problem_breakdown", breakdown.content)
 
         steps: List[str] = []
         for step in range(int(self.config.get("max_steps", 5))):
@@ -34,10 +31,7 @@ class ChainOfThoughtPrompt(PromptPlugin):
                 context, reasoning_prompt, purpose=f"reasoning_step_{step + 1}"
             )
             steps.append(reasoning.content)
-            context.say(
-                f"Reasoning step {step + 1}: {reasoning.content}",
-                metadata={"reasoning_step": step + 1},
-            )
+            context.think(f"reasoning_step_{step + 1}", reasoning.content)
 
             if self._needs_tools(reasoning.content):
                 await context.tool_use(

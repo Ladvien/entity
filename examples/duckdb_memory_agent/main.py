@@ -98,7 +98,7 @@ class IncrementPrompt(PromptPlugin):
         memory: DuckDBMemory = context.get_resource("memory")  # type: ignore[assignment]
         count = memory.get("count", 0) + 1
         memory.remember("count", count)
-        context.set_response(f"Count: {count}")
+        context.say(f"Count: {count}")
 
 
 async def main() -> None:

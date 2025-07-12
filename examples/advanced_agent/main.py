@@ -48,7 +48,7 @@ class FinalResponder(PromptPlugin):
 
     async def _execute_impl(self, context: PluginContext) -> None:
         assistant = [e.content for e in context.conversation() if e.role == "assistant"]
-        context.set_response(assistant[-1] if assistant else "")
+        context.say(assistant[-1] if assistant else "")
 
 
 async def main() -> None:
