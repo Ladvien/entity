@@ -239,41 +239,19 @@ class PluginContext:
         return self.advanced.discover_tools(**filters)
 
     # ------------------------------------------------------------------
-    # Stage result helpers ("think"/"reflect")
+    # Temporary stage result helpers ("think"/"reflect")
     # ------------------------------------------------------------------
 
     async def think(self, key: str, value: Any) -> None:
-        """Persist ``value`` for later pipeline stages."""
-        if (
-            self._state.max_stage_results is not None
-            and len(self._state.stage_results) >= self._state.max_stage_results
-        ):
-            oldest = next(iter(self._state.stage_results))
-            del self._state.stage_results[oldest]
-        self._state.stage_results[key] = value
-
-    async def reflect(self, key: str, default: Any | None = None) -> Any:
-        """Retrieve a stored value."""
-        return self._state.stage_results.get(key, default)
-
-    async def clear_thoughts(self) -> None:
-        """Remove all stored stage results."""
-        self._state.stage_results.clear()
-
-    # ------------------------------------------------------------------
-    # Anthropomorphic temporary storage helpers
-    # ------------------------------------------------------------------
-
-    async def think(self, key: str, value: Any) -> None:
-        """Store a temporary value for later reflection."""
+        """Store a temporary stage result for later reflection."""
         self._temporary_thoughts[key] = value
 
     async def reflect(self, key: str, default: Any | None = None) -> Any:
-        """Retrieve a previously stored thought."""
+        """Retrieve a previously stored temporary stage result."""
         return self._temporary_thoughts.get(key, default)
 
     async def clear_thoughts(self) -> None:
-        """Remove all stored thoughts."""
+        """Remove all stored temporary stage results."""
         self._temporary_thoughts.clear()
 
     # ------------------------------------------------------------------

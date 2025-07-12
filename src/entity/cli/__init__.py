@@ -9,7 +9,7 @@ import inspect
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Awaitable, Callable, Optional, Type
+from typing import Any, Awaitable, Callable, Optional
 
 import yaml
 
