@@ -39,7 +39,7 @@ class DummyConnection:
     def __init__(self, store: dict) -> None:
         self.store = store
 
-    async def execute(self, query: str, params: tuple) -> None:
+    async def execute(self, query: str, params: tuple | None = None) -> None:
         if query.startswith("DELETE FROM conversation_history"):
             cid = params[0] if isinstance(params, tuple) else params
             self.store.setdefault("history", {}).pop(cid, None)
@@ -93,7 +93,7 @@ class DummyRegistries:
         mem = Memory(config={})
         mem.database = db
         mem.vector_store = None
-        asyncio.get_event_loop().run_until_complete(mem.initialize())
+        asyncio.run(mem.initialize())
         self.resources = {"memory": mem}
         self.tools = types.SimpleNamespace()
 
@@ -106,50 +106,47 @@ def make_context(tmp_path) -> PluginContext:
 
 def test_memory_roundtrip(tmp_path) -> None:
     ctx = make_context(tmp_path)
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(ctx.remember("foo", "bar"))
-    assert loop.run_until_complete(ctx.recall("foo")) == "bar"
+    asyncio.run(ctx.remember("foo", "bar"))
+    assert asyncio.run(ctx.recall("foo")) == "bar"
 
 
 def test_memory_persists_between_instances() -> None:
     asyncio.set_event_loop(asyncio.new_event_loop())
-    loop = asyncio.get_event_loop()
     db = DummyDatabase()
     mem1 = Memory(config={})
     mem1.database = db
     mem1.vector_store = None
-    asyncio.get_event_loop().run_until_complete(mem1.initialize())
+    asyncio.run(mem1.initialize())
     mem1.set("foo", "bar")
     entry = ConversationEntry("hi", "user", datetime.now())
-    loop.run_until_complete(mem1.save_conversation("cid", [entry]))
+    asyncio.run(mem1.save_conversation("cid", [entry]))
 
     mem2 = Memory(config={})
     mem2.database = db
     mem2.vector_store = None
-    asyncio.get_event_loop().run_until_complete(mem2.initialize())
+    asyncio.run(mem2.initialize())
     assert mem2.get("foo") == "bar"
-    history = loop.run_until_complete(mem2.load_conversation("cid"))
+    history = asyncio.run(mem2.load_conversation("cid"))
     assert history == [entry]
 
 
 def test_memory_persists_with_connection_pool() -> None:
     asyncio.set_event_loop(asyncio.new_event_loop())
-    loop = asyncio.get_event_loop()
     pool = DummyPool()
     mem1 = Memory(config={})
     mem1.database = pool
     mem1.vector_store = None
-    asyncio.get_event_loop().run_until_complete(mem1.initialize())
+    asyncio.run(mem1.initialize())
     mem1.set("foo", "bar")
     entry = ConversationEntry("hi", "user", datetime.now())
-    loop.run_until_complete(mem1.save_conversation("cid", [entry]))
+    asyncio.run(mem1.save_conversation("cid", [entry]))
 
     mem2 = Memory(config={})
     mem2.database = pool
     mem2.vector_store = None
-    asyncio.get_event_loop().run_until_complete(mem2.initialize())
+    asyncio.run(mem2.initialize())
     assert mem2.get("foo") == "bar"
-    history = loop.run_until_complete(mem2.load_conversation("cid"))
+    history = asyncio.run(mem2.load_conversation("cid"))
     assert history == [entry]
 
 

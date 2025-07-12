@@ -13,7 +13,7 @@ class DummyConnection:
     def __init__(self, store: dict) -> None:
         self.store = store
 
-    async def execute(self, query: str, params: tuple) -> None:
+    async def execute(self, query: str, params: tuple | None = None) -> None:
         if query.startswith("DELETE FROM conversation_history"):
             cid = params
             self.store["history"].pop(cid, None)
