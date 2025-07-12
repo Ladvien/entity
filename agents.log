@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-14: Updated memory dependencies for resource configuration
 AGENT NOTE - 2025-07-13: Memory now persists to DuckDB and vector store
 AGENT NOTE - 2025-07-12: Removed ConversationHistory helper class
 

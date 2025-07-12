@@ -37,7 +37,7 @@ plugins:
   agent_resources:
     memory:
       type: entity.resources.memory:Memory
-      dependencies: [database]
+      dependencies: [database, vector_store]
     # filesystem:
     #   type: plugins.builtin.resources.s3_filesystem:S3FileSystem
     #   bucket: agent-files
