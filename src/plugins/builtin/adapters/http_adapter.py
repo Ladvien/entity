@@ -9,7 +9,7 @@ from pipeline.stages import PipelineStage
 class HTTPAdapter(AdapterPlugin):
     """Placeholder HTTP adapter."""
 
-    stages = [PipelineStage.PARSE, PipelineStage.DELIVER]
+    stages = [PipelineStage.INPUT, PipelineStage.OUTPUT]
 
     def __init__(self, manager: Any, config: Dict | None = None) -> None:
         super().__init__(config or {})

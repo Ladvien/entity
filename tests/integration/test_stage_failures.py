@@ -14,7 +14,7 @@ from entity.core.state import ConversationEntry, PipelineState
 
 
 class RespondPlugin(BasePlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
         context.set_response({"message": "ok"})
@@ -41,7 +41,7 @@ def make_failing_plugin(stage: PipelineStage):
         PipelineStage.THINK,
         PipelineStage.DO,
         PipelineStage.REVIEW,
-        PipelineStage.DELIVER,
+        PipelineStage.OUTPUT,
     ],
 )
 def test_pipeline_recovers_from_stage_failure(
@@ -50,7 +50,7 @@ def test_pipeline_recovers_from_stage_failure(
     async def run() -> str:
         plugins = PluginRegistry()
         await plugins.register_plugin_for_stage(make_failing_plugin(stage), stage)
-        await plugins.register_plugin_for_stage(RespondPlugin(), PipelineStage.DELIVER)
+        await plugins.register_plugin_for_stage(RespondPlugin(), PipelineStage.OUTPUT)
         capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 
         log_file = tmp_path / "state_log.jsonl"
@@ -72,7 +72,7 @@ def test_pipeline_recovers_from_stage_failure(
         logger.close()
         transitions = list(LogReplayer(log_file).transitions())
         stages = [t.stage for t in transitions]
-        assert "deliver" in stages[-1]
+        assert "output" in stages[-1]
 
         return result.get("message", "")
 

@@ -8,11 +8,12 @@ from enum import IntEnum, auto
 class PipelineStage(IntEnum):
     """Ordered pipeline stages."""
 
+    INPUT = auto()
     PARSE = auto()
     THINK = auto()
     DO = auto()
     REVIEW = auto()
-    DELIVER = auto()
+    OUTPUT = auto()
     ERROR = auto()
 
     def __str__(self) -> str:

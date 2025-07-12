@@ -8,7 +8,7 @@ from pipeline.workflow import Workflow
 
 
 def test_workflow_roundtrip(tmp_path: Path) -> None:
-    wf_data = {"parse": ["a"], "think": ["b"], "deliver": ["c"]}
+    wf_data = {"parse": ["a"], "think": ["b"], "output": ["c"]}
     wf_yaml = tmp_path / "wf.yaml"
     wf_json = tmp_path / "wf.json"
     wf_yaml.write_text(yaml.dump(wf_data, sort_keys=False))

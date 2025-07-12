@@ -1,6 +1,5 @@
 import sys
 
-import sys
 from pathlib import Path
 
 from plugins.builtin.adapters.websocket import WebSocketAdapter

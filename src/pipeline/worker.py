@@ -12,7 +12,6 @@ from typing import Any
 from entity.core.registries import SystemRegistries
 from entity.core.state import ConversationEntry
 
-from .pipeline import execute_pipeline
 from .state import PipelineState
 
 

@@ -1,5 +1,4 @@
 import os
-import os
 import subprocess
 import sys
 import yaml

@@ -1,10 +1,10 @@
 """Template for an adapter plugin.
 
 Adapters connect pipeline output to the outside world. Add the generated
-plugin to a workflow so it runs in the ``DELIVER`` stage:
+plugin to a workflow so it runs in the ``OUTPUT`` stage:
 
 ```
-workflow = {PipelineStage.DELIVER: ["MyAdapter"]}
+workflow = {PipelineStage.OUTPUT: ["MyAdapter"]}
 ```
 """
 
@@ -15,7 +15,7 @@ from entity.core.stages import PipelineStage
 class {class_name}(AdapterPlugin):
     """Example adapter plugin."""
 
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
     # List position controls execution order and SystemInitializer preserves it.
 
     async def _execute_impl(self, context):

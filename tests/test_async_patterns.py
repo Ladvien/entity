@@ -33,9 +33,9 @@ def make_capabilities() -> SystemRegistries:
     plugins = PluginRegistry()
     plugin = PluginAutoClassifier.classify(
         use_tool_plugin,
-        {"stage": PipelineStage.DELIVER, "name": "UseToolPlugin"},
+        {"stage": PipelineStage.OUTPUT, "name": "UseToolPlugin"},
     )
-    asyncio.run(plugins.register_plugin_for_stage(plugin, PipelineStage.DELIVER))
+    asyncio.run(plugins.register_plugin_for_stage(plugin, PipelineStage.OUTPUT))
     return SystemRegistries(resources, tools, plugins)
 
 

@@ -1,8 +1,6 @@
 import asyncio
 import importlib.util
 import sys
-from pathlib import Path
-from types import ModuleType
 
 import pytest
 from pipeline import PipelineStage

@@ -9,7 +9,6 @@ This module delegates tool execution to
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict
 
@@ -108,7 +107,7 @@ async def execute_stage(
                 await registries.validators.validate(stage, context)
             try:
                 await plugin.execute(context)
-                if stage == PipelineStage.DELIVER and state.response is not None:
+                if stage == PipelineStage.OUTPUT and state.response is not None:
                     break
                 if state.pending_tool_calls:
                     tool_results = await execute_pending_tools(state, registries)
@@ -262,11 +261,12 @@ async def execute_pipeline(
             while True:
                 state.iteration += 1
                 for stage in [
+                    PipelineStage.INPUT,
                     PipelineStage.PARSE,
                     PipelineStage.THINK,
                     PipelineStage.DO,
                     PipelineStage.REVIEW,
-                    PipelineStage.DELIVER,
+                    PipelineStage.OUTPUT,
                 ]:
                     if (
                         state.last_completed_stage is not None
@@ -292,7 +292,7 @@ async def execute_pipeline(
 
                 if (
                     state.response is not None
-                    and state.last_completed_stage == PipelineStage.DELIVER
+                    and state.last_completed_stage == PipelineStage.OUTPUT
                 ):
                     break
 
@@ -322,7 +322,7 @@ async def execute_pipeline(
                     await execute_stage(PipelineStage.ERROR, state, capabilities)
                     if state_logger is not None:
                         state_logger.log(state, PipelineStage.ERROR)
-                await execute_stage(PipelineStage.DELIVER, state, capabilities)
+                await execute_stage(PipelineStage.OUTPUT, state, capabilities)
             except Exception:
                 result = create_static_error_response(state.pipeline_id).to_dict()
                 return result

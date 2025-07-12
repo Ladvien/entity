@@ -33,7 +33,7 @@ def test_class_attribute_overrides_type_defaults():
 def test_type_default_overrides_auto_classification():
     builder = _AgentBuilder()
     plugin = InferredPrompt({})
-    plugin.stages = [PipelineStage.DELIVER]
+    plugin.stages = [PipelineStage.OUTPUT]
     plugin._explicit_stages = False
     stages = builder._resolve_plugin_stages(plugin, None)
     assert stages == [PipelineStage.THINK]

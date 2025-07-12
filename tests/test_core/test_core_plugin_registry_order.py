@@ -7,7 +7,7 @@ from pipeline import PipelineStage, PromptPlugin
 
 
 class First(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
         order = context.get_metadata("order") or []
@@ -17,7 +17,7 @@ class First(PromptPlugin):
 
 
 class Second(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
         order = context.get_metadata("order") or []
@@ -26,7 +26,7 @@ class Second(PromptPlugin):
 
 
 class Third(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
         order = context.get_metadata("order") or []
@@ -71,6 +71,6 @@ def test_agent_initializer_preserves_yaml_order(tmp_path):
     agent = Agent(config_path=str(path))
     asyncio.run(agent._ensure_runtime())
     plugins = agent.runtime.capabilities.plugins.get_plugins_for_stage(
-        PipelineStage.DELIVER
+        PipelineStage.OUTPUT
     )
     assert [p.__class__ for p in plugins] == [Second, First, Third]

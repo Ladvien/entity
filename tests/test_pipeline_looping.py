@@ -15,7 +15,7 @@ from pipeline import (
 
 
 class CountingDeliverPlugin(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     def __init__(self, config: Optional[dict] = None) -> None:
         super().__init__(config)
@@ -28,7 +28,7 @@ class CountingDeliverPlugin(PromptPlugin):
 
 
 class NoResponseDeliverPlugin(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     def __init__(self, config: Optional[dict] = None) -> None:
         super().__init__(config)
@@ -54,7 +54,7 @@ class RecordFailurePlugin(FailurePlugin):
 
 async def make_capabilities(plugin):
     plugins = PluginRegistry()
-    await plugins.register_plugin_for_stage(plugin, PipelineStage.DELIVER)
+    await plugins.register_plugin_for_stage(plugin, PipelineStage.OUTPUT)
     return SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 
 
@@ -77,7 +77,7 @@ def test_max_iterations_triggers_error():
 
     async def run() -> PipelineState:
         plugins = PluginRegistry()
-        await plugins.register_plugin_for_stage(plugin, PipelineStage.DELIVER)
+        await plugins.register_plugin_for_stage(plugin, PipelineStage.OUTPUT)
         await plugins.register_plugin_for_stage(
             RecordFailurePlugin(failures), PipelineStage.ERROR
         )

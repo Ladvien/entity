@@ -15,7 +15,7 @@ from pipeline.state import PipelineState
 
 
 class Second(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
         order = context.get_metadata("order") or []
@@ -24,7 +24,7 @@ class Second(PromptPlugin):
 
 
 class First(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
         order = context.get_metadata("order") or []
@@ -33,7 +33,7 @@ class First(PromptPlugin):
 
 
 class Final(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
         order = context.get_metadata("order") or []
@@ -44,9 +44,9 @@ class Final(PromptPlugin):
 
 async def _run_pipeline():
     plugins = PluginRegistry()
-    await plugins.register_plugin_for_stage(Second({}), PipelineStage.DELIVER)
-    await plugins.register_plugin_for_stage(First({}), PipelineStage.DELIVER)
-    await plugins.register_plugin_for_stage(Final({}), PipelineStage.DELIVER)
+    await plugins.register_plugin_for_stage(Second({}), PipelineStage.OUTPUT)
+    await plugins.register_plugin_for_stage(First({}), PipelineStage.OUTPUT)
+    await plugins.register_plugin_for_stage(Final({}), PipelineStage.OUTPUT)
 
     caps = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     state = PipelineState(

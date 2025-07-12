@@ -3,8 +3,10 @@
 from pipeline import PipelineStage
 
 {workflow_name} = {
+    PipelineStage.INPUT: [],
     PipelineStage.PARSE: [],
     PipelineStage.THINK: [],
     PipelineStage.DO: [],
-    PipelineStage.DELIVER: [],
+    PipelineStage.REVIEW: [],
+    PipelineStage.OUTPUT: [],
 }

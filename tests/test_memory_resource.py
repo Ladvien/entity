@@ -15,7 +15,7 @@ from pipeline import (
 
 
 class IncrementPlugin(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
     dependencies = ["memory"]
 
     async def _execute_impl(self, context):
@@ -28,7 +28,7 @@ class IncrementPlugin(PromptPlugin):
 def make_capabilities():
     plugins = PluginRegistry()
     asyncio.run(
-        plugins.register_plugin_for_stage(IncrementPlugin({}), PipelineStage.DELIVER)
+        plugins.register_plugin_for_stage(IncrementPlugin({}), PipelineStage.OUTPUT)
     )
     resources = ResourceContainer()
     asyncio.run(resources.add("memory", Memory()))

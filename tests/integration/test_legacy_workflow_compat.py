@@ -7,7 +7,7 @@ from entity.core.builder import _AgentBuilder
 
 
 class ReplyPlugin(BasePlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
         context.set_response("ok")

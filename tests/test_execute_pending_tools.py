@@ -5,7 +5,6 @@ from entity.core.resources.container import ResourceContainer
 from entity.core.state import (
     ConversationEntry,
     PipelineState,
-    ToolCall,
 )
 from pipeline import PluginRegistry, SystemRegistries, ToolRegistry
 from entity.core.context import PluginContext

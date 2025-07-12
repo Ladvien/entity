@@ -45,7 +45,7 @@ def test_logger_and_replay(tmp_path):
 
 
 class RespondPlugin(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
         context.set_response("ok")
@@ -54,7 +54,7 @@ class RespondPlugin(PromptPlugin):
 def test_execute_pipeline_logs_states(tmp_path):
     plugins = PluginRegistry()
     asyncio.run(
-        plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.DELIVER)
+        plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.OUTPUT)
     )
     capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 
@@ -68,4 +68,4 @@ def test_execute_pipeline_logs_states(tmp_path):
     transitions = list(LogReplayer(log_file).transitions())
     stages = [t.stage for t in transitions]
     assert stages[0] == "parse"
-    assert "deliver" in stages[-1]
+    assert "output" in stages[-1]

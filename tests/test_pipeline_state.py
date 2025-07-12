@@ -4,7 +4,7 @@ from pipeline import ConversationEntry, PipelineStage, PipelineState, PromptPlug
 
 
 class RespondPlugin(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):  # pragma: no cover - simple
         context.set_response("ok")

@@ -15,7 +15,7 @@ from plugins.builtin.adapters import WebSocketAdapter
 
 
 class RespPlugin(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
         first = context.get_conversation_history()[0]
@@ -24,9 +24,7 @@ class RespPlugin(PromptPlugin):
 
 def make_adapter():
     plugins = PluginRegistry()
-    asyncio.run(
-        plugins.register_plugin_for_stage(RespPlugin({}), PipelineStage.DELIVER)
-    )
+    asyncio.run(plugins.register_plugin_for_stage(RespPlugin({}), PipelineStage.OUTPUT))
     capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     runtime = _AgentRuntime(capabilities)
     return WebSocketAdapter(runtime)
