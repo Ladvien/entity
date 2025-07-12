@@ -19,6 +19,8 @@ from entity.core.resources.container import ResourceContainer
 from entity.core.runtime import AgentRuntime
 from entity.utils.logging import get_logger
 
+from pipeline.utils import resolve_stages
+
 from .plugin_utils import PluginAutoClassifier
 from .stages import PipelineStage
 
@@ -204,53 +206,22 @@ class _AgentBuilder:
         cfg_val = None
         if config is not None:
             cfg_val = config.get("stages") or config.get("stage")
-        attr_stages = [PipelineStage.ensure(s) for s in getattr(plugin, "stages", [])]
-        type_defaults = self._type_default_stages(plugin)
 
         explicit_attr = getattr(plugin, "_explicit_stages", False) or (
-            "stages" in plugin.__class__.__dict__ and attr_stages != type_defaults
+            "stages" in plugin.__class__.__dict__
         )
 
-        stages: list[PipelineStage] = []
-        explicit = False
-        source = None
-
-        if cfg_val is not None:
-            stages = cfg_val if isinstance(cfg_val, list) else [cfg_val]
-            stages = [PipelineStage.ensure(s) for s in stages]
-            explicit = True
-            source = "config"
-            if explicit_attr and set(stages) != set(attr_stages):
-                logger.warning(
-                    "Plugin '%s' config stages %s override class stages %s",
-                    plugin.__class__.__name__,
-                    [str(s) for s in stages],
-                    [str(s) for s in attr_stages],
-                )
-        elif explicit_attr:
-            stages = attr_stages
-            explicit = True
-            source = "class"
-        elif type_defaults:
-            stages = type_defaults
-        elif attr_stages:
-            stages = attr_stages
-
-        if explicit and type_defaults and set(stages) != set(type_defaults):
-            logger.warning(
-                "Plugin '%s' explicit %s stages %s override type defaults %s",
-                plugin.__class__.__name__,
-                source or "config",
-                [str(s) for s in stages],
-                [str(s) for s in type_defaults],
-            )
-
-        if not stages:
-            stages = attr_stages or type_defaults
-
-        if not stages:
-            raise ValueError(f"No stage specified for {plugin.__class__.__name__}")
-
+        stages, _ = resolve_stages(
+            plugin.__class__.__name__,
+            cfg_value=cfg_val,
+            attr_stages=getattr(plugin, "stages", []),
+            explicit_attr=explicit_attr,
+            type_defaults=self._type_default_stages(plugin),
+            ensure_stage=PipelineStage.ensure,
+            logger=logger,
+            auto_inferred=getattr(plugin, "_auto_inferred_stages", False),
+            error_type=ValueError,
+        )
         return stages
 
     def _register_module_plugins(self, module: ModuleType) -> None:
