@@ -529,12 +529,19 @@ class EntityCLI:
                         logger.error("Plugin %s not registered", name)
                         return 2
 
-                    cfg_result = await plugin.__class__.validate_config(config)
+                    async def _maybe_await(value: Any) -> Any:
+                        return await value if inspect.isawaitable(value) else value
+
+                    cfg_result = await _maybe_await(
+                        plugin.__class__.validate_config(config)
+                    )
                     if not cfg_result.success:
                         logger.error("%s config invalid: %s", name, cfg_result.message)
                         return 1
 
-                    dep_result = await plugin.__class__.validate_dependencies(registry)
+                    dep_result = await _maybe_await(
+                        plugin.__class__.validate_dependencies(registry)
+                    )
                     if not dep_result.success:
                         logger.error(
                             "%s dependency check failed: %s",

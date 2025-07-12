@@ -1,15 +1,6 @@
+AGENT NOTE - 2025-07-15: Wrapped plugin validation in reload helper to await results when needed
 AGENT NOTE - 2025-07-14: Unified builder and runtime inside Agent
 AGENT NOTE - 2025-07-13: Consolidated pipeline under entity.pipeline
 AGENT NOTE - 2025-07-12: Added restart check for unknown plugins in CLI reload
 AGENT NOTE - 2025-07-13: Updated tests for Memory initialization
 AGENT NOTE - 2025-07-13: Memory now persists to DuckDB and vector store
-AGENT NOTE - 2025-07-12: Removed ConversationHistory helper class
-AGENT NOTE - 2025-07-12: Simplified plugin analysis output
-AGENT NOTE - 2025-07-12: Added get_memory/get_storage helpers and updated docs
-AGENT NOTE - 2025-07-12: Added decorator shortcuts and tests
-AGENT NOTE - 2025-07-12: Added plugin lifecycle hooks and updated CLI
-AGENT NOTE - 2025-07-12: Enforced explicit plugin stages and simplified precedence
-AGENT NOTE - 2025-07-12: Added config and dependency hooks for plugins
-AGENT NOTE - 2025-07-12: Updated ResourceContainer build sequence and tests
-AGENT NOTE - 2025-07-12: Added canonical resource classes and StandardResources dataclass
-AGENT NOTE - 2025-07-12: Rewrote stage precedence tests for new rules
