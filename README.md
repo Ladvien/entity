@@ -22,3 +22,23 @@ poetry run entity-cli --config config/dev.yaml
 ```
 
 See the [Quick Start](docs/source/quick_start.md) for step-by-step setup or browse the [full documentation](https://entity.readthedocs.io/en/latest/).
+
+### Zero-Config Plugins
+
+Register a tool and prompt without specifying stages:
+
+```python
+from entity import Agent
+
+agent = Agent()
+
+@agent.tool
+async def add(a: int, b: int) -> int:
+    return a + b
+
+
+@agent.prompt
+async def final(ctx):
+    result = await ctx.tool_use("add", a=2, b=2)
+    ctx.set_response(str(result))
+```

@@ -4,9 +4,13 @@ from __future__ import annotations
 
 from typing import Any, Callable, Optional
 
+from .logging import get_logger
+from .plugin_analyzer import suggest_upgrade
+
 from .stages import PipelineStage
 
 from .plugin_utils import PluginAutoClassifier
+from .plugins import PromptPlugin, ToolPlugin
 
 
 def plugin(func: Optional[Callable] = None, **hints: Any) -> Callable:
@@ -81,6 +85,24 @@ def output(
     return plugin(func, **hints)
 
 
+def prompt_plugin(
+    func: Optional[Callable] = None, **hints: Any
+) -> Callable[[Callable], Callable] | Callable:
+    """Decorator for prompt plugins using default stage."""
+
+    hints["plugin_class"] = PromptPlugin
+    return plugin(func, **hints)
+
+
+def tool_plugin(
+    func: Optional[Callable] = None, **hints: Any
+) -> Callable[[Callable], Callable] | Callable:
+    """Decorator for tool plugins using default stage."""
+
+    hints["plugin_class"] = ToolPlugin
+    return plugin(func, **hints)
+
+
 __all__ = [
     "plugin",
     "input",
@@ -89,4 +111,6 @@ __all__ = [
     "tool",
     "review",
     "output",
+    "prompt_plugin",
+    "tool_plugin",
 ]

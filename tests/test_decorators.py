@@ -6,6 +6,7 @@ sys.path.insert(0, str(pathlib.Path("src").resolve()))
 from entity import agent
 from entity.core.builder import _AgentBuilder
 from entity.core.stages import PipelineStage
+from entity import Agent
 
 
 _DEFINITIONS = [
@@ -37,3 +38,25 @@ for dec, stage in _DEFINITIONS:
         return test_func
 
     globals()[f"test_{dec.__name__}_decorator"] = _make_test()
+
+
+def test_agent_tool_method_default_stage():
+    ag = Agent()
+
+    @ag.tool
+    async def do_it(ctx):
+        pass
+
+    plugin = ag.builder._added_plugins[-1]
+    assert plugin.stages == [PipelineStage.DO]
+
+
+def test_agent_prompt_method_default_stage():
+    ag = Agent()
+
+    @ag.prompt
+    async def think(ctx):
+        pass
+
+    plugin = ag.builder._added_plugins[-1]
+    assert plugin.stages == [PipelineStage.THINK]
