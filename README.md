@@ -41,6 +41,8 @@ plugins:
       dependencies: [database, vector_store]
 ```
 
+To make a dependency optional, append `?` to its name, e.g. `vector_store?`. Optional dependencies aren't validated during initialization and will be `None` if not configured.
+
 See the [Quick Start](docs/source/quick_start.md) for step-by-step setup or browse the [full documentation](https://entity.readthedocs.io/en/latest/).
 
 ### Stateless Workers (Decision 6)
