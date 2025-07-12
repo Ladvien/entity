@@ -13,7 +13,6 @@ from entity.core.plugins import (
 )
 from entity.core.stages import PipelineStage
 from entity.core.registry_validator import RegistryValidator
-from entity.pipeline.initializer import ClassRegistry
 from entity.pipeline.utils import StageResolver
 
 
@@ -260,7 +259,6 @@ def test_stage_override_warning():
         async def _execute_impl(self, context):
             pass
 
-    registry = ClassRegistry()
     stages, explicit = StageResolver._resolve_plugin_stages(
         OverridePrompt, {"stage": PipelineStage.DO}
     )

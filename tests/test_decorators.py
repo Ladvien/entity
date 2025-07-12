@@ -4,7 +4,6 @@ import sys
 sys.path.insert(0, str(pathlib.Path("src").resolve()))
 
 from entity import agent
-from entity.core.builder import _AgentBuilder
 from entity.core.stages import PipelineStage
 from entity import Agent
 
@@ -20,7 +19,7 @@ _DEFINITIONS = [
 
 
 def _stage_of(decorator):
-    _ = _AgentBuilder()
+    _ = Agent()
 
     @decorator
     async def dummy(context):

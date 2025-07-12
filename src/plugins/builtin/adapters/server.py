@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from entity.core.runtime import AgentRuntime
+from entity.core.agent import AgentRuntime
 
 from .cli import CLIAdapter
 from .http_adapter import HTTPAdapter

@@ -1,6 +1,6 @@
 import pytest
 
-from entity.core.builder import _AgentBuilder
+from entity.core.agent import Agent
 from entity.core.plugins import Plugin
 from entity.core.stages import PipelineStage
 
@@ -27,14 +27,14 @@ class LifecyclePlugin(Plugin):
 
 @pytest.mark.asyncio
 async def test_plugin_lifecycle():
-    builder = _AgentBuilder()
+    ag = Agent()
     plugin = LifecyclePlugin({})
-    builder.add_plugin(plugin)
-    builder.build_runtime()
+    ag.builder.add_plugin(plugin)
+    ag.builder.build_runtime()
 
     await plugin.execute(object())
     assert plugin.initialized
     assert plugin.executed
 
-    builder.shutdown()
+    ag.builder.shutdown()
     assert plugin.closed
