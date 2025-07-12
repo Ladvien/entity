@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-12: Verified tests only use default_setup and kitchen_sink; no example references found
+AGENT NOTE - 2025-07-17: Added tests for zero_config example and kitchen_sink placeholder
 AGENT NOTE - 2025-07-16: Revised built-in resource config validation and tests
 AGENT NOTE - 2025-07-12: Added infrastructure deps injection in ResourceContainer
 AGENT NOTE - 2025-07-14: Unified builder and runtime inside Agent
