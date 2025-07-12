@@ -71,6 +71,15 @@ class PluginToolCLI:
         gen.add_argument("--out", default="src", help="Output directory")
         gen.add_argument("--docs-dir", default="docs/source")
 
+        scaffold = sub.add_parser("scaffold", help="Create a standalone plugin project")
+        scaffold.add_argument("name", help="Plugin name")
+        scaffold.add_argument("--type", required=True, choices=list(PLUGIN_TYPES))
+        scaffold.add_argument(
+            "--out",
+            default="user_plugins",
+            help="Directory to create the project in",
+        )
+
         val = sub.add_parser("validate", help="Validate plugin structure")
         val.add_argument("path", help="Path to plugin file")
 
@@ -117,6 +126,8 @@ class PluginToolCLI:
             return self._generate()
         if cmd == "validate":
             return self._validate()
+        if cmd == "scaffold":
+            return self._scaffold()
         if cmd == "test":
             return self._test()
         if cmd == "config":
@@ -236,6 +247,38 @@ class PluginToolCLI:
                 name,
                 ", ".join(deps) if deps else "no dependencies",
             )
+        return 0
+
+    def _scaffold(self) -> int:
+        assert self.args.name is not None
+        assert self.args.type is not None
+        assert self.args.out is not None
+        project_dir = Path(self.args.out) / self.args.name
+        if project_dir.exists() and any(project_dir.iterdir()):
+            logger.error("%s already exists and is not empty", project_dir)
+            return 1
+        src_dir = project_dir / "src"
+        docs_dir = project_dir / "docs"
+        tests_dir = project_dir / "tests"
+        src_dir.mkdir(parents=True, exist_ok=True)
+        docs_dir.mkdir(parents=True, exist_ok=True)
+        tests_dir.mkdir(parents=True, exist_ok=True)
+
+        template = Path("templates/plugins") / f"{self.args.type}.py"
+        class_name = "".join(part.capitalize() for part in self.args.name.split("_"))
+        content = template.read_text().format(class_name=class_name)
+        (src_dir / f"{self.args.name}.py").write_text(content)
+        (docs_dir / f"{self.args.name}.md").write_text(
+            f"## {class_name}\n\n.. automodule:: {self.args.name}\n    :members:\n"
+        )
+        test_file = tests_dir / f"test_{self.args.name}.py"
+        test_file.write_text(
+            "from pathlib import Path\nfrom tests.plugins.harness import run_plugin\n\n"
+            f"def test_{self.args.name}():\n"
+            "    path = Path(__file__).parents[1] / 'src' / '{self.args.name}.py'\n"
+            "    run_plugin(str(path))\n"
+        )
+        logger.info("Created plugin project at %s", project_dir)
         return 0
 
     def _docs(self) -> int:
