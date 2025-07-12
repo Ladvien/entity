@@ -1,4 +1,6 @@
 import os
+import asyncio
+import pytest
 from entity.config.environment import load_env
 
 
@@ -52,3 +54,63 @@ def test_os_env_overrides_secret(monkeypatch, tmp_path):
     load_env(env_file, env="prod")
 
     assert os.environ["QUX"] == "os"
+
+
+@pytest.mark.asyncio
+async def test_ensure_ollama_pulls_when_missing(monkeypatch):
+    from entity.utils.setup_manager import Layer0SetupManager
+    from httpx import AsyncClient
+    import asyncio
+
+    async def fake_get(self, url):
+        class R:
+            def json(self):
+                return {"models": []}
+
+        return R()
+
+    async def fake_exec(*args, **kwargs):
+        class P:
+            returncode = 0
+
+            async def communicate(self):
+                return b"", b""
+
+        return P()
+
+    monkeypatch.setattr(AsyncClient, "get", fake_get)
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
+
+    mgr = Layer0SetupManager()
+    await mgr.ensure_ollama()
+
+
+@pytest.mark.asyncio
+async def test_ensure_ollama_download_failure(monkeypatch):
+    from entity.utils.setup_manager import Layer0SetupManager
+    from httpx import AsyncClient
+    import asyncio
+    import pytest
+
+    async def fake_get(self, url):
+        class R:
+            def json(self):
+                return {"models": []}
+
+        return R()
+
+    async def fake_exec(*args, **kwargs):
+        class P:
+            returncode = 1
+
+            async def communicate(self):
+                return b"", b"boom"
+
+        return P()
+
+    monkeypatch.setattr(AsyncClient, "get", fake_get)
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
+
+    mgr = Layer0SetupManager()
+    with pytest.raises(RuntimeError):
+        await mgr.ensure_ollama()

@@ -73,7 +73,7 @@ import asyncio
 asyncio.run(agent.handle("calc"))
 ```
 
-Ensure [Ollama](https://ollama.ai) is installed and run `ollama pull llama3` before testing.
+Ensure [Ollama](https://ollama.ai) is installed. If no model is detected, the setup step will attempt `ollama pull llama3` for you. Run it manually beforehand to avoid the initial download delay.
 
 ### Stateless Workers (Decision 6)
 
@@ -115,6 +115,7 @@ This project uses `mise` for Python version management. The `.python-version` fi
 ```bash
 mise install
 ```
+The zero-config setup verifies that Ollama is running. If no models are present it automatically runs `ollama pull llama3`.
 ### Secrets Management
 
 Store API keys and credentials in `secrets/<env>.env` files. The `load_env()` helper first loads `.env` and then overrides values with the matching secrets file, keeping existing environment variables intact. Ensure the `secrets/` directory remains untracked.
