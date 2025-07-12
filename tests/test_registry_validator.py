@@ -9,6 +9,9 @@ from pipeline.initializer import ClassRegistry
 class A(AgentResource):
     stages = [PipelineStage.PARSE]
 
+    def __init__(self, config=None):
+        super().__init__(config or {})
+
     async def _execute_impl(self, context):
         pass
 
@@ -16,6 +19,10 @@ class A(AgentResource):
 class B(PromptPlugin):
     stages = [PipelineStage.THINK]
     dependencies = ["a"]
+
+    def __init__(self, a: A, config=None):
+        super().__init__(config or {})
+        self.a = a
 
     async def _execute_impl(self, context):
         pass
@@ -25,6 +32,11 @@ class C(PromptPlugin):
     stages = [PipelineStage.DO]
     dependencies = ["missing"]
 
+    def __init__(
+        self, missing, config=None
+    ):  # pragma: no cover - constructed in validator
+        super().__init__(config or {})
+
     async def _execute_impl(self, context):
         pass
 
@@ -33,6 +45,9 @@ class D(PromptPlugin):
     stages = [PipelineStage.PARSE]
     dependencies = ["e"]
 
+    def __init__(self, e, config=None):  # pragma: no cover - constructed in validator
+        super().__init__(config or {})
+
     async def _execute_impl(self, context):
         pass
 
@@ -40,6 +55,9 @@ class D(PromptPlugin):
 class E(PromptPlugin):
     stages = [PipelineStage.DO]
     dependencies = ["d"]
+
+    def __init__(self, d, config=None):  # pragma: no cover - constructed in validator
+        super().__init__(config or {})
 
     async def _execute_impl(self, context):
         pass
@@ -62,6 +80,12 @@ class PostgresResource(AgentResource):
 class ComplexPrompt(PromptPlugin):
     stages = [PipelineStage.THINK]
     dependencies = ["memory"]
+
+    def __init__(
+        self, memory, config=None
+    ):  # pragma: no cover - constructed in validator
+        super().__init__(config or {})
+        self.memory = memory
 
     async def _execute_impl(self, context):
         pass
