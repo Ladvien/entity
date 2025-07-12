@@ -1,8 +1,6 @@
 import asyncio
 import importlib.util
 import sys
-from pathlib import Path
-from types import ModuleType
 
 import pytest
 from pipeline import PipelineStage
@@ -152,3 +150,84 @@ async def test_dependencies_injected_before_initialize():
     await container.build_all()
     dep = container.get("dep")
     assert dep is not None and dep.initialized_with_dep
+
+
+class InfraRes(ResourcePlugin):
+    stages = [PipelineStage.PARSE]
+
+    async def _execute_impl(self, context):
+        return None
+
+
+class InterfaceRes(ResourcePlugin):
+    stages = [PipelineStage.PARSE]
+    dependencies = ["infra"]
+
+    async def _execute_impl(self, context):
+        return None
+
+
+class CanonRes(ResourcePlugin):
+    stages = [PipelineStage.PARSE]
+    dependencies = ["interface"]
+
+    async def _execute_impl(self, context):
+        return None
+
+
+class CustomRes(ResourcePlugin):
+    stages = [PipelineStage.PARSE]
+    dependencies = ["canon"]
+
+    async def _execute_impl(self, context):
+        return None
+
+
+@pytest.mark.asyncio
+async def test_four_layer_order_and_injection():
+    container = ResourceContainer()
+    container.register("infra", InfraRes, {}, layer=1)
+    container.register("interface", InterfaceRes, {}, layer=2)
+    container.register("canon", CanonRes, {}, layer=3)
+    container.register("custom", CustomRes, {}, layer=4)
+    await container.build_all()
+    assert container._init_order == ["infra", "interface", "canon", "custom"]
+    custom = container.get("custom")
+    canon = container.get("canon")
+    assert custom.canon is canon
+
+
+@pytest.mark.asyncio
+async def test_layer_violation_raises():
+    class Bad(ResourcePlugin):
+        dependencies = ["infra"]
+
+        async def _execute_impl(self, context):
+            return None
+
+    container = ResourceContainer()
+    container.register("infra", InfraRes, {}, layer=1)
+    container.register("bad", Bad, {}, layer=3)
+    with pytest.raises(SystemError):
+        await container.build_all()
+
+
+@pytest.mark.asyncio
+async def test_circular_dependency_detected():
+    class A(ResourcePlugin):
+        dependencies = ["b"]
+
+        async def _execute_impl(self, context):
+            return None
+
+    class B(ResourcePlugin):
+        dependencies = ["a"]
+
+        async def _execute_impl(self, context):
+            return None
+
+    container = ResourceContainer()
+    container.register("a", A, {}, layer=2)
+    container.register("b", B, {}, layer=2)
+    with pytest.raises(SystemError):
+        await container.build_all()

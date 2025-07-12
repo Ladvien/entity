@@ -119,6 +119,7 @@ class ResourceContainer:
         self._classes: Dict[str, type] = {}
         self._configs: Dict[str, Dict] = {}
         self._deps: Dict[str, List[str]] = {}
+        self._layers: Dict[str, int] = {}
         self._order: List[str] = []
         self._init_order: List[str] = []
         self._pools: Dict[str, ResourcePool] = {}
@@ -151,34 +152,39 @@ class ResourceContainer:
             if callable(shutdown):
                 await shutdown()
 
-    def register(self, name: str, cls: type, config: Dict) -> None:
+    def register(self, name: str, cls: type, config: Dict, layer: int = 1) -> None:
         self._classes[name] = cls
         self._configs[name] = config
         self._deps[name] = list(getattr(cls, "dependencies", []))
+        self._layers[name] = layer
 
     async def build_all(self) -> None:
         """Instantiate and initialize resources sequentially."""
-
+        self._validate_layers()
         self._order = self._resolve_order()
         self._init_order = []
 
-        for name in self._order:
-            cls = self._classes[name]
-            cfg = self._configs[name]
+        for layer in range(1, 5):
+            for name in self._order:
+                if self._layers.get(name) != layer:
+                    continue
 
-            instance = self._create_instance(cls, cfg)
-            await self.add(name, instance)
+                cls = self._classes[name]
+                cfg = self._configs[name]
 
-            self._inject_dependencies(name, instance)
+                instance = self._create_instance(cls, cfg)
+                await self.add(name, instance)
 
-            init = getattr(instance, "initialize", None)
-            if callable(init):
-                await init()
-            self._init_order.append(name)
+                self._inject_dependencies(name, instance)
 
-            check = getattr(instance, "health_check", None)
-            if callable(check) and not await check():
-                raise SystemError(f"Resource '{name}' failed health check")
+                init = getattr(instance, "initialize", None)
+                if callable(init):
+                    await init()
+                self._init_order.append(name)
+
+                check = getattr(instance, "health_check", None)
+                if callable(check) and not await check():
+                    raise SystemError(f"Resource '{name}' failed health check")
 
     async def shutdown_all(self) -> None:
         order = self._init_order or self._order
@@ -254,6 +260,26 @@ class ResourceContainer:
                     f"Resource '{name}' requires '{dep_name}' which is missing"
                 )
             setattr(instance, dep_name, dep_obj)
+
+    def _validate_layers(self) -> None:
+        """Ensure layer dependencies follow the 4-layer architecture."""
+
+        for name, layer in self._layers.items():
+            if layer not in {1, 2, 3, 4}:
+                raise SystemError(f"Resource '{name}' has invalid layer {layer}")
+            if layer == 1 and self._deps.get(name):
+                raise SystemError("Infrastructure resources cannot have dependencies")
+
+        for name, deps in self._deps.items():
+            for dep in deps:
+                dep_name = dep[:-1] if dep.endswith("?") else dep
+                dep_layer = self._layers.get(dep_name)
+                if dep_layer is None:
+                    continue
+                if self._layers[name] - dep_layer != 1:
+                    raise SystemError(
+                        f"Resource '{name}' violates layer rules: depends on '{dep_name}'"
+                    )
 
     def _resolve_order(self) -> List[str]:
         # Build dependency graph with edges from each dependency to its dependents
