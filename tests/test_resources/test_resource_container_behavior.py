@@ -3,6 +3,7 @@ from typing import List
 import pytest
 from entity.core.plugins import AgentResource as BaseResource
 from entity.core.resources.container import ResourceContainer
+from entity.resources import Memory
 
 
 class A(BaseResource):
@@ -87,3 +88,17 @@ async def test_shutdown_all_reverse_order() -> None:
     await container.build_all()
     await container.shutdown_all()
     assert log == ["i1", "i2", "s2", "s1"]
+
+
+@pytest.mark.asyncio
+async def test_dependency_injection_by_name() -> None:
+    class UsesMemory(BaseResource):
+        dependencies = ["memory"]
+
+    container = ResourceContainer()
+    container.register("memory", Memory, {})
+    container.register("use", UsesMemory, {})
+    await container.build_all()
+
+    instance: UsesMemory = container.get("use")  # type: ignore[assignment]
+    assert isinstance(instance.memory, Memory)

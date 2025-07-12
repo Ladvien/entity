@@ -11,7 +11,8 @@ import inspect
 from entity.core.registries import SystemRegistries
 from pipeline.pipeline import execute_pipeline
 
-from ..core.plugins import AgentResource, ValidationResult
+from .base import AgentResource
+from ..core.plugins import ValidationResult
 from ..core.state import ConversationEntry
 
 
