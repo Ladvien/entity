@@ -1,7 +1,7 @@
 import types
 import pytest
 
-from pipeline.worker import PipelineWorker
+from pipeline import PipelineWorker
 
 
 class DummyMemory:
