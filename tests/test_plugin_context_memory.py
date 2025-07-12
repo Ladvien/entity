@@ -11,7 +11,6 @@ asyncio.set_event_loop(loop)
 from entity.core.context import PluginContext
 from entity.core.state import PipelineState, ConversationEntry
 from entity.resources import Memory
-from entity.resources import memory as memory_module
 from entity.resources.interfaces.database import DatabaseResource
 from pipeline.errors import ResourceInitializationError
 import pytest
@@ -117,12 +116,16 @@ def test_memory_persists_between_instances() -> None:
     loop = asyncio.get_event_loop()
     db = DummyDatabase()
     mem1 = Memory(config={})
+    mem1.database = db
+    mem1.vector_store = None
     asyncio.get_event_loop().run_until_complete(mem1.initialize())
     mem1.set("foo", "bar")
     entry = ConversationEntry("hi", "user", datetime.now())
     loop.run_until_complete(mem1.save_conversation("cid", [entry]))
 
     mem2 = Memory(config={})
+    mem2.database = db
+    mem2.vector_store = None
     asyncio.get_event_loop().run_until_complete(mem2.initialize())
     assert mem2.get("foo") == "bar"
     history = loop.run_until_complete(mem2.load_conversation("cid"))
@@ -134,12 +137,16 @@ def test_memory_persists_with_connection_pool() -> None:
     loop = asyncio.get_event_loop()
     pool = DummyPool()
     mem1 = Memory(config={})
+    mem1.database = pool
+    mem1.vector_store = None
     asyncio.get_event_loop().run_until_complete(mem1.initialize())
     mem1.set("foo", "bar")
     entry = ConversationEntry("hi", "user", datetime.now())
     loop.run_until_complete(mem1.save_conversation("cid", [entry]))
 
     mem2 = Memory(config={})
+    mem2.database = pool
+    mem2.vector_store = None
     asyncio.get_event_loop().run_until_complete(mem2.initialize())
     assert mem2.get("foo") == "bar"
     history = loop.run_until_complete(mem2.load_conversation("cid"))

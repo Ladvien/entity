@@ -59,6 +59,8 @@ class DummyLLMProvider(LLMResource):
 def test_standard_resources_types() -> None:
     db = DummyDatabase()
     memory = Memory(config={})
+    memory.database = db
+    memory.vector_store = None
     asyncio.get_event_loop().run_until_complete(memory.initialize())
 
     res = StandardResources(
