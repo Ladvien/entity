@@ -5,7 +5,7 @@ from typing import Iterable, Mapping, Optional
 
 from typing import TYPE_CHECKING
 
-from entity.core.builder import _AgentBuilder
+from entity.core.agent import _AgentBuilder
 
 if TYPE_CHECKING:
     from entity.core.agent import AgentRuntime

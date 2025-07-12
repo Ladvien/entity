@@ -12,7 +12,6 @@ from entity.core import plugin_utils
 from .plugin_utils import PluginAutoClassifier
 from entity.pipeline.exceptions import PipelineError
 from entity.pipeline.utils import StageResolver
-from entity.pipeline.workflow import Pipeline
 from entity.pipeline.stages import PipelineStage
 
 from .plugins import (
@@ -28,6 +27,13 @@ from .registries import PluginRegistry, SystemRegistries, ToolRegistry
 from .resources.container import ResourceContainer
 from entity.workflows.base import Workflow
 from entity.workflows.discovery import discover_workflows, register_module_workflows
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover - type checking
+    from entity.pipeline.workflow import Pipeline
+else:  # pragma: no cover - runtime circular import guard
+    Pipeline = object
 
 
 @dataclass(init=False)
