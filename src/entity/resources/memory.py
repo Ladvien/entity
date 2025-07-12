@@ -57,9 +57,11 @@ class Memory(AgentResource):
 
     # ``store_persistent`` and ``fetch_persistent`` are implemented below.
 
-    def clear(self) -> None:
-        if self._pool is not None:
-            self._pool.execute(f"DELETE FROM {self._kv_table}")
+    async def clear(self) -> None:
+        if self._pool is None:
+            return
+        async with self.database.connection() as conn:
+            conn.execute(f"DELETE FROM {self._kv_table}")
 
     # ------------------------------------------------------------------
     # Conversation helpers
@@ -69,30 +71,32 @@ class Memory(AgentResource):
     ) -> None:
         if self._pool is None:
             return
-        self._pool.execute(
-            f"DELETE FROM {self._history_table} WHERE conversation_id = ?",
-            (conversation_id,),
-        )
-        for entry in history:
-            self._pool.execute(
-                f"INSERT INTO {self._history_table} VALUES (?, ?, ?, ?, ?)",
-                (
-                    conversation_id,
-                    entry.role,
-                    entry.content,
-                    json.dumps(entry.metadata),
-                    entry.timestamp.isoformat(),
-                ),
+        async with self.database.connection() as conn:
+            conn.execute(
+                f"DELETE FROM {self._history_table} WHERE conversation_id = ?",
+                (conversation_id,),
             )
+            for entry in history:
+                conn.execute(
+                    f"INSERT INTO {self._history_table} VALUES (?, ?, ?, ?, ?)",
+                    (
+                        conversation_id,
+                        entry.role,
+                        entry.content,
+                        json.dumps(entry.metadata),
+                        entry.timestamp.isoformat(),
+                    ),
+                )
 
     async def load_conversation(self, conversation_id: str) -> List[ConversationEntry]:
         if self._pool is None:
             return []
-        rows = self._pool.execute(
-            f"SELECT role, content, metadata, timestamp FROM {self._history_table} "
-            "WHERE conversation_id = ? ORDER BY timestamp",
-            (conversation_id,),
-        ).fetchall()
+        async with self.database.connection() as conn:
+            rows = conn.execute(
+                f"SELECT role, content, metadata, timestamp FROM {self._history_table} "
+                "WHERE conversation_id = ? ORDER BY timestamp",
+                (conversation_id,),
+            ).fetchall()
         result: List[ConversationEntry] = []
         for row in rows:
             metadata = json.loads(row[2]) if row[2] else {}
@@ -131,9 +135,10 @@ class Memory(AgentResource):
         if self._pool is None:
             raise InitializationError("Database dependency not injected")
 
-        cursor = self._pool.execute(sql, params or [])
-        columns = [d[0] for d in cursor.description]
-        return [dict(zip(columns, row)) for row in cursor.fetchall()]
+        async with self.database.connection() as conn:
+            cursor = conn.execute(sql, params or [])
+            columns = [d[0] for d in cursor.description]
+            return [dict(zip(columns, row)) for row in cursor.fetchall()]
 
     async def vector_search(self, query: str, k: int = 5) -> List[str]:
         """Delegate semantic search to the vector store."""
@@ -146,37 +151,41 @@ class Memory(AgentResource):
         if self._pool is None:
             return
         rows = [(key, json.dumps(value)) for key, value in key_value_pairs.items()]
-        self._pool.executemany(
-            f"INSERT OR REPLACE INTO {self._kv_table} VALUES (?, ?)", rows
-        )
+        async with self.database.connection() as conn:
+            conn.executemany(
+                f"INSERT OR REPLACE INTO {self._kv_table} VALUES (?, ?)", rows
+            )
 
     async def store_persistent(self, key: str, value: Any) -> None:
         """Persist ``value`` under ``key``."""
         if self._pool is None:
             return
-        self._pool.execute(
-            f"INSERT OR REPLACE INTO {self._kv_table} VALUES (?, ?)",
-            (key, json.dumps(value)),
-        )
+        async with self.database.connection() as conn:
+            conn.execute(
+                f"INSERT OR REPLACE INTO {self._kv_table} VALUES (?, ?)",
+                (key, json.dumps(value)),
+            )
 
     async def fetch_persistent(self, key: str, default: Any = None) -> Any:
         """Retrieve a persisted value."""
         if self._pool is None:
             return default
-        row = self._pool.execute(
-            f"SELECT value FROM {self._kv_table} WHERE key = ?",
-            (key,),
-        ).fetchone()
+        async with self.database.connection() as conn:
+            row = conn.execute(
+                f"SELECT value FROM {self._kv_table} WHERE key = ?",
+                (key,),
+            ).fetchone()
         return json.loads(row[0]) if row else default
 
     async def delete_persistent(self, key: str) -> None:
         """Remove ``key`` from persistent storage."""
         if self._pool is None:
             return
-        self._pool.execute(
-            f"DELETE FROM {self._kv_table} WHERE key = ?",
-            (key,),
-        )
+        async with self.database.connection() as conn:
+            conn.execute(
+                f"DELETE FROM {self._kv_table} WHERE key = ?",
+                (key,),
+            )
 
     async def add_conversation_entry(
         self, conversation_id: str, entry: ConversationEntry
@@ -184,16 +193,17 @@ class Memory(AgentResource):
         """Append a single entry to ``conversation_id``."""
         if self._pool is None:
             return
-        self._pool.execute(
-            f"INSERT INTO {self._history_table} VALUES (?, ?, ?, ?, ?)",
-            (
-                conversation_id,
-                entry.role,
-                entry.content,
-                json.dumps(entry.metadata),
-                entry.timestamp.isoformat(),
-            ),
-        )
+        async with self.database.connection() as conn:
+            conn.execute(
+                f"INSERT INTO {self._history_table} VALUES (?, ?, ?, ?, ?)",
+                (
+                    conversation_id,
+                    entry.role,
+                    entry.content,
+                    json.dumps(entry.metadata),
+                    entry.timestamp.isoformat(),
+                ),
+            )
 
     async def conversation_search(
         self, query: str, user_id: str | None = None, days: int | None = None
@@ -222,7 +232,8 @@ class Memory(AgentResource):
             sql += " WHERE " + " AND ".join(clauses)
         sql += " ORDER BY timestamp DESC"
 
-        rows = self._pool.execute(sql, params).fetchall()
+        async with self.database.connection() as conn:
+            rows = conn.execute(sql, params).fetchall()
         return [
             {
                 "conversation_id": row[0],
@@ -238,15 +249,16 @@ class Memory(AgentResource):
         """Return simple statistics for a user's conversations."""
         if self._pool is None:
             return {}
-        conv_rows = self._pool.execute(
-            f"SELECT DISTINCT conversation_id FROM {self._history_table} "
-            "WHERE conversation_id LIKE ?",
-            (f"{user_id}%",),
-        ).fetchall()
-        total_messages = self._pool.execute(
-            f"SELECT COUNT(*) FROM {self._history_table} WHERE conversation_id LIKE ?",
-            (f"{user_id}%",),
-        ).fetchone()[0]
+        async with self.database.connection() as conn:
+            conv_rows = conn.execute(
+                f"SELECT DISTINCT conversation_id FROM {self._history_table} "
+                "WHERE conversation_id LIKE ?",
+                (f"{user_id}%",),
+            ).fetchall()
+            total_messages = conn.execute(
+                f"SELECT COUNT(*) FROM {self._history_table} WHERE conversation_id LIKE ?",
+                (f"{user_id}%",),
+            ).fetchone()[0]
         return {
             "conversations": len(conv_rows),
             "messages": total_messages,
