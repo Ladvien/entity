@@ -38,7 +38,7 @@ plugins:
 plugins:
   resources:
     metrics_collector:
-      type: entity.resources.metrics_collector:MetricsCollectorResource
+      type: entity.resources.metrics:MetricsCollectorResource
       retention_days: 90
       buffer_size: 1000
 ```

@@ -18,8 +18,8 @@ plugins:
     database:
       type: entity.infrastructure.duckdb:DuckDBInfrastructure
       path: ./agent.duckdb
-    # metrics_collector:
-    #   type: entity.resources.metrics_collector:MetricsCollectorResource
+    metrics_collector:
+      type: entity.resources.metrics:MetricsCollectorResource
     # llm:
     #   provider: ollama
     #   base_url: "${OLLAMA_BASE_URL}"

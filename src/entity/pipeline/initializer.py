@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple, Type
 
 from entity.config.environment import load_env
-from entity.config.models import EntityConfig, asdict
+from entity.config.models import EntityConfig, PluginConfig, asdict
 from entity.core.plugin_utils import import_plugin_class
 from entity.core.plugins import Plugin, ResourcePlugin, ToolPlugin
 from entity.core.registries import PluginRegistry, ToolRegistry
@@ -168,6 +168,15 @@ class SystemInitializer:
             cfg = config or {}
             self._config_model = EntityConfig.from_dict(cfg)
             self.config = asdict(self._config_model)
+
+        resources = self._config_model.plugins.resources
+        if "metrics_collector" not in resources:
+            resources["metrics_collector"] = PluginConfig(
+                type="entity.resources.metrics:MetricsCollectorResource"
+            )
+            self.config["plugins"]["resources"]["metrics_collector"] = {
+                "type": "entity.resources.metrics:MetricsCollectorResource"
+            }
         self.plugin_registry_cls = plugin_registry_cls
         self.tool_registry_cls = tool_registry_cls
         self.resource_container_cls = resource_container_cls
@@ -497,6 +506,9 @@ class SystemInitializer:
             self.plugin_registry = plugin_registry
             for cls, config in registry.non_resource_non_tool_classes():
                 instance = cls(config)
+                metrics = resource_container.get("metrics_collector")
+                if metrics is not None:
+                    setattr(instance, "metrics_collector", metrics)
                 stages, _ = StageResolver._resolve_plugin_stages(
                     cls, config, instance, logger=logger
                 )
@@ -552,7 +564,7 @@ class SystemInitializer:
     def _ensure_canonical_resources(self, container: ResourceContainer) -> None:
         """Verify required canonical resources are registered."""
 
-        required = {"memory", "llm", "storage", "logging"}
+        required = {"memory", "llm", "storage", "logging", "metrics_collector"}
         registered = set(container._classes)
         missing = required - registered
         if missing:
