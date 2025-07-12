@@ -1,3 +1,4 @@
+import asyncio
 import pytest
 
 from entity.core.builder import _AgentBuilder
@@ -29,12 +30,13 @@ class LifecyclePlugin(Plugin):
 async def test_plugin_lifecycle():
     builder = _AgentBuilder()
     plugin = LifecyclePlugin({})
-    builder.add_plugin(plugin)
-    builder.build_runtime()
+    loop = asyncio.get_running_loop()
+    await loop.run_in_executor(None, builder.add_plugin, plugin)
+    await loop.run_in_executor(None, builder.build_runtime)
 
     await plugin.execute(object())
     assert plugin.initialized
     assert plugin.executed
 
-    builder.shutdown()
+    await loop.run_in_executor(None, builder.shutdown)
     assert plugin.closed
