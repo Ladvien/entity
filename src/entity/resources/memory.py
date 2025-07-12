@@ -98,21 +98,16 @@ class Memory(AgentResource):
     """Store key/value pairs, conversation history, and vectors."""
 
     name = "memory"
-    dependencies: list[str] = ["database?", "vector_store?"]
+    dependencies: list[str] = ["database", "vector_store"]
 
-    def __init__(
-        self,
-        database: DatabaseInterface | None = None,
-        vector_store: VectorStoreInterface | None = None,
-        config: Dict | None = None,
-    ) -> None:
+    def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
         self._kv: Dict[str, Any] = {}
         self._conversations: Dict[str, List[ConversationEntry]] = {}
         self._vectors: Dict[str, List[float]] = {}
         self._history = ConversationHistory(self._conversations)
-        self.database = database
-        self.vector_store = vector_store
+        self.database: DatabaseInterface | None = None
+        self.vector_store: VectorStoreInterface | None = None
 
     async def _execute_impl(self, context: Any) -> None:  # noqa: D401, ARG002
         return None
