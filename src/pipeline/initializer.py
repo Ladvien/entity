@@ -421,8 +421,6 @@ class SystemInitializer:
         for name, cls, config, layer in registry.resource_classes():
             resource_container.register(name, cls, config, layer=layer)
 
-        self._ensure_canonical_resources(resource_container)
-
         async with (
             initialization_cleanup_context(resource_container),
             plugin_cleanup_context(self._plugins),
