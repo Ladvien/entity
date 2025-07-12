@@ -25,9 +25,9 @@ class InterfacePlugin(ResourcePlugin):
     infrastructure_dependencies = ["infra"]
     stages: list = []
 
-    def __init__(self, infra: InfraPlugin, config=None):
+    def __init__(self, config=None):
         super().__init__(config or {})
-        self.infra = infra
+        self.infra: InfraPlugin | None = None
         self.initialized = False
 
     async def initialize(self) -> None:
@@ -38,9 +38,9 @@ class CanonicalResource(AgentResource):
     dependencies = ["iface"]
     stages: list = []
 
-    def __init__(self, iface: InterfacePlugin, config=None):
+    def __init__(self, config=None):
         super().__init__(config or {})
-        self.iface = iface
+        self.iface: InterfacePlugin | None = None
         self.initialized = False
         self.closed = False
 
