@@ -104,6 +104,7 @@ class ResourcePlugin(Plugin):
     """Layer 2 resource interface over infrastructure."""
 
     infrastructure_dependencies: List[str] = []
+    stages: List[PipelineStage] = []
 
 
 class AgentResource(ResourcePlugin):
@@ -113,6 +114,7 @@ class AgentResource(ResourcePlugin):
 class ToolPlugin(BasePlugin):
     """Utility plugin executed via ``tool_use`` calls."""
 
+    stages = [PipelineStage.DO]
     required_params: List[str] = []
 
     async def execute_function(self, params: Dict[str, Any]) -> Any:

@@ -78,7 +78,7 @@ class RegistryValidator:
                 cls = import_plugin_class(cfg.get("type", name))
                 self.registry.register_class(cls, cfg, name)
                 self.dep_graph[name] = list(getattr(cls, "dependencies", []))
-                self._validate_stage_assignment(name, cls)
+                self._validate_stage_assignment(name, cls, cfg)
 
                 if name == "memory" and isinstance(cfg, dict):
                     if cfg.get("vector_store"):
@@ -96,40 +96,24 @@ class RegistryValidator:
                     self.has_postgres = True
 
     @staticmethod
-    def _type_default_stages(cls: type) -> list[PipelineStage]:
-        from entity.core.plugins.base import AdapterPlugin, PromptPlugin, ToolPlugin
-
-        if issubclass(cls, ToolPlugin):
-            return [PipelineStage.DO]
-        if issubclass(cls, PromptPlugin):
-            return [PipelineStage.THINK]
-        if issubclass(cls, AdapterPlugin):
-            return [PipelineStage.INPUT, PipelineStage.OUTPUT]
-        return []
-
-    @staticmethod
-    def _validate_stage_assignment(name: str, cls: type) -> None:
+    def _validate_stage_assignment(name: str, cls: type, cfg: Dict) -> None:
         from entity.core.plugins import ResourcePlugin, ToolPlugin
 
         if issubclass(cls, (ResourcePlugin, ToolPlugin)):
             return
 
-        attr_stages = getattr(cls, "stages", [])
-        type_defaults = RegistryValidator._type_default_stages(cls)
-        if not (attr_stages or type_defaults):
-            type_defaults = [PipelineStage.THINK]
+        cfg_value = cfg.get("stages") or cfg.get("stage")
+        if cfg_value is not None:
+            stages = cfg_value if isinstance(cfg_value, list) else [cfg_value]
+            explicit = True
+        else:
+            stages = getattr(cls, "stages", [])
+            explicit = bool(stages)
 
-        stages, _ = resolve_stages(
-            cls.__name__,
-            cfg_value=None,
-            attr_stages=attr_stages,
-            explicit_attr=bool(attr_stages),
-            type_defaults=type_defaults,
-            ensure_stage=PipelineStage.ensure,
-            logger=logger,
-            error_type=SystemError,
-        )
+        if not explicit:
+            raise SystemError(f"Plugin '{name}' does not specify any stages")
 
+        stages = [PipelineStage.ensure(s) for s in stages]
         invalid = [s for s in stages if not isinstance(s, PipelineStage)]
         if invalid:
             raise SystemError(f"Plugin '{name}' has invalid stage values: {invalid}")

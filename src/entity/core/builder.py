@@ -25,7 +25,6 @@ from entity.core.resources.container import ResourceContainer
 from entity.core.runtime import AgentRuntime
 from entity.utils.logging import get_logger
 
-from pipeline.utils import resolve_stages
 
 from .plugin_utils import PluginAutoClassifier
 from .stages import PipelineStage
@@ -222,26 +221,20 @@ class _AgentBuilder:
         if config is not None:
             cfg_val = config.get("stages") or config.get("stage")
 
-        explicit_attr = getattr(plugin, "_explicit_stages", False) or (
-            "stages" in plugin.__class__.__dict__
-        )
+        if cfg_val is not None:
+            if not isinstance(cfg_val, list):
+                cfg_val = [cfg_val]
+            return [PipelineStage.ensure(s) for s in cfg_val]
 
-        type_defaults = self._type_default_stages(plugin)
-        if not (getattr(plugin, "stages", None) or type_defaults):
-            type_defaults = [PipelineStage.THINK]
+        class_stages = getattr(plugin, "stages", [])
+        if class_stages:
+            return [PipelineStage.ensure(s) for s in class_stages]
 
-        stages, _ = resolve_stages(
-            plugin.__class__.__name__,
-            cfg_value=cfg_val,
-            attr_stages=getattr(plugin, "stages", []),
-            explicit_attr=explicit_attr,
-            type_defaults=type_defaults,
-            ensure_stage=PipelineStage.ensure,
-            logger=logger,
-            auto_inferred=getattr(plugin, "_auto_inferred_stages", False),
-            error_type=ValueError,
-        )
-        return stages
+        type_default = self._type_default_stages(plugin)
+        if type_default:
+            return [PipelineStage.ensure(s) for s in type_default]
+
+        return [PipelineStage.THINK]
 
     def _register_module_plugins(self, module: ModuleType) -> None:
         import inspect
