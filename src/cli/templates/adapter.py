@@ -20,4 +20,6 @@ class {class_name}(AdapterPlugin):
 
     async def _execute_impl(self, context):
         if context.has("response"):
-            await context.queue_tool_use("send", {"text": context.load("response")})
+            await context.advanced.queue_tool_use(
+                "send", {"text": context.load("response")}
+            )
