@@ -144,6 +144,18 @@ class PluginToolCLI:
         if not isinstance(result, ValidationResult) or not result.success:
             logger.error("Config validation failed: %s", result.error_message)
             return 1
+
+        class _DummyRegistry:
+            def has_plugin(self, _name: str) -> bool:
+                return False
+
+            def list_plugins(self) -> list[str]:
+                return []
+
+        dep_result = plugin_cls.validate_dependencies(_DummyRegistry())
+        if not isinstance(dep_result, ValidationResult) or not dep_result.success:
+            logger.error("Dependency validation failed: %s", dep_result.error_message)
+            return 1
         logger.info("Validation succeeded")
         return 0
 

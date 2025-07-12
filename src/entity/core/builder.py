@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Pipeline component: builder."""
+
+from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, field
@@ -39,6 +39,19 @@ class _AgentBuilder:
     plugin_registry: PluginRegistry = field(default_factory=PluginRegistry)
     resource_registry: ResourceContainer = field(default_factory=ResourceContainer)
     tool_registry: ToolRegistry = field(default_factory=ToolRegistry)
+    _added_plugins: list[Plugin] = field(default_factory=list, init=False)
+
+    # ------------------------------ utility helpers ------------------------------
+    def has_plugin(self, name: str) -> bool:
+        """Return True if a plugin, resource, or tool with ``name`` exists."""
+
+        if self.plugin_registry.get_plugin(name) is not None:
+            return True
+        if self.resource_registry.get(name) is not None:
+            return True
+        if self.tool_registry.get(name) is not None:
+            return True
+        return False
 
     def __post_init__(self) -> None:
         """Configure plugin system on first construction."""
@@ -65,12 +78,26 @@ class _AgentBuilder:
             name = getattr(plugin, "name", plugin.__class__.__name__)
             raise TypeError(f"Plugin '{name}' must implement async '_execute_impl'")
 
+        result = plugin.__class__.validate_config(plugin.config)
+        if not result.success:
+            raise SystemError(
+                f"Config validation failed for {plugin.__class__.__name__}: {result.message}"
+            )
+
+        dep_result = plugin.__class__.validate_dependencies(self)
+        if not dep_result.success:
+            raise SystemError(
+                f"Dependency validation failed for {plugin.__class__.__name__}: {dep_result.message}"
+            )
+
         stages = self._resolve_plugin_stages(plugin, config)
         for stage in stages:
             name = getattr(plugin, "name", plugin.__class__.__name__)
             asyncio.run(
                 self.plugin_registry.register_plugin_for_stage(plugin, stage, name)
             )
+
+        self._added_plugins.append(plugin)
 
     def plugin(
         self,
@@ -153,10 +180,10 @@ class _AgentBuilder:
         """Register plugins from a configuration mapping in listed order."""
 
         plugins_cfg = cfg.get("plugins", {})
-        for _section, entries in plugins_cfg.items():
+        for section, entries in plugins_cfg.items():
             if not isinstance(entries, Mapping):
                 continue
-            for _name, meta in entries.items():
+            for name, meta in entries.items():
                 if isinstance(meta, str):
                     cls_path = meta
                     plugin_cfg = {}
@@ -168,6 +195,24 @@ class _AgentBuilder:
                 else:  # pragma: no cover - defensive
                     continue
                 plugin_cls = plugin_utils.import_plugin_class(cls_path)
+
+                if issubclass(plugin_cls, ResourcePlugin):
+                    layer = {
+                        "infrastructure": 1,
+                        "resources": 2,
+                        "agent_resources": 3,
+                        "custom_resources": 4,
+                    }.get(section, 3)
+                    self.resource_registry.register(
+                        name, plugin_cls, plugin_cfg, layer=layer
+                    )
+                    continue
+
+                if issubclass(plugin_cls, ToolPlugin):
+                    instance = plugin_cls(plugin_cfg)
+                    asyncio.run(self.tool_registry.add(name, instance))
+                    continue
+
                 instance = plugin_cls(plugin_cfg)
                 self.add_plugin(instance)
 
@@ -176,12 +221,25 @@ class _AgentBuilder:
         self, workflow: Mapping[PipelineStage | str, Iterable[str]] | None = None
     ) -> "AgentRuntime":
         asyncio.run(self.resource_registry.build_all())
+        for plugin in self._added_plugins:
+            init = getattr(plugin, "initialize", None)
+            if callable(init):
+                asyncio.run(init())
         capabilities = SystemRegistries(
             resources=self.resource_registry,
             tools=self.tool_registry,
             plugins=self.plugin_registry,
         )
         return AgentRuntime(capabilities)
+
+    def shutdown(self) -> None:
+        """Shut down plugins and resources."""
+
+        for plugin in reversed(self._added_plugins):
+            shutdown = getattr(plugin, "shutdown", None)
+            if callable(shutdown):
+                asyncio.run(shutdown())
+        asyncio.run(self.resource_registry.shutdown_all())
 
     # ------------------------------ internals --------------------------------
     def _import_module(self, file: Path) -> ModuleType | None:

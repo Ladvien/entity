@@ -139,6 +139,20 @@ async def initialization_cleanup_context(container: ResourceContainer):
         raise
 
 
+@asynccontextmanager
+async def plugin_cleanup_context(plugins: list[Plugin]):
+    """Shutdown plugins if initialization fails."""
+
+    try:
+        yield
+    except Exception:
+        for plugin in reversed(plugins):
+            shutdown = getattr(plugin, "shutdown", None)
+            if callable(shutdown):
+                await shutdown()
+        raise
+
+
 class SystemInitializer:
     """Initialize and validate all plugins for the pipeline."""
 
@@ -164,6 +178,10 @@ class SystemInitializer:
         self.tool_registry_cls = tool_registry_cls
         self.resource_container_cls = resource_container_cls
         self.workflows: Dict[str, Type] = {}
+        self._plugins: list[Plugin] = []
+        self.plugin_registry: PluginRegistry | None = None
+        self.resource_container: ResourceContainer | None = None
+        self.tool_registry: ToolRegistry | None = None
 
     @classmethod
     def from_yaml(cls, yaml_path: str, env_file: str = ".env") -> "SystemInitializer":
@@ -399,12 +417,14 @@ class SystemInitializer:
 
         # Phase 3: initialize resources via container
         resource_container = self.resource_container_cls()
-        for name, cls, config, layer in registry.resource_classes():
-            resource_container.register(name, cls, config, layer)
+        self.resource_container = resource_container
+        for name, cls, config in registry.resource_classes():
+            resource_container.register(name, cls, config)
 
-        self._ensure_canonical_resources(resource_container)
-
-        async with initialization_cleanup_context(resource_container):
+        async with (
+            initialization_cleanup_context(resource_container),
+            plugin_cleanup_context(self._plugins),
+        ):
             await resource_container.build_all()
 
             breaker_cfg = self.config.get("runtime_validation_breaker", {})
@@ -440,12 +460,14 @@ class SystemInitializer:
             tool_registry = self.tool_registry_cls(
                 concurrency_limit=tr_cfg.get("concurrency_limit", 5)
             )
+            self.tool_registry = tool_registry
             for name, cls, config in registry.named_tool_classes():
                 instance = cls(config)
                 await tool_registry.add(name, instance)
 
             # Phase 4: instantiate prompt and adapter plugins
             plugin_registry = self.plugin_registry_cls()
+            self.plugin_registry = plugin_registry
             for cls, config in registry.non_resource_non_tool_classes():
                 instance = cls(config)
                 stages, _ = self._resolve_plugin_stages(cls, instance, config)
@@ -453,8 +475,24 @@ class SystemInitializer:
                     await plugin_registry.register_plugin_for_stage(
                         instance, PipelineStage.ensure(stage)
                     )
+                self._plugins.append(instance)
+
+            for plugin in self._plugins:
+                init = getattr(plugin, "initialize", None)
+                if callable(init):
+                    await init()
 
         return plugin_registry, resource_container, tool_registry, workflow
+
+    async def shutdown(self) -> None:
+        """Shutdown resources and plugins."""
+
+        if self.resource_container is not None:
+            await self.resource_container.shutdown_all()
+        for plugin in reversed(self._plugins):
+            shutdown = getattr(plugin, "shutdown", None)
+            if callable(shutdown):
+                await shutdown()
 
     def _validate_dependency_graph(
         self, registry: ClassRegistry, dep_graph: Dict[str, List[str]]
