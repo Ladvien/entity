@@ -10,6 +10,7 @@ import inspect
 from .base import AgentResource
 from ..core.plugins import ValidationResult
 from ..core.state import ConversationEntry
+from ..core.resources.container import ResourcePool
 
 
 class Conversation:
@@ -71,13 +72,25 @@ class Memory(AgentResource):
     name = "memory"
     dependencies: list[str] = ["database", "vector_store"]
 
-    def __init__(self, config: Dict | None = None) -> None:
+    def __init__(
+        self,
+        database: DatabaseInterface | None = None,
+        vector_store: VectorStoreInterface | None = None,
+        config: Dict | None = None,
+    ) -> None:
         super().__init__(config or {})
+        self.database = database
+        self.vector_store = vector_store
         self._kv: Dict[str, Any] = {}
         self._conversations: Dict[str, List[ConversationEntry]] = {}
         self._vectors: Dict[str, List[float]] = {}
-        self.database = None
-        self.vector_store = None
+        self._pool: ResourcePool | None = (
+            database.get_connection_pool() if database is not None else None
+        )
+
+    async def initialize(self) -> None:
+        if self._pool is None and self.database is not None:
+            self._pool = self.database.get_connection_pool()
 
     async def _execute_impl(self, context: Any) -> None:  # noqa: D401, ARG002
         return None
@@ -85,38 +98,68 @@ class Memory(AgentResource):
     # ------------------------------------------------------------------
     # Key-value helpers
     # ------------------------------------------------------------------
-    async def get(self, key: str, default: Any | None = None) -> Any:
-        """Return ``key`` from persistent storage or ``default`` when missing."""
-        table = self.database.config.get("kv_table", "memory_kv")
-        async with self.database.connection() as conn:
-            rows = await _fetchall(
-                conn,
-                f"SELECT value FROM {table} WHERE key = ?",
-                key,
-            )
-        if not rows:
-            return default
-        value = rows[0][0] if not isinstance(rows[0], dict) else rows[0].get("value")
-        try:
-            return json.loads(value)
-        except Exception:
-            return value
+    def get(self, key: str, default: Any | None = None) -> Any:
+        """Return ``key`` from memory or ``default`` when missing."""
+        if self.database is not None:
+            table = self.database.config.get("kv_table", "kv_store")
 
-    async def set(self, key: str, value: Any) -> None:
+            async def _get() -> Any:
+                async with self._pool as conn:
+                    rows = await _fetchall(
+                        conn,
+                        f"SELECT value FROM {table} WHERE key = ?",
+                        key,
+                    )
+                if not rows:
+                    return default
+                value = (
+                    rows[0][0] if not isinstance(rows[0], dict) else rows[0]["value"]
+                )
+                try:
+                    return json.loads(value)
+                except Exception:
+                    return value
+
+            return asyncio.get_event_loop().run_until_complete(_get())
+        return self._kv.get(key, default)
+
+    def set(self, key: str, value: Any) -> None:
         """Persist ``value`` for later retrieval."""
-        table = self.database.config.get("kv_table", "memory_kv")
-        payload = json.dumps(value)
-        async with self.database.connection() as conn:
-            await _exec(conn, f"DELETE FROM {table} WHERE key = ?", key)
-            await _exec(conn, f"INSERT INTO {table} VALUES (?, ?)", key, payload)
+        if self.database is not None:
+            table = self.database.config.get("kv_table", "kv_store")
+
+            async def _set() -> None:
+                async with self._pool as conn:
+                    await _exec(
+                        conn,
+                        f"DELETE FROM {table} WHERE key = ?",
+                        key,
+                    )
+                    await _exec(
+                        conn,
+                        f"INSERT INTO {table} VALUES (?, ?)",
+                        key,
+                        json.dumps(value),
+                    )
+
+            asyncio.get_event_loop().run_until_complete(_set())
+            return None
+        self._kv[key] = value
 
     # Backwards compatibility
     remember = set
 
-    async def clear(self) -> None:
-        table = self.database.config.get("kv_table", "memory_kv")
-        async with self.database.connection() as conn:
-            await _exec(conn, f"DELETE FROM {table}")
+    def clear(self) -> None:
+        if self.database is not None:
+            table = self.database.config.get("kv_table", "kv_store")
+
+            async def _clear() -> None:
+                async with self._pool as conn:
+                    await _exec(conn, f"DELETE FROM {table}")
+
+            asyncio.get_event_loop().run_until_complete(_clear())
+            return None
+        self._kv.clear()
 
     # ------------------------------------------------------------------
     # Conversation helpers
@@ -124,14 +167,9 @@ class Memory(AgentResource):
     async def save_conversation(
         self, conversation_id: str, history: List[ConversationEntry]
     ) -> None:
-        table = self.database.config.get("history_table", "conversation_history")
-        async with self.database.connection() as conn:
-            await _exec(
-                conn,
-                f"DELETE FROM {table} WHERE conversation_id = ?",
-                conversation_id,
-            )
-            for entry in history:
+        if self.database is not None:
+            table = self.database.config.get("history_table", "conversation_history")
+            async with self._pool as conn:
                 await _exec(
                     conn,
                     f"INSERT INTO {table} VALUES (?, ?, ?, ?, ?)",
@@ -143,27 +181,31 @@ class Memory(AgentResource):
                 )
 
     async def load_conversation(self, conversation_id: str) -> List[ConversationEntry]:
-        table = self.database.config.get("history_table", "conversation_history")
-        async with self.database.connection() as conn:
-            rows = await _fetchall(
-                conn,
-                f"SELECT role, content, metadata, timestamp FROM {table} WHERE conversation_id = ? ORDER BY timestamp",
-                conversation_id,
-            )
-        result: List[ConversationEntry] = []
-        for row in rows:
-            role = row[0] if not isinstance(row, dict) else row["role"]
-            content = row[1] if not isinstance(row, dict) else row["content"]
-            metadata = row[2] if not isinstance(row, dict) else row.get("metadata", {})
-            timestamp = row[3] if not isinstance(row, dict) else row["timestamp"]
-            if isinstance(timestamp, str):
-                timestamp = datetime.fromisoformat(timestamp)
-            result.append(
-                ConversationEntry(
-                    content=content,
-                    role=role,
-                    timestamp=timestamp,
-                    metadata=metadata,
+        if self.database is not None:
+            table = self.database.config.get("history_table", "conversation_history")
+            async with self._pool as conn:
+                rows = await _fetchall(
+                    conn,
+                    f"SELECT role, content, metadata, timestamp FROM {table} WHERE conversation_id = ? ORDER BY timestamp",
+                    conversation_id,
+                )
+            result: List[ConversationEntry] = []
+            for row in rows:
+                role = row[0] if not isinstance(row, dict) else row["role"]
+                content = row[1] if not isinstance(row, dict) else row["content"]
+                metadata = (
+                    row[2] if not isinstance(row, dict) else row.get("metadata", {})
+                )
+                timestamp = row[3] if not isinstance(row, dict) else row["timestamp"]
+                if isinstance(timestamp, str):
+                    timestamp = datetime.fromisoformat(timestamp)
+                result.append(
+                    ConversationEntry(
+                        content=content,
+                        role=role,
+                        timestamp=timestamp,
+                        metadata=metadata,
+                    )
                 )
             return result
 

@@ -7,22 +7,18 @@ from pipeline.exceptions import CircuitBreakerTripped
 from pipeline.reliability import CircuitBreaker
 
 from entity.core.plugins import InfrastructurePlugin, ValidationResult
+from entity.core.resources.container import PoolConfig, ResourcePool
 
 
 class _DummyConn:
-    async def execute(self, *args: Any, **kwargs: Any) -> None:
+    async def execute(
+        self, *args: Any, **kwargs: Any
+    ) -> None:  # pragma: no cover - stub
         return None
 
 
-class _DummyPool:
-    async def acquire(self) -> _DummyConn:
-        return _DummyConn()
-
-    async def release(self, _conn: _DummyConn) -> None:
-        return None
-
-    async def close(self) -> None:  # pragma: no cover - placeholder
-        return None
+async def _create_conn() -> _DummyConn:
+    return _DummyConn()
 
 
 class PostgresInfrastructure(InfrastructurePlugin):
@@ -36,7 +32,8 @@ class PostgresInfrastructure(InfrastructurePlugin):
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
-        self._pool = _DummyPool()
+        pool_cfg = PoolConfig(**self.config.get("pool", {}))
+        self._pool = ResourcePool(_create_conn, pool_cfg)
         self._breaker = CircuitBreaker(
             failure_threshold=self.config.get("failure_threshold", 3),
             recovery_timeout=self.config.get("recovery_timeout", 60.0),
@@ -46,15 +43,15 @@ class PostgresInfrastructure(InfrastructurePlugin):
         return None
 
     async def initialize(self) -> None:
-        return None
+        await self._pool.initialize()
 
     @asynccontextmanager
     async def connection(self) -> Any:
-        conn = await self._pool.acquire()
-        try:
+        async with self._pool as conn:
             yield conn
-        finally:
-            await self._pool.release(conn)
+
+    def get_connection_pool(self) -> ResourcePool:
+        return self._pool
 
     async def validate_runtime(
         self, breaker: CircuitBreaker | None = None

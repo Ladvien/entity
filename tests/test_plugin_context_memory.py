@@ -10,25 +10,14 @@ from entity.core.state import PipelineState
 from entity.resources import Memory
 from entity.resources import memory as memory_module
 from entity.resources.interfaces.database import DatabaseResource
-from entity.resources.interfaces.vector_store import VectorStoreResource
+from entity.core.resources.container import PoolConfig, ResourcePool
 
 
-class _DBConn:
-    def __init__(self, db: "DummyDB") -> None:
-        self.db = db
+class DummyConnection:
+    def __init__(self, store: dict) -> None:
+        self.store = store
 
-    async def execute(self, query: str, params: tuple) -> list:
-        if query.startswith("DELETE FROM memory_kv"):
-            if "WHERE" in query:
-                self.db.kv.pop(params[0], None)
-            else:
-                self.db.kv.clear()
-            return []
-        if query.startswith("INSERT INTO memory_kv"):
-            self.db.kv[params[0]] = params[1]
-            return []
-        if query.startswith("SELECT value FROM memory_kv"):
-            return [(self.db.kv.get(params[0]),)]
+    async def execute(self, query: str, params: tuple) -> None:
         if query.startswith("DELETE FROM conversation_history"):
             cid = params[0] if isinstance(params, tuple) else params
             self.store["history"].pop(cid, None)
@@ -68,16 +57,17 @@ class _DBConn:
 class DummyDB(DatabaseResource):
     def __init__(self) -> None:
         super().__init__({})
-        self.kv: dict[str, str] = {}
-        self.history: dict[str, list] = {}
+        self.data: dict = {"history": {}, "kv": {}}
+        self.pool = ResourcePool(lambda: DummyConnection(self.data), PoolConfig())
+        asyncio.get_event_loop().run_until_complete(self.pool.initialize())
 
     @asynccontextmanager
     async def connection(self):
-        yield _DBConn(self)
+        async with self.pool as conn:
+            yield conn
 
-
-class DummyPool(DummyDatabase):
-    pass
+    def get_connection_pool(self) -> ResourcePool:
+        return self.pool
 
 
 class DummyRegistries:
