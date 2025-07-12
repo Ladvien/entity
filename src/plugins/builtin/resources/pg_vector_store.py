@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from entity.core.plugins import ResourcePlugin, ValidationResult
+from entity.core.plugins import ValidationResult
 
 
 class PgVectorStore(VectorStoreResource):

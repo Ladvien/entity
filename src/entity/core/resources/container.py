@@ -135,6 +135,11 @@ class ResourceContainer:
     def get(self, name: str) -> Any | None:
         return self._resources.get(name)
 
+    def has_plugin(self, name: str) -> bool:
+        """Return ``True`` if a resource with ``name`` is registered."""
+
+        return name in self._classes or name in self._resources
+
     async def remove(self, name: str) -> None:
         async with self._lock:
             self._resources.pop(name, None)
@@ -172,6 +177,16 @@ class ResourceContainer:
                     if self._dependencies_satisfied(name):
                         cls = self._classes[name]
                         cfg = self._configs[name]
+                        result = cls.validate_config(cfg)
+                        if not result.success:
+                            raise SystemError(
+                                f"Config validation failed for {name}: {result.message}"
+                            )
+                        dep_result = cls.validate_dependencies(self)
+                        if not dep_result.success:
+                            raise SystemError(
+                                f"Dependency validation failed for {name}: {dep_result.message}"
+                            )
                         instance = self._create_instance(cls, cfg)
                         await self.add(name, instance)
 

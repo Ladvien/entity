@@ -60,6 +60,16 @@ class Plugin:
 
         return ValidationResult.success_result()
 
+    async def initialize(self) -> None:
+        """Initialize the plugin instance."""
+
+        return None
+
+    async def shutdown(self) -> None:
+        """Shut down the plugin instance."""
+
+        return None
+
     async def execute(self, context: Any) -> Any:
         return await self._execute_impl(context)
 
