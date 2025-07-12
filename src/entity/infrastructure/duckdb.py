@@ -16,6 +16,7 @@ class DuckDBInfrastructure(InfrastructurePlugin):
 
     name = "duckdb_database"
     infrastructure_type = "database"
+    resource_category = "database"
     stages: list = []
     dependencies: list[str] = []
 
@@ -50,15 +51,18 @@ class DuckDBInfrastructure(InfrastructurePlugin):
             self._conn.close()
             self._conn = None
 
-    async def validate_runtime(self) -> ValidationResult:
+    async def validate_runtime(
+        self, breaker: CircuitBreaker | None = None
+    ) -> ValidationResult:
         """Check connectivity using a simple query."""
 
         async def _query() -> None:
             async with self.connection() as conn:
                 conn.execute("SELECT 1")
 
+        breaker = breaker or self._breaker
         try:
-            await self._breaker.call(_query)
+            await breaker.call(_query)
         except CircuitBreakerTripped:
             return ValidationResult.error_result("circuit breaker open")
         except Exception as exc:  # noqa: BLE001 - return as validation error

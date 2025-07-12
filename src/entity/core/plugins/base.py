@@ -117,6 +117,7 @@ class InfrastructurePlugin(Plugin):
     """Layer 1 plugin providing infrastructure primitives."""
 
     infrastructure_type: str = ""
+    resource_category: str = ""
     stages: List[PipelineStage] = []
     dependencies: List[str] = []
 
@@ -125,6 +126,7 @@ class ResourcePlugin(Plugin):
     """Layer 2 resource interface over infrastructure."""
 
     infrastructure_dependencies: List[str] = []
+    resource_category: str = ""
     stages: List[PipelineStage] = []
 
 

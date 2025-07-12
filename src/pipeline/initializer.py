@@ -408,28 +408,42 @@ class SystemInitializer:
             await resource_container.build_all()
 
             model = self._config_model
-            default_cfg = model.runtime_validation_breaker
+            cfg = model.runtime_validation_breaker
             settings = model.breaker_settings
+
+            breaker_map = {
+                "database": CircuitBreaker(
+                    failure_threshold=cfg.database
+                    or settings.database.failure_threshold,
+                    recovery_timeout=cfg.recovery_timeout,
+                ),
+                "api": CircuitBreaker(
+                    failure_threshold=cfg.api
+                    or settings.external_api.failure_threshold,
+                    recovery_timeout=cfg.recovery_timeout,
+                ),
+                "filesystem": CircuitBreaker(
+                    failure_threshold=cfg.filesystem
+                    or settings.file_system.failure_threshold,
+                    recovery_timeout=cfg.recovery_timeout,
+                ),
+            }
+
+            default_breaker = CircuitBreaker(
+                failure_threshold=cfg.failure_threshold,
+                recovery_timeout=cfg.recovery_timeout,
+            )
 
             for name, resource in resource_container._resources.items():
                 validate = getattr(resource, "validate_runtime", None)
                 if not callable(validate):
                     continue
 
-                resource_type = getattr(resource, "infrastructure_type", "").lower()
-                if resource_type == "database":
-                    cfg = settings.database
-                elif resource_type in {"external_api", "external-api", "api"}:
-                    cfg = settings.external_api
-                elif resource_type in {"file_system", "filesystem", "file-system"}:
-                    cfg = settings.file_system
-                else:
-                    cfg = default_cfg
+                category = getattr(resource, "resource_category", None)
+                if not category:
+                    category = getattr(resource, "infrastructure_type", "").lower()
 
-                breaker = CircuitBreaker(
-                    failure_threshold=cfg.failure_threshold,
-                    recovery_timeout=cfg.recovery_timeout,
-                )
+                breaker = breaker_map.get(category, default_breaker)
 
                 async def _run_validation() -> None:
                     result = await validate(breaker)

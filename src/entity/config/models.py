@@ -54,6 +54,9 @@ class CircuitBreakerConfig(BaseModel):
 
     failure_threshold: int = 3
     recovery_timeout: float = 60.0
+    database: int | None = 3
+    api: int | None = 5
+    filesystem: int | None = 2
 
     class Config:
         extra = "allow"
