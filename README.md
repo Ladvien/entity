@@ -14,6 +14,10 @@ Entity lets you craft agent pipelines using a single configuration file. The sam
 - In-memory DuckDB backend for quick local testing
 - Overrides of default plugin stages produce log warnings
 
+### Plugin Context Helpers
+Plugins can access canonical resources with helper methods:
+`context.get_llm()`, `context.get_memory()`, and `context.get_storage()`.
+
 Check the [hero landing page](https://entity.readthedocs.io/en/latest/) for a visual overview.
 
 ## Minimal Example
