@@ -1,4 +1,3 @@
-
 import pytest
 
 from entity.infrastructure import DockerInfrastructure, AWSStandardInfrastructure

@@ -534,12 +534,20 @@ class EntityCLI:
                         logger.error("Plugin %s not registered", name)
                         return 2
 
-                    cfg_result = await plugin.__class__.validate_config(config)
+                    config_validator = plugin.__class__.validate_config
+                    if inspect.iscoroutinefunction(config_validator):
+                        cfg_result = await config_validator(config)
+                    else:
+                        cfg_result = config_validator(config)
                     if not cfg_result.success:
                         logger.error("%s config invalid: %s", name, cfg_result.message)
                         return 1
 
-                    dep_result = await plugin.__class__.validate_dependencies(registry)
+                    dep_validator = plugin.__class__.validate_dependencies
+                    if inspect.iscoroutinefunction(dep_validator):
+                        dep_result = await dep_validator(registry)
+                    else:
+                        dep_result = dep_validator(registry)
                     if not dep_result.success:
                         logger.error(
                             "%s dependency check failed: %s",
