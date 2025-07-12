@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from math import sqrt
+from typing import Any, Dict, Iterable, List, cast
 from datetime import datetime
 import json
 import inspect
 
 from .base import AgentResource
+from .interfaces.database import DatabaseResource as DatabaseInterface
+from .interfaces.vector_store import (
+    VectorStoreResource as VectorStoreInterface,
+)
 from ..core.plugins import ValidationResult
 from ..core.state import ConversationEntry
-from ..core.resources.container import ResourcePool
+from pipeline.errors import InitializationError
 
 
 class Conversation:
@@ -66,7 +71,7 @@ async def _fetchall(conn: Any, query: str, *args: Any) -> List[Any]:
     return []
 
 
-class Memory(AgentResource):
+class Memory(AgentResource):  # type: ignore[misc]
     """Store key/value pairs, conversation history, and vectors."""
 
     name = "memory"
@@ -76,21 +81,31 @@ class Memory(AgentResource):
         self,
         database: DatabaseInterface | None = None,
         vector_store: VectorStoreInterface | None = None,
-        config: Dict | None = None,
+        config: Dict[str, Any] | None = None,
     ) -> None:
         super().__init__(config or {})
-        self.database = database
-        self.vector_store = vector_store
-        self._kv: Dict[str, Any] = {}
-        self._conversations: Dict[str, List[ConversationEntry]] = {}
-        self._vectors: Dict[str, List[float]] = {}
-        self._pool: ResourcePool | None = (
-            database.get_connection_pool() if database is not None else None
-        )
+        self.database: DatabaseInterface | None = database
+        self.vector_store: VectorStoreInterface | None = vector_store
 
     async def initialize(self) -> None:
-        if self._pool is None and self.database is not None:
-            self._pool = self.database.get_connection_pool()
+        if self.database is None:
+            raise InitializationError(
+                self.name,
+                "dependency injection",
+                "Database dependency not injected.",
+                kind="Resource",
+            )
+        if self.vector_store is None:
+            raise InitializationError(
+                self.name,
+                "dependency injection",
+                "Vector store dependency not injected.",
+                kind="Resource",
+            )
+        assert self.database is not None
+        assert self.vector_store is not None
+        self.database = cast(DatabaseInterface, self.database)
+        self.vector_store = cast(VectorStoreInterface, self.vector_store)
 
     async def _execute_impl(self, context: Any) -> None:  # noqa: D401, ARG002
         return None
@@ -100,66 +115,64 @@ class Memory(AgentResource):
     # ------------------------------------------------------------------
     def get(self, key: str, default: Any | None = None) -> Any:
         """Return ``key`` from memory or ``default`` when missing."""
-        if self.database is not None:
-            table = self.database.config.get("kv_table", "kv_store")
+        db = self.database
+        assert db is not None
+        table = db.config.get("kv_table", "kv_store")
 
-            async def _get() -> Any:
-                async with self._pool as conn:
-                    rows = await _fetchall(
-                        conn,
-                        f"SELECT value FROM {table} WHERE key = ?",
-                        key,
-                    )
-                if not rows:
-                    return default
-                value = (
-                    rows[0][0] if not isinstance(rows[0], dict) else rows[0]["value"]
+        async def _get() -> Any:
+            async with db.connection() as conn:
+                rows = await _fetchall(
+                    conn,
+                    f"SELECT value FROM {table} WHERE key = ?",
+                    key,
                 )
-                try:
-                    return json.loads(value)
-                except Exception:
-                    return value
+            if not rows:
+                return default
+            value = rows[0][0] if not isinstance(rows[0], dict) else rows[0]["value"]
+            try:
+                return json.loads(value)
+            except Exception:
+                return value
 
-            return asyncio.get_event_loop().run_until_complete(_get())
-        return self._kv.get(key, default)
+        return asyncio.get_event_loop().run_until_complete(_get())
 
     def set(self, key: str, value: Any) -> None:
         """Persist ``value`` for later retrieval."""
-        if self.database is not None:
-            table = self.database.config.get("kv_table", "kv_store")
+        db = self.database
+        assert db is not None
+        table = db.config.get("kv_table", "kv_store")
 
-            async def _set() -> None:
-                async with self._pool as conn:
-                    await _exec(
-                        conn,
-                        f"DELETE FROM {table} WHERE key = ?",
-                        key,
-                    )
-                    await _exec(
-                        conn,
-                        f"INSERT INTO {table} VALUES (?, ?)",
-                        key,
-                        json.dumps(value),
-                    )
+        async def _set() -> None:
+            async with db.connection() as conn:
+                await _exec(
+                    conn,
+                    f"DELETE FROM {table} WHERE key = ?",
+                    key,
+                )
+                await _exec(
+                    conn,
+                    f"INSERT INTO {table} VALUES (?, ?)",
+                    key,
+                    json.dumps(value),
+                )
 
-            asyncio.get_event_loop().run_until_complete(_set())
-            return None
-        self._kv[key] = value
+        asyncio.get_event_loop().run_until_complete(_set())
+        return None
 
     # Backwards compatibility
     remember = set
 
     def clear(self) -> None:
-        if self.database is not None:
-            table = self.database.config.get("kv_table", "kv_store")
+        db = self.database
+        assert db is not None
+        table = db.config.get("kv_table", "kv_store")
 
-            async def _clear() -> None:
-                async with self._pool as conn:
-                    await _exec(conn, f"DELETE FROM {table}")
+        async def _clear() -> None:
+            async with db.connection() as conn:
+                await _exec(conn, f"DELETE FROM {table}")
 
-            asyncio.get_event_loop().run_until_complete(_clear())
-            return None
-        self._kv.clear()
+        asyncio.get_event_loop().run_until_complete(_clear())
+        return None
 
     # ------------------------------------------------------------------
     # Conversation helpers
@@ -167,9 +180,16 @@ class Memory(AgentResource):
     async def save_conversation(
         self, conversation_id: str, history: List[ConversationEntry]
     ) -> None:
-        if self.database is not None:
-            table = self.database.config.get("history_table", "conversation_history")
-            async with self._pool as conn:
+        db = self.database
+        assert db is not None
+        table = db.config.get("history_table", "conversation_history")
+        async with db.connection() as conn:
+            await _exec(
+                conn,
+                f"DELETE FROM {table} WHERE conversation_id = ?",
+                conversation_id,
+            )
+            for entry in history:
                 await _exec(
                     conn,
                     f"INSERT INTO {table} VALUES (?, ?, ?, ?, ?)",
@@ -179,16 +199,18 @@ class Memory(AgentResource):
                     json.dumps(entry.metadata),
                     entry.timestamp.isoformat(),
                 )
+        return None
 
     async def load_conversation(self, conversation_id: str) -> List[ConversationEntry]:
-        if self.database is not None:
-            table = self.database.config.get("history_table", "conversation_history")
-            async with self._pool as conn:
-                rows = await _fetchall(
-                    conn,
-                    f"SELECT role, content, metadata, timestamp FROM {table} WHERE conversation_id = ? ORDER BY timestamp",
-                    conversation_id,
-                )
+        db = self.database
+        assert db is not None
+        table = db.config.get("history_table", "conversation_history")
+        async with db.connection() as conn:
+            rows = await _fetchall(
+                conn,
+                f"SELECT role, content, metadata, timestamp FROM {table} WHERE conversation_id = ? ORDER BY timestamp",
+                conversation_id,
+            )
             result: List[ConversationEntry] = []
             for row in rows:
                 role = row[0] if not isinstance(row, dict) else row["role"]
@@ -207,31 +229,40 @@ class Memory(AgentResource):
                         metadata=metadata,
                     )
                 )
-            return result
+        return result
 
     # ------------------------------------------------------------------
     # Vector helpers
     # ------------------------------------------------------------------
-    async def add_embedding(self, text: str) -> None:
-        await self.vector_store.add_embedding(text)
+    async def add_embedding(self, key: str, vector: List[float]) -> None:
+        db = self.database
+        assert db is not None
+        table = db.config.get("vector_table", "vectors")
+        async with db.connection() as conn:
+            await _exec(conn, f"DELETE FROM {table} WHERE key = ?", key)
+            await _exec(
+                conn, f"INSERT INTO {table} VALUES (?, ?)", key, json.dumps(vector)
+            )
 
-    async def search_similar(self, query: str, k: int = 5) -> List[str]:
-        return await self.vector_store.query_similar(query, k)
-
-    async def validate_runtime(self) -> ValidationResult:
-        """Check dependencies for availability."""
-        if hasattr(self, "database") and hasattr(self.database, "validate_runtime"):
-            result = await self.database.validate_runtime()
-            if not result.success:
-                return ValidationResult.error_result(f"database: {result.message}")
-        if hasattr(self, "vector_store") and hasattr(
-            self.vector_store, "validate_runtime"
-        ):
-            result = await self.vector_store.validate_runtime()
-            if not result.success:
-                return ValidationResult.error_result(f"vector_store: {result.message}")
-        return ValidationResult.success_result()
+    async def search_similar(self, vector: List[float], k: int = 5) -> List[str]:
+        db = self.database
+        assert db is not None
+        table = db.config.get("vector_table", "vectors")
+        async with db.connection() as conn:
+            rows = await _fetchall(conn, f"SELECT key, vector FROM {table}")
+        scores: Dict[str, float] = {}
+        for row in rows:
+            key = row[0] if not isinstance(row, dict) else row["key"]
+            val = row[1] if not isinstance(row, dict) else row["vector"]
+            vec = json.loads(val) if isinstance(val, str) else val
+            scores[key] = _cosine_similarity(vector, vec)
+        return [
+            item[0]
+            for item in sorted(scores.items(), key=lambda it: it[1], reverse=True)[:k]
+        ]
 
     @classmethod
-    async def validate_config(cls, config: Dict) -> ValidationResult:  # noqa: D401
+    async def validate_config(
+        cls, config: Dict[str, Any]
+    ) -> ValidationResult:  # noqa: D401
         return ValidationResult.success_result()
