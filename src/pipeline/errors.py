@@ -53,6 +53,13 @@ class InitializationError(PipelineError):
         self.kind = kind
 
 
+class ResourceInitializationError(InitializationError):
+    """Raised when a resource dependency is missing."""
+
+    def __init__(self, remediation: str, name: str = "resource") -> None:
+        super().__init__(name, "initialization", remediation, kind="Resource")
+
+
 class ToolExecutionError(PipelineError):
     pass
 
@@ -123,6 +130,7 @@ __all__ = [
     "PluginExecutionError",
     "ResourceError",
     "InitializationError",
+    "ResourceInitializationError",
     "StageExecutionError",
     "ToolExecutionError",
     "ErrorResponse",

@@ -1,15 +1,16 @@
 import types
+import asyncio
 import duckdb
 from contextlib import asynccontextmanager
 
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
-
-from contextlib import asynccontextmanager
 from entity.core.context import PluginContext
 from entity.core.state import PipelineState
 from entity.resources import Memory
 from entity.resources.interfaces.database import DatabaseResource
+from pipeline.errors import ResourceInitializationError
+import pytest
 
 
 class DuckDBResource(DatabaseResource):
@@ -86,3 +87,9 @@ def test_memory_persists_with_connection_pool() -> None:
     assert mem2.get("foo") == "bar"
     history = loop.run_until_complete(mem2.load_conversation("cid"))
     assert history == [entry]
+
+
+def test_initialize_without_database_raises_error() -> None:
+    mem = Memory(config={})
+    with pytest.raises(ResourceInitializationError):
+        asyncio.run(mem.initialize())

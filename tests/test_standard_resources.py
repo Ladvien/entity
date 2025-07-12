@@ -4,6 +4,7 @@ from entity.resources import LLM, Memory, Storage, StandardResources
 from entity.resources import memory as memory_module
 from entity.resources.interfaces.database import DatabaseResource
 from entity.resources.interfaces.storage import StorageResource
+from entity.resources.interfaces.vector_store import VectorStoreResource
 
 
 class DummyConnection:

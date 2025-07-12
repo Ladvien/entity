@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-12: Added Memory initialization test for missing database
 AGENT NOTE - 2025-07-13: Memory now persists to DuckDB and vector store
 AGENT NOTE - 2025-07-12: Removed ConversationHistory helper class
 
