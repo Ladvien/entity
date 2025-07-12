@@ -1,4 +1,5 @@
 import pytest
+from contextlib import asynccontextmanager
 
 from entity.infrastructure import DuckDBInfrastructure, PostgresInfrastructure
 
@@ -14,7 +15,11 @@ async def test_duckdb_runtime_breaker_opens(monkeypatch):
         def close(self):
             pass
 
-    db._conn = BadConn()
+    @asynccontextmanager
+    async def bad_connection(self):
+        yield BadConn()
+
+    monkeypatch.setattr(DuckDBInfrastructure, "connection", bad_connection)
 
     res1 = await db.validate_runtime()
     assert not res1.success
