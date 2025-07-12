@@ -49,3 +49,12 @@ async def test_logging_stream_output(tmp_path):
     await container.shutdown_all()
     data = json.loads(msg)
     assert data["message"] == "hi"
+
+
+@pytest.mark.asyncio
+async def test_logging_auto_registration():
+    container = ResourceContainer()
+    await container.build_all()
+    logger = container.get("logging")
+    assert isinstance(logger, LoggingResource)
+    await container.shutdown_all()
