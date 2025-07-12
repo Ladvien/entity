@@ -31,7 +31,7 @@ class StateManager:
 
 
 class SavePlugin(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     def __init__(self, manager: StateManager) -> None:
         super().__init__({})
@@ -45,7 +45,7 @@ class SavePlugin(PromptPlugin):
 def make_runtime(manager: StateManager) -> _AgentRuntime:
     plugins = PluginRegistry()
     asyncio.run(
-        plugins.register_plugin_for_stage(SavePlugin(manager), PipelineStage.DELIVER)
+        plugins.register_plugin_for_stage(SavePlugin(manager), PipelineStage.OUTPUT)
     )
     capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     return _AgentRuntime(capabilities)

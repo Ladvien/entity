@@ -15,7 +15,7 @@ from entity.core.resources.container import ResourceContainer
 
 
 class First(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
         order = context.get_metadata("order") or []
@@ -25,7 +25,7 @@ class First(PromptPlugin):
 
 
 class Second(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
         order = context.get_metadata("order") or []
@@ -34,7 +34,7 @@ class Second(PromptPlugin):
 
 
 class Third(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
         order = context.get_metadata("order") or []
@@ -49,9 +49,9 @@ def _set_final_response(context):
 
 def test_plugin_registration_order_matches_execution():
     registry = PluginRegistry()
-    asyncio.run(registry.register_plugin_for_stage(First({}), PipelineStage.DELIVER))
-    asyncio.run(registry.register_plugin_for_stage(Third({}), PipelineStage.DELIVER))
-    asyncio.run(registry.register_plugin_for_stage(Second({}), PipelineStage.DELIVER))
+    asyncio.run(registry.register_plugin_for_stage(First({}), PipelineStage.OUTPUT))
+    asyncio.run(registry.register_plugin_for_stage(Third({}), PipelineStage.OUTPUT))
+    asyncio.run(registry.register_plugin_for_stage(Second({}), PipelineStage.OUTPUT))
     capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), registry)
     result = asyncio.run(execute_pipeline("hi", capabilities))
     assert result == ["first", "third", "second"]
@@ -72,5 +72,5 @@ def test_initializer_preserves_yaml_order(tmp_path):
 
     initializer = SystemInitializer.from_yaml(str(path))
     plugin_reg, _, _, _ = asyncio.run(initializer.initialize())
-    plugins = plugin_reg.get_plugins_for_stage(PipelineStage.DELIVER)
+    plugins = plugin_reg.get_plugins_for_stage(PipelineStage.OUTPUT)
     assert [p.__class__ for p in plugins] == [Second, First, Third]

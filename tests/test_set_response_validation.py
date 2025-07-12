@@ -7,7 +7,7 @@ from entity.core.state import PipelineState
 from entity.core.resources.container import ResourceContainer
 
 
-def test_set_response_disallowed_outside_deliver():
+def test_set_response_disallowed_outside_output():
     state = PipelineState(conversation=[], pipeline_id="id")
     ctx = PluginContext(
         state, SystemRegistries(ResourceContainer(), ToolRegistry(), PluginRegistry())
@@ -15,7 +15,7 @@ def test_set_response_disallowed_outside_deliver():
     ctx.set_current_stage(PipelineStage.PARSE)
     with pytest.raises(
         PluginContextError,
-        match="set_response may only be called in DELIVER stage",
+        match="set_response may only be called in OUTPUT stage",
     ):
         ctx.set_response("nope")
     assert state.response is None

@@ -16,8 +16,8 @@ def make_context(stage: PipelineStage) -> PluginContext:
     return PluginContext(state, capabilities)
 
 
-def test_set_response_allowed_in_deliver():
-    ctx = make_context(PipelineStage.DELIVER)
+def test_set_response_allowed_in_output():
+    ctx = make_context(PipelineStage.OUTPUT)
     ctx.set_response("ok")
     assert ctx.response == "ok"
 
@@ -26,7 +26,7 @@ def test_set_response_fails_in_other_stage():
     ctx = make_context(PipelineStage.DO)
     with pytest.raises(
         PluginContextError,
-        match="set_response may only be called in DELIVER stage",
+        match="set_response may only be called in OUTPUT stage",
     ):
         ctx.set_response("nope")
 
@@ -38,7 +38,7 @@ class EarlyPlugin(PromptPlugin):
         context.set_response("bad")
 
 
-def test_plugin_cannot_set_response_before_deliver():
+def test_plugin_cannot_set_response_before_output():
     ctx = make_context(PipelineStage.DO)
     plugin = EarlyPlugin({})
     with pytest.raises(PluginContextError):

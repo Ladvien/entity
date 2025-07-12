@@ -19,7 +19,6 @@ from entity.core.builder import _AgentBuilder
 from pipeline.config.config_update import update_plugin_configuration
 from entity.utils.logging import get_logger
 from importlib import import_module
-from pathlib import Path
 import sys
 
 try:  # Resolve plugin helpers from installed "cli" package

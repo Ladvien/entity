@@ -89,7 +89,7 @@ class ClassRegistry:
         if issubclass(cls, PromptPlugin):
             return [PipelineStage.THINK]
         if issubclass(cls, AdapterPlugin):
-            return [PipelineStage.PARSE, PipelineStage.DELIVER]
+            return [PipelineStage.INPUT, PipelineStage.OUTPUT]
         return []
 
     def _resolve_plugin_stages(
@@ -293,7 +293,7 @@ class SystemInitializer:
         if issubclass(cls, PromptPlugin):
             return [PipelineStage.THINK]
         if issubclass(cls, AdapterPlugin):
-            return [PipelineStage.PARSE, PipelineStage.DELIVER]
+            return [PipelineStage.INPUT, PipelineStage.OUTPUT]
         return []
 
     def _resolve_plugin_stages(

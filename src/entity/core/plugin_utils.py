@@ -38,7 +38,7 @@ def default_stages_for_class(plugin_class: Type) -> list[PipelineStage]:
     if issubclass(plugin_class, plugin_base_registry.prompt_plugin):
         return [PipelineStage.THINK]
     if issubclass(plugin_class, plugin_base_registry.adapter_plugin):
-        return [PipelineStage.PARSE, PipelineStage.DELIVER]
+        return [PipelineStage.INPUT, PipelineStage.OUTPUT]
     return []
 
 

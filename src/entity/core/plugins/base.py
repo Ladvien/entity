@@ -119,7 +119,7 @@ class PromptPlugin(BasePlugin):
 class AdapterPlugin(BasePlugin):
     """Input or output adapter plugin."""
 
-    stages = [PipelineStage.PARSE, PipelineStage.DELIVER]
+    stages = [PipelineStage.INPUT, PipelineStage.OUTPUT]
 
 
 class FailurePlugin(BasePlugin):

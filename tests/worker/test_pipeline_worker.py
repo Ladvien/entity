@@ -9,7 +9,7 @@ from pipeline.stages import PipelineStage
 
 
 class RespondPlugin(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):  # pragma: no cover - trivial
         context.set_response("ok")
@@ -19,7 +19,7 @@ async def build_worker() -> PipelineWorker:
     resources = ResourceContainer()
     await resources.add("memory", Memory())
     plugins = PluginRegistry()
-    await plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.DELIVER)
+    await plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.OUTPUT)
     regs = SystemRegistries(resources, ToolRegistry(), plugins)
     return PipelineWorker(regs)
 

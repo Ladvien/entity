@@ -195,10 +195,10 @@ class PluginContext:
         return self._state.failure_info
 
     def set_response(self, value: Any) -> None:
-        if self.current_stage is not PipelineStage.DELIVER:
+        if self.current_stage is not PipelineStage.OUTPUT:
             raise PluginContextError(
                 self.current_stage,
                 self.current_plugin or "unknown",
-                f"set_response may only be called in DELIVER stage, not {self.current_stage}",
+                f"set_response may only be called in OUTPUT stage, not {self.current_stage}",
             )
         self._state.response = value

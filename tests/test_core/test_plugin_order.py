@@ -5,7 +5,7 @@ from entity.core.plugins import PromptPlugin
 
 
 class First(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
         order = context.get_metadata("order") or []
@@ -15,7 +15,7 @@ class First(PromptPlugin):
 
 
 class Second(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
         order = context.get_metadata("order") or []
@@ -24,7 +24,7 @@ class Second(PromptPlugin):
 
 
 class Third(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
         order = context.get_metadata("order") or []
@@ -51,5 +51,5 @@ def test_builder_load_from_yaml_preserves_order(tmp_path):
     path.write_text(yaml.dump(cfg, sort_keys=False))
 
     builder = _AgentBuilder.from_yaml(str(path))
-    plugins = builder.plugin_registry.get_plugins_for_stage(PipelineStage.DELIVER)
+    plugins = builder.plugin_registry.get_plugins_for_stage(PipelineStage.OUTPUT)
     assert [p.__class__ for p in plugins] == [Second, First, Third]

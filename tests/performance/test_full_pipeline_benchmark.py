@@ -13,7 +13,7 @@ from pipeline import (
 
 
 class RespondPlugin:
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def execute(self, context):
         context.set_response("ok")
@@ -23,7 +23,7 @@ class RespondPlugin:
 def test_full_pipeline_benchmark(benchmark):
     plugins = PluginRegistry()
     asyncio.run(
-        plugins.register_plugin_for_stage(RespondPlugin(), PipelineStage.DELIVER)
+        plugins.register_plugin_for_stage(RespondPlugin(), PipelineStage.OUTPUT)
     )
     capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
 

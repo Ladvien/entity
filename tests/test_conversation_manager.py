@@ -12,7 +12,7 @@ from pipeline import (
 
 
 class ContinuePlugin(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
         if context.message == "start":
@@ -20,7 +20,7 @@ class ContinuePlugin(PromptPlugin):
 
 
 class RespondPlugin(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
         if context.message == "next":
@@ -30,10 +30,10 @@ class RespondPlugin(PromptPlugin):
 def make_conversation():
     plugins = PluginRegistry()
     asyncio.run(
-        plugins.register_plugin_for_stage(ContinuePlugin({}), PipelineStage.DELIVER)
+        plugins.register_plugin_for_stage(ContinuePlugin({}), PipelineStage.OUTPUT)
     )
     asyncio.run(
-        plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.DELIVER)
+        plugins.register_plugin_for_stage(RespondPlugin({}), PipelineStage.OUTPUT)
     )
     resources = ResourceContainer()
     asyncio.run(resources.add("memory", Memory()))

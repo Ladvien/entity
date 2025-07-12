@@ -7,7 +7,6 @@ from pathlib import Path
 from threading import Thread
 
 import pytest
-from entity.config.environment import load_env
 
 SRC_PATH = str(Path(__file__).resolve().parents[1] / "src")
 if SRC_PATH not in sys.path:

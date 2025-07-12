@@ -14,14 +14,14 @@ from pipeline import (
 
 
 class LoggingAdapter(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
         logging.info("adapter", extra={"response": context.state.response})
 
 
 class EchoPlugin(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
         entry = context.get_conversation_history()[0]
@@ -30,11 +30,9 @@ class EchoPlugin(PromptPlugin):
 
 def make_runtime() -> _AgentRuntime:
     plugins = PluginRegistry()
+    asyncio.run(plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.OUTPUT))
     asyncio.run(
-        plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.DELIVER)
-    )
-    asyncio.run(
-        plugins.register_plugin_for_stage(LoggingAdapter({}), PipelineStage.DELIVER)
+        plugins.register_plugin_for_stage(LoggingAdapter({}), PipelineStage.OUTPUT)
     )
     capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     return _AgentRuntime(capabilities)

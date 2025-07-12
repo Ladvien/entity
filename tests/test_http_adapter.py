@@ -15,7 +15,7 @@ from plugins.builtin.adapters import HTTPAdapter
 
 
 class RespPlugin(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
         first = context.get_conversation_history()[0]
@@ -24,9 +24,7 @@ class RespPlugin(PromptPlugin):
 
 def make_adapter(config=None):
     plugins = PluginRegistry()
-    asyncio.run(
-        plugins.register_plugin_for_stage(RespPlugin({}), PipelineStage.DELIVER)
-    )
+    asyncio.run(plugins.register_plugin_for_stage(RespPlugin({}), PipelineStage.OUTPUT))
     capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
     runtime = _AgentRuntime(capabilities)
     return HTTPAdapter(runtime, config)
@@ -36,7 +34,7 @@ def test_http_adapter_basic():
     adapter = make_adapter()
 
     # ensure the adapter participates in both input and output stages
-    assert HTTPAdapter.stages == [PipelineStage.PARSE, PipelineStage.DELIVER]
+    assert HTTPAdapter.stages == [PipelineStage.PARSE, PipelineStage.OUTPUT]
 
     async def _make_request():
         async with httpx.AsyncClient(

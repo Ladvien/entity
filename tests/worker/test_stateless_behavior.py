@@ -24,7 +24,7 @@ class CountingMemory(Memory):
 
 
 class EchoPlugin(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
         context.set_response(context.conversation[-1].content)
@@ -32,7 +32,7 @@ class EchoPlugin(PromptPlugin):
 
 async def make_registries(memory: Memory) -> SystemRegistries:
     plugins = PluginRegistry()
-    await plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.DELIVER)
+    await plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.OUTPUT)
     resources = ResourceContainer()
     await resources.add("memory", memory)
     return SystemRegistries(resources, ToolRegistry(), plugins)

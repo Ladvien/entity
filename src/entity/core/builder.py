@@ -205,7 +205,7 @@ class _AgentBuilder:
         if isinstance(plugin, PromptPlugin):
             return [PipelineStage.THINK]
         if isinstance(plugin, AdapterPlugin):
-            return [PipelineStage.PARSE, PipelineStage.DELIVER]
+            return [PipelineStage.INPUT, PipelineStage.OUTPUT]
         return []
 
     def _resolve_plugin_stages(

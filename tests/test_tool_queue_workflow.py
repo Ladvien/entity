@@ -25,7 +25,7 @@ class StageOne(PromptPlugin):
 
 
 class StageTwo(PromptPlugin):
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     def __init__(self):
         super().__init__()
@@ -44,7 +44,7 @@ def test_tool_runs_before_next_stage():
     plugins = PluginRegistry()
     asyncio.run(plugins.register_plugin_for_stage(StageOne(), PipelineStage.DO))
     stage_two = StageTwo()
-    asyncio.run(plugins.register_plugin_for_stage(stage_two, PipelineStage.DELIVER))
+    asyncio.run(plugins.register_plugin_for_stage(stage_two, PipelineStage.OUTPUT))
 
     tools = ToolRegistry()
     asyncio.run(tools.add("echo", EchoTool()))
