@@ -2,7 +2,7 @@
 
 ### Composing Storage Backends
 
-Local development uses a file-backed DuckDB database by default, so you can
+The examples use a file-backed DuckDB database for local development, so you can
 experiment without running an external server. `StorageResource` composes the
 database and optional file system into a single interface:
 

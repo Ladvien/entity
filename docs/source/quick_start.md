@@ -9,7 +9,8 @@ Ready-made agents live in the new `examples/` directory. Run them with
 
 ### Programmatic Configuration
 Build the same configuration in Python using the models from
-`entity.config`. The `Memory` resource sets up an in-memory DuckDB database by default so no database server is required:
+`entity.config`. The `Memory` resource is ephemeral by default; use a custom
+resource such as the DuckDB example if you need to persist history:
 
 ```python
 from entity.config.models import EntityConfig, PluginsSection, PluginConfig
@@ -56,7 +57,9 @@ curl -X POST -H "Content-Type: application/json" \
 
 You should see a simple reply from the example pipeline.
 
-The generated configuration stores conversation history in an in-memory DuckDB database. You can switch to a file-based or server database later by editing `config/dev.yaml`.
+The generated configuration keeps conversation history only in memory. To
+persist data across runs, register a custom resource like the DuckDB example and
+update `config/dev.yaml`.
 
 ## Troubleshooting
 

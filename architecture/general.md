@@ -126,9 +126,9 @@ storage = StorageResource({})
 storage.filesystem = S3FileSystem(bucket="agent-files")
 ```
 
-MemoryResource \u2013 composite store that defaults to a DuckDB-backed database
-in memory and supports optional SQL/NoSQL and vector backends. MemoryResource
-uses an in-memory DuckDB database by default, so there is no separate
+MemoryResource \u2013 composite store that keeps data in memory by default and
+supports optional SQL/NoSQL and vector backends. Use a custom resource such as
+the DuckDB example when persistence is required. There is no separate
 `InMemoryResource`.
 
 ## Plugin System Details

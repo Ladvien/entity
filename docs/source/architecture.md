@@ -2,8 +2,8 @@
 
 The Entity Pipeline Framework uses a single execution pipeline with explicit
 stages. Plugins implement each stage and provide reusable behavior. The default
-agent stores conversations in a DuckDB database that runs entirely in memory so
-you can start experimenting without setting up external services.
+agent keeps conversations only in memory. Use a custom resource such as the
+DuckDB example when you need persistence.
 
 ## Pipeline Stages
 - **parse** – validate input and load context
