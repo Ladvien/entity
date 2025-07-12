@@ -28,6 +28,7 @@ from entity.utils.logging import get_logger
 
 from .plugin_utils import PluginAutoClassifier
 from .stages import PipelineStage
+from pipeline.utils import StageResolver
 
 logger = get_logger(__name__)
 
@@ -90,7 +91,10 @@ class _AgentBuilder:
                 f"Dependency validation failed for {plugin.__class__.__name__}: {dep_result.message}"
             )
 
-        stages = self._resolve_plugin_stages(plugin, config)
+        cfg = plugin.config if config is None else config
+        stages, _ = StageResolver._resolve_plugin_stages(
+            plugin.__class__, cfg, plugin, logger=logger
+        )
         for stage in stages:
             name = getattr(plugin, "name", plugin.__class__.__name__)
             asyncio.run(
@@ -260,39 +264,6 @@ class _AgentBuilder:
                 extra={"pipeline_id": "builder", "stage": "initialization"},
             )
             return None
-
-    def _type_default_stages(self, plugin: Plugin) -> list[PipelineStage]:
-        if isinstance(plugin, ToolPlugin):
-            return [PipelineStage.DO]
-        if isinstance(plugin, PromptPlugin):
-            return [PipelineStage.THINK]
-        if isinstance(plugin, AdapterPlugin):
-            return [PipelineStage.INPUT, PipelineStage.OUTPUT]
-        return []
-
-    def _resolve_plugin_stages(
-        self, plugin: Plugin, config: Mapping[str, Any] | None
-    ) -> list[PipelineStage]:
-        """Resolve final stages for ``plugin`` with sane fallbacks."""
-
-        cfg_val = None
-        if config is not None:
-            cfg_val = config.get("stages") or config.get("stage")
-
-        if cfg_val is not None:
-            if not isinstance(cfg_val, list):
-                cfg_val = [cfg_val]
-            return [PipelineStage.ensure(s) for s in cfg_val]
-
-        class_stages = getattr(plugin, "stages", [])
-        if class_stages:
-            return [PipelineStage.ensure(s) for s in class_stages]
-
-        type_default = self._type_default_stages(plugin)
-        if type_default:
-            return [PipelineStage.ensure(s) for s in type_default]
-
-        return [PipelineStage.THINK]
 
     def _register_module_plugins(self, module: ModuleType) -> None:
         import inspect

@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-12: Consolidated stage resolution helpers and removed duplicates
 AGENT NOTE - 2025-07-12: Added get_memory/get_storage helpers and updated docs
 AGENT NOTE - 2025-07-12: Added decorator shortcuts and tests
 AGENT NOTE - 2025-07-12: Added plugin lifecycle hooks and updated CLI

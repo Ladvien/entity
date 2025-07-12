@@ -1,6 +1,7 @@
 from entity.core.builder import _AgentBuilder
 from entity.core.plugins import Plugin
 from pipeline.initializer import SystemInitializer
+from pipeline.utils import StageResolver
 from entity.core.stages import PipelineStage
 
 
@@ -20,7 +21,9 @@ def test_builder_config_overrides():
     builder = _AgentBuilder()
     plugin = AttrPrompt({})
 
-    stages = builder._resolve_plugin_stages(plugin, {"stage": PipelineStage.REVIEW})
+    stages, _ = StageResolver._resolve_plugin_stages(
+        plugin.__class__, {"stage": PipelineStage.REVIEW}, plugin
+    )
 
     assert stages == [PipelineStage.REVIEW]
 
@@ -28,7 +31,9 @@ def test_builder_config_overrides():
 def test_builder_class_attribute_overrides():
     builder = _AgentBuilder()
     plugin = AttrPrompt({})
-    stages = builder._resolve_plugin_stages(plugin, None)
+    stages, _ = StageResolver._resolve_plugin_stages(
+        plugin.__class__, plugin.config, plugin
+    )
 
     assert stages == [PipelineStage.DO]
 
@@ -36,7 +41,9 @@ def test_builder_class_attribute_overrides():
 def test_builder_type_default():
     builder = _AgentBuilder()
     plugin = InferredPrompt({})
-    stages = builder._resolve_plugin_stages(plugin, None)
+    stages, _ = StageResolver._resolve_plugin_stages(
+        plugin.__class__, plugin.config, plugin
+    )
 
     assert stages == [PipelineStage.THINK]
 
@@ -46,8 +53,8 @@ def test_initializer_config_overrides():
     plugin = AttrPrompt({})
     plugin._explicit_stages = True
 
-    stages, explicit = init._resolve_plugin_stages(
-        AttrPrompt, plugin, {"stage": PipelineStage.REVIEW}
+    stages, explicit = StageResolver._resolve_plugin_stages(
+        AttrPrompt, {"stage": PipelineStage.REVIEW}, plugin
     )
 
     assert stages == [PipelineStage.REVIEW]
@@ -59,7 +66,7 @@ def test_initializer_class_attribute_overrides():
     plugin = AttrPrompt({})
     plugin._explicit_stages = True
 
-    stages, explicit = init._resolve_plugin_stages(AttrPrompt, plugin, {})
+    stages, explicit = StageResolver._resolve_plugin_stages(AttrPrompt, {}, plugin)
 
     assert stages == [PipelineStage.DO]
     assert explicit is True
@@ -69,7 +76,7 @@ def test_initializer_type_default():
     init = SystemInitializer({})
     plugin = InferredPrompt({})
 
-    stages, explicit = init._resolve_plugin_stages(InferredPrompt, plugin, {})
+    stages, explicit = StageResolver._resolve_plugin_stages(InferredPrompt, {}, plugin)
 
     assert stages == [PipelineStage.THINK]
     assert explicit is False
