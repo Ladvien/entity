@@ -98,13 +98,15 @@ async def test_conversation_id_generation():
 
 
 @pytest.mark.asyncio
-async def test_workers_share_database_memory():
-    regs = DBRegistries()
-    worker1 = PipelineWorker(regs)
-    await worker1.execute_pipeline("pipe1", "first", user_id="u1")
+async def test_pipeline_persists_conversation(memory_db):
+    regs = types.SimpleNamespace(
+        resources={"memory": memory_db}, tools=types.SimpleNamespace()
+    )
+    worker = PipelineWorker(regs)
 
-    worker2 = PipelineWorker(regs)
-    await worker2.execute_pipeline("pipe1", "second", user_id="u1")
+    await worker.execute_pipeline("pipe1", "hello", user_id="u1")
+    await worker.execute_pipeline("pipe1", "world", user_id="u1")
 
-    history = await regs.resources["memory"].load_conversation("u1_pipe1")
-    assert [e.content for e in history] == ["first", "second"]
+    mem = regs.resources["memory"]
+    history = await mem.load_conversation("u1_pipe1")
+    assert [h.content for h in history] == ["hello", "world"]

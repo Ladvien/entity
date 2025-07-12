@@ -76,8 +76,11 @@ class Memory(AgentResource):
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
-        self.database = database
-        self.vector_store = vector_store
+        self._kv: Dict[str, Any] = {}
+        self._conversations: Dict[str, List[ConversationEntry]] = {}
+        self._vectors: Dict[str, List[float]] = {}
+        self.database = None
+        self.vector_store = None
 
     async def _execute_impl(self, context: Any) -> None:  # noqa: D401, ARG002
         return None
@@ -165,8 +168,7 @@ class Memory(AgentResource):
                     timestamp=timestamp,
                     metadata=metadata,
                 )
-            )
-        return result
+            return result
 
     # ------------------------------------------------------------------
     # Vector helpers
