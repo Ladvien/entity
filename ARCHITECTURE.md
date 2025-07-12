@@ -3183,3 +3183,15 @@ Future Features List
 - `MetricsCollector` and telemetry
 - `core` versus `community` plugin separation
 - Import paths / circular imports
+
+
+## Reads
+
+### Benchmarking Tools
+- https://github.com/THUDM/AgentBench
+- https://github.com/web-arena-x/webarena
+- https://huggingface.co/spaces/gaia-benchmark/leaderboard
+- https://github.com/xingyaoww/mint-bench
+- https://github.com/facebookresearch/sweet_rl
+- https://github.com/ryoungj/ToolEmu
+- https://github.com/HowieHwong/MetaTool
