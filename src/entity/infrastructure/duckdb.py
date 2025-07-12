@@ -27,6 +27,7 @@ class DuckDBInfrastructure(InfrastructurePlugin):
         self.path: str = self.config.get("path", ":memory:")
         pool_cfg = PoolConfig(**self.config.get("pool", {}))
         self._pool = ResourcePool(self._create_conn, pool_cfg)
+        self._conn: duckdb.DuckDBPyConnection | None = None
         self._breaker = CircuitBreaker(
             failure_threshold=self.config.get("failure_threshold", 3),
             recovery_timeout=self.config.get("recovery_timeout", 60.0),
@@ -47,12 +48,6 @@ class DuckDBInfrastructure(InfrastructurePlugin):
         """Yield a connection from the pool."""
         async with self._pool as conn:
             yield conn
-
-    def get_connection_pool(self) -> duckdb.DuckDBPyConnection:
-        """Return the shared DuckDB connection."""
-        if self._conn is None:
-            self._conn = duckdb.connect(self.path)
-        return self._conn
 
     async def shutdown(self) -> None:
         while not self._pool._pool.empty():
