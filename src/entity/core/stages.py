@@ -9,11 +9,12 @@ class PipelineStage(IntEnum):
     """Ordered pipeline stages."""
 
     INPUT = auto()
-    PARSE = auto()
+    PARSE = INPUT
     THINK = auto()
     DO = auto()
     REVIEW = auto()
     OUTPUT = auto()
+    DELIVER = OUTPUT
     ERROR = auto()
 
     def __str__(self) -> str:

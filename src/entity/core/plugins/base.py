@@ -118,7 +118,19 @@ class AdapterPlugin(Plugin):
     stages = [PipelineStage.INPUT, PipelineStage.OUTPUT]
 
 
-class FailurePlugin(Plugin):
+class InputAdapterPlugin(AdapterPlugin):
+    """Adapter executed in the ``INPUT`` stage."""
+
+    stages = [PipelineStage.INPUT]
+
+
+class OutputAdapterPlugin(AdapterPlugin):
+    """Adapter executed in the ``OUTPUT`` stage."""
+
+    stages = [PipelineStage.OUTPUT]
+
+
+class FailurePlugin(BasePlugin):
     """Error handling plugin for the ``ERROR`` stage."""
 
     stages = [PipelineStage.ERROR]

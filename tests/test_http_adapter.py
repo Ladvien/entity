@@ -34,7 +34,7 @@ def test_http_adapter_basic():
     adapter = make_adapter()
 
     # ensure the adapter participates in both input and output stages
-    assert HTTPAdapter.stages == [PipelineStage.PARSE, PipelineStage.OUTPUT]
+    assert HTTPAdapter.stages == [PipelineStage.INPUT, PipelineStage.OUTPUT]
 
     async def _make_request():
         async with httpx.AsyncClient(

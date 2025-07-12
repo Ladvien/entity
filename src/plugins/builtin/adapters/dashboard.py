@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from entity.core.plugins import AdapterPlugin
+from entity.core.plugins import InputAdapterPlugin
 from pipeline.stages import PipelineStage
 
 
-class DashboardAdapter(AdapterPlugin):
+class DashboardAdapter(InputAdapterPlugin):
     """Placeholder dashboard adapter."""
 
     stages = [PipelineStage.INPUT, PipelineStage.OUTPUT]

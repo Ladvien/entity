@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from entity.core.plugins import AdapterPlugin
+from entity.core.plugins import InputAdapterPlugin
 from pipeline.stages import PipelineStage
 
 
-class WebSocketAdapter(AdapterPlugin):
+class WebSocketAdapter(InputAdapterPlugin):
     """Placeholder WebSocket adapter."""
 
     stages = [PipelineStage.INPUT, PipelineStage.OUTPUT]
