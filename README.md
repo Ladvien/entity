@@ -12,6 +12,7 @@ Entity lets you craft agent pipelines using a single configuration file. The sam
 - Stateless workers that scale horizontally
 - Unified memory resource for chat, search, and storage
 - In-memory DuckDB backend for quick local testing
+- Overrides of default plugin stages produce log warnings
 
 Check the [hero landing page](https://entity.readthedocs.io/en/latest/) for a visual overview.
 
