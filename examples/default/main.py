@@ -1,10 +1,7 @@
 import asyncio
 
-from entity import Agent
-from entity.resources.memory import Memory
+from entity import agent
 from pipeline.stages import PipelineStage
-
-agent = Agent()
 
 
 @agent.tool
@@ -20,7 +17,6 @@ async def responder(ctx):
 
 
 async def main() -> None:
-    agent.register_resource("memory", Memory, {})
     response = await agent.handle("hello")
     print(response)
 
