@@ -35,19 +35,27 @@ class _AgentRuntime:
     """Minimal runtime executor for an Agent."""
 
     capabilities: SystemRegistries
+    workflow: Workflow | None = None
     manager: Any = field(init=False)
 
-    def __init__(self, capabilities: SystemRegistries) -> None:
+    def __init__(
+        self, capabilities: SystemRegistries, *, workflow: Workflow | None = None
+    ) -> None:
         self.capabilities = capabilities
+        self.workflow = workflow
         self.__post_init__()
 
     def __post_init__(self) -> None:
         self.manager = None
 
-    async def run_pipeline(
-        self, message: str, *, user_id: str | None = None
-    ) -> Dict[str, Any]:
-        return {"message": message, "user_id": user_id or "default"}
+    async def run_pipeline(self, message: str, *, user_id: str | None = None) -> Any:
+        from entity.pipeline.pipeline import Pipeline as ExecPipeline, execute_pipeline
+
+        if self.workflow is None:
+            return await execute_pipeline(message, self.capabilities, user_id=user_id)
+
+        pipeline = ExecPipeline(self.workflow)
+        return await pipeline.run_message(message, self.capabilities, user_id=user_id)
 
     async def handle(
         self, message: str, *, user_id: str | None = None
@@ -267,7 +275,14 @@ class _AgentBuilder:
             tools=self.tool_registry,
             plugins=self.plugin_registry,
         )
-        return _AgentRuntime(capabilities)
+        wf_obj = None
+        if workflow is not None:
+            wf_obj = (
+                workflow
+                if isinstance(workflow, Workflow)
+                else Workflow.from_dict(workflow)
+            )
+        return _AgentRuntime(capabilities, workflow=wf_obj)
 
     def shutdown(self) -> None:
         """Shut down plugins and resources."""
@@ -486,13 +501,13 @@ class Agent:
                 initializer = SystemInitializer.from_yaml(path, env_file)
 
         async def _build() -> tuple[AgentRuntime, dict[str, type]]:
-            plugins, resources, tools, _ = await initializer.initialize()
+            plugins, resources, tools, wf = await initializer.initialize()
             caps = SystemRegistries(
                 resources=resources,
                 tools=tools,
                 plugins=plugins,
             )
-            return AgentRuntime(caps), initializer.workflows
+            return AgentRuntime(caps, workflow=wf), initializer.workflows
 
         runtime, workflows = asyncio.run(_build())
         agent = cls(config_path=path)
@@ -503,7 +518,8 @@ class Agent:
     # ------------------------------------------------------------------
     async def _ensure_runtime(self) -> None:
         if self._runtime is None:
-            self._runtime = await self.builder.build_runtime()
+            workflow = self.pipeline.workflow if self.pipeline else None
+            self._runtime = await self.builder.build_runtime(workflow=workflow)
 
     @property
     def runtime(self) -> AgentRuntime:
