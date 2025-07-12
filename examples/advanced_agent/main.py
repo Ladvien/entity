@@ -15,7 +15,7 @@ from datetime import datetime
 
 from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
 from entity.core.resources.container import ResourceContainer
-from plugins.builtin.resources.duckdb_database import DuckDBDatabaseResource
+from entity.infrastructure.duckdb import DuckDBInfrastructure
 from entity.resources.memory import Memory
 from pipeline.pipeline import execute_pipeline, generate_pipeline_id
 from pipeline.state import ConversationEntry, PipelineState
@@ -53,7 +53,7 @@ class FinalResponder(PromptPlugin):
 
 async def main() -> None:
     resources = ResourceContainer()
-    db = DuckDBDatabaseResource({"path": "./agent.duckdb"})
+    db = DuckDBInfrastructure({"path": "./agent.duckdb"})
     memory = Memory(database=db)
     await db.initialize()
     await resources.add("database", db)
