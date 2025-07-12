@@ -216,6 +216,8 @@ class _AgentBuilder:
     def _resolve_plugin_stages(
         self, plugin: Plugin, config: Mapping[str, Any] | None
     ) -> list[PipelineStage]:
+        """Resolve final stages for ``plugin`` with sane fallbacks."""
+
         cfg_val = None
         if config is not None:
             cfg_val = config.get("stages") or config.get("stage")
@@ -224,12 +226,16 @@ class _AgentBuilder:
             "stages" in plugin.__class__.__dict__
         )
 
+        type_defaults = self._type_default_stages(plugin)
+        if not (getattr(plugin, "stages", None) or type_defaults):
+            type_defaults = [PipelineStage.THINK]
+
         stages, _ = resolve_stages(
             plugin.__class__.__name__,
             cfg_value=cfg_val,
             attr_stages=getattr(plugin, "stages", []),
             explicit_attr=explicit_attr,
-            type_defaults=self._type_default_stages(plugin),
+            type_defaults=type_defaults,
             ensure_stage=PipelineStage.ensure,
             logger=logger,
             auto_inferred=getattr(plugin, "_auto_inferred_stages", False),

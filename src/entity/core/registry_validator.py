@@ -53,6 +53,7 @@ class SystemInitializer:
 
 from entity.utils.logging import get_logger  # noqa: E402
 
+from pipeline.utils import resolve_stages  # noqa: E402
 from .stages import PipelineStage  # noqa: E402
 
 logger = get_logger(__name__)
@@ -95,15 +96,40 @@ class RegistryValidator:
                     self.has_postgres = True
 
     @staticmethod
+    def _type_default_stages(cls: type) -> list[PipelineStage]:
+        from entity.core.plugins.base import AdapterPlugin, PromptPlugin, ToolPlugin
+
+        if issubclass(cls, ToolPlugin):
+            return [PipelineStage.DO]
+        if issubclass(cls, PromptPlugin):
+            return [PipelineStage.THINK]
+        if issubclass(cls, AdapterPlugin):
+            return [PipelineStage.INPUT, PipelineStage.OUTPUT]
+        return []
+
+    @staticmethod
     def _validate_stage_assignment(name: str, cls: type) -> None:
         from entity.core.plugins import ResourcePlugin, ToolPlugin
 
         if issubclass(cls, (ResourcePlugin, ToolPlugin)):
             return
 
-        stages = getattr(cls, "stages", None)
-        if not stages:
-            raise SystemError(f"Plugin '{name}' does not specify any stages")
+        attr_stages = getattr(cls, "stages", [])
+        type_defaults = RegistryValidator._type_default_stages(cls)
+        if not (attr_stages or type_defaults):
+            type_defaults = [PipelineStage.THINK]
+
+        stages, _ = resolve_stages(
+            cls.__name__,
+            cfg_value=None,
+            attr_stages=attr_stages,
+            explicit_attr=bool(attr_stages),
+            type_defaults=type_defaults,
+            ensure_stage=PipelineStage.ensure,
+            logger=logger,
+            error_type=SystemError,
+        )
+
         invalid = [s for s in stages if not isinstance(s, PipelineStage)]
         if invalid:
             raise SystemError(f"Plugin '{name}' has invalid stage values: {invalid}")
