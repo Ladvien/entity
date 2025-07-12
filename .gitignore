@@ -191,3 +191,4 @@ talking.log
 *.log*
 
 audio_output/*
+.claude/*

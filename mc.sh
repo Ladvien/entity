@@ -1,27 +1,33 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # --- Load GitHub token from .env if present ---
-if [[ -f .env ]]; then
+if [ -f .env ]; then
   echo "📦 Loading .env"
+  # shellcheck disable=SC1091
   source .env
 fi
 
 # --- Validate token ---
-if [[ -z "${GITHUB_TOKEN:-}" ]]; then
+if [ -z "${GITHUB_TOKEN:-}" ]; then
   echo "❌ GITHUB_TOKEN is not set. Add it to .env or export it."
   exit 1
 fi
 
 # --- Detect and parse repo info ---
-REMOTE_URL=$(git remote get-url origin)
+if git remote get-url origin >/dev/null 2>&1; then
+  REMOTE_URL=$(git remote get-url origin)
+else
+  REMOTE_URL=$(git config --get remote.origin.url)
+fi
 
 # Normalize and extract owner/repo
-REMOTE_CLEAN=${REMOTE_URL#*github.com[:/]}
-OWNER=$(echo "$REMOTE_CLEAN" | cut -d'/' -f1)
-REPO=$(echo "$REMOTE_CLEAN" | cut -d'/' -f2 | sed 's/\.git$//')
+REMOTE_CLEAN="${REMOTE_URL#*github.com[:/]}"
+OWNER_REPO=$(echo "$REMOTE_CLEAN" | awk -F'[:/]' '{print $(NF-1) "/" $NF}' | sed 's/\.git$//')
+OWNER=$(echo "$OWNER_REPO" | awk -F/ '{print $1}')
+REPO=$(echo "$OWNER_REPO" | awk -F/ '{print $2}')
 
-if [[ -z "$OWNER" || -z "$REPO" ]]; then
+if [ -z "$OWNER" ] || [ -z "$REPO" ]; then
   echo "❌ Failed to extract owner/repo from: $REMOTE_URL"
   exit 1
 fi
@@ -39,7 +45,7 @@ PR_API_RESPONSE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
   "https://api.github.com/repos/$OWNER/$REPO/pulls?state=open&per_page=100")
 
 # Validate response is a JSON array
-if ! echo "$PR_API_RESPONSE" | jq -e 'type == "array"' > /dev/null; then
+if ! echo "$PR_API_RESPONSE" | jq -e 'type == "array"' >/dev/null; then
   echo "❌ GitHub API error:"
   echo "$PR_API_RESPONSE" | jq .
   exit 1
@@ -47,7 +53,7 @@ fi
 
 PR_NUMBERS=$(echo "$PR_API_RESPONSE" | jq -r '.[].number')
 
-if [[ -z "$PR_NUMBERS" ]]; then
+if [ -z "$PR_NUMBERS" ]; then
   echo "✅ No open PRs to merge."
   exit 0
 fi
