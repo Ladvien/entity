@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-12: Added log entry documenting recent actions
+AGENT NOTE - 2025-07-12: Updated import_plugin_class to retry after adding src path
 AGENT NOTE - 2025-07-14: Unified builder and runtime inside Agent
 AGENT NOTE - 2025-07-13: Consolidated pipeline under entity.pipeline
 AGENT NOTE - 2025-07-12: Added restart check for unknown plugins in CLI reload
