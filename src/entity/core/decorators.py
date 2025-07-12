@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, Optional
 
-from .logging import get_logger
-from .plugin_analyzer import suggest_upgrade
+from .stages import PipelineStage
 
 from .plugin_utils import PluginAutoClassifier
 
@@ -26,3 +25,68 @@ def plugin(func: Optional[Callable] = None, **hints: Any) -> Callable:
         return f
 
     return decorator(func) if func else decorator
+
+
+def input(
+    func: Optional[Callable] = None, **hints: Any
+) -> Callable[[Callable], Callable] | Callable:
+    """Decorator for INPUT stage plugins."""
+
+    hints["stage"] = PipelineStage.INPUT
+    return plugin(func, **hints)
+
+
+def parse(
+    func: Optional[Callable] = None, **hints: Any
+) -> Callable[[Callable], Callable] | Callable:
+    """Decorator for PARSE stage plugins."""
+
+    hints["stage"] = PipelineStage.PARSE
+    return plugin(func, **hints)
+
+
+def prompt(
+    func: Optional[Callable] = None, **hints: Any
+) -> Callable[[Callable], Callable] | Callable:
+    """Decorator for THINK stage plugins."""
+
+    hints["stage"] = PipelineStage.THINK
+    return plugin(func, **hints)
+
+
+def tool(
+    func: Optional[Callable] = None, **hints: Any
+) -> Callable[[Callable], Callable] | Callable:
+    """Decorator for DO stage plugins."""
+
+    hints["stage"] = PipelineStage.DO
+    return plugin(func, **hints)
+
+
+def review(
+    func: Optional[Callable] = None, **hints: Any
+) -> Callable[[Callable], Callable] | Callable:
+    """Decorator for REVIEW stage plugins."""
+
+    hints["stage"] = PipelineStage.REVIEW
+    return plugin(func, **hints)
+
+
+def output(
+    func: Optional[Callable] = None, **hints: Any
+) -> Callable[[Callable], Callable] | Callable:
+    """Decorator for OUTPUT stage plugins."""
+
+    hints["stage"] = PipelineStage.OUTPUT
+    return plugin(func, **hints)
+
+
+__all__ = [
+    "plugin",
+    "input",
+    "parse",
+    "prompt",
+    "tool",
+    "review",
+    "output",
+]

@@ -2,7 +2,22 @@
 
 from __future__ import annotations
 
-__all__ = ["core", "Agent", "AgentBuilder"]
+from .core import decorators as _decorators
+
+
+class _AgentAPI:
+    plugin = staticmethod(_decorators.plugin)
+    input = staticmethod(_decorators.input)
+    parse = staticmethod(_decorators.parse)
+    prompt = staticmethod(_decorators.prompt)
+    tool = staticmethod(_decorators.tool)
+    review = staticmethod(_decorators.review)
+    output = staticmethod(_decorators.output)
+
+
+agent = _AgentAPI()
+
+__all__ = ["core", "Agent", "AgentBuilder", "agent"]
 
 
 def __getattr__(name: str):
