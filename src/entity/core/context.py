@@ -62,13 +62,18 @@ class AdvancedContext:
     async def remember(self, key: str, value: Any) -> None:
         if self._parent._memory is not None:
             namespaced_key = f"{self._parent._user_id}:{key}"
-            await self._parent._memory.set(namespaced_key, value)
+            await self._parent._memory.store_persistent(namespaced_key, value)
 
     async def memory(self, key: str, default: Any | None = None) -> Any:
         if self._parent._memory is None:
             return default
         namespaced_key = f"{self._parent._user_id}:{key}"
-        return await self._parent._memory.get(namespaced_key, default)
+        return await self._parent._memory.fetch_persistent(namespaced_key, default)
+
+    async def forget(self, key: str) -> None:
+        if self._parent._memory is not None:
+            namespaced_key = f"{self._parent._user_id}:{key}"
+            await self._parent._memory.delete_persistent(namespaced_key)
 
     def set_metadata(self, key: str, value: Any) -> None:
         self._parent._state.metadata[key] = value
@@ -298,7 +303,7 @@ class PluginContext:
             DeprecationWarning,
             stacklevel=2,
         )
-        await self.advanced.remember(key, value)
+        await self._memory.store_persistent(f"{self._user_id}:{key}", value)
 
     async def memory(self, key: str, default: Any | None = None) -> Any:
         warnings.warn(
@@ -306,7 +311,18 @@ class PluginContext:
             DeprecationWarning,
             stacklevel=2,
         )
-        return await self.advanced.memory(key, default)
+        if self._memory is None:
+            return default
+        return await self._memory.fetch_persistent(f"{self._user_id}:{key}", default)
+
+    async def forget(self, key: str) -> None:
+        warnings.warn(
+            "PluginContext.forget is deprecated; use context.advanced.forget",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        if self._memory is not None:
+            await self._memory.delete_persistent(f"{self._user_id}:{key}")
 
     def set_metadata(self, key: str, value: Any) -> None:
         warnings.warn(
