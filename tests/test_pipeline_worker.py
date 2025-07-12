@@ -129,19 +129,20 @@ class ThoughtPlugin(Plugin):
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context):
-        if not context.has("thought"):
+        if await context.reflect("thought") is None:
             last = next(
                 (e.content for e in context.conversation()[::-1] if e.role == "user"),
                 "",
             )
-            context.store("thought", last)
+            await context.think("thought", last)
 
 
 class EchoPlugin(Plugin):
     stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
-        context.set_response(context.load("thought"))
+        thought = await context.reflect("thought")
+        context.say(thought)
 
 
 @pytest.mark.asyncio
@@ -179,7 +180,7 @@ async def test_thoughts_do_not_leak_between_executions():
 
     worker = PipelineWorker(regs)
 
-    import pipeline.pipeline as pp
+    import entity.pipeline.pipeline as pp
 
     pp.user_id = "u1"
     first = await worker.execute_pipeline("pipe1", "one", user_id="u1")

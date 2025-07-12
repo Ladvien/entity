@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-12: Removed deprecation warnings from PluginContext memory helpers
+AGENT NOTE - 2025-07-12: Refactored prompt plugins to store intermediate results and added output responders.
 AGENT NOTE - 2025-07-13: Consolidated pipeline under entity.pipeline
 AGENT NOTE - 2025-07-12: Added restart check for unknown plugins in CLI reload
 AGENT NOTE - 2025-07-13: Updated tests for Memory initialization

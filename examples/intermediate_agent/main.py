@@ -5,6 +5,7 @@ from typing import Any
 from pathlib import Path
 import sys
 
+from user_plugins.responders import ChainOfThoughtResponder
 from entity.core.plugins import PromptPlugin, ResourcePlugin
 from entity.core.context import PluginContext
 from pipeline.stages import PipelineStage
@@ -34,17 +35,7 @@ class ChainOfThoughtPrompt(PromptPlugin):
 
     async def _execute_impl(self, context: PluginContext) -> None:
         user = next((e.content for e in context.conversation() if e.role == "user"), "")
-        await context.think("thought", f"Thought about: {user}")
-
-
-class FinalResponder(PromptPlugin):
-    """Send the last assistant message as the response."""
-
-    stages = [PipelineStage.OUTPUT]
-
-    async def _execute_impl(self, context: PluginContext) -> None:
-        thought = await context.reflect("thought")
-        context.say(thought or "")
+        await context.think("problem_breakdown", user)
 
 
 async def main() -> None:
@@ -62,7 +53,7 @@ async def main() -> None:
         ChainOfThoughtPrompt({"max_steps": 1}), PipelineStage.THINK, "cot"
     )
     await plugins.register_plugin_for_stage(
-        FinalResponder(), PipelineStage.OUTPUT, "final"
+        ChainOfThoughtResponder({}), PipelineStage.OUTPUT, "final"
     )
 
     caps = SystemRegistries(resources=resources, tools=ToolRegistry(), plugins=plugins)

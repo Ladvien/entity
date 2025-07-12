@@ -37,10 +37,9 @@ class ReActPrompt(PromptPlugin):
                 context, thought_prompt, purpose=f"react_thought_step_{step}"
             )
 
-            context.say(
-                f"Thought: {thought.content}",
-                metadata={"react_step": step, "type": "thought"},
-            )
+            thoughts: List[str] = await context.reflect("react_thoughts", [])
+            thoughts.append(thought.content)
+            await context.think("react_thoughts", thoughts)
 
             action_prompt = (
                 f'Based on my thought: "{thought.content}"\n'
@@ -57,21 +56,21 @@ class ReActPrompt(PromptPlugin):
                 final_answer = action_decision.content.replace(
                     "Final Answer:", ""
                 ).strip()
-                context.set_response(final_answer)
+                await context.think("react_final_answer", final_answer)
                 return
             if action_decision.content.startswith("Action:"):
                 action_text = action_decision.content.replace("Action:", "").strip()
                 action_name, params = self._parse_action(action_text)
 
-                context.say(
-                    f"Action: {action_text}",
-                    metadata={"react_step": step, "type": "action"},
-                )
+                actions: List[str] = await context.reflect("react_actions", [])
+                actions.append(action_text)
+                await context.think("react_actions", actions)
 
                 await context.tool_use(action_name, **params)
 
-        context.set_response(
-            "I've reached my reasoning limit without finding a definitive answer."
+        await context.think(
+            "react_final_answer",
+            "I've reached my reasoning limit without finding a definitive answer.",
         )
 
     def _build_step_context(

@@ -8,6 +8,7 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 from user_plugins.tools.calculator_tool import CalculatorTool
+from user_plugins.responders import ReactResponder
 from entity.core.plugins import PromptPlugin, ResourcePlugin
 from entity.core.context import PluginContext
 from pipeline.stages import PipelineStage
@@ -38,19 +39,9 @@ class ReActPrompt(PromptPlugin):
             (e.content for e in context.conversation() if e.role == "user"), ""
         )
         tool_result = await context.tool_use("calc", expression="2+2")
-        await context.think(
-            "analysis", f"Thinking about {question} using tool result {tool_result}"
-        )
-
-
-class FinalResponder(PromptPlugin):
-    """Return the last assistant message."""
-
-    stages = [PipelineStage.OUTPUT]
-
-    async def _execute_impl(self, context: PluginContext) -> None:
-        analysis = await context.reflect("analysis")
-        context.say(analysis or "")
+        thoughts = await context.reflect("react_thoughts", [])
+        thoughts.append(f"Thinking about {question} using tool result {tool_result}")
+        await context.think("react_thoughts", thoughts)
 
 
 async def main() -> None:
@@ -71,7 +62,7 @@ async def main() -> None:
         ReActPrompt({"max_steps": 2}), PipelineStage.THINK, "react"
     )
     await plugins.register_plugin_for_stage(
-        FinalResponder(), PipelineStage.OUTPUT, "final"
+        ReactResponder({}), PipelineStage.OUTPUT, "final"
     )
 
     caps = SystemRegistries(resources=resources, tools=tools, plugins=plugins)
