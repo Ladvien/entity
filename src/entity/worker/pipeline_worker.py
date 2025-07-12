@@ -20,14 +20,17 @@ class PipelineWorker:
         # user_message is ignored when ``state`` is provided
         return await execute_pipeline("", self.registries, state=state)
 
-    async def execute_pipeline(self, pipeline_id: str, message: str) -> Any:
-        """Process ``message`` using the pipeline identified by ``pipeline_id``."""
+    async def execute_pipeline(
+        self, pipeline_id: str, message: str, *, user_id: str
+    ) -> Any:
+        """Process ``message`` using the pipeline identified by ``pipeline_id`` and ``user_id``."""
+        conversation_id = f"{user_id}_{pipeline_id}"
         memory = self.registries.resources.get("memory")
-        conversation = await memory.load_conversation(pipeline_id)
+        conversation = await memory.load_conversation(conversation_id)
         conversation.append(
             ConversationEntry(content=message, role="user", timestamp=datetime.now())
         )
         state = PipelineState(conversation=conversation, pipeline_id=pipeline_id)
         result = await self.run_stages(state)
-        await memory.save_conversation(pipeline_id, state.conversation)
+        await memory.save_conversation(conversation_id, state.conversation)
         return result
