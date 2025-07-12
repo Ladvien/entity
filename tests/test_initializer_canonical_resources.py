@@ -1,10 +1,10 @@
 import pathlib
 import sys
 import asyncio
-import types
 import pytest
 from entity.core.resources.container import ResourceContainer
 from entity.pipeline.errors import InitializationError
+from entity.resources.logging import LoggingResource
 
 
 sys.path.insert(0, str(pathlib.Path("src").resolve()))
@@ -74,7 +74,7 @@ def test_initializer_fails_without_logging():
     assert init.resource_container.get("logging") is not None
 
 
-def test_initializer_accepts_all_canonical_resources():
+def test_initializer_accepts_all_canonical_resources(monkeypatch):
     cfg = {
         "plugins": {
             "agent_resources": {
@@ -92,5 +92,10 @@ def test_initializer_accepts_all_canonical_resources():
         return None
 
     # Skip resource initialization complexity
-    ResourceContainer.build_all = types.MethodType(_noop, ResourceContainer)
-    asyncio.run(init.initialize())
+    monkeypatch.setattr(ResourceContainer, "build_all", _noop)
+
+    original_deps = LoggingResource.dependencies.copy()
+    try:
+        asyncio.run(init.initialize())
+    finally:
+        LoggingResource.dependencies = original_deps
