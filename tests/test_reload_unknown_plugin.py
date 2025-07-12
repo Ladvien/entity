@@ -2,7 +2,6 @@ import yaml
 from pathlib import Path
 
 from entity.core.agent import Agent
-from entity.core.builder import _AgentBuilder
 from entity.core.plugins import Plugin, ValidationResult
 from entity.core.stages import PipelineStage
 from entity.cli import EntityCLI
@@ -21,14 +20,10 @@ class SimplePlugin(Plugin):
 
 
 def test_reload_requires_restart_when_plugin_missing(tmp_path: Path) -> None:
-    builder = _AgentBuilder()
-    plugin = SimplePlugin({})
-    builder.add_plugin(plugin)
-    runtime = builder.build_runtime()
-
     agent = Agent()
-    agent._builder = builder
-    agent._runtime = runtime
+    plugin = SimplePlugin({})
+    agent.builder.add_plugin(plugin)
+    agent._runtime = agent.builder.build_runtime()
 
     cli = EntityCLI.__new__(EntityCLI)
     cfg = {"plugins": {"prompts": {"unknown": {}}}}

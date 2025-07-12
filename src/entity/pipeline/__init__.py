@@ -111,7 +111,7 @@ def __getattr__(name: str) -> Any:
         "ClassRegistry": "entity.pipeline.initializer",
         "SystemInitializer": "entity.pipeline.initializer",
         "initialization_cleanup_context": "entity.pipeline.initializer",
-        "AgentRuntime": "entity.core.runtime",
+        "AgentRuntime": "entity.core.agent",
         "PipelineStage": "entity.pipeline.stages",
         "PluginContext": "entity.core.context",
         "ConversationEntry": "entity.core.state",

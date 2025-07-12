@@ -96,7 +96,7 @@ async def execute_stage(
 ) -> None:
     state.current_stage = stage
     stage_plugins = registries.plugins.get_plugins_for_stage(stage)
-    start = time.perf_counter()
+    _start = time.perf_counter()
     async with start_span(f"stage.{stage.name.lower()}"):
         for plugin in stage_plugins:
             context = PluginContext(state, registries, user_id)
@@ -229,7 +229,7 @@ async def execute_stage(
         if state.failure_info and stage != PipelineStage.ERROR:
             await execute_stage(PipelineStage.ERROR, state, registries)
             state.last_completed_stage = PipelineStage.ERROR
-    duration = time.perf_counter() - start
+    _ = time.perf_counter() - start
 
 
 async def execute_pipeline(
@@ -256,7 +256,7 @@ async def execute_pipeline(
             pipeline_id=f"{user_id}_{generate_pipeline_id()}",
         )
         state.stage_results.clear()
-    start = time.time()
+    _start = time.time()
     async with capabilities.resources:
         async with start_span("pipeline.execute"):
             while True:

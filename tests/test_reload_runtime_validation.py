@@ -3,7 +3,6 @@ from pathlib import Path
 import yaml
 
 from entity.core.agent import Agent
-from entity.core.builder import _AgentBuilder
 from entity.core.plugins import Plugin, ValidationResult
 from entity.core.stages import PipelineStage
 from entity.cli import EntityCLI
@@ -30,14 +29,10 @@ async def run_reload(cli: EntityCLI, agent: Agent, cfg_path: Path) -> int:
 
 
 def test_reload_aborts_on_failed_runtime_validation(tmp_path):
-    builder = _AgentBuilder()
-    plugin = RuntimeCheckPlugin({"valid": True})
-    builder.add_plugin(plugin)
-    runtime = builder.build_runtime()
-
     agent = Agent()
-    agent._builder = builder
-    agent._runtime = runtime
+    plugin = RuntimeCheckPlugin({"valid": True})
+    agent.builder.add_plugin(plugin)
+    agent._runtime = agent.builder.build_runtime()
 
     # Ensure config updates do not call async validator
     RuntimeCheckPlugin.validate_config = classmethod(

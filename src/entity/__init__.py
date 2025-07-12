@@ -19,7 +19,7 @@ class _AgentAPI:
 
 agent = _AgentAPI()
 
-__all__ = ["core", "Agent", "AgentBuilder", "agent"]
+__all__ = ["core", "Agent", "agent"]
 
 
 def __getattr__(name: str):
@@ -31,8 +31,4 @@ def __getattr__(name: str):
         from .core.agent import Agent as _Agent
 
         return _Agent
-    if name == "AgentBuilder":
-        from .core.builder import _AgentBuilder
-
-        return _AgentBuilder
     raise AttributeError(name)

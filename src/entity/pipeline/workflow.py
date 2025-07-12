@@ -3,8 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Iterable, Mapping, Optional
 
+from typing import TYPE_CHECKING
+
 from entity.core.builder import _AgentBuilder
-from entity.core.runtime import AgentRuntime
+
+if TYPE_CHECKING:
+    from entity.core.agent import AgentRuntime
+else:
+    AgentRuntime = object  # type: ignore
 from entity.workflows.base import Workflow
 
 from .stages import PipelineStage

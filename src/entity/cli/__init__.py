@@ -15,7 +15,7 @@ import yaml
 
 from entity.core.agent import Agent
 from entity.core.plugins import Plugin, ValidationResult
-from entity.core.builder import _AgentBuilder
+from entity.core.agent import _AgentBuilder
 from entity.pipeline.config.config_update import update_plugin_configuration
 from entity.pipeline.exceptions import CircuitBreakerTripped
 from entity.pipeline.reliability import CircuitBreaker
@@ -498,9 +498,9 @@ class EntityCLI:
 
         if agent._runtime is None:
             if agent.config_path:
-                builder = _AgentBuilder.from_yaml(agent.config_path)
-                agent._builder = builder
-                agent._runtime = builder.build_runtime()
+                tmp = Agent.from_config(agent.config_path)
+                agent._builder = tmp._builder
+                agent._runtime = tmp._runtime
             else:
                 agent._runtime = agent.builder.build_runtime()
 
