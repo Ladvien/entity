@@ -13,7 +13,6 @@ from .interfaces.vector_store import (
 )
 from ..core.plugins import ValidationResult
 from ..core.state import ConversationEntry
-from pipeline.errors import InitializationError
 
 
 class Memory(AgentResource):
@@ -57,7 +56,8 @@ class Memory(AgentResource):
         if self._pool is None:
             return default
         row = self._pool.execute(
-            f"SELECT value FROM {self._kv_table} WHERE key = ?", (key,)
+            f"SELECT value FROM {self._kv_table} WHERE key = ?",
+            (key,),
         ).fetchone()
         return json.loads(row[0]) if row else default
 
@@ -70,6 +70,20 @@ class Memory(AgentResource):
         )
 
     remember = set
+
+    async def store_persistent(self, key: str, value: Any) -> None:
+        self.set(key, value)
+
+    async def fetch_persistent(self, key: str, default: Any | None = None) -> Any:
+        return self.get(key, default)
+
+    async def delete_persistent(self, key: str) -> None:
+        if self._pool is None:
+            return
+        self._pool.execute(
+            f"DELETE FROM {self._kv_table} WHERE key = ?",
+            (key,),
+        )
 
     def clear(self) -> None:
         if self._pool is not None:
