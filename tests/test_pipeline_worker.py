@@ -1,3 +1,4 @@
+# ruff: noqa
 import json
 import asyncio
 import types
@@ -18,6 +19,7 @@ class StageResolver:
 
 pipeline_utils.StageResolver = StageResolver
 
+from entity.pipeline import pipeline as pipeline_module  # noqa: E402
 from entity.worker.pipeline_worker import PipelineWorker
 from entity.core.plugins import Plugin
 from entity.core.registries import PluginRegistry
@@ -181,11 +183,9 @@ async def test_thoughts_do_not_leak_between_executions():
 
     worker = PipelineWorker(regs)
 
-    import entity.pipeline.pipeline as pp
-
-    pp.user_id = "u1"
+    pipeline_module.user_id = "u1"
     first = await worker.execute_pipeline("pipe1", "one", user_id="u1")
-    pp.user_id = "u1"
+    pipeline_module.user_id = "u1"
     second = await worker.execute_pipeline("pipe1", "two", user_id="u1")
 
     assert first == "one"
