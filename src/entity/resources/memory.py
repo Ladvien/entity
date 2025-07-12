@@ -177,6 +177,20 @@ class Memory(AgentResource):
     async def search_similar(self, query: str, k: int = 5) -> List[str]:
         return await self.vector_store.query_similar(query, k)
 
+    async def validate_runtime(self) -> ValidationResult:
+        """Check dependencies for availability."""
+        if hasattr(self, "database") and hasattr(self.database, "validate_runtime"):
+            result = await self.database.validate_runtime()
+            if not result.success:
+                return ValidationResult.error_result(f"database: {result.message}")
+        if hasattr(self, "vector_store") and hasattr(
+            self.vector_store, "validate_runtime"
+        ):
+            result = await self.vector_store.validate_runtime()
+            if not result.success:
+                return ValidationResult.error_result(f"vector_store: {result.message}")
+        return ValidationResult.success_result()
+
     @classmethod
     async def validate_config(cls, config: Dict) -> ValidationResult:  # noqa: D401
         return ValidationResult.success_result()

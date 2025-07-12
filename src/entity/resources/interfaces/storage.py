@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from entity.core.plugins import ResourcePlugin
+from entity.core.plugins import ResourcePlugin, ValidationResult
 
 
 class StorageResource(ResourcePlugin):
@@ -21,3 +21,11 @@ class StorageResource(ResourcePlugin):
 
     def set(self, key: str, value: Any) -> None:  # pragma: no cover - stub
         return None
+
+    async def validate_runtime(self) -> ValidationResult:
+        """Ensure the storage backend is accessible."""
+        try:
+            self.get("__ping__")
+        except Exception as exc:  # noqa: BLE001 - propagate as validation error
+            return ValidationResult.error_result(str(exc))
+        return ValidationResult.success_result()

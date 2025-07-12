@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 from typing import Any, Dict, Iterator
+import os
 
 from pipeline.exceptions import CircuitBreakerTripped
 from pipeline.reliability import CircuitBreaker
@@ -55,6 +56,17 @@ class DuckDBInfrastructure(InfrastructurePlugin):
         self, breaker: CircuitBreaker | None = None
     ) -> ValidationResult:
         """Check connectivity using a simple query."""
+
+        if self.path != ":memory:":
+            directory = os.path.dirname(self.path) or "."
+            if not os.path.exists(directory):
+                return ValidationResult.error_result(
+                    f"database directory missing: {directory}"
+                )
+            if not os.access(directory, os.W_OK):
+                return ValidationResult.error_result(
+                    f"database directory not writable: {directory}"
+                )
 
         async def _query() -> None:
             async with self.connection() as conn:

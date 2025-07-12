@@ -5,7 +5,7 @@ from typing import Any, Dict
 import httpx
 from pydantic import BaseModel
 
-from entity.core.plugins import ToolPlugin
+from entity.core.plugins import ToolPlugin, ValidationResult
 from pipeline.stages import PipelineStage
 from entity.core.validation.input import validate_params
 
@@ -47,3 +47,12 @@ class WeatherApiTool(ToolPlugin):
 
     async def execute(self, params: Dict[str, Any]) -> Any:  # type: ignore[override]
         return await self.execute_function(params)
+
+    async def validate_runtime(self) -> ValidationResult:
+        """Check external API connectivity."""
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                await client.get(self.base_url, params={"location": "ping"})
+        except httpx.HTTPError as exc:  # pragma: no cover - network failure
+            return ValidationResult.error_result(str(exc))
+        return ValidationResult.success_result()
