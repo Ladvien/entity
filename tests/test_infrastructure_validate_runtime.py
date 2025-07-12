@@ -1,4 +1,5 @@
 import pytest
+from entity.pipeline.reliability import CircuitBreaker
 
 from entity.infrastructure import DuckDBInfrastructure, PostgresInfrastructure
 
@@ -6,6 +7,7 @@ from entity.infrastructure import DuckDBInfrastructure, PostgresInfrastructure
 @pytest.mark.asyncio
 async def test_duckdb_runtime_breaker_opens(monkeypatch):
     db = DuckDBInfrastructure({"failure_threshold": 2})
+    breaker = CircuitBreaker(failure_threshold=2)
 
     class BadConn:
         def execute(self, _q):
@@ -16,14 +18,14 @@ async def test_duckdb_runtime_breaker_opens(monkeypatch):
 
     db._conn = BadConn()
 
-    res1 = await db.validate_runtime()
+    res1 = await db.validate_runtime(breaker)
     assert not res1.success
     assert "boom" in res1.message
 
-    res2 = await db.validate_runtime()
+    res2 = await db.validate_runtime(breaker)
     assert not res2.success
 
-    res3 = await db.validate_runtime()
+    res3 = await db.validate_runtime(breaker)
     assert not res3.success
     assert "circuit breaker open" in res3.message.lower()
 
@@ -31,6 +33,7 @@ async def test_duckdb_runtime_breaker_opens(monkeypatch):
 @pytest.mark.asyncio
 async def test_postgres_runtime_breaker_opens(monkeypatch):
     pg = PostgresInfrastructure({"failure_threshold": 2})
+    breaker = CircuitBreaker(failure_threshold=2)
 
     class BadConn:
         async def execute(self, *_args, **_kwargs):
@@ -41,13 +44,13 @@ async def test_postgres_runtime_breaker_opens(monkeypatch):
 
     pg._pool.acquire = acquire
 
-    res1 = await pg.validate_runtime()
+    res1 = await pg.validate_runtime(breaker)
     assert not res1.success
     assert "bad" in res1.message
 
-    res2 = await pg.validate_runtime()
+    res2 = await pg.validate_runtime(breaker)
     assert not res2.success
 
-    res3 = await pg.validate_runtime()
+    res3 = await pg.validate_runtime(breaker)
     assert not res3.success
     assert "circuit breaker open" in res3.message.lower()
