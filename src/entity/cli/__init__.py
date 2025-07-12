@@ -131,7 +131,11 @@ class EntityCLI:
         doc.add_argument("--out", default="docs/source")
 
         ana = plug_sub.add_parser(
-            "analyze-plugin", help="Suggest pipeline stages for plugin functions"
+            "analyze-plugin",
+            help=(
+                "Show plugin stages and whether they come from config hints"
+                " or class attributes"
+            ),
         )
         ana.add_argument("path")
 
@@ -336,7 +340,11 @@ class EntityCLI:
             if inspect.iscoroutinefunction(obj):
                 plugin = PluginAutoClassifier.classify(obj)
                 stages = ", ".join(str(s) for s in plugin.stages)
-                logger.info("%s -> %s", name, stages)
+                if getattr(plugin, "_explicit_stages", False):
+                    reason = "config hints"
+                else:
+                    reason = "class attributes"
+                logger.info("%s -> %s (%s)", name, stages, reason)
                 found = True
         if not found:
             logger.error("No async plugin functions found in %s", path)
