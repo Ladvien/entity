@@ -100,7 +100,7 @@ def __getattr__(name: str) -> Any:
         "Agent": "pipeline.agent",
         "Pipeline": "pipeline.workflow",
         "Workflow": "pipeline.workflow",
-        "PipelineWorker": "pipeline.worker",
+        "PipelineWorker": "entity.worker.pipeline_worker",
         "execute_pipeline": "pipeline.pipeline",
         "create_default_response": "pipeline.pipeline",
         "create_static_error_response": "pipeline.errors",

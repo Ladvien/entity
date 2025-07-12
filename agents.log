@@ -1,4 +1,6 @@
-AGENT NOTE - 2025-07-12: Refactored Memory to use database and vector store only
+AGENT NOTE - 2025-07-12: Deprecated pipeline.worker; PipelineWorker now lives under entity.worker.pipeline_worker
+AGENT NOTE - 2025-07-12: Removed ConversationHistory helper class
+
 AGENT NOTE - 2025-07-12: Simplified plugin analysis output
 
 AGENT NOTE - 2025-07-12: Added get_memory/get_storage helpers and updated docs
