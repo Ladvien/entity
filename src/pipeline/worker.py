@@ -25,16 +25,19 @@ class PipelineWorker:
         """Return the assistant response for the provided state."""
         return state.conversation[-1].content
 
-    async def execute_pipeline(self, pipeline_id: str, message: str) -> Any:
-        """Process ``message`` for ``pipeline_id``."""
+    async def execute_pipeline(
+        self, pipeline_id: str, message: str, user_id: str
+    ) -> Any:
+        """Process ``message`` for ``pipeline_id`` and ``user_id``."""
         memory = self.registries.resources.get("memory")
-        history = await memory.load_conversation(pipeline_id)
+        conversation_id = f"{user_id}_{pipeline_id}"
+        history = await memory.load_conversation(conversation_id)
         history.append(
             ConversationEntry(content=message, role="user", timestamp=datetime.now())
         )
-        state = PipelineState(conversation=history, pipeline_id=pipeline_id)
+        state = PipelineState(conversation=history, pipeline_id=conversation_id)
         result = await self.run_stages(state)
-        await memory.save_conversation(pipeline_id, state.conversation)
+        await memory.save_conversation(conversation_id, state.conversation)
         return result
 
 

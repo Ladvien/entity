@@ -13,12 +13,12 @@ plugins:
     database:
       type: entity.infrastructure.duckdb:DuckDBInfrastructure
       path: ./agent.duckdb
-    # vector_store:
-    #   type: plugins.builtin.resources.duckdb_vector_store:DuckDBVectorStore
-    #   table: vector_mem
-    #   embedding_model:
-    #     name: dummy
-    #     dimensions: 3
+    vector_store:
+      type: plugins.builtin.resources.duckdb_vector_store:DuckDBVectorStore
+      table: vector_mem
+      embedding_model:
+        name: dummy
+        dimensions: 3
   # llm:
   #   type: plugins.builtin.resources.llm.unified:UnifiedLLMResource
   #   provider: ollama
@@ -29,7 +29,7 @@ plugins:
   agent_resources:
     memory:
       type: entity.resources.memory:Memory
-      dependencies: [database]
+      dependencies: [database, vector_store]
     # filesystem:
     #   type: plugins.builtin.resources.s3_filesystem:S3FileSystem
     #   bucket: agent-files

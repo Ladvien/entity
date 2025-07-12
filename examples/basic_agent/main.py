@@ -39,11 +39,14 @@ async def main() -> None:
     await plugins.register_plugin_for_stage(EchoPrompt(), PipelineStage.DELIVER, "echo")
 
     resources = ResourceContainer()
-    db = DuckDBInfrastructure({"path": "./agent.duckdb"})
-    memory = Memory(database=db)
-    await db.initialize()
-    await resources.add("database", db)
-    await resources.add("memory", memory)
+    resources.register(
+        "database",
+        DuckDBInfrastructure,
+        {"path": "./agent.duckdb"},
+        layer=1,
+    )
+    resources.register("memory", Memory, {}, layer=3)
+    await resources.build_all()
 
     caps = SystemRegistries(resources=resources, tools=ToolRegistry(), plugins=plugins)
 
