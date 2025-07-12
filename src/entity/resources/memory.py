@@ -13,6 +13,7 @@ from .interfaces.vector_store import (
 )
 from ..core.plugins import ValidationResult
 from ..core.state import ConversationEntry
+from pipeline.errors import ResourceInitializationError
 
 
 class Memory(AgentResource):
@@ -34,16 +35,19 @@ class Memory(AgentResource):
         self._history_table = self.config.get("history_table", "conversation_history")
 
     async def initialize(self) -> None:
-        if self.database is not None:
-            self._pool = self.database.get_connection_pool()
-            async with self.database.connection() as conn:
-                conn.execute(
-                    f"CREATE TABLE IF NOT EXISTS {self._kv_table} (key TEXT PRIMARY KEY, value TEXT)"
-                )
-                conn.execute(
-                    f"CREATE TABLE IF NOT EXISTS {self._history_table} ("
-                    "conversation_id TEXT, role TEXT, content TEXT, metadata TEXT, timestamp TEXT)"
-                )
+        if self.database is None:
+            raise ResourceInitializationError("Database dependency not injected")
+        if self.vector_store is None:
+            raise ResourceInitializationError("VectorStore dependency not injected")
+        self._pool = self.database.get_connection_pool()
+        async with self.database.connection() as conn:
+            conn.execute(
+                f"CREATE TABLE IF NOT EXISTS {self._kv_table} (key TEXT PRIMARY KEY, value TEXT)"
+            )
+            conn.execute(
+                f"CREATE TABLE IF NOT EXISTS {self._history_table} ("
+                "conversation_id TEXT, role TEXT, content TEXT, metadata TEXT, timestamp TEXT)"
+            )
 
     async def _execute_impl(self, context: Any) -> None:  # pragma: no cover - stub
         return None

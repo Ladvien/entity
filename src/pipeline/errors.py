@@ -39,6 +39,12 @@ class ResourceError(PipelineError):
     pass
 
 
+class ResourceInitializationError(ResourceError):
+    """Raised when a resource fails to initialize."""
+
+    pass
+
+
 class InitializationError(PipelineError):
     """Raised when a plugin or resource fails to initialize."""
 
@@ -122,6 +128,7 @@ __all__ = [
     "PluginContextError",
     "PluginExecutionError",
     "ResourceError",
+    "ResourceInitializationError",
     "InitializationError",
     "StageExecutionError",
     "ToolExecutionError",
