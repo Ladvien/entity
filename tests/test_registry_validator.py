@@ -1,5 +1,3 @@
-import logging
-
 import pytest
 import yaml
 from entity.core.plugins import AgentResource, PromptPlugin
@@ -166,19 +164,15 @@ def test_memory_with_postgres(tmp_path):
     RegistryValidator(str(path)).run()
 
 
-def test_stage_override_warning(caplog):
+def test_stage_override_warning():
     class OverridePrompt(PromptPlugin):
         async def _execute_impl(self, context):
             pass
 
     registry = ClassRegistry()
-
-    caplog.set_level(logging.WARNING, logger="pipeline.initializer")
-    logging.getLogger("pipeline.initializer").addHandler(caplog.handler)
-    registry._resolve_plugin_stages(OverridePrompt, {"stage": PipelineStage.DO})
-
-    assert any(
-        "override type defaults" in record.getMessage()
-        and "OverridePrompt" in record.getMessage()
-        for record in caplog.records
+    stages, explicit = registry._resolve_plugin_stages(
+        OverridePrompt, {"stage": PipelineStage.DO}
     )
+
+    assert stages == [PipelineStage.DO]
+    assert explicit is True

@@ -96,19 +96,20 @@ class ClassRegistry:
         self, cls: type[Plugin], config: Dict
     ) -> tuple[List[PipelineStage], bool]:
         """Determine final stages and whether they were explicit."""
-
         cfg_value = config.get("stages") or config.get("stage")
+        if cfg_value is not None:
+            stages = cfg_value if isinstance(cfg_value, list) else [cfg_value]
+            return [PipelineStage.ensure(s) for s in stages], True
 
-        return resolve_stages(
-            cls.__name__,
-            cfg_value=cfg_value,
-            attr_stages=getattr(cls, "stages", []),
-            explicit_attr=bool(getattr(cls, "stages", [])),
-            type_defaults=self._type_default_stages(cls),
-            ensure_stage=PipelineStage.ensure,
-            logger=logger,
-            error_type=SystemError,
-        )
+        class_stages = getattr(cls, "stages", [])
+        if class_stages:
+            return [PipelineStage.ensure(s) for s in class_stages], True
+
+        type_default = self._type_default_stages(cls)
+        if type_default:
+            return [PipelineStage.ensure(s) for s in type_default], False
+
+        return [PipelineStage.THINK], False
 
     def _validate_stage_assignment(
         self, name: str, cls: type[Plugin], config: Dict
@@ -116,7 +117,9 @@ class ClassRegistry:
         if issubclass(cls, (ResourcePlugin, ToolPlugin)):
             return
 
-        stages, _ = self._resolve_plugin_stages(cls, config)
+        stages, explicit = self._resolve_plugin_stages(cls, config)
+        if not explicit:
+            raise SystemError(f"Plugin '{name}' does not specify any stages")
         invalid = [s for s in stages if not isinstance(s, PipelineStage)]
         if invalid:
             raise SystemError(f"Plugin '{name}' has invalid stage values: {invalid}")

@@ -77,7 +77,7 @@ class RegistryValidator:
                 cls = import_plugin_class(cfg.get("type", name))
                 self.registry.register_class(cls, cfg, name)
                 self.dep_graph[name] = list(getattr(cls, "dependencies", []))
-                self._validate_stage_assignment(name, cls)
+                self._validate_stage_assignment(name, cls, cfg)
 
                 if name == "memory" and isinstance(cfg, dict):
                     if cfg.get("vector_store"):
@@ -95,15 +95,24 @@ class RegistryValidator:
                     self.has_postgres = True
 
     @staticmethod
-    def _validate_stage_assignment(name: str, cls: type) -> None:
+    def _validate_stage_assignment(name: str, cls: type, cfg: Dict) -> None:
         from entity.core.plugins import ResourcePlugin, ToolPlugin
 
         if issubclass(cls, (ResourcePlugin, ToolPlugin)):
             return
 
-        stages = getattr(cls, "stages", None)
-        if not stages:
+        cfg_value = cfg.get("stages") or cfg.get("stage")
+        if cfg_value is not None:
+            stages = cfg_value if isinstance(cfg_value, list) else [cfg_value]
+            explicit = True
+        else:
+            stages = getattr(cls, "stages", [])
+            explicit = bool(stages)
+
+        if not explicit:
             raise SystemError(f"Plugin '{name}' does not specify any stages")
+
+        stages = [PipelineStage.ensure(s) for s in stages]
         invalid = [s for s in stages if not isinstance(s, PipelineStage)]
         if invalid:
             raise SystemError(f"Plugin '{name}' has invalid stage values: {invalid}")
