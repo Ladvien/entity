@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-14: Added advanced memory methods with database and vector store calls
+AGENT NOTE - 2025-07-12: Updated Memory resource for DI and adjusted examples/tests
 AGENT NOTE - 2025-07-13: Memory now persists to DuckDB and vector store
 AGENT NOTE - 2025-07-12: Removed ConversationHistory helper class
 

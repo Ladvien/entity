@@ -20,12 +20,7 @@ class Memory(AgentResource):
 
     name = "memory"
 
-    def __init__(
-        self,
-        database: DatabaseInterface | None = None,
-        vector_store: VectorStoreInterface | None = None,
-        config: Dict[str, Any] | None = None,
-    ) -> None:
+    def __init__(self, config: Dict[str, Any] | None = None) -> None:
         super().__init__(config or {})
         self.database = database
         self.vector_store = vector_store
@@ -34,10 +29,14 @@ class Memory(AgentResource):
         self._history_table = self.config.get("history_table", "conversation_history")
 
     async def initialize(self) -> None:
-        if self.database is None:
-            raise ResourceInitializationError("Database dependency not injected")
-        if self.vector_store is None:
-            raise ResourceInitializationError("VectorStore dependency not injected")
+        if self.database is None or self.vector_store is None:
+            raise InitializationError(
+                self.name,
+                "dependency check",
+                "Database and vector_store must be injected before initialization.",
+                kind="Resource",
+            )
+
         self._pool = self.database.get_connection_pool()
         async with self.database.connection() as conn:
             conn.execute(

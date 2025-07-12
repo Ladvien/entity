@@ -52,7 +52,8 @@ class FinalResponder(PromptPlugin):
 async def main() -> None:
     resources = ResourceContainer()
     db = DuckDBInfrastructure({"path": "./agent.duckdb"})
-    memory = Memory(database=db)
+    memory = Memory(config={})
+    memory.database = db
     await db.initialize()
     await resources.add("database", db)
     await resources.add("memory", memory)

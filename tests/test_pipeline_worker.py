@@ -111,7 +111,9 @@ class DBRegistries:
             async def __aexit__(self, exc_type, exc, tb):
                 return False
 
-        self.resources = _Resources(memory=Memory(database=db, config={}))
+        mem = Memory(config={})
+        mem.database = db
+        self.resources = _Resources(memory=mem)
         self.tools = types.SimpleNamespace()
         self.validators = None
 
