@@ -3,6 +3,8 @@ from __future__ import annotations
 """Pydantic models for Entity configuration."""
 
 from typing import Any, Dict
+import os
+import socket
 
 from pydantic import BaseModel, Field
 
@@ -112,11 +114,15 @@ class LogOutputConfig(BaseModel):
     path: str | None = None
     host: str | None = None
     port: int | None = None
+    max_size: int | None = None
+    backup_count: int | None = None
 
 
 class LoggingConfig(BaseModel):
     """Settings controlling the :class:`LoggingResource`."""
 
+    host_name: str = Field(default_factory=socket.gethostname)
+    process_id: int = Field(default_factory=os.getpid)
     outputs: list[LogOutputConfig] = Field(default_factory=lambda: [LogOutputConfig()])
 
 

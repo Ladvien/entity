@@ -59,6 +59,8 @@ Configuration for a single logging output.
 | path | str | None | None |  |
 | host | str | None | None |  |
 | port | int | None | None |  |
+| max_size | int | None |  |  |
+| backup_count | int | None |  |  |
 
 ## LoggingConfig
 
@@ -66,6 +68,8 @@ Settings controlling the :class:`LoggingResource`.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
+| host_name | str | socket.gethostname() |  |
+| process_id | int | os.getpid() |  |
 | outputs | ForwardRef('list[LogOutputConfig]') | Required |  |
 
 ## MemoryConfig
