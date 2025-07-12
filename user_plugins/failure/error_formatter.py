@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:  # pragma: no cover - type hints only
     from entity.core.context import PluginContext
 from pipeline.errors import create_static_error_response
-from pipeline.stages import PipelineStage
+from entity.pipeline.stages import PipelineStage
 
 
 class ErrorFormatter(FailurePlugin):

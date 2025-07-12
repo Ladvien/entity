@@ -9,8 +9,7 @@ base = Path(__file__).resolve().parents[2]
 sys.path.append(str(base / "src"))
 sys.path.append(str(base))
 
-from user_plugins.tools.calculator_tool import CalculatorTool
-from user_plugins.responders import ReactResponder
+from user_plugins.responders import ComplexPromptResponder
 from entity.core.plugins import PromptPlugin, ResourcePlugin
 from entity.core.context import PluginContext
 from entity.pipeline.stages import PipelineStage
@@ -31,19 +30,14 @@ class EchoLLMResource(ResourcePlugin):
         return {"content": prompt}
 
 
-class ReActPrompt(PromptPlugin):
-    """Very small ReAct style prompt."""
+class ChainOfThoughtPrompt(PromptPlugin):
+    """Simple reasoning plugin."""
 
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context: PluginContext) -> None:
-        question = next(
-            (e.content for e in context.conversation() if e.role == "user"), ""
-        )
-        tool_result = await context.tool_use("calc", expression="2+2")
-        thoughts = await context.reflect("react_thoughts", [])
-        thoughts.append(f"Thinking about {question} using tool result {tool_result}")
-        await context.think("react_thoughts", thoughts)
+        user = next((e.content for e in context.conversation() if e.role == "user"), "")
+        await context.think("complex_response", f"Problem breakdown: {user}")
 
 
 async def main() -> None:
@@ -56,28 +50,27 @@ async def main() -> None:
     await resources.add("memory", memory)
     await resources.add("llm", EchoLLMResource({}))
 
-    tools = ToolRegistry()
-    await tools.add("calc", CalculatorTool())
-
     plugins = PluginRegistry()
     await plugins.register_plugin_for_stage(
-        ReActPrompt({"max_steps": 2}), PipelineStage.THINK, "react"
+        ChainOfThoughtPrompt({"max_steps": 1}), PipelineStage.THINK, "cot"
     )
     await plugins.register_plugin_for_stage(
-        ReactResponder({}), PipelineStage.OUTPUT, "final"
+        ComplexPromptResponder({}), PipelineStage.OUTPUT, "final"
     )
 
-    caps = SystemRegistries(resources=resources, tools=tools, plugins=plugins)
+    caps = SystemRegistries(resources=resources, tools=ToolRegistry(), plugins=plugins)
 
     state = PipelineState(
         conversation=[
             ConversationEntry(
-                content="What is 2 + 2?", role="user", timestamp=datetime.now()
+                content="Explain the sky", role="user", timestamp=datetime.now()
             )
         ],
         pipeline_id=generate_pipeline_id(),
     )
-    result: dict[str, Any] = await execute_pipeline("What is 2 + 2?", caps, state=state)
+    result: dict[str, Any] = await execute_pipeline(
+        "Explain the sky", caps, state=state
+    )
     print(result)
 
 

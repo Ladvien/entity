@@ -66,11 +66,6 @@ plugins:
 #       region: us-east-1
   custom_resources: {}
   tools:
-    weather:
-      type: user_plugins.tools.weather_api_tool:WeatherApiTool
-      api_key: "${WEATHER_API_KEY}"
-      base_url: "https://api.weather.com"
-      timeout: 30
     calculator:
       type: user_plugins.tools.calculator_tool:CalculatorTool
       precision: 10

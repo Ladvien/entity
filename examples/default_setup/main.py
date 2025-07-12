@@ -4,6 +4,8 @@ from entity import Agent
 from entity.resources.memory import Memory
 from entity.pipeline.stages import PipelineStage
 
+agent = Agent()
+
 
 @agent.tool
 async def add(a: int, b: int) -> int:
