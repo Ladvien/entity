@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import asyncio
 
 from entity.resources import LLM, Memory, Storage, StandardResources
 from entity.resources.interfaces.database import DatabaseResource
@@ -58,7 +59,7 @@ class DummyLLMProvider(LLMResource):
 def test_standard_resources_types() -> None:
     db = DummyDatabase()
     memory = Memory(config={})
-    memory.database = db
+    asyncio.get_event_loop().run_until_complete(memory.initialize())
 
     res = StandardResources(
         memory=memory,

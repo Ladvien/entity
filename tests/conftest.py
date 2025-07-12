@@ -17,6 +17,8 @@ async def memory_db(tmp_path: Path) -> Memory:
         )
     mem = Memory(config={})
     mem.database = db
+    mem.vector_store = None
+    await mem.initialize()
     try:
         yield mem
     finally:
