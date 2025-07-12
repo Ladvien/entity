@@ -81,6 +81,11 @@ class _AgentBuilder:
         """Decorator registering ``func`` as a plugin."""
 
         def decorator(f: Callable[..., Any]) -> Callable[..., Any]:
+            if not (
+                hints.get("plugin_class") or hints.get("stage") or hints.get("stages")
+            ):
+                raise ValueError("plugin() requires 'plugin_class' or stage hints")
+
             plugin = PluginAutoClassifier.classify(f, hints)
             self.add_plugin(plugin)
             return f

@@ -26,7 +26,7 @@ async def tool_user(ctx):
 
 
 def test_classifier_detects_tool_use_call():
-    plugin = PluginAutoClassifier.classify(tool_user)
+    plugin = PluginAutoClassifier.classify(tool_user, {"plugin_class": ToolPlugin})
     assert plugin.base_class is ToolPlugin
     assert plugin.stages == [PipelineStage.DO]
 
@@ -36,6 +36,6 @@ async def handle_action(ctx, action: str):
 
 
 def test_classifier_detects_action_param():
-    plugin = PluginAutoClassifier.classify(handle_action)
+    plugin = PluginAutoClassifier.classify(handle_action, {"plugin_class": ToolPlugin})
     assert plugin.base_class is ToolPlugin
     assert plugin.stages == [PipelineStage.DO]

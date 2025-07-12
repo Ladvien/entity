@@ -91,7 +91,7 @@ class AgentResource(ResourcePlugin):
     """Layer 3 canonical or custom agent resource."""
 
 
-class ToolPlugin(Plugin):
+class ToolPlugin(BasePlugin):
     """Utility plugin executed via ``tool_use`` calls."""
 
     required_params: List[str] = []
@@ -106,13 +106,13 @@ class ToolPlugin(Plugin):
         return await self.execute_function(params)
 
 
-class PromptPlugin(Plugin):
+class PromptPlugin(BasePlugin):
     """Processing plugin typically run in ``THINK`` stage."""
 
     stages = [PipelineStage.THINK]
 
 
-class AdapterPlugin(Plugin):
+class AdapterPlugin(BasePlugin):
     """Input or output adapter plugin."""
 
     stages = [PipelineStage.INPUT, PipelineStage.OUTPUT]

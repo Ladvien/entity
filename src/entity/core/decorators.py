@@ -11,6 +11,9 @@ def plugin(func: Optional[Callable] = None, **hints: Any) -> Callable:
     """Decorator turning ``func`` into a plugin."""
 
     def decorator(f: Callable) -> Callable:
+        if not (hints.get("plugin_class") or hints.get("stage") or hints.get("stages")):
+            raise ValueError("plugin() requires 'plugin_class' or stage hints")
+
         plugin_obj = PluginAutoClassifier.classify(f, hints)
         setattr(f, "__entity_plugin__", plugin_obj)
         return f

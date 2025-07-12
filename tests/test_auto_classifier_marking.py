@@ -26,5 +26,5 @@ def test_auto_classifier_marks_inferred():
     async def dummy(ctx):
         return "ok"
 
-    plugin = PluginAutoClassifier.classify(dummy)
-    assert getattr(plugin, "_auto_inferred_stages", False)
+    plugin = PluginAutoClassifier.classify(dummy, {"plugin_class": PromptPlugin})
+    assert not getattr(plugin, "_auto_inferred_stages", False)

@@ -93,38 +93,18 @@ class PluginAutoClassifier:
             )
 
         hints = user_hints or {}
-        try:
-            source = inspect.getsource(plugin_func)
-        except OSError:
-            source = ""
+        base = cast(Type, hints.get("plugin_class", plugin_base_registry.prompt_plugin))
 
-        sig = inspect.signature(plugin_func)
-        param_names = [p.name.lower() for p in sig.parameters.values()]
-
-        action_keywords = {"action", "tool", "command"}
-        named_like_tool = any(
-            any(key in name for key in action_keywords) for name in param_names[1:]
-        )
-
-        calls_tool = any(k in source for k in ["tool_use(", "queue_tool_use("])
-
-        if calls_tool or named_like_tool:
-            base = cast(Type, plugin_base_registry.tool_plugin)
-        elif any(k in source for k in ["think", "reason", "analyze"]):
-            base = cast(Type, plugin_base_registry.prompt_plugin)
-        elif any(k in source for k in ["parse", "validate", "check"]):
-            base = cast(Type, plugin_base_registry.adapter_plugin)
-        elif any(k in source for k in ["return", "response", "answer"]):
-            base = cast(Type, plugin_base_registry.prompt_plugin)
-        else:
-            base = cast(Type, plugin_base_registry.prompt_plugin)
-
-        explicit = False
-        inferred = False
-        if "stage" in hints or "stages" in hints:
-            hint = hints.get("stages") or hints.get("stage")
-            stages = hint if isinstance(hint, list) else [hint]
+        stage_hint = hints.get("stages") or hints.get("stage")
+        if stage_hint is not None:
+            stages = stage_hint if isinstance(stage_hint, list) else [stage_hint]
             stages = [PipelineStage.from_str(str(s)) for s in stages]
+            explicit = True
+        else:
+            stages = default_stages_for_class(base)
+            explicit = False
+
+        if hints.get("plugin_class") is None and stage_hint is not None:
             stage_set = set(stages)
             if stage_set == {PipelineStage.DO}:
                 base = cast(Type, plugin_base_registry.tool_plugin)
@@ -134,10 +114,8 @@ class PluginAutoClassifier:
                 base = cast(Type, plugin_base_registry.adapter_plugin)
             else:
                 base = cast(Type, plugin_base_registry.prompt_plugin)
-            explicit = True
-        else:
-            inferred = True
-            stages = default_stages_for_class(base)
+
+        inferred = not explicit
 
         name = hints.get("name", plugin_func.__name__)
 
@@ -149,7 +127,7 @@ class PluginAutoClassifier:
         )
         plugin_obj._explicit_stages = explicit
         plugin_obj._inferred_stages = inferred
-        plugin_obj._auto_inferred_stages = inferred
+        plugin_obj._auto_inferred_stages = False
         plugin_obj._type_default_stages = default_stages_for_class(base)
         plugin_obj._inferred = inferred
         return plugin_obj

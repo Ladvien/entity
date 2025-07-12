@@ -9,7 +9,12 @@ def test_from_package_import_error(tmp_path, caplog, monkeypatch):
     pkg = tmp_path / "pkg"
     pkg.mkdir()
     (pkg / "__init__.py").write_text("")
-    (pkg / "good.py").write_text("async def ok_plugin(ctx):\n    return 'ok'")
+    (pkg / "good.py").write_text(
+        "from entity.core.decorators import plugin\n"
+        "from pipeline import PipelineStage\n"
+        "@plugin(stage=PipelineStage.DO)\n"
+        "async def ok_plugin(ctx):\n    return 'ok'\n"
+    )
     (pkg / "bad.py").write_text("import nonexistent_module")
 
     monkeypatch.syspath_prepend(str(tmp_path))
@@ -29,8 +34,10 @@ def test_package_plugin_naming(tmp_path, monkeypatch):
 
     (pkg / "mods.py").write_text(
         """
-from pipeline import Plugin, PipelineStage
+from pipeline import BasePlugin, PipelineStage
+from entity.core.decorators import plugin
 
+@plugin(stage=PipelineStage.DO)
 async def top_plugin(ctx):
     return 'top'
 
@@ -47,6 +54,10 @@ class BadClass:
 
     (sub / "submod.py").write_text(
         """
+from entity.core.decorators import plugin
+from pipeline import PipelineStage
+
+@plugin(stage=PipelineStage.DO)
 async def sub_plugin(ctx):
     return 'sub'
 """
