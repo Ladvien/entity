@@ -255,6 +255,7 @@ async def execute_pipeline(
             ],
             pipeline_id=f"{user_id}_{generate_pipeline_id()}",
         )
+        state.stage_results.clear()
     start = time.time()
     async with capabilities.resources:
         async with start_span("pipeline.execute"):
