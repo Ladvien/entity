@@ -39,21 +39,51 @@ class DummyConnection:
     def __init__(self, store: dict) -> None:
         self.store = store
 
-    async def execute(self, query: str, params: tuple) -> None:
+    class _Cursor:
+        def __init__(self, rows: list[tuple] | None = None) -> None:
+            self.rows = rows or []
+
+        def fetchone(self) -> tuple | None:
+            return self.rows[0] if self.rows else None
+
+        def fetchall(self) -> list[tuple]:
+            return self.rows
+
+    def execute(
+        self, query: str, params: tuple | None = None
+    ) -> "DummyConnection._Cursor":
+        params = params or ()
         if query.startswith("DELETE FROM conversation_history"):
             cid = params[0] if isinstance(params, tuple) else params
             self.store.setdefault("history", {}).pop(cid, None)
-        elif query.startswith("INSERT INTO conversation_history"):
+            return self._Cursor()
+        if query.startswith("INSERT INTO conversation_history"):
             cid, role, content, metadata, ts = params
             self.store.setdefault("history", {}).setdefault(cid, []).append(
                 (role, content, json.loads(metadata), ts)
             )
-        elif query.startswith("DELETE FROM kv_store"):
+            return self._Cursor()
+        if query.startswith("DELETE FROM memory_kv"):
             key = params[0] if isinstance(params, tuple) else params
             self.store.setdefault("kv", {}).pop(key, None)
-        elif query.startswith("INSERT INTO kv_store"):
+            return self._Cursor()
+        if query.startswith("INSERT OR REPLACE INTO memory_kv") or query.startswith(
+            "INSERT INTO memory_kv"
+        ):
             key, value = params
             self.store.setdefault("kv", {})[key] = json.loads(value)
+            return self._Cursor()
+        if query.startswith("SELECT value FROM memory_kv"):
+            key = params[0] if isinstance(params, tuple) else params
+            value = self.store.get("kv", {}).get(key)
+            return self._Cursor([(json.dumps(value),)] if value is not None else [])
+        if query.startswith(
+            "SELECT role, content, metadata, timestamp FROM conversation_history"
+        ):
+            cid = params[0] if isinstance(params, tuple) else params
+            rows = self.store.get("history", {}).get(cid, [])
+            return self._Cursor([(r[0], r[1], json.dumps(r[2]), r[3]) for r in rows])
+        return self._Cursor()
 
     async def fetch(self, query: str, params: tuple) -> list:
         if query.startswith(
@@ -66,7 +96,7 @@ class DummyConnection:
                     cid, []
                 )
             ]
-        if query.startswith("SELECT value FROM kv_store"):
+        if query.startswith("SELECT value FROM memory_kv"):
             key = params[0] if isinstance(params, tuple) else params
             if key in self.store.get("kv", {}):
                 return [(json.dumps(self.store["kv"][key]),)]
@@ -119,7 +149,7 @@ def test_memory_persists_between_instances() -> None:
     mem1.database = db
     mem1.vector_store = None
     asyncio.get_event_loop().run_until_complete(mem1.initialize())
-    mem1.set("foo", "bar")
+    loop.run_until_complete(mem1.set("foo", "bar"))
     entry = ConversationEntry("hi", "user", datetime.now())
     loop.run_until_complete(mem1.save_conversation("cid", [entry]))
 
@@ -127,7 +157,7 @@ def test_memory_persists_between_instances() -> None:
     mem2.database = db
     mem2.vector_store = None
     asyncio.get_event_loop().run_until_complete(mem2.initialize())
-    assert mem2.get("foo") == "bar"
+    assert loop.run_until_complete(mem2.get("foo")) == "bar"
     history = loop.run_until_complete(mem2.load_conversation("cid"))
     assert history == [entry]
 
@@ -140,7 +170,7 @@ def test_memory_persists_with_connection_pool() -> None:
     mem1.database = pool
     mem1.vector_store = None
     asyncio.get_event_loop().run_until_complete(mem1.initialize())
-    mem1.set("foo", "bar")
+    loop.run_until_complete(mem1.set("foo", "bar"))
     entry = ConversationEntry("hi", "user", datetime.now())
     loop.run_until_complete(mem1.save_conversation("cid", [entry]))
 
@@ -148,7 +178,7 @@ def test_memory_persists_with_connection_pool() -> None:
     mem2.database = pool
     mem2.vector_store = None
     asyncio.get_event_loop().run_until_complete(mem2.initialize())
-    assert mem2.get("foo") == "bar"
+    assert loop.run_until_complete(mem2.get("foo")) == "bar"
     history = loop.run_until_complete(mem2.load_conversation("cid"))
     assert history == [entry]
 
