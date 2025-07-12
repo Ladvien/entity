@@ -71,6 +71,11 @@ class Plugin:
 
         return ValidationResult.success_result()
 
+    async def validate_runtime(self) -> "ValidationResult":
+        """Validate the runtime environment for the plugin."""
+
+        return ValidationResult.success_result()
+
     async def initialize(self) -> None:
         """Initialize the plugin instance."""
 
