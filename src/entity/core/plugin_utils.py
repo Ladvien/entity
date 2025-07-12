@@ -9,9 +9,9 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, Optional, Type, cast
 
-from entity.utils.logging import get_logger
+from pipeline.utils import _normalize_stages
 
-from .stages import PipelineStage
+from entity.utils.logging import get_logger
 
 
 @dataclass
@@ -30,22 +30,6 @@ class PluginBaseRegistry:
 plugin_base_registry = PluginBaseRegistry()
 
 logger = get_logger(__name__)
-
-
-def default_stages_for_class(plugin_class: Type) -> list[PipelineStage]:
-    """Return default stages based on plugin class hierarchy."""
-
-    if issubclass(plugin_class, plugin_base_registry.failure_plugin):
-        return [PipelineStage.ERROR]
-    if issubclass(plugin_class, plugin_base_registry.resource_plugin):
-        return []
-    if issubclass(plugin_class, plugin_base_registry.tool_plugin):
-        return [PipelineStage.DO]
-    if issubclass(plugin_class, plugin_base_registry.prompt_plugin):
-        return [PipelineStage.THINK]
-    if issubclass(plugin_class, plugin_base_registry.adapter_plugin):
-        return [PipelineStage.INPUT, PipelineStage.OUTPUT]
-    return []
 
 
 def configure_plugins(
@@ -119,17 +103,17 @@ class PluginAutoClassifier:
 
         hints: Dict[str, Any] = user_hints or {}
 
-        base = hints.get("plugin_class")
-        if base is None:
-            base = plugin_base_registry.prompt_plugin
+        base_cls = hints.get("plugin_class") or plugin_base_registry.prompt_plugin
 
         stage_hint = hints.get("stages") or hints.get("stage")
         if stage_hint is not None:
-            stages = stage_hint if isinstance(stage_hint, list) else [stage_hint]
-            stages = [PipelineStage.from_str(str(s)) for s in stages]
+            stages = _normalize_stages(stage_hint)
             explicit = True
         else:
-            stages = default_stages_for_class(cast(Type, base))
+            class_value = getattr(cast(Type, base_cls), "stages", None) or getattr(
+                cast(Type, base_cls), "stage", None
+            )
+            stages = _normalize_stages(class_value) if class_value is not None else []
             explicit = False
 
         name = hints.get("name", plugin_func.__name__)
@@ -138,7 +122,7 @@ class PluginAutoClassifier:
             func=plugin_func,
             stages=stages,
             name=name,
-            base_class=cast(Type, base),
+            base_class=cast(Type, base_cls),
         )
         plugin_obj._explicit_stages = explicit
         return plugin_obj
@@ -154,5 +138,4 @@ __all__ = [
     "PluginAutoClassifier",
     "import_plugin_class",
     "configure_plugins",
-    "default_stages_for_class",
 ]
