@@ -286,6 +286,19 @@ class ResourceContainer:
                 raise SystemError(f"Resource '{name}' has invalid layer {layer}")
             if layer == 1 and self._deps.get(name):
                 raise SystemError("Infrastructure resources cannot have dependencies")
+            if layer == 1:
+                itype = getattr(self._classes[name], "infrastructure_type", "")
+                if not itype:
+                    raise SystemError(
+                        f"Infrastructure '{name}' missing infrastructure_type"
+                    )
+            if layer == 2:
+                if not getattr(
+                    self._classes[name], "infrastructure_dependencies", None
+                ):
+                    raise SystemError(
+                        f"Resource interface '{name}' must declare infrastructure_dependencies"
+                    )
 
         for name, deps in self._deps.items():
             for dep in deps:

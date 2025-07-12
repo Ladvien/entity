@@ -12,6 +12,8 @@ from entity.core.registries import SystemRegistries
 from pipeline.pipeline import execute_pipeline
 
 from .base import AgentResource
+from .interfaces.database import DatabaseResource
+from .interfaces.vector_store import VectorStoreResource
 from ..core.plugins import ValidationResult
 from ..core.state import ConversationEntry
 
@@ -97,7 +99,7 @@ class Memory(AgentResource):
     """Store key/value pairs, conversation history, and vectors."""
 
     name = "memory"
-    dependencies: list[str] = []
+    dependencies: list[str] = ["database?", "vector_store?"]
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
@@ -105,8 +107,8 @@ class Memory(AgentResource):
         self._conversations: Dict[str, List[ConversationEntry]] = {}
         self._vectors: Dict[str, List[float]] = {}
         self._history = ConversationHistory(self._conversations)
-        self.database: Any | None = None
-        self.vector_store: Any | None = None
+        self.database: DatabaseResource | None = None
+        self.vector_store: VectorStoreResource | None = None
 
     async def _execute_impl(self, context: Any) -> None:  # noqa: D401, ARG002
         return None

@@ -5,13 +5,16 @@ from typing import Any, Dict, Iterator
 
 import duckdb
 
-from entity.infrastructure.duckdb import DuckDBInfrastructure
+from entity.core.plugins import InfrastructurePlugin
 
 
-class DuckDBDatabaseResource(DuckDBInfrastructure):
+class DuckDBInfrastructure(InfrastructurePlugin):
     """DuckDB-backed database implementation."""
 
-    # Attributes defined in ``DuckDBInfrastructure``
+    name = "duckdb_database"
+    infrastructure_type = "database"
+    stages: list = []
+    dependencies: list[str] = []
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
