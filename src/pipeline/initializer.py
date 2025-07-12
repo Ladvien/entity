@@ -16,7 +16,7 @@ from entity.core.resources.container import ResourceContainer
 from entity.utils.logging import configure_logging, get_logger
 from entity.workflows.discovery import discover_workflows, register_module_workflows
 from pipeline.config import ConfigLoader
-from pipeline.utils import DependencyGraph, StageResolver
+from pipeline.utils import DependencyGraph, resolve_stages
 from pipeline.reliability import CircuitBreaker
 from pipeline.exceptions import CircuitBreakerTripped
 
@@ -81,6 +81,19 @@ class ClassRegistry(StageResolver):
             cls = self._classes[name]
             if not issubclass(cls, (ResourcePlugin, ToolPlugin)):
                 yield cls, self._configs[name]
+
+    def _resolve_plugin_stages(
+        self, cls: type[Plugin], config: Dict
+    ) -> tuple[List[PipelineStage], bool]:
+        """Determine final stages and whether they were explicit."""
+
+        stages = resolve_stages(cls, config)
+        explicit = bool(
+            (config.get("stage") or config.get("stages"))
+            or getattr(cls, "stages", None)
+            or getattr(cls, "stage", None)
+        )
+        return stages, explicit
 
     def _validate_stage_assignment(
         self, name: str, cls: type[Plugin], config: Dict
@@ -276,6 +289,20 @@ class SystemInitializer:
             except Exception:  # noqa: BLE001
                 continue
             register_module_workflows(module, self.workflows)
+
+    def _resolve_plugin_stages(
+        self, cls: type[Plugin], instance: Plugin, config: Dict
+    ) -> tuple[List[PipelineStage], bool]:
+        """Determine final stages and whether they were explicit."""
+
+        stages = resolve_stages(cls, config)
+        explicit = bool(
+            (config.get("stage") or config.get("stages"))
+            or getattr(instance, "_explicit_stages", False)
+            or getattr(cls, "stages", None)
+            or getattr(cls, "stage", None)
+        )
+        return stages, explicit
 
     async def initialize(self):
         self._discover_plugins()

@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-12: Added runtime validation methods with circuit breakers
+AGENT NOTE - 2025-07-12: Simplified stage resolution helpers
 AGENT NOTE - 2025-07-12: Simplified plugin analysis output
 
 AGENT NOTE - 2025-07-12: Added get_memory/get_storage helpers and updated docs
