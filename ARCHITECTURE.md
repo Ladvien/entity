@@ -621,9 +621,10 @@ class MemoryResource:
 **Decision**: Use layered approach with strict precedence hierarchy for plugin stage assignment.
 
 **Precedence Order (highest to lowest)**:
-1. **Explicit `stages` attribute** - declared in plugin class always wins
-2. **Plugin type defaults** - ToolPlugin → DO, PromptPlugin → THINK, AdapterPlugin → PARSE+DELIVER
-3. **Auto-classification** - analyze function source code for stage hints (function-based plugins only)
+1. **YAML configuration** - values in the config file override all other sources
+2. **Class `stages` attribute** - declared in the plugin class
+3. **Plugin type defaults** - ToolPlugin → DO, PromptPlugin → THINK, AdapterPlugin → PARSE+DELIVER
+4. **Auto-classification** - analyze function source code for stage hints (function-based plugins only)
 
 **Rationale**:
 - Supports progressive disclosure from simple defaults to explicit control
@@ -633,8 +634,8 @@ class MemoryResource:
 - Maintains backward compatibility with existing auto-classification
 
 **Implementation**:
-- Allow explicit stage overrides even when they conflict with type conventions
-- Log warnings when explicit stages deviate from type defaults for visibility
+- Stages defined in YAML configuration override the class `stages` attribute
+- Overriding type defaults logs a warning (see `ClassRegistry._resolve_plugin_stages`)
 - Auto-classification only applies to function-based plugins without explicit stages
 - Document common override patterns and use cases
 
