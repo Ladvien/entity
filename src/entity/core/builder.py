@@ -28,7 +28,7 @@ from entity.utils.logging import get_logger
 
 from .plugin_utils import PluginAutoClassifier
 from .stages import PipelineStage
-from pipeline.utils import StageResolver
+from entity.pipeline.utils import StageResolver
 
 logger = get_logger(__name__)
 
@@ -290,7 +290,7 @@ class _AgentBuilder:
     ) -> list[PipelineStage]:
         """Resolve final stages for ``plugin`` using simple precedence."""
 
-        from pipeline.utils import resolve_stages
+        from entity.pipeline.utils import resolve_stages
 
         cfg = config or plugin.config
         return resolve_stages(plugin.__class__, cfg)

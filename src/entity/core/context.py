@@ -8,8 +8,8 @@ from typing import Any, Callable, Dict, List, Optional, cast
 
 from entity.core.state import ConversationEntry, PipelineState, ToolCall
 import warnings
-from pipeline.errors import PluginContextError
-from pipeline.stages import PipelineStage
+from entity.pipeline.errors import PluginContextError
+from entity.pipeline.stages import PipelineStage
 
 
 class AdvancedContext:

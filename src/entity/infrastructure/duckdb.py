@@ -4,8 +4,8 @@ from contextlib import asynccontextmanager
 from typing import Any, Dict, Iterator
 import os
 
-from pipeline.exceptions import CircuitBreakerTripped
-from pipeline.reliability import CircuitBreaker
+from entity.pipeline.exceptions import CircuitBreakerTripped
+from entity.pipeline.reliability import CircuitBreaker
 
 import duckdb
 

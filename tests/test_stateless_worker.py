@@ -6,7 +6,7 @@ import pytest
 
 from entity.resources import Memory
 from entity.resources.interfaces.database import DatabaseResource
-from pipeline.worker import PipelineWorker
+from entity.pipeline.worker import PipelineWorker
 
 
 class DummyConnection:

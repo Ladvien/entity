@@ -1,6 +1,6 @@
 """Template for workflow definition."""
 
-from pipeline import PipelineStage
+from entity.pipeline import PipelineStage
 
 {workflow_name} = {
     PipelineStage.INPUT: [],

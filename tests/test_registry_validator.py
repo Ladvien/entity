@@ -13,8 +13,8 @@ from entity.core.plugins import (
 )
 from entity.core.stages import PipelineStage
 from entity.core.registry_validator import RegistryValidator
-from pipeline.initializer import ClassRegistry
-from pipeline.utils import StageResolver
+from entity.pipeline.initializer import ClassRegistry
+from entity.pipeline.utils import StageResolver
 
 
 class A(AgentResource):

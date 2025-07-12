@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Any
 
 from entity.core.state import FailureInfo
-from pipeline.stages import PipelineStage
+from .stages import PipelineStage
 
 
 class PipelineError(Exception):

@@ -17,7 +17,7 @@ from entity.core.registries import PluginRegistry, SystemRegistries
 from entity.core.state import ConversationEntry, FailureInfo
 from entity.core.state_logger import StateLogger
 from entity.utils.logging import get_logger
-from pipeline.state import PipelineState
+from .state import PipelineState
 
 from .errors import create_static_error_response
 from .exceptions import MaxIterationsExceeded  # noqa: F401 - reserved for future use

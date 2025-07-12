@@ -1,7 +1,7 @@
 import logging
 
 
-from pipeline import Plugin  # noqa: F401 - triggers plugin configuration
+from entity.pipeline import Plugin  # noqa: F401 - triggers plugin configuration
 
 from entity.core.decorators import plugin
 from entity.core.stages import PipelineStage

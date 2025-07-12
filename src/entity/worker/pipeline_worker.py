@@ -5,8 +5,8 @@ from typing import Any
 
 from entity.core.registries import SystemRegistries
 from entity.core.state import ConversationEntry
-from pipeline.pipeline import execute_pipeline
-from pipeline.state import PipelineState
+from entity.pipeline.pipeline import execute_pipeline
+from entity.pipeline.state import PipelineState
 
 
 class PipelineWorker:

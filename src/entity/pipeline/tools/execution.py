@@ -5,7 +5,7 @@ from typing import Any, Dict
 
 from entity.core.plugins import ToolExecutionError
 from entity.core.state import ToolCall
-from pipeline.state import PipelineState
+from ..state import PipelineState
 from entity.core.context import PluginContext
 from entity.core.registries import SystemRegistries
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Example workflow classes."""
 
-from pipeline.stages import PipelineStage
+from entity.pipeline.stages import PipelineStage
 
 from . import Workflow
 

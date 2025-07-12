@@ -5,7 +5,7 @@ import asyncio
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Dict, List, Optional
 
-from pipeline.errors import InitializationError
+from entity.pipeline.errors import InitializationError
 
 
 class DependencyGraph:

@@ -12,7 +12,7 @@ from entity.core.context import PluginContext
 from entity.core.state import PipelineState, ConversationEntry
 from entity.resources import Memory
 from entity.resources.interfaces.database import DatabaseResource
-from pipeline.errors import ResourceInitializationError
+from entity.pipeline.errors import ResourceInitializationError
 import pytest
 
 
