@@ -5,8 +5,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
     from entity.core.context import PluginContext
-from pipeline.errors import create_error_response, create_static_error_response
-from pipeline.stages import PipelineStage
+from entity.core.stages import PipelineStage
 
 
 class DefaultResponder(FailurePlugin):
@@ -19,10 +18,22 @@ class DefaultResponder(FailurePlugin):
         if info is None:
             await context.think(
                 "failure_response",
-                create_static_error_response(context.pipeline_id).to_dict(),
+                {
+                    "error": "System error occurred",
+                    "message": "An unexpected error prevented processing your request.",
+                    "error_id": context.pipeline_id,
+                    "type": "static_fallback",
+                },
             )
         else:
             await context.think(
                 "failure_response",
-                create_error_response(context.pipeline_id, info).to_dict(),
+                {
+                    "error": info.error_message,
+                    "message": "Unable to process request",
+                    "error_id": context.pipeline_id,
+                    "plugin": info.plugin_name,
+                    "stage": info.stage,
+                    "type": "plugin_error",
+                },
             )

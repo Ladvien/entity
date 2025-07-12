@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Tuple
 from entity.core.plugins import PromptPlugin
 from entity.core.state import ConversationEntry
 from entity.core.context import PluginContext
-from entity.pipeline.stages import PipelineStage
+from entity.core.stages import PipelineStage
 
 
 class ReActPrompt(PromptPlugin):

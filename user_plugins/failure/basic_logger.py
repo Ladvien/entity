@@ -8,7 +8,7 @@ from entity.core.plugins import FailurePlugin
 if TYPE_CHECKING:  # pragma: no cover - type hints only
     from entity.core.context import PluginContext
 
-from entity.pipeline.stages import PipelineStage
+from entity.core.stages import PipelineStage
 
 
 class BasicLogger(FailurePlugin):

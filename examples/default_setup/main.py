@@ -1,8 +1,7 @@
 import asyncio
 
 from entity import Agent
-from entity.resources.memory import Memory
-from entity.pipeline.stages import PipelineStage
+from entity.core.stages import PipelineStage
 
 agent = Agent()
 

@@ -4,7 +4,7 @@ from typing import List
 
 from entity.core.context import PluginContext
 from entity.core.plugins import PromptPlugin
-from entity.pipeline.stages import PipelineStage
+from entity.core.stages import PipelineStage
 
 
 class ReactResponder(PromptPlugin):

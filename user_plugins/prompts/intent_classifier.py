@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from entity.core.plugins import PromptPlugin, ValidationResult
 from entity.core.context import PluginContext
-from entity.pipeline.stages import PipelineStage
+from entity.core.stages import PipelineStage
 
 
 class IntentClassifierPrompt(PromptPlugin):

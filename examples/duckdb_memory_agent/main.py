@@ -10,13 +10,14 @@ import sys
 base = Path(__file__).resolve().parents[2]
 sys.path.append(str(base / "src"))
 sys.path.append(str(base))
+# ruff: noqa: E402
 
 import duckdb
 
 from entity.core.plugins import PromptPlugin, ResourcePlugin
 from entity.core.context import PluginContext
 from entity.core.state import ConversationEntry
-from entity.pipeline.stages import PipelineStage
+from entity.core.stages import PipelineStage
 from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
 from entity.core.resources.container import ResourceContainer
 from entity.pipeline.pipeline import execute_pipeline, generate_pipeline_id

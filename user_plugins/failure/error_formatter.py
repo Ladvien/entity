@@ -5,8 +5,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
     from entity.core.context import PluginContext
-from pipeline.errors import create_static_error_response
-from entity.pipeline.stages import PipelineStage
+from entity.core.stages import PipelineStage
 
 
 class ErrorFormatter(FailurePlugin):
@@ -17,7 +16,12 @@ class ErrorFormatter(FailurePlugin):
     async def _execute_impl(self, context: PluginContext) -> None:
         failure_msg = await context.reflect("failure_response")
         if failure_msg is None:
-            failure_msg = create_static_error_response(context.pipeline_id).to_dict()
+            failure_msg = {
+                "error": "System error occurred",
+                "message": "An unexpected error prevented processing your request.",
+                "error_id": context.pipeline_id,
+                "type": "static_fallback",
+            }
         elif hasattr(failure_msg, "to_dict"):
             failure_msg = failure_msg.to_dict()
         await context.say(failure_msg)

@@ -8,10 +8,11 @@ import sys
 base = Path(__file__).resolve().parents[2]
 sys.path.append(str(base / "src"))
 sys.path.append(str(base))
+# ruff: noqa: E402
 
 from entity.core.plugins import PromptPlugin
 from entity.core.context import PluginContext
-from entity.pipeline.stages import PipelineStage
+from entity.core.stages import PipelineStage
 from datetime import datetime
 
 from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
