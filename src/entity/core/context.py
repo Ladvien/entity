@@ -35,7 +35,7 @@ class AdvancedContext:
         result_key: str | None = None,
         **params: Any,
     ) -> str:
-        if self._parent._registries.tools.get(name) is None:
+        if self._parent.get_tool(name) is None:
             raise ValueError(f"Tool '{name}' not found")
         if result_key is None:
             result_key = f"{name}_{len(self._parent._state.pending_tool_calls)}"
@@ -45,13 +45,10 @@ class AdvancedContext:
         return result_key
 
     def discover_tools(self, **filters: Any) -> list[tuple[str, Any]]:
-        discover = getattr(self._parent._registries.tools, "discover", None)
+        discover = getattr(self._parent._tools, "discover", None)
         if callable(discover):
             return cast(list[tuple[str, Any]], discover(**filters))
-        return [
-            (n, t)
-            for n, t in getattr(self._parent._registries.tools, "_tools", {}).items()
-        ]
+        return [(n, t) for n, t in getattr(self._parent._tools, "_tools", {}).items()]
 
     async def remember(self, key: str, value: Any) -> None:
         if self._parent._memory is not None:
@@ -99,10 +96,11 @@ class PluginContext:
         self, state: PipelineState, registries: Any, user_id: str | None = None
     ) -> None:
         self._state = state
-        self._registries = registries
+        self._resources = registries.resources
+        self._tools = registries.tools
         self._user_id = user_id or "default"
         # Use registry helper to fetch memory if registered
-        self._memory = registries.resources.get("memory")
+        self._memory = self._resources.get("memory")
         self._plugin_name: str | None = None
         self._advanced = AdvancedContext(self)
         self._temporary_thoughts: dict[str, Any] = {}
@@ -165,11 +163,11 @@ class PluginContext:
 
     def get_resource(self, name: str) -> Any | None:
         """Return the registered resource ``name`` or ``None`` when missing."""
-        return self._registries.resources.get(name)
+        return self._resources.get(name)
 
     def get_llm(self) -> Any | None:
         """Return the configured LLM resource."""
-        return self._registries.resources.get("llm")
+        return self._resources.get("llm")
 
     def get_memory(self) -> Any | None:
         """Return the configured Memory resource."""
@@ -178,6 +176,10 @@ class PluginContext:
     def get_storage(self) -> Any | None:
         """Return the configured Storage resource."""
         return self.get_resource("storage")
+
+    def get_tool(self, name: str) -> Any | None:
+        """Return the registered tool ``name`` or ``None`` when missing."""
+        return self._tools.get(name)
 
     def say(self, content: str, *, metadata: Dict[str, Any] | None = None) -> None:
         """Finalize the response in ``OUTPUT`` stage."""
@@ -195,7 +197,7 @@ class PluginContext:
         )
 
     async def call_llm(self, _context: Any, prompt: str, *, purpose: str = "") -> Any:
-        llm = self._registries.resources.get("llm")
+        llm = self._resources.get("llm")
 
         class _Resp:
             content = ""
@@ -230,7 +232,7 @@ class PluginContext:
 
     async def tool_use(self, name: str, **params: Any) -> Any:
         """Execute ``name`` immediately and return the result."""
-        tool = self._registries.tools.get(name)
+        tool = self.get_tool(name)
         if tool is None:
             raise ValueError(f"Tool '{name}' not found")
         result = await tool.execute_function(params)

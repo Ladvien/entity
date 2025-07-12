@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-16: Context hides registries and adds get_tool helper
 AGENT NOTE - 2025-07-12: Verified metrics_collector removal; file already absent
 AGENT NOTE - 2025-07-12: Removed sandbox infrastructure and unused plugins
 AGENT NOTE - 2025-07-16: Revised built-in resource config validation and tests
