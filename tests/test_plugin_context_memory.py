@@ -3,7 +3,7 @@ import pytest
 
 from contextlib import asynccontextmanager
 from entity.core.context import PluginContext
-from entity.core.state import ConversationEntry, PipelineState
+from entity.core.state import PipelineState
 from entity.resources import Memory
 from entity.resources.interfaces.database import DatabaseResource
 from entity.resources.interfaces.vector_store import VectorStoreResource
