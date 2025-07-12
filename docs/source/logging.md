@@ -62,7 +62,6 @@ fields:
 * ``error`` – human readable message
 * ``pipeline_id`` – unique identifier for the run
 * ``retry_count`` – current iteration count
-* ``context_snapshot`` – serialized pipeline state if available
 
 These fields provide enough information to correlate failures with pipeline
 state and retry attempts.

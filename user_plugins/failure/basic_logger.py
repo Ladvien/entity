@@ -21,7 +21,6 @@ class BasicLogger(FailurePlugin):
         try:
             info = context.failure_info
             if info is not None:
-                snapshot = getattr(info, "context_snapshot", None)
                 logger.error(
                     "Pipeline failure encountered",
                     extra={
@@ -33,7 +32,6 @@ class BasicLogger(FailurePlugin):
                         "retry_count": getattr(
                             getattr(context, "_state", None), "iteration", 0
                         ),
-                        **({"context_snapshot": snapshot} if snapshot else {}),
                     },
                 )
             else:
