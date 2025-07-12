@@ -20,6 +20,7 @@ from entity.pipeline.config.config_update import update_plugin_configuration
 from entity.pipeline.exceptions import CircuitBreakerTripped
 from entity.pipeline.reliability import CircuitBreaker
 from entity.utils.logging import get_logger
+from entity.config.environment import load_config
 from importlib import import_module
 import sys
 
@@ -56,6 +57,7 @@ class CLIArgs:
     workflow_cmd: Optional[str] = None
     workflow_name: Optional[str] = None
     fmt: Optional[str] = None
+    env: Optional[str] = None
 
 
 class EntityCLI:
@@ -72,6 +74,7 @@ class EntityCLI:
             description="Run an Entity agent using a YAML configuration."
         )
         parser.add_argument("--config", "-c")
+        parser.add_argument("--env")
         parser.add_argument("--state-log", dest="state_log")
 
         sub = parser.add_subparsers(dest="command", required=True)
@@ -162,6 +165,7 @@ class EntityCLI:
             workflow_cmd=getattr(parsed, "workflow_cmd", None),
             workflow_name=getattr(parsed, "workflow_name", None),
             fmt=getattr(parsed, "fmt", None),
+            env=getattr(parsed, "env", None),
         )
 
     # -----------------------------------------------------
@@ -195,7 +199,11 @@ class EntityCLI:
 
             LogReplayer(self.args.file).replay()
             return 0
-        agent = Agent(self.args.config) if self.args.config else Agent()
+        if self.args.config:
+            cfg = self._load_config_files(self.args.config)
+            agent = Agent.from_config(cfg)
+        else:
+            agent = Agent()
         if cmd == "reload-config":
             assert self.args.file is not None
             return self._reload_config(agent, self.args.file)
@@ -462,15 +470,17 @@ class EntityCLI:
     # -----------------------------------------------------
     # configuration helpers
     # -----------------------------------------------------
+    def _load_config_files(self, config_path: str) -> dict[str, Any]:
+        overlay = None
+        if self.args.env:
+            overlay = Path("config") / f"{self.args.env}.yaml"
+        return load_config(config_path, overlay)
+
     async def _verify_plugins(self, config_path: str) -> int:
         async def _run() -> int:
-            if agent._runtime is None:
-                agent._runtime = await agent.builder.build_runtime()
-
-            if agent._runtime is None:
-                agent._runtime = await agent.builder.build_runtime()
             try:
-                agent = Agent(config_path)
+                cfg = self._load_config_files(config_path)
+                agent = Agent.from_config(cfg)
                 await agent._ensure_runtime()
             except Exception as exc:  # noqa: BLE001
                 logger.error("Plugin loading failed: %s", exc)
@@ -483,11 +493,9 @@ class EntityCLI:
     def _validate_config(self, config_path: str) -> int:
         async def _run() -> int:
             from entity.pipeline import SystemInitializer
-            import yaml
-            from pathlib import Path
 
             try:
-                data = yaml.safe_load(Path(config_path).read_text()) or {}
+                data = self._load_config_files(config_path)
                 initializer = SystemInitializer(data)
                 await initializer.initialize()
             except Exception as exc:  # noqa: BLE001
