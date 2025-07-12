@@ -464,16 +464,16 @@ class EntityCLI:
     # -----------------------------------------------------
     async def _verify_plugins(self, config_path: str) -> int:
         async def _run() -> int:
-            if agent._runtime is None:
-                agent._runtime = await agent.builder.build_runtime()
+            from entity.pipeline import SystemInitializer
+            import yaml
+            from pathlib import Path
 
-            if agent._runtime is None:
-                agent._runtime = await agent.builder.build_runtime()
             try:
-                agent = Agent(config_path)
-                await agent._ensure_runtime()
+                data = yaml.safe_load(Path(config_path).read_text()) or {}
+                initializer = SystemInitializer(data)
+                await initializer.initialize()
             except Exception as exc:  # noqa: BLE001
-                logger.error("Plugin loading failed: %s", exc)
+                logger.error("Plugin validation failed: %s", exc)
                 return 1
             logger.info("All plugins loaded successfully")
             return 0

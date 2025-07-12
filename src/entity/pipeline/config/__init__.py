@@ -9,7 +9,7 @@ from typing import Any, Dict
 import yaml
 
 from entity.config.environment import load_env
-from entity.config.models import validate_config
+from entity.config.models import WorkflowSettings, validate_config
 from ..workflow import Workflow
 
 from .utils import interpolate_env_vars
@@ -19,15 +19,11 @@ class ConfigLoader:
     """Load and normalize pipeline configuration."""
 
     @staticmethod
-    def _load_workflow(workflow: Any, base: Path) -> Workflow:
-        """Return :class:`Workflow` from mapping or file path."""
-        if isinstance(workflow, Workflow):
-            return workflow
+    def _load_workflow_data(workflow: Any, base: Path) -> dict[str, list[str]]:
+        """Return workflow mapping from string path or dict."""
         if isinstance(workflow, str):
             wf_path = (
-                (base / workflow)
-                if not Path(workflow).is_absolute()
-                else Path(workflow)
+                base / workflow if not Path(workflow).is_absolute() else Path(workflow)
             )
             if wf_path.suffix in {".yaml", ".yml"}:
                 wf_data = yaml.safe_load(wf_path.read_text()) or {}
@@ -35,10 +31,15 @@ class ConfigLoader:
                 wf_data = json.loads(wf_path.read_text() or "{}")
         elif isinstance(workflow, dict):
             wf_data = workflow
+        elif isinstance(workflow, Workflow):
+            wf_data = workflow.to_dict()
         else:
             raise TypeError("workflow must be a path or mapping")
-        wf_data = interpolate_env_vars(wf_data)
-        return Workflow.from_dict(wf_data)
+        return interpolate_env_vars(wf_data)
+
+    def _load_workflow(workflow: Any, base: Path) -> Workflow:
+        mapping = ConfigLoader._load_workflow_data(workflow, base)
+        return Workflow.from_dict(mapping)
 
     @staticmethod
     def from_yaml(path: str | Path, env_file: str = ".env") -> Dict[str, Any]:
@@ -47,10 +48,12 @@ class ConfigLoader:
         data = yaml.safe_load(path_obj.read_text()) or {}
         data = interpolate_env_vars(data)
         if "workflow" in data:
-            data["workflow"] = ConfigLoader._load_workflow(
+            data["workflow"] = ConfigLoader._load_workflow_data(
                 data["workflow"], path_obj.parent
             )
         validate_config(data)
+        if "workflow" in data:
+            data["workflow"] = Workflow.from_dict(data["workflow"])  # type: ignore[arg-type]
         return data
 
     @staticmethod
@@ -60,10 +63,12 @@ class ConfigLoader:
         data = json.loads(path_obj.read_text() or "{}")
         data = interpolate_env_vars(data)
         if "workflow" in data:
-            data["workflow"] = ConfigLoader._load_workflow(
+            data["workflow"] = ConfigLoader._load_workflow_data(
                 data["workflow"], path_obj.parent
             )
         validate_config(data)
+        if "workflow" in data:
+            data["workflow"] = Workflow.from_dict(data["workflow"])  # type: ignore[arg-type]
         return data
 
     @staticmethod
@@ -71,6 +76,10 @@ class ConfigLoader:
         load_env(env_file)
         data = interpolate_env_vars(dict(cfg))
         if "workflow" in data:
-            data["workflow"] = ConfigLoader._load_workflow(data["workflow"], Path("."))
+            data["workflow"] = ConfigLoader._load_workflow_data(
+                data["workflow"], Path(".")
+            )
         validate_config(data)
+        if "workflow" in data:
+            data["workflow"] = Workflow.from_dict(data["workflow"])  # type: ignore[arg-type]
         return data
