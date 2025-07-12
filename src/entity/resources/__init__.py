@@ -2,6 +2,7 @@ from .base import AgentResource, StandardResources
 from .llm import LLM
 from .memory import Memory
 from .storage import Storage
+from .metrics_collector import MetricsCollectorResource
 from .interfaces import DatabaseResource, LLMResource, VectorStoreResource
 
 __all__ = [
@@ -9,6 +10,7 @@ __all__ = [
     "Memory",
     "LLM",
     "Storage",
+    "MetricsCollectorResource",
     "StandardResources",
     "DatabaseResource",
     "VectorStoreResource",

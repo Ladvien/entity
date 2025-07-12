@@ -177,6 +177,14 @@ class SystemInitializer:
         self.resource_container: ResourceContainer | None = None
         self.tool_registry: ToolRegistry | None = None
 
+    def _ensure_metrics_collector_config(self) -> None:
+        plugins_cfg = self.config.setdefault("plugins", {})
+        resources_cfg = plugins_cfg.setdefault("resources", {})
+        resources_cfg.setdefault(
+            "metrics_collector",
+            {"type": "entity.resources.metrics_collector:MetricsCollectorResource"},
+        )
+
     @classmethod
     def from_yaml(cls, yaml_path: str, env_file: str = ".env") -> "SystemInitializer":
         data = ConfigLoader.from_yaml(yaml_path, env_file)
@@ -317,6 +325,7 @@ class SystemInitializer:
 
     async def initialize(self):
         self._discover_plugins()
+        self._ensure_metrics_collector_config()
         self._discover_workflows()
 
         registry = ClassRegistry()
@@ -346,8 +355,12 @@ class SystemInitializer:
                         f"Resource '{name}' must specify a full class path"
                     )
                 cls = import_plugin_class(cls_path)
+                deps = list(getattr(cls, "dependencies", []))
+                if "metrics_collector" not in deps:
+                    deps.append("metrics_collector")
+                cls.dependencies = deps
                 registry.register_class(cls, config, name, layer)
-                dep_graph[name] = getattr(cls, "dependencies", [])
+                dep_graph[name] = deps
 
         for section in ["tools", "adapters", "prompts"]:
             for name, config in self.config.get("plugins", {}).get(section, {}).items():
@@ -357,8 +370,12 @@ class SystemInitializer:
                         f"{section[:-1].capitalize()} '{name}' must specify a full class path"
                     )
                 cls = import_plugin_class(cls_path)
+                deps = list(getattr(cls, "dependencies", []))
+                if "metrics_collector" not in deps:
+                    deps.append("metrics_collector")
+                cls.dependencies = deps
                 registry.register_class(cls, config, name, 4)
-                dep_graph[name] = getattr(cls, "dependencies", [])
+                dep_graph[name] = deps
 
         # Validate workflow references
         for stage_plugins in workflow.stage_map.values():
@@ -435,6 +452,9 @@ class SystemInitializer:
                 failure_threshold=cfg.failure_threshold,
                 recovery_timeout=cfg.recovery_timeout,
             )
+
+            tasks: list[asyncio.Task] = []
+            resources: list[tuple[str, CircuitBreaker]] = []
 
             for name, resource in resource_container._resources.items():
                 validate = getattr(resource, "validate_runtime", None)

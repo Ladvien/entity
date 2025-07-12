@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Core plugin wrappers for the Entity framework.
 
 These classes mirror the minimal architecture described in
@@ -7,9 +5,11 @@ These classes mirror the minimal architecture described in
 They offer a small, easy to understand surface for plugin authors.
 """
 
+from __future__ import annotations
+
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any, Awaitable, Callable, Dict, List
 
 from entity.utils.logging import get_logger
 from entity.pipeline.utils import _normalize_stages
@@ -25,13 +25,14 @@ class BasePlugin:
     """Lightweight plugin foundation."""
 
     stages: List[PipelineStage]
-    dependencies: List[str] = []
+    dependencies: List[str] = ["metrics_collector"]
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
         self.config = config or {}
         self.logger = get_logger(self.__class__.__name__)
         self._config_history: list[Dict[str, Any]] = [self.config.copy()]
         self.config_version: int = 1
+        self.metrics_collector = None  # injected by container
 
     # -----------------------------------------------------
     def supports_runtime_reconfiguration(self) -> bool:
@@ -102,7 +103,33 @@ class Plugin(BasePlugin):
         return None
 
     async def execute(self, context: Any) -> Any:
-        return await self._execute_impl(context)
+        start = time.perf_counter()
+        try:
+            result = await self._execute_impl(context)
+            duration_ms = (time.perf_counter() - start) * 1000
+            mc = getattr(self, "metrics_collector", None)
+            if mc is not None:
+                await mc.record_plugin_execution(
+                    pipeline_id=getattr(context, "pipeline_id", ""),
+                    stage=getattr(context, "current_stage", PipelineStage.INPUT),
+                    plugin_name=self.__class__.__name__,
+                    duration_ms=duration_ms,
+                    success=True,
+                )
+            return result
+        except Exception as exc:
+            duration_ms = (time.perf_counter() - start) * 1000
+            mc = getattr(self, "metrics_collector", None)
+            if mc is not None:
+                await mc.record_plugin_execution(
+                    pipeline_id=getattr(context, "pipeline_id", ""),
+                    stage=getattr(context, "current_stage", PipelineStage.INPUT),
+                    plugin_name=self.__class__.__name__,
+                    duration_ms=duration_ms,
+                    success=False,
+                    error_type=exc.__class__.__name__,
+                )
+            raise
 
 
 class InfrastructurePlugin(Plugin):
@@ -120,6 +147,49 @@ class ResourcePlugin(Plugin):
     infrastructure_dependencies: List[str] = []
     resource_category: str = ""
     stages: List[PipelineStage] = []
+
+    async def _track_operation(
+        self,
+        operation: str,
+        func: Callable[[], Any | Awaitable[Any]],
+        *,
+        context: Any | None = None,
+        **metadata: Any,
+    ) -> Any:
+        start = time.perf_counter()
+        try:
+            result = (
+                await func() if callable(getattr(func, "__await__", None)) else func()
+            )
+            duration_ms = (time.perf_counter() - start) * 1000
+            mc = getattr(self, "metrics_collector", None)
+            if mc is not None:
+                await mc.record_resource_operation(
+                    pipeline_id=getattr(context, "pipeline_id", "system"),
+                    resource_name=getattr(self, "name", self.__class__.__name__),
+                    operation=operation,
+                    duration_ms=duration_ms,
+                    success=True,
+                    metadata=metadata,
+                )
+            return result
+        except Exception as exc:
+            duration_ms = (time.perf_counter() - start) * 1000
+            mc = getattr(self, "metrics_collector", None)
+            if mc is not None:
+                await mc.record_resource_operation(
+                    pipeline_id=getattr(context, "pipeline_id", "system"),
+                    resource_name=getattr(self, "name", self.__class__.__name__),
+                    operation=operation,
+                    duration_ms=duration_ms,
+                    success=False,
+                    metadata={
+                        **metadata,
+                        "error_type": exc.__class__.__name__,
+                        "error": str(exc),
+                    },
+                )
+            raise
 
 
 class AgentResource(ResourcePlugin):
