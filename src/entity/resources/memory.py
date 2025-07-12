@@ -40,21 +40,6 @@ def _cosine_similarity(a: Iterable[float], b: Iterable[float]) -> float:
     return num / (denom_a * denom_b)
 
 
-class ConversationHistory:
-    """Helper managing conversation histories."""
-
-    def __init__(self, store: Dict[str, List[ConversationEntry]]) -> None:
-        self._store = store
-
-    async def save(
-        self, conversation_id: str, history: List[ConversationEntry]
-    ) -> None:
-        self._store[conversation_id] = list(history)
-
-    async def load(self, conversation_id: str) -> List[ConversationEntry]:
-        return list(self._store.get(conversation_id, []))
-
-
 def _normalize_args(args: tuple[Any, ...]) -> Any:
     if not args:
         return ()
@@ -110,7 +95,6 @@ class Memory(AgentResource):
         self._kv: Dict[str, Any] = {}
         self._conversations: Dict[str, List[ConversationEntry]] = {}
         self._vectors: Dict[str, List[float]] = {}
-        self._history = ConversationHistory(self._conversations)
         self.database = database
         self.vector_store = vector_store
 
@@ -159,7 +143,7 @@ class Memory(AgentResource):
                         entry.timestamp.isoformat(),
                     )
             return None
-        await self._history.save(conversation_id, history)
+        self._conversations[conversation_id] = list(history)
 
     async def load_conversation(self, conversation_id: str) -> List[ConversationEntry]:
         if self.database is not None:
@@ -188,13 +172,6 @@ class Memory(AgentResource):
                         metadata=metadata,
                     )
                 )
-            return result
-        return await self._history.load(conversation_id)
-
-    @property
-    def conversation_history(self) -> ConversationHistory:
-        """Return the conversation history manager."""
-        return self._history
 
     # ------------------------------------------------------------------
     # Vector helpers
