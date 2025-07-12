@@ -14,6 +14,7 @@ All pipeline utilities are now provided under the ``entity.pipeline`` namespace.
 - Stateless workers that scale horizontally
 - Unified memory resource for chat, search, and storage
 - DuckDB backend persists to disk for quick local testing
+- Automatic metrics collection via a shared MetricsCollector resource
 - Overrides of default plugin stages produce log warnings
 
 ### Plugin Context Helpers
