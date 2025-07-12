@@ -7,8 +7,68 @@ from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional
 
 from entity.core.state import ConversationEntry, PipelineState, ToolCall
+import warnings
 from pipeline.errors import PluginContextError
 from pipeline.stages import PipelineStage
+
+
+class AdvancedContext:
+    """Low-level helpers for advanced plugin features."""
+
+    def __init__(self, parent: "PluginContext") -> None:
+        self._parent = parent
+
+    # ------------------------------------------------------------------
+    # Core helpers
+    # ------------------------------------------------------------------
+    @property
+    def parent(self) -> "PluginContext":
+        return self._parent
+
+    def replace_conversation_history(self, history: list[ConversationEntry]) -> None:
+        self._parent._state.conversation = list(history)
+
+    async def queue_tool_use(
+        self,
+        name: str,
+        *,
+        result_key: str | None = None,
+        **params: Any,
+    ) -> str:
+        if self._parent._registries.tools.get(name) is None:
+            raise ValueError(f"Tool '{name}' not found")
+        if result_key is None:
+            result_key = f"{name}_{len(self._parent._state.pending_tool_calls)}"
+        self._parent._state.pending_tool_calls.append(
+            ToolCall(name=name, params=params, result_key=result_key, source="queued")
+        )
+        return result_key
+
+    def discover_tools(self, **filters: Any) -> list[tuple[str, Any]]:
+        discover = getattr(self._parent._registries.tools, "discover", None)
+        if callable(discover):
+            return discover(**filters)
+        return [
+            (n, t)
+            for n, t in getattr(self._parent._registries.tools, "_tools", {}).items()
+        ]
+
+    def remember(self, key: str, value: Any) -> None:
+        if self._parent._memory is not None:
+            namespaced_key = f"{self._parent._user_id}:{key}"
+            self._parent._memory.remember(namespaced_key, value)
+
+    def memory(self, key: str, default: Any | None = None) -> Any:
+        if self._parent._memory is None:
+            return default
+        namespaced_key = f"{self._parent._user_id}:{key}"
+        return self._parent._memory.get(namespaced_key, default)
+
+    def set_metadata(self, key: str, value: Any) -> None:
+        self._parent._state.metadata[key] = value
+
+    def get_metadata(self, key: str, default: Any | None = None) -> Any:
+        return self._parent._state.metadata.get(key, default)
 
 
 class PluginContext:
@@ -23,21 +83,7 @@ class PluginContext:
         # Use registry helper to fetch memory if registered
         self._memory = registries.resources.get("memory")
         self._plugin_name: str | None = None
-
-    class AdvancedContext:
-        """Low-level helpers for advanced plugin features."""
-
-        def __init__(self, parent: "PluginContext") -> None:
-            self._parent = parent
-
-        @property
-        def parent(self) -> "PluginContext":
-            return self._parent
-
-        def replace_conversation_history(
-            self, history: list[ConversationEntry]
-        ) -> None:
-            self._parent._state.conversation = list(history)
+        self._advanced = AdvancedContext(self)
 
     # ------------------------------------------------------------------
     @property
@@ -72,9 +118,9 @@ class PluginContext:
         return self._state.response
 
     @property
-    def advanced(self) -> "PluginContext.AdvancedContext":
+    def advanced(self) -> AdvancedContext:
         """Return helpers for advanced plugins."""
-        return PluginContext.AdvancedContext(self)
+        return self._advanced
 
     def has_response(self) -> bool:
         """Return ``True`` if a response has been set."""
@@ -165,25 +211,20 @@ class PluginContext:
     async def queue_tool_use(
         self, name: str, *, result_key: str | None = None, **params: Any
     ) -> str:
-        """Queue ``name`` for later execution and return its result key."""
-        if self._registries.tools.get(name) is None:
-            raise ValueError(f"Tool '{name}' not found")
-        if result_key is None:
-            result_key = f"{name}_{len(self._state.pending_tool_calls)}"
-        self._state.pending_tool_calls.append(
-            ToolCall(name=name, params=params, result_key=result_key, source="queued")
+        warnings.warn(
+            "PluginContext.queue_tool_use is deprecated; use context.advanced.queue_tool_use",
+            DeprecationWarning,
+            stacklevel=2,
         )
-        return result_key
+        return await self.advanced.queue_tool_use(name, result_key=result_key, **params)
 
     def discover_tools(self, **filters: Any) -> list[tuple[str, Any]]:
-        """Return registered tools matching ``filters``."""
-        discover = getattr(self._registries.tools, "discover", None)
-        if callable(discover):
-            return discover(**filters)
-        # Fallback: return all tools if registry lacks discovery helper
-        return [
-            (n, t) for n, t in getattr(self._registries.tools, "_tools", {}).items()
-        ]
+        warnings.warn(
+            "PluginContext.discover_tools is deprecated; use context.advanced.discover_tools",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.advanced.discover_tools(**filters)
 
     # ------------------------------------------------------------------
     # Stage result helpers
@@ -212,25 +253,36 @@ class PluginContext:
     # ------------------------------------------------------------------
 
     def remember(self, key: str, value: Any) -> None:
-        """Persist ``value`` in the configured memory resource."""
-        memory = self.get_resource("memory")
-        if memory is not None:
-            namespaced_key = f"{self._user_id}:{key}"
-            memory.remember(namespaced_key, value)
+        warnings.warn(
+            "PluginContext.remember is deprecated; use context.advanced.remember",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self.advanced.remember(key, value)
 
     def memory(self, key: str, default: Any | None = None) -> Any:
-        """Retrieve a value from persistent memory."""
-        memory = self.get_resource("memory")
-        if memory is None:
-            return default
-        namespaced_key = f"{self._user_id}:{key}"
-        return memory.get(namespaced_key, default)
+        warnings.warn(
+            "PluginContext.memory is deprecated; use context.advanced.memory",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.advanced.memory(key, default)
 
     def set_metadata(self, key: str, value: Any) -> None:
-        self._state.metadata[key] = value
+        warnings.warn(
+            "PluginContext.set_metadata is deprecated; use context.advanced.set_metadata",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self.advanced.set_metadata(key, value)
 
     def get_metadata(self, key: str, default: Any | None = None) -> Any:
-        return self._state.metadata.get(key, default)
+        warnings.warn(
+            "PluginContext.get_metadata is deprecated; use context.advanced.get_metadata",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.advanced.get_metadata(key, default)
 
     @property
     def failure_info(self) -> Any:

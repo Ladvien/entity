@@ -26,4 +26,4 @@ class {class_name}(ResourcePlugin):
         pass
 
     async def _execute_impl(self, context) -> None:
-        context.queue_tool_use("refresh", {})
+        context.advanced.queue_tool_use("refresh", {})
