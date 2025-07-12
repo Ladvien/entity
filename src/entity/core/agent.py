@@ -94,7 +94,8 @@ class Agent:
     def from_directory(
         cls, directory: str, *, workflow: Workflow | None = None
     ) -> "Agent":
-        agent = cls(workflow=workflow)
+        agent = cls()
+        agent.pipeline = workflow
         agent.load_plugins_from_directory(directory)
         return agent
 
@@ -102,7 +103,8 @@ class Agent:
     def from_package(
         cls, package_name: str, *, workflow: Workflow | None = None
     ) -> "Agent":
-        agent = cls(workflow=workflow)
+        agent = cls()
+        agent.pipeline = workflow
         agent.load_plugins_from_package(package_name)
         return agent
 

@@ -45,6 +45,6 @@ def test_auto_classification_used_when_no_other_source():
     async def fn(ctx):
         return None
 
-    plugin = PluginAutoClassifier.classify(fn)
+    plugin = PluginAutoClassifier.classify(fn, {"plugin_class": PromptPlugin})
     stages = builder._resolve_plugin_stages(plugin, None)
     assert stages == [PipelineStage.THINK]

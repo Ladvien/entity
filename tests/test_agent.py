@@ -5,7 +5,7 @@ from pipeline import PipelineStage, PromptPlugin
 def test_plugin_decorator_registration():
     agent = Agent()
 
-    @agent.plugin
+    @agent.plugin(stage=PipelineStage.DO)
     async def hello(context):
         return "hi"
 

@@ -61,7 +61,7 @@ def test_builder_auto_classification(caplog):
     async def fn(ctx):
         return None
 
-    plugin = PluginAutoClassifier.classify(fn)
+    plugin = PluginAutoClassifier.classify(fn, {"plugin_class": PromptPlugin})
     caplog.set_level(logging.WARNING, logger="entity.core.builder")
     logging.getLogger("entity.core.builder").addHandler(caplog.handler)
 
@@ -120,7 +120,7 @@ def test_initializer_auto_classification(caplog):
     async def fn(ctx):
         return None
 
-    plugin = PluginAutoClassifier.classify(fn)
+    plugin = PluginAutoClassifier.classify(fn, {"plugin_class": PromptPlugin})
     caplog.set_level(logging.WARNING, logger="pipeline.initializer")
     logging.getLogger("pipeline.initializer").addHandler(caplog.handler)
 
