@@ -165,8 +165,7 @@ class Memory(AgentResource):
                     timestamp=timestamp,
                     metadata=metadata,
                 )
-            )
-        return result
+            return result
 
     # ------------------------------------------------------------------
     # Vector helpers
