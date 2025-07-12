@@ -1,5 +1,4 @@
-AGENT NOTE - 2025-07-13: Updated README to clarify external conversation persistence and disk-backed DuckDB default
-
+AGENT NOTE - 2025-07-12: Added user_id namespacing to PipelineWorker conversations
 AGENT NOTE - 2025-07-12: Simplified plugin analysis output
 
 AGENT NOTE - 2025-07-12: Added get_memory/get_storage helpers and updated docs
