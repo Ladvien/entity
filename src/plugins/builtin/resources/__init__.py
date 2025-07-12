@@ -2,11 +2,10 @@
 
 from .echo_llm import EchoLLMResource
 from .ollama_llm import OllamaLLMResource
-from .llm_base import LLM
+from .duckdb_resource import DuckDBResource
 from .pg_vector_store import PgVectorStore
 
 __all__ = [
-    "LLM",
     "EchoLLMResource",
     "OllamaLLMResource",
     "PgVectorStore",
