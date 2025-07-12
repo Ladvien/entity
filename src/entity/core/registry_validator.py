@@ -122,19 +122,25 @@ class RegistryValidator:
                     f"Dependency validation failed for {cls.__name__}: {result.error_message}"
                 )
 
-        graph = DependencyGraph(self.dep_graph)
+        graph_map: Dict[str, List[str]] = {name: [] for name in self.dep_graph}
         for plugin_name, deps in self.dep_graph.items():
             for dep in deps:
-                if not self.registry.has_plugin(dep):
+                optional = dep.endswith("?")
+                dep_name = dep[:-1] if optional else dep
+                if not self.registry.has_plugin(dep_name):
+                    if optional:
+                        continue
                     available = self.registry.list_plugins()
                     raise SystemError(
                         (
-                            f"Plugin '{plugin_name}' requires '{dep}' but it's not registered. "
+                            f"Plugin '{plugin_name}' requires '{dep_name}' but it's not registered. "
                             f"Available: {available}"
                         )
                     )
+                if dep_name in graph_map:
+                    graph_map[dep_name].append(plugin_name)
 
-        graph.topological_sort()
+        DependencyGraph(graph_map).topological_sort()
 
     def run(self) -> None:
         self._register_classes()

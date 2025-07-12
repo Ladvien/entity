@@ -482,16 +482,22 @@ class SystemInitializer:
     def _validate_dependency_graph(
         self, registry: ClassRegistry, dep_graph: Dict[str, List[str]]
     ) -> None:
-        graph = DependencyGraph(dep_graph)
-        # Ensure all dependencies reference known plugins before sorting
+        graph_map: Dict[str, List[str]] = {name: [] for name in dep_graph}
         for plugin_name, deps in dep_graph.items():
             for dep in deps:
-                if not registry.has_plugin(dep):
+                optional = dep.endswith("?")
+                dep_name = dep[:-1] if optional else dep
+                if not registry.has_plugin(dep_name):
+                    if optional:
+                        continue
                     available = registry.list_plugins()
                     raise SystemError(
-                        f"Plugin '{plugin_name}' requires '{dep}' but it's not registered. "
+                        f"Plugin '{plugin_name}' requires '{dep_name}' but it's not registered. "
                         f"Available: {available}"
                     )
+                if dep_name in graph_map:
+                    graph_map[dep_name].append(plugin_name)
 
         # DependencyGraph may enforce valid dependencies but should not reorder
         # plugins. Execution strictly follows YAML order.
+        DependencyGraph(graph_map).topological_sort()

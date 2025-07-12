@@ -29,6 +29,14 @@ class ExamplePlugin(PromptPlugin):
         pass
 ```
 
+Add ``?`` to mark a dependency optional:
+
+```python
+class MaybeVector(PromptPlugin):
+    dependencies = ["vector_store?"]
+    stages = [PipelineStage.PARSE]
+```
+
 Register plugins through `Agent.add_plugin()` or in a YAML configuration file.
 YAML order determines execution order and `SystemInitializer` keeps the
 sequence intact. There is no priority field.

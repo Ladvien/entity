@@ -119,6 +119,15 @@ class = "my_pkg.calc:CalculatorTool"
 During initialization the discovered entries are merged into the config and
 their dependencies validated automatically.
 
+Append a ``?`` to a dependency name to mark it optional. Missing optional
+dependencies are injected as ``None`` instead of raising an error:
+
+```toml
+[tool.entity.plugins.prompts.optional]
+class = "my_pkg.opt:OptionalPrompt"
+dependencies = ["vector_store?"]
+```
+
 ### External Plugin Repositories
 
 Plugins can live in their own repositories. Add the repository path to
