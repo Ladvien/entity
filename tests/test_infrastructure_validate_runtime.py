@@ -1,7 +1,6 @@
 import pytest
 
 from entity.infrastructure import DuckDBInfrastructure, PostgresInfrastructure
-from pipeline.exceptions import CircuitBreakerTripped
 
 
 @pytest.mark.asyncio
