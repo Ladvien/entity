@@ -14,10 +14,11 @@ class LLM(AgentResource):
     """Simple LLM wrapper."""
 
     name = "llm"
+    dependencies = ["llm_provider"]
 
-    def __init__(self, provider: LLMResource, config: Dict | None = None) -> None:
+    def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
-        self.provider = provider
+        self.provider: LLMResource | None = None
 
     async def _execute_impl(self, context: Any) -> None:  # pragma: no cover - stub
         return None

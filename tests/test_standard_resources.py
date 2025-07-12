@@ -61,7 +61,7 @@ def test_standard_resources_types() -> None:
 
     res = StandardResources(
         memory=memory,
-        llm=LLM(provider=DummyLLMProvider({}), config={}),
+        llm=LLM(config={}),
         storage=Storage(config={}),
     )
     assert isinstance(res.memory, Memory)
