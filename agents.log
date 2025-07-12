@@ -1,4 +1,5 @@
-AGENT NOTE - 2025-07-12: Summarized Decision 6 and stateless workers in README
+AGENT NOTE - 2025-07-12: Added stateless worker tests
+
 AGENT NOTE - 2025-07-12: Replaced SystemError with InitializationError messages
 AGENT NOTE - 2025-07-12: Simplified plugin analysis output
 
