@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-12: Added CLI validate failure tests
+AGENT NOTE - 2025-07-12: Added workflow YAML support with CLI test
 AGENT NOTE - 2025-07-12: Added PipelineWorker memory persistence test
 AGENT NOTE - 2025-07-12: Updated Memory tests with database backend
 AGENT NOTE - 2025-07-12: Simplified plugin analysis output
