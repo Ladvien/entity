@@ -1,6 +1,7 @@
+"""Asynchronous resource container."""
+
 from __future__ import annotations
 
-"""Asynchronous resource container."""
 import asyncio
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Dict, List, Optional
@@ -345,7 +346,11 @@ class ResourceContainer:
     def _validate_layers(self) -> None:
         """Ensure layer dependencies follow the 4-layer architecture."""
 
-        from entity.core.plugins import InfrastructurePlugin, ResourcePlugin
+        from entity.core.plugins import (
+            AgentResource as PluginAgentResource,
+            InfrastructurePlugin,
+            ResourcePlugin,
+        )
         from entity.resources.base import AgentResource as CanonicalResource
 
         for name, layer in self._layers.items():
@@ -359,20 +364,26 @@ class ResourceContainer:
             cls = self._classes[name]
             if issubclass(cls, InfrastructurePlugin):
                 expected = 1
-            elif issubclass(cls, CanonicalResource):
+            elif issubclass(cls, (CanonicalResource, PluginAgentResource)):
                 expected = 3
             elif issubclass(cls, ResourcePlugin):
                 expected = 2
             else:
                 expected = 4
+
             if layer != expected:
+                message = (
+                    f"Provided layer {layer} for {cls.__name__} is invalid."
+                    if expected == 3
+                    else (
+                        f"Incorrect layer {layer} for {cls.__name__}. "
+                        f"Expected {expected}."
+                    )
+                )
                 raise InitializationError(
                     name,
                     "layer validation",
-                    (
-                        f"Incorrect layer {layer} for {cls.__name__}. "
-                        f"Expected {expected}."
-                    ),
+                    message,
                     kind="Resource",
                 )
             if layer == 1 and self._deps.get(name):
