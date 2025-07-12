@@ -3,9 +3,7 @@ import pytest
 
 import sys
 import pathlib
-import types
 
-import pytest
 
 sys.path.insert(0, str(pathlib.Path("src").resolve()))
 
