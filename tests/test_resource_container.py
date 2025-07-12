@@ -85,3 +85,26 @@ def test_layer_violation():
 
     with pytest.raises(SystemError, match="violates layer rules"):
         asyncio.run(container.build_all())
+
+
+def test_missing_interface_dependencies():
+    class BadInterface(ResourcePlugin):
+        stages: list = []
+
+    container = ResourceContainer()
+    container.register("infra", InfraPlugin, {}, layer=1)
+    container.register("iface", BadInterface, {}, layer=2)
+
+    with pytest.raises(SystemError, match="infrastructure_dependencies"):
+        asyncio.run(container.build_all())
+
+
+def test_missing_infrastructure_type():
+    class BadInfra(InfrastructurePlugin):
+        stages: list = []
+
+    container = ResourceContainer()
+    container.register("bad", BadInfra, {}, layer=1)
+
+    with pytest.raises(SystemError, match="infrastructure_type"):
+        asyncio.run(container.build_all())

@@ -1,17 +1,17 @@
 from entity.core.builder import _AgentBuilder
-from entity.core.plugins import PromptPlugin
+from entity.core.plugins import Plugin
 from pipeline.initializer import SystemInitializer
 from entity.core.stages import PipelineStage
 
 
-class AttrPrompt(PromptPlugin):
+class AttrPrompt(Plugin):
     stages = [PipelineStage.DO]
 
     async def _execute_impl(self, context):
         pass
 
 
-class InferredPrompt(PromptPlugin):
+class InferredPrompt(Plugin):
     async def _execute_impl(self, context):
         pass
 
