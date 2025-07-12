@@ -60,7 +60,7 @@ async def add(a: int, b: int) -> int:
 @agent.prompt
 async def final(ctx):
     result = await ctx.tool_use("add", a=2, b=2)
-    ctx.set_response(str(result))
+    ctx.say(str(result))
 ```
 ## Development Environment Setup
 

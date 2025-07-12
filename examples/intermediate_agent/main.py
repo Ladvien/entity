@@ -46,7 +46,7 @@ class FinalResponder(PromptPlugin):
         assistant_messages = [
             e.content for e in context.conversation() if e.role == "assistant"
         ]
-        context.set_response(assistant_messages[-1] if assistant_messages else "")
+        context.say(assistant_messages[-1] if assistant_messages else "")
 
 
 async def main() -> None:

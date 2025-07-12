@@ -287,14 +287,11 @@ async def execute_pipeline(
                                 "iteration": state.iteration,
                             },
                         )
-                    if state.failure_info:
+                    if state.failure_info or state.response is not None:
                         break
                     state.last_completed_stage = stage
 
-                if (
-                    state.response is not None
-                    and state.last_completed_stage == PipelineStage.OUTPUT
-                ):
+                if state.response is not None:
                     break
 
                 if state.failure_info is not None or state.iteration >= max_iterations:
@@ -307,7 +304,9 @@ async def execute_pipeline(
                             stage="iteration_guard",
                             plugin_name="pipeline",
                             error_type="max_iterations",
-                            error_message=f"Reached {max_iterations} iterations",
+                            error_message=(
+                                f"No OUTPUT plugin responded after {max_iterations} iterations"
+                            ),
                             original_exception=RuntimeError(
                                 "max iteration limit reached"
                             ),

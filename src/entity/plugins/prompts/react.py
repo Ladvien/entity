@@ -31,10 +31,7 @@ class ReActPrompt(PromptPlugin):
             thought = await self.call_llm(
                 context, thought_prompt, purpose=f"react_thought_step_{step}"
             )
-            context.say(
-                f"Thought: {thought.content}",
-                metadata={"react_step": step, "type": "thought"},
-            )
+            context.think(f"thought_{step}", thought.content)
             step_record: Dict[str, str] = {"thought": thought.content}
 
             action_prompt = (
@@ -50,7 +47,7 @@ class ReActPrompt(PromptPlugin):
 
             if decision.content.startswith("Final Answer:"):
                 answer = decision.content.replace("Final Answer:", "").strip()
-                context.set_response(answer)
+                context.think("final_answer", answer)
                 steps.append(step_record)
                 await context.think("react_steps", steps)
                 return
@@ -59,16 +56,14 @@ class ReActPrompt(PromptPlugin):
                 action_text = decision.content.replace("Action:", "").strip()
                 action_name, params = self._parse_action(action_text)
                 step_record["action"] = action_text
-                context.say(
-                    f"Action: {action_text}",
-                    metadata={"react_step": step, "type": "action"},
-                )
+                context.think(f"action_{step}", action_text)
                 await context.tool_use(action_name, **params)
 
             steps.append(step_record)
 
-        context.set_response(
-            "I've reached my reasoning limit without finding a definitive answer."
+        context.think(
+            "final_answer",
+            "I've reached my reasoning limit without finding a definitive answer.",
         )
         await context.think("react_steps", steps)
 
