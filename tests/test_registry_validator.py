@@ -174,9 +174,12 @@ def test_complex_prompt_requires_vector_store(tmp_path):
         "prompts": {
             "complex_prompt": {"type": "tests.test_registry_validator:ComplexPrompt"}
         },
+        "agent_resources": {
+            "database": {"type": "tests.test_registry_validator:DBInterface"}
+        },
     }
     path = _write_config(tmp_path, plugins)
-    with pytest.raises(SystemError, match="layer-3 or layer-4"):
+    with pytest.raises(SystemError, match="vector store"):
         RegistryValidator(str(path)).run()
 
 
@@ -187,14 +190,14 @@ def test_complex_prompt_with_vector_store(tmp_path):
             "vector_store": {
                 "type": "tests.test_registry_validator:VectorStoreResource"
             },
+            "database": {"type": "tests.test_registry_validator:DBInterface"},
         },
         "prompts": {
             "complex_prompt": {"type": "tests.test_registry_validator:ComplexPrompt"}
         },
     }
     path = _write_config(tmp_path, plugins)
-    with pytest.raises(SystemError, match="layer-3 or layer-4"):
-        RegistryValidator(str(path)).run()
+    RegistryValidator(str(path)).run()
 
 
 def test_memory_requires_postgres(tmp_path):

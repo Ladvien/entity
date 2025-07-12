@@ -53,16 +53,16 @@ class AdvancedContext:
             for n, t in getattr(self._parent._registries.tools, "_tools", {}).items()
         ]
 
-    def remember(self, key: str, value: Any) -> None:
+    async def remember(self, key: str, value: Any) -> None:
         if self._parent._memory is not None:
             namespaced_key = f"{self._parent._user_id}:{key}"
-            self._parent._memory.remember(namespaced_key, value)
+            await self._parent._memory.set(namespaced_key, value)
 
-    def memory(self, key: str, default: Any | None = None) -> Any:
+    async def memory(self, key: str, default: Any | None = None) -> Any:
         if self._parent._memory is None:
             return default
         namespaced_key = f"{self._parent._user_id}:{key}"
-        return self._parent._memory.get(namespaced_key, default)
+        return await self._parent._memory.get(namespaced_key, default)
 
     def set_metadata(self, key: str, value: Any) -> None:
         self._parent._state.metadata[key] = value
@@ -252,21 +252,21 @@ class PluginContext:
     # Persistent memory helpers
     # ------------------------------------------------------------------
 
-    def remember(self, key: str, value: Any) -> None:
+    async def remember(self, key: str, value: Any) -> None:
         warnings.warn(
             "PluginContext.remember is deprecated; use context.advanced.remember",
             DeprecationWarning,
             stacklevel=2,
         )
-        self.advanced.remember(key, value)
+        await self.advanced.remember(key, value)
 
-    def memory(self, key: str, default: Any | None = None) -> Any:
+    async def memory(self, key: str, default: Any | None = None) -> Any:
         warnings.warn(
             "PluginContext.memory is deprecated; use context.advanced.memory",
             DeprecationWarning,
             stacklevel=2,
         )
-        return self.advanced.memory(key, default)
+        return await self.advanced.memory(key, default)
 
     def set_metadata(self, key: str, value: Any) -> None:
         warnings.warn(

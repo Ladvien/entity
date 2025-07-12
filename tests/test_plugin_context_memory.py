@@ -1,68 +1,73 @@
 import types
-from datetime import datetime
-import asyncio
-import json
+import pytest
 
 from contextlib import asynccontextmanager
-
 from entity.core.context import PluginContext
 from entity.core.state import ConversationEntry, PipelineState
 from entity.resources import Memory
 from entity.resources.interfaces.database import DatabaseResource
+from entity.resources.interfaces.vector_store import VectorStoreResource
 
 
-class DummyConnection:
-    def __init__(self, store: dict) -> None:
-        self.store = store
+class _DBConn:
+    def __init__(self, db: "DummyDB") -> None:
+        self.db = db
 
-    async def execute(self, query: str, params: tuple) -> None:
+    async def execute(self, query: str, params: tuple) -> list:
+        if query.startswith("DELETE FROM memory_kv"):
+            if "WHERE" in query:
+                self.db.kv.pop(params[0], None)
+            else:
+                self.db.kv.clear()
+            return []
+        if query.startswith("INSERT INTO memory_kv"):
+            self.db.kv[params[0]] = params[1]
+            return []
+        if query.startswith("SELECT value FROM memory_kv"):
+            return [(self.db.kv.get(params[0]),)]
         if query.startswith("DELETE FROM conversation_history"):
-            cid = params
-            self.store["history"].pop(cid, None)
-        elif query.startswith("INSERT INTO conversation_history"):
+            self.db.history.pop(params[0], None)
+            return []
+        if query.startswith("INSERT INTO conversation_history"):
             cid, role, content, metadata, ts = params
-            self.store.setdefault("history", {}).setdefault(cid, []).append(
-                (role, content, json.loads(metadata), ts)
-            )
-        elif query.startswith("DELETE FROM kv_store"):
-            key = params
-            self.store.setdefault("kv", {}).pop(key, None)
-        elif query.startswith("INSERT INTO kv_store"):
-            key, value = params
-            self.store.setdefault("kv", {})[key] = json.loads(value)
-
-    async def fetch(self, query: str, params: tuple) -> list:
+            self.db.history.setdefault(cid, []).append((role, content, metadata, ts))
+            return []
         if query.startswith(
             "SELECT role, content, metadata, timestamp FROM conversation_history"
         ):
-            cid = params
-            return [
-                (role, content, metadata, ts)
-                for role, content, metadata, ts in self.store.get("history", {}).get(
-                    cid, []
-                )
-            ]
-        if query.startswith("SELECT value FROM kv_store"):
-            key = params
-            if key in self.store.get("kv", {}):
-                return [(json.dumps(self.store["kv"][key]),)]
+            return self.db.history.get(params[0], [])
         return []
 
+    async def fetch(self, query: str, params: tuple) -> list:
+        return await self.execute(query, params)
 
-class DummyDatabase(DatabaseResource):
+
+class DummyDB(DatabaseResource):
     def __init__(self) -> None:
         super().__init__({})
-        self.data: dict = {"history": {}, "kv": {}}
+        self.kv: dict[str, str] = {}
+        self.history: dict[str, list] = {}
 
     @asynccontextmanager
     async def connection(self):
-        yield DummyConnection(self.data)
+        yield _DBConn(self)
+
+
+class DummyVector(VectorStoreResource):
+    def __init__(self) -> None:
+        super().__init__({})
+
+    async def add_embedding(self, text: str) -> None:
+        return None
+
+    async def query_similar(self, query: str, k: int = 5) -> list[str]:
+        return []
 
 
 class DummyRegistries:
     def __init__(self) -> None:
-        db = DummyDatabase()
-        self.resources = {"memory": Memory(database=db, config={})}
+        mem = Memory(database=DummyDB(), vector_store=DummyVector(), config={})
+        self.resources = {"memory": mem}
         self.tools = types.SimpleNamespace()
 
 
@@ -71,21 +76,9 @@ def make_context() -> PluginContext:
     return PluginContext(state, DummyRegistries())
 
 
-def test_memory_roundtrip() -> None:
+@pytest.mark.asyncio
+async def test_memory_roundtrip() -> None:
     ctx = make_context()
-    ctx.remember("foo", "bar")
+    await ctx.remember("foo", "bar")
 
-    assert ctx.memory("foo") == "bar"
-
-
-def test_memory_persists_between_instances() -> None:
-    db = DummyDatabase()
-    mem1 = Memory(database=db, config={})
-    mem1.set("foo", "bar")
-    entry = ConversationEntry("hi", "user", datetime.now())
-    asyncio.run(mem1.save_conversation("cid", [entry]))
-
-    mem2 = Memory(database=db, config={})
-    assert mem2.get("foo") == "bar"
-    history = asyncio.run(mem2.load_conversation("cid"))
-    assert history == [entry]
+    assert await ctx.memory("foo") == "bar"

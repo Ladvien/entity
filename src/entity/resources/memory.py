@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from math import sqrt
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, List
 from datetime import datetime
 import json
 import inspect
@@ -16,13 +15,18 @@ from ..core.plugins import ValidationResult
 from ..core.state import ConversationEntry
 
 
-def _cosine_similarity(a: Iterable[float], b: Iterable[float]) -> float:
-    num = sum(x * y for x, y in zip(a, b))
-    denom_a = sqrt(sum(x * x for x in a))
-    denom_b = sqrt(sum(y * y for y in b))
-    if denom_a == 0 or denom_b == 0:
-        return 0.0
-    return num / (denom_a * denom_b)
+class Conversation:
+    """Simple conversation helper used by tests."""
+
+    def __init__(self, capabilities: SystemRegistries) -> None:
+        self._caps = capabilities
+
+    async def process_request(self, message: str) -> Any:
+        result = await execute_pipeline(message, self._caps)
+        while isinstance(result, dict) and result.get("type") == "continue_processing":
+            next_msg = result.get("message", "")
+            result = await execute_pipeline(next_msg, self._caps)
+        return result
 
 
 def _normalize_args(args: tuple[Any, ...]) -> Any:
@@ -72,9 +76,6 @@ class Memory(AgentResource):
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
-        self._kv: Dict[str, Any] = {}
-        self._conversations: Dict[str, List[ConversationEntry]] = {}
-        self._vectors: Dict[str, List[float]] = {}
         self.database = database
         self.vector_store = vector_store
 
@@ -84,68 +85,38 @@ class Memory(AgentResource):
     # ------------------------------------------------------------------
     # Key-value helpers
     # ------------------------------------------------------------------
-    def get(self, key: str, default: Any | None = None) -> Any:
-        """Return ``key`` from memory or ``default`` when missing."""
-        if self.database is not None:
-            table = self.database.config.get("kv_table", "kv_store")
+    async def get(self, key: str, default: Any | None = None) -> Any:
+        """Return ``key`` from persistent storage or ``default`` when missing."""
+        table = self.database.config.get("kv_table", "memory_kv")
+        async with self.database.connection() as conn:
+            rows = await _fetchall(
+                conn,
+                f"SELECT value FROM {table} WHERE key = ?",
+                key,
+            )
+        if not rows:
+            return default
+        value = rows[0][0] if not isinstance(rows[0], dict) else rows[0].get("value")
+        try:
+            return json.loads(value)
+        except Exception:
+            return value
 
-            async def _get() -> Any:
-                async with self.database.connection() as conn:
-                    rows = await _fetchall(
-                        conn,
-                        f"SELECT value FROM {table} WHERE key = ?",
-                        key,
-                    )
-                if not rows:
-                    return default
-                value = (
-                    rows[0][0] if not isinstance(rows[0], dict) else rows[0]["value"]
-                )
-                try:
-                    return json.loads(value)
-                except Exception:
-                    return value
-
-            return asyncio.get_event_loop().run_until_complete(_get())
-        return self._kv.get(key, default)
-
-    def set(self, key: str, value: Any) -> None:
+    async def set(self, key: str, value: Any) -> None:
         """Persist ``value`` for later retrieval."""
-        if self.database is not None:
-            table = self.database.config.get("kv_table", "kv_store")
-
-            async def _set() -> None:
-                async with self.database.connection() as conn:
-                    await _exec(
-                        conn,
-                        f"DELETE FROM {table} WHERE key = ?",
-                        key,
-                    )
-                    await _exec(
-                        conn,
-                        f"INSERT INTO {table} VALUES (?, ?)",
-                        key,
-                        json.dumps(value),
-                    )
-
-            asyncio.get_event_loop().run_until_complete(_set())
-            return None
-        self._kv[key] = value
+        table = self.database.config.get("kv_table", "memory_kv")
+        payload = json.dumps(value)
+        async with self.database.connection() as conn:
+            await _exec(conn, f"DELETE FROM {table} WHERE key = ?", key)
+            await _exec(conn, f"INSERT INTO {table} VALUES (?, ?)", key, payload)
 
     # Backwards compatibility
     remember = set
 
-    def clear(self) -> None:
-        if self.database is not None:
-            table = self.database.config.get("kv_table", "kv_store")
-
-            async def _clear() -> None:
-                async with self.database.connection() as conn:
-                    await _exec(conn, f"DELETE FROM {table}")
-
-            asyncio.get_event_loop().run_until_complete(_clear())
-            return None
-        self._kv.clear()
+    async def clear(self) -> None:
+        table = self.database.config.get("kv_table", "memory_kv")
+        async with self.database.connection() as conn:
+            await _exec(conn, f"DELETE FROM {table}")
 
     # ------------------------------------------------------------------
     # Conversation helpers
@@ -153,69 +124,58 @@ class Memory(AgentResource):
     async def save_conversation(
         self, conversation_id: str, history: List[ConversationEntry]
     ) -> None:
-        if self.database is not None:
-            table = self.database.config.get("history_table", "conversation_history")
-            async with self.database.connection() as conn:
+        table = self.database.config.get("history_table", "conversation_history")
+        async with self.database.connection() as conn:
+            await _exec(
+                conn,
+                f"DELETE FROM {table} WHERE conversation_id = ?",
+                conversation_id,
+            )
+            for entry in history:
                 await _exec(
                     conn,
-                    f"DELETE FROM {table} WHERE conversation_id = ?",
+                    f"INSERT INTO {table} VALUES (?, ?, ?, ?, ?)",
                     conversation_id,
+                    entry.role,
+                    entry.content,
+                    json.dumps(entry.metadata),
+                    entry.timestamp.isoformat(),
                 )
-                for entry in history:
-                    await _exec(
-                        conn,
-                        f"INSERT INTO {table} VALUES (?, ?, ?, ?, ?)",
-                        conversation_id,
-                        entry.role,
-                        entry.content,
-                        json.dumps(entry.metadata),
-                        entry.timestamp.isoformat(),
-                    )
-            return None
-        self._conversations[conversation_id] = list(history)
 
     async def load_conversation(self, conversation_id: str) -> List[ConversationEntry]:
-        if self.database is not None:
-            table = self.database.config.get("history_table", "conversation_history")
-            async with self.database.connection() as conn:
-                rows = await _fetchall(
-                    conn,
-                    f"SELECT role, content, metadata, timestamp FROM {table} WHERE conversation_id = ? ORDER BY timestamp",
-                    conversation_id,
+        table = self.database.config.get("history_table", "conversation_history")
+        async with self.database.connection() as conn:
+            rows = await _fetchall(
+                conn,
+                f"SELECT role, content, metadata, timestamp FROM {table} WHERE conversation_id = ? ORDER BY timestamp",
+                conversation_id,
+            )
+        result: List[ConversationEntry] = []
+        for row in rows:
+            role = row[0] if not isinstance(row, dict) else row["role"]
+            content = row[1] if not isinstance(row, dict) else row["content"]
+            metadata = row[2] if not isinstance(row, dict) else row.get("metadata", {})
+            timestamp = row[3] if not isinstance(row, dict) else row["timestamp"]
+            if isinstance(timestamp, str):
+                timestamp = datetime.fromisoformat(timestamp)
+            result.append(
+                ConversationEntry(
+                    content=content,
+                    role=role,
+                    timestamp=timestamp,
+                    metadata=metadata,
                 )
-            result: List[ConversationEntry] = []
-            for row in rows:
-                role = row[0] if not isinstance(row, dict) else row["role"]
-                content = row[1] if not isinstance(row, dict) else row["content"]
-                metadata = (
-                    row[2] if not isinstance(row, dict) else row.get("metadata", {})
-                )
-                timestamp = row[3] if not isinstance(row, dict) else row["timestamp"]
-                if isinstance(timestamp, str):
-                    timestamp = datetime.fromisoformat(timestamp)
-                result.append(
-                    ConversationEntry(
-                        content=content,
-                        role=role,
-                        timestamp=timestamp,
-                        metadata=metadata,
-                    )
-                )
+            )
+        return result
 
     # ------------------------------------------------------------------
     # Vector helpers
     # ------------------------------------------------------------------
-    async def add_embedding(self, key: str, vector: List[float]) -> None:
-        self._vectors[key] = vector
+    async def add_embedding(self, text: str) -> None:
+        await self.vector_store.add_embedding(text)
 
-    async def search_similar(self, vector: List[float], k: int = 5) -> List[str]:
-        scores = {k_: _cosine_similarity(vector, v) for k_, v in self._vectors.items()}
-        return [
-            k
-            for k, _ in sorted(scores.items(), key=lambda item: item[1], reverse=True)[
-                :k
-            ]
-        ]
+    async def search_similar(self, query: str, k: int = 5) -> List[str]:
+        return await self.vector_store.query_similar(query, k)
 
     @classmethod
     async def validate_config(cls, config: Dict) -> ValidationResult:  # noqa: D401
