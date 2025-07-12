@@ -59,6 +59,20 @@ class CircuitBreakerConfig(BaseModel):
         extra = "allow"
 
 
+class BreakerSettings(BaseModel):
+    """Circuit breaker settings for different resource types."""
+
+    database: CircuitBreakerConfig = Field(
+        default_factory=lambda: CircuitBreakerConfig(failure_threshold=3)
+    )
+    external_api: CircuitBreakerConfig = Field(
+        default_factory=lambda: CircuitBreakerConfig(failure_threshold=5)
+    )
+    file_system: CircuitBreakerConfig = Field(
+        default_factory=lambda: CircuitBreakerConfig(failure_threshold=2)
+    )
+
+
 class EntityConfig(BaseModel):
     server: ServerConfig = Field(
         default_factory=lambda: ServerConfig(host="localhost", port=8000)
@@ -69,6 +83,7 @@ class EntityConfig(BaseModel):
     runtime_validation_breaker: CircuitBreakerConfig = Field(
         default_factory=CircuitBreakerConfig
     )
+    breaker_settings: BreakerSettings = Field(default_factory=BreakerSettings)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "EntityConfig":
@@ -94,6 +109,7 @@ __all__ = [
     "ServerConfig",
     "ToolRegistryConfig",
     "CircuitBreakerConfig",
+    "BreakerSettings",
     "EntityConfig",
     "validate_config",
     "asdict",
