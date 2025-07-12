@@ -67,6 +67,7 @@ async def test_container_lifecycle_and_order():
 
     assert infra.initialized
     assert iface.initialized
+    assert iface.infra is infra
     assert canon.initialized
     assert canon.iface is iface
 

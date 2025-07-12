@@ -169,11 +169,9 @@ class ResourceContainer:
     ) -> None:
         """Register a resource class and its configuration."""
 
+        from entity.core.plugins import InfrastructurePlugin, ResourcePlugin
+
         if layer is None:
-            from entity.core.plugins import (
-                InfrastructurePlugin,
-                ResourcePlugin,
-            )
             from entity.resources.base import AgentResource as CanonicalResource
 
             if issubclass(cls, InfrastructurePlugin):
@@ -187,7 +185,10 @@ class ResourceContainer:
 
         self._classes[name] = cls
         self._configs[name] = config
-        self._deps[name] = list(getattr(cls, "dependencies", []))
+        deps = list(getattr(cls, "dependencies", []))
+        if issubclass(cls, ResourcePlugin):
+            deps.extend(getattr(cls, "infrastructure_dependencies", []))
+        self._deps[name] = deps
         self._layers[name] = layer
 
     async def build_all(self) -> None:
@@ -404,10 +405,18 @@ class ResourceContainer:
 
         for name, deps in self._deps.items():
             for dep in deps:
-                dep_name = dep[:-1] if dep.endswith("?") else dep
+                optional = dep.endswith("?")
+                dep_name = dep[:-1] if optional else dep
                 dep_layer = self._layers.get(dep_name)
                 if dep_layer is None:
-                    continue
+                    if optional:
+                        continue
+                    raise InitializationError(
+                        name,
+                        "layer validation",
+                        f"Resource depends on '{dep_name}' but it is not registered.",
+                        kind="Resource",
+                    )
                 if self._layers[name] - dep_layer != 1:
                     raise InitializationError(
                         name,
