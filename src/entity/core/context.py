@@ -44,6 +44,11 @@ class PluginContext:
         return self._state.pipeline_id
 
     @property
+    def request_id(self) -> str:
+        """Alias for ``pipeline_id`` for compatibility with logging."""
+        return self.pipeline_id
+
+    @property
     def user_id(self) -> str:
         return self._user_id
 
