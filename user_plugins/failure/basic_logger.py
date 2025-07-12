@@ -32,7 +32,6 @@ class BasicLogger(FailurePlugin):
                         "retry_count": getattr(
                             getattr(context, "_state", None), "iteration", 0
                         ),
-                        "context_snapshot": info.context_snapshot,
                     },
                 )
             else:
