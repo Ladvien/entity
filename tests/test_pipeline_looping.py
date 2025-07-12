@@ -1,6 +1,8 @@
 import asyncio
 from typing import Optional
 
+from entity.core.resources.container import ResourceContainer
+from entity.core.state import FailureInfo, PipelineState
 from pipeline import (
     FailurePlugin,
     PipelineStage,
@@ -10,9 +12,6 @@ from pipeline import (
     ToolRegistry,
     execute_pipeline,
 )
-from entity.core.state import FailureInfo, PipelineState
-
-from entity.core.resources.container import ResourceContainer
 
 
 class CountingDeliverPlugin(PromptPlugin):
@@ -94,3 +93,4 @@ def test_max_iterations_triggers_error():
     assert state.iteration == 2
     assert failures
     assert failures[0].error_type == "max_iterations"
+    assert failures[0].context_snapshot == state.to_dict()

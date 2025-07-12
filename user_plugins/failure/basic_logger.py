@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from entity.core.plugins import FailurePlugin
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
     from entity.core.context import PluginContext
+
 from pipeline.stages import PipelineStage
 
 
@@ -21,7 +21,6 @@ class BasicLogger(FailurePlugin):
         try:
             info = context.failure_info
             if info is not None:
-                snapshot = getattr(info, "context_snapshot", None)
                 logger.error(
                     "Pipeline failure encountered",
                     extra={
@@ -33,7 +32,7 @@ class BasicLogger(FailurePlugin):
                         "retry_count": getattr(
                             getattr(context, "_state", None), "iteration", 0
                         ),
-                        **({"context_snapshot": snapshot} if snapshot else {}),
+                        "context_snapshot": info.context_snapshot,
                     },
                 )
             else:
