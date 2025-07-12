@@ -1,9 +1,5 @@
-class DependencyGraph:
-    def __init__(self, graph):
-        self.graph = graph
+"""Utility helpers used by the pipeline package."""
 
-    def topological_sort(self):  # pragma: no cover - simple stub
-        return list(self.graph)
-
+from entity.core.resources.container import DependencyGraph
 
 __all__ = ["DependencyGraph"]
