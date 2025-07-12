@@ -99,12 +99,16 @@ class ClassRegistry:
 
         cfg_value = config.get("stages") or config.get("stage")
 
+        type_defaults = self._type_default_stages(cls)
+        if not (getattr(cls, "stages", None) or type_defaults):
+            type_defaults = [PipelineStage.THINK]
+
         return resolve_stages(
             cls.__name__,
             cfg_value=cfg_value,
             attr_stages=getattr(cls, "stages", []),
             explicit_attr=bool(getattr(cls, "stages", [])),
-            type_defaults=self._type_default_stages(cls),
+            type_defaults=type_defaults,
             ensure_stage=PipelineStage.ensure,
             logger=logger,
             error_type=SystemError,
@@ -303,12 +307,16 @@ class SystemInitializer:
 
         cfg_value = config.get("stages") or config.get("stage")
 
+        type_defaults = self._type_default_stages(cls)
+        if not (getattr(instance, "stages", None) or type_defaults):
+            type_defaults = [PipelineStage.THINK]
+
         return resolve_stages(
             cls.__name__,
             cfg_value=cfg_value,
             attr_stages=getattr(instance, "stages", []),
             explicit_attr=getattr(instance, "_explicit_stages", False),
-            type_defaults=self._type_default_stages(cls),
+            type_defaults=type_defaults,
             ensure_stage=PipelineStage.ensure,
             logger=logger,
             auto_inferred=getattr(instance, "_auto_inferred_stages", False),
