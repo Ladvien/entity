@@ -439,10 +439,74 @@ class EntityCLI:
         return asyncio.run(_run())
 
     def _reload_config(self, agent: Agent, file_path: str) -> int:
-        logger.info(
-            "Reloading configuration is not supported in this simplified build."
-        )
-        return 0
+        """Reload plugin configuration from ``file_path``."""
+
+        from pipeline.config import ConfigLoader
+        from pipeline.config.config_update import update_plugin_configuration
+
+        try:
+            new_cfg = ConfigLoader.from_yaml(file_path)
+        except Exception as exc:  # noqa: BLE001 - CLI feedback
+            logger.error("Failed to load %s: %s", file_path, exc)
+            return 1
+
+        if agent.config_path is None:
+            logger.error("Agent was not created from a config file")
+            return 1
+
+        try:
+            current_cfg = ConfigLoader.from_yaml(agent.config_path)
+            if agent._runtime is None:
+                agent = Agent.from_config(agent.config_path)
+        except Exception as exc:  # noqa: BLE001 - CLI feedback
+            logger.error("Failed to load current config: %s", exc)
+            return 1
+
+        def _flatten(cfg: dict) -> dict[str, dict]:
+            plugins = cfg.get("plugins", {})
+            flat: dict[str, dict] = {}
+            for entries in plugins.values():
+                if not isinstance(entries, dict):
+                    continue
+                for name, meta in entries.items():
+                    if isinstance(meta, str):
+                        meta = {"type": meta}
+                    if isinstance(meta, dict):
+                        flat[name] = meta
+            return flat
+
+        cur_plugins = _flatten(current_cfg)
+        new_plugins = _flatten(new_cfg)
+
+        if set(cur_plugins) != set(new_plugins):
+            logger.warning("Plugin set changed; restart required")
+            return 1
+
+        for name in cur_plugins:
+            cur = cur_plugins[name]
+            new = new_plugins[name]
+            if cur.get("stages") != new.get("stages") or cur.get(
+                "dependencies"
+            ) != new.get("dependencies"):
+                logger.warning("Topology change for '%s'; restart required", name)
+                return 1
+
+        asyncio.run(agent._ensure_runtime())
+        registry = agent.get_capabilities().plugins
+        manager = getattr(agent.runtime, "manager", None)
+
+        async def _apply() -> int:
+            for name, meta in new_plugins.items():
+                cfg = {k: v for k, v in meta.items() if k not in {"type", "class"}}
+                result = await update_plugin_configuration(
+                    registry, name, cfg, pipeline_manager=manager
+                )
+                if not result.success:
+                    logger.error(result.error_message)
+                    return 1
+            return 0
+
+        return asyncio.run(_apply())
 
     def _create_project(self, path: str) -> int:
         target = Path(path)
