@@ -1,0 +1,79 @@
+import asyncio
+from datetime import datetime
+from pathlib import Path
+
+import pytest
+
+from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
+from entity.core.state_logger import LogReplayer, StateLogger
+from pipeline import PipelineStage, execute_pipeline
+from entity.core.plugins import BasePlugin
+from pipeline.pipeline import generate_pipeline_id
+from entity.core.resources.container import ResourceContainer
+from entity.core.state import ConversationEntry, PipelineState
+
+
+class RespondPlugin(BasePlugin):
+    stages = [PipelineStage.OUTPUT]
+
+    async def _execute_impl(self, context):
+        context.set_response({"message": "ok"})
+
+
+def make_failing_plugin(stage: PipelineStage):
+    class FailingPlugin(BasePlugin):
+        stages = [stage]
+
+        async def _execute_impl(self, context):
+            if not context.get_metadata("failed"):
+                context.set_metadata("failed", True)
+                raise RuntimeError("boom")
+            context.store(str(stage), True)
+
+    return FailingPlugin()
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "stage",
+    [
+        PipelineStage.PARSE,
+        PipelineStage.THINK,
+        PipelineStage.DO,
+        PipelineStage.REVIEW,
+        PipelineStage.OUTPUT,
+    ],
+)
+def test_pipeline_recovers_from_stage_failure(
+    tmp_path: Path, stage: PipelineStage
+) -> None:
+    async def run() -> str:
+        plugins = PluginRegistry()
+        await plugins.register_plugin_for_stage(make_failing_plugin(stage), stage)
+        await plugins.register_plugin_for_stage(RespondPlugin(), PipelineStage.OUTPUT)
+        capabilities = SystemRegistries(ResourceContainer(), ToolRegistry(), plugins)
+
+        log_file = tmp_path / "state_log.jsonl"
+        logger = StateLogger(log_file)
+
+        state = PipelineState(
+            conversation=[
+                ConversationEntry(content="hi", role="user", timestamp=datetime.now())
+            ],
+            pipeline_id=generate_pipeline_id(),
+        )
+
+        await execute_pipeline("hi", capabilities, state_logger=logger, state=state)
+        state.failure_info = None
+        result = await execute_pipeline(
+            "hi", capabilities, state_logger=logger, state=state
+        )
+
+        logger.close()
+        transitions = list(LogReplayer(log_file).transitions())
+        stages = [t.stage for t in transitions]
+        assert "output" in stages[-1]
+
+        return result.get("message", "")
+
+    assert asyncio.run(run()) == "ok"

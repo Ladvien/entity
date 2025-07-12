@@ -7,7 +7,14 @@ license = "MIT"
 readme = "README.md"
 package-mode = true
 
-packages = [{ include = "src", from = "." }]
+packages = [
+    { include = "entity", from = "src" },
+    { include = "cli", from = "src" },
+]
+
+[tool.poetry.scripts]
+entity-cli = "entity.cli.__main__:main"
+
 
 [tool.poetry.urls]
 homepage = "https://github.com/Ladvien/entity"
@@ -15,33 +22,39 @@ repository = "https://github.com/Ladvien/entity"
 documentation = "https://entity.readthedocs.io/en/latest/"
 
 [tool.poetry.dependencies]
-python = "^3.13"
+python = "^3.11"
 pyyaml = "^6.0.2"
-rich = "^13.9.4"
-requests = "^2.32.4"
-pyaudio = "^0.2.14"
-scipy = "^1.15.3"
-python-dotenv = "^1.1.0"
-transformers = "^4.52.4"
+fastapi = "^0.110.0"
+uvicorn = {extras = ["standard"], version = "^0.30.0"}
 asyncpg = "^0.30.0"
-fastapi = "0.115.13"
-pydantic = ">=2.9"
-uvicorn = "^0.34.3"
-langchain = "^0.3.25"
-langchain-community = "^0.3.25"
-langchain-ollama = "^0.2.0"
-ollama = "^0.5.1"
-httpx = "^0.28.1"
-langgraph = "^0.2.0"
-langgraph-checkpoint-postgres = "^2.0.21"
-sentence-transformers = "^4.1.0"
-psycopg = "^3.2.9"
-langchain_postgres = { git = "https://github.com/langchain-ai/langchain-postgres.git", branch = "main" }
-click = "^8.2.1"
-pytest-mock = "^3.14.1"
-gevent = "^25.5.1"
-langchain-huggingface = "^0.3.0"
-uvloop = "^0.21.0"
+python-dotenv = "^1.1.1"
+aiosqlite = "^0.20.0"
+pgvector = "^0.4.1"
+httpx = "0.27.*"
+aioboto3 = "^15.0.0"
+duckdb = "^1.3.1"
+cdktf = "^0.21.0"
+cdktf-cdktf-provider-aws = "^21.1.0"
+constructs = "^10.3.0"
+redis = "^5.0.0"
+prometheus-client = "^0.20.0"
+psutil = "^5.9.8"
+opentelemetry-api = "^1.24.0"
+opentelemetry-sdk = "^1.24.0"
+tenacity = "^8.2.3"
+msgpack = "^1.0.5"
+protobuf = "^6.31.0"
+cryptography = "^45.0.5"
+websockets = "^15.0"
+grpcio = "^1.62.2"
+grpcio-tools = "^1.62.2"
+
+[tool.poetry.extras]
+examples = [
+    "websockets",
+    "grpcio",
+    "grpcio-tools",
+]
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
@@ -51,11 +64,18 @@ sphinx-autobuild = "^2024.10.3"
 furo = "^2024.8.6"
 sphinx-autoapi = "^3.5.0"
 sphinx-autodoc2 = "^0.5.0"
-doc-utils = "^0.0.2"
 poethepoet = "^0.32.2"
 pytest = "^8.4.1"
 pytest-asyncio = "^0.25.0"
 pytest-cov = "^6.1.0"
+hypothesis = "^6.100"
+pytest-benchmark = "^4.0.0"
+flake8 = "7.0.0"
+bandit = "^1.8.5"
+pydeps = "^3.0.1"
+types-protobuf = "^5.26.0.20240422"
+types-psutil = "^5.9.5.20240516"
+pytest-postgresql = "^7.0.2"
 
 
 [build-system]
@@ -63,19 +83,37 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poe.tasks]
-docs = "sphinx-build docs/source docs/build/html"
-docs_view = "sphinx-autobuild docs/source docs/build/html"
-patch = "poetry version patch"
-_publish = "poetry publish --build"
+docs = { cmd = "sphinx-build -c docs/source docs/source docs/build/html" }
+docs_view = { cmd = "sphinx-autobuild -c docs/source docs/source docs/build/html" }
+patch = { cmd = "poetry version patch" }
+_publish = { cmd = "poetry publish --build" }
 release = ["docs", "patch", "_publish"]
-test = "pytest"
-test-verbose = "pytest -v"
-test-coverage = "pytest --cov=src --cov-report=html --cov-report=term-missing"
+test = { cmd = "pytest" }
+test-verbose = { cmd = "pytest -v" }
+test-coverage = { cmd = "pytest --cov=src --cov-report=html --cov-report=term-missing" }
+setup-dev = { cmd = "poetry install --with dev" }
+[tool.poe.tasks.lint]
+sequence = [
+    { cmd = "poetry run black src tests" },
+    { cmd = "poetry run isort src tests" },
+    { cmd = "poetry run flake8 src tests" },
+]
+[tool.poe.tasks.validate]
+sequence = [
+    { cmd = "poetry run entity-cli --config config/dev.yaml verify" },
+    { cmd = "poetry run entity-cli --config config/prod.yaml verify" },
+    { cmd = "python -m src.entity.core.registry_validator" },
+]
+[tool.poe.tasks.check]
+sequence = [
+    { ref = "lint" },
+    { cmd = "poetry run mypy src" },
+    { cmd = "bandit -r src" },
+    { ref = "validate" },
+    { cmd = "pytest" },
+]
 
-[tool.poetry.scripts]
-entity = "src.client.terminal:cli"
 
-# Pytest configuration in pyproject.toml format
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
@@ -98,6 +136,8 @@ markers = [
     "tools: Tests related to tool system",
     "api: Tests related to API endpoints",
     "cli: Tests related to CLI interface",
+    "benchmark: Performance benchmarking tests",
+    "examples: Tests that run example scripts",
 ]
 filterwarnings = [
     "ignore::DeprecationWarning",
@@ -130,7 +170,7 @@ exclude_lines = [
 # Black formatting configuration
 [tool.black]
 line-length = 88
-target-version = ['py313']
+target-version = ['py311']
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -143,5 +183,6 @@ exclude = '''
   | buck-out
   | build
   | dist
+  | src/cli/templates
 )/
 '''

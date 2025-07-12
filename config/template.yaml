@@ -1,0 +1,59 @@
+server:
+  host: "0.0.0.0"
+  port: 8000
+  reload: true
+  log_level: "info"
+
+plugins:
+  infrastructure: {}
+  resources:
+    database:
+      type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
+      path: ./agent.duckdb
+    # llm:
+    #   provider: ollama
+    #   base_url: "${OLLAMA_BASE_URL}"
+    #   model: "${OLLAMA_MODEL}"
+  agent_resources:
+    memory:
+      type: entity.resources.memory:Memory
+      dependencies: [database]
+    # storage:
+    #   type: plugins.builtin.resources.storage_resource:StorageResource
+  custom_resources: {}
+  tools:
+    weather:
+      type: user_plugins.tools.weather_api_tool:WeatherApiTool
+      api_key: "${WEATHER_API_KEY}"
+      base_url: "https://api.weather.com"
+    calculator:
+      type: user_plugins.tools.calculator_tool:CalculatorTool
+  adapters:
+    # http:
+    #   type: plugins.builtin.adapters.http:HTTPAdapter
+    #   auth_tokens:
+    #     - ${HTTP_TOKEN}
+    #   rate_limit:
+    #     requests: 60
+    #     interval: 60
+    #   audit_log_path: logs/audit.log
+    # cli:
+    #   type: plugins.builtin.adapters.cli:CLIAdapter
+    # logging:
+    #   type: plugins.builtin.adapters.logging:LoggingAdapter
+  prompts:
+    chain_of_thought:
+      type: entity.plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
+      dependencies: [llm]
+      enable_reasoning: true
+    react:
+      type: entity.plugins.prompts.react:ReActPrompt
+      dependencies: [llm]
+      max_steps: 5
+    memory_retrieval:
+      type: user_plugins.prompts.memory_retrieval:MemoryRetrievalPrompt
+      dependencies: [memory]
+      max_context_length: 4000
+    intent_classifier:
+      type: user_plugins.prompts.intent_classifier:IntentClassifierPrompt
+      confidence_threshold: 0.8

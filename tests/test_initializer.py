@@ -1,0 +1,257 @@
+import asyncio
+import json
+import os
+
+import pytest
+import yaml
+
+from pipeline import (
+    CircuitBreaker,
+    CircuitBreakerTripped,
+    PipelineStage,
+    PromptPlugin,
+    AgentResource,
+    SystemInitializer,
+    ValidationResult,
+)
+
+
+class A(AgentResource):
+    stages = [PipelineStage.PARSE]
+    dependencies = []
+
+    async def _execute_impl(self, context):
+        pass
+
+    async def initialize(self) -> None:
+        self.initialized = True
+
+
+class B(PromptPlugin):
+    stages = [PipelineStage.THINK]
+    dependencies = ["a"]
+
+    async def _execute_impl(self, context):
+        pass
+
+
+class C(PromptPlugin):
+    stages = [PipelineStage.THINK]
+    dependencies = ["b"]
+
+    async def _execute_impl(self, context):
+        pass
+
+
+class D(PromptPlugin):
+    stages = [PipelineStage.THINK]
+    dependencies: list[str] = []
+
+    @classmethod
+    def validate_dependencies(cls, registry):
+        if not registry.has_plugin("a"):
+            return ValidationResult.error_result("missing dependency 'a'")
+        return ValidationResult.success_result()
+
+    async def _execute_impl(self, context):
+        pass
+
+
+class BadRes(AgentResource):
+    stages = [PipelineStage.PARSE]
+
+    async def _execute_impl(self, context):
+        pass
+
+    async def validate_runtime(self) -> ValidationResult:
+        return ValidationResult.error_result("no runtime")
+
+
+class UnhealthyRes(AgentResource):
+    stages = [PipelineStage.PARSE]
+
+    async def _execute_impl(self, context):
+        pass
+
+    async def health_check(self) -> bool:
+        return False
+
+
+class BreakerRes(AgentResource):
+    stages = [PipelineStage.PARSE]
+    breaker = CircuitBreaker(failure_threshold=2, recovery_timeout=60)
+
+    async def _execute_impl(self, context):
+        pass
+
+    async def initialize(self) -> None:
+        async def fail() -> None:
+            raise RuntimeError("boom")
+
+        await self.breaker.call(fail)
+
+
+def test_initializer_env_and_dependencies(tmp_path):
+    os.environ["TEST_VALUE"] = "ok"
+    config = {
+        "plugins": {
+            "agent_resources": {
+                "a": {"type": "tests.test_initializer:A", "val": "${TEST_VALUE}"}
+            },
+            "prompts": {
+                "b": {"type": "tests.test_initializer:B"},
+                "c": {"type": "tests.test_initializer:C"},
+            },
+        }
+    }
+    path = tmp_path / "config.yaml"
+    path.write_text(yaml.dump(config, sort_keys=False))
+
+    initializer = SystemInitializer.from_yaml(str(path))
+    assert initializer.get_resource_config("a")["val"] == "ok"
+
+    plugin_reg, resource_reg, tool_reg, _ = asyncio.run(initializer.initialize())
+
+    assert resource_reg.get("a")
+    think_plugins = plugin_reg.get_plugins_for_stage(PipelineStage.THINK)
+    assert len(think_plugins) == 2
+
+
+def test_validate_dependencies_missing(tmp_path):
+    config = {"plugins": {"prompts": {"d": {"type": "tests.test_initializer:D"}}}}
+    path = tmp_path / "config.yaml"
+    path.write_text(yaml.dump(config, sort_keys=False))
+
+    initializer = SystemInitializer.from_yaml(str(path))
+    with pytest.raises(SystemError, match="missing dependency 'a'"):
+        asyncio.run(initializer.initialize())
+
+
+def test_initializer_from_json_and_dict(tmp_path):
+    config = {
+        "plugins": {
+            "agent_resources": {
+                "a": {"type": "tests.test_initializer:A"},
+            },
+            "prompts": {
+                "b": {"type": "tests.test_initializer:B"},
+            },
+        }
+    }
+
+    yaml_path = tmp_path / "cfg.yml"
+    json_path = tmp_path / "cfg.json"
+    yaml_path.write_text(yaml.dump(config, sort_keys=False))
+    json_path.write_text(json.dumps(config))
+
+    init_yaml = SystemInitializer.from_yaml(str(yaml_path))
+    init_json = SystemInitializer.from_json(str(json_path))
+    init_dict = SystemInitializer.from_dict(config)
+
+    assert init_yaml.config == init_json.config == init_dict.config
+
+    py, ry, _, _ = asyncio.run(init_yaml.initialize())
+    pj, rj, _, _ = asyncio.run(init_json.initialize())
+    pd, rd, _, _ = asyncio.run(init_dict.initialize())
+
+    assert (
+        len(py.get_plugins_for_stage(PipelineStage.THINK))
+        == len(pj.get_plugins_for_stage(PipelineStage.THINK))
+        == len(pd.get_plugins_for_stage(PipelineStage.THINK))
+    )
+    assert ry.get("a") and rj.get("a") and rd.get("a")
+
+
+def test_llm_resource_registration(tmp_path):
+    config = {
+        "plugins": {
+            "agent_resources": {
+                "llm": {
+                    "type": "plugins.builtin.resources.llm.unified:UnifiedLLMResource",
+                    "provider": "ollama",
+                    "base_url": "http://localhost:11434",
+                    "model": "tiny",
+                }
+            }
+        }
+    }
+
+    path = tmp_path / "cfg.yml"
+    path.write_text(yaml.dump(config, sort_keys=False))
+
+    initializer = SystemInitializer.from_yaml(str(path))
+    _, resources, _, _ = asyncio.run(initializer.initialize())
+
+    assert resources.get("llm") is not None
+    assert resources.get("ollama") is None
+
+
+def test_runtime_validation_failure(tmp_path):
+    config = {
+        "runtime_validation_breaker": {"failure_threshold": 1},
+        "plugins": {
+            "agent_resources": {"bad": {"type": "tests.test_initializer:BadRes"}}
+        },
+    }
+
+    path = tmp_path / "cfg.yml"
+    path.write_text(yaml.dump(config, sort_keys=False))
+
+    initializer = SystemInitializer.from_yaml(str(path))
+    with pytest.raises(
+        SystemError, match="Runtime validation failure threshold exceeded"
+    ):
+        asyncio.run(initializer.initialize())
+
+
+def test_runtime_validation_threshold_allows_pass(tmp_path):
+    config = {
+        "runtime_validation_breaker": {"failure_threshold": 2},
+        "plugins": {
+            "agent_resources": {"bad": {"type": "tests.test_initializer:BadRes"}}
+        },
+    }
+
+    path = tmp_path / "cfg.yml"
+    path.write_text(yaml.dump(config, sort_keys=False))
+
+    initializer = SystemInitializer.from_yaml(str(path))
+    regs = asyncio.run(initializer.initialize())
+    assert regs[1].get("bad") is not None
+
+
+def test_health_check_failure(tmp_path):
+    config = {
+        "plugins": {
+            "agent_resources": {"bad": {"type": "tests.test_initializer:UnhealthyRes"}}
+        }
+    }
+
+    path = tmp_path / "cfg.yml"
+    path.write_text(yaml.dump(config, sort_keys=False))
+
+    initializer = SystemInitializer.from_yaml(str(path))
+    with pytest.raises(SystemError, match="failed health check"):
+        asyncio.run(initializer.initialize())
+
+
+def test_initialization_breaker(tmp_path):
+    config = {
+        "plugins": {
+            "agent_resources": {"boom": {"type": "tests.test_initializer:BreakerRes"}}
+        }
+    }
+
+    path = tmp_path / "cfg.yml"
+    path.write_text(yaml.dump(config, sort_keys=False))
+
+    for _ in range(2):
+        init = SystemInitializer.from_yaml(str(path))
+        with pytest.raises(RuntimeError):
+            asyncio.run(init.initialize())
+
+    init = SystemInitializer.from_yaml(str(path))
+    with pytest.raises(CircuitBreakerTripped):
+        asyncio.run(init.initialize())
+
+    BreakerRes.breaker.reset()

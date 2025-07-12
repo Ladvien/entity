@@ -1,0 +1,44 @@
+import asyncio
+
+from pipeline.stages import PipelineStage
+from entity.core.plugins import PromptPlugin
+from entity.core.registries import PluginRegistry, ToolRegistry
+
+from entity.core.resources.container import ResourceContainer
+
+
+class DummyPlugin(PromptPlugin):
+    stages = [PipelineStage.DO]
+
+    async def _execute_impl(self, context):
+        return None
+
+
+async def test_plugin_registry_thread_safety():
+    registry = PluginRegistry()
+
+    async def register(i):
+        plugin = DummyPlugin({})
+        await registry.register_plugin_for_stage(plugin, PipelineStage.DO)
+
+    await asyncio.gather(*(register(i) for i in range(10)))
+    assert len(registry.get_plugins_for_stage(PipelineStage.DO)) == 10
+
+
+async def test_resource_and_tool_registry_thread_safety():
+    resources = ResourceContainer()
+    tools = ToolRegistry()
+
+    async def add_resource(i):
+        await resources.add(f"r{i}", object())
+
+    async def add_tool(i):
+        await tools.add(f"t{i}", object())
+
+    await asyncio.gather(
+        *(add_resource(i) for i in range(5)),
+        *(add_tool(i) for i in range(5)),
+    )
+
+    assert len(resources._resources) == 5
+    assert len(tools.query()) == 5
