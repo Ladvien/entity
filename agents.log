@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-12: Added plugin analyzer to suggest upgrades
 AGENT NOTE - 2025-07-12: Added plugin lifecycle hooks and updated CLI
 AGENT NOTE - 2025-07-12: Enforced explicit plugin stages and simplified precedence
 AGENT NOTE - 2025-07-12: Added config and dependency hooks for plugins
