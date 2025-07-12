@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import inspect
 import pathlib
 import sys
 from typing import Dict, List
@@ -135,7 +136,7 @@ class RegistryValidator:
                 result = ValidationResult.success_result()
             else:
                 result = validate(self.registry)
-                if asyncio.iscoroutine(result):
+                if inspect.isawaitable(result):
                     result = asyncio.run(result)
             if not result.success:
                 raise SystemError(
@@ -189,7 +190,7 @@ class RegistryValidator:
                 result = ValidationResult.success_result()
             else:
                 result = validate(cfg)
-                if asyncio.iscoroutine(result):
+                if inspect.isawaitable(result):
                     result = asyncio.run(result)
             if not result.success:
                 raise SystemError(
