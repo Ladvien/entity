@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from entity.core.state import ConversationEntry, PipelineState, ToolCall
 from pipeline.errors import PluginContextError
@@ -22,6 +22,21 @@ class PluginContext:
         self._user_id = user_id or "default"
         self._memory = getattr(registries.resources, "memory", None)
         self._plugin_name: str | None = None
+
+    class AdvancedContext:
+        """Low-level helpers for advanced plugin features."""
+
+        def __init__(self, parent: "PluginContext") -> None:
+            self._parent = parent
+
+        @property
+        def parent(self) -> "PluginContext":
+            return self._parent
+
+        def replace_conversation_history(
+            self, history: list[ConversationEntry]
+        ) -> None:
+            self._parent._state.conversation = list(history)
 
     # ------------------------------------------------------------------
     @property
@@ -54,6 +69,19 @@ class PluginContext:
     @property
     def response(self) -> Any:
         return self._state.response
+
+    @property
+    def advanced(self) -> "PluginContext.AdvancedContext":
+        """Return helpers for advanced plugins."""
+        return PluginContext.AdvancedContext(self)
+
+    def has_response(self) -> bool:
+        """Return ``True`` if a response has been set."""
+        return self._state.response is not None
+
+    def update_response(self, func: Callable[[Any], Any]) -> None:
+        """Update ``response`` with ``func`` result."""
+        self._state.response = func(self._state.response)
 
     def get_conversation_history(self) -> List[ConversationEntry]:
         return list(self._state.conversation)
