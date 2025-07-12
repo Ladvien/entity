@@ -10,7 +10,7 @@ from typing import Any, Dict, Iterable, List, Tuple, Type
 from entity.config.environment import load_env
 from entity.config.models import EntityConfig, asdict
 from entity.core.plugin_utils import import_plugin_class
-from entity.core.plugins import BasePlugin, ResourcePlugin, ToolPlugin
+from entity.core.plugins import Plugin, ResourcePlugin, ToolPlugin
 from entity.core.registries import PluginRegistry, ToolRegistry
 from entity.core.resources.container import ResourceContainer
 from entity.utils.logging import configure_logging, get_logger
@@ -30,12 +30,12 @@ class ClassRegistry:
     """Store plugin classes and configs before instantiation."""
 
     def __init__(self) -> None:
-        self._classes: Dict[str, type[BasePlugin]] = {}
+        self._classes: Dict[str, type[Plugin]] = {}
         self._configs: Dict[str, Dict] = {}
         self._order: List[str] = []
 
     def register_class(
-        self, plugin_class: type[BasePlugin], config: Dict, name: str
+        self, plugin_class: type[Plugin], config: Dict, name: str
     ) -> None:
         self._classes[name] = plugin_class
         self._configs[name] = config
@@ -48,7 +48,7 @@ class ClassRegistry:
     def list_plugins(self) -> List[str]:
         return list(self._order)
 
-    def all_plugin_classes(self) -> Iterable[Tuple[type[BasePlugin], Dict]]:
+    def all_plugin_classes(self) -> Iterable[Tuple[type[Plugin], Dict]]:
         for name in self._order:
             cls = self._classes[name]
             yield cls, self._configs[name]
@@ -73,13 +73,13 @@ class ClassRegistry:
             if issubclass(cls, ToolPlugin):
                 yield name, cls, self._configs[name]
 
-    def non_resource_non_tool_classes(self) -> Iterable[Tuple[type[BasePlugin], Dict]]:
+    def non_resource_non_tool_classes(self) -> Iterable[Tuple[type[Plugin], Dict]]:
         for name in self._order:
             cls = self._classes[name]
             if not issubclass(cls, (ResourcePlugin, ToolPlugin)):
                 yield cls, self._configs[name]
 
-    def _type_default_stages(self, cls: type[BasePlugin]) -> List[PipelineStage]:
+    def _type_default_stages(self, cls: type[Plugin]) -> List[PipelineStage]:
         """Return default stages for the given plugin class."""
 
         from entity.core.plugins.base import AdapterPlugin, PromptPlugin
@@ -93,7 +93,7 @@ class ClassRegistry:
         return []
 
     def _resolve_plugin_stages(
-        self, cls: type[BasePlugin], config: Dict
+        self, cls: type[Plugin], config: Dict
     ) -> tuple[List[PipelineStage], bool]:
         """Determine final stages and whether they were explicit."""
 
@@ -111,7 +111,7 @@ class ClassRegistry:
         )
 
     def _validate_stage_assignment(
-        self, name: str, cls: type[BasePlugin], config: Dict
+        self, name: str, cls: type[Plugin], config: Dict
     ) -> None:
         if issubclass(cls, (ResourcePlugin, ToolPlugin)):
             return
@@ -283,7 +283,7 @@ class SystemInitializer:
                 continue
             register_module_workflows(module, self.workflows)
 
-    def _type_default_stages(self, cls: type[BasePlugin]) -> List[PipelineStage]:
+    def _type_default_stages(self, cls: type[Plugin]) -> List[PipelineStage]:
         """Return default stages for the given plugin class."""
 
         from entity.core.plugins.base import AdapterPlugin, PromptPlugin
@@ -297,7 +297,7 @@ class SystemInitializer:
         return []
 
     def _resolve_plugin_stages(
-        self, cls: type[BasePlugin], instance: BasePlugin, config: Dict
+        self, cls: type[Plugin], instance: Plugin, config: Dict
     ) -> tuple[List[PipelineStage], bool]:
         """Determine final stages and whether they were explicit."""
 

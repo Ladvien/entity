@@ -26,7 +26,7 @@ def test_directory_plugin_naming(tmp_path):
     mixed = tmp_path / "mixed.py"
     mixed.write_text(
         """
-from pipeline import BasePlugin, PipelineStage
+from pipeline import Plugin, PipelineStage
 
 async def good_plugin(ctx):
     return 'ok'
@@ -34,7 +34,7 @@ async def good_plugin(ctx):
 def bad(ctx):
     return 'no'
 
-class GoodClass(BasePlugin):
+class GoodClass(Plugin):
     stages = [PipelineStage.DO]
 
     async def _execute_impl(self, context):

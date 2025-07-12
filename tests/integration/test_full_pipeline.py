@@ -1,26 +1,26 @@
 import asyncio
 
 import pytest
-from entity.core.plugins import BasePlugin
+from entity.core.plugins import Plugin
 from pipeline import PipelineStage
 from entity import Agent
 
 
-class ParsePlugin(BasePlugin):
+class ParsePlugin(Plugin):
     stages = [PipelineStage.PARSE]
 
     async def _execute_impl(self, context):
         context.store("parsed", True)
 
 
-class ThinkPlugin(BasePlugin):
+class ThinkPlugin(Plugin):
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context):
         context.store("thought", True)
 
 
-class RespondPlugin(BasePlugin):
+class RespondPlugin(Plugin):
     stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):

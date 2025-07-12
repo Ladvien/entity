@@ -14,7 +14,7 @@ from typing import Any, Awaitable, Callable, Optional, Type
 import yaml
 
 from entity.core.agent import Agent
-from entity.core.plugins import BasePlugin, ValidationResult
+from entity.core.plugins import Plugin, ValidationResult
 from entity.core.builder import _AgentBuilder
 from pipeline.config.config_update import update_plugin_configuration
 from entity.utils.logging import get_logger
@@ -245,7 +245,7 @@ class EntityCLI:
 
     def _plugin_validate(self, path: str) -> int:
         plugin_cls = load_plugin(path)
-        if not issubclass(plugin_cls, BasePlugin):
+        if not issubclass(plugin_cls, Plugin):
             logger.error("Not a plugin class")
             return 1
         if not getattr(plugin_cls, "stages", None):

@@ -4,7 +4,7 @@ from threading import Thread
 
 import pytest
 from pipeline import PipelineStage
-from entity.core.plugins import BasePlugin
+from entity.core.plugins import Plugin
 from plugins.builtin.resources.llm.unified import UnifiedLLMResource
 
 from entity.core.builder import _AgentBuilder
@@ -17,7 +17,7 @@ class FailHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
 
-class LLMResponder(BasePlugin):
+class LLMResponder(Plugin):
     stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
