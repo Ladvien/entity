@@ -45,7 +45,7 @@ class DummyConnection:
     def __init__(self, store: dict) -> None:
         self.store = store
 
-    def execute(self, query: str, params: tuple):
+    def execute(self, query: str, params: tuple | None = None):
         if query.startswith("DELETE FROM conversation_history"):
             cid = params
             self.store["history"].pop(cid, None)
@@ -121,7 +121,7 @@ class DBRegistries:
         mem = Memory(config={})
         mem.database = db
         mem.vector_store = None
-        asyncio.get_event_loop().run_until_complete(mem.initialize())
+        asyncio.run(mem.initialize())
         self.resources = _Resources(memory=mem)
         self.tools = types.SimpleNamespace()
         self.validators = None
