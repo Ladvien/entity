@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-12: Added temporary DuckDB-based Memory fixture in tests
 AGENT NOTE - 2025-07-12: Removed ConversationHistory helper class
 
 AGENT NOTE - 2025-07-12: Simplified plugin analysis output

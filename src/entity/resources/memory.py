@@ -74,8 +74,8 @@ class Memory(AgentResource):
         self._kv: Dict[str, Any] = {}
         self._conversations: Dict[str, List[ConversationEntry]] = {}
         self._vectors: Dict[str, List[float]] = {}
-        self.database = database
-        self.vector_store = vector_store
+        self.database = None
+        self.vector_store = None
 
     async def _execute_impl(self, context: Any) -> None:  # noqa: D401, ARG002
         return None
@@ -151,6 +151,7 @@ class Memory(AgentResource):
                         metadata=metadata,
                     )
                 )
+            return result
 
     # ------------------------------------------------------------------
     # Vector helpers
