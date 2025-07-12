@@ -16,7 +16,7 @@ from entity.core.resources.container import ResourceContainer
 from entity.utils.logging import configure_logging, get_logger
 from entity.workflows.discovery import discover_workflows, register_module_workflows
 from pipeline.config import ConfigLoader
-from pipeline.utils import DependencyGraph, get_plugin_stages
+from pipeline.utils import DependencyGraph, StageResolver
 from pipeline.reliability import CircuitBreaker
 from pipeline.exceptions import CircuitBreakerTripped
 
@@ -26,7 +26,7 @@ from .workflow import Workflow
 logger = get_logger(__name__)
 
 
-class ClassRegistry:
+class ClassRegistry(StageResolver):
     """Store plugin classes and configs before instantiation."""
 
     def __init__(self) -> None:
@@ -82,26 +82,15 @@ class ClassRegistry:
             if not issubclass(cls, (ResourcePlugin, ToolPlugin)):
                 yield cls, self._configs[name]
 
-    def _resolve_plugin_stages(
-        self, cls: type[Plugin], config: Dict
-    ) -> tuple[List[PipelineStage], bool]:
-        """Determine final stages and whether they were explicit."""
-
-        stages = get_plugin_stages(cls, config)
-        explicit = bool(
-            (config.get("stage") or config.get("stages"))
-            or getattr(cls, "stages", None)
-            or getattr(cls, "stage", None)
-        )
-        return stages, explicit
-
     def _validate_stage_assignment(
         self, name: str, cls: type[Plugin], config: Dict
     ) -> None:
         if issubclass(cls, (ResourcePlugin, ToolPlugin)):
             return
 
-        stages, explicit = self._resolve_plugin_stages(cls, config)
+        stages, explicit = StageResolver._resolve_plugin_stages(
+            cls, config, logger=logger
+        )
         if not explicit:
             raise SystemError(f"Plugin '{name}' does not specify any stages")
         invalid = [s for s in stages if not isinstance(s, PipelineStage)]
@@ -288,20 +277,6 @@ class SystemInitializer:
                 continue
             register_module_workflows(module, self.workflows)
 
-    def _resolve_plugin_stages(
-        self, cls: type[Plugin], instance: Plugin, config: Dict
-    ) -> tuple[List[PipelineStage], bool]:
-        """Determine final stages and whether they were explicit."""
-
-        stages = get_plugin_stages(cls, config)
-        explicit = bool(
-            (config.get("stage") or config.get("stages"))
-            or getattr(instance, "_explicit_stages", False)
-            or getattr(cls, "stages", None)
-            or getattr(cls, "stage", None)
-        )
-        return stages, explicit
-
     async def initialize(self):
         self._discover_plugins()
         self._discover_workflows()
@@ -434,7 +409,9 @@ class SystemInitializer:
             self.plugin_registry = plugin_registry
             for cls, config in registry.non_resource_non_tool_classes():
                 instance = cls(config)
-                stages, _ = self._resolve_plugin_stages(cls, instance, config)
+                stages, _ = StageResolver._resolve_plugin_stages(
+                    cls, config, instance, logger=logger
+                )
                 for stage in stages:
                     await plugin_registry.register_plugin_for_stage(
                         instance, PipelineStage.ensure(stage)

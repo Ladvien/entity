@@ -2,7 +2,11 @@
 
 from entity.core.resources.container import DependencyGraph
 
-from typing import Any, Iterable, List, Mapping, Type
+import logging
+from typing import Any, Callable, Iterable, Mapping, Type
+
+from entity.core.plugins import AdapterPlugin, PromptPlugin, ToolPlugin, Plugin
+from ..stages import PipelineStage
 
 from pipeline.stages import PipelineStage
 
@@ -33,4 +37,53 @@ def get_plugin_stages(
     return [PipelineStage.THINK]
 
 
-__all__ = ["DependencyGraph", "get_plugin_stages"]
+class StageResolver:
+    """Shared helpers for resolving plugin stages."""
+
+    @staticmethod
+    def _type_default_stages(plugin_cls: type[Plugin]) -> list[PipelineStage]:
+        if issubclass(plugin_cls, ToolPlugin):
+            return [PipelineStage.DO]
+        if issubclass(plugin_cls, PromptPlugin):
+            return [PipelineStage.THINK]
+        if issubclass(plugin_cls, AdapterPlugin):
+            return [PipelineStage.INPUT, PipelineStage.OUTPUT]
+        return []
+
+    @staticmethod
+    def _resolve_plugin_stages(
+        plugin_cls: type[Plugin],
+        config: Mapping[str, Any],
+        plugin: Plugin | None = None,
+        *,
+        logger: logging.Logger | None = None,
+    ) -> tuple[list[PipelineStage], bool]:
+        cfg_value = config.get("stages") or config.get("stage")
+        attr_stages = getattr(plugin or plugin_cls, "stages", [])
+        explicit_attr = (
+            getattr(plugin, "_explicit_stages", False)
+            if plugin is not None
+            else bool(attr_stages)
+        )
+        type_defaults = StageResolver._type_default_stages(plugin_cls)
+        if not (attr_stages or type_defaults):
+            type_defaults = [PipelineStage.THINK]
+        auto_inferred = (
+            getattr(plugin, "_auto_inferred_stages", False)
+            if plugin is not None
+            else False
+        )
+        return resolve_stages(
+            plugin_cls.__name__,
+            cfg_value=cfg_value,
+            attr_stages=attr_stages,
+            explicit_attr=explicit_attr,
+            type_defaults=type_defaults,
+            ensure_stage=PipelineStage.ensure,
+            logger=logger,
+            auto_inferred=auto_inferred,
+            error_type=SystemError,
+        )
+
+
+__all__ = ["DependencyGraph", "resolve_stages", "StageResolver"]

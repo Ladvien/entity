@@ -28,6 +28,7 @@ from entity.utils.logging import get_logger
 
 from .plugin_utils import PluginAutoClassifier
 from .stages import PipelineStage
+from pipeline.utils import StageResolver
 
 logger = get_logger(__name__)
 
@@ -90,7 +91,10 @@ class _AgentBuilder:
                 f"Dependency validation failed for {plugin.__class__.__name__}: {dep_result.message}"
             )
 
-        stages = self._resolve_plugin_stages(plugin, config)
+        cfg = plugin.config if config is None else config
+        stages, _ = StageResolver._resolve_plugin_stages(
+            plugin.__class__, cfg, plugin, logger=logger
+        )
         for stage in stages:
             name = getattr(plugin, "name", plugin.__class__.__name__)
             asyncio.run(
@@ -280,16 +284,6 @@ class _AgentBuilder:
                 extra={"pipeline_id": "builder", "stage": "initialization"},
             )
             return None
-
-    def _resolve_plugin_stages(
-        self, plugin: Plugin, config: Mapping[str, Any] | None
-    ) -> list[PipelineStage]:
-        """Resolve final stages for ``plugin`` using simple precedence."""
-
-        from pipeline.utils import get_plugin_stages
-
-        cfg = config or plugin.config
-        return get_plugin_stages(plugin.__class__, cfg)
 
     def _register_module_plugins(self, module: ModuleType) -> None:
         import inspect
