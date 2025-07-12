@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-12: Added stage resolution fallback and validator checks
+AGENT NOTE - 2025-07-12: Simplified PluginAutoClassifier and updated tests
 AGENT NOTE - 2025-07-12: Added config and dependency hooks for plugins
 AGENT NOTE - 2025-07-12: Updated ResourceContainer build sequence and tests
 AGENT NOTE - 2025-07-12: Added canonical resource classes and StandardResources dataclass

@@ -79,21 +79,24 @@ def import_plugin_class(path: str) -> Type:
 
 
 class PluginAutoClassifier:
-    """Generate plugin classes from async functions."""
+    """Wrap coroutine functions as plugin instances without introspection."""
 
     @staticmethod
     def classify(
         plugin_func: Any, user_hints: Optional[Dict[str, Any]] | None = None
     ) -> Any:
-        """Return a plugin object for ``plugin_func``."""
+        """Return a plugin object for ``plugin_func`` using explicit hints."""
 
         if not inspect.iscoroutinefunction(plugin_func):
             raise TypeError(
                 f"Plugin function '{getattr(plugin_func, '__name__', 'unknown')}' must be async"
             )
 
-        hints = user_hints or {}
-        base = cast(Type, hints.get("plugin_class", plugin_base_registry.prompt_plugin))
+        hints: Dict[str, Any] = user_hints or {}
+
+        base = hints.get("plugin_class")
+        if base is None:
+            base = plugin_base_registry.prompt_plugin
 
         stage_hint = hints.get("stages") or hints.get("stage")
         if stage_hint is not None:
@@ -101,21 +104,8 @@ class PluginAutoClassifier:
             stages = [PipelineStage.from_str(str(s)) for s in stages]
             explicit = True
         else:
-            stages = default_stages_for_class(base)
+            stages = default_stages_for_class(cast(Type, base))
             explicit = False
-
-        if hints.get("plugin_class") is None and stage_hint is not None:
-            stage_set = set(stages)
-            if stage_set == {PipelineStage.DO}:
-                base = cast(Type, plugin_base_registry.tool_plugin)
-            elif stage_set == {PipelineStage.ERROR}:
-                base = cast(Type, plugin_base_registry.failure_plugin)
-            elif stage_set == {PipelineStage.PARSE, PipelineStage.DELIVER}:
-                base = cast(Type, plugin_base_registry.adapter_plugin)
-            else:
-                base = cast(Type, plugin_base_registry.prompt_plugin)
-
-        inferred = not explicit
 
         name = hints.get("name", plugin_func.__name__)
 
@@ -123,13 +113,9 @@ class PluginAutoClassifier:
             func=plugin_func,
             stages=stages,
             name=name,
-            base_class=base,
+            base_class=cast(Type, base),
         )
         plugin_obj._explicit_stages = explicit
-        plugin_obj._inferred_stages = inferred
-        plugin_obj._auto_inferred_stages = False
-        plugin_obj._type_default_stages = default_stages_for_class(base)
-        plugin_obj._inferred = inferred
         return plugin_obj
 
     @staticmethod
