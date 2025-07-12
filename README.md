@@ -43,6 +43,21 @@ plugins:
 
 See the [Quick Start](docs/source/quick_start.md) for step-by-step setup or browse the [full documentation](https://entity.readthedocs.io/en/latest/).
 
+### Stateless Workers (Decision 6)
+
+Workers hold no conversation state between requests. Instead, the `Memory` resource persists data to an external store. Each worker loads the conversation from `Memory` at the start of a request and saves updates when finished. This allows any worker process to handle any user without coordination.
+
+The default configuration persists `Memory` through DuckDB:
+
+```yaml
+agent_resources:
+  memory:
+    type: entity.resources.memory:Memory
+    dependencies: [database]
+```
+
+See [`config/dev.yaml`](config/dev.yaml) for the complete example.
+
 ### Zero-Config Plugins
 
 Register a tool and prompt without specifying stages:
