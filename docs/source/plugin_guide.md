@@ -80,9 +80,13 @@ Plugin stages are resolved in a predictable order:
 3. Defaults based on plugin type (``ToolPlugin`` → ``DO``, ``PromptPlugin`` → ``THINK``, ``AdapterPlugin`` → ``PARSE`` + ``DELIVER``).
 4. Stages inferred by ``PluginAutoClassifier``.
 
-Explicit configuration always wins. If a plugin class declares stages that differ from its type defaults the initializer emits a warning. The same warning appears when configuration overrides either the class stages or the defaults so you can double‑check the override is intentional.
+Explicit configuration always wins. If a plugin class declares stages that differ from its type defaults the initializer emits a warning. The same warning appears when configuration overrides either the class stages or the defaults so you can double‑check the override is intentional. Programmatic registration through ``_AgentBuilder`` follows the same rules. ``add_plugin`` checks any provided configuration first, then the class attribute, and finally falls back to the plugin type defaults or auto‑classified stages. Warnings appear whenever a higher‑precedence source overrides a lower one.
 
-Programmatic registration through ``_AgentBuilder`` follows the same rules. ``add_plugin`` checks any provided configuration first, then the class attribute, and finally falls back to the plugin type defaults or auto‑classified stages. Warnings appear whenever a higher‑precedence source overrides a lower one.
+When this occurs you'll see a log line similar to:
+
+```
+WARNING entity.pipeline.initializer: Plugin 'MyPrompt' explicit config stages ['THINK', 'DELIVER'] override type defaults ['THINK']
+```
 
 ## Loading Plugins Automatically
 
