@@ -16,6 +16,7 @@ from entity.core.context import PluginContext
 from entity.core.registries import PluginRegistry, SystemRegistries
 from entity.core.state import ConversationEntry, FailureInfo
 from entity.core.state_logger import StateLogger
+from contextlib import asynccontextmanager
 from entity.utils.logging import get_logger
 from .state import PipelineState
 
@@ -34,6 +35,11 @@ from .tools.execution import execute_pending_tools
 from .workflow import Workflow
 
 logger = get_logger(__name__)
+
+
+@asynccontextmanager
+async def _noop_async_cm():
+    yield
 
 
 class Pipeline:
@@ -257,7 +263,12 @@ async def execute_pipeline(
         )
         state.stage_results.clear()
     _start = time.time()
-    async with capabilities.resources:
+    resource_manager = (
+        capabilities.resources
+        if hasattr(capabilities.resources, "__aenter__")
+        else _noop_async_cm()
+    )
+    async with resource_manager:
         async with start_span("pipeline.execute"):
             while True:
                 state.iteration += 1
