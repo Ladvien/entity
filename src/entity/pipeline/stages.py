@@ -30,10 +30,4 @@ class PipelineStage(IntEnum):
     def ensure(cls, value: "PipelineStage | str") -> "PipelineStage":
         if isinstance(value, cls):
             return value
-        alias_map = {
-            "parse": "input",
-            "deliver": "output",
-        }
-        if isinstance(value, str):
-            value = alias_map.get(value.lower(), value)
         return cls.from_str(str(value))
