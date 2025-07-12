@@ -35,4 +35,29 @@ def resolve_stages(
 get_plugin_stages = resolve_stages
 
 
-__all__ = ["DependencyGraph", "resolve_stages", "get_plugin_stages"]
+class StageResolver:
+    """Compatibility layer providing stage resolution helpers."""
+
+    @staticmethod
+    def _resolve_plugin_stages(
+        plugin_class: Type,
+        config: Mapping[str, Any],
+        _instance: Any | None = None,
+        logger: Any | None = None,
+    ) -> tuple[list[PipelineStage], bool]:
+        stages = resolve_stages(plugin_class, config)
+        explicit = bool(
+            (config.get("stage") or config.get("stages"))
+            or getattr(_instance, "_explicit_stages", False)
+            or getattr(plugin_class, "stages", None)
+            or getattr(plugin_class, "stage", None)
+        )
+        return stages, explicit
+
+
+__all__ = [
+    "DependencyGraph",
+    "resolve_stages",
+    "get_plugin_stages",
+    "StageResolver",
+]

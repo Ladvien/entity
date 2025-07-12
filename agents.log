@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-12: Added tests for context.think/reflect/clear
 AGENT NOTE - 2025-07-12: Added PipelineWorker memory persistence test
 AGENT NOTE - 2025-07-12: Updated Memory tests with database backend
 AGENT NOTE - 2025-07-12: Simplified plugin analysis output
