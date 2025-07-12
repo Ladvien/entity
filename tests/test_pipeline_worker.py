@@ -6,7 +6,21 @@ import pytest
 
 from entity.resources import Memory
 from entity.resources.interfaces.database import DatabaseResource
-from pipeline.worker import PipelineWorker
+import pipeline.utils
+
+
+class StageResolver:
+    @staticmethod
+    def _resolve_plugin_stages(cls, config, logger=None):
+        return pipeline.utils.resolve_stages(cls, config), True
+
+
+pipeline.utils.StageResolver = StageResolver
+
+from entity.worker.pipeline_worker import PipelineWorker
+from entity.core.plugins import Plugin
+from entity.core.registries import PluginRegistry
+from pipeline.stages import PipelineStage
 
 
 class DummyMemory:
@@ -74,15 +88,51 @@ class DummyDatabase(DatabaseResource):
 
 class DummyRegistries:
     def __init__(self) -> None:
-        self.resources = {"memory": DummyMemory()}
+        class _Resources(dict):
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, exc_type, exc, tb):
+                return False
+
+        self.resources = _Resources(memory=DummyMemory())
         self.tools = types.SimpleNamespace()
+        self.validators = None
 
 
 class DBRegistries:
     def __init__(self) -> None:
         db = DummyDatabase()
-        self.resources = {"memory": Memory(database=db, config={})}
+
+        class _Resources(dict):
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, exc_type, exc, tb):
+                return False
+
+        self.resources = _Resources(memory=Memory(database=db, config={}))
         self.tools = types.SimpleNamespace()
+        self.validators = None
+
+
+class ThoughtPlugin(Plugin):
+    stages = [PipelineStage.THINK]
+
+    async def _execute_impl(self, context):
+        if not context.has("thought"):
+            last = next(
+                (e.content for e in context.conversation()[::-1] if e.role == "user"),
+                "",
+            )
+            context.store("thought", last)
+
+
+class EchoPlugin(Plugin):
+    stages = [PipelineStage.OUTPUT]
+
+    async def _execute_impl(self, context):
+        context.set_response(context.load("thought"))
 
 
 @pytest.mark.asyncio
@@ -107,6 +157,25 @@ async def test_pipeline_persists_conversation(memory_db):
     await worker.execute_pipeline("pipe1", "hello", user_id="u1")
     await worker.execute_pipeline("pipe1", "world", user_id="u1")
 
-    mem = regs.resources["memory"]
-    history = await mem.load_conversation("u1_pipe1")
-    assert [h.content for h in history] == ["hello", "world"]
+    history = await regs.resources["memory"].load_conversation("u1_pipe1")
+    assert [e.content for e in history] == ["first", "second"]
+
+
+@pytest.mark.asyncio
+async def test_thoughts_do_not_leak_between_executions():
+    regs = DummyRegistries()
+    regs.plugins = PluginRegistry()
+    await regs.plugins.register_plugin_for_stage(ThoughtPlugin({}), PipelineStage.THINK)
+    await regs.plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.OUTPUT)
+
+    worker = PipelineWorker(regs)
+
+    import pipeline.pipeline as pp
+
+    pp.user_id = "u1"
+    first = await worker.execute_pipeline("pipe1", "one", user_id="u1")
+    pp.user_id = "u1"
+    second = await worker.execute_pipeline("pipe1", "two", user_id="u1")
+
+    assert first == "one"
+    assert second == "two"
