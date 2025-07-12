@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from importlib import import_module
 from typing import Any, Dict, Optional, Type, cast
 
+from entity.utils.logging import get_logger
+
 from .stages import PipelineStage
 
 
@@ -24,6 +26,8 @@ class PluginBaseRegistry:
 
 
 plugin_base_registry = PluginBaseRegistry()
+
+logger = get_logger(__name__)
 
 
 def default_stages_for_class(plugin_class: Type) -> list[PipelineStage]:
@@ -91,6 +95,19 @@ class PluginAutoClassifier:
             raise TypeError(
                 f"Plugin function '{getattr(plugin_func, '__name__', 'unknown')}' must be async"
             )
+
+        try:
+            source = inspect.getsource(plugin_func)
+        except OSError:
+            lines = 0
+        else:
+            lines = len(source.splitlines())
+            if lines > 20:
+                logger.warning(
+                    "Function '%s' is %d lines long; consider using a class-based plugin",
+                    plugin_func.__name__,
+                    lines,
+                )
 
         hints: Dict[str, Any] = user_hints or {}
 
