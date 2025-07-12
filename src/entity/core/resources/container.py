@@ -164,7 +164,27 @@ class ResourceContainer:
             if callable(shutdown):
                 await shutdown()
 
-    def register(self, name: str, cls: type, config: Dict, layer: int = 1) -> None:
+    def register(
+        self, name: str, cls: type, config: Dict, layer: int | None = None
+    ) -> None:
+        """Register a resource class and its configuration."""
+
+        if layer is None:
+            from entity.core.plugins import (
+                InfrastructurePlugin,
+                ResourcePlugin,
+            )
+            from entity.resources.base import AgentResource as CanonicalResource
+
+            if issubclass(cls, InfrastructurePlugin):
+                layer = 1
+            elif issubclass(cls, ResourcePlugin):
+                layer = 2
+            elif issubclass(cls, CanonicalResource):
+                layer = 3
+            else:
+                layer = 4
+
         self._classes[name] = cls
         self._configs[name] = config
         self._deps[name] = list(getattr(cls, "dependencies", []))
@@ -320,12 +340,34 @@ class ResourceContainer:
     def _validate_layers(self) -> None:
         """Ensure layer dependencies follow the 4-layer architecture."""
 
+        from entity.core.plugins import InfrastructurePlugin, ResourcePlugin
+        from entity.resources.base import AgentResource as CanonicalResource
+
         for name, layer in self._layers.items():
             if layer not in {1, 2, 3, 4}:
                 raise InitializationError(
                     name,
                     "layer validation",
                     f"Invalid layer {layer} specified.",
+                    kind="Resource",
+                )
+            cls = self._classes[name]
+            if issubclass(cls, InfrastructurePlugin):
+                expected = 1
+            elif issubclass(cls, CanonicalResource):
+                expected = 3
+            elif issubclass(cls, ResourcePlugin):
+                expected = 2
+            else:
+                expected = 4
+            if layer != expected:
+                raise InitializationError(
+                    name,
+                    "layer validation",
+                    (
+                        f"Incorrect layer {layer} for {cls.__name__}. "
+                        f"Expected {expected}."
+                    ),
                     kind="Resource",
                 )
             if layer == 1 and self._deps.get(name):

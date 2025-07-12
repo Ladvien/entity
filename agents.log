@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-13: StandardResources now imports canonical classes directly
+AGENT NOTE - 2025-07-12: Resource layers inferred from plugin type
 AGENT NOTE - 2025-07-13: Memory now persists to DuckDB and vector store
 AGENT NOTE - 2025-07-12: Removed ConversationHistory helper class
 

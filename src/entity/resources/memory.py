@@ -13,7 +13,6 @@ from .interfaces.vector_store import (
 )
 from ..core.plugins import ValidationResult
 from ..core.state import ConversationEntry
-from pipeline.errors import InitializationError
 
 
 class Memory(AgentResource):
