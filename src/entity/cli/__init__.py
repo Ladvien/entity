@@ -517,10 +517,29 @@ class EntityCLI:
             )
 
             plugins = new_cfg.get("plugins", {})
+            runtime_tasks = []
             for section in plugins.values():
                 if not isinstance(section, dict):
                     continue
                 for name, config in section.items():
+                    plugin = registry.get_plugin(name)
+                    if plugin is None:
+                        continue
+
+                    cfg_result = await plugin.__class__.validate_config(config)
+                    if not cfg_result.success:
+                        logger.error("%s config invalid: %s", name, cfg_result.message)
+                        return 1
+
+                    dep_result = await plugin.__class__.validate_dependencies(registry)
+                    if not dep_result.success:
+                        logger.error(
+                            "%s dependency check failed: %s",
+                            name,
+                            dep_result.message,
+                        )
+                        return 1
+
                     result = await update_plugin_configuration(
                         registry,
                         name,
@@ -531,36 +550,47 @@ class EntityCLI:
                         logger.error(result.error_message)
                         return 2 if result.requires_restart else 1
 
-                    plugin = registry.get_plugin(name)
-                    if plugin is None:
-                        continue
                     validate = getattr(plugin, "validate_runtime", None)
-                    if not callable(validate):
-                        continue
+                    if callable(validate):
 
-                    async def _run_validation() -> None:
-                        v_result = await validate()
-                        if not v_result.success:
-                            raise RuntimeError(v_result.message)
+                        async def _run_validation(p: Any, plugin_name: str) -> None:
+                            async def _validate() -> None:
+                                v_result = await validate()
+                                if not v_result.success:
+                                    raise RuntimeError(v_result.message)
 
-                    try:
-                        await breaker.call(_run_validation)
-                    except CircuitBreakerTripped as exc:
-                        logger.error(
-                            "Runtime validation failure threshold exceeded: %s",
-                            exc,
+                            try:
+                                await breaker.call(_validate)
+                            except CircuitBreakerTripped as exc:
+                                logger.error(
+                                    "Runtime validation failure threshold exceeded: %s",
+                                    exc,
+                                )
+                                await p.rollback_config(p.config_version - 1)
+                                raise
+                            except Exception as exc:  # noqa: BLE001
+                                logger.error(
+                                    "Runtime validation failed for %s: %s",
+                                    plugin_name,
+                                    exc,
+                                )
+                                await p.rollback_config(p.config_version - 1)
+                                if breaker._failure_count >= breaker.failure_threshold:
+                                    logger.error(
+                                        "Runtime validation failure threshold exceeded"
+                                    )
+                                raise
+
+                        runtime_tasks.append(
+                            asyncio.create_task(_run_validation(plugin, name))
                         )
-                        await plugin.rollback_config(plugin.config_version - 1)
-                        return 1
-                    except Exception as exc:
-                        logger.error("Runtime validation failed for %s: %s", name, exc)
-                        await plugin.rollback_config(plugin.config_version - 1)
-                        if breaker._failure_count >= breaker.failure_threshold:
-                            logger.error(
-                                "Runtime validation failure threshold exceeded"
-                            )
-                            return 1
-                        return 1
+
+            for task in runtime_tasks:
+                try:
+                    await task
+                except Exception:
+                    return 1
+
             logger.info("Configuration updated successfully")
             return 0
 
