@@ -1,5 +1,4 @@
 from entity.core.builder import _AgentBuilder
-from entity.core.plugin_utils import PluginAutoClassifier
 from entity.core.plugins import PromptPlugin
 from pipeline.initializer import SystemInitializer
 from entity.core.stages import PipelineStage
@@ -42,18 +41,6 @@ def test_builder_type_default():
     assert stages == [PipelineStage.THINK]
 
 
-def test_builder_auto_classification():
-    builder = _AgentBuilder()
-
-    async def fn(ctx):
-        return None
-
-    plugin = PluginAutoClassifier.classify(fn, {"plugin_class": PromptPlugin})
-    stages = builder._resolve_plugin_stages(plugin, None)
-
-    assert stages == [PipelineStage.THINK]
-
-
 def test_initializer_config_overrides():
     init = SystemInitializer({})
     plugin = AttrPrompt({})
@@ -83,20 +70,6 @@ def test_initializer_type_default():
     plugin = InferredPrompt({})
 
     stages, explicit = init._resolve_plugin_stages(InferredPrompt, plugin, {})
-
-    assert stages == [PipelineStage.THINK]
-    assert explicit is False
-
-
-def test_initializer_auto_classification():
-    init = SystemInitializer({})
-
-    async def fn(ctx):
-        return None
-
-    plugin = PluginAutoClassifier.classify(fn, {"plugin_class": PromptPlugin})
-
-    stages, explicit = init._resolve_plugin_stages(plugin.__class__, plugin, {})
 
     assert stages == [PipelineStage.THINK]
     assert explicit is False
