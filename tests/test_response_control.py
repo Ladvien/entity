@@ -38,14 +38,14 @@ class Thinker(PromptPlugin):
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context: PluginContext) -> None:
-        context.think("data", "x")
+        await context.think("data", "x")
 
 
 class Responder(PromptPlugin):
     stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context: PluginContext) -> None:
-        val = context.reflect("data")
+        val = await context.reflect("data")
         context.say(f"final:{val}")
 
 
