@@ -12,7 +12,7 @@ from pipeline.stages import PipelineStage
 class ErrorFormatter(FailurePlugin):
     """Generate a simple user message from captured failure information."""
 
-    stages = [PipelineStage.OUTPUT]
+    stages = [PipelineStage.ERROR]
 
     async def _execute_impl(self, context: PluginContext) -> None:
         failure_msg = await context.reflect("failure_response")
