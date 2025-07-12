@@ -526,7 +526,8 @@ class EntityCLI:
                 for name, config in section.items():
                     plugin = registry.get_plugin(name)
                     if plugin is None:
-                        continue
+                        logger.error("Plugin %s not registered", name)
+                        return 2
 
                     cfg_result = await plugin.__class__.validate_config(config)
                     if not cfg_result.success:
