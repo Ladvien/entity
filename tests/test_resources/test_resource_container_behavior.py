@@ -1,7 +1,7 @@
 from typing import List
 
 import pytest
-from entity.core.plugins import ResourcePlugin as BaseResource
+from entity.core.plugins import AgentResource as BaseResource
 from entity.core.resources.container import ResourceContainer
 
 

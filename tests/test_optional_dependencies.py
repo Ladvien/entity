@@ -1,20 +1,20 @@
 import asyncio
 
 from entity.core.resources.container import ResourceContainer
-from entity.core.plugins import ResourcePlugin, PromptPlugin
+from entity.core.plugins import AgentResource, PromptPlugin
 from entity.core.stages import PipelineStage
 from entity.core.registry_validator import RegistryValidator
 import yaml
 
 
-class OptionalRes(ResourcePlugin):
+class OptionalRes(AgentResource):
     stages = [PipelineStage.PARSE]
 
     async def _execute_impl(self, context):
         pass
 
 
-class DependentRes(ResourcePlugin):
+class DependentRes(AgentResource):
     stages = [PipelineStage.PARSE]
     dependencies = ["optional?"]
 

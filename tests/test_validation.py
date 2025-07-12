@@ -5,7 +5,7 @@ import yaml
 from pipeline import (
     PipelineStage,
     PromptPlugin,
-    ResourcePlugin,
+    AgentResource,
     SystemInitializer,
     ValidationResult,
 )
@@ -32,7 +32,7 @@ class DepPlugin(PromptPlugin):
         pass
 
 
-class Res(ResourcePlugin):
+class Res(AgentResource):
     stages = [PipelineStage.PARSE]
 
     async def _execute_impl(self, context):

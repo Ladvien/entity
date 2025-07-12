@@ -4,12 +4,12 @@ import sys
 
 import pytest
 from pipeline import PipelineStage
-from entity.core.plugins import ResourcePlugin
+from entity.core.plugins import AgentResource
 
 from entity.core.resources.container import ResourceContainer
 
 
-class BaseRes(ResourcePlugin):
+class BaseRes(AgentResource):
     stages = [PipelineStage.PARSE]
     name = "base"
 
@@ -17,7 +17,7 @@ class BaseRes(ResourcePlugin):
         return None
 
 
-class DepRes(ResourcePlugin):
+class DepRes(AgentResource):
     stages = [PipelineStage.PARSE]
     name = "dep"
     dependencies = ["base"]
@@ -38,7 +38,7 @@ async def build_container():
     return container
 
 
-class DepInitRes(ResourcePlugin):
+class DepInitRes(AgentResource):
     stages = [PipelineStage.PARSE]
     name = "dep_init"
     dependencies = ["base"]
@@ -112,7 +112,7 @@ async def test_container_async_context_shutdown():
 async def test_shutdown_order_reversed():
     log: list[str] = []
 
-    class A(ResourcePlugin):
+    class A(AgentResource):
         async def initialize(self) -> None:
             log.append("init-a")
 
@@ -122,7 +122,7 @@ async def test_shutdown_order_reversed():
         async def _execute_impl(self, context):
             return None
 
-    class B(ResourcePlugin):
+    class B(AgentResource):
         dependencies = ["a"]
 
         async def initialize(self) -> None:

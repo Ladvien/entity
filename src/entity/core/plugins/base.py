@@ -73,26 +73,22 @@ class BasePlugin:
         return response
 
 
-class Plugin(BasePlugin):
-    """Base plugin with simple lifecycle hooks."""
+class InfrastructurePlugin(BasePlugin):
+    """Layer 1 plugin providing infrastructure primitives."""
 
-    @classmethod
-    def validate_config(cls, config: Dict[str, Any]) -> "ValidationResult":
-        return ValidationResult.success_result()
-
-    @classmethod
-    def validate_dependencies(cls, deps: Dict[str, Any]) -> "ValidationResult":
-        return ValidationResult.success_result()
-
-    async def initialize(self) -> None:  # pragma: no cover - default no-op
-        return None
-
-    async def shutdown(self) -> None:  # pragma: no cover - default no-op
-        return None
+    infrastructure_type: str = ""
+    stages: List[PipelineStage] = []
+    dependencies: List[str] = []
 
 
-class ResourcePlugin(Plugin):
-    """Infrastructure plugin providing persistent resources."""
+class ResourcePlugin(BasePlugin):
+    """Layer 2 resource interface over infrastructure."""
+
+    infrastructure_dependencies: List[str] = []
+
+
+class AgentResource(ResourcePlugin):
+    """Layer 3 canonical or custom agent resource."""
 
 
 class ToolPlugin(Plugin):

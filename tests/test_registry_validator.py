@@ -2,13 +2,13 @@ import logging
 
 import pytest
 import yaml
-from entity.core.plugins import PromptPlugin, ResourcePlugin
+from entity.core.plugins import AgentResource, PromptPlugin
 from entity.core.stages import PipelineStage
 from entity.core.registry_validator import RegistryValidator
 from pipeline.initializer import ClassRegistry
 
 
-class A(ResourcePlugin):
+class A(AgentResource):
     stages = [PipelineStage.PARSE]
 
     async def _execute_impl(self, context):
@@ -47,14 +47,14 @@ class E(PromptPlugin):
         pass
 
 
-class VectorStoreResource(ResourcePlugin):
+class VectorStoreResource(AgentResource):
     stages = [PipelineStage.PARSE]
 
     async def _execute_impl(self, context):
         pass
 
 
-class PostgresResource(ResourcePlugin):
+class PostgresResource(AgentResource):
     stages: list = []
 
     async def _execute_impl(self, context):  # pragma: no cover - stub

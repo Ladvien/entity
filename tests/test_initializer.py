@@ -10,13 +10,13 @@ from pipeline import (
     CircuitBreakerTripped,
     PipelineStage,
     PromptPlugin,
-    ResourcePlugin,
+    AgentResource,
     SystemInitializer,
     ValidationResult,
 )
 
 
-class A(ResourcePlugin):
+class A(AgentResource):
     stages = [PipelineStage.PARSE]
     dependencies = []
 
@@ -57,7 +57,7 @@ class D(PromptPlugin):
         pass
 
 
-class BadRes(ResourcePlugin):
+class BadRes(AgentResource):
     stages = [PipelineStage.PARSE]
 
     async def _execute_impl(self, context):
@@ -67,7 +67,7 @@ class BadRes(ResourcePlugin):
         return ValidationResult.error_result("no runtime")
 
 
-class UnhealthyRes(ResourcePlugin):
+class UnhealthyRes(AgentResource):
     stages = [PipelineStage.PARSE]
 
     async def _execute_impl(self, context):
@@ -77,7 +77,7 @@ class UnhealthyRes(ResourcePlugin):
         return False
 
 
-class BreakerRes(ResourcePlugin):
+class BreakerRes(AgentResource):
     stages = [PipelineStage.PARSE]
     breaker = CircuitBreaker(failure_threshold=2, recovery_timeout=60)
 
