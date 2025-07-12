@@ -114,13 +114,11 @@ Resources are composed from simpler backends:
 
 ```python
 # Simple setup
-memory = MemoryResource({})
-memory.database = SQLiteDatabaseResource("./agent.db")
+memory = MemoryResource(database=SQLiteDatabaseResource("./agent.db"))
 
 # Production setup
-memory = MemoryResource({})
-memory.database = PostgresResource(connection_str)
-memory.vector_store = PgVectorStore({"dimensions": 768})
+memory = MemoryResource(database=PostgresResource(connection_str),
+                       vector_store=PgVectorStore({"dimensions": 768}))
 
 storage = StorageResource({})
 storage.filesystem = S3FileSystem(bucket="agent-files")

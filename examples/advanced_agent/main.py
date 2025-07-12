@@ -53,11 +53,12 @@ class FinalResponder(PromptPlugin):
 
 async def main() -> None:
     resources = ResourceContainer()
-    Memory.dependencies = ["database"]
-    resources.register("database", DuckDBDatabaseResource, {"path": "./agent.duckdb"})
-    resources.register("memory", Memory, {})
-    resources.register("llm", EchoLLMResource, {})
-    await resources.build_all()
+    db = DuckDBDatabaseResource({"path": "./agent.duckdb"})
+    memory = Memory(database=db)
+    await db.initialize()
+    await resources.add("database", db)
+    await resources.add("memory", memory)
+    await resources.add("llm", EchoLLMResource({}))
 
     tools = ToolRegistry()
     await tools.add("calc", CalculatorTool())

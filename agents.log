@@ -1,2 +1,3 @@
-AGENT NOTE - 2025-07-12: Introduced infrastructure layer and resource interfaces
+AGENT NOTE - 2025-07-12: Memory now accepts database and vector store via constructor.
+AGENT NOTE - 2025-07-12: Updated ResourceContainer build sequence and tests
 AGENT NOTE - 2025-07-12: Added canonical resource classes and StandardResources dataclass
