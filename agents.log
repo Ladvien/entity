@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-12: Updated Memory dependency injection and tests
+AGENT NOTE - 2025-07-12: Updated DuckDB connection pool usage
 AGENT NOTE - 2025-07-12: Removed deprecated store/load helpers
 AGENT NOTE - 2025-07-12: Introduced think()/reflect() helpers
 AGENT NOTE - 2025-07-12: Added PipelineWorker memory persistence test
