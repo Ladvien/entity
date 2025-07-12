@@ -393,18 +393,32 @@ class SystemInitializer:
         ):
             await resource_container.build_all()
 
-            breaker_cfg = self.config.get("runtime_validation_breaker", {})
-            breaker = CircuitBreaker(
-                failure_threshold=breaker_cfg.get("failure_threshold", 3),
-                recovery_timeout=breaker_cfg.get("recovery_timeout", 60.0),
-            )
+            model = self._config_model
+            default_cfg = model.runtime_validation_breaker
+            settings = model.breaker_settings
+
             for name, resource in resource_container._resources.items():
                 validate = getattr(resource, "validate_runtime", None)
                 if not callable(validate):
                     continue
 
+                resource_type = getattr(resource, "infrastructure_type", "").lower()
+                if resource_type == "database":
+                    cfg = settings.database
+                elif resource_type in {"external_api", "external-api", "api"}:
+                    cfg = settings.external_api
+                elif resource_type in {"file_system", "filesystem", "file-system"}:
+                    cfg = settings.file_system
+                else:
+                    cfg = default_cfg
+
+                breaker = CircuitBreaker(
+                    failure_threshold=cfg.failure_threshold,
+                    recovery_timeout=cfg.recovery_timeout,
+                )
+
                 async def _run_validation() -> None:
-                    result = await validate()
+                    result = await validate(breaker)
                     if not result.success:
                         raise RuntimeError(result.error_message)
 

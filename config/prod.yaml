@@ -7,6 +7,14 @@ server:
 tool_registry:
   concurrency_limit: 10
 
+breaker_settings:
+  database:
+    failure_threshold: 3
+  external_api:
+    failure_threshold: 5
+  file_system:
+    failure_threshold: 2
+
 plugins:
   infrastructure: {}
   resources:

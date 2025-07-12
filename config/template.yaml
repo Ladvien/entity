@@ -4,6 +4,14 @@ server:
   reload: true
   log_level: "info"
 
+breaker_settings:
+  database:
+    failure_threshold: 3
+  external_api:
+    failure_threshold: 5
+  file_system:
+    failure_threshold: 2
+
 plugins:
   infrastructure: {}
   resources:
