@@ -9,6 +9,7 @@ from pipeline.reliability import CircuitBreaker
 import duckdb
 
 from entity.core.plugins import InfrastructurePlugin, ValidationResult
+from entity.core.resources.container import PoolConfig, ResourcePool
 
 
 class DuckDBInfrastructure(InfrastructurePlugin):
@@ -22,7 +23,8 @@ class DuckDBInfrastructure(InfrastructurePlugin):
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
         self.path: str = self.config.get("path", ":memory:")
-        self._conn: duckdb.DuckDBPyConnection | None = None
+        pool_cfg = PoolConfig(**self.config.get("pool", {}))
+        self._pool = ResourcePool(self._create_conn, pool_cfg)
         self._breaker = CircuitBreaker(
             failure_threshold=self.config.get("failure_threshold", 3),
             recovery_timeout=self.config.get("recovery_timeout", 60.0),
@@ -32,23 +34,25 @@ class DuckDBInfrastructure(InfrastructurePlugin):
         return None
 
     async def initialize(self) -> None:
-        """Open the database connection."""
-        self._conn = duckdb.connect(self.path)
+        """Initialize the connection pool."""
+        await self._pool.initialize()
+
+    async def _create_conn(self) -> duckdb.DuckDBPyConnection:
+        return duckdb.connect(self.path)
 
     @asynccontextmanager
     async def connection(self) -> Iterator[duckdb.DuckDBPyConnection]:
-        """Yield a connection to execute queries."""
-        if self._conn is None:
-            self._conn = duckdb.connect(self.path)
-        try:
-            yield self._conn
-        finally:
-            pass
+        """Yield a connection from the pool."""
+        async with self._pool as conn:
+            yield conn
 
     async def shutdown(self) -> None:
-        if self._conn is not None:
-            self._conn.close()
-            self._conn = None
+        while not self._pool._pool.empty():
+            conn = await self._pool._pool.get()
+            conn.close()
+
+    def get_connection_pool(self) -> ResourcePool:
+        return self._pool
 
     async def validate_runtime(self) -> ValidationResult:
         """Check connectivity using a simple query."""

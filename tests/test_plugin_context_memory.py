@@ -9,6 +9,7 @@ from entity.core.context import PluginContext
 from entity.core.state import ConversationEntry, PipelineState
 from entity.resources import Memory
 from entity.resources.interfaces.database import DatabaseResource
+from entity.core.resources.container import PoolConfig, ResourcePool
 
 
 class DummyConnection:
@@ -53,10 +54,16 @@ class DummyDatabase(DatabaseResource):
     def __init__(self) -> None:
         super().__init__({})
         self.data: dict = {"history": {}, "kv": {}}
+        self.pool = ResourcePool(lambda: DummyConnection(self.data), PoolConfig())
+        asyncio.get_event_loop().run_until_complete(self.pool.initialize())
 
     @asynccontextmanager
     async def connection(self):
-        yield DummyConnection(self.data)
+        async with self.pool as conn:
+            yield conn
+
+    def get_connection_pool(self) -> ResourcePool:
+        return self.pool
 
 
 class DummyRegistries:

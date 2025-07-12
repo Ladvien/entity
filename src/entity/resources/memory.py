@@ -14,6 +14,7 @@ from .interfaces.database import DatabaseResource as DatabaseInterface
 from .interfaces.vector_store import VectorStoreResource as VectorStoreInterface
 from ..core.plugins import ValidationResult
 from ..core.state import ConversationEntry
+from ..core.resources.container import ResourcePool
 
 
 def _cosine_similarity(a: Iterable[float], b: Iterable[float]) -> float:
@@ -70,13 +71,25 @@ class Memory(AgentResource):
     name = "memory"
     dependencies: list[str] = ["database", "vector_store"]
 
-    def __init__(self, config: Dict | None = None) -> None:
+    def __init__(
+        self,
+        database: DatabaseInterface | None = None,
+        vector_store: VectorStoreInterface | None = None,
+        config: Dict | None = None,
+    ) -> None:
         super().__init__(config or {})
+        self.database = database
+        self.vector_store = vector_store
         self._kv: Dict[str, Any] = {}
         self._conversations: Dict[str, List[ConversationEntry]] = {}
         self._vectors: Dict[str, List[float]] = {}
-        self.database = database
-        self.vector_store = vector_store
+        self._pool: ResourcePool | None = (
+            database.get_connection_pool() if database is not None else None
+        )
+
+    async def initialize(self) -> None:
+        if self._pool is None and self.database is not None:
+            self._pool = self.database.get_connection_pool()
 
     async def _execute_impl(self, context: Any) -> None:  # noqa: D401, ARG002
         return None
@@ -90,7 +103,7 @@ class Memory(AgentResource):
             table = self.database.config.get("kv_table", "kv_store")
 
             async def _get() -> Any:
-                async with self.database.connection() as conn:
+                async with self._pool as conn:
                     rows = await _fetchall(
                         conn,
                         f"SELECT value FROM {table} WHERE key = ?",
@@ -115,7 +128,7 @@ class Memory(AgentResource):
             table = self.database.config.get("kv_table", "kv_store")
 
             async def _set() -> None:
-                async with self.database.connection() as conn:
+                async with self._pool as conn:
                     await _exec(
                         conn,
                         f"DELETE FROM {table} WHERE key = ?",
@@ -140,7 +153,7 @@ class Memory(AgentResource):
             table = self.database.config.get("kv_table", "kv_store")
 
             async def _clear() -> None:
-                async with self.database.connection() as conn:
+                async with self._pool as conn:
                     await _exec(conn, f"DELETE FROM {table}")
 
             asyncio.get_event_loop().run_until_complete(_clear())
@@ -155,7 +168,7 @@ class Memory(AgentResource):
     ) -> None:
         if self.database is not None:
             table = self.database.config.get("history_table", "conversation_history")
-            async with self.database.connection() as conn:
+            async with self._pool as conn:
                 await _exec(
                     conn,
                     f"DELETE FROM {table} WHERE conversation_id = ?",
@@ -177,7 +190,7 @@ class Memory(AgentResource):
     async def load_conversation(self, conversation_id: str) -> List[ConversationEntry]:
         if self.database is not None:
             table = self.database.config.get("history_table", "conversation_history")
-            async with self.database.connection() as conn:
+            async with self._pool as conn:
                 rows = await _fetchall(
                     conn,
                     f"SELECT role, content, metadata, timestamp FROM {table} WHERE conversation_id = ? ORDER BY timestamp",
