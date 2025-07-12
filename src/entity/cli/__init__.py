@@ -15,6 +15,8 @@ import yaml
 
 from entity.core.agent import Agent
 from entity.core.plugins import BasePlugin, ValidationResult
+from entity.core.builder import _AgentBuilder
+from pipeline.config.config_update import update_plugin_configuration
 from entity.utils.logging import get_logger
 from importlib import import_module
 from pathlib import Path
@@ -439,74 +441,42 @@ class EntityCLI:
         return asyncio.run(_run())
 
     def _reload_config(self, agent: Agent, file_path: str) -> int:
-        """Reload plugin configuration from ``file_path``."""
+        """Hot-reload plugin parameters from ``file_path``."""
 
-        from pipeline.config import ConfigLoader
-        from pipeline.config.config_update import update_plugin_configuration
+        if agent._runtime is None:
+            if agent.config_path:
+                builder = _AgentBuilder.from_yaml(agent.config_path)
+                agent._builder = builder
+                agent._runtime = builder.build_runtime()
+            else:
+                agent._runtime = agent.builder.build_runtime()
 
-        try:
-            new_cfg = ConfigLoader.from_yaml(file_path)
-        except Exception as exc:  # noqa: BLE001 - CLI feedback
-            logger.error("Failed to load %s: %s", file_path, exc)
-            return 1
+        async def _run() -> int:
 
-        if agent.config_path is None:
-            logger.error("Agent was not created from a config file")
-            return 1
+            with open(file_path, "r", encoding="utf-8") as handle:
+                new_cfg = yaml.safe_load(handle) or {}
 
-        try:
-            current_cfg = ConfigLoader.from_yaml(agent.config_path)
-            if agent._runtime is None:
-                agent = Agent.from_config(agent.config_path)
-        except Exception as exc:  # noqa: BLE001 - CLI feedback
-            logger.error("Failed to load current config: %s", exc)
-            return 1
+            registry = agent.runtime.capabilities.plugins
+            pipeline_manager = getattr(agent.runtime, "manager", None)
 
-        def _flatten(cfg: dict) -> dict[str, dict]:
-            plugins = cfg.get("plugins", {})
-            flat: dict[str, dict] = {}
-            for entries in plugins.values():
-                if not isinstance(entries, dict):
+            plugins = new_cfg.get("plugins", {})
+            for section in plugins.values():
+                if not isinstance(section, dict):
                     continue
-                for name, meta in entries.items():
-                    if isinstance(meta, str):
-                        meta = {"type": meta}
-                    if isinstance(meta, dict):
-                        flat[name] = meta
-            return flat
-
-        cur_plugins = _flatten(current_cfg)
-        new_plugins = _flatten(new_cfg)
-
-        if set(cur_plugins) != set(new_plugins):
-            logger.warning("Plugin set changed; restart required")
-            return 1
-
-        for name in cur_plugins:
-            cur = cur_plugins[name]
-            new = new_plugins[name]
-            if cur.get("stages") != new.get("stages") or cur.get(
-                "dependencies"
-            ) != new.get("dependencies"):
-                logger.warning("Topology change for '%s'; restart required", name)
-                return 1
-
-        asyncio.run(agent._ensure_runtime())
-        registry = agent.get_capabilities().plugins
-        manager = getattr(agent.runtime, "manager", None)
-
-        async def _apply() -> int:
-            for name, meta in new_plugins.items():
-                cfg = {k: v for k, v in meta.items() if k not in {"type", "class"}}
-                result = await update_plugin_configuration(
-                    registry, name, cfg, pipeline_manager=manager
-                )
-                if not result.success:
-                    logger.error(result.error_message)
-                    return 1
+                for name, config in section.items():
+                    result = await update_plugin_configuration(
+                        registry,
+                        name,
+                        config,
+                        pipeline_manager=pipeline_manager,
+                    )
+                    if not result.success:
+                        logger.error(result.error_message)
+                        return 2 if result.requires_restart else 1
+            logger.info("Configuration updated successfully")
             return 0
 
-        return asyncio.run(_apply())
+        return asyncio.run(_run())
 
     def _create_project(self, path: str) -> int:
         target = Path(path)
