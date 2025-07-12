@@ -159,32 +159,40 @@ class ResourceContainer:
         self._layers[name] = layer
 
     async def build_all(self) -> None:
-        """Instantiate and initialize resources sequentially."""
+        """Instantiate and initialize resources in layer order."""
         self._validate_layers()
         self._order = self._resolve_order()
         self._init_order = []
 
         for layer in range(1, 5):
-            for name in self._order:
-                if self._layers.get(name) != layer:
-                    continue
+            pending = [n for n in self._order if self._layers.get(n) == layer]
+            while pending:
+                progress = False
+                for name in list(pending):
+                    if self._dependencies_satisfied(name):
+                        cls = self._classes[name]
+                        cfg = self._configs[name]
+                        instance = self._create_instance(cls, cfg)
+                        await self.add(name, instance)
 
-                cls = self._classes[name]
-                cfg = self._configs[name]
+                        self._inject_dependencies(name, instance)
 
-                instance = self._create_instance(cls, cfg)
-                await self.add(name, instance)
+                        init = getattr(instance, "initialize", None)
+                        if callable(init):
+                            await init()
+                        self._init_order.append(name)
 
-                self._inject_dependencies(name, instance)
+                        check = getattr(instance, "health_check", None)
+                        if callable(check) and not await check():
+                            raise SystemError(f"Resource '{name}' failed health check")
 
-                init = getattr(instance, "initialize", None)
-                if callable(init):
-                    await init()
-                self._init_order.append(name)
-
-                check = getattr(instance, "health_check", None)
-                if callable(check) and not await check():
-                    raise SystemError(f"Resource '{name}' failed health check")
+                        pending.remove(name)
+                        progress = True
+                if not progress:
+                    unresolved = ", ".join(pending)
+                    raise SystemError(
+                        f"Unresolved dependencies for resources: {unresolved}"
+                    )
 
     async def shutdown_all(self) -> None:
         order = self._init_order or self._order
@@ -260,6 +268,15 @@ class ResourceContainer:
                     f"Resource '{name}' requires '{dep_name}' which is missing"
                 )
             setattr(instance, dep_name, dep_obj)
+
+    def _dependencies_satisfied(self, name: str) -> bool:
+        """Return ``True`` if all required deps for ``name`` exist."""
+        for dep in self._deps.get(name, []):
+            optional = dep.endswith("?")
+            dep_name = dep[:-1] if optional else dep
+            if dep_name not in self._resources and not optional:
+                return False
+        return True
 
     def _validate_layers(self) -> None:
         """Ensure layer dependencies follow the 4-layer architecture."""

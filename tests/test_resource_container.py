@@ -231,3 +231,24 @@ async def test_circular_dependency_detected():
     container.register("b", B, {}, layer=2)
     with pytest.raises(SystemError):
         await container.build_all()
+
+
+@pytest.mark.asyncio
+async def test_cross_layer_cycle_detected():
+    class A(ResourcePlugin):
+        dependencies = ["b"]
+
+        async def _execute_impl(self, context):
+            return None
+
+    class B(ResourcePlugin):
+        dependencies = ["a"]
+
+        async def _execute_impl(self, context):
+            return None
+
+    container = ResourceContainer()
+    container.register("a", A, {}, layer=3)
+    container.register("b", B, {}, layer=4)
+    with pytest.raises(SystemError):
+        await container.build_all()
