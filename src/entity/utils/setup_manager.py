@@ -34,9 +34,28 @@ class Layer0SetupManager:
             ) from exc
         tags = resp.json().get("models", [])
         if not tags:
-            raise RuntimeError(
-                f"No Ollama models installed. Run 'ollama pull {self.model}'."
-            )
+            import asyncio
+
+            try:
+                proc = await asyncio.create_subprocess_exec(
+                    "ollama",
+                    "pull",
+                    self.model,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+            except FileNotFoundError as exc:  # noqa: PERF203
+                raise RuntimeError(
+                    "Ollama CLI not found. Install from https://ollama.ai"
+                ) from exc
+
+            _, stderr = await proc.communicate()
+            if proc.returncode != 0:
+                err = stderr.decode().strip()
+                raise RuntimeError(
+                    f"Failed to download model {self.model}: {err}\n"
+                    f"Please run 'ollama pull {self.model}' manually."
+                )
 
     def setup_resources(self) -> None:
         """Create local resources if they do not exist."""

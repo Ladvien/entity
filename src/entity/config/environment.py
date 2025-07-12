@@ -8,7 +8,7 @@ from typing import Any, MutableMapping, Mapping
 
 import yaml
 
-from dotenv import dotenv_values
+from dotenv import load_dotenv, dotenv_values
 
 
 def load_env(env_file: str | Path = ".env", env: str | None = None) -> None:
@@ -19,11 +19,20 @@ def load_env(env_file: str | Path = ".env", env: str | None = None) -> None:
     are present.
     """
 
-    env_values = {}
+    env_values: dict[str, str] = {}
 
     env_path = Path(env_file)
     if env_path.exists():
-        load_dotenv(env_path)
+        env_values.update(dotenv_values(env_path))
+
+    env_name = env or os.getenv("ENTITY_ENV")
+    if env_name:
+        secret_path = Path("secrets") / f"{env_name}.env"
+        if secret_path.exists():
+            env_values.update(dotenv_values(secret_path))
+
+    for key, value in env_values.items():
+        os.environ.setdefault(key, value)
 
 
 def _merge(
