@@ -2,19 +2,19 @@
 
 from __future__ import annotations
 
-from enum import IntEnum, auto
+from enum import IntEnum
 
 
 class PipelineStage(IntEnum):
     """Ordered pipeline stages."""
 
-    INPUT = auto()
-    PARSE = auto()
-    THINK = auto()
-    DO = auto()
-    REVIEW = auto()
-    OUTPUT = auto()
-    ERROR = auto()
+    INPUT = 1
+    PARSE = 2
+    THINK = 3
+    DO = 4
+    REVIEW = 5
+    OUTPUT = 6
+    ERROR = 7
 
     def __str__(self) -> str:
         return self.name.lower()
