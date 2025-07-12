@@ -10,8 +10,6 @@ import inspect
 import asyncio
 
 from .base import AgentResource
-from .interfaces.database import DatabaseResource as DatabaseInterface
-from .interfaces.vector_store import VectorStoreResource as VectorStoreInterface
 from ..core.plugins import ValidationResult
 from ..core.state import ConversationEntry
 
@@ -201,6 +199,7 @@ class Memory(AgentResource):
                         metadata=metadata,
                     )
                 )
+            return result
 
     # ------------------------------------------------------------------
     # Vector helpers
