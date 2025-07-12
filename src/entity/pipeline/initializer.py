@@ -367,6 +367,8 @@ class SystemInitializer:
                 deps = list(getattr(cls, "dependencies", []))
                 if "metrics_collector" not in deps:
                     deps.append("metrics_collector")
+                if "logging" not in deps:
+                    deps.append("logging")
                 cls.dependencies = deps
                 registry.register_class(cls, config, name, layer)
                 dep_graph[name] = deps
@@ -382,6 +384,8 @@ class SystemInitializer:
                 deps = list(getattr(cls, "dependencies", []))
                 if "metrics_collector" not in deps:
                     deps.append("metrics_collector")
+                if "logging" not in deps:
+                    deps.append("logging")
                 cls.dependencies = deps
                 registry.register_class(cls, config, name, 4)
                 dep_graph[name] = deps
@@ -522,6 +526,12 @@ class SystemInitializer:
             self.tool_registry = tool_registry
             for name, cls, config in registry.named_tool_classes():
                 instance = cls(config)
+                metrics = resource_container.get("metrics_collector")
+                if metrics is not None:
+                    setattr(instance, "metrics_collector", metrics)
+                log_res = resource_container.get("logging")
+                if log_res is not None:
+                    setattr(instance, "logging", log_res)
                 await tool_registry.add(name, instance)
 
             # Phase 4: instantiate prompt and adapter plugins
@@ -532,6 +542,9 @@ class SystemInitializer:
                 metrics = resource_container.get("metrics_collector")
                 if metrics is not None:
                     setattr(instance, "metrics_collector", metrics)
+                log_res = resource_container.get("logging")
+                if log_res is not None:
+                    setattr(instance, "logging", log_res)
                 stages, _ = StageResolver._resolve_plugin_stages(
                     cls, config, instance, logger=logger
                 )

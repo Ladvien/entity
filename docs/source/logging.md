@@ -25,3 +25,11 @@ plugins:
         - type: structured_file
           path: ./logs/agent.jsonl
 ```
+
+## Automatic Logging
+
+All plugins based on :class:`~entity.core.plugins.BasePlugin` automatically log
+the start, success, and failure of their ``execute`` method. Resource classes
+derived from :class:`~entity.core.plugins.ResourcePlugin` log each operation
+tracked via ``_track_operation``. No additional code is required other than
+having a ``LoggingResource`` registered in the system.

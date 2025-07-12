@@ -26,6 +26,15 @@ def _ensure_metrics_dependency(cls: type) -> None:
     cls.dependencies = deps
 
 
+def _ensure_logging_dependency(cls: type) -> None:
+    if cls.__name__ == "LoggingResource":
+        return
+    deps = list(getattr(cls, "dependencies", []))
+    if "logging" not in deps:
+        deps.append("logging")
+    cls.dependencies = deps
+
+
 class ToolExecutionError(Exception):
     """Raised when a tool fails during execution."""
 
@@ -34,11 +43,12 @@ class BasePlugin:
     """Lightweight plugin foundation."""
 
     stages: List[PipelineStage]
-    dependencies: List[str] = ["metrics_collector"]
+    dependencies: List[str] = ["metrics_collector", "logging"]
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
         _ensure_metrics_dependency(cls)
+        _ensure_logging_dependency(cls)
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
         self.config = config or {}
@@ -46,6 +56,7 @@ class BasePlugin:
         self._config_history: list[Dict[str, Any]] = [self.config.copy()]
         self.config_version: int = 1
         self.metrics_collector = None  # injected by container
+        self.logging = None  # injected by container
 
     # -----------------------------------------------------
     def supports_runtime_reconfiguration(self) -> bool:
@@ -136,6 +147,16 @@ class Plugin(BasePlugin):
 
     async def execute(self, context: Any) -> Any:
         start = time.perf_counter()
+        logger = getattr(self, "logging", None)
+        if logger is not None:
+            await logger.log(
+                "info",
+                "Plugin execution started",
+                component="plugin",
+                plugin_name=self.__class__.__name__,
+                pipeline_id=getattr(context, "pipeline_id", ""),
+                stage=getattr(context, "current_stage", None),
+            )
         success = True
         error_type = None
         try:
@@ -148,6 +169,21 @@ class Plugin(BasePlugin):
         finally:
             duration = (time.perf_counter() - start) * 1000
             metrics = getattr(self, "metrics_collector", None)
+            if logger is not None:
+                await logger.log(
+                    "error" if not success else "info",
+                    (
+                        "Plugin execution failed"
+                        if not success
+                        else "Plugin execution succeeded"
+                    ),
+                    component="plugin",
+                    plugin_name=self.__class__.__name__,
+                    pipeline_id=getattr(context, "pipeline_id", ""),
+                    stage=getattr(context, "current_stage", None),
+                    error_type=error_type,
+                    duration_ms=duration,
+                )
             if metrics is not None:
                 await metrics.record_plugin_execution(
                     pipeline_id=getattr(context, "pipeline_id", ""),
@@ -184,6 +220,17 @@ class ResourcePlugin(Plugin):
         **metadata: Any,
     ) -> Any:
         start = time.perf_counter()
+        logger = getattr(self, "logging", None)
+        if logger is not None:
+            await logger.log(
+                "info",
+                f"{operation} started",
+                component="resource",
+                resource_name=getattr(self, "name", self.__class__.__name__),
+                pipeline_id=(
+                    getattr(context, "pipeline_id", "system") if context else "system"
+                ),
+            )
         success = True
         try:
             result = await func()
@@ -194,6 +241,21 @@ class ResourcePlugin(Plugin):
         finally:
             duration = (time.perf_counter() - start) * 1000
             metrics = getattr(self, "metrics_collector", None)
+            if logger is not None:
+                await logger.log(
+                    "error" if not success else "info",
+                    f"{operation} failed" if not success else f"{operation} succeeded",
+                    component="resource",
+                    resource_name=getattr(self, "name", self.__class__.__name__),
+                    pipeline_id=(
+                        getattr(context, "pipeline_id", "system")
+                        if context
+                        else "system"
+                    ),
+                    duration_ms=duration,
+                    success=success,
+                    **metadata,
+                )
             if metrics is not None:
                 await metrics.record_resource_operation(
                     pipeline_id=(
