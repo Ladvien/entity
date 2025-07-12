@@ -101,6 +101,7 @@ async def execute_stage(
     stage: PipelineStage, state: PipelineState, registries: SystemRegistries
 ) -> None:
     state.current_stage = stage
+    log_res = registries.resources.get("logging") if registries.resources else None
     stage_plugins = registries.plugins.get_plugins_for_stage(stage)
     _start = time.perf_counter()
     async with start_span(f"stage.{stage.name.lower()}"):
@@ -126,14 +127,15 @@ async def execute_stage(
                         )
                     state.pending_tool_calls.clear()
             except CircuitBreakerTripped as exc:
-                logger.exception(
-                    "Circuit breaker tripped",
-                    extra={
-                        "plugin": getattr(plugin, "name", plugin.__class__.__name__),
-                        "stage": str(stage),
-                        "pipeline_id": state.pipeline_id,
-                    },
-                )
+                if log_res is not None:
+                    await log_res.log(
+                        "error",
+                        "Circuit breaker tripped",
+                        component="pipeline",
+                        plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
+                        stage=stage,
+                        pipeline_id=state.pipeline_id,
+                    )
                 state.failure_info = FailureInfo(
                     stage=str(stage),
                     plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
@@ -143,14 +145,15 @@ async def execute_stage(
                     context_snapshot=state.to_dict(),
                 )
             except PluginExecutionError as exc:
-                logger.exception(
-                    "Plugin execution failed",
-                    extra={
-                        "plugin": getattr(plugin, "name", plugin.__class__.__name__),
-                        "stage": str(stage),
-                        "pipeline_id": state.pipeline_id,
-                    },
-                )
+                if log_res is not None:
+                    await log_res.log(
+                        "error",
+                        "Plugin execution failed",
+                        component="pipeline",
+                        plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
+                        stage=stage,
+                        pipeline_id=state.pipeline_id,
+                    )
                 state.failure_info = FailureInfo(
                     stage=str(stage),
                     plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
@@ -160,14 +163,15 @@ async def execute_stage(
                     context_snapshot=state.to_dict(),
                 )
             except ToolExecutionError as exc:
-                logger.exception(
-                    "Tool execution failed",
-                    extra={
-                        "plugin": exc.tool_name,
-                        "stage": str(stage),
-                        "pipeline_id": state.pipeline_id,
-                    },
-                )
+                if log_res is not None:
+                    await log_res.log(
+                        "error",
+                        "Tool execution failed",
+                        component="pipeline",
+                        plugin_name=exc.tool_name,
+                        stage=stage,
+                        pipeline_id=state.pipeline_id,
+                    )
                 state.failure_info = FailureInfo(
                     stage=str(stage),
                     plugin_name=exc.tool_name,
@@ -177,14 +181,15 @@ async def execute_stage(
                     context_snapshot=state.to_dict(),
                 )
             except ResourceError as exc:
-                logger.exception(
-                    "Resource error",
-                    extra={
-                        "plugin": getattr(plugin, "name", plugin.__class__.__name__),
-                        "stage": str(stage),
-                        "pipeline_id": state.pipeline_id,
-                    },
-                )
+                if log_res is not None:
+                    await log_res.log(
+                        "error",
+                        "Resource error",
+                        component="pipeline",
+                        plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
+                        stage=stage,
+                        pipeline_id=state.pipeline_id,
+                    )
                 state.failure_info = FailureInfo(
                     stage=str(stage),
                     plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
@@ -194,14 +199,15 @@ async def execute_stage(
                     context_snapshot=state.to_dict(),
                 )
             except PipelineError as exc:
-                logger.exception(
-                    "Pipeline error",
-                    extra={
-                        "plugin": getattr(plugin, "name", plugin.__class__.__name__),
-                        "stage": str(stage),
-                        "pipeline_id": state.pipeline_id,
-                    },
-                )
+                if log_res is not None:
+                    await log_res.log(
+                        "error",
+                        "Pipeline error",
+                        component="pipeline",
+                        plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
+                        stage=stage,
+                        pipeline_id=state.pipeline_id,
+                    )
                 state.failure_info = FailureInfo(
                     stage=str(stage),
                     plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
@@ -211,15 +217,15 @@ async def execute_stage(
                     context_snapshot=state.to_dict(),
                 )
             except Exception as exc:  # noqa: BLE001
-                logger.exception(
-                    "Unexpected plugin exception",
-                    exc_info=exc,
-                    extra={
-                        "plugin": getattr(plugin, "name", plugin.__class__.__name__),
-                        "stage": str(stage),
-                        "pipeline_id": state.pipeline_id,
-                    },
-                )
+                if log_res is not None:
+                    await log_res.log(
+                        "error",
+                        "Unexpected plugin exception",
+                        component="pipeline",
+                        plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
+                        stage=stage,
+                        pipeline_id=state.pipeline_id,
+                    )
 
                 message = exc.args[0] if exc.args else str(exc)
                 state.failure_info = FailureInfo(
@@ -290,14 +296,20 @@ async def execute_pipeline(
                     finally:
                         if state_logger is not None:
                             state_logger.log(state, stage)
-                        logger.info(
-                            "stage complete",
-                            extra={
-                                "stage": str(stage),
-                                "pipeline_id": state.pipeline_id,
-                                "iteration": state.iteration,
-                            },
+                        log_res = (
+                            capabilities.resources.get("logging")
+                            if capabilities.resources
+                            else None
                         )
+                        if log_res is not None:
+                            await log_res.log(
+                                "info",
+                                "stage complete",
+                                component="pipeline",
+                                stage=stage,
+                                pipeline_id=state.pipeline_id,
+                                iteration=state.iteration,
+                            )
                     if state.failure_info or state.response is not None:
                         break
                     state.last_completed_stage = stage

@@ -135,6 +135,8 @@ class LogOutputConfig(BaseModel):
     path: str | None = None
     host: str | None = None
     port: int | None = None
+    max_size: str | int | None = None
+    backup_count: int | None = None
 
 
 class LoggingConfig(BaseModel):

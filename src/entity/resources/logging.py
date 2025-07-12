@@ -5,6 +5,8 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
+import socket
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -19,6 +21,20 @@ from entity.core.plugins import ValidationResult
 def _level(name: str) -> int:
     """Return numeric logging level for ``name``."""
     return logging._nameToLevel.get(name.upper(), logging.INFO)
+
+
+def _parse_size(value: str | int | None) -> int | None:
+    """Return bytes from ``value`` supporting ``KB``, ``MB``, ``GB`` suffixes."""
+    if value is None:
+        return None
+    if isinstance(value, int):
+        return value
+    multipliers = {"kb": 1024, "mb": 1024**2, "gb": 1024**3}
+    value = value.strip().lower()
+    for suffix, mult in multipliers.items():
+        if value.endswith(suffix):
+            return int(float(value[:-2]) * mult)
+    return int(value)
 
 
 @dataclass
@@ -59,17 +75,43 @@ class ConsoleLogOutput(LogOutput):
 
 
 class StructuredFileOutput(LogOutput):
-    """Append structured logs to a JSON Lines file."""
+    """Append structured logs to a JSON Lines file with rotation."""
 
-    def __init__(self, path: str, level: int) -> None:
+    def __init__(
+        self,
+        path: str,
+        level: int,
+        *,
+        max_size: int | None = None,
+        backup_count: int = 0,
+    ) -> None:
         super().__init__(level)
         self.path = Path(path)
+        self.max_size = max_size
+        self.backup_count = backup_count
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._handle = self.path.open("a", encoding="utf-8")
         self._lock = asyncio.Lock()
 
+    def _rotate(self) -> None:
+        if self.max_size is None:
+            return
+        if self.path.stat().st_size < self.max_size:
+            return
+        self._handle.close()
+        for i in range(self.backup_count - 1, 0, -1):
+            src = self.path.with_suffix(f".{i}")
+            dst = self.path.with_suffix(f".{i+1}")
+            if src.exists():
+                src.rename(dst)
+        backup = self.path.with_suffix(".1")
+        if self.path.exists():
+            self.path.rename(backup)
+        self._handle = self.path.open("a", encoding="utf-8")
+
     async def write(self, entry: Dict[str, Any]) -> None:
         async with self._lock:
+            self._rotate()
             self._handle.write(json.dumps(entry) + "\n")
             self._handle.flush()
 
@@ -88,6 +130,8 @@ class StreamLogOutput(LogOutput):
         self.clients: set[Any] = set()
 
     async def start(self) -> None:
+        if self.server is not None:
+            return
         import websockets
 
         self.server = await websockets.serve(self._handler, self.host, self.port)
@@ -100,7 +144,7 @@ class StreamLogOutput(LogOutput):
         self.server.close()
         await self.server.wait_closed()
 
-    async def _handler(self, websocket: Any, _path: str) -> None:
+    async def _handler(self, websocket: Any, *_path: Any) -> None:
         self.clients.add(websocket)
         try:
             await websocket.wait_closed()
@@ -146,7 +190,13 @@ class LoggingResource(AgentResource):
                 self._outputs.append(ConsoleLogOutput(level))
             elif otype in {"structured_file", "file"}:
                 path = out.get("path", "agent.log")
-                self._outputs.append(StructuredFileOutput(path, level))
+                max_size = _parse_size(out.get("max_size"))
+                backup_count = int(out.get("backup_count", 0))
+                self._outputs.append(
+                    StructuredFileOutput(
+                        path, level, max_size=max_size, backup_count=backup_count
+                    )
+                )
             elif otype in {"real_time_stream", "stream"}:
                 host = out.get("host", "127.0.0.1")
                 port = int(out.get("port", 0))
@@ -174,6 +224,7 @@ class LoggingResource(AgentResource):
         stage: Any | None = None,
         plugin_name: str | None = None,
         resource_name: str | None = None,
+        correlation_headers: Dict[str, Any] | None = None,
         **extra: Any,
     ) -> None:
         entry = {
@@ -186,6 +237,9 @@ class LoggingResource(AgentResource):
             "stage": str(stage) if stage is not None else None,
             "plugin_name": plugin_name,
             "resource_name": resource_name,
+            "hostname": socket.gethostname(),
+            "pid": os.getpid(),
+            "correlation_headers": correlation_headers,
         }
         if extra:
             entry.update(extra)
