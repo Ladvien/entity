@@ -1,9 +1,11 @@
 from contextlib import asynccontextmanager
+import asyncio
 
 from entity.resources import LLM, Memory, Storage, StandardResources
 from entity.resources import memory as memory_module
 from entity.resources.interfaces.database import DatabaseResource
 from entity.resources.interfaces.storage import StorageResource
+from entity.resources.interfaces.vector_store import VectorStoreResource
 
 
 class DummyConnection:
@@ -53,6 +55,7 @@ def test_standard_resources_types() -> None:
     memory_module.database = db
     memory_module.vector_store = None
     memory = Memory(config={})
+    asyncio.get_event_loop().run_until_complete(memory.initialize())
 
     res = StandardResources(
         memory=memory,

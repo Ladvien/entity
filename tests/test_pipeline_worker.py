@@ -42,7 +42,7 @@ class DummyConnection:
     def __init__(self, store: dict) -> None:
         self.store = store
 
-    async def execute(self, query: str, params: tuple) -> None:
+    def execute(self, query: str, params: tuple):
         if query.startswith("DELETE FROM conversation_history"):
             cid = params
             self.store["history"].pop(cid, None)
@@ -58,7 +58,7 @@ class DummyConnection:
             key, value = params
             self.store.setdefault("kv", {})[key] = json.loads(value)
 
-    async def fetch(self, query: str, params: tuple) -> list:
+    def fetch(self, query: str, params: tuple) -> list:
         if query.startswith(
             "SELECT role, content, metadata, timestamp FROM conversation_history"
         ):
@@ -85,6 +85,9 @@ class DummyDatabase(DatabaseResource):
     async def connection(self):
         yield DummyConnection(self.data)
 
+    def get_connection_pool(self):
+        return DummyConnection(self.data)
+
 
 class DummyRegistries:
     def __init__(self) -> None:
@@ -98,6 +101,7 @@ class DummyRegistries:
         self.resources = _Resources(memory=DummyMemory())
         self.tools = types.SimpleNamespace()
         self.validators = None
+        self.plugins = PluginRegistry()
 
 
 class DBRegistries:
@@ -111,9 +115,14 @@ class DBRegistries:
             async def __aexit__(self, exc_type, exc, tb):
                 return False
 
-        self.resources = _Resources(memory=Memory(database=db, config={}))
+        mem = Memory(config={})
+        mem.database = db
+        mem.vector_store = None
+        asyncio.get_event_loop().run_until_complete(mem.initialize())
+        self.resources = _Resources(memory=mem)
         self.tools = types.SimpleNamespace()
         self.validators = None
+        self.plugins = PluginRegistry()
 
 
 class ThoughtPlugin(Plugin):
