@@ -75,15 +75,10 @@ class ConsoleLogOutput(LogOutput):
 
 
 class StructuredFileOutput(LogOutput):
-    """Append structured logs to a JSON Lines file with rotation."""
+    """Append structured logs to a JSON Lines file with optional rotation."""
 
     def __init__(
-        self,
-        path: str,
-        level: int,
-        *,
-        max_size: int | None = None,
-        backup_count: int = 0,
+        self, path: str, level: int, max_size: int = 0, backup_count: int = 0
     ) -> None:
         super().__init__(level)
         self.path = Path(path)
@@ -93,20 +88,26 @@ class StructuredFileOutput(LogOutput):
         self._handle = self.path.open("a", encoding="utf-8")
         self._lock = asyncio.Lock()
 
+    def _should_rotate(self) -> bool:
+        if self.max_size <= 0:
+            return False
+        self._handle.flush()
+        return self.path.stat().st_size >= self.max_size
+
     def _rotate(self) -> None:
-        if self.max_size is None:
-            return
-        if self.path.stat().st_size < self.max_size:
-            return
         self._handle.close()
-        for i in range(self.backup_count - 1, 0, -1):
-            src = self.path.with_suffix(f".{i}")
-            dst = self.path.with_suffix(f".{i+1}")
-            if src.exists():
-                src.rename(dst)
-        backup = self.path.with_suffix(".1")
-        if self.path.exists():
-            self.path.rename(backup)
+        if self.backup_count > 0:
+            for i in range(self.backup_count - 1, 0, -1):
+                src = self.path.with_name(f"{self.path.name}.{i}")
+                dst = self.path.with_name(f"{self.path.name}.{i + 1}")
+                if src.exists():
+                    src.rename(dst)
+            rotate_target = self.path.with_name(f"{self.path.name}.1")
+            if self.path.exists():
+                self.path.rename(rotate_target)
+        else:
+            if self.path.exists():
+                self.path.unlink()
         self._handle = self.path.open("a", encoding="utf-8")
 
     async def write(self, entry: Dict[str, Any]) -> None:
@@ -114,6 +115,8 @@ class StructuredFileOutput(LogOutput):
             self._rotate()
             self._handle.write(json.dumps(entry) + "\n")
             self._handle.flush()
+            if self._should_rotate():
+                self._rotate()
 
     def close(self) -> None:
         self._handle.close()
@@ -172,6 +175,8 @@ class LoggingResource(AgentResource):
         super().__init__(config or {})
         self._outputs: List[LogOutput] = []
         self._stream_outputs: List[StreamLogOutput] = []
+        self.host_name = self.config.get("host_name", socket.gethostname())
+        self.process_id = self.config.get("process_id", os.getpid())
 
     @classmethod
     async def validate_config(cls, config: Dict[str, Any]) -> ValidationResult:
@@ -190,12 +195,10 @@ class LoggingResource(AgentResource):
                 self._outputs.append(ConsoleLogOutput(level))
             elif otype in {"structured_file", "file"}:
                 path = out.get("path", "agent.log")
-                max_size = _parse_size(out.get("max_size"))
+                max_size = int(out.get("max_size", 0))
                 backup_count = int(out.get("backup_count", 0))
                 self._outputs.append(
-                    StructuredFileOutput(
-                        path, level, max_size=max_size, backup_count=backup_count
-                    )
+                    StructuredFileOutput(path, level, max_size, backup_count)
                 )
             elif otype in {"real_time_stream", "stream"}:
                 host = out.get("host", "127.0.0.1")
@@ -237,9 +240,8 @@ class LoggingResource(AgentResource):
             "stage": str(stage) if stage is not None else None,
             "plugin_name": plugin_name,
             "resource_name": resource_name,
-            "hostname": socket.gethostname(),
-            "pid": os.getpid(),
-            "correlation_headers": correlation_headers,
+            "host": self.host_name,
+            "pid": self.process_id,
         }
         if extra:
             entry.update(extra)
