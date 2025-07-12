@@ -13,6 +13,8 @@ class _AgentAPI:
     tool = staticmethod(_decorators.tool)
     review = staticmethod(_decorators.review)
     output = staticmethod(_decorators.output)
+    prompt_plugin = staticmethod(_decorators.prompt_plugin)
+    tool_plugin = staticmethod(_decorators.tool_plugin)
 
 
 agent = _AgentAPI()

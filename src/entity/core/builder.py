@@ -118,6 +118,26 @@ class _AgentBuilder:
 
         return decorator(func) if func else decorator
 
+    def tool(
+        self,
+        func: Optional[Callable[..., Any]] = None,
+        **hints: Any,
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]] | Callable[..., Any]:
+        """Decorator registering ``func`` as a ``ToolPlugin``."""
+
+        hints["plugin_class"] = ToolPlugin
+        return self.plugin(func, **hints)
+
+    def prompt(
+        self,
+        func: Optional[Callable[..., Any]] = None,
+        **hints: Any,
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]] | Callable[..., Any]:
+        """Decorator registering ``func`` as a ``PromptPlugin``."""
+
+        hints["plugin_class"] = PromptPlugin
+        return self.plugin(func, **hints)
+
     # ---------------------------- discovery helpers ---------------------------
     @classmethod
     def from_directory(cls, directory: str) -> "_AgentBuilder":

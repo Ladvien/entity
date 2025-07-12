@@ -9,6 +9,7 @@ from pipeline.exceptions import PipelineError
 from pipeline.workflow import Pipeline
 
 from .builder import _AgentBuilder
+from .plugins import PromptPlugin, ToolPlugin
 from .registries import SystemRegistries
 from .runtime import AgentRuntime
 
@@ -47,6 +48,26 @@ class Agent:
         """Decorator for registering ``func`` as a plugin."""
 
         return self.builder.plugin(func, **hints)
+
+    def tool(
+        self,
+        func: Optional[Callable[..., Any]] = None,
+        **hints: Any,
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]] | Callable[..., Any]:
+        """Decorator registering ``func`` as a ``ToolPlugin``."""
+
+        hints["plugin_class"] = ToolPlugin
+        return self.plugin(func, **hints)
+
+    def prompt(
+        self,
+        func: Optional[Callable[..., Any]] = None,
+        **hints: Any,
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]] | Callable[..., Any]:
+        """Decorator registering ``func`` as a ``PromptPlugin``."""
+
+        hints["plugin_class"] = PromptPlugin
+        return self.plugin(func, **hints)
 
     def load_plugins_from_directory(
         self, directory: str
