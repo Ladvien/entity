@@ -14,6 +14,8 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install black isort flake8 mypy pydocstyle
+      - run: pip install .[dev]
+      - run: python docs/generate_config_docs.py --check
       - run: black --check src tests
       - run: isort --check-only src tests
       - run: flake8 src tests
