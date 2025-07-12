@@ -57,7 +57,9 @@ class PostgresInfrastructure(InfrastructurePlugin):
         """Return the underlying connection pool."""
         return self._pool
 
-    async def validate_runtime(self) -> ValidationResult:
+    async def validate_runtime(
+        self, breaker: CircuitBreaker | None = None
+    ) -> ValidationResult:
         """Check connectivity using a simple query."""
 
         if not hasattr(self._pool, "acquire"):
