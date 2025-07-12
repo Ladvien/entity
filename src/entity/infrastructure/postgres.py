@@ -20,9 +20,6 @@ class _DummyConn:
 async def _create_conn() -> _DummyConn:
     return _DummyConn()
 
-    def get_pool(self) -> "_DummyPool":
-        return self
-
 
 class PostgresInfrastructure(InfrastructurePlugin):
     """Minimal Postgres infrastructure stub used in tests."""
