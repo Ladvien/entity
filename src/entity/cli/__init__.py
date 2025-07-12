@@ -15,7 +15,6 @@ import yaml
 
 from entity.core.agent import Agent
 from entity.core.plugins import Plugin, ValidationResult
-from entity.core.agent import _AgentBuilder
 from entity.pipeline.config.config_update import update_plugin_configuration
 from entity.pipeline.exceptions import CircuitBreakerTripped
 from entity.pipeline.reliability import CircuitBreaker

@@ -4,7 +4,6 @@ from entity.resources.memory import Memory
 from entity.resources.logging import LoggingResource
 from entity.resources.llm import LLM
 from entity.resources.storage import Storage
-from entity.core.plugins import ValidationResult
 
 
 @pytest.mark.asyncio

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from typing import Any, Awaitable, Callable, Dict, List
+from typing import Any, Dict, List
 
 from entity.utils.logging import get_logger
 from entity.pipeline.utils import _normalize_stages
@@ -235,7 +235,7 @@ class ResourcePlugin(Plugin):
         try:
             result = await func()
             return result
-        except Exception as exc:
+        except Exception:
             success = False
             raise
         finally:
