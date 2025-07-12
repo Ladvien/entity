@@ -20,7 +20,7 @@ async def responder(ctx):
 
 
 async def main() -> None:
-    agent.builder.resource_registry.register("memory", Memory, {})
+    agent.register_resource("memory", Memory, {})
     response = await agent.handle("hello")
     print(response)
 
