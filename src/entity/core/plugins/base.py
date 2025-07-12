@@ -9,7 +9,7 @@ They offer a small, easy to understand surface for plugin authors.
 
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Type
+from typing import Any, Dict, List
 
 from entity.utils.logging import get_logger
 
@@ -73,11 +73,29 @@ class BasePlugin:
         return response
 
 
-class ResourcePlugin(BasePlugin):
+class Plugin(BasePlugin):
+    """Base plugin with simple lifecycle hooks."""
+
+    @classmethod
+    def validate_config(cls, config: Dict[str, Any]) -> "ValidationResult":
+        return ValidationResult.success_result()
+
+    @classmethod
+    def validate_dependencies(cls, deps: Dict[str, Any]) -> "ValidationResult":
+        return ValidationResult.success_result()
+
+    async def initialize(self) -> None:  # pragma: no cover - default no-op
+        return None
+
+    async def shutdown(self) -> None:  # pragma: no cover - default no-op
+        return None
+
+
+class ResourcePlugin(Plugin):
     """Infrastructure plugin providing persistent resources."""
 
 
-class ToolPlugin(BasePlugin):
+class ToolPlugin(Plugin):
     """Utility plugin executed via ``tool_use`` calls."""
 
     required_params: List[str] = []
@@ -92,19 +110,19 @@ class ToolPlugin(BasePlugin):
         return await self.execute_function(params)
 
 
-class PromptPlugin(BasePlugin):
+class PromptPlugin(Plugin):
     """Processing plugin typically run in ``THINK`` stage."""
 
     stages = [PipelineStage.THINK]
 
 
-class AdapterPlugin(BasePlugin):
+class AdapterPlugin(Plugin):
     """Input or output adapter plugin."""
 
     stages = [PipelineStage.PARSE, PipelineStage.DELIVER]
 
 
-class FailurePlugin(BasePlugin):
+class FailurePlugin(Plugin):
     """Error handling plugin for the ``ERROR`` stage."""
 
     stages = [PipelineStage.ERROR]
