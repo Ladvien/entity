@@ -28,7 +28,7 @@ class BasicLogger(FailurePlugin):
                         "plugin": info.plugin_name,
                         "error": info.error_message,
                         "type": info.error_type,
-                        "pipeline_id": context.pipeline_id,
+                        "pipeline_id": context.request_id,
                         "retry_count": getattr(
                             getattr(context, "_state", None), "iteration", 0
                         ),
