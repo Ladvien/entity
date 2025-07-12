@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from entity.core.plugins import ResourcePlugin, ValidationResult
+from entity.core.plugins import ValidationResult
 
 
 class PgVectorStore(VectorStoreResource):
@@ -23,7 +23,7 @@ class PgVectorStore(VectorStoreResource):
         self._db = self.database
 
     @classmethod
-    def validate_dependencies(cls, registry: Any) -> "ValidationResult":
+    async def validate_dependencies(cls, registry: Any) -> "ValidationResult":
         if not registry.has_plugin("database"):
             return ValidationResult.error_result(
                 "PgVectorStore requires the PostgresResource to be registered"

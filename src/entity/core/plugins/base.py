@@ -47,15 +47,25 @@ class Plugin:
         self.config_version = version
         self._config_history = self._config_history[:version]
 
+    async def initialize(self) -> None:
+        """Optional startup hook for plugins."""
+
+        return None
+
+    async def shutdown(self) -> None:
+        """Optional shutdown hook for plugins."""
+
+        return None
+
     # -----------------------------------------------------
     @classmethod
-    def validate_config(cls, config: Dict[str, Any]) -> "ValidationResult":
+    async def validate_config(cls, config: Dict[str, Any]) -> "ValidationResult":
         """Validate ``config`` and return ``ValidationResult``."""
 
         return ValidationResult.success_result()
 
     @classmethod
-    def validate_dependencies(cls, registry: Any) -> "ValidationResult":
+    async def validate_dependencies(cls, registry: Any) -> "ValidationResult":
         """Validate dependencies against ``registry``."""
 
         return ValidationResult.success_result()
@@ -111,7 +121,7 @@ class AgentResource(ResourcePlugin):
     """Layer 3 canonical or custom agent resource."""
 
 
-class ToolPlugin(BasePlugin):
+class ToolPlugin(Plugin):
     """Utility plugin executed via ``tool_use`` calls."""
 
     stages = [PipelineStage.DO]
@@ -127,13 +137,13 @@ class ToolPlugin(BasePlugin):
         return await self.execute_function(params)
 
 
-class PromptPlugin(BasePlugin):
+class PromptPlugin(Plugin):
     """Processing plugin typically run in ``THINK`` stage."""
 
     stages = [PipelineStage.THINK]
 
 
-class AdapterPlugin(BasePlugin):
+class AdapterPlugin(Plugin):
     """Input or output adapter plugin."""
 
     stages = [PipelineStage.INPUT, PipelineStage.OUTPUT]

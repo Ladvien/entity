@@ -218,5 +218,5 @@ class Memory(AgentResource):
         return Conversation(capabilities)
 
     @classmethod
-    def validate_config(cls, config: Dict) -> ValidationResult:  # noqa: D401
+    async def validate_config(cls, config: Dict) -> ValidationResult:  # noqa: D401
         return ValidationResult.success_result()

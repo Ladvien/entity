@@ -140,7 +140,9 @@ class PluginToolCLI:
         if not getattr(plugin_cls, "stages", None):
             logger.error("Plugin does not define stages")
             return 1
-        result = plugin_cls.validate_config(getattr(plugin_cls, "config", {}))
+        result = asyncio.run(
+            plugin_cls.validate_config(getattr(plugin_cls, "config", {}))
+        )
         if not isinstance(result, ValidationResult) or not result.success:
             logger.error("Config validation failed: %s", result.error_message)
             return 1
@@ -152,7 +154,7 @@ class PluginToolCLI:
             def list_plugins(self) -> list[str]:
                 return []
 
-        dep_result = plugin_cls.validate_dependencies(_DummyRegistry())
+        dep_result = asyncio.run(plugin_cls.validate_dependencies(_DummyRegistry()))
         if not isinstance(dep_result, ValidationResult) or not dep_result.success:
             logger.error("Dependency validation failed: %s", dep_result.error_message)
             return 1

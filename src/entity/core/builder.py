@@ -78,13 +78,13 @@ class _AgentBuilder:
             name = getattr(plugin, "name", plugin.__class__.__name__)
             raise TypeError(f"Plugin '{name}' must implement async '_execute_impl'")
 
-        result = plugin.__class__.validate_config(plugin.config)
+        result = asyncio.run(plugin.__class__.validate_config(plugin.config))
         if not result.success:
             raise SystemError(
                 f"Config validation failed for {plugin.__class__.__name__}: {result.message}"
             )
 
-        dep_result = plugin.__class__.validate_dependencies(self)
+        dep_result = asyncio.run(plugin.__class__.validate_dependencies(self))
         if not dep_result.success:
             raise SystemError(
                 f"Dependency validation failed for {plugin.__class__.__name__}: {dep_result.message}"
