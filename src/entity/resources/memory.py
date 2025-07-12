@@ -163,35 +163,42 @@ class Memory(AgentResource):
                 f"INSERT OR REPLACE INTO {self._kv_table} VALUES (?, ?)", rows
             )
 
-    async def store_persistent(self, key: str, value: Any) -> None:
-        """Persist ``value`` under ``key``."""
+    async def store_persistent(
+        self, key: str, value: Any, *, user_id: str | None = None
+    ) -> None:
+        """Persist ``value`` under ``key`` for ``user_id`` if provided."""
         if self._pool is None:
             return
+        namespaced = f"{user_id}:{key}" if user_id else key
         async with self.database.connection() as conn:
             conn.execute(
                 f"INSERT OR REPLACE INTO {self._kv_table} VALUES (?, ?)",
-                (key, json.dumps(value)),
+                (namespaced, json.dumps(value)),
             )
 
-    async def fetch_persistent(self, key: str, default: Any = None) -> Any:
-        """Retrieve a persisted value."""
+    async def fetch_persistent(
+        self, key: str, default: Any = None, *, user_id: str | None = None
+    ) -> Any:
+        """Retrieve a persisted value scoped by ``user_id`` when provided."""
         if self._pool is None:
             return default
+        namespaced = f"{user_id}:{key}" if user_id else key
         async with self.database.connection() as conn:
             row = conn.execute(
                 f"SELECT value FROM {self._kv_table} WHERE key = ?",
-                (key,),
+                (namespaced,),
             ).fetchone()
         return json.loads(row[0]) if row else default
 
-    async def delete_persistent(self, key: str) -> None:
-        """Remove ``key`` from persistent storage."""
+    async def delete_persistent(self, key: str, *, user_id: str | None = None) -> None:
+        """Remove ``key`` from persistent storage for ``user_id`` if set."""
         if self._pool is None:
             return
+        namespaced = f"{user_id}:{key}" if user_id else key
         async with self.database.connection() as conn:
             conn.execute(
                 f"DELETE FROM {self._kv_table} WHERE key = ?",
-                (key,),
+                (namespaced,),
             )
 
     async def add_conversation_entry(

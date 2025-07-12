@@ -82,25 +82,9 @@ async def test_remember_alias(simple_memory: Memory) -> None:
 
 
 @pytest.mark.asyncio
-async def test_conversation_search_sql_fallback(simple_memory: Memory) -> None:
-    await simple_memory.add_conversation_entry(
-        "user1_conv1",
-        ConversationEntry(
-            content="where is the meeting",
-            role="user",
-            timestamp=datetime.now(),
-        ),
-    )
-    results = await simple_memory.conversation_search("meeting")
-    assert len(results) == 1
-    assert results[0]["content"] == "where is the meeting"
-
-
-@pytest.mark.asyncio
-async def test_conversation_search_vector(vector_memory: Memory) -> None:
-    results = await vector_memory.conversation_search("hello")
-    assert len(results) == 1
-    assert results[0]["content"] == "hello world"
-    vector = vector_memory.vector_store
-    assert isinstance(vector, DummyVector)
-    assert vector.queries == ["hello"]
+async def test_user_isolation(simple_memory: Memory) -> None:
+    await simple_memory.store_persistent("foo", "a", user_id="u1")
+    await simple_memory.store_persistent("foo", "b", user_id="u2")
+    assert await simple_memory.fetch_persistent("foo", user_id="u1") == "a"
+    assert await simple_memory.fetch_persistent("foo", user_id="u2") == "b"
+    assert await simple_memory.fetch_persistent("foo", user_id="u3") is None

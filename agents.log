@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-21: ensure_ollama now auto-pulls model if none installed.
+AGENT NOTE - 2025-07-12: Added user_id key prefixing for persistent memory
 AGENT NOTE - 2025-07-12: Verified sandbox references removed and executed quality checks
 AGENT NOTE - 2025-07-12: Verified metrics_collector removal; file already absent
 AGENT NOTE - 2025-07-12: Removed sandbox infrastructure and unused plugins
