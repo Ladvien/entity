@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 import json
 import asyncio
 import types
@@ -149,6 +150,8 @@ class EchoPlugin(Plugin):
 @pytest.mark.asyncio
 async def test_conversation_id_generation():
     regs = DummyRegistries()
+    regs.plugins = PluginRegistry()
+    await regs.plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.OUTPUT)
     worker = PipelineWorker(regs)
     result = await worker.execute_pipeline("pipe1", "hello", user_id="u123")
 
