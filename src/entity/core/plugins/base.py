@@ -73,29 +73,29 @@ class BasePlugin:
         return response
 
 
-class InfrastructurePlugin(BasePlugin):
-    """Layer 1 infrastructure plugin with no dependencies."""
+class Plugin(BasePlugin):
+    """Base plugin with simple lifecycle hooks."""
 
-    stages: list = []
-    dependencies: list[str] = []
+    @classmethod
+    def validate_config(cls, config: Dict[str, Any]) -> "ValidationResult":
+        return ValidationResult.success_result()
 
+    @classmethod
+    def validate_dependencies(cls, deps: Dict[str, Any]) -> "ValidationResult":
+        return ValidationResult.success_result()
 
-class ResourcePlugin(BasePlugin):
-    """Layer 2 resource interface built from infrastructure plugins."""
+    async def initialize(self) -> None:  # pragma: no cover - default no-op
+        return None
 
-    infrastructure_dependencies: list[str] = []
-
-    def __init__(self, config: Dict[str, Any] | None = None) -> None:
-        super().__init__(config)
-        # mirror infrastructure dependencies for ResourceContainer
-        self.dependencies = list(self.infrastructure_dependencies)
-
-
-class AgentResource(ResourcePlugin):
-    """Layer 3 canonical resource composed from resource interfaces."""
+    async def shutdown(self) -> None:  # pragma: no cover - default no-op
+        return None
 
 
-class ToolPlugin(BasePlugin):
+class ResourcePlugin(Plugin):
+    """Infrastructure plugin providing persistent resources."""
+
+
+class ToolPlugin(Plugin):
     """Utility plugin executed via ``tool_use`` calls."""
 
     required_params: List[str] = []
@@ -110,19 +110,19 @@ class ToolPlugin(BasePlugin):
         return await self.execute_function(params)
 
 
-class PromptPlugin(BasePlugin):
+class PromptPlugin(Plugin):
     """Processing plugin typically run in ``THINK`` stage."""
 
     stages = [PipelineStage.THINK]
 
 
-class AdapterPlugin(BasePlugin):
+class AdapterPlugin(Plugin):
     """Input or output adapter plugin."""
 
     stages = [PipelineStage.INPUT, PipelineStage.OUTPUT]
 
 
-class FailurePlugin(BasePlugin):
+class FailurePlugin(Plugin):
     """Error handling plugin for the ``ERROR`` stage."""
 
     stages = [PipelineStage.ERROR]
