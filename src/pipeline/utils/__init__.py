@@ -2,68 +2,35 @@
 
 from entity.core.resources.container import DependencyGraph
 
-import logging
-from typing import Any, Callable, Iterable, Type
+from typing import Any, Iterable, List, Mapping, Type
+
+from pipeline.stages import PipelineStage
 
 
-def resolve_stages(
-    name: str,
-    *,
-    cfg_value: Any | None,
-    attr_stages: Iterable[Any],
-    explicit_attr: bool,
-    type_defaults: Iterable[Any],
-    ensure_stage: Callable[[Any], Any],
-    logger: logging.Logger | None = None,
-    auto_inferred: bool = False,
-    error_type: Type[Exception] = SystemError,
-) -> tuple[list[Any], bool]:
-    """Resolve final stages and whether they were explicit."""
+def _normalize_stages(stages: Any) -> List[PipelineStage]:
+    """Return a list of valid ``PipelineStage`` items."""
 
-    logger = logger or logging.getLogger(__name__)
-    attr_stages = [ensure_stage(s) for s in attr_stages]
-    type_defaults = [ensure_stage(s) for s in type_defaults]
-    stages: list[Any] = []
-    explicit = False
-    source = None
+    if isinstance(stages, Iterable) and not isinstance(stages, (str, PipelineStage)):
+        return [PipelineStage.ensure(s) for s in stages]
+    return [PipelineStage.ensure(stages)]
 
+
+def get_plugin_stages(
+    plugin_class: Type, config: Mapping[str, Any]
+) -> List[PipelineStage]:
+    """Return final stages for ``plugin_class`` following Decision #4."""
+
+    cfg_value = config.get("stages") or config.get("stage")
     if cfg_value is not None:
-        stages = cfg_value if isinstance(cfg_value, list) else [cfg_value]
-        stages = [ensure_stage(s) for s in stages]
-        explicit = True
-        source = "config"
-        if explicit_attr and set(stages) != set(attr_stages):
-            logger.warning(
-                "Plugin '%s' config stages %s override class stages %s",
-                name,
-                [str(s) for s in stages],
-                [str(s) for s in attr_stages],
-            )
-    elif explicit_attr:
-        stages = attr_stages
-        explicit = True
-        source = "class"
-    elif type_defaults:
-        stages = type_defaults
-    elif auto_inferred:
-        stages = attr_stages
+        return _normalize_stages(cfg_value)
 
-    if not stages:
-        stages = attr_stages or type_defaults
+    class_stages = getattr(plugin_class, "stages", None) or getattr(
+        plugin_class, "stage", None
+    )
+    if class_stages is not None:
+        return _normalize_stages(class_stages)
 
-    if explicit and type_defaults and set(stages) != set(type_defaults):
-        logger.warning(
-            "Plugin '%s' explicit %s stages %s override type defaults %s",
-            name,
-            source or "config",
-            [str(s) for s in stages],
-            [str(s) for s in type_defaults],
-        )
-
-    if not stages:
-        raise error_type(f"No stage specified for {name}")
-
-    return stages, explicit
+    return [PipelineStage.THINK]
 
 
-__all__ = ["DependencyGraph", "resolve_stages"]
+__all__ = ["DependencyGraph", "get_plugin_stages"]

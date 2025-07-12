@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Pipeline component: initializer."""
+
+from __future__ import annotations
 
 import tomllib
 from contextlib import asynccontextmanager
@@ -16,7 +16,7 @@ from entity.core.resources.container import ResourceContainer
 from entity.utils.logging import configure_logging, get_logger
 from entity.workflows.discovery import discover_workflows, register_module_workflows
 from pipeline.config import ConfigLoader
-from pipeline.utils import DependencyGraph, resolve_stages
+from pipeline.utils import DependencyGraph, get_plugin_stages
 from pipeline.reliability import CircuitBreaker
 from pipeline.exceptions import CircuitBreakerTripped
 
@@ -82,37 +82,18 @@ class ClassRegistry:
             if not issubclass(cls, (ResourcePlugin, ToolPlugin)):
                 yield cls, self._configs[name]
 
-    def _type_default_stages(self, cls: type[Plugin]) -> List[PipelineStage]:
-        """Return default stages for the given plugin class."""
-
-        from entity.core.plugins.base import AdapterPlugin, PromptPlugin
-
-        if issubclass(cls, ToolPlugin):
-            return [PipelineStage.DO]
-        if issubclass(cls, PromptPlugin):
-            return [PipelineStage.THINK]
-        if issubclass(cls, AdapterPlugin):
-            return [PipelineStage.INPUT, PipelineStage.OUTPUT]
-        return []
-
     def _resolve_plugin_stages(
         self, cls: type[Plugin], config: Dict
     ) -> tuple[List[PipelineStage], bool]:
         """Determine final stages and whether they were explicit."""
-        cfg_value = config.get("stages") or config.get("stage")
-        if cfg_value is not None:
-            stages = cfg_value if isinstance(cfg_value, list) else [cfg_value]
-            return [PipelineStage.ensure(s) for s in stages], True
 
-        class_stages = getattr(cls, "stages", [])
-        if class_stages:
-            return [PipelineStage.ensure(s) for s in class_stages], True
-
-        type_default = self._type_default_stages(cls)
-        if type_default:
-            return [PipelineStage.ensure(s) for s in type_default], False
-
-        return [PipelineStage.THINK], False
+        stages = get_plugin_stages(cls, config)
+        explicit = bool(
+            (config.get("stage") or config.get("stages"))
+            or getattr(cls, "stages", None)
+            or getattr(cls, "stage", None)
+        )
+        return stages, explicit
 
     def _validate_stage_assignment(
         self, name: str, cls: type[Plugin], config: Dict
@@ -307,41 +288,19 @@ class SystemInitializer:
                 continue
             register_module_workflows(module, self.workflows)
 
-    def _type_default_stages(self, cls: type[Plugin]) -> List[PipelineStage]:
-        """Return default stages for the given plugin class."""
-
-        from entity.core.plugins.base import AdapterPlugin, PromptPlugin
-
-        if issubclass(cls, ToolPlugin):
-            return [PipelineStage.DO]
-        if issubclass(cls, PromptPlugin):
-            return [PipelineStage.THINK]
-        if issubclass(cls, AdapterPlugin):
-            return [PipelineStage.INPUT, PipelineStage.OUTPUT]
-        return []
-
     def _resolve_plugin_stages(
         self, cls: type[Plugin], instance: Plugin, config: Dict
     ) -> tuple[List[PipelineStage], bool]:
         """Determine final stages and whether they were explicit."""
 
-        cfg_value = config.get("stages") or config.get("stage")
-
-        type_defaults = self._type_default_stages(cls)
-        if not (getattr(instance, "stages", None) or type_defaults):
-            type_defaults = [PipelineStage.THINK]
-
-        return resolve_stages(
-            cls.__name__,
-            cfg_value=cfg_value,
-            attr_stages=getattr(instance, "stages", []),
-            explicit_attr=getattr(instance, "_explicit_stages", False),
-            type_defaults=type_defaults,
-            ensure_stage=PipelineStage.ensure,
-            logger=logger,
-            auto_inferred=getattr(instance, "_auto_inferred_stages", False),
-            error_type=SystemError,
+        stages = get_plugin_stages(cls, config)
+        explicit = bool(
+            (config.get("stage") or config.get("stages"))
+            or getattr(instance, "_explicit_stages", False)
+            or getattr(cls, "stages", None)
+            or getattr(cls, "stage", None)
         )
+        return stages, explicit
 
     async def initialize(self):
         self._discover_plugins()
