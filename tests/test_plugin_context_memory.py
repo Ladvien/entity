@@ -33,9 +33,7 @@ class DuckDBResource(DatabaseResource):
 class DummyRegistries:
     def __init__(self, path: str) -> None:
         db = DuckDBResource(path)
-        mem = Memory(config={})
-        mem.database = db
-        mem.vector_store = None
+        mem = Memory(database=db, vector_store=None, config={})
         self.resources = {"memory": mem}
         self.tools = types.SimpleNamespace()
 
@@ -57,14 +55,12 @@ def test_memory_persists_between_instances() -> None:
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     db = DummyDatabase()
-    memory_module.database = db
-    memory_module.vector_store = None
-    mem1 = Memory(config={})
+    mem1 = Memory(database=db, vector_store=None, config={})
     mem1.set("foo", "bar")
     entry = ConversationEntry("hi", "user", datetime.now())
     loop.run_until_complete(mem1.save_conversation("cid", [entry]))
 
-    mem2 = Memory(config={})
+    mem2 = Memory(database=db, vector_store=None, config={})
     assert mem2.get("foo") == "bar"
     history = loop.run_until_complete(mem2.load_conversation("cid"))
     assert history == [entry]
@@ -74,14 +70,12 @@ def test_memory_persists_with_connection_pool() -> None:
     asyncio.set_event_loop(asyncio.new_event_loop())
     loop = asyncio.get_event_loop()
     pool = DummyPool()
-    memory_module.database = pool
-    memory_module.vector_store = None
-    mem1 = Memory(config={})
+    mem1 = Memory(database=pool, vector_store=None, config={})
     mem1.set("foo", "bar")
     entry = ConversationEntry("hi", "user", datetime.now())
     loop.run_until_complete(mem1.save_conversation("cid", [entry]))
 
-    mem2 = Memory(config={})
+    mem2 = Memory(database=pool, vector_store=None, config={})
     assert mem2.get("foo") == "bar"
     history = loop.run_until_complete(mem2.load_conversation("cid"))
     assert history == [entry]

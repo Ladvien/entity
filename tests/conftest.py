@@ -15,8 +15,7 @@ async def memory_db(tmp_path: Path) -> Memory:
         conn.execute(
             "CREATE TABLE IF NOT EXISTS conversation_history (conversation_id TEXT, role TEXT, content TEXT, metadata TEXT, timestamp TEXT)"
         )
-    mem = Memory(config={})
-    mem.database = db
+    mem = Memory(database=db, vector_store=None, config={})
     try:
         yield mem
     finally:

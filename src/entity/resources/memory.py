@@ -19,7 +19,6 @@ class Memory(AgentResource):
     """Persist conversations, key/value pairs and vectors."""
 
     name = "memory"
-    dependencies: list[str] = ["database", "vector_store"]
 
     def __init__(
         self,
@@ -28,8 +27,8 @@ class Memory(AgentResource):
         config: Dict[str, Any] | None = None,
     ) -> None:
         super().__init__(config or {})
-        self.database: DatabaseInterface | None = None
-        self.vector_store: VectorStoreInterface | None = None
+        self.database = database
+        self.vector_store = vector_store
         self._pool: Any | None = None
         self._kv_table = self.config.get("kv_table", "memory_kv")
         self._history_table = self.config.get("history_table", "conversation_history")
