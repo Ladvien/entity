@@ -1,6 +1,11 @@
 import pytest
 import yaml
-from entity.core.plugins import AgentResource, PromptPlugin
+from entity.core.plugins import (
+    AgentResource,
+    InfrastructurePlugin,
+    PromptPlugin,
+    ResourcePlugin,
+)
 from entity.core.stages import PipelineStage
 from entity.core.registry_validator import RegistryValidator
 from pipeline.initializer import ClassRegistry
@@ -74,6 +79,38 @@ class PostgresResource(AgentResource):
     stages: list = []
 
     async def _execute_impl(self, context):  # pragma: no cover - stub
+        pass
+
+
+class DBInterface(ResourcePlugin):
+    stages: list = []
+    infrastructure_dependencies = ["database"]
+
+    async def _execute_impl(self, context):
+        pass
+
+
+class InfraDatabase(InfrastructurePlugin):
+    infrastructure_type = "database"
+    stages: list = []
+
+    async def _execute_impl(self, context):
+        pass
+
+
+class BadPromptInterface(PromptPlugin):
+    stages = [PipelineStage.THINK]
+    dependencies = ["db_interface"]
+
+    async def _execute_impl(self, context):
+        pass
+
+
+class BadPromptInfra(PromptPlugin):
+    stages = [PipelineStage.THINK]
+    dependencies = ["infra_db"]
+
+    async def _execute_impl(self, context):
         pass
 
 
@@ -186,6 +223,32 @@ def test_memory_with_postgres(tmp_path):
     }
     path = _write_config(tmp_path, plugins)
     RegistryValidator(str(path)).run()
+
+
+def test_plugin_depends_on_interface(tmp_path):
+    plugins = {
+        "resources": {
+            "db_interface": {"type": "tests.test_registry_validator:DBInterface"}
+        },
+        "prompts": {
+            "bad": {"type": "tests.test_registry_validator:BadPromptInterface"}
+        },
+    }
+    path = _write_config(tmp_path, plugins)
+    with pytest.raises(SystemError, match="layer-3 or layer-4"):
+        RegistryValidator(str(path)).run()
+
+
+def test_plugin_depends_on_infrastructure(tmp_path):
+    plugins = {
+        "infrastructure": {
+            "infra_db": {"type": "tests.test_registry_validator:InfraDatabase"}
+        },
+        "prompts": {"bad": {"type": "tests.test_registry_validator:BadPromptInfra"}},
+    }
+    path = _write_config(tmp_path, plugins)
+    with pytest.raises(SystemError, match="layer-3 or layer-4"):
+        RegistryValidator(str(path)).run()
 
 
 def test_stage_override_warning():
