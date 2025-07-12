@@ -13,6 +13,8 @@ from .interfaces.vector_store import (
 )
 from ..core.resources.container import ResourcePool
 from ..core.plugins import ValidationResult
+from entity.config.models import MemoryConfig
+from pydantic import ValidationError
 from ..core.state import ConversationEntry
 from entity.pipeline.errors import InitializationError, ResourceInitializationError
 
@@ -125,6 +127,10 @@ class Memory(AgentResource):
     async def validate_config(
         cls, config: Dict[str, Any]
     ) -> ValidationResult:  # noqa: D401
+        try:
+            MemoryConfig.parse_obj(config)
+        except ValidationError as exc:
+            return ValidationResult.error_result(str(exc))
         return ValidationResult.success_result()
 
     # ------------------------------------------------------------------

@@ -76,6 +76,34 @@ class BreakerSettings(BaseModel):
     )
 
 
+class MemoryConfig(BaseModel):
+    """Configuration model for the :class:`~entity.resources.memory.Memory`."""
+
+    kv_table: str = "memory_kv"
+    history_table: str = "conversation_history"
+
+    class Config:
+        extra = "forbid"
+
+
+class LLMConfig(BaseModel):
+    """Configuration model for the :class:`~entity.resources.llm.LLM`."""
+
+    provider: str = "default"
+
+    class Config:
+        extra = "forbid"
+
+
+class StorageConfig(BaseModel):
+    """Configuration model for the :class:`~entity.resources.storage.Storage`."""
+
+    namespace: str = "default"
+
+    class Config:
+        extra = "forbid"
+
+
 class LogOutputConfig(BaseModel):
     """Configuration for a single logging output."""
 
@@ -129,6 +157,9 @@ __all__ = [
     "ToolRegistryConfig",
     "CircuitBreakerConfig",
     "BreakerSettings",
+    "MemoryConfig",
+    "LLMConfig",
+    "StorageConfig",
     "LogOutputConfig",
     "LoggingConfig",
     "EntityConfig",

@@ -11,6 +11,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from .base import AgentResource
+from entity.config.models import LoggingConfig
+from pydantic import ValidationError
+from entity.core.plugins import ValidationResult
 
 
 def _level(name: str) -> int:
@@ -125,6 +128,14 @@ class LoggingResource(AgentResource):
         super().__init__(config or {})
         self._outputs: List[LogOutput] = []
         self._stream_outputs: List[StreamLogOutput] = []
+
+    @classmethod
+    async def validate_config(cls, config: Dict[str, Any]) -> ValidationResult:
+        try:
+            LoggingConfig.parse_obj(config)
+        except ValidationError as exc:
+            return ValidationResult.error_result(str(exc))
+        return ValidationResult.success_result()
 
     async def initialize(self) -> None:
         outputs_cfg = self.config.get("outputs", [{"type": "console"}])

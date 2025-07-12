@@ -5,6 +5,8 @@ from __future__ import annotations
 from typing import Any, Dict
 
 from ..core.plugins import ValidationResult
+from entity.config.models import LLMConfig
+from pydantic import ValidationError
 
 from .base import AgentResource
 from .interfaces.llm import LLMResource
@@ -19,6 +21,14 @@ class LLM(AgentResource):
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
         self.provider: LLMResource | None = None
+
+    @classmethod
+    async def validate_config(cls, config: Dict[str, Any]) -> ValidationResult:
+        try:
+            LLMConfig.parse_obj(config)
+        except ValidationError as exc:
+            return ValidationResult.error_result(str(exc))
+        return ValidationResult.success_result()
 
     async def _execute_impl(self, context: Any) -> None:  # pragma: no cover - stub
         return None
