@@ -68,9 +68,8 @@ def import_plugin_class(path: str) -> Type:
         module = import_module(module_path)
     except ModuleNotFoundError:
         sys.path.insert(0, str(Path.cwd()))
-        module = sys.modules.get(module_path)
-        if module is None:
-            module = import_module(module_path)
+        sys.path.append(str(Path.cwd() / "src"))
+        module = import_module(module_path)
     return getattr(module, class_name)
 
 
