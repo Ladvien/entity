@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
+
 from entity.core.context import PluginContext
 from entity.core.state import PipelineState
 from entity.resources import Memory

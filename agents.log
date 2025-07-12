@@ -2,6 +2,8 @@ AGENT NOTE - 2025-07-12: Added Memory initialization test for missing database
 AGENT NOTE - 2025-07-13: Memory now persists to DuckDB and vector store
 AGENT NOTE - 2025-07-12: Removed ConversationHistory helper class
 
+AGENT NOTE - 2025-07-12: Documented optional dependencies marked with `?`
+
 AGENT NOTE - 2025-07-12: Simplified plugin analysis output
 
 AGENT NOTE - 2025-07-12: Added get_memory/get_storage helpers and updated docs
