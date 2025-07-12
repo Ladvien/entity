@@ -2,10 +2,8 @@
 
 Each subdirectory contains a small agent showcasing a different feature level.
 
-- **basic_agent** – echoes the user's message.
-- **intermediate_agent** – runs a chain-of-thought prompt with an echo LLM.
-- **advanced_agent** – demonstrates a ReAct loop with tool usage.
-- **zero_config_agent** – uses `@agent.tool` and `@agent.prompt` decorators.
+- **kitchen_sink** – demonstrates a ReAct loop with tool usage.
+- **default** – uses `@agent.tool` and `@agent.prompt` decorators.
 
 Run any example with:
 

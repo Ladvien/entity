@@ -1,4 +1,4 @@
-# Zero Config Agent
+# Default Agent
 
 This example uses the high level `Agent` API and the
 `@agent.tool` and `@agent.prompt` decorators to register plugins. The
@@ -8,5 +8,5 @@ the correct point in the pipeline.
 Run it with:
 
 ```bash
-poetry run python examples/zero_config_agent/main.py
+poetry run python examples/default/main.py
 ```
