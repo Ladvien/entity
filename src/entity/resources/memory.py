@@ -1,12 +1,10 @@
-"""Unified Memory resource."""
+"""Unified Memory resource without in-memory state."""
 
 from __future__ import annotations
 
-from math import sqrt
-from typing import Any, Dict, Iterable, List
 from datetime import datetime
+from typing import Any, Dict, List
 import json
-import inspect
 
 from .base import AgentResource
 from .interfaces.database import DatabaseResource as DatabaseInterface
@@ -15,87 +13,59 @@ from ..core.plugins import ValidationResult
 from ..core.state import ConversationEntry
 
 
-def _cosine_similarity(a: Iterable[float], b: Iterable[float]) -> float:
-    num = sum(x * y for x, y in zip(a, b))
-    denom_a = sqrt(sum(x * x for x in a))
-    denom_b = sqrt(sum(y * y for y in b))
-    if denom_a == 0 or denom_b == 0:
-        return 0.0
-    return num / (denom_a * denom_b)
-
-
-def _normalize_args(args: tuple[Any, ...]) -> Any:
-    if not args:
-        return ()
-    if len(args) == 1 and not isinstance(args[0], (list, tuple, dict)):
-        return (args[0],)
-    return args
-
-
-async def _exec(conn: Any, query: str, *args: Any) -> Any:
-    """Execute query supporting sync or async connections."""
-    fn = getattr(conn, "execute", None)
-    if fn is None:
-        return None
-    params = _normalize_args(args)
-    result = fn(query, params)
-    if inspect.isawaitable(result):
-        result = await result
-    return result
-
-
-async def _fetchall(conn: Any, query: str, *args: Any) -> List[Any]:
-    """Fetch all rows from the given query."""
-    params = _normalize_args(args)
-    if hasattr(conn, "fetch"):
-        result = conn.fetch(query, params)
-        if inspect.isawaitable(result):
-            result = await result
-        return list(result)
-    result = conn.execute(query, params)
-    if inspect.isawaitable(result):
-        result = await result
-    if hasattr(result, "fetchall"):
-        rows = result.fetchall()
-        if inspect.isawaitable(rows):
-            rows = await rows
-        return list(rows)
-    return []
-
-
 class Memory(AgentResource):
-    """Store key/value pairs, conversation history, and vectors."""
+    """Persist conversations, key/value pairs and vectors."""
 
     name = "memory"
     dependencies: list[str] = ["database", "vector_store"]
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
-        self._kv: Dict[str, Any] = {}
-        self._conversations: Dict[str, List[ConversationEntry]] = {}
-        self._vectors: Dict[str, List[float]] = {}
-        self.database = database
-        self.vector_store = vector_store
+        self.database: DatabaseInterface | None = None
+        self.vector_store: VectorStoreInterface | None = None
+        self._pool: Any | None = None
+        self._kv_table = self.config.get("kv_table", "memory_kv")
+        self._history_table = self.config.get("history_table", "conversation_history")
 
-    async def _execute_impl(self, context: Any) -> None:  # noqa: D401, ARG002
+    async def initialize(self) -> None:
+        if self.database is not None:
+            self._pool = self.database.get_connection_pool()
+            async with self.database.connection() as conn:
+                conn.execute(
+                    f"CREATE TABLE IF NOT EXISTS {self._kv_table} (key TEXT PRIMARY KEY, value TEXT)"
+                )
+                conn.execute(
+                    f"CREATE TABLE IF NOT EXISTS {self._history_table} ("
+                    "conversation_id TEXT, role TEXT, content TEXT, metadata TEXT, timestamp TEXT)"
+                )
+
+    async def _execute_impl(self, context: Any) -> None:  # pragma: no cover - stub
         return None
 
     # ------------------------------------------------------------------
     # Key-value helpers
     # ------------------------------------------------------------------
     def get(self, key: str, default: Any | None = None) -> Any:
-        """Return ``key`` from memory or ``default`` when missing."""
-        return self._kv.get(key, default)
+        if self._pool is None:
+            return default
+        row = self._pool.execute(
+            f"SELECT value FROM {self._kv_table} WHERE key = ?", (key,)
+        ).fetchone()
+        return json.loads(row[0]) if row else default
 
     def set(self, key: str, value: Any) -> None:
-        """Persist ``value`` for later retrieval."""
-        self._kv[key] = value
+        if self._pool is None:
+            return
+        self._pool.execute(
+            f"INSERT OR REPLACE INTO {self._kv_table} VALUES (?, ?)",
+            (key, json.dumps(value)),
+        )
 
-    # Backwards compatibility
     remember = set
 
     def clear(self) -> None:
-        self._kv.clear()
+        if self._pool is not None:
+            self._pool.execute(f"DELETE FROM {self._kv_table}")
 
     # ------------------------------------------------------------------
     # Conversation helpers
@@ -103,69 +73,56 @@ class Memory(AgentResource):
     async def save_conversation(
         self, conversation_id: str, history: List[ConversationEntry]
     ) -> None:
-        if self.database is not None:
-            table = self.database.config.get("history_table", "conversation_history")
-            async with self.database.connection() as conn:
-                await _exec(
-                    conn,
-                    f"DELETE FROM {table} WHERE conversation_id = ?",
+        if self._pool is None:
+            return
+        self._pool.execute(
+            f"DELETE FROM {self._history_table} WHERE conversation_id = ?",
+            (conversation_id,),
+        )
+        for entry in history:
+            self._pool.execute(
+                f"INSERT INTO {self._history_table} VALUES (?, ?, ?, ?, ?)",
+                (
                     conversation_id,
-                )
-                for entry in history:
-                    await _exec(
-                        conn,
-                        f"INSERT INTO {table} VALUES (?, ?, ?, ?, ?)",
-                        conversation_id,
-                        entry.role,
-                        entry.content,
-                        json.dumps(entry.metadata),
-                        entry.timestamp.isoformat(),
-                    )
-            return None
-        self._conversations[conversation_id] = list(history)
+                    entry.role,
+                    entry.content,
+                    json.dumps(entry.metadata),
+                    entry.timestamp.isoformat(),
+                ),
+            )
 
     async def load_conversation(self, conversation_id: str) -> List[ConversationEntry]:
-        if self.database is not None:
-            table = self.database.config.get("history_table", "conversation_history")
-            async with self.database.connection() as conn:
-                rows = await _fetchall(
-                    conn,
-                    f"SELECT role, content, metadata, timestamp FROM {table} WHERE conversation_id = ? ORDER BY timestamp",
-                    conversation_id,
+        if self._pool is None:
+            return []
+        rows = self._pool.execute(
+            f"SELECT role, content, metadata, timestamp FROM {self._history_table} "
+            "WHERE conversation_id = ? ORDER BY timestamp",
+            (conversation_id,),
+        ).fetchall()
+        result: List[ConversationEntry] = []
+        for row in rows:
+            metadata = json.loads(row[2]) if row[2] else {}
+            result.append(
+                ConversationEntry(
+                    content=row[1],
+                    role=row[0],
+                    timestamp=datetime.fromisoformat(row[3]),
+                    metadata=metadata,
                 )
-            result: List[ConversationEntry] = []
-            for row in rows:
-                role = row[0] if not isinstance(row, dict) else row["role"]
-                content = row[1] if not isinstance(row, dict) else row["content"]
-                metadata = (
-                    row[2] if not isinstance(row, dict) else row.get("metadata", {})
-                )
-                timestamp = row[3] if not isinstance(row, dict) else row["timestamp"]
-                if isinstance(timestamp, str):
-                    timestamp = datetime.fromisoformat(timestamp)
-                result.append(
-                    ConversationEntry(
-                        content=content,
-                        role=role,
-                        timestamp=timestamp,
-                        metadata=metadata,
-                    )
-                )
+            )
+        return result
 
     # ------------------------------------------------------------------
     # Vector helpers
     # ------------------------------------------------------------------
-    async def add_embedding(self, key: str, vector: List[float]) -> None:
-        self._vectors[key] = vector
+    async def add_embedding(self, text: str) -> None:
+        if self.vector_store is not None:
+            await self.vector_store.add_embedding(text)
 
-    async def search_similar(self, vector: List[float], k: int = 5) -> List[str]:
-        scores = {k_: _cosine_similarity(vector, v) for k_, v in self._vectors.items()}
-        return [
-            k
-            for k, _ in sorted(scores.items(), key=lambda item: item[1], reverse=True)[
-                :k
-            ]
-        ]
+    async def search_similar(self, text: str, k: int = 5) -> List[str]:
+        if self.vector_store is None:
+            return []
+        return await self.vector_store.query_similar(text, k)
 
     @classmethod
     async def validate_config(cls, config: Dict) -> ValidationResult:  # noqa: D401

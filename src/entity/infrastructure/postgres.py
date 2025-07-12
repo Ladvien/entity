@@ -24,6 +24,9 @@ class _DummyPool:
     async def close(self) -> None:  # pragma: no cover - placeholder
         return None
 
+    def get_pool(self) -> "_DummyPool":
+        return self
+
 
 class PostgresInfrastructure(InfrastructurePlugin):
     """Minimal Postgres infrastructure stub used in tests."""
@@ -54,6 +57,10 @@ class PostgresInfrastructure(InfrastructurePlugin):
             yield conn
         finally:
             await self._pool.release(conn)
+
+    def get_connection_pool(self) -> Any:
+        """Return the underlying connection pool."""
+        return self._pool
 
     async def validate_runtime(self) -> ValidationResult:
         """Check connectivity using a simple query."""
