@@ -92,22 +92,18 @@ See [`config/dev.yaml`](config/dev.yaml) for the complete example.
 
 ### Zero-Config Plugins
 
-Register a tool and prompt. The prompt plugin runs in the OUTPUT stage
-so any call to `ctx.say()` occurs at the correct point in the pipeline:
+Register a tool and output plugin using the default ``agent`` instance.
+The output plugin emits the final response:
 
 ```python
-from entity import Agent
-
-agent = Agent()
+from entity import agent
 
 @agent.tool
 async def add(a: int, b: int) -> int:
     return a + b
 
 
-from pipeline.stages import PipelineStage
-
-@agent.prompt(stage=PipelineStage.OUTPUT)
+@agent.output
 async def final(ctx):
     result = await ctx.tool_use("add", a=2, b=2)
     ctx.say(str(result))
@@ -120,3 +116,10 @@ This project uses `mise` for Python version management. The `.python-version` fi
 mise install
 ```
 
+
+## Examples
+
+The repository includes two sample agents:
+
+- [`examples/kitchen_sink`](examples/kitchen_sink) – a full-featured demo using several plugins.
+- [`examples/zero_config_agent`](examples/zero_config_agent) – minimal setup with the default agent.

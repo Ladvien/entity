@@ -1,9 +1,9 @@
 # Example Agents
 
-Each subdirectory contains a small agent showcasing a different feature level.
+Each subdirectory contains a small agent showcasing different features.
 
 - **kitchen_sink** – demonstrates a ReAct loop with tool usage.
-- **default_setup** – uses `@agent.tool` and `@agent.prompt` decorators.
+- **zero_config_agent** – uses `@agent.tool` and `@agent.output` decorators.
 
 Run any example with:
 

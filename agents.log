@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-12: Removed unused mc.sh and CLAUDE.md
+AGENT NOTE - 2025-07-12: Renamed advanced_agent to kitchen_sink and removed outdated examples
 AGENT NOTE - 2025-07-16: Revised built-in resource config validation and tests
 AGENT NOTE - 2025-07-12: Added infrastructure deps injection in ResourceContainer
 AGENT NOTE - 2025-07-14: Unified builder and runtime inside Agent
