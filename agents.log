@@ -1,4 +1,5 @@
-AGENT NOTE - 2025-07-12: Added generic ResourcePool and pooled LLM tests
+AGENT NOTE - 2025-07-12: Clarified plugin verification log message
+AGENT NOTE - 2025-07-12: Added Pydantic models for tool, adapter, and workflow settings
 AGENT NOTE - 2025-07-12: Verified metrics_collector removal; file already absent
 AGENT NOTE - 2025-07-12: Removed sandbox infrastructure and unused plugins
 AGENT NOTE - 2025-07-16: Revised built-in resource config validation and tests

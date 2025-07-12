@@ -36,6 +36,29 @@ class PluginsSection(BaseModel):
     prompts: Dict[str, PluginConfig] = Field(default_factory=dict)
 
 
+class RateLimitConfig(BaseModel):
+    """Request throttling settings for an adapter."""
+
+    requests: int = Field(ge=1, default=1)
+    interval: int = Field(ge=1, default=60)
+
+
+class AdapterSettings(BaseModel):
+    """Configuration for adapter plugins."""
+
+    stages: list[str] = Field(default_factory=list)
+    auth_tokens: list[str] = Field(default_factory=list)
+    rate_limit: RateLimitConfig | None = None
+    audit_log_path: str | None = None
+    dashboard: bool = False
+
+
+class WorkflowSettings(BaseModel):
+    """Mapping of pipeline stages to plugin names."""
+
+    stages: Dict[str, list[str]] = Field(default_factory=dict)
+
+
 class ServerConfig(BaseModel):
     host: str
     port: int
@@ -125,7 +148,7 @@ class EntityConfig(BaseModel):
         default_factory=lambda: ServerConfig(host="localhost", port=8000)
     )
     plugins: PluginsSection = Field(default_factory=PluginsSection)
-    workflow: Dict[str, list[str]] | None = Field(default=None)
+    workflow: WorkflowSettings | None = Field(default=None)
     tool_registry: ToolRegistryConfig = Field(default_factory=ToolRegistryConfig)
     runtime_validation_breaker: CircuitBreakerConfig = Field(
         default_factory=CircuitBreakerConfig
@@ -154,6 +177,8 @@ __all__ = [
     "EmbeddingModelConfig",
     "PluginsSection",
     "ServerConfig",
+    "RateLimitConfig",
+    "AdapterSettings",
     "ToolRegistryConfig",
     "CircuitBreakerConfig",
     "BreakerSettings",
@@ -162,6 +187,7 @@ __all__ = [
     "StorageConfig",
     "LogOutputConfig",
     "LoggingConfig",
+    "WorkflowSettings",
     "EntityConfig",
     "validate_config",
     "asdict",
