@@ -3,7 +3,7 @@
 Each subdirectory contains a small agent showcasing a different feature level.
 
 - **kitchen_sink** – demonstrates a ReAct loop with tool usage.
-- **default** – uses `@agent.tool` and `@agent.prompt` decorators.
+- **default_setup** – uses `@agent.tool` and `@agent.prompt` decorators.
 
 Run any example with:
 
