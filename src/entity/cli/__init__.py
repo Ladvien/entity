@@ -464,6 +464,11 @@ class EntityCLI:
     # -----------------------------------------------------
     async def _verify_plugins(self, config_path: str) -> int:
         async def _run() -> int:
+            if agent._runtime is None:
+                agent._runtime = await agent.builder.build_runtime()
+
+            if agent._runtime is None:
+                agent._runtime = await agent.builder.build_runtime()
             try:
                 agent = Agent(config_path)
                 await agent._ensure_runtime()
@@ -501,10 +506,10 @@ class EntityCLI:
                 tmp = Agent.from_config(agent.config_path)
                 agent._builder = tmp._builder
                 agent._runtime = tmp._runtime
-            else:
-                agent._runtime = agent.builder.build_runtime()
 
         async def _run() -> int:
+            if agent._runtime is None:
+                agent._runtime = await agent.builder.build_runtime()
 
             with open(file_path, "r", encoding="utf-8") as handle:
                 new_cfg = yaml.safe_load(handle) or {}

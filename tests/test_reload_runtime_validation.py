@@ -1,6 +1,7 @@
 import asyncio
 from pathlib import Path
 import yaml
+import pytest
 
 from entity.core.agent import Agent
 from entity.core.plugins import Plugin, ValidationResult
@@ -28,11 +29,12 @@ async def run_reload(cli: EntityCLI, agent: Agent, cfg_path: Path) -> int:
     return await loop.run_in_executor(None, cli._reload_config, agent, str(cfg_path))
 
 
-def test_reload_aborts_on_failed_runtime_validation(tmp_path):
+@pytest.mark.asyncio
+async def test_reload_aborts_on_failed_runtime_validation(tmp_path):
     agent = Agent()
     plugin = RuntimeCheckPlugin({"valid": True})
-    agent.builder.add_plugin(plugin)
-    agent._runtime = agent.builder.build_runtime()
+    await agent.builder.add_plugin(plugin)
+    agent._runtime = await agent.builder.build_runtime()
 
     # Ensure config updates do not call async validator
     RuntimeCheckPlugin.validate_config = classmethod(

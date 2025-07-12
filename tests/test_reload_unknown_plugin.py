@@ -1,4 +1,6 @@
+import asyncio
 import yaml
+import pytest
 from pathlib import Path
 
 from entity.core.agent import Agent
@@ -19,11 +21,12 @@ class SimplePlugin(Plugin):
         return ValidationResult(True, "")
 
 
-def test_reload_requires_restart_when_plugin_missing(tmp_path: Path) -> None:
+@pytest.mark.asyncio
+async def test_reload_requires_restart_when_plugin_missing(tmp_path: Path) -> None:
     agent = Agent()
     plugin = SimplePlugin({})
-    agent.builder.add_plugin(plugin)
-    agent._runtime = agent.builder.build_runtime()
+    await agent.builder.add_plugin(plugin)
+    agent._runtime = await agent.builder.build_runtime()
 
     cli = EntityCLI.__new__(EntityCLI)
     cfg = {"plugins": {"prompts": {"unknown": {}}}}
