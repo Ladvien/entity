@@ -20,7 +20,7 @@ class {class_name}(ResourcePlugin):
 
     @classmethod
     def validate_config(cls, config: dict) -> ValidationResult:
-        return ValidationResult.success()
+        return ValidationResult.success_result()
 
     async def initialize(self) -> None:
         pass
