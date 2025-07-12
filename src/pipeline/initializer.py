@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import tomllib
 from contextlib import asynccontextmanager
+import asyncio
+import inspect
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple, Type
 
@@ -411,6 +413,9 @@ class SystemInitializer:
             default_cfg = model.runtime_validation_breaker
             settings = model.breaker_settings
 
+            tasks: list[asyncio.Task[None]] = []
+            resources: list[tuple[str, CircuitBreaker]] = []
+
             for name, resource in resource_container._resources.items():
                 validate = getattr(resource, "validate_runtime", None)
                 if not callable(validate):
@@ -431,29 +436,40 @@ class SystemInitializer:
                     recovery_timeout=cfg.recovery_timeout,
                 )
 
-                async def _run_validation() -> None:
-                    result = await validate(breaker)
-                    if not result.success:
-                        raise RuntimeError(result.error_message)
+                async def _call_validation(
+                    validate=validate,
+                    breaker=breaker,
+                ) -> None:
+                    async def _run() -> None:
+                        if len(inspect.signature(validate).parameters) == 1:
+                            result = await validate(breaker)
+                        else:
+                            result = await validate()
+                        if not result.success:
+                            raise RuntimeError(result.message)
 
-                try:
-                    await breaker.call(_run_validation)
-                except CircuitBreakerTripped as exc:
-                    raise InitializationError(
-                        name,
-                        "runtime validation",
-                        "Failure threshold exceeded. Inspect resource configuration.",
-                        kind="Resource",
-                    ) from exc
-                except Exception as exc:
-                    logger.error("Runtime validation failed for %s: %s", name, exc)
-                    if breaker._failure_count >= breaker.failure_threshold:
+                    await breaker.call(_run)
+
+                tasks.append(asyncio.create_task(_call_validation()))
+                resources.append((name, breaker))
+
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+
+            for (name, breaker), result in zip(resources, results):
+                if isinstance(result, Exception):
+                    logger.error("Runtime validation failed for %s: %s", name, result)
+                    if (
+                        isinstance(result, CircuitBreakerTripped)
+                        or breaker._failure_count >= breaker.failure_threshold
+                    ):
                         raise InitializationError(
                             name,
                             "runtime validation",
                             "Failure threshold exceeded. Inspect resource configuration.",
                             kind="Resource",
-                        ) from exc
+                        ) from result
+                else:
+                    logger.info("Runtime validation succeeded for %s", name)
 
             # Phase 3.5: register tools
             tr_cfg = self.config.get("tool_registry", {})
