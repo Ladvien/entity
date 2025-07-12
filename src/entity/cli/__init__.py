@@ -100,12 +100,12 @@ class EntityCLI:
         create.add_argument("workflow_name")
         create.add_argument("--out", default="src/workflows")
         validate = wf_sub.add_parser(
-            "validate", help="Validate a workflow module or YAML config"
+            "validate", help="Validate a workflow module or YAML file"
         )
         validate.add_argument("file", help="Workflow .py or .yaml file")
         visualize = wf_sub.add_parser(
             "visualize",
-            help="Visualize workflow from module or YAML config",
+            help="Visualize workflow from module or YAML file",
         )
         visualize.add_argument("file", help="Workflow .py or .yaml file")
         visualize.add_argument(
@@ -407,15 +407,17 @@ class EntityCLI:
 
     def _load_workflow(self, path: str) -> Optional[dict]:
         p = Path(path)
-        if p.suffix in {".yaml", ".yml"}:
+        if p.suffix.lower() in {".yaml", ".yml"}:
             try:
                 data = yaml.safe_load(p.read_text()) or {}
             except Exception as exc:  # noqa: BLE001
                 logger.error("Cannot parse %s: %s", path, exc)
                 return None
+
             workflow = data.get("workflow")
             if isinstance(workflow, dict):
                 return workflow
+
             logger.error("No workflow mapping found in %s", path)
             return None
 
