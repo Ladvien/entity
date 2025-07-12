@@ -17,16 +17,12 @@ class DatabaseResource(ResourcePlugin):
         super().__init__(config or {})
 
     def get_connection_pool(self) -> ResourcePool:  # pragma: no cover - stub
-        """Return the shared connection pool from the infrastructure."""
+        """Return the connection pool provided by the database infrastructure."""
         infra = getattr(self, "database", None)
-        if infra is not None:
-            return infra.get_connection_pool()
-        return ResourcePool(lambda: None, PoolConfig())
+        if infra is None:
+            return ResourcePool(lambda: None, PoolConfig())
+        return infra.get_connection_pool()
 
     @asynccontextmanager
     async def connection(self) -> Iterator[Any]:  # pragma: no cover - stub
         yield None
-
-    def get_connection_pool(self) -> Any:  # pragma: no cover - stub
-        """Return the underlying connection or pool."""
-        return None
