@@ -97,10 +97,15 @@ class EntityCLI:
         create = wf_sub.add_parser("create", help="Create a workflow module")
         create.add_argument("workflow_name")
         create.add_argument("--out", default="src/workflows")
-        validate = wf_sub.add_parser("validate", help="Validate a workflow module")
-        validate.add_argument("file")
-        visualize = wf_sub.add_parser("visualize", help="Visualize workflow")
-        visualize.add_argument("file")
+        validate = wf_sub.add_parser(
+            "validate", help="Validate a workflow module or YAML config"
+        )
+        validate.add_argument("file", help="Workflow .py or .yaml file")
+        visualize = wf_sub.add_parser(
+            "visualize",
+            help="Visualize workflow from module or YAML config",
+        )
+        visualize.add_argument("file", help="Workflow .py or .yaml file")
         visualize.add_argument(
             "--format", dest="fmt", choices=["ascii", "graphviz"], default="ascii"
         )
@@ -391,7 +396,20 @@ class EntityCLI:
         return 0
 
     def _load_workflow(self, path: str) -> Optional[dict]:
-        spec = importlib.util.spec_from_file_location(Path(path).stem, path)
+        p = Path(path)
+        if p.suffix in {".yaml", ".yml"}:
+            try:
+                data = yaml.safe_load(p.read_text()) or {}
+            except Exception as exc:  # noqa: BLE001
+                logger.error("Cannot parse %s: %s", path, exc)
+                return None
+            workflow = data.get("workflow")
+            if isinstance(workflow, dict):
+                return workflow
+            logger.error("No workflow mapping found in %s", path)
+            return None
+
+        spec = importlib.util.spec_from_file_location(p.stem, path)
         if spec is None or spec.loader is None:
             logger.error("Cannot import %s", path)
             return None
