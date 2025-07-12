@@ -275,7 +275,7 @@ class PluginToolCLI:
                 ResourcePlugin,
             )
 
-        selections: list[tuple[str, Type[Plugin], list[PipelineStage]]] = []
+        selections: list[tuple[str, type, list]] = []
         found = False
         # Inspect async callables and classify them as plugins.
         # The reason indicates whether stages come from config hints or
