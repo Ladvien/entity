@@ -552,7 +552,7 @@ class SystemInitializer:
     def _ensure_canonical_resources(self, container: ResourceContainer) -> None:
         """Verify required canonical resources are registered."""
 
-        required = {"memory", "llm", "storage"}
+        required = {"memory", "llm", "storage", "logging"}
         registered = set(container._classes)
         missing = required - registered
         if missing:

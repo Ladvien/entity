@@ -8,6 +8,7 @@ The pipeline implementation now lives under the ``entity.pipeline`` package. Imp
 :maxdepth: 2
 :hidden:
 error_handling
+logging
 ```
 
 The following pages cover core concepts and usage patterns.

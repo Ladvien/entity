@@ -13,4 +13,5 @@ Run any example with:
 poetry run python examples/<name>/main.py
 ```
 
-The `PluginContext` in each example provides `get_llm()`, `get_memory()`, and `get_storage()` helpers for quick resource access.
+The `PluginContext` in each example provides `get_llm()`, `get_memory()`,
+`get_storage()`, and `get_resource("logging")` for unified logging access.

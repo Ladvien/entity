@@ -57,6 +57,22 @@ def test_initializer_fails_without_storage():
         asyncio.run(init.initialize())
 
 
+def test_initializer_fails_without_logging():
+    cfg = {
+        "plugins": {
+            "agent_resources": {
+                "memory": {"type": "entity.resources.memory:Memory"},
+                "llm": {"type": "entity.resources.llm:LLM"},
+                "storage": {"type": "entity.resources.storage:Storage"},
+            }
+        },
+        "workflow": {},
+    }
+    init = SystemInitializer(cfg)
+    with pytest.raises(InitializationError, match="logging"):
+        asyncio.run(init.initialize())
+
+
 def test_initializer_accepts_all_canonical_resources():
     cfg = {
         "plugins": {
@@ -64,6 +80,7 @@ def test_initializer_accepts_all_canonical_resources():
                 "memory": {"type": "entity.resources.memory:Memory"},
                 "llm": {"type": "entity.resources.llm:LLM"},
                 "storage": {"type": "entity.resources.storage:Storage"},
+                "logging": {"type": "entity.resources.logging:LoggingResource"},
             }
         },
         "workflow": {},
