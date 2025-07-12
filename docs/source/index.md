@@ -11,3 +11,33 @@ error_handling
 ```
 
 The following pages cover core concepts and usage patterns.
+
+## LoggingResource
+
+The `LoggingResource` provides structured logging across all pipeline components. It supports multiple outputs like console, JSON files, and real-time streams.
+
+```yaml
+plugins:
+  resources:
+    logging:
+      type: entity.resources.logging:LoggingResource
+      outputs:
+        - type: console
+          level: info
+        - type: structured_file
+          level: debug
+          path: logs/entity.jsonl
+```
+
+## MetricsCollectorResource
+
+`MetricsCollectorResource` collects performance and custom metrics from every plugin. The resource is automatically added if not specified.
+
+```yaml
+plugins:
+  resources:
+    metrics_collector:
+      type: entity.resources.metrics_collector:MetricsCollectorResource
+      retention_days: 90
+      buffer_size: 1000
+```

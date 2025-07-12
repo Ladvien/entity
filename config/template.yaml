@@ -18,6 +18,8 @@ plugins:
     database:
       type: entity.infrastructure.duckdb:DuckDBInfrastructure
       path: ./agent.duckdb
+    # metrics_collector:
+    #   type: entity.resources.metrics_collector:MetricsCollectorResource
     # llm:
     #   provider: ollama
     #   base_url: "${OLLAMA_BASE_URL}"
@@ -48,7 +50,7 @@ plugins:
     # cli:
     #   type: plugins.builtin.adapters.cli:CLIAdapter
     # logging:
-    #   type: plugins.builtin.adapters.logging:LoggingAdapter
+    #   type: entity.resources.logging:LoggingResource
   prompts:
     chain_of_thought:
       type: entity.plugins.prompts.chain_of_thought:ChainOfThoughtPrompt
