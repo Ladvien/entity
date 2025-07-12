@@ -181,13 +181,11 @@ def test_complex_prompt_requires_vector_store(tmp_path):
 
 def test_complex_prompt_with_vector_store(tmp_path):
     plugins = {
-        "resources": {
-            "memory": {
-                "type": "entity.resources.memory:Memory",
-                "vector_store": {
-                    "type": "tests.test_registry_validator:VectorStoreResource"
-                },
-            }
+        "agent_resources": {
+            "memory": {"type": "entity.resources.memory:Memory"},
+            "vector_store": {
+                "type": "tests.test_registry_validator:VectorStoreResource"
+            },
         },
         "prompts": {
             "complex_prompt": {"type": "tests.test_registry_validator:ComplexPrompt"}
@@ -200,12 +198,10 @@ def test_complex_prompt_with_vector_store(tmp_path):
 
 def test_memory_requires_postgres(tmp_path):
     plugins = {
-        "resources": {
-            "memory": {
-                "type": "entity.resources.memory:Memory",
-                "vector_store": {
-                    "type": "plugins.builtin.resources.pg_vector_store:PgVectorStore"
-                },
+        "agent_resources": {
+            "memory": {"type": "entity.resources.memory:Memory"},
+            "vector_store": {
+                "type": "plugins.builtin.resources.pg_vector_store:PgVectorStore"
             },
             "database": {"type": "tests.test_registry_validator:A"},
         }
@@ -217,12 +213,10 @@ def test_memory_requires_postgres(tmp_path):
 
 def test_memory_with_postgres(tmp_path):
     plugins = {
-        "resources": {
-            "memory": {
-                "type": "entity.resources.memory:Memory",
-                "vector_store": {
-                    "type": "plugins.builtin.resources.pg_vector_store:PgVectorStore"
-                },
+        "agent_resources": {
+            "memory": {"type": "entity.resources.memory:Memory"},
+            "vector_store": {
+                "type": "plugins.builtin.resources.pg_vector_store:PgVectorStore"
             },
             "database": {"type": "tests.test_registry_validator:PostgresResource"},
         },
