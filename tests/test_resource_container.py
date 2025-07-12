@@ -4,11 +4,13 @@ import pytest
 from entity.core.resources.container import ResourceContainer
 from entity.pipeline.errors import InitializationError
 from entity.core.plugins import InfrastructurePlugin, ResourcePlugin, AgentResource
+from entity.resources.logging import LoggingResource
 
 
 class InfraPlugin(InfrastructurePlugin):
     infrastructure_type = "infra"
     stages: list = []
+    dependencies: list = []
 
     def __init__(self, config=None):
         super().__init__(config or {})
@@ -25,6 +27,7 @@ class InfraPlugin(InfrastructurePlugin):
 class InterfacePlugin(ResourcePlugin):
     infrastructure_dependencies = ["infra"]
     stages: list = []
+    dependencies: list = []
 
     def __init__(self, config=None):
         super().__init__(config or {})
@@ -50,6 +53,13 @@ class CanonicalResource(AgentResource):
 
     async def shutdown(self) -> None:
         self.closed = True
+
+
+InfraPlugin.dependencies = []
+InterfacePlugin.dependencies = []
+CanonicalResource.dependencies = ["iface"]
+
+LoggingResource.dependencies = []
 
 
 @pytest.mark.asyncio
@@ -81,6 +91,8 @@ def test_layer_violation():
         dependencies = ["infra"]
         stages: list = []
 
+    BadResource.dependencies = ["infra"]
+
     container = ResourceContainer()
     container.register("infra", InfraPlugin, {}, layer=1)
     container.register("bad", BadResource, {}, layer=3)
@@ -92,6 +104,9 @@ def test_layer_violation():
 def test_missing_interface_dependencies():
     class BadInterface(ResourcePlugin):
         stages: list = []
+        dependencies: list = []
+
+    BadInterface.dependencies = []
 
     container = ResourceContainer()
     container.register("infra", InfraPlugin, {}, layer=1)
@@ -104,6 +119,9 @@ def test_missing_interface_dependencies():
 def test_missing_infrastructure_type():
     class BadInfra(InfrastructurePlugin):
         stages: list = []
+        dependencies: list = []
+
+    BadInfra.dependencies = []
 
     container = ResourceContainer()
     container.register("bad", BadInfra, {}, layer=1)
