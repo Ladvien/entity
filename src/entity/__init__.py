@@ -6,6 +6,9 @@ from .core.agent import Agent
 from .infrastructure import DuckDBInfrastructure
 from .resources import LLM, Memory, Storage
 from plugins.builtin.resources.ollama_llm import OllamaLLMResource
+from plugins.builtin.resources.duckdb_resource import (  # noqa: F401
+    DuckDBResource,
+)
 from .core.stages import PipelineStage
 from .core.plugins import PromptPlugin, ToolPlugin
 from .utils.setup_manager import Layer0SetupManager
@@ -129,7 +132,7 @@ def __getattr__(name: str):
 
         return _core
     if name == "AgentBuilder":
-        from .core.builder import _AgentBuilder
+        from .core.agent import _AgentBuilder
 
         return _AgentBuilder
     raise AttributeError(name)

@@ -3,6 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Iterable, Mapping, Optional, TYPE_CHECKING
 
+from typing import TYPE_CHECKING
+
+from entity.core.agent import _AgentBuilder
 
 if TYPE_CHECKING:
     from entity.core.agent import AgentRuntime, _AgentBuilder
