@@ -12,8 +12,7 @@ from plugins.builtin.resources.duckdb_database import DuckDBDatabaseResource
 def test_memory_persists_through_database(tmp_path):
     async def run():
         db = DuckDBDatabaseResource({"path": str(tmp_path / "mem.db")})
-        memory = Memory()
-        memory.database = db
+        memory = Memory(database=db)
         await db.initialize()
         async with db.connection() as conn:
             conn.execute(

@@ -10,6 +10,8 @@ import inspect
 
 from entity.core.registries import SystemRegistries
 from pipeline.pipeline import execute_pipeline
+from plugins.builtin.resources.database_resource import DatabaseResource
+from plugins.builtin.resources.vector_store_resource import VectorStoreResource
 
 from .base import AgentResource
 from ..core.plugins import ValidationResult
@@ -99,14 +101,19 @@ class Memory(AgentResource):
     name = "memory"
     dependencies: list[str] = []
 
-    def __init__(self, config: Dict | None = None) -> None:
+    def __init__(
+        self,
+        database: DatabaseResource | None = None,
+        vector_store: VectorStoreResource | None = None,
+        config: Dict | None = None,
+    ) -> None:
         super().__init__(config or {})
         self._kv: Dict[str, Any] = {}
         self._conversations: Dict[str, List[ConversationEntry]] = {}
         self._vectors: Dict[str, List[float]] = {}
         self._history = ConversationHistory(self._conversations)
-        self.database: Any | None = None
-        self.vector_store: Any | None = None
+        self.database = database
+        self.vector_store = vector_store
 
     async def _execute_impl(self, context: Any) -> None:  # noqa: D401, ARG002
         return None
