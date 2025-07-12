@@ -191,7 +191,7 @@ class SystemInitializer:
         resources_cfg = plugins_cfg.setdefault("resources", {})
         resources_cfg.setdefault(
             "metrics_collector",
-            {"type": "entity.resources.metrics_collector:MetricsCollectorResource"},
+            {"type": "entity.resources.metrics:MetricsCollectorResource"},
         )
 
     @classmethod
