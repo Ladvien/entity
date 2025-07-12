@@ -11,9 +11,9 @@ from entity.resources.interfaces.vector_store import VectorStoreResource
 
 class DummyConnection:
     async def execute(
-        self, query: str, params: tuple
+        self, query: str, params: tuple | None = None
     ) -> None:  # pragma: no cover - stub
-        pass
+        return None
 
     async def fetch(self, query: str, params: tuple) -> list:  # pragma: no cover - stub
         return []
@@ -37,12 +37,6 @@ class DummyBackend(StorageResource):
         return []
 
 
-class DummyDB(DatabaseResource):
-    @asynccontextmanager
-    async def connection(self):
-        yield _DBConn()
-
-
 class DummyVector(VectorStoreResource):
     async def add_embedding(self, text: str) -> None:
         return None
@@ -59,11 +53,15 @@ class DummyLLMProvider(LLMResource):
 def test_standard_resources_types() -> None:
     db = DummyDatabase()
     memory = Memory(config={})
+    memory.database = db
+    memory.vector_store = DummyVector()
     asyncio.get_event_loop().run_until_complete(memory.initialize())
 
+    llm = LLM(config={})
+    llm.provider = DummyLLMProvider({})
     res = StandardResources(
         memory=memory,
-        llm=LLM(config={}),
+        llm=llm,
         storage=Storage(config={}),
     )
     assert isinstance(res.memory, Memory)
