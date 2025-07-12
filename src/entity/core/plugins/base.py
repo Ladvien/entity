@@ -21,8 +21,8 @@ class ToolExecutionError(Exception):
     """Raised when a tool fails during execution."""
 
 
-class Plugin:
-    """Foundation for all plugins."""
+class BasePlugin:
+    """Lightweight plugin foundation."""
 
     stages: List[PipelineStage]
     dependencies: List[str] = []
@@ -48,50 +48,10 @@ class Plugin:
         self.config_version = version
         self._config_history = self._config_history[:version]
 
-    async def initialize(self) -> None:
-        """Optional startup hook for plugins."""
-
-        return None
-
-    async def shutdown(self) -> None:
-        """Optional shutdown hook for plugins."""
-
-        return None
-
-    # -----------------------------------------------------
-    @classmethod
-    async def validate_config(cls, config: Dict[str, Any]) -> "ValidationResult":
-        """Validate ``config`` and return ``ValidationResult``."""
-
-        return ValidationResult.success_result()
-
-    @classmethod
-    async def validate_dependencies(cls, registry: Any) -> "ValidationResult":
-        """Validate dependencies against ``registry``."""
-
-        return ValidationResult.success_result()
-
     async def validate_runtime(self) -> "ValidationResult":
         """Validate the runtime environment for the plugin."""
 
         return ValidationResult.success_result()
-
-    async def initialize(self) -> None:
-        """Initialize the plugin instance."""
-
-        return None
-
-    async def shutdown(self) -> None:
-        """Shut down the plugin instance."""
-
-        return None
-
-    async def execute(self, context: Any) -> Any:
-        return await self._execute_impl(context)
-
-    async def _execute_impl(self, context: Any) -> Any:
-        """Execute plugin logic in the pipeline."""
-        raise NotImplementedError
 
     async def call_llm(self, context: Any, prompt: str, purpose: str = "") -> Any:
         start = time.perf_counter()
@@ -111,11 +71,38 @@ class Plugin:
         )
         return response
 
+    async def _execute_impl(self, context: Any) -> Any:
+        """Execute plugin logic in the pipeline."""
+        raise NotImplementedError
 
-class BasePlugin(Plugin):
-    """Backward compatibility alias for :class:`Plugin`."""
 
-    pass
+class Plugin(BasePlugin):
+    """Base plugin implementation with default behaviors."""
+
+    @classmethod
+    async def validate_config(cls, config: Dict[str, Any]) -> "ValidationResult":
+        """Validate ``config`` and return ``ValidationResult``."""
+
+        return ValidationResult.success_result()
+
+    @classmethod
+    async def validate_dependencies(cls, registry: Any) -> "ValidationResult":
+        """Validate dependencies against ``registry``."""
+
+        return ValidationResult.success_result()
+
+    async def initialize(self) -> None:
+        """Optional startup hook for plugins."""
+
+        return None
+
+    async def shutdown(self) -> None:
+        """Optional shutdown hook for plugins."""
+
+        return None
+
+    async def execute(self, context: Any) -> Any:
+        return await self._execute_impl(context)
 
 
 class InfrastructurePlugin(Plugin):
