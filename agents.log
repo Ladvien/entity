@@ -1,4 +1,5 @@
-AGENT NOTE - 2025-07-12: Renamed advanced_agent to kitchen_sink and removed outdated examples
+AGENT NOTE - 2025-07-12: Removed sandbox infrastructure code
+AGENT NOTE - 2025-07-17: Pipeline workflow imports _AgentBuilder from agent to avoid deprecated builder
 AGENT NOTE - 2025-07-16: Revised built-in resource config validation and tests
 AGENT NOTE - 2025-07-12: Added infrastructure deps injection in ResourceContainer
 AGENT NOTE - 2025-07-14: Unified builder and runtime inside Agent
