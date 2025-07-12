@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-12: Revised execute_pipeline context manager check
 AGENT NOTE - 2025-07-14: Unified builder and runtime inside Agent
 AGENT NOTE - 2025-07-13: Consolidated pipeline under entity.pipeline
 AGENT NOTE - 2025-07-12: Added restart check for unknown plugins in CLI reload
