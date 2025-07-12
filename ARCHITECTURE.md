@@ -484,6 +484,7 @@ class PipelineWorker:
         await memory.save_conversation(pipeline_id, state.conversation)
         return result
 ```
+Implemented in `src/entity/worker/pipeline_worker.py`.
 
 **Resource Implementation**:
 ```python
