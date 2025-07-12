@@ -3195,3 +3195,10 @@ Future Features List
 - https://github.com/facebookresearch/sweet_rl
 - https://github.com/ryoungj/ToolEmu
 - https://github.com/HowieHwong/MetaTool
+
+## Agent Coordination
+- https://github.com/SakanaAI
+- https://github.com/SakanaAI/evolutionary-model-merge
+
+## SOTA and Innovations
+- https://github.com/HazyResearch/minions
