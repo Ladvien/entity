@@ -58,6 +58,9 @@ class PostgresInfrastructure(InfrastructurePlugin):
     async def validate_runtime(self) -> ValidationResult:
         """Check connectivity using a simple query."""
 
+        if not hasattr(self._pool, "acquire"):
+            return ValidationResult.error_result("connection pool unavailable")
+
         async def _query() -> None:
             async with self.connection() as conn:
                 await conn.execute("SELECT 1")

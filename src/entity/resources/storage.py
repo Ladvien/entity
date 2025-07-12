@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
+from ..core.plugins import ValidationResult
+
 from .interfaces.storage import StorageResource as StorageBackend
 
 from .base import AgentResource
@@ -27,3 +29,11 @@ class Storage(AgentResource):
 
     def set(self, key: str, value: Any) -> None:
         self.backend.set(key, value)
+
+    async def validate_runtime(self) -> ValidationResult:
+        """Check backend availability."""
+        if hasattr(self.backend, "validate_runtime"):
+            result = await self.backend.validate_runtime()
+            if not result.success:
+                return ValidationResult.error_result(f"backend: {result.message}")
+        return ValidationResult.success_result()

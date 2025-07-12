@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, List
 
-from entity.core.plugins import ResourcePlugin
+from entity.core.plugins import ResourcePlugin, ValidationResult
 
 
 class VectorStoreResource(ResourcePlugin):
@@ -20,3 +20,11 @@ class VectorStoreResource(ResourcePlugin):
         self, query: str, k: int = 5
     ) -> List[str]:  # pragma: no cover - stub
         return []
+
+    async def validate_runtime(self) -> ValidationResult:
+        """Ensure the vector store can handle simple queries."""
+        try:
+            await self.query_similar("ping", k=1)
+        except Exception as exc:  # noqa: BLE001
+            return ValidationResult.error_result(str(exc))
+        return ValidationResult.success_result()

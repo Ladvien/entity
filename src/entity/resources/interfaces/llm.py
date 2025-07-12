@@ -3,7 +3,7 @@ from __future__ import annotations
 from html import escape
 from typing import Any, Dict
 
-from entity.core.plugins import ResourcePlugin
+from entity.core.plugins import ResourcePlugin, ValidationResult
 from entity.core.state import LLMResponse
 
 
@@ -29,3 +29,11 @@ class LLMResource(ResourcePlugin):
             prompt = escape(prompt)
         result = await self.generate(prompt)
         return getattr(result, "content", str(result))
+
+    async def validate_runtime(self) -> ValidationResult:
+        """Validate that the LLM backend is reachable."""
+        try:
+            await self.generate("ping")
+        except Exception as exc:  # noqa: BLE001
+            return ValidationResult.error_result(str(exc))
+        return ValidationResult.success_result()

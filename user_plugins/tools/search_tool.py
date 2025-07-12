@@ -5,7 +5,7 @@ from typing import Any, Dict
 import httpx
 from pydantic import BaseModel
 
-from entity.core.plugins import ToolPlugin
+from entity.core.plugins import ToolPlugin, ValidationResult
 from pipeline.stages import PipelineStage
 from entity.core.validation.input import validate_params
 
@@ -53,3 +53,15 @@ class SearchTool(ToolPlugin):
 
     async def execute(self, params: Dict[str, Any]) -> Any:  # type: ignore[override]
         return await self.execute_function(params)
+
+    async def validate_runtime(self) -> ValidationResult:
+        """Check that the DuckDuckGo API is reachable."""
+        try:
+            async with httpx.AsyncClient(timeout=5) as client:
+                await client.get(
+                    "https://api.duckduckgo.com/",
+                    params={"q": "ping", "format": "json"},
+                )
+        except httpx.HTTPError as exc:  # pragma: no cover - network failure
+            return ValidationResult.error_result(str(exc))
+        return ValidationResult.success_result()
