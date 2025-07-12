@@ -77,6 +77,16 @@ Any structural change—adding or removing plugins, modifying stage assignments,
 changing dependencies—requires restarting the agent. This keeps hot reloads fast
 for tunable values while preventing inconsistent pipeline state.
 
+### Configuration Validation
+
+Validate a YAML file without launching the agent:
+
+```bash
+poetry run entity-cli validate --config config/dev.yaml
+```
+
+`SystemInitializer` loads all plugins and exits with a non-zero code on errors.
+
 
 ### Runtime Reconfiguration and Rollback
 

@@ -75,6 +75,7 @@ class EntityCLI:
         sub.add_parser("run", help="Start the agent")
         sub.add_parser("serve-websocket", help="Start the agent via WebSocket")
         sub.add_parser("verify", help="Load plugins and exit")
+        sub.add_parser("validate", help="Validate configuration and exit")
         search = sub.add_parser("search-plugin", help="Search the plugin marketplace")
         search.add_argument("name")
         replay = sub.add_parser("replay-log", help="Replay a state log file")
@@ -168,6 +169,9 @@ class EntityCLI:
         if cmd == "verify":
             assert self.args.config is not None
             return self._verify_plugins(self.args.config)
+        if cmd == "validate":
+            assert self.args.config is not None
+            return self._validate_config(self.args.config)
         if cmd == "search-plugin":
             assert self.args.name is not None
             return self._search_plugin(self.args.name)
@@ -434,6 +438,24 @@ class EntityCLI:
                 logger.error("Plugin loading failed: %s", exc)
                 return 1
             logger.info("All plugins loaded successfully")
+            return 0
+
+        return asyncio.run(_run())
+
+    def _validate_config(self, config_path: str) -> int:
+        async def _run() -> int:
+            from pipeline import SystemInitializer
+            import yaml
+            from pathlib import Path
+
+            try:
+                data = yaml.safe_load(Path(config_path).read_text()) or {}
+                initializer = SystemInitializer(data)
+                await initializer.initialize()
+            except Exception as exc:  # noqa: BLE001
+                logger.error("Validation failed: %s", exc)
+                return 1
+            logger.info("Validation succeeded")
             return 0
 
         return asyncio.run(_run())
