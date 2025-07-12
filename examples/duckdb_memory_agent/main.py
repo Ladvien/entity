@@ -91,7 +91,7 @@ class DuckDBMemory(ResourcePlugin):
 class IncrementPrompt(PromptPlugin):
     """Increment a counter stored in memory."""
 
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
     dependencies = ["memory"]
 
     async def _execute_impl(self, context: PluginContext) -> None:
@@ -108,7 +108,7 @@ async def main() -> None:
 
     plugins = PluginRegistry()
     await plugins.register_plugin_for_stage(
-        IncrementPrompt({}), PipelineStage.DELIVER, "increment"
+        IncrementPrompt({}), PipelineStage.OUTPUT, "increment"
     )
 
     caps = SystemRegistries(resources=resources, tools=ToolRegistry(), plugins=plugins)

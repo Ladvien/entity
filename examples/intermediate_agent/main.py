@@ -40,7 +40,7 @@ class ChainOfThoughtPrompt(PromptPlugin):
 class FinalResponder(PromptPlugin):
     """Send the last assistant message as the response."""
 
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context: PluginContext) -> None:
         assistant_messages = [
@@ -64,7 +64,7 @@ async def main() -> None:
         ChainOfThoughtPrompt({"max_steps": 1}), PipelineStage.THINK, "cot"
     )
     await plugins.register_plugin_for_stage(
-        FinalResponder(), PipelineStage.DELIVER, "final"
+        FinalResponder(), PipelineStage.OUTPUT, "final"
     )
 
     caps = SystemRegistries(resources=resources, tools=ToolRegistry(), plugins=plugins)

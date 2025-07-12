@@ -23,7 +23,7 @@ from pipeline.state import ConversationEntry, PipelineState
 class EchoPrompt(PromptPlugin):
     """Return the last user message."""
 
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context: PluginContext) -> None:
         last_message = ""
@@ -36,7 +36,7 @@ class EchoPrompt(PromptPlugin):
 
 async def main() -> None:
     plugins = PluginRegistry()
-    await plugins.register_plugin_for_stage(EchoPrompt(), PipelineStage.DELIVER, "echo")
+    await plugins.register_plugin_for_stage(EchoPrompt(), PipelineStage.OUTPUT, "echo")
 
     resources = ResourceContainer()
     db = DuckDBInfrastructure({"path": "./agent.duckdb"})
