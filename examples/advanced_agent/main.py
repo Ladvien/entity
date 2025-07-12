@@ -44,7 +44,7 @@ class ReActPrompt(PromptPlugin):
 class FinalResponder(PromptPlugin):
     """Return the last assistant message."""
 
-    stages = [PipelineStage.DELIVER]
+    stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context: PluginContext) -> None:
         assistant = [e.content for e in context.conversation() if e.role == "assistant"]
@@ -69,7 +69,7 @@ async def main() -> None:
         ReActPrompt({"max_steps": 2}), PipelineStage.THINK, "react"
     )
     await plugins.register_plugin_for_stage(
-        FinalResponder(), PipelineStage.DELIVER, "final"
+        FinalResponder(), PipelineStage.OUTPUT, "final"
     )
 
     caps = SystemRegistries(resources=resources, tools=tools, plugins=plugins)
