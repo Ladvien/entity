@@ -90,7 +90,7 @@ class _AgentBuilder:
             )
 
     # ------------------------------ plugin utils ------------------------------
-    def add_plugin(
+    async def add_plugin(
         self, plugin: Plugin, config: Mapping[str, Any] | None = None
     ) -> None:
         """Validate and register ``plugin`` for its resolved stages."""
@@ -101,13 +101,13 @@ class _AgentBuilder:
             name = getattr(plugin, "name", plugin.__class__.__name__)
             raise TypeError(f"Plugin '{name}' must implement async '_execute_impl'")
 
-        result = asyncio.run(plugin.__class__.validate_config(plugin.config))
+        result = await plugin.__class__.validate_config(plugin.config)
         if not result.success:
             raise SystemError(
                 f"Config validation failed for {plugin.__class__.__name__}: {result.message}"
             )
 
-        dep_result = asyncio.run(plugin.__class__.validate_dependencies(self))
+        dep_result = await plugin.__class__.validate_dependencies(self)
         if not dep_result.success:
             raise SystemError(
                 f"Dependency validation failed for {plugin.__class__.__name__}: {dep_result.message}"
@@ -117,9 +117,7 @@ class _AgentBuilder:
         stages, _ = StageResolver._resolve_plugin_stages(plugin.__class__, cfg, plugin)
         for stage in stages:
             name = getattr(plugin, "name", plugin.__class__.__name__)
-            asyncio.run(
-                self.plugin_registry.register_plugin_for_stage(plugin, stage, name)
-            )
+            await self.plugin_registry.register_plugin_for_stage(plugin, stage, name)
 
         self._added_plugins.append(plugin)
 
@@ -137,7 +135,7 @@ class _AgentBuilder:
                 raise ValueError("plugin() requires 'plugin_class' or stage hints")
 
             plugin = PluginAutoClassifier.classify(f, hints)
-            self.add_plugin(plugin)
+            asyncio.run(self.add_plugin(plugin))
             return f
 
         return decorator(func) if func else decorator
@@ -252,17 +250,17 @@ class _AgentBuilder:
                     continue
 
                 instance = plugin_cls(plugin_cfg)
-                self.add_plugin(instance)
+                asyncio.run(self.add_plugin(instance))
 
     # ------------------------------ runtime build -----------------------------
-    def build_runtime(
+    async def build_runtime(
         self, workflow: Mapping[PipelineStage | str, Iterable[str]] | None = None
     ) -> "_AgentRuntime":
-        asyncio.run(self.resource_registry.build_all())
+        await self.resource_registry.build_all()
         for plugin in self._added_plugins:
             init = getattr(plugin, "initialize", None)
             if callable(init):
-                asyncio.run(init())
+                await init()
         capabilities = SystemRegistries(
             resources=self.resource_registry,
             tools=self.tool_registry,
@@ -309,9 +307,9 @@ class _AgentBuilder:
                         instance = obj()
                     except TypeError:
                         instance = obj({})
-                    self.add_plugin(instance)
+                    asyncio.run(self.add_plugin(instance))
                 elif callable(obj) and hasattr(obj, "__entity_plugin__"):
-                    self.add_plugin(getattr(obj, "__entity_plugin__"))
+                    asyncio.run(self.add_plugin(getattr(obj, "__entity_plugin__")))
                 elif callable(obj) and name.endswith("_plugin"):
                     self.plugin(obj)
             except Exception:  # noqa: BLE001
@@ -339,10 +337,10 @@ class Agent:
     # ------------------------------------------------------------------
     # Delegated plugin helpers
     # ------------------------------------------------------------------
-    def add_plugin(self, plugin: Any) -> None:  # pragma: no cover - delegation
+    async def add_plugin(self, plugin: Any) -> None:  # pragma: no cover - delegation
         """Register a plugin on the underlying builder."""
 
-        self.builder.add_plugin(plugin)
+        await self.builder.add_plugin(plugin)
 
     def plugin(
         self,
@@ -473,7 +471,7 @@ class Agent:
     # ------------------------------------------------------------------
     async def _ensure_runtime(self) -> None:
         if self._runtime is None:
-            self._runtime = self.builder.build_runtime()
+            self._runtime = await self.builder.build_runtime()
 
     @property
     def runtime(self) -> AgentRuntime:

@@ -29,8 +29,8 @@ class LifecyclePlugin(Plugin):
 async def test_plugin_lifecycle():
     ag = Agent()
     plugin = LifecyclePlugin({})
-    ag.builder.add_plugin(plugin)
-    ag.builder.build_runtime()
+    await ag.builder.add_plugin(plugin)
+    await ag.builder.build_runtime()
 
     await plugin.execute(object())
     assert plugin.initialized

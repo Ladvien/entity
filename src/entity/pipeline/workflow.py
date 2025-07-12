@@ -27,7 +27,7 @@ class Pipeline:
     builder: _AgentBuilder = field(default_factory=_AgentBuilder)
     workflow: Optional[WorkflowMapping] = None
 
-    def build_runtime(self) -> AgentRuntime:
+    async def build_runtime(self) -> AgentRuntime:
         """Build an AgentRuntime using the stored builder and workflow."""
 
-        return self.builder.build_runtime(workflow=self.workflow)
+        return await self.builder.build_runtime(workflow=self.workflow)
