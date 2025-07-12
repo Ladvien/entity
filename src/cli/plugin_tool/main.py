@@ -254,6 +254,9 @@ class PluginToolCLI:
         from entity.core.plugin_utils import PluginAutoClassifier
 
         found = False
+        # Inspect async callables and classify them as plugins.
+        # The reason indicates whether stages were provided through
+        # configuration hints or fall back to the class defaults.
         for name, obj in module.__dict__.items():
             if name.startswith("_"):
                 continue
@@ -261,15 +264,10 @@ class PluginToolCLI:
                 plugin = PluginAutoClassifier.classify(obj)
                 stages = ", ".join(str(s) for s in plugin.stages)
 
-                reasons: list[str] = []
                 if getattr(plugin, "_explicit_stages", False):
-                    reasons.append("explicit hints")
+                    reason = "configuration hints"
                 else:
-                    if getattr(plugin, "_auto_inferred_stages", False):
-                        reasons.append("source heuristics")
-                    if plugin.stages == getattr(plugin, "_type_default_stages", []):
-                        reasons.append("type defaults")
-                reason = ", ".join(reasons) if reasons else "unknown"
+                    reason = "class defaults"
 
                 logger.info("%s -> %s (%s)", name, stages, reason)
                 found = True
