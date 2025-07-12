@@ -47,6 +47,19 @@ class Plugin:
         self.config_version = version
         self._config_history = self._config_history[:version]
 
+    # -----------------------------------------------------
+    @classmethod
+    def validate_config(cls, config: Dict[str, Any]) -> "ValidationResult":
+        """Validate ``config`` and return ``ValidationResult``."""
+
+        return ValidationResult.success_result()
+
+    @classmethod
+    def validate_dependencies(cls, registry: Any) -> "ValidationResult":
+        """Validate dependencies against ``registry``."""
+
+        return ValidationResult.success_result()
+
     async def execute(self, context: Any) -> Any:
         return await self._execute_impl(context)
 
@@ -71,6 +84,12 @@ class Plugin:
             },
         )
         return response
+
+
+class BasePlugin(Plugin):
+    """Backward compatibility alias for :class:`Plugin`."""
+
+    pass
 
 
 class InfrastructurePlugin(Plugin):

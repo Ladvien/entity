@@ -11,6 +11,7 @@ from .base import (
     FailurePlugin,
     InputAdapterPlugin,
     OutputAdapterPlugin,
+    Plugin,
     PromptPlugin,
     ResourcePlugin,
     ToolExecutionError,
