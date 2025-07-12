@@ -76,6 +76,22 @@ class BreakerSettings(BaseModel):
     )
 
 
+class LogOutputConfig(BaseModel):
+    """Configuration for a single logging output."""
+
+    type: str = "console"
+    level: str = "info"
+    path: str | None = None
+    host: str | None = None
+    port: int | None = None
+
+
+class LoggingConfig(BaseModel):
+    """Settings controlling the :class:`LoggingResource`."""
+
+    outputs: list[LogOutputConfig] = Field(default_factory=lambda: [LogOutputConfig()])
+
+
 class EntityConfig(BaseModel):
     server: ServerConfig = Field(
         default_factory=lambda: ServerConfig(host="localhost", port=8000)
@@ -113,6 +129,8 @@ __all__ = [
     "ToolRegistryConfig",
     "CircuitBreakerConfig",
     "BreakerSettings",
+    "LogOutputConfig",
+    "LoggingConfig",
     "EntityConfig",
     "validate_config",
     "asdict",

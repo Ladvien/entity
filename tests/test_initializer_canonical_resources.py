@@ -69,8 +69,9 @@ def test_initializer_fails_without_logging():
         "workflow": {},
     }
     init = SystemInitializer(cfg)
-    with pytest.raises(InitializationError, match="logging"):
-        asyncio.run(init.initialize())
+    asyncio.run(init.initialize())
+    assert init.resource_container is not None
+    assert init.resource_container.get("logging") is not None
 
 
 def test_initializer_accepts_all_canonical_resources():

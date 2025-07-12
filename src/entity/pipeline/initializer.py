@@ -552,7 +552,7 @@ class SystemInitializer:
     def _ensure_canonical_resources(self, container: ResourceContainer) -> None:
         """Verify required canonical resources are registered."""
 
-        required = {"memory", "llm", "storage", "logging"}
+        required = {"memory", "llm", "storage"}
         registered = set(container._classes)
         missing = required - registered
         if missing:
@@ -563,3 +563,8 @@ class SystemInitializer:
                 f"Missing canonical resources: {missing_list}. Add them to your configuration.",
                 kind="Resource",
             )
+
+        if "logging" not in registered:
+            from entity.resources.logging import LoggingResource
+
+            container.register("logging", LoggingResource, {}, layer=3)
