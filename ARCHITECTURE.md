@@ -2,10 +2,11 @@
 
 The following architecture decisions were made through systematic analysis of the Entity Pipeline Framework to optimize for developer adoption, scalability, and maintainability.
 
-- [Architecture Decisions Summary](#architecture-decisions-summary)
-  - [0. Folder Structure and Naming Conventions](#0-folder-structure-and-naming-conventions)
-  - [Repository Layout](#repository-layout)
-- [**1. Core Mental Model: Plugin Taxonomy and 4-Layer Resource Architecture**](#1-core-mental-model-plugin-taxonomy-and-4-layer-resource-architecture)
+# Architecture Decisions Table of Contents
+*Ordered by architectural impact (major → minor)*
+
+## Core Foundational Architecture
+- [1. Core Mental Model: Plugin Taxonomy and 4-Layer Resource Architecture](#1-core-mental-model-plugin-taxonomy-and-4-layer-resource-architecture)
   - [**Plugin Categories**](#plugin-categories)
     - [**Infrastructure Plugins (Layer 1 - No Dependencies)**](#infrastructure-plugins-layer-1---no-dependencies)
     - [**Resource Interface Plugins (Layer 2 - Depend Only on Layer 1)**](#resource-interface-plugins-layer-2---depend-only-on-layer-1)
@@ -19,55 +20,72 @@ The following architecture decisions were made through systematic analysis of th
     - [**Resource Composition Rules**](#resource-composition-rules)
     - [**Dependency Flow (Strict Hierarchy)**](#dependency-flow-strict-hierarchy)
   - [**Plugin Lifecycle Management**](#plugin-lifecycle-management)
-    - [**Two-Phase Lifecycle**](#two-phase-lifecycle)
-    - [**Lifecycle Characteristics**](#lifecycle-characteristics)
   - [**Plugin Development Patterns**](#plugin-development-patterns)
-    - [**Stage Assignment Precedence**](#stage-assignment-precedence)
-    - [**Dependency Declaration with Constructor Injection**](#dependency-declaration-with-constructor-injection)
-    - [**Plugin Registration Order**](#plugin-registration-order)
   - [**Configuration Integration**](#configuration-integration)
   - [**Benefits of Unified Plugin + Resource Architecture**](#benefits-of-unified-plugin--resource-architecture)
   - [**Plugin Validation and Discovery**](#plugin-validation-and-discovery)
-  - [2. Progressive Disclosure: Enhanced 3-Layer Plugin System](#2-progressive-disclosure-enhanced-3-layer-plugin-system)
-  - [3. Resource Management: Core Canonical + Simple Flexible Keys](#3-resource-management-core-canonical--simple-flexible-keys)
-  - [4. Plugin Stage Assignment: Explicit Declaration with Simple Defaults](#4-plugin-stage-assignment-explicit-declaration-with-simple-defaults)
-  - [5. Error Handling and Validation: Fail-Fast with Multi-Layered Validation](#5-error-handling-and-validation-fail-fast-with-multi-layered-validation)
-  - [6. Scalability Architecture: Persistent State with Stateless Workers](#6-scalability-architecture-persistent-state-with-stateless-workers)
-  - [7. Response Termination Control](#7-response-termination-control)
-  - [8. Stage Results Accumulation Pattern](#8-stage-results-accumulation-pattern)
-  - [9. Tool Execution Patterns](#9-tool-execution-patterns)
-  - [10. Memory Resource Consolidation](#10-memory-resource-consolidation)
-  - [11. Resource Dependency Injection Pattern](#11-resource-dependency-injection-pattern)
-  - [13. Resource Lifecycle Management](#13-resource-lifecycle-management)
-  - [14. Configuration Hot-Reload Scope](#14-configuration-hot-reload-scope)
-  - [15. Error Handling and Failure Propagation](#15-error-handling-and-failure-propagation)
-  - [16. Pipeline State Management Strategy](#16-pipeline-state-management-strategy)
-  - [17. Plugin Execution Order Simplification](#17-plugin-execution-order-simplification)
-  - [18. Configuration Validation Consolidation](#18-configuration-validation-consolidation)
-  - [19. Reasoning Pattern Abstraction Strategy](#19-reasoning-pattern-abstraction-strategy)
-  - [20. Memory Architecture: Primitive Resources + Custom Plugins](#20-memory-architecture-primitive-resources--custom-plugins)
-  - [21. Tool Discovery Architecture: Lightweight Registry Query + Plugin-Level Orchestration](#21-tool-discovery-architecture-lightweight-registry-query--plugin-level-orchestration)
-  - [22. Plugin System Architecture: Explicit Configuration with Smart Defaults](#22-plugin-system-architecture-explicit-configuration-with-smart-defaults)
-    - [Rationale](#rationale)
-    - [Implementation Pattern](#implementation-pattern)
-    - [Key Principles](#key-principles)
-  - [23. State Management Consolidation: Dual Interface Pattern](#23-state-management-consolidation-dual-interface-pattern)
-    - [Rationale](#rationale-1)
-    - [Dual Interface Pattern](#dual-interface-pattern)
-    - [Key Principles](#key-principles-1)
-    - [Implementation Architecture](#implementation-architecture)
-  - [24. Agent Instantiation Unification: Single Agent Class Pattern](#24-agent-instantiation-unification-single-agent-class-pattern)
-    - [Rationale](#rationale-2)
-    - [Unified API Pattern](#unified-api-pattern)
-    - [Key Principles](#key-principles-2)
-  - [25. Workflow Objects with Progressive Complexity](#25-workflow-objects-with-progressive-complexity)
-  - [26. Workflow Objects: Composable Agent Blueprints](#26-workflow-objects-composable-agent-blueprints)
-  - [27. Layer 0: Zero-Config Developer Experience](#27-layer-0-zero-config-developer-experience)
-  - [28. Infrastructure Components: Docker + OpenTofu Architecture](#28-infrastructure-components-docker--opentofu-architecture)
-  - [29. Multi-User Support: user\_id Parameter Pattern](#29-multi-user-support-user_id-parameter-pattern)
-  - [30. LoggingResource: Unified Agent Component Logging](#30-loggingresource-unified-agent-component-logging)
-  - [31. MetricsCollectorResource: Shared Performance Tracking](#31-metricscollectorresource-shared-performance-tracking)
-  - [Architectural Decisions not Reviewed](#architectural-decisions-not-reviewed)
+
+## Core Pipeline Architecture
+- [6. Scalability Architecture: Persistent State with Stateless Workers](#6-scalability-architecture-persistent-state-with-stateless-workers)
+- [4. Plugin Stage Assignment: Explicit Declaration with Simple Defaults](#4-plugin-stage-assignment-explicit-declaration-with-simple-defaults)
+- [23. State Management Consolidation: Dual Interface Pattern](#23-state-management-consolidation-dual-interface-pattern)
+  - [Rationale](#rationale-1)
+  - [Dual Interface Pattern](#dual-interface-pattern)
+  - [Key Principles](#key-principles-1)
+  - [Implementation Architecture](#implementation-architecture)
+- [7. Response Termination Control](#7-response-termination-control)
+- [8. Stage Results Accumulation Pattern](#8-stage-results-accumulation-pattern)
+
+## Core Resource Management
+- [10. Memory Resource Consolidation](#10-memory-resource-consolidation)
+- [3. Resource Management: Core Canonical + Simple Flexible Keys](#3-resource-management-core-canonical--simple-flexible-keys)
+- [11. Resource Dependency Injection Pattern](#11-resource-dependency-injection-pattern)
+- [13. Resource Lifecycle Management](#13-resource-lifecycle-management)
+
+## Developer Experience & API Design
+- [24. Agent Instantiation Unification: Single Agent Class Pattern](#24-agent-instantiation-unification-single-agent-class-pattern)
+  - [Rationale](#rationale-2)
+  - [Unified API Pattern](#unified-api-pattern)
+  - [Key Principles](#key-principles-2)
+- [27. Layer 0: Zero-Config Developer Experience](#27-layer-0-zero-config-developer-experience)
+- [2. Progressive Disclosure: Enhanced 3-Layer Plugin System](#2-progressive-disclosure-enhanced-3-layer-plugin-system)
+- [22. Plugin System Architecture: Explicit Configuration with Smart Defaults](#22-plugin-system-architecture-explicit-configuration-with-smart-defaults)
+  - [Rationale](#rationale)
+  - [Implementation Pattern](#implementation-pattern)
+  - [Key Principles](#key-principles)
+
+## Error Handling & Validation
+- [5. Error Handling and Validation: Fail-Fast with Multi-Layered Validation](#5-error-handling-and-validation-fail-fast-with-multi-layered-validation)
+- [15. Error Handling and Failure Propagation](#15-error-handling-and-failure-propagation)
+- [18. Configuration Validation Consolidation](#18-configuration-validation-consolidation)
+
+## Workflow & Composition
+- [25. Workflow Objects with Progressive Complexity](#25-workflow-objects-with-progressive-complexity)
+- [26. Workflow Objects: Composable Agent Blueprints](#26-workflow-objects-composable-agent-blueprints)
+
+## Infrastructure & Deployment
+- [28. Infrastructure Components: Docker + OpenTofu Architecture](#28-infrastructure-components-docker--opentofu-architecture)
+- [29. Multi-User Support: user_id Parameter Pattern](#29-multi-user-support-user_id-parameter-pattern)
+
+## Observability & Monitoring
+- [30. LoggingResource: Unified Agent Component Logging](#30-loggingresource-unified-agent-component-logging)
+- [31. MetricsCollectorResource: Shared Performance Tracking](#31-metricscollectorresource-shared-performance-tracking)
+
+## Specific Feature Patterns
+- [19. Reasoning Pattern Abstraction Strategy](#19-reasoning-pattern-abstraction-strategy)
+- [20. Memory Architecture: Primitive Resources + Custom Plugins](#20-memory-architecture-primitive-resources--custom-plugins)
+- [21. Tool Discovery Architecture: Lightweight Registry Query + Plugin-Level Orchestration](#21-tool-discovery-architecture-lightweight-registry-query--plugin-level-orchestration)
+- [9. Tool Execution Patterns](#9-tool-execution-patterns)
+
+## Implementation Details & Minor Configuration
+- [16. Pipeline State Management Strategy](#16-pipeline-state-management-strategy)
+- [17. Plugin Execution Order Simplification](#17-plugin-execution-order-simplification)
+- [14. Configuration Hot-Reload Scope](#14-configuration-hot-reload-scope)
+- [0. Folder Structure and Naming Conventions](#0-folder-structure-and-naming-conventions)
+  - [Repository Layout](#repository-layout)
+
+## Future Considerations
+- [Architectural Decisions not Reviewed](#architectural-decisions-not-reviewed)
 
 ## 0. Folder Structure and Naming Conventions
 
@@ -95,13 +113,7 @@ entity/
     └── test_cli/              # Tests for CLI commands and developer tools
 ```
 
-
-
-
-
-Yes, absolutely! These should be combined. Looking at both sections, they're describing the same unified plugin architecture but with some inconsistencies that need to be resolved. Let me rewrite Section 1 to incorporate the 4-layer resource architecture and resolve the conflicts:
-
-# **1. Core Mental Model: Plugin Taxonomy and 4-Layer Resource Architecture**
+# 1. Core Mental Model: Plugin Taxonomy and 4-Layer Resource Architecture
 
 The Entity Pipeline Framework uses a unified plugin architecture where all extensions inherit from a single `Plugin` base class, combined with a strict 4-layer resource architecture that prevents circular dependencies through dependency inversion.
 
