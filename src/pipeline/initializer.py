@@ -32,13 +32,15 @@ class ClassRegistry:
     def __init__(self) -> None:
         self._classes: Dict[str, type[Plugin]] = {}
         self._configs: Dict[str, Dict] = {}
+        self._layers: Dict[str, int] = {}
         self._order: List[str] = []
 
     def register_class(
-        self, plugin_class: type[Plugin], config: Dict, name: str
+        self, plugin_class: type[Plugin], config: Dict, name: str, layer: int
     ) -> None:
         self._classes[name] = plugin_class
         self._configs[name] = config
+        self._layers[name] = layer
         self._order.append(name)
         self._validate_stage_assignment(name, plugin_class, config)
 
@@ -53,11 +55,12 @@ class ClassRegistry:
             cls = self._classes[name]
             yield cls, self._configs[name]
 
-    def resource_classes(self) -> Iterable[Tuple[type, Dict]]:
+    def resource_classes(self) -> Iterable[Tuple[str, type, Dict, int]]:
         for name in self._order:
             cls = self._classes[name]
             if issubclass(cls, ResourcePlugin):
-                yield name, cls, self._configs[name]
+                layer = self._layers.get(name, 1)
+                yield name, cls, self._configs[name], layer
 
     def tool_classes(self) -> Iterable[Tuple[type[ToolPlugin], Dict]]:
         for name in self._order:
@@ -337,8 +340,15 @@ class SystemInitializer:
             "agent_resources",
             "custom_resources",
         ]
+        layer_map = {
+            "infrastructure": 1,
+            "resources": 2,
+            "agent_resources": 3,
+            "custom_resources": 4,
+        }
         for section in resource_sections:
             entries = self.config.get("plugins", {}).get(section, {})
+            layer = layer_map[section]
             for name, config in entries.items():
                 cls_path = config.get("type")
                 if not cls_path:
@@ -346,7 +356,7 @@ class SystemInitializer:
                         f"Resource '{name}' must specify a full class path"
                     )
                 cls = import_plugin_class(cls_path)
-                registry.register_class(cls, config, name)
+                registry.register_class(cls, config, name, layer)
                 dep_graph[name] = getattr(cls, "dependencies", [])
 
         for section in ["tools", "adapters", "prompts"]:
@@ -357,7 +367,7 @@ class SystemInitializer:
                         f"{section[:-1].capitalize()} '{name}' must specify a full class path"
                     )
                 cls = import_plugin_class(cls_path)
-                registry.register_class(cls, config, name)
+                registry.register_class(cls, config, name, 4)
                 dep_graph[name] = getattr(cls, "dependencies", [])
 
         # Validate workflow references
@@ -389,8 +399,10 @@ class SystemInitializer:
 
         # Phase 3: initialize resources via container
         resource_container = self.resource_container_cls()
-        for name, cls, config in registry.resource_classes():
-            resource_container.register(name, cls, config)
+        for name, cls, config, layer in registry.resource_classes():
+            resource_container.register(name, cls, config, layer)
+
+        self._ensure_canonical_resources(resource_container)
 
         async with initialization_cleanup_context(resource_container):
             await resource_container.build_all()
@@ -466,3 +478,13 @@ class SystemInitializer:
         # DependencyGraph may enforce valid dependencies but should not reorder
         # plugins. Execution strictly follows YAML order.
         DependencyGraph(graph_map).topological_sort()
+
+    def _ensure_canonical_resources(self, container: ResourceContainer) -> None:
+        """Verify required canonical resources are registered."""
+
+        required = {"memory", "llm", "storage"}
+        registered = set(container._classes)
+        missing = required - registered
+        if missing:
+            missing_list = ", ".join(sorted(missing))
+            raise SystemError(f"Missing canonical resources: {missing_list}")
