@@ -215,9 +215,39 @@ class Memory(AgentResource):
     async def conversation_search(
         self, query: str, user_id: str | None = None, days: int | None = None
     ) -> List[Dict[str, Any]]:
-        """Search conversation history using simple text matching."""
+        """Search conversation history, preferring vector store results."""
         if self._pool is None:
             return []
+
+        if self.vector_store is not None:
+            texts = await self.vector_store.query_similar(query)
+            if texts:
+                placeholders = ",".join("?" for _ in texts)
+                sql = (
+                    f"SELECT conversation_id, role, content, metadata, timestamp "
+                    f"FROM {self._history_table} WHERE content IN ({placeholders})"
+                )
+                params: List[Any] = list(texts)
+                if user_id:
+                    sql += " AND conversation_id LIKE ?"
+                    params.append(f"{user_id}%")
+                if days is not None:
+                    since = (datetime.now() - timedelta(days=days)).isoformat()
+                    sql += " AND timestamp >= ?"
+                    params.append(since)
+                sql += " ORDER BY timestamp DESC"
+                async with self.database.connection() as conn:
+                    rows = conn.execute(sql, params).fetchall()
+                return [
+                    {
+                        "conversation_id": row[0],
+                        "role": row[1],
+                        "content": row[2],
+                        "metadata": json.loads(row[3]) if row[3] else {},
+                        "timestamp": row[4],
+                    }
+                    for row in rows
+                ]
 
         sql = (
             f"SELECT conversation_id, role, content, metadata, timestamp "
