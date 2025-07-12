@@ -5,6 +5,8 @@ import asyncio
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Dict, List, Optional
 
+from pipeline.errors import InitializationError
+
 
 class DependencyGraph:
     def __init__(self, graph: Dict[str, List[str]]) -> None:
@@ -27,7 +29,12 @@ class DependencyGraph:
                     if in_degree[dep] == 0:
                         queue.append(dep)
         if len(order) != len(in_degree):
-            raise SystemError("Circular dependency detected")
+            raise InitializationError(
+                "dependency graph",
+                "order resolution",
+                "Circular dependency detected. Review resource dependencies for cycles.",
+                kind="Resource",
+            )
         return order
 
 
@@ -179,13 +186,19 @@ class ResourceContainer:
                         cfg = self._configs[name]
                         result = cls.validate_config(cfg)
                         if not result.success:
-                            raise SystemError(
-                                f"Config validation failed for {name}: {result.message}"
+                            raise InitializationError(
+                                name,
+                                "config validation",
+                                f"{result.message}. Fix the resource configuration.",
+                                kind="Resource",
                             )
                         dep_result = cls.validate_dependencies(self)
                         if not dep_result.success:
-                            raise SystemError(
-                                f"Dependency validation failed for {name}: {dep_result.message}"
+                            raise InitializationError(
+                                name,
+                                "dependency validation",
+                                f"{dep_result.message}. Fix the resource dependencies.",
+                                kind="Resource",
                             )
                         instance = self._create_instance(cls, cfg)
                         await self.add(name, instance)
@@ -199,14 +212,22 @@ class ResourceContainer:
 
                         check = getattr(instance, "health_check", None)
                         if callable(check) and not await check():
-                            raise SystemError(f"Resource '{name}' failed health check")
+                            raise InitializationError(
+                                name,
+                                "health check",
+                                "Resource failed health check during initialization.",
+                                kind="Resource",
+                            )
 
                         pending.remove(name)
                         progress = True
                 if not progress:
                     unresolved = ", ".join(pending)
-                    raise SystemError(
-                        f"Unresolved dependencies for resources: {unresolved}"
+                    raise InitializationError(
+                        unresolved,
+                        "dependency resolution",
+                        "Unresolved dependencies for resources.",
+                        kind="Resource",
                     )
 
     async def shutdown_all(self) -> None:
@@ -279,8 +300,11 @@ class ResourceContainer:
             dep_name = dep[:-1] if optional else dep
             dep_obj = self.get(dep_name)
             if dep_obj is None and not optional:
-                raise SystemError(
-                    f"Resource '{name}' requires '{dep_name}' which is missing"
+                raise InitializationError(
+                    name,
+                    "dependency injection",
+                    f"Required dependency '{dep_name}' is missing.",
+                    kind="Resource",
                 )
             setattr(instance, dep_name, dep_obj)
 
@@ -298,21 +322,37 @@ class ResourceContainer:
 
         for name, layer in self._layers.items():
             if layer not in {1, 2, 3, 4}:
-                raise SystemError(f"Resource '{name}' has invalid layer {layer}")
+                raise InitializationError(
+                    name,
+                    "layer validation",
+                    f"Invalid layer {layer} specified.",
+                    kind="Resource",
+                )
             if layer == 1 and self._deps.get(name):
-                raise SystemError("Infrastructure resources cannot have dependencies")
+                raise InitializationError(
+                    name,
+                    "layer validation",
+                    "Infrastructure resources cannot have dependencies.",
+                    kind="Resource",
+                )
             if layer == 1:
                 itype = getattr(self._classes[name], "infrastructure_type", "")
                 if not itype:
-                    raise SystemError(
-                        f"Infrastructure '{name}' missing infrastructure_type"
+                    raise InitializationError(
+                        name,
+                        "layer validation",
+                        "Infrastructure resource missing infrastructure_type.",
+                        kind="Resource",
                     )
             if layer == 2:
                 if not getattr(
                     self._classes[name], "infrastructure_dependencies", None
                 ):
-                    raise SystemError(
-                        f"Resource interface '{name}' must declare infrastructure_dependencies"
+                    raise InitializationError(
+                        name,
+                        "layer validation",
+                        "Resource interface must declare infrastructure_dependencies.",
+                        kind="Resource",
                     )
 
         for name, deps in self._deps.items():
@@ -322,8 +362,11 @@ class ResourceContainer:
                 if dep_layer is None:
                     continue
                 if self._layers[name] - dep_layer != 1:
-                    raise SystemError(
-                        f"Resource '{name}' violates layer rules: depends on '{dep_name}'"
+                    raise InitializationError(
+                        name,
+                        "layer validation",
+                        f"Resource depends on '{dep_name}' and violates layer rules.",
+                        kind="Resource",
                     )
 
     def _resolve_order(self) -> List[str]:

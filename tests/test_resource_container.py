@@ -2,6 +2,7 @@ import asyncio
 import pytest
 
 from entity.core.resources.container import ResourceContainer
+from pipeline.errors import InitializationError
 from entity.core.plugins import InfrastructurePlugin, ResourcePlugin, AgentResource
 
 
@@ -83,7 +84,7 @@ def test_layer_violation():
     container.register("infra", InfraPlugin, {}, layer=1)
     container.register("bad", BadResource, {}, layer=3)
 
-    with pytest.raises(SystemError, match="violates layer rules"):
+    with pytest.raises(InitializationError, match="layer validation"):
         asyncio.run(container.build_all())
 
 
@@ -95,7 +96,7 @@ def test_missing_interface_dependencies():
     container.register("infra", InfraPlugin, {}, layer=1)
     container.register("iface", BadInterface, {}, layer=2)
 
-    with pytest.raises(SystemError, match="infrastructure_dependencies"):
+    with pytest.raises(InitializationError, match="infrastructure_dependencies"):
         asyncio.run(container.build_all())
 
 
@@ -106,5 +107,5 @@ def test_missing_infrastructure_type():
     container = ResourceContainer()
     container.register("bad", BadInfra, {}, layer=1)
 
-    with pytest.raises(SystemError, match="infrastructure_type"):
+    with pytest.raises(InitializationError, match="infrastructure_type"):
         asyncio.run(container.build_all())

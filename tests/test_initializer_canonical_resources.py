@@ -2,7 +2,9 @@ import pathlib
 import sys
 import asyncio
 import types
+import pytest
 from entity.core.resources.container import ResourceContainer
+from pipeline.errors import InitializationError
 
 
 sys.path.insert(0, str(pathlib.Path("src").resolve()))
@@ -21,7 +23,8 @@ def test_initializer_fails_without_memory():
         "workflow": {},
     }
     init = SystemInitializer(cfg)
-    asyncio.run(init.initialize())
+    with pytest.raises(InitializationError, match="memory"):
+        asyncio.run(init.initialize())
 
 
 def test_initializer_fails_without_llm():
@@ -35,7 +38,7 @@ def test_initializer_fails_without_llm():
         "workflow": {},
     }
     init = SystemInitializer(cfg)
-    with pytest.raises(SystemError, match="llm"):
+    with pytest.raises(InitializationError, match="llm"):
         asyncio.run(init.initialize())
 
 
@@ -50,7 +53,7 @@ def test_initializer_fails_without_storage():
         "workflow": {},
     }
     init = SystemInitializer(cfg)
-    with pytest.raises(SystemError, match="storage"):
+    with pytest.raises(InitializationError, match="storage"):
         asyncio.run(init.initialize())
 
 
