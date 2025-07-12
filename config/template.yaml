@@ -8,7 +8,7 @@ plugins:
   infrastructure: {}
   resources:
     database:
-      type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
+      type: entity.infrastructure.duckdb:DuckDBInfrastructure
       path: ./agent.duckdb
     # llm:
     #   provider: ollama

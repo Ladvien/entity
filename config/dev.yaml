@@ -11,7 +11,7 @@ plugins:
   infrastructure: {}
   resources:
     database:
-      type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
+      type: entity.infrastructure.duckdb:DuckDBInfrastructure
       path: ./agent.duckdb
   # llm:
   #   type: plugins.builtin.resources.llm.unified:UnifiedLLMResource
@@ -39,7 +39,7 @@ plugins:
 #   storage:
 #     type: plugins.builtin.resources.storage_resource:StorageResource
 #     database:
-#       type: plugins.builtin.resources.postgres:PostgresResource
+#       type: entity.infrastructure.postgres:PostgresInfrastructure
 #       host: localhost
 #       port: 5432
 #       name: storage_db
