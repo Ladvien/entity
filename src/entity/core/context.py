@@ -1,10 +1,10 @@
-from __future__ import annotations
-
 """Minimal plugin context objects."""
+
+from __future__ import annotations
 
 import asyncio
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, cast
 
 from entity.core.state import ConversationEntry, PipelineState, ToolCall
 import warnings
@@ -47,7 +47,7 @@ class AdvancedContext:
     def discover_tools(self, **filters: Any) -> list[tuple[str, Any]]:
         discover = getattr(self._parent._registries.tools, "discover", None)
         if callable(discover):
-            return discover(**filters)
+            return cast(list[tuple[str, Any]], discover(**filters))
         return [
             (n, t)
             for n, t in getattr(self._parent._registries.tools, "_tools", {}).items()
@@ -102,7 +102,7 @@ class PluginContext:
 
     @property
     def pipeline_id(self) -> str:
-        return self._state.pipeline_id
+        return cast(str, self._state.pipeline_id)
 
     @property
     def request_id(self) -> str:
@@ -165,11 +165,11 @@ class PluginContext:
 
     async def call_llm(self, _context: Any, prompt: str, *, purpose: str = "") -> Any:
         llm = self._registries.resources.get("llm")
+
+        class _Resp:
+            content = ""
+
         if llm is None:
-
-            class _Resp:
-                content = ""
-
             return _Resp()
         if hasattr(llm, "generate"):
             return await llm.generate(prompt)
@@ -178,9 +178,6 @@ class PluginContext:
             return await func(prompt)
         if func:
             return func(prompt)
-
-        class _Resp:
-            content = ""
 
         return _Resp()
 
@@ -230,7 +227,7 @@ class PluginContext:
     # Stage result helpers
     # ------------------------------------------------------------------
 
-    def store(self, key: str, value: Any) -> None:
+    async def think(self, key: str, value: Any) -> None:
         """Persist ``value`` for later pipeline stages."""
         if (
             self._state.max_stage_results is not None
@@ -240,13 +237,13 @@ class PluginContext:
             del self._state.stage_results[oldest]
         self._state.stage_results[key] = value
 
-    def load(self, key: str, default: Any | None = None) -> Any:
+    async def reflect(self, key: str, default: Any | None = None) -> Any:
         """Retrieve a stored value."""
         return self._state.stage_results.get(key, default)
 
-    def has(self, key: str) -> bool:
-        """Return ``True`` if ``key`` exists in stage results."""
-        return key in self._state.stage_results
+    async def clear_thoughts(self) -> None:
+        """Remove all stored stage results."""
+        self._state.stage_results.clear()
 
     # ------------------------------------------------------------------
     # Persistent memory helpers
