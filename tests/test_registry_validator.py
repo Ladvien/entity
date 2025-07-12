@@ -77,7 +77,7 @@ def _write_config(tmp_path, plugins):
 
 def test_validator_success(tmp_path):
     plugins = {
-        "resources": {"a": {"type": "tests.test_registry_validator:A"}},
+        "agent_resources": {"a": {"type": "tests.test_registry_validator:A"}},
         "prompts": {"b": {"type": "tests.test_registry_validator:B"}},
     }
     path = _write_config(tmp_path, plugins)
@@ -105,7 +105,7 @@ def test_validator_cycle_detection(tmp_path):
 
 def test_complex_prompt_requires_vector_store(tmp_path):
     plugins = {
-        "resources": {"memory": {"type": "entity.resources.memory:Memory"}},
+        "agent_resources": {"memory": {"type": "entity.resources.memory:Memory"}},
         "prompts": {
             "complex_prompt": {"type": "tests.test_registry_validator:ComplexPrompt"}
         },
@@ -117,7 +117,7 @@ def test_complex_prompt_requires_vector_store(tmp_path):
 
 def test_complex_prompt_with_vector_store(tmp_path):
     plugins = {
-        "resources": {
+        "agent_resources": {
             "memory": {
                 "type": "entity.resources.memory:Memory",
                 "vector_store": {
@@ -135,7 +135,7 @@ def test_complex_prompt_with_vector_store(tmp_path):
 
 def test_memory_requires_postgres(tmp_path):
     plugins = {
-        "resources": {
+        "agent_resources": {
             "memory": {
                 "type": "entity.resources.memory:Memory",
                 "vector_store": {
@@ -152,7 +152,7 @@ def test_memory_requires_postgres(tmp_path):
 
 def test_memory_with_postgres(tmp_path):
     plugins = {
-        "resources": {
+        "agent_resources": {
             "memory": {
                 "type": "entity.resources.memory:Memory",
                 "vector_store": {

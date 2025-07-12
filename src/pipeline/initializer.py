@@ -195,7 +195,15 @@ class SystemInitializer:
                 tool_section = data.get("tool", {})
                 entity = tool_section.get("entity", {})
                 plugins = entity.get("plugins", {})
-                for section in ["resources", "tools", "adapters", "prompts"]:
+                for section in [
+                    "infrastructure",
+                    "resources",
+                    "agent_resources",
+                    "custom_resources",
+                    "tools",
+                    "adapters",
+                    "prompts",
+                ]:
                     entries = plugins.get(section, {})
                     if not isinstance(entries, dict):
                         continue
@@ -230,7 +238,17 @@ class SystemInitializer:
             self.workflows.update(discover_workflows(directory))
 
     def get_resource_config(self, name: str) -> Dict:
-        return self.config["plugins"]["resources"][name]
+        plugins = self.config.get("plugins", {})
+        for section in (
+            "agent_resources",
+            "custom_resources",
+            "resources",
+            "infrastructure",
+        ):
+            cfg = plugins.get(section, {})
+            if name in cfg:
+                return cfg[name]
+        raise KeyError(name)
 
     def get_tool_config(self, name: str) -> Dict:
         return self.config["plugins"]["tools"][name]
@@ -306,14 +324,23 @@ class SystemInitializer:
         workflow = Workflow.from_dict(self.config.get("workflow"))
 
         # Phase 1: register all plugin classes
-        resources = self.config.get("plugins", {}).get("resources", {})
-        for name, config in resources.items():
-            cls_path = config.get("type")
-            if not cls_path:
-                raise ValueError(f"Resource '{name}' must specify a full class path")
-            cls = import_plugin_class(cls_path)
-            registry.register_class(cls, config, name)
-            dep_graph[name] = getattr(cls, "dependencies", [])
+        resource_sections = [
+            "infrastructure",
+            "resources",
+            "agent_resources",
+            "custom_resources",
+        ]
+        for section in resource_sections:
+            entries = self.config.get("plugins", {}).get(section, {})
+            for name, config in entries.items():
+                cls_path = config.get("type")
+                if not cls_path:
+                    raise ValueError(
+                        f"Resource '{name}' must specify a full class path"
+                    )
+                cls = import_plugin_class(cls_path)
+                registry.register_class(cls, config, name)
+                dep_graph[name] = getattr(cls, "dependencies", [])
 
         for section in ["tools", "adapters", "prompts"]:
             for name, config in self.config.get("plugins", {}).get(section, {}).items():
