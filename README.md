@@ -62,3 +62,11 @@ async def final(ctx):
     result = await ctx.tool_use("add", a=2, b=2)
     ctx.set_response(str(result))
 ```
+## Development Environment Setup
+
+This project uses `mise` for Python version management. The `.python-version` file specifies the required interpreter. The `.mise.toml` config explicitly enables this file so future `mise` releases won't warn about idiomatic version files. After installing `mise`, run:
+
+```bash
+mise install
+```
+
