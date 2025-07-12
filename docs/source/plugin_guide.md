@@ -235,7 +235,7 @@ Additional pipelines are available in a dedicated examples repository.
 
 ### StorageResource Composition
 
-`StorageResource` composes `DatabaseResource`, `VectorStoreResource`, and `FileSystemResource` behind one interface for handling files. Memory persists conversation history and vectors and is configured in [config/dev.yaml](https://github.com/Ladvien/entity/blob/main/config/dev.yaml). Use `StorageResource` when your plugins need to create or read files. The scaffold's `dev.yaml` already registers `DuckDBDatabaseResource`, so local development works out of the box. With the plugin configured the code looks like:
+`StorageResource` composes `DatabaseResource`, `VectorStoreResource`, and `FileSystemResource` behind one interface for handling files. Memory persists conversation history and vectors and is configured in [config/dev.yaml](https://github.com/Ladvien/entity/blob/main/config/dev.yaml). Use `StorageResource` when your plugins need to create or read files. The scaffold's `dev.yaml` registers `DuckDBDatabaseResource` for this purpose, so local development works out of the box. With the plugin configured the code looks like:
 
 ```python
 resources = ResourceContainer()

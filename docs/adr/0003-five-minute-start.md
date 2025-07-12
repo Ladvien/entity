@@ -4,10 +4,10 @@
 Accepted
 
 ## Context
-Early experimentation should require no external services. A persistent database often slows first-time users. DuckDB runs in-process and can operate entirely in memory.
+Early experimentation should require no external services. A persistent database often slows first-time users, so the default memory plugin uses an in-process dictionary. DuckDB remains available for lightweight persistence.
 
 ## Decision
-The default `memory` resource uses DuckDB in memory so new users can launch an agent with a single command. This configuration provides conversation history and vector search without installing a database server.
+The default `memory` resource keeps data in memory only. New users can launch an agent with a single command, but history is lost on restart. The DuckDB example shows how to add simple persistence without running a server.
 
 ## Consequences
 - Quick local demos and tutorials do not require additional infrastructure.

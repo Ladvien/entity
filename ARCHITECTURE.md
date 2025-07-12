@@ -5,24 +5,29 @@ The following architecture decisions were made through systematic analysis of th
 - [Architecture Decisions Summary](#architecture-decisions-summary)
   - [0. Folder Structure and Naming Conventions](#0-folder-structure-and-naming-conventions)
   - [Repository Layout](#repository-layout)
-  - [1. Core Mental Model: Plugin Taxonomy and Architecture](#1-core-mental-model-plugin-taxonomy-and-architecture)
-    - [**Plugin Categories**](#plugin-categories)
-      - [**Infrastructure Plugins (ResourcePlugin)**](#infrastructure-plugins-resourceplugin)
-      - [**Processing Plugins (Execution Plugins)**](#processing-plugins-execution-plugins)
-      - [**Interface Plugins (AdapterPlugin)**](#interface-plugins-adapterplugin)
-      - [**Specialized Plugins**](#specialized-plugins)
-    - [**Resource Composition Architecture**](#resource-composition-architecture)
-      - [**Required Resources**](#required-resources)
-      - [**Composition Rules**](#composition-rules)
-    - [**Plugin Lifecycle Management**](#plugin-lifecycle-management)
-      - [**Two-Phase Lifecycle**](#two-phase-lifecycle)
-      - [**Lifecycle Characteristics**](#lifecycle-characteristics)
-    - [**Plugin Development Patterns**](#plugin-development-patterns)
-      - [**Stage Assignment Precedence**](#stage-assignment-precedence)
-      - [**Dependency Declaration**](#dependency-declaration)
-      - [**Plugin Registration Order**](#plugin-registration-order)
-    - [**Benefits of Unified Plugin Architecture**](#benefits-of-unified-plugin-architecture)
-    - [**Plugin Validation and Discovery**](#plugin-validation-and-discovery)
+- [**1. Core Mental Model: Plugin Taxonomy and 4-Layer Resource Architecture**](#1-core-mental-model-plugin-taxonomy-and-4-layer-resource-architecture)
+  - [**Plugin Categories**](#plugin-categories)
+    - [**Infrastructure Plugins (Layer 1 - No Dependencies)**](#infrastructure-plugins-layer-1---no-dependencies)
+    - [**Resource Interface Plugins (Layer 2 - Depend Only on Layer 1)**](#resource-interface-plugins-layer-2---depend-only-on-layer-1)
+    - [**Canonical Agent Resources (Layer 3 - Depend Only on Layer 2)**](#canonical-agent-resources-layer-3---depend-only-on-layer-2)
+    - [**Processing Plugins (Execute During Pipeline Stages)**](#processing-plugins-execute-during-pipeline-stages)
+    - [**Interface Plugins (AdapterPlugin)**](#interface-plugins-adapterplugin)
+    - [**Specialized Plugins**](#specialized-plugins)
+  - [**4-Layer Resource Architecture**](#4-layer-resource-architecture)
+    - [**Required Resources (Layer 3 - Canonical)**](#required-resources-layer-3---canonical)
+    - [**Custom Agent Resources (Layer 4 - User Compositions)**](#custom-agent-resources-layer-4---user-compositions)
+    - [**Resource Composition Rules**](#resource-composition-rules)
+    - [**Dependency Flow (Strict Hierarchy)**](#dependency-flow-strict-hierarchy)
+  - [**Plugin Lifecycle Management**](#plugin-lifecycle-management)
+    - [**Two-Phase Lifecycle**](#two-phase-lifecycle)
+    - [**Lifecycle Characteristics**](#lifecycle-characteristics)
+  - [**Plugin Development Patterns**](#plugin-development-patterns)
+    - [**Stage Assignment Precedence**](#stage-assignment-precedence)
+    - [**Dependency Declaration with Constructor Injection**](#dependency-declaration-with-constructor-injection)
+    - [**Plugin Registration Order**](#plugin-registration-order)
+  - [**Configuration Integration**](#configuration-integration)
+  - [**Benefits of Unified Plugin + Resource Architecture**](#benefits-of-unified-plugin--resource-architecture)
+  - [**Plugin Validation and Discovery**](#plugin-validation-and-discovery)
   - [2. Progressive Disclosure: Enhanced 3-Layer Plugin System](#2-progressive-disclosure-enhanced-3-layer-plugin-system)
   - [3. Resource Management: Core Canonical + Simple Flexible Keys](#3-resource-management-core-canonical--simple-flexible-keys)
   - [4. Plugin Stage Assignment: Explicit Declaration with Simple Defaults](#4-plugin-stage-assignment-explicit-declaration-with-simple-defaults)
@@ -33,7 +38,6 @@ The following architecture decisions were made through systematic analysis of th
   - [9. Tool Execution Patterns](#9-tool-execution-patterns)
   - [10. Memory Resource Consolidation](#10-memory-resource-consolidation)
   - [11. Resource Dependency Injection Pattern](#11-resource-dependency-injection-pattern)
-  - [12. Plugin Stage Assignment Precedence](#12-plugin-stage-assignment-precedence)
   - [13. Resource Lifecycle Management](#13-resource-lifecycle-management)
   - [14. Configuration Hot-Reload Scope](#14-configuration-hot-reload-scope)
   - [15. Error Handling and Failure Propagation](#15-error-handling-and-failure-propagation)
@@ -95,11 +99,11 @@ entity/
 
 
 
+Yes, absolutely! These should be combined. Looking at both sections, they're describing the same unified plugin architecture but with some inconsistencies that need to be resolved. Let me rewrite Section 1 to incorporate the 4-layer resource architecture and resolve the conflicts:
 
+# **1. Core Mental Model: Plugin Taxonomy and 4-Layer Resource Architecture**
 
-## 1. Core Mental Model: Plugin Taxonomy and Architecture
-
-The Entity Pipeline Framework uses a unified plugin architecture where all extensions inherit from a single `Plugin` base class. This design follows the universal extension pattern found in frameworks like Blender's Node system, providing a consistent interface while supporting diverse functionality.
+The Entity Pipeline Framework uses a unified plugin architecture where all extensions inherit from a single `Plugin` base class, combined with a strict 4-layer resource architecture that prevents circular dependencies through dependency inversion.
 
 ```python
 class Plugin(ABC):
@@ -115,41 +119,74 @@ class Plugin(ABC):
     async def execute(self, context) -> Any: ...  # Required for stage-based plugins
 ```
 
-### **Plugin Categories**
+## **Plugin Categories**
 
-#### **Infrastructure Plugins (ResourcePlugin)**
-Persistent services that provide capabilities to other plugins. These initialize once during startup and remain available throughout the pipeline lifecycle.
+### **Infrastructure Plugins (Layer 1 - No Dependencies)**
+Concrete technology implementations that provide foundational capabilities. These are completely self-contained.
 
-**Characteristics:**
-- Initialize during startup phase, before any pipeline execution
-- Provide shared services (databases, APIs, storage)
-- Never execute during pipeline stages
-- Have complex dependency relationships and composition patterns
-
-**Subtypes:**
 ```python
-class LLMResourcePlugin(ResourcePlugin):
-    """Provides language model capability"""
-    resource_type: str = "llm"
-    # Examples: OpenAIProvider, OllamaProvider, ClaudeProvider
+class InfrastructurePlugin(Plugin):
+    """Layer 1: Concrete technology implementations - NO DEPENDENCIES"""
+    infrastructure_type: str  # "database", "vector_store", "llm_provider", "file_system"
 
-class DatabaseResourcePlugin(ResourcePlugin):  
-    """Provides persistent storage capability"""
-    resource_type: str = "database"
-    # Examples: PostgresResource, SQLiteResource, DuckDBResource
+class PostgresInfrastructure(InfrastructurePlugin):
+    infrastructure_type = "database"
+    # Examples: PostgresInfrastructure, DuckDBInfrastructure
 
-class VectorStoreResourcePlugin(ResourcePlugin):
-    """Provides semantic search capability"""  
-    resource_type: str = "vector_store"
-    # Examples: PgVectorStore, MemoryVectorStore
+class PgVectorInfrastructure(InfrastructurePlugin):
+    infrastructure_type = "vector_store"
+    # Examples: PgVectorInfrastructure, ChromaInfrastructure
 
-class FileSystemResourcePlugin(ResourcePlugin):
-    """Provides file storage capability"""
-    resource_type: str = "filesystem" 
-    # Examples: LocalFileSystem, S3FileSystem, MemoryFileSystem
+class OllamaInfrastructure(InfrastructurePlugin):
+    infrastructure_type = "llm_provider"
+    # Examples: OllamaInfrastructure, OpenAIInfrastructure
 ```
 
-#### **Processing Plugins (Execution Plugins)**
+### **Resource Interface Plugins (Layer 2 - Depend Only on Layer 1)**
+Technology-agnostic interfaces that provide consistent APIs over infrastructure primitives.
+
+```python
+class ResourcePlugin(Plugin):
+    """Layer 2: Abstract resource interfaces over infrastructure primitives"""
+    infrastructure_dependencies: List[str] = []  # Required infrastructure_types
+
+class DatabaseResource(ResourcePlugin):
+    infrastructure_dependencies = ["database"]
+    
+    def __init__(self, postgres_infra: PostgresInfrastructure, config: Dict | None = None):
+        # Constructor injection from Layer 1 only
+
+class VectorStoreResource(ResourcePlugin):
+    infrastructure_dependencies = ["vector_store"]
+    
+class LLMResource(ResourcePlugin):
+    infrastructure_dependencies = ["llm_provider"]
+```
+
+### **Canonical Agent Resources (Layer 3 - Depend Only on Layer 2)**
+Simple building blocks provided by the framework. These are the **guaranteed resources** available to all plugins.
+
+```python
+class AgentResource(ResourcePlugin):
+    """Layer 3: Canonical building blocks - depend only on Layer 2"""
+
+class Memory(AgentResource):
+    """Canonical memory - simple building block with NO other agent resource dependencies"""
+    
+    def __init__(self, database: DatabaseResource, vector_store: VectorStoreResource, config: Dict | None = None):
+        # Constructor injection from Layer 2 only - NO LLM dependency
+
+class LLM(AgentResource):
+    """Canonical LLM - simple building block with NO other agent resource dependencies"""
+    
+    def __init__(self, llm_resource: LLMResource, config: Dict | None = None):
+        # Constructor injection from Layer 2 only
+
+class Storage(AgentResource):
+    """Canonical storage - simple building block with NO other agent resource dependencies"""
+```
+
+### **Processing Plugins (Execute During Pipeline Stages)**
 Functional units that execute during specific pipeline stages to transform data, make decisions, or perform actions.
 
 **PromptPlugin - Reasoning and Planning**
@@ -157,6 +194,7 @@ Functional units that execute during specific pipeline stages to transform data,
 class PromptPlugin(Plugin):
     """LLM-based reasoning and processing logic"""
     stage = THINK  # Default stage assignment
+    dependencies = ["llm"]  # Can depend on any agent resources (Layer 3+)
     
     # Examples: ConversationHistory, ComplexPrompt, MemoryRetrieval
 ```
@@ -172,12 +210,12 @@ class ToolPlugin(Plugin):
     # Examples: CalculatorTool, WeatherAPI, SearchTool
 ```
 
-#### **Interface Plugins (AdapterPlugin)**
+### **Interface Plugins (AdapterPlugin)**
 Handle input/output transformation and protocol adaptation between external systems and the pipeline.
 
 **InputAdapterPlugin - Media Ingestion**
 ```python
-class InputAdapterPlugin(AdapterPlugin):
+class InputAdapterPlugin(Plugin):
     """Convert external input into pipeline messages"""
     stage = INPUT  # Default stage assignment
     
@@ -186,14 +224,14 @@ class InputAdapterPlugin(AdapterPlugin):
 
 **OutputAdapterPlugin - Response Delivery**
 ```python
-class OutputAdapterPlugin(AdapterPlugin):
+class OutputAdapterPlugin(Plugin):
     """Convert pipeline responses to external formats"""
     stage = OUTPUT  # Default stage assignment
     
     # Examples: JSONFormatter, TTSAdapter, LoggingAdapter
 ```
 
-#### **Specialized Plugins**
+### **Specialized Plugins**
 
 **FailurePlugin - Error Handling**
 ```python
@@ -204,55 +242,67 @@ class FailurePlugin(Plugin):
     # Examples: BasicLogger, ErrorFormatter, FallbackErrorPlugin
 ```
 
-**InfrastructurePlugin - Operational Concerns**
-```python
-class InfrastructurePlugin(Plugin):
-    """Deployment, monitoring, and operational support"""
-    # Examples: MetricsCollector, DockerDeployment, TerraformProvisioning
-```
+## **4-Layer Resource Architecture**
 
-### **Resource Composition Architecture**
+### **Required Resources (Layer 3 - Canonical)**
+The framework guarantees these three canonical resources are available to every pipeline execution:
 
-The framework guarantees three concrete resources are available to every pipeline execution:
-
-#### **Required Resources**
 ```python
 class StandardResources:
-    llm: LLM           # Composed from LLMResourcePlugin instances
-    memory: Memory     # Composed from DatabaseResourcePlugin + VectorStoreResourcePlugin  
-    storage: Storage   # Composed from FileSystemResourcePlugin instances
+    llm: LLM           # Canonical LLM building block
+    memory: Memory     # Canonical Memory building block  
+    storage: Storage   # Canonical Storage building block
 ```
 
-#### **Composition Rules**
-Resources are assembled from compatible ResourcePlugins based on `resource_type` declarations:
+### **Custom Agent Resources (Layer 4 - User Compositions)**
+Users create intelligent AgentResources by composing canonical ones:
 
 ```python
-# LLM Resource Composition
-llm = UnifiedLLMResource([
-    OpenAIProvider(config),      # LLMResourcePlugin
-    OllamaProvider(config),      # LLMResourcePlugin (fallback)
-])
+# User-defined: Memory with LLM-enhanced operations
+class SmartMemory(AgentResource):
+    def __init__(self, memory: Memory, llm: LLM, config: Dict | None = None):
+        # Composes Layer 3 canonical resources
+        self.memory = memory
+        self.llm = llm
+    
+    async def contextual_recall(self, query: str) -> Dict[str, Any]:
+        """Smart recall with LLM-enhanced semantic search"""
+        # Complex behaviors that combine canonical resources
 
-# Memory Resource Composition  
-memory = Memory(
-    database=PostgresResource(config),        # DatabaseResourcePlugin
-    vector_store=PgVectorStore(config),       # VectorStoreResourcePlugin
-)
-
-# Storage Resource Composition
-storage = Storage(
-    filesystem=S3FileSystem(config)           # FileSystemResourcePlugin
-)
+# User-defined: Complete RAG system
+class RAGSystem(AgentResource):
+    def __init__(self, memory: Memory, llm: LLM, storage: Storage, config: Dict | None = None):
+        # Composes multiple canonical resources
 ```
 
-### **Plugin Lifecycle Management**
+### **Resource Composition Rules**
+- **Layer 1 → Layer 2**: Infrastructure primitives composed into resource interfaces
+- **Layer 2 → Layer 3**: Resource interfaces composed into canonical agent resources  
+- **Layer 3 → Layer 4**: Canonical resources composed into custom intelligent resources
+- **Plugins**: Can depend on any agent resources (Layer 3 or Layer 4)
 
-#### **Two-Phase Lifecycle**
+### **Dependency Flow (Strict Hierarchy)**
+```
+Layer 1: Infrastructure Primitives (no dependencies)
+    ↓
+Layer 2: Resource Interfaces (depend only on Layer 1)
+    ↓  
+Layer 3: Canonical Agent Resources (depend only on Layer 2)
+    ↓
+Layer 4: Custom Agent Resources (depend only on Layer 3)
+    ↓
+Plugins (can depend on any agent resources)
+```
+
+## **Plugin Lifecycle Management**
+
+### **Two-Phase Lifecycle**
 ```python
-# Phase 1: Infrastructure Initialization (ResourcePlugins)
-for resource_plugin in dependency_order:
-    await resource_plugin.initialize()
-    container.register(resource_plugin)
+# Phase 1: Resource Initialization (Layers 1-4 in dependency order)
+for layer in [infrastructure, resource_interfaces, canonical_resources, custom_resources]:
+    for resource in dependency_order:
+        await resource.initialize()
+        container.register(resource)
 
 # Phase 2: Pipeline Execution (Processing Plugins)
 for stage in [INPUT, PARSE, THINK, DO, REVIEW, OUTPUT]:
@@ -261,31 +311,31 @@ for stage in [INPUT, PARSE, THINK, DO, REVIEW, OUTPUT]:
         await plugin.execute(context)
 ```
 
-#### **Lifecycle Characteristics**
-- **ResourcePlugins**: Initialize once → persist → shutdown at end
+### **Lifecycle Characteristics**
+- **Infrastructure/Resource Plugins**: Initialize once → persist → shutdown at end
 - **Processing Plugins**: Execute per-request → stateless between executions
 - **AdapterPlugins**: May run continuously (HTTP server) or per-request (CLI)
 
-### **Plugin Development Patterns**
+## **Plugin Development Patterns**
 
-#### **Stage Assignment Precedence**
+### **Stage Assignment Precedence**
 1. **Config override**: `stage: DO` or `stages: [THINK, DO]` in configuration always wins
 2. **Class default**: `stage = THINK` or `stages = [INPUT, OUTPUT]` in plugin class
 3. **Safe fallback**: `THINK` stage if nothing else specified
 
-#### **Dependency Declaration**
+### **Dependency Declaration with Constructor Injection**
 ```python
 class ComplexPlugin(PromptPlugin):
-    dependencies = ["database", "vector_store"]  # Explicit dependency list
+    dependencies = ["smart_memory", "rag_system"]  # Can use Layer 3 or Layer 4 resources
     
     def __init__(self, config):
         super().__init__(config)
-        # Dependencies injected by container after construction
-        self.database = None      # Set by container
-        self.vector_store = None  # Set by container
+        # Dependencies injected by container via constructor
+        self.smart_memory = None      # Set by container
+        self.rag_system = None        # Set by container
 ```
 
-#### **Plugin Registration Order**
+### **Plugin Registration Order**
 Plugins execute in YAML configuration order within each stage:
 ```yaml
 plugins:
@@ -295,37 +345,58 @@ plugins:
     step_3: {...}    # Runs third in THINK stage
 ```
 
-### **Benefits of Unified Plugin Architecture**
+## **Configuration Integration**
+
+```yaml
+plugins:
+  # Layer 1: Infrastructure Primitives
+  infrastructure:
+    postgres:
+      type: entity.infrastructure.postgres:PostgresInfrastructure
+      
+  # Layer 2: Resource Interfaces (auto-wired to infrastructure)
+  resources:
+    database:
+      type: entity.resources.database:DatabaseResource
+      
+  # Layer 3: Canonical Agent Resources
+  agent_resources:
+    memory:
+      type: entity.agent.memory:Memory
+      # Constructor: Memory(database=database, vector_store=vector_store)
+      
+  # Layer 4: Custom Agent Resources (user-defined)
+  custom_resources:
+    smart_memory:
+      type: my_company.resources:SmartMemory
+      # Constructor: SmartMemory(memory=memory, llm=llm)
+      
+  # Processing Plugins
+  prompts:
+    reasoning:
+      type: my_company.plugins:ReasoningPlugin
+      dependencies: ["smart_memory"]
+```
+
+## **Benefits of Unified Plugin + Resource Architecture**
 
 1. **Single Learning Curve** - Developers master one Plugin interface for all extensions
-2. **Consistent Tooling** - Same CLI commands, documentation patterns, and development tools work across all plugin types
-3. **Unified Ecosystem** - Plugin marketplace, examples, and community resources share common patterns
-4. **Flexible Composition** - Mix and match plugins to create custom agent behaviors
-5. **Clear Extension Points** - Obvious places to add functionality without framework modifications
+2. **No Circular Dependencies** - Strict 4-layer hierarchy prevents cycles by design
+3. **Progressive Complexity** - Start with canonical resources, compose custom as needed
+4. **Consistent Tooling** - Same CLI commands, documentation patterns across all plugin types
+5. **Clear Extension Points** - Obvious places to add functionality at each layer
+6. **Framework Focus** - Core provides reliable building blocks, complexity lives in user code
 
-### **Plugin Validation and Discovery**
+## **Plugin Validation and Discovery**
 
 The framework automatically validates plugin configurations to ensure:
-- Required resource types are present (LLM, Memory, Storage)
-- ResourcePlugin composition rules are followed
+- Required canonical resources are present (LLM, Memory, Storage)
+- Resource dependency hierarchy is respected (no Layer violations)
 - Stage assignments are compatible with plugin types
 - Dependency chains are valid and acyclic
 - Configuration parameters match plugin requirements
 
-This taxonomy provides a clear mental model for developers while maintaining the flexibility to extend the framework in any direction through the universal Plugin interface.
-
-
-
-
-
-
-
-
-
-
-
-
-
+This unified taxonomy provides a clear mental model for developers while maintaining unlimited flexibility to extend the framework through the universal Plugin interface and composable resource architecture.
 
 
 ## 2. Progressive Disclosure: Enhanced 3-Layer Plugin System
@@ -1126,151 +1197,6 @@ stats = await memory.conversation_statistics(context.user_id)
 - DependencyGraph validates entire system before initialization
 
 **Benefits**: Startup validation, clear architecture visibility, hot-reload support, and robust dependency management across the entire resource system.
-
-
-
-
-
-## 12. Plugin Stage Assignment Precedence
-
-**Decision**: Use simple, predictable precedence with no complex hierarchies or auto-classification magic.
-
-**Simple Precedence Order**:
-1. **Config override** - `stage: DO` or `stages: [THINK, DO]` in configuration always wins
-2. **Class default** - `stage = THINK` or `stages = [INPUT, OUTPUT]` in plugin class
-3. **Safe fallback** - `THINK` stage if nothing else specified
-
-**Rationale**:
-- **Predictable**: Same configuration always produces same stage assignment
-- **Simple**: Only 3 levels, no complex analysis or heuristics
-- **Debuggable**: Easy to trace exactly why a plugin runs in specific stages
-- **No surprises**: Developers know exactly what will happen
-
-**Implementation**:
-```python
-def get_plugin_stages(plugin_class, config):
-    # 1. Config always wins
-    config_stages = config.get('stages') or config.get('stage')
-    if config_stages:
-        return normalize_to_list(config_stages)
-    
-    # 2. Class default
-    class_stages = getattr(plugin_class, 'stages', None) or getattr(plugin_class, 'stage', None)
-    if class_stages:
-        return normalize_to_list(class_stages)
-    
-    # 3. Safe fallback
-    return [THINK]
-```
-
-**Plugin Type Defaults**:
-```python
-# Input/Output plugins
-class InputAdapterPlugin(AdapterPlugin):
-    stage = INPUT  # Single stage for input processing
-
-class OutputAdapterPlugin(AdapterPlugin):
-    stage = OUTPUT  # Single stage for output formatting
-
-class FullAdapterPlugin(AdapterPlugin):
-    stages = [INPUT, OUTPUT]  # Both input and output
-
-# Processing plugins  
-class ToolPlugin(Plugin):
-    stage = DO  # Execute actions and tools
-
-class PromptPlugin(Plugin):
-    stage = THINK  # Reasoning and analysis
-
-# Multi-stage plugins
-class WorkflowPlugin(Plugin):
-    stages = [PARSE, THINK, DO]  # Custom multi-stage flow
-```
-
-**Configuration Examples**:
-```yaml
-plugins:
-  # Use class default
-  weather_tool:
-    type: WeatherPlugin  # Uses stage = DO from ToolPlugin
-    
-  # Override single stage
-  special_reasoning:
-    type: PromptPlugin
-    stage: REVIEW  # Override default THINK → REVIEW
-    
-  # Override to multi-stage
-  data_processor:
-    type: ToolPlugin  
-    stages: [PARSE, DO]  # Override default DO → PARSE+DO
-    
-  # Multi-stage with config override
-  http_adapter:
-    type: FullAdapterPlugin  # Class has stages = [INPUT, OUTPUT]
-    stages: [INPUT]  # Config override to only INPUT
-```
-
-**Warning System**:
-```python
-# Log when config overrides class defaults
-if config_stages and class_stages and config_stages != class_stages:
-    logger.warning(
-        f"Plugin '{plugin_name}' config stages {config_stages} "
-        f"override class stages {class_stages}"
-    )
-
-# Log when class overrides type defaults  
-if class_stages and type_defaults and class_stages != type_defaults:
-    logger.warning(
-        f"Plugin '{plugin_class.__name__}' explicit stages {class_stages} "
-        f"override type default {type_defaults}"
-    )
-```
-
-**No Auto-Classification**:
-- **Removed**: Function name analysis and source code inspection
-- **Removed**: Complex precedence with 5+ levels
-- **Removed**: Magic stage assignment based on behavior detection
-- **Reason**: Simplicity and predictability over clever automation
-
-**Stage Assignment Examples**:
-```python
-# Example 1: Type default
-class WeatherTool(ToolPlugin):
-    pass  # Gets stage = DO from ToolPlugin
-
-# Example 2: Explicit class override
-class PlanningTool(ToolPlugin):
-    stage = THINK  # Override ToolPlugin default of DO
-
-# Example 3: Multi-stage class
-class DataFlow(Plugin):
-    stages = [PARSE, THINK, DO]  # Custom workflow
-
-# Example 4: Config override
-plugins:
-  weather:
-    type: WeatherTool
-    stage: REVIEW  # Override class default DO → REVIEW
-```
-
-**Benefits**:
-- **No surprises**: Developers know exactly when their plugins run
-- **Easy debugging**: Clear path from config → class → fallback
-- **Simple mental model**: Just 3 rules, no complex precedence
-- **Flexible**: Both single and multi-stage assignments supported
-- **Warning system**: Clear notifications when overrides happen
-
-**Eliminated Complexity**:
-- No auto-classification of function behavior
-- No complex 5-level precedence hierarchies  
-- No source code analysis or heuristics
-- No type inference or magic stage detection
-
-This approach prioritizes **developer clarity** over **framework cleverness**.
-
-
-
 
 
 

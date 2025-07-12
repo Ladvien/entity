@@ -1,6 +1,6 @@
 # Component Overview
 
-This page explains the main building blocks of the Entity Pipeline framework. Use it alongside the [architecture overview](https://github.com/Ladvien/entity/blob/main/architecture/general.md), [plugin guide](plugin_guide.md) and [plugin cheat sheet](plugin_cheatsheet.md). A working configuration is available in [`config/dev.yaml`](https://github.com/Ladvien/entity/blob/main/config/dev.yaml). The sample configuration stores history in an in-memory DuckDB database so you can experiment immediately.
+This page explains the main building blocks of the Entity Pipeline framework. Use it alongside the [architecture overview](https://github.com/Ladvien/entity/blob/main/architecture/general.md), [plugin guide](plugin_guide.md) and [plugin cheat sheet](plugin_cheatsheet.md). A working configuration is available in [`config/dev.yaml`](https://github.com/Ladvien/entity/blob/main/config/dev.yaml). The sample configuration stores history only in memory so you can experiment immediately.
 
 ## Pipelines and Stages
 
@@ -47,10 +47,10 @@ An LLM resource wraps a language model provider. Plugins can call `context.ask_l
 
 ### Memory vs Storage
 
-`Memory` \u2013 composite store that defaults to a DuckDB-backed database in
-memory and supports optional SQL/NoSQL and vector backends. Memory uses an
-in-memory DuckDB database by default, so there is no separate `InMemoryResource`.
-`StorageResource` handles file CRUD across databases, vector stores, and file systems.
+`Memory` \u2013 composite store that keeps data in memory by default. Use a
+custom resource such as the DuckDB example when you need to persist history.
+There is no separate `InMemoryResource`. `StorageResource` handles file CRUD
+across databases, vector stores, and file systems.
 
 ## Adapters
 
