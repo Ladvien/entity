@@ -279,29 +279,21 @@ class PluginContext:
     # ------------------------------------------------------------------
 
     async def remember(self, key: str, value: Any) -> None:
-        warnings.warn(
-            "PluginContext.remember is deprecated; use context.advanced.remember",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        await self._memory.store_persistent(f"{self._user_id}:{key}", value)
+        """Persist ``value`` under ``key`` for the current user."""
+        if self._memory is not None:
+            await self._memory.store_persistent(f"{self._user_id}:{key}", value)
 
-    async def memory(self, key: str, default: Any | None = None) -> Any:
-        warnings.warn(
-            "PluginContext.memory is deprecated; use context.advanced.memory",
-            DeprecationWarning,
-            stacklevel=2,
-        )
+    async def recall(self, key: str, default: Any | None = None) -> Any:
+        """Retrieve a persisted value for ``key``."""
         if self._memory is None:
             return default
         return await self._memory.fetch_persistent(f"{self._user_id}:{key}", default)
 
+    # alias for backward compatibility
+    memory = recall
+
     async def forget(self, key: str) -> None:
-        warnings.warn(
-            "PluginContext.forget is deprecated; use context.advanced.forget",
-            DeprecationWarning,
-            stacklevel=2,
-        )
+        """Remove ``key`` from persistent storage."""
         if self._memory is not None:
             await self._memory.delete_persistent(f"{self._user_id}:{key}")
 
