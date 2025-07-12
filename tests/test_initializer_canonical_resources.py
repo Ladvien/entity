@@ -74,7 +74,7 @@ def test_initializer_fails_without_logging():
     assert init.resource_container.get("logging") is not None
 
 
-def test_initializer_accepts_all_canonical_resources():
+def test_initializer_accepts_all_canonical_resources(monkeypatch):
     cfg = {
         "plugins": {
             "agent_resources": {
@@ -92,5 +92,5 @@ def test_initializer_accepts_all_canonical_resources():
         return None
 
     # Skip resource initialization complexity
-    ResourceContainer.build_all = types.MethodType(_noop, ResourceContainer)
+    monkeypatch.setattr(ResourceContainer, "build_all", _noop)
     asyncio.run(init.initialize())
