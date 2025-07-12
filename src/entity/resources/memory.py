@@ -8,27 +8,11 @@ from datetime import datetime
 import json
 import inspect
 
-from entity.core.registries import SystemRegistries
-from pipeline.pipeline import execute_pipeline
 from .base import AgentResource
 from .interfaces.database import DatabaseResource as DatabaseInterface
 from .interfaces.vector_store import VectorStoreResource as VectorStoreInterface
 from ..core.plugins import ValidationResult
 from ..core.state import ConversationEntry
-
-
-class Conversation:
-    """Simple conversation helper used by tests."""
-
-    def __init__(self, capabilities: SystemRegistries) -> None:
-        self._caps = capabilities
-
-    async def process_request(self, message: str) -> Any:
-        result = await execute_pipeline(message, self._caps)
-        while isinstance(result, dict) and result.get("type") == "continue_processing":
-            next_msg = result.get("message", "")
-            result = await execute_pipeline(next_msg, self._caps)
-        return result
 
 
 def _cosine_similarity(a: Iterable[float], b: Iterable[float]) -> float:
@@ -210,12 +194,6 @@ class Memory(AgentResource):
                 :k
             ]
         ]
-
-    # ------------------------------------------------------------------
-    # Conversation manager
-    # ------------------------------------------------------------------
-    def start_conversation(self, capabilities: SystemRegistries) -> Conversation:
-        return Conversation(capabilities)
 
     @classmethod
     async def validate_config(cls, config: Dict) -> ValidationResult:  # noqa: D401
