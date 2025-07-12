@@ -9,7 +9,7 @@ They offer a small, easy to understand surface for plugin authors.
 
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Type
+from typing import Any, Dict, List
 
 from entity.utils.logging import get_logger
 
@@ -102,6 +102,18 @@ class AdapterPlugin(BasePlugin):
     """Input or output adapter plugin."""
 
     stages = [PipelineStage.PARSE, PipelineStage.DELIVER]
+
+
+class InputAdapterPlugin(AdapterPlugin):
+    """Adapter executed in the ``INPUT`` stage."""
+
+    stages = [PipelineStage.INPUT]
+
+
+class OutputAdapterPlugin(AdapterPlugin):
+    """Adapter executed in the ``OUTPUT`` stage."""
+
+    stages = [PipelineStage.OUTPUT]
 
 
 class FailurePlugin(BasePlugin):

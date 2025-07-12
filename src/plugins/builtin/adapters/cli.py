@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from entity.core.plugins import AdapterPlugin
+from entity.core.plugins import InputAdapterPlugin
 from pipeline.stages import PipelineStage
 
 
-class CLIAdapter(AdapterPlugin):
+class CLIAdapter(InputAdapterPlugin):
     """Placeholder CLI adapter."""
 
-    stages = [PipelineStage.PARSE, PipelineStage.DELIVER]
+    stages = [PipelineStage.INPUT, PipelineStage.OUTPUT]
 
     def __init__(self, manager: Any, config: Dict | None = None) -> None:
         super().__init__(config or {})
