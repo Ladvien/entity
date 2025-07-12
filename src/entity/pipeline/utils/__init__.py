@@ -46,12 +46,17 @@ class StageResolver:
         logger: Any | None = None,
     ) -> tuple[list[PipelineStage], bool]:
         stages = resolve_stages(plugin_class, config)
-        explicit = bool(
-            (config.get("stage") or config.get("stages"))
-            or getattr(_instance, "_explicit_stages", False)
-            or getattr(plugin_class, "stages", None)
-            or getattr(plugin_class, "stage", None)
-        )
+
+        explicit_cfg = bool(config.get("stage") or config.get("stages"))
+
+        explicit_instance = bool(getattr(_instance, "_explicit_stages", False))
+
+        class_stages = getattr(plugin_class, "stages", None)
+        class_stage = getattr(plugin_class, "stage", None)
+        explicit_class = bool(class_stages) or bool(class_stage)
+
+        explicit = explicit_cfg or explicit_instance or explicit_class
+
         return stages, explicit
 
 
