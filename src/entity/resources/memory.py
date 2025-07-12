@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Unified Memory resource."""
+
+from __future__ import annotations
 
 from math import sqrt
 from typing import Any, Dict, Iterable, List
@@ -10,12 +10,9 @@ import inspect
 
 from entity.core.registries import SystemRegistries
 from pipeline.pipeline import execute_pipeline
-from plugins.builtin.resources.database_resource import DatabaseResource
-from plugins.builtin.resources.vector_store_resource import VectorStoreResource
-
 from .base import AgentResource
-from .interfaces.database import DatabaseResource
-from .interfaces.vector_store import VectorStoreResource
+from .interfaces.database import DatabaseResource as DatabaseInterface
+from .interfaces.vector_store import VectorStoreResource as VectorStoreInterface
 from ..core.plugins import ValidationResult
 from ..core.state import ConversationEntry
 
@@ -105,8 +102,8 @@ class Memory(AgentResource):
 
     def __init__(
         self,
-        database: DatabaseResource | None = None,
-        vector_store: VectorStoreResource | None = None,
+        database: DatabaseInterface | None = None,
+        vector_store: VectorStoreInterface | None = None,
         config: Dict | None = None,
     ) -> None:
         super().__init__(config or {})
