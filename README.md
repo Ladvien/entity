@@ -19,6 +19,8 @@ All pipeline utilities are now provided under the ``entity.pipeline`` namespace.
 ### Plugin Context Helpers
 Plugins can access canonical resources with helper methods:
 `context.get_llm()`, `context.get_memory()`, and `context.get_storage()`.
+Use `context.remember()`, `context.recall()`, and `context.forget()` to persist
+small values across requests.
 
 Check the [hero landing page](https://entity.readthedocs.io/en/latest/) for a visual overview.
 

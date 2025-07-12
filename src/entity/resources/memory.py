@@ -257,3 +257,5 @@ class Memory(AgentResource):
     # ------------------------------------------------------------------
 
     remember = store_persistent
+    recall = fetch_persistent
+    forget = delete_persistent

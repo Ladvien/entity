@@ -8,12 +8,12 @@ from contextlib import asynccontextmanager
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 
-from entity.core.context import PluginContext
-from entity.core.state import PipelineState, ConversationEntry
-from entity.resources import Memory
-from entity.resources.interfaces.database import DatabaseResource
-from entity.pipeline.errors import ResourceInitializationError
-import pytest
+from entity.core.context import PluginContext  # noqa: E402
+from entity.core.state import PipelineState, ConversationEntry  # noqa: E402
+from entity.resources import Memory  # noqa: E402
+from entity.resources.interfaces.database import DatabaseResource  # noqa: E402
+from entity.pipeline.errors import ResourceInitializationError  # noqa: E402
+import pytest  # noqa: E402
 
 
 class DuckDBResource(DatabaseResource):
@@ -108,7 +108,7 @@ def test_memory_roundtrip(tmp_path) -> None:
     ctx = make_context(tmp_path)
     loop = asyncio.get_event_loop()
     loop.run_until_complete(ctx.remember("foo", "bar"))
-    assert loop.run_until_complete(ctx.memory("foo")) == "bar"
+    assert loop.run_until_complete(ctx.recall("foo")) == "bar"
 
 
 def test_memory_persists_between_instances() -> None:
