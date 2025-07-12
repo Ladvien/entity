@@ -28,7 +28,7 @@ async def execute_pending_tools(
         async with sem:
             result = await tool.execute_function(call.params)
         results[call.result_key] = result
-        context.store(call.result_key, result)
+        await context.think(call.result_key, result)
 
     await asyncio.gather(*(run_call(c) for c in list(state.pending_tool_calls)))
     return results

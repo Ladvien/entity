@@ -240,9 +240,17 @@ class PluginContext:
             del self._state.stage_results[oldest]
         self._state.stage_results[key] = value
 
+    async def think(self, key: str, value: Any) -> None:
+        """Async wrapper around :meth:`store`."""
+        self.store(key, value)
+
     def load(self, key: str, default: Any | None = None) -> Any:
         """Retrieve a stored value."""
         return self._state.stage_results.get(key, default)
+
+    async def reflect(self, key: str, default: Any | None = None) -> Any:
+        """Async wrapper around :meth:`load`."""
+        return self.load(key, default)
 
     def has(self, key: str) -> bool:
         """Return ``True`` if ``key`` exists in stage results."""
