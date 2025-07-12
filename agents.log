@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-12: Moved canonical resources check earlier in initializer
+AGENT NOTE - 2025-07-12: Updated duckdb connection context to use existing connection if available
 AGENT NOTE - 2025-07-14: Unified builder and runtime inside Agent
 AGENT NOTE - 2025-07-13: Consolidated pipeline under entity.pipeline
 AGENT NOTE - 2025-07-12: Added restart check for unknown plugins in CLI reload

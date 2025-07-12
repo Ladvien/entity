@@ -45,9 +45,12 @@ class DuckDBInfrastructure(InfrastructurePlugin):
 
     @asynccontextmanager
     async def connection(self) -> Iterator[duckdb.DuckDBPyConnection]:
-        """Yield a connection from the pool."""
-        async with self._pool as conn:
-            yield conn
+        """Yield an existing connection or acquire one from the pool."""
+        if self._conn is not None:
+            yield self._conn
+        else:
+            async with self._pool as conn:
+                yield conn
 
     async def shutdown(self) -> None:
         while not self._pool._pool.empty():
