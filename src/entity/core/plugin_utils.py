@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Type, cast
 
 from entity.pipeline.utils import _normalize_stages
+from entity.core.plugin_analyzer import suggest_upgrade
 
 from entity.utils.logging import get_logger
 
@@ -93,6 +94,9 @@ class PluginAutoClassifier:
             lines = 0
         else:
             lines = len(source.splitlines())
+            msg = suggest_upgrade(plugin_func)
+            if msg:
+                logger.warning(msg)
             if lines > 20:
                 logger.warning(
                     "Function '%s' is %d lines long; consider using a class-based plugin",
