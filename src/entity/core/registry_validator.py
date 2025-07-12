@@ -119,7 +119,7 @@ class RegistryValidator:
                 result = validate(self.registry)
             if not result.success:
                 raise SystemError(
-                    f"Dependency validation failed for {cls.__name__}: {result.error_message}"
+                    f"Dependency validation failed for {cls.__name__}: {result.message}"
                 )
 
         graph_map: Dict[str, List[str]] = {name: [] for name in self.dep_graph}
@@ -142,9 +142,24 @@ class RegistryValidator:
 
         DependencyGraph(graph_map).topological_sort()
 
+    def _validate_configs(self) -> None:
+        for cls, cfg in self.registry.all_plugin_classes():
+            validate = getattr(cls, "validate_config", None)
+            if validate is None:
+                from entity.core.plugins import ValidationResult
+
+                result = ValidationResult.success_result()
+            else:
+                result = validate(cfg)
+            if not result.success:
+                raise SystemError(
+                    f"Config validation failed for {cls.__name__}: {result.message}"
+                )
+
     def run(self) -> None:
         self._register_classes()
         self._validate_dependencies()
+        self._validate_configs()
         if self.has_complex_prompt and not self.has_vector_memory:
             raise SystemError(
                 "ComplexPrompt requires the memory resource with a vector store"
