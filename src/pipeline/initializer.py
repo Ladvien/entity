@@ -419,7 +419,9 @@ class SystemInitializer:
         resource_container = self.resource_container_cls()
         self.resource_container = resource_container
         for name, cls, config, layer in registry.resource_classes():
-            resource_container.register(name, cls, config, layer=layer)
+            resource_container.register(name, cls, config, layer)
+
+        self._ensure_canonical_resources(resource_container)
 
         async with (
             initialization_cleanup_context(resource_container),

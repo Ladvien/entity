@@ -75,7 +75,14 @@ class RegistryValidator:
 
     def _register_classes(self) -> None:
         plugins_cfg = self.initializer.config.get("plugins", {})
-        for section in ["resources", "tools", "adapters", "prompts"]:
+        for section in [
+            "resources",
+            "agent_resources",
+            "infrastructure",
+            "tools",
+            "adapters",
+            "prompts",
+        ]:
             for name, cfg in plugins_cfg.get(section, {}).items():
                 cls = import_plugin_class(cfg.get("type", name))
                 self.registry.register_class(cls, cfg, name)
@@ -99,9 +106,13 @@ class RegistryValidator:
 
     @staticmethod
     def _validate_stage_assignment(name: str, cls: type, cfg: Dict) -> None:
-        from entity.core.plugins import ResourcePlugin, ToolPlugin
+        from entity.core.plugins import (
+            ResourcePlugin,
+            ToolPlugin,
+            InfrastructurePlugin,
+        )
 
-        if issubclass(cls, (ResourcePlugin, ToolPlugin)):
+        if issubclass(cls, (ResourcePlugin, ToolPlugin, InfrastructurePlugin)):
             return
 
         cfg_value = cfg.get("stages") or cfg.get("stage")
@@ -156,6 +167,7 @@ class RegistryValidator:
 
     def _validate_resource_levels(self) -> None:
         from entity.core.plugins import AgentResource, ResourcePlugin
+        from entity.resources.base import AgentResource as CanonicalAgentResource
 
         for plugin_name, plugin_cls in self.registry._classes.items():
             if issubclass(plugin_cls, ResourcePlugin):
@@ -163,7 +175,9 @@ class RegistryValidator:
             for dep in self.dep_graph.get(plugin_name, []):
                 dep_name = dep[:-1] if dep.endswith("?") else dep
                 dep_cls = self.registry.get_class(dep_name)
-                if dep_cls is None or issubclass(dep_cls, AgentResource):
+                if dep_cls is None or issubclass(
+                    dep_cls, (AgentResource, CanonicalAgentResource)
+                ):
                     continue
                 raise SystemError(
                     f"Plugin '{plugin_name}' depends on '{dep_name}' which is not a layer-3 or layer-4 resource"

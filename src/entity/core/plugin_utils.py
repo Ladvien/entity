@@ -5,6 +5,8 @@ from __future__ import annotations
 import inspect
 from dataclasses import dataclass
 from importlib import import_module
+import sys
+from pathlib import Path
 from typing import Any, Dict, Optional, Type, cast
 
 from .stages import PipelineStage
@@ -74,7 +76,13 @@ def import_plugin_class(path: str) -> Type:
         module_path, class_name = path.rsplit(".", 1)
     else:
         raise ValueError(f"Invalid plugin path: {path}")
-    module = import_module(module_path)
+    try:
+        module = import_module(module_path)
+    except ModuleNotFoundError:
+        sys.path.insert(0, str(Path.cwd()))
+        module = sys.modules.get(module_path)
+        if module is None:
+            module = import_module(module_path)
     return getattr(module, class_name)
 
 
