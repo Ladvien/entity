@@ -89,7 +89,11 @@ class PluginToolCLI:
         doc.add_argument("--out", default="docs/source")
 
         ana = sub.add_parser(
-            "analyze-plugin", help="Suggest pipeline stages for plugin functions"
+            "analyze-plugin",
+            help=(
+                "Show plugin stages and whether they come from config hints"
+                " or class attributes"
+            ),
         )
         ana.add_argument("path", help="Plugin file path")
 
@@ -272,7 +276,9 @@ class PluginToolCLI:
             )
 
         found = False
-        selections: list[tuple[str, type[Plugin], list[PipelineStage]]] = []
+        # Inspect async callables and classify them as plugins.
+        # The reason indicates whether stages come from config hints or
+        # default class attributes.
         for name, obj in module.__dict__.items():
             if name.startswith("_"):
                 continue
@@ -281,9 +287,9 @@ class PluginToolCLI:
                 stage_list = ", ".join(str(s) for s in plugin.stages)
 
                 if getattr(plugin, "_explicit_stages", False):
-                    reason = "configuration hints"
+                    reason = "config hints"
                 else:
-                    reason = "class defaults"
+                    reason = "class attributes"
 
                 logger.info("%s -> %s (%s)", name, stage_list, reason)
                 prompt = f"Use these stages for {name}? [Y/n or comma list] "
