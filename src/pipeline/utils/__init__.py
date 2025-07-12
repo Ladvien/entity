@@ -1,9 +1,7 @@
 """Utility helpers used by the pipeline package."""
 
 from entity.core.resources.container import DependencyGraph
-
 from typing import Any, Iterable, List, Mapping, Type
-
 from pipeline.stages import PipelineStage
 
 
@@ -15,10 +13,10 @@ def _normalize_stages(stages: Any) -> List[PipelineStage]:
     return [PipelineStage.ensure(stages)]
 
 
-def get_plugin_stages(
+def resolve_stages(
     plugin_class: Type, config: Mapping[str, Any]
 ) -> List[PipelineStage]:
-    """Return final stages for ``plugin_class`` following Decision #4."""
+    """Return final stages following Decision #4."""
 
     cfg_value = config.get("stages") or config.get("stage")
     if cfg_value is not None:
@@ -33,4 +31,8 @@ def get_plugin_stages(
     return [PipelineStage.THINK]
 
 
-__all__ = ["DependencyGraph", "get_plugin_stages"]
+# Backward compatible alias
+get_plugin_stages = resolve_stages
+
+
+__all__ = ["DependencyGraph", "resolve_stages", "get_plugin_stages"]

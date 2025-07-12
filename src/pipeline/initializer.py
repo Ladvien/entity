@@ -16,7 +16,7 @@ from entity.core.resources.container import ResourceContainer
 from entity.utils.logging import configure_logging, get_logger
 from entity.workflows.discovery import discover_workflows, register_module_workflows
 from pipeline.config import ConfigLoader
-from pipeline.utils import DependencyGraph, get_plugin_stages
+from pipeline.utils import DependencyGraph, resolve_stages
 from pipeline.reliability import CircuitBreaker
 from pipeline.exceptions import CircuitBreakerTripped
 
@@ -87,7 +87,7 @@ class ClassRegistry:
     ) -> tuple[List[PipelineStage], bool]:
         """Determine final stages and whether they were explicit."""
 
-        stages = get_plugin_stages(cls, config)
+        stages = resolve_stages(cls, config)
         explicit = bool(
             (config.get("stage") or config.get("stages"))
             or getattr(cls, "stages", None)
@@ -293,7 +293,7 @@ class SystemInitializer:
     ) -> tuple[List[PipelineStage], bool]:
         """Determine final stages and whether they were explicit."""
 
-        stages = get_plugin_stages(cls, config)
+        stages = resolve_stages(cls, config)
         explicit = bool(
             (config.get("stage") or config.get("stages"))
             or getattr(instance, "_explicit_stages", False)

@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import Any, Callable, Optional
 
-from .logging import get_logger
-from .plugin_analyzer import suggest_upgrade
 
 from .stages import PipelineStage
 

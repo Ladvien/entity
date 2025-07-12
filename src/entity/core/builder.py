@@ -286,10 +286,10 @@ class _AgentBuilder:
     ) -> list[PipelineStage]:
         """Resolve final stages for ``plugin`` using simple precedence."""
 
-        from pipeline.utils import get_plugin_stages
+        from pipeline.utils import resolve_stages
 
         cfg = config or plugin.config
-        return get_plugin_stages(plugin.__class__, cfg)
+        return resolve_stages(plugin.__class__, cfg)
 
     def _register_module_plugins(self, module: ModuleType) -> None:
         import inspect
