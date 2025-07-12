@@ -24,6 +24,32 @@ class RuntimeCheckPlugin(Plugin):
     pass
 
 
+class ReconfigPlugin(Plugin):
+    name = "reconfiger"
+    stages = [PipelineStage.THINK]
+
+    def __init__(self, config):
+        super().__init__(config)
+        self.handled = False
+
+    async def _execute_impl(self, context):
+        return "ok"
+
+    async def _handle_reconfiguration(self, old_config, new_config):
+        self.handled = True
+
+
+class FailingReconfigPlugin(Plugin):
+    name = "badreconfig"
+    stages = [PipelineStage.THINK]
+
+    async def _execute_impl(self, context):
+        return "ok"
+
+    async def _handle_reconfiguration(self, old_config, new_config):
+        raise RuntimeError("boom")
+
+
 async def run_reload(cli: EntityCLI, agent: Agent, cfg_path: Path) -> int:
     loop = asyncio.get_event_loop()
     return await loop.run_in_executor(None, cli._reload_config, agent, str(cfg_path))
@@ -51,3 +77,48 @@ async def test_reload_aborts_on_failed_runtime_validation(tmp_path):
 
     result = cli._reload_config(agent, str(cfg_file))
     assert result == 1
+
+
+@pytest.mark.asyncio
+async def test_reload_successful_reconfiguration(tmp_path):
+    agent = Agent()
+    plugin = ReconfigPlugin({"value": 1})
+    await agent.add_plugin(plugin)
+    await agent.build_runtime()
+
+    ReconfigPlugin.validate_config = classmethod(
+        lambda cls, cfg: ValidationResult(True, "")
+    )
+
+    cli = EntityCLI.__new__(EntityCLI)
+    cfg = {"plugins": {"prompts": {"reconfiger": {"value": 2}}}}
+    cfg_file = tmp_path / "reload.yaml"
+    cfg_file.write_text(yaml.safe_dump(cfg))
+
+    result = cli._reload_config(agent, str(cfg_file))
+    assert result == 0
+    assert plugin.config["value"] == 2
+    assert plugin.config_version == 2
+    assert plugin.handled
+
+
+@pytest.mark.asyncio
+async def test_reload_failed_reconfiguration(tmp_path):
+    agent = Agent()
+    plugin = FailingReconfigPlugin({"value": 1})
+    await agent.add_plugin(plugin)
+    await agent.build_runtime()
+
+    FailingReconfigPlugin.validate_config = classmethod(
+        lambda cls, cfg: ValidationResult(True, "")
+    )
+
+    cli = EntityCLI.__new__(EntityCLI)
+    cfg = {"plugins": {"prompts": {"badreconfig": {"value": 2}}}}
+    cfg_file = tmp_path / "reload.yaml"
+    cfg_file.write_text(yaml.safe_dump(cfg))
+
+    result = cli._reload_config(agent, str(cfg_file))
+    assert result == 1
+    assert plugin.config["value"] == 1
+    assert plugin.config_version == 1
