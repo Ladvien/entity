@@ -57,7 +57,8 @@ class DummyLLMProvider(LLMResource):
 
 def test_standard_resources_types() -> None:
     db = DummyDatabase()
-    memory = Memory(database=db, vector_store=None, config={})
+    memory = Memory(config={})
+    memory.database = db
 
     res = StandardResources(
         memory=memory,

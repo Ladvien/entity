@@ -37,9 +37,8 @@ async def test_initialize_without_database_raises():
 
 
 @pytest.mark.asyncio
-async def test_initialize_without_vector_store_raises():
+async def test_initialize_without_vector_store_ok():
     mem = Memory(config={})
     mem.database = DummyDB()
 
-    with pytest.raises(ResourceInitializationError, match="VectorStore dependency"):
-        await mem.initialize()
+    await mem.initialize()
