@@ -423,6 +423,9 @@ class SystemInitializer:
 
         self._ensure_canonical_resources(resource_container)
 
+        # Fail fast if any canonical resources are missing before initialization
+        self._ensure_canonical_resources(resource_container)
+
         async with (
             initialization_cleanup_context(resource_container),
             plugin_cleanup_context(self._plugins),
