@@ -13,6 +13,7 @@ from .interfaces.vector_store import (
 )
 from ..core.plugins import ValidationResult
 from ..core.state import ConversationEntry
+from pipeline.errors import ResourceInitializationError
 
 
 class Memory(AgentResource):
@@ -29,14 +30,8 @@ class Memory(AgentResource):
         self._history_table = self.config.get("history_table", "conversation_history")
 
     async def initialize(self) -> None:
-        if self.database is None or self.vector_store is None:
-            raise InitializationError(
-                self.name,
-                "dependency check",
-                "Database and vector_store must be injected before initialization.",
-                kind="Resource",
-            )
-
+        if self.database is None:
+            raise ResourceInitializationError("Database dependency not injected")
         self._pool = self.database.get_connection_pool()
         async with self.database.connection() as conn:
             conn.execute(
