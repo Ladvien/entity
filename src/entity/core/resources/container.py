@@ -210,6 +210,8 @@ class ResourceContainer:
                         cls = self._classes[name]
                         cfg = self._configs[name]
                         result = cls.validate_config(cfg)
+                        if asyncio.iscoroutine(result):
+                            result = await result
                         if not result.success:
                             raise InitializationError(
                                 name,
@@ -217,7 +219,10 @@ class ResourceContainer:
                                 f"{result.message}. Fix the resource configuration.",
                                 kind="Resource",
                             )
+
                         dep_result = cls.validate_dependencies(self)
+                        if asyncio.iscoroutine(dep_result):
+                            dep_result = await dep_result
                         if not dep_result.success:
                             raise InitializationError(
                                 name,
