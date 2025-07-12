@@ -3,7 +3,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from typing import Any, Dict
 
-from entity.core.plugins import ResourcePlugin
+from entity.core.plugins import InfrastructurePlugin
 
 
 class _DummyConn:
@@ -22,8 +22,8 @@ class _DummyPool:
         return None
 
 
-class PostgresResource(ResourcePlugin):
-    """Minimal Postgres resource stub used in tests."""
+class PostgresResource(InfrastructurePlugin):
+    """Minimal Postgres infrastructure stub used in tests."""
 
     name = "postgres"
     stages: list = []

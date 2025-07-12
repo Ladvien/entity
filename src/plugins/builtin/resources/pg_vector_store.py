@@ -9,7 +9,7 @@ class PgVectorStore(ResourcePlugin):
     """Placeholder pgvector-based store."""
 
     name = "pg_vector_store"
-    dependencies = ["database"]
+    infrastructure_dependencies = ["database"]
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
