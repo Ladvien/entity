@@ -3,7 +3,7 @@ import yaml
 from entity.core.plugins import (
     AgentResource,
     InfrastructurePlugin,
-    PromptPlugin,
+    Plugin,
     ResourcePlugin,
 )
 from entity.core.stages import PipelineStage
@@ -21,7 +21,7 @@ class A(AgentResource):
         pass
 
 
-class B(PromptPlugin):
+class B(Plugin):
     stages = [PipelineStage.THINK]
     dependencies = ["a"]
 
@@ -33,7 +33,7 @@ class B(PromptPlugin):
         pass
 
 
-class C(PromptPlugin):
+class C(Plugin):
     stages = [PipelineStage.DO]
     dependencies = ["missing"]
 
@@ -46,7 +46,7 @@ class C(PromptPlugin):
         pass
 
 
-class D(PromptPlugin):
+class D(Plugin):
     stages = [PipelineStage.PARSE]
     dependencies = ["e"]
 
@@ -57,7 +57,7 @@ class D(PromptPlugin):
         pass
 
 
-class E(PromptPlugin):
+class E(Plugin):
     stages = [PipelineStage.DO]
     dependencies = ["d"]
 
@@ -98,7 +98,7 @@ class InfraDatabase(InfrastructurePlugin):
         pass
 
 
-class BadPromptInterface(PromptPlugin):
+class BadPromptInterface(Plugin):
     stages = [PipelineStage.THINK]
     dependencies = ["db_interface"]
 
@@ -106,7 +106,7 @@ class BadPromptInterface(PromptPlugin):
         pass
 
 
-class BadPromptInfra(PromptPlugin):
+class BadPromptInfra(Plugin):
     stages = [PipelineStage.THINK]
     dependencies = ["infra_db"]
 
@@ -114,7 +114,7 @@ class BadPromptInfra(PromptPlugin):
         pass
 
 
-class ComplexPrompt(PromptPlugin):
+class ComplexPrompt(Plugin):
     stages = [PipelineStage.THINK]
     dependencies = ["memory"]
 
@@ -252,7 +252,7 @@ def test_plugin_depends_on_infrastructure(tmp_path):
 
 
 def test_stage_override_warning():
-    class OverridePrompt(PromptPlugin):
+    class OverridePrompt(Plugin):
         async def _execute_impl(self, context):
             pass
 
