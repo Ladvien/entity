@@ -7,6 +7,7 @@ from typing import Any, Dict, Iterable, List
 from datetime import datetime
 import json
 import inspect
+import asyncio
 
 from .base import AgentResource
 from .interfaces.database import DatabaseResource as DatabaseInterface
@@ -85,16 +86,65 @@ class Memory(AgentResource):
     # ------------------------------------------------------------------
     def get(self, key: str, default: Any | None = None) -> Any:
         """Return ``key`` from memory or ``default`` when missing."""
+        if self.database is not None:
+            table = self.database.config.get("kv_table", "kv_store")
+
+            async def _get() -> Any:
+                async with self.database.connection() as conn:
+                    rows = await _fetchall(
+                        conn,
+                        f"SELECT value FROM {table} WHERE key = ?",
+                        key,
+                    )
+                if not rows:
+                    return default
+                value = (
+                    rows[0][0] if not isinstance(rows[0], dict) else rows[0]["value"]
+                )
+                try:
+                    return json.loads(value)
+                except Exception:
+                    return value
+
+            return asyncio.get_event_loop().run_until_complete(_get())
         return self._kv.get(key, default)
 
     def set(self, key: str, value: Any) -> None:
         """Persist ``value`` for later retrieval."""
+        if self.database is not None:
+            table = self.database.config.get("kv_table", "kv_store")
+
+            async def _set() -> None:
+                async with self.database.connection() as conn:
+                    await _exec(
+                        conn,
+                        f"DELETE FROM {table} WHERE key = ?",
+                        key,
+                    )
+                    await _exec(
+                        conn,
+                        f"INSERT INTO {table} VALUES (?, ?)",
+                        key,
+                        json.dumps(value),
+                    )
+
+            asyncio.get_event_loop().run_until_complete(_set())
+            return None
         self._kv[key] = value
 
     # Backwards compatibility
     remember = set
 
     def clear(self) -> None:
+        if self.database is not None:
+            table = self.database.config.get("kv_table", "kv_store")
+
+            async def _clear() -> None:
+                async with self.database.connection() as conn:
+                    await _exec(conn, f"DELETE FROM {table}")
+
+            asyncio.get_event_loop().run_until_complete(_clear())
+            return None
         self._kv.clear()
 
     # ------------------------------------------------------------------
