@@ -2,11 +2,11 @@ import asyncio
 import pytest
 
 from pipeline import PipelineStage, execute_pipeline
-from entity.core.plugins import BasePlugin
+from entity.core.plugins import Plugin
 from entity.core.builder import _AgentBuilder
 
 
-class ReplyPlugin(BasePlugin):
+class ReplyPlugin(Plugin):
     stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):

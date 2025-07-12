@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parent.parent  # noqa: E402
 if str(ROOT) not in sys.path:  # noqa: E402
     sys.path.insert(0, str(ROOT))
 
-from entity.core.plugins import BasePlugin  # noqa: E402
+from entity.core.plugins import Plugin  # noqa: E402
 from entity.core.plugins import FailurePlugin  # noqa: E402
 from entity.core.plugins import PromptPlugin  # noqa: E402
 from entity.core.plugins import ResourcePlugin  # noqa: E402
@@ -23,7 +23,7 @@ from entity.utils.logging import get_logger  # noqa: E402
 from .generate import generate_plugin  # noqa: E402
 from .utils import load_plugin  # noqa: E402
 
-PLUGIN_TYPES: dict[str, Type[BasePlugin]] = {
+PLUGIN_TYPES: dict[str, Type[Plugin]] = {
     "resource": ResourcePlugin,
     "tool": ToolPlugin,
     "prompt": PromptPlugin,
@@ -134,7 +134,7 @@ class PluginToolCLI:
     def _validate(self) -> int:
         assert self.args.path is not None
         plugin_cls = self._load_plugin(self.args.path)
-        if not issubclass(plugin_cls, BasePlugin):
+        if not issubclass(plugin_cls, Plugin):
             logger.error("Not a plugin class")
             return 1
         if not getattr(plugin_cls, "stages", None):
@@ -268,7 +268,7 @@ class PluginToolCLI:
     # -----------------------------------------------------
     # helper methods
     # -----------------------------------------------------
-    def _load_plugin(self, path: str) -> Type[BasePlugin]:
+    def _load_plugin(self, path: str) -> Type[Plugin]:
         return load_plugin(path)
 
     @staticmethod

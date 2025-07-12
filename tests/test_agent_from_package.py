@@ -29,12 +29,12 @@ def test_package_plugin_naming(tmp_path, monkeypatch):
 
     (pkg / "mods.py").write_text(
         """
-from pipeline import BasePlugin, PipelineStage
+from pipeline import Plugin, PipelineStage
 
 async def top_plugin(ctx):
     return 'top'
 
-class TopClass(BasePlugin):
+class TopClass(Plugin):
     stages = [PipelineStage.DO]
 
     async def _execute_impl(self, context):

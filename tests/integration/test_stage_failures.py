@@ -7,13 +7,13 @@ import pytest
 from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
 from entity.core.state_logger import LogReplayer, StateLogger
 from pipeline import PipelineStage, execute_pipeline
-from entity.core.plugins import BasePlugin
+from entity.core.plugins import Plugin
 from pipeline.pipeline import generate_pipeline_id
 from entity.core.resources.container import ResourceContainer
 from entity.core.state import ConversationEntry, PipelineState
 
 
-class RespondPlugin(BasePlugin):
+class RespondPlugin(Plugin):
     stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context):
@@ -21,7 +21,7 @@ class RespondPlugin(BasePlugin):
 
 
 def make_failing_plugin(stage: PipelineStage):
-    class FailingPlugin(BasePlugin):
+    class FailingPlugin(Plugin):
         stages = [stage]
 
         async def _execute_impl(self, context):

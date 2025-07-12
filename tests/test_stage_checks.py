@@ -6,7 +6,7 @@ from pipeline import (
     PipelineStage,
     PluginRegistry,
     PromptPlugin,
-    BasePlugin,
+    Plugin,
 )
 
 
@@ -43,7 +43,7 @@ def test_registry_rejects_invalid_stage():
 
 
 def test_class_registry_validates_missing_stage():
-    class PlainPlugin(BasePlugin):
+    class PlainPlugin(Plugin):
         async def _execute_impl(self, context):
             pass
 
@@ -53,7 +53,7 @@ def test_class_registry_validates_missing_stage():
 
 
 def test_class_registry_validates_invalid_stage():
-    class BadStage(BasePlugin):
+    class BadStage(Plugin):
         stages = ["bogus"]
 
         async def _execute_impl(self, context):

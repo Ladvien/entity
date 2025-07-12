@@ -2,20 +2,20 @@ import asyncio
 
 import pytest
 from pipeline import PipelineStage, execute_pipeline
-from entity.core.plugins import BasePlugin, FailurePlugin
+from entity.core.plugins import Plugin, FailurePlugin
 from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
 
 from entity.core.resources.container import ResourceContainer
 
 
-class FailingPlugin(BasePlugin):
+class FailingPlugin(Plugin):
     stages = [PipelineStage.PARSE]
 
     async def _execute_impl(self, context):
         raise RuntimeError("boom")
 
 
-class MarkerPlugin(BasePlugin):
+class MarkerPlugin(Plugin):
     stages = [PipelineStage.PARSE]
 
     def __init__(self, executed):
@@ -37,7 +37,7 @@ class ErrorRecorder(FailurePlugin):
         self.executed.append("error")
 
 
-class ThinkPlugin(BasePlugin):
+class ThinkPlugin(Plugin):
     stages = [PipelineStage.THINK]
 
     def __init__(self, executed):
