@@ -55,21 +55,7 @@ class Memory(AgentResource):
     async def set(self, key: str, value: Any) -> None:
         await self.store_persistent(key, value)
 
-    remember = set
-
-    async def store_persistent(self, key: str, value: Any) -> None:
-        self.set(key, value)
-
-    async def fetch_persistent(self, key: str, default: Any | None = None) -> Any:
-        return self.get(key, default)
-
-    async def delete_persistent(self, key: str) -> None:
-        if self._pool is None:
-            return
-        self._pool.execute(
-            f"DELETE FROM {self._kv_table} WHERE key = ?",
-            (key,),
-        )
+    # ``store_persistent`` and ``fetch_persistent`` are implemented below.
 
     def clear(self) -> None:
         if self._pool is not None:
