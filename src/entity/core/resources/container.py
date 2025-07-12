@@ -144,7 +144,7 @@ class ResourceContainer:
             self._resources[name] = resource
 
     async def add_from_config(self, name: str, cls: type, config: Dict) -> None:
-        instance = self._instantiate(name, cls, config)
+        instance = self._create_instance(cls, config)
         await self.add(name, instance)
 
     def get(self, name: str) -> Any | None:
@@ -210,64 +210,50 @@ class ResourceContainer:
         self._order = self._resolve_order()
         self._init_order = []
 
-        for layer in range(1, 5):
-            pending = [n for n in self._order if self._layers.get(n) == layer]
-            while pending:
-                progress = False
-                for name in list(pending):
-                    if self._dependencies_satisfied(name):
-                        cls = self._classes[name]
-                        cfg = self._configs[name]
-                        result = cls.validate_config(cfg)
-                        if asyncio.iscoroutine(result):
-                            result = await result
-                        if not result.success:
-                            raise InitializationError(
-                                name,
-                                "config validation",
-                                f"{result.message}. Fix the resource configuration.",
-                                kind="Resource",
-                            )
+        for name in self._order:
+            cls = self._classes[name]
+            cfg = self._configs[name]
 
-                        dep_result = cls.validate_dependencies(self)
-                        if asyncio.iscoroutine(dep_result):
-                            dep_result = await dep_result
-                        if not dep_result.success:
-                            raise InitializationError(
-                                name,
-                                "dependency validation",
-                                f"{dep_result.message}. Fix the resource dependencies.",
-                                kind="Resource",
-                            )
-                        instance = self._create_instance(cls, cfg)
-                        await self.add(name, instance)
+            result = cls.validate_config(cfg)
+            if asyncio.iscoroutine(result):
+                result = await result
+            if not result.success:
+                raise InitializationError(
+                    name,
+                    "config validation",
+                    f"{result.message}. Fix the resource configuration.",
+                    kind="Resource",
+                )
 
-                        self._inject_dependencies(name, instance)
+            dep_result = cls.validate_dependencies(self)
+            if asyncio.iscoroutine(dep_result):
+                dep_result = await dep_result
+            if not dep_result.success:
+                raise InitializationError(
+                    name,
+                    "dependency validation",
+                    f"{dep_result.message}. Fix the resource dependencies.",
+                    kind="Resource",
+                )
 
-                        init = getattr(instance, "initialize", None)
-                        if callable(init):
-                            await init()
-                        self._init_order.append(name)
+            instance = self._create_instance(cls, cfg)
+            await self.add(name, instance)
 
-                        check = getattr(instance, "health_check", None)
-                        if callable(check) and not await check():
-                            raise InitializationError(
-                                name,
-                                "health check",
-                                "Resource failed health check during initialization.",
-                                kind="Resource",
-                            )
+            self._inject_dependencies(name, instance)
 
-                        pending.remove(name)
-                        progress = True
-                if not progress:
-                    unresolved = ", ".join(pending)
-                    raise InitializationError(
-                        unresolved,
-                        "dependency resolution",
-                        "Unresolved dependencies for resources.",
-                        kind="Resource",
-                    )
+            init = getattr(instance, "initialize", None)
+            if callable(init):
+                await init()
+            self._init_order.append(name)
+
+            check = getattr(instance, "health_check", None)
+            if callable(check) and not await check():
+                raise InitializationError(
+                    name,
+                    "health check",
+                    "Resource failed health check during initialization.",
+                    kind="Resource",
+                )
 
     async def shutdown_all(self) -> None:
         order = self._init_order or self._order
@@ -275,6 +261,10 @@ class ResourceContainer:
             res = self.get(name)
             if res is None:
                 continue
+            check = getattr(res, "health_check", None)
+            if callable(check) and not await check():
+                await self._restart_resource(name)
+                res = self.get(name)
             shutdown = getattr(res, "shutdown", None)
             if callable(shutdown):
                 await shutdown()
@@ -330,6 +320,49 @@ class ResourceContainer:
         if hasattr(cls, "from_config"):
             return cls.from_config(cfg)
         return cls(config=cfg)
+
+    def _dependents(self, name: str) -> List[str]:
+        deps: List[str] = []
+        for res, dep_list in self._deps.items():
+            for dep in dep_list:
+                dep_name = dep[:-1] if dep.endswith("?") else dep
+                if dep_name == name:
+                    deps.append(res)
+        return deps
+
+    async def _restart_resource(self, name: str) -> bool:
+        old = self.get(name)
+        if old is not None:
+            shutdown = getattr(old, "shutdown", None)
+            if callable(shutdown):
+                try:
+                    await shutdown()
+                except Exception:
+                    pass
+        cls = self._classes.get(name)
+        cfg = self._configs.get(name)
+        if cls is None or cfg is None:
+            return False
+        instance = self._create_instance(cls, cfg)
+        await self.add(name, instance)
+        self._inject_dependencies(name, instance)
+        for dep in self._dependents(name):
+            dep_inst = self.get(dep)
+            if dep_inst is not None:
+                self._inject_dependencies(dep, dep_inst)
+        init = getattr(instance, "initialize", None)
+        if callable(init):
+            await init()
+        check = getattr(instance, "health_check", None)
+        if callable(check):
+            return await check()
+        return True
+
+    async def restart_failed(self) -> None:
+        report = await self.health_report()
+        for name, ok in report.items():
+            if not ok:
+                await self._restart_resource(name)
 
     def _inject_dependencies(self, name: str, instance: Any) -> None:
         """Attach dependencies to ``instance``.
