@@ -19,6 +19,7 @@ from pipeline.config import ConfigLoader
 from pipeline.utils import DependencyGraph, get_plugin_stages
 from pipeline.reliability import CircuitBreaker
 from pipeline.exceptions import CircuitBreakerTripped
+from pipeline.errors import InitializationError
 
 from .stages import PipelineStage
 from .workflow import Workflow
@@ -103,10 +104,18 @@ class ClassRegistry:
 
         stages, explicit = self._resolve_plugin_stages(cls, config)
         if not explicit:
-            raise SystemError(f"Plugin '{name}' does not specify any stages")
+            raise InitializationError(
+                name,
+                "stage validation",
+                "Specify 'stage' or 'stages' on the plugin or in its configuration.",
+            )
         invalid = [s for s in stages if not isinstance(s, PipelineStage)]
         if invalid:
-            raise SystemError(f"Plugin '{name}' has invalid stage values: {invalid}")
+            raise InitializationError(
+                name,
+                "stage validation",
+                f"Invalid stage values: {invalid}. Use PipelineStage members.",
+            )
 
 
 @asynccontextmanager
@@ -352,17 +361,20 @@ class SystemInitializer:
             for plugin_name in stage_plugins:
                 if not registry.has_plugin(plugin_name):
                     available = registry.list_plugins()
-                    raise SystemError(
-                        f"Workflow references unknown plugin '{plugin_name}'. Available: {available}"
+                    raise InitializationError(
+                        plugin_name,
+                        "workflow validation",
+                        f"Unknown plugin referenced. Available plugins: {available}",
                     )
 
         # Validate dependencies declared by each plugin class
         for plugin_class, _ in registry.all_plugin_classes():
             result = await plugin_class.validate_dependencies(registry)
             if not result.success:
-                raise SystemError(
-                    f"Dependency validation failed for {plugin_class.__name__}:"
-                    f"{result.error_message}"
+                raise InitializationError(
+                    plugin_class.__name__,
+                    "dependency validation",
+                    f"{result.message}. Fix plugin dependencies.",
                 )
 
         # Phase 2: dependency validation
@@ -370,8 +382,10 @@ class SystemInitializer:
         for plugin_class, config in registry.all_plugin_classes():
             result = await plugin_class.validate_config(config)
             if not result.success:
-                raise SystemError(
-                    f"Config validation failed for {plugin_class.__name__}: {result.error_message}"
+                raise InitializationError(
+                    plugin_class.__name__,
+                    "config validation",
+                    f"{result.message}. Update the plugin configuration.",
                 )
 
         # Phase 3: initialize resources via container
@@ -409,14 +423,20 @@ class SystemInitializer:
                 try:
                     await breaker.call(_run_validation)
                 except CircuitBreakerTripped as exc:
-                    raise SystemError(
-                        "Runtime validation failure threshold exceeded"
+                    raise InitializationError(
+                        name,
+                        "runtime validation",
+                        "Failure threshold exceeded. Inspect resource configuration.",
+                        kind="Resource",
                     ) from exc
                 except Exception as exc:
                     logger.error("Runtime validation failed for %s: %s", name, exc)
                     if breaker._failure_count >= breaker.failure_threshold:
-                        raise SystemError(
-                            "Runtime validation failure threshold exceeded"
+                        raise InitializationError(
+                            name,
+                            "runtime validation",
+                            "Failure threshold exceeded. Inspect resource configuration.",
+                            kind="Resource",
                         ) from exc
 
             # Phase 3.5: register tools
@@ -470,9 +490,12 @@ class SystemInitializer:
                     if optional:
                         continue
                     available = registry.list_plugins()
-                    raise SystemError(
-                        f"Plugin '{plugin_name}' requires '{dep_name}' but it's not registered. "
-                        f"Available: {available}"
+                    raise InitializationError(
+                        plugin_name,
+                        "dependency graph validation",
+                        (
+                            f"Missing dependency '{dep_name}'. Registered plugins: {available}."
+                        ),
                     )
                 if dep_name in graph_map:
                     graph_map[dep_name].append(plugin_name)
@@ -489,4 +512,9 @@ class SystemInitializer:
         missing = required - registered
         if missing:
             missing_list = ", ".join(sorted(missing))
-            raise SystemError(f"Missing canonical resources: {missing_list}")
+            raise InitializationError(
+                "canonical resources",
+                "pre-flight check",
+                f"Missing canonical resources: {missing_list}. Add them to your configuration.",
+                kind="Resource",
+            )

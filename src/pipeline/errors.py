@@ -39,6 +39,20 @@ class ResourceError(PipelineError):
     pass
 
 
+class InitializationError(PipelineError):
+    """Raised when a plugin or resource fails to initialize."""
+
+    def __init__(
+        self, name: str, phase: str, remediation: str, *, kind: str = "Plugin"
+    ) -> None:
+        message = f"{kind} '{name}' failed during {phase}. {remediation}"
+        super().__init__(message)
+        self.name = name
+        self.phase = phase
+        self.remediation = remediation
+        self.kind = kind
+
+
 class ToolExecutionError(PipelineError):
     pass
 
@@ -108,6 +122,7 @@ __all__ = [
     "PluginContextError",
     "PluginExecutionError",
     "ResourceError",
+    "InitializationError",
     "StageExecutionError",
     "ToolExecutionError",
     "ErrorResponse",
