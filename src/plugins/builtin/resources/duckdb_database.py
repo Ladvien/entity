@@ -5,11 +5,11 @@ from typing import Any, Dict, Iterator
 
 import duckdb
 
-from entity.core.plugins import ResourcePlugin
+from entity.core.plugins import InfrastructurePlugin
 
 
-class DuckDBDatabaseResource(ResourcePlugin):
-    """DuckDB-backed database resource."""
+class DuckDBDatabaseResource(InfrastructurePlugin):
+    """DuckDB-backed database implementation."""
 
     name = "duckdb_database"
     stages: list = []

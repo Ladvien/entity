@@ -9,7 +9,7 @@ They offer a small, easy to understand surface for plugin authors.
 
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Type
+from typing import Any, Dict, List
 
 from entity.utils.logging import get_logger
 
@@ -73,8 +73,26 @@ class BasePlugin:
         return response
 
 
+class InfrastructurePlugin(BasePlugin):
+    """Layer 1 infrastructure plugin with no dependencies."""
+
+    stages: list = []
+    dependencies: list[str] = []
+
+
 class ResourcePlugin(BasePlugin):
-    """Infrastructure plugin providing persistent resources."""
+    """Layer 2 resource interface built from infrastructure plugins."""
+
+    infrastructure_dependencies: list[str] = []
+
+    def __init__(self, config: Dict[str, Any] | None = None) -> None:
+        super().__init__(config)
+        # mirror infrastructure dependencies for ResourceContainer
+        self.dependencies = list(self.infrastructure_dependencies)
+
+
+class AgentResource(ResourcePlugin):
+    """Layer 3 canonical resource composed from resource interfaces."""
 
 
 class ToolPlugin(BasePlugin):
