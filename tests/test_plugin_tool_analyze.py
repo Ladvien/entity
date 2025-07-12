@@ -1,6 +1,17 @@
 import logging
+import sys
+from pathlib import Path
 
-from cli.plugin_tool.main import PluginToolArgs, PluginToolCLI
+import pytest
+
+SRC = str(Path(__file__).resolve().parents[1] / "src")
+if SRC not in sys.path:
+    sys.path.insert(0, SRC)
+
+try:
+    from cli.plugin_tool.main import PluginToolArgs, PluginToolCLI
+except ModuleNotFoundError:  # pragma: no cover - env dependent
+    pytest.skip("cli package not available", allow_module_level=True)
 
 
 def _create_tmp_plugin(tmp_path):

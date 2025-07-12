@@ -11,7 +11,8 @@ import inspect
 from entity.core.registries import SystemRegistries
 from pipeline.pipeline import execute_pipeline
 
-from ..core.plugins import ResourcePlugin, ValidationResult
+from .base import AgentResource
+from ..core.plugins import ValidationResult
 from ..core.state import ConversationEntry
 
 
@@ -92,7 +93,7 @@ async def _fetchall(conn: Any, query: str, *args: Any) -> List[Any]:
     return []
 
 
-class Memory(ResourcePlugin):
+class Memory(AgentResource):
     """Store key/value pairs, conversation history, and vectors."""
 
     name = "memory"
