@@ -27,6 +27,8 @@ plugins:
     #   embedding_model:
     #     name: dummy
     #     dimensions: 3
+    # metrics_collector:
+    #   type: entity.resources.metrics_collector:MetricsCollectorResource
   # llm:
   #   type: plugins.builtin.resources.llm.unified:UnifiedLLMResource
   #   provider: ollama
@@ -84,7 +86,7 @@ plugins:
     #   type: plugins.builtin.adapters.cli:CLIAdapter
     #   stages: [deliver]
     # logging:
-    #   type: plugins.builtin.adapters.logging:LoggingAdapter
+    #   type: entity.resources.logging:LoggingResource
     #   stages: [deliver]
   prompts:
     chain_of_thought:
