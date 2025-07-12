@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-12: Implemented stage aliasing and updated PluginTool analyze selections
+AGENT NOTE - 2025-07-15: Hot-reload validation supports sync and async methods
 AGENT NOTE - 2025-07-12: Added infrastructure deps injection in ResourceContainer
 AGENT NOTE - 2025-07-14: Unified builder and runtime inside Agent
 AGENT NOTE - 2025-07-13: Consolidated pipeline under entity.pipeline
