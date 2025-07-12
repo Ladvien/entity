@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from typing import Any, Awaitable, Callable, Dict, List, Optional
+from typing import Any, Awaitable, Callable, Dict, Generic, List, Optional, TypeVar
 
 from entity.pipeline.errors import InitializationError
 
@@ -47,18 +47,21 @@ class PoolConfig:
     scale_step: int = 1
 
 
-class ResourcePool:
+T = TypeVar("T")
+
+
+class ResourcePool(Generic[T]):
     """Asynchronous pool for expensive resources."""
 
     def __init__(
-        self, factory: Callable[[], Awaitable[Any]], config: PoolConfig
+        self, factory: Callable[[], Awaitable[T] | T], config: PoolConfig
     ) -> None:
         self._factory = factory
         self._cfg = config
-        self._pool: asyncio.Queue[Any] = asyncio.Queue()
+        self._pool: asyncio.Queue[T] = asyncio.Queue()
         self._total_size = 0
         self._lock = asyncio.Lock()
-        self._ctx_resource: Any | None = None
+        self._ctx_resource: T | None = None
 
     async def initialize(self) -> None:
         for _ in range(self._cfg.min_size):
@@ -67,7 +70,8 @@ class ResourcePool:
     async def _grow(self) -> None:
         if self._total_size >= self._cfg.max_size:
             return
-        resource = await self._factory()
+        result = self._factory()
+        resource = await result if asyncio.iscoroutine(result) else result
         await self._pool.put(resource)
         self._total_size += 1
 
@@ -77,11 +81,12 @@ class ResourcePool:
         in_use = self._total_size - self._pool.qsize()
         return in_use / self._total_size
 
-    async def acquire(self) -> Any:
+    async def acquire(self) -> T:
         async with self._lock:
             if self._pool.empty() and self._total_size < self._cfg.max_size:
                 await self._grow()
-            resource = await self._pool.get()
+        resource = await self._pool.get()
+        async with self._lock:
             if (
                 self._utilization() > self._cfg.scale_threshold
                 and self._total_size < self._cfg.max_size
@@ -90,9 +95,9 @@ class ResourcePool:
                     min(self._cfg.scale_step, self._cfg.max_size - self._total_size)
                 ):
                     await self._grow()
-            return resource
+        return resource
 
-    async def release(self, resource: Any) -> None:
+    async def release(self, resource: T) -> None:
         async with self._lock:
             await self._pool.put(resource)
 
@@ -103,7 +108,7 @@ class ResourcePool:
             "available": self._pool.qsize(),
         }
 
-    async def __aenter__(self) -> Any:
+    async def __aenter__(self) -> T:
         self._ctx_resource = await self.acquire()
         return self._ctx_resource
 
@@ -291,7 +296,7 @@ class ResourceContainer:
     async def add_pool(
         self,
         name: str,
-        factory: Callable[[], Awaitable[Any]],
+        factory: Callable[[], Awaitable[Any] | Any],
         config: Optional[Dict[str, Any]] = None,
     ) -> None:
         cfg = PoolConfig(**(config or {}))
@@ -312,7 +317,12 @@ class ResourceContainer:
             await pool.release(resource)
 
     def get_metrics(self) -> Dict[str, Dict[str, int]]:
-        return {name: pool.metrics() for name, pool in self._pools.items()}
+        metrics = {name: pool.metrics() for name, pool in self._pools.items()}
+        for name, resource in self._resources.items():
+            getter = getattr(resource, "get_pool_metrics", None)
+            if callable(getter):
+                metrics[name] = getter()
+        return metrics
 
     def _create_instance(self, cls: type, cfg: Dict) -> Any:
         if hasattr(cls, "from_config"):
