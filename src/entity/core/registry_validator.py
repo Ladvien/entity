@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import pathlib
 import sys
 from typing import Dict, List
@@ -134,6 +135,8 @@ class RegistryValidator:
                 result = ValidationResult.success_result()
             else:
                 result = validate(self.registry)
+                if asyncio.iscoroutine(result):
+                    result = asyncio.run(result)
             if not result.success:
                 raise SystemError(
                     f"Dependency validation failed for {cls.__name__}: {result.message}"
@@ -186,6 +189,8 @@ class RegistryValidator:
                 result = ValidationResult.success_result()
             else:
                 result = validate(cfg)
+                if asyncio.iscoroutine(result):
+                    result = asyncio.run(result)
             if not result.success:
                 raise SystemError(
                     f"Config validation failed for {cls.__name__}: {result.message}"
