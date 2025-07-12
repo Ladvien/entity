@@ -6,21 +6,21 @@ import pytest
 
 from entity.resources import Memory
 from entity.resources.interfaces.database import DatabaseResource
-import pipeline.utils
+import entity.pipeline.utils as pipeline_utils
 
 
 class StageResolver:
     @staticmethod
     def _resolve_plugin_stages(cls, config, logger=None):
-        return pipeline.utils.resolve_stages(cls, config), True
+        return pipeline_utils.resolve_stages(cls, config), True
 
 
-pipeline.utils.StageResolver = StageResolver
+pipeline_utils.StageResolver = StageResolver
 
 from entity.worker.pipeline_worker import PipelineWorker
 from entity.core.plugins import Plugin
 from entity.core.registries import PluginRegistry
-from pipeline.stages import PipelineStage
+from entity.pipeline.stages import PipelineStage
 
 
 class DummyMemory:

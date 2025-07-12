@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict
 
 from entity.core.plugins import InputAdapterPlugin
-from pipeline.stages import PipelineStage
+from entity.pipeline.stages import PipelineStage
 
 
 class CLIAdapter(InputAdapterPlugin):

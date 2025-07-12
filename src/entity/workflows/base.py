@@ -6,7 +6,7 @@ from typing import ClassVar, Dict, Iterable, List, Mapping
 
 from pydantic import BaseModel, Field
 
-from pipeline.stages import PipelineStage
+from entity.pipeline.stages import PipelineStage
 
 
 class Workflow(BaseModel):

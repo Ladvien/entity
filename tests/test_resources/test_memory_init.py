@@ -2,7 +2,7 @@ import pytest
 from entity.resources import Memory
 from entity.resources.interfaces.vector_store import VectorStoreResource
 from entity.resources.interfaces.database import DatabaseResource
-from pipeline.errors import ResourceInitializationError
+from entity.pipeline.errors import ResourceInitializationError
 from contextlib import asynccontextmanager
 
 

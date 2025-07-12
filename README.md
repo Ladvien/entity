@@ -6,6 +6,8 @@
 
 Entity lets you craft agent pipelines using a single configuration file. The same YAML works locally and in production, so iteration stays simple. Conversations are persisted externally through the Memory resource, keeping workers stateless. The default DuckDB backend writes this data to disk for immediate durability while still requiring zero setup.
 
+All pipeline utilities are now provided under the ``entity.pipeline`` namespace. The old ``pipeline`` package remains as a thin wrapper for backward compatibility.
+
 ## Key Features
 - Three-layer plugin system for progressive complexity
 - Hot-reloadable YAML config with validation

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Built-in workflow blueprints."""
 
-from pipeline.stages import PipelineStage
+from entity.pipeline.stages import PipelineStage
 
 from .base import Workflow
 

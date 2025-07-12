@@ -3,8 +3,8 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from typing import Any, Dict
 
-from pipeline.exceptions import CircuitBreakerTripped
-from pipeline.reliability import CircuitBreaker
+from entity.pipeline.exceptions import CircuitBreakerTripped
+from entity.pipeline.reliability import CircuitBreaker
 
 from entity.core.plugins import InfrastructurePlugin, ValidationResult
 from entity.core.resources.container import PoolConfig, ResourcePool

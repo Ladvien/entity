@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Mapping, Optional, cast
 
-from pipeline.exceptions import PipelineError
-from pipeline.workflow import Pipeline
+from entity.pipeline.exceptions import PipelineError
+from entity.pipeline.workflow import Pipeline
 
 from .builder import _AgentBuilder
 from .plugins import PromptPlugin, ToolPlugin
@@ -138,7 +138,7 @@ class Agent:
         import asyncio
         from pathlib import Path
 
-        from pipeline.initializer import SystemInitializer
+        from entity.pipeline.initializer import SystemInitializer
 
         if isinstance(cfg, Mapping):
             initializer = SystemInitializer.from_dict(cfg, env_file)

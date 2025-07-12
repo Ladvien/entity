@@ -2,7 +2,7 @@
 
 from entity.core.resources.container import DependencyGraph
 from typing import Any, Iterable, List, Mapping, Type
-from pipeline.stages import PipelineStage
+from ..stages import PipelineStage
 
 
 def _normalize_stages(stages: Any) -> List[PipelineStage]:

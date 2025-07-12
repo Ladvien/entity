@@ -1,7 +1,7 @@
 import yaml
 from entity.cli import EntityCLI
 from entity.core.plugins import Plugin, AgentResource, ValidationResult
-from pipeline.stages import PipelineStage
+from entity.pipeline.stages import PipelineStage
 
 
 class DummyResource(AgentResource):

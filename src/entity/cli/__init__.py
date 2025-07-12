@@ -16,9 +16,9 @@ import yaml
 from entity.core.agent import Agent
 from entity.core.plugins import Plugin, ValidationResult
 from entity.core.builder import _AgentBuilder
-from pipeline.config.config_update import update_plugin_configuration
-from pipeline.exceptions import CircuitBreakerTripped
-from pipeline.reliability import CircuitBreaker
+from entity.pipeline.config.config_update import update_plugin_configuration
+from entity.pipeline.exceptions import CircuitBreakerTripped
+from entity.pipeline.reliability import CircuitBreaker
 from entity.utils.logging import get_logger
 from importlib import import_module
 import sys
@@ -477,7 +477,7 @@ class EntityCLI:
 
     def _validate_config(self, config_path: str) -> int:
         async def _run() -> int:
-            from pipeline import SystemInitializer
+            from entity.pipeline import SystemInitializer
             import yaml
             from pathlib import Path
 

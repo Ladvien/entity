@@ -1,7 +1,7 @@
 from entity.core.builder import _AgentBuilder
 from entity.core.plugins import Plugin
-from pipeline.initializer import SystemInitializer
-from pipeline.utils import StageResolver
+from entity.pipeline.initializer import SystemInitializer
+from entity.pipeline.utils import StageResolver
 from entity.core.stages import PipelineStage
 
 

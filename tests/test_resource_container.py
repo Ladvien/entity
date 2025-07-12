@@ -2,7 +2,7 @@ import asyncio
 import pytest
 
 from entity.core.resources.container import ResourceContainer
-from pipeline.errors import InitializationError
+from entity.pipeline.errors import InitializationError
 from entity.core.plugins import InfrastructurePlugin, ResourcePlugin, AgentResource
 
 

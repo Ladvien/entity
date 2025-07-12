@@ -10,7 +10,7 @@ import yaml
 
 from entity.config.environment import load_env
 from entity.config.models import validate_config
-from pipeline.workflow import Workflow
+from ..workflow import Workflow
 
 from .utils import interpolate_env_vars
 

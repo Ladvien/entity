@@ -1,8 +1,8 @@
 import pytest
-from pipeline.initializer import SystemInitializer
+from entity.pipeline.initializer import SystemInitializer
 from entity.core.plugins import InfrastructurePlugin, ValidationResult
-from pipeline.reliability import CircuitBreaker
-from pipeline.exceptions import CircuitBreakerTripped, InitializationError
+from entity.pipeline.reliability import CircuitBreaker
+from entity.pipeline.exceptions import CircuitBreakerTripped, InitializationError
 
 
 class FailingInfra(InfrastructurePlugin):

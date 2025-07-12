@@ -4,12 +4,12 @@ import asyncio
 import types
 import pytest
 from entity.core.resources.container import ResourceContainer
-from pipeline.errors import InitializationError
+from entity.pipeline.errors import InitializationError
 
 
 sys.path.insert(0, str(pathlib.Path("src").resolve()))
 
-from pipeline.initializer import SystemInitializer
+from entity.pipeline.initializer import SystemInitializer
 
 
 def test_initializer_fails_without_memory():
