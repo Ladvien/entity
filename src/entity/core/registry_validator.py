@@ -37,6 +37,9 @@ class ClassRegistry:
         for name in self._order:
             yield self._classes[name], self._configs[name]
 
+    def get_class(self, name: str) -> type | None:
+        return self._classes.get(name)
+
 
 class SystemInitializer:
     def __init__(self, config: Dict) -> None:
@@ -53,7 +56,6 @@ class SystemInitializer:
 
 from entity.utils.logging import get_logger  # noqa: E402
 
-from pipeline.utils import resolve_stages  # noqa: E402
 from .stages import PipelineStage  # noqa: E402
 
 logger = get_logger(__name__)
@@ -152,6 +154,21 @@ class RegistryValidator:
 
         DependencyGraph(graph_map).topological_sort()
 
+    def _validate_resource_levels(self) -> None:
+        from entity.core.plugins import AgentResource, ResourcePlugin
+
+        for plugin_name, plugin_cls in self.registry._classes.items():
+            if issubclass(plugin_cls, ResourcePlugin):
+                continue
+            for dep in self.dep_graph.get(plugin_name, []):
+                dep_name = dep[:-1] if dep.endswith("?") else dep
+                dep_cls = self.registry.get_class(dep_name)
+                if dep_cls is None or issubclass(dep_cls, AgentResource):
+                    continue
+                raise SystemError(
+                    f"Plugin '{plugin_name}' depends on '{dep_name}' which is not a layer-3 or layer-4 resource"
+                )
+
     def _validate_configs(self) -> None:
         for cls, cfg in self.registry.all_plugin_classes():
             validate = getattr(cls, "validate_config", None)
@@ -169,6 +186,7 @@ class RegistryValidator:
     def run(self) -> None:
         self._register_classes()
         self._validate_dependencies()
+        self._validate_resource_levels()
         self._validate_configs()
         if self.has_complex_prompt and not self.has_vector_memory:
             raise SystemError(
