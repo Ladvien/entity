@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-12: Flattened resource configs
 AGENT NOTE - 2025-07-12: Added decorator shortcuts and tests
 AGENT NOTE - 2025-07-12: Added plugin lifecycle hooks and updated CLI
 AGENT NOTE - 2025-07-12: Enforced explicit plugin stages and simplified precedence

@@ -82,12 +82,6 @@ class RegistryValidator:
                 self.dep_graph[name] = list(getattr(cls, "dependencies", []))
                 self._validate_stage_assignment(name, cls, cfg)
 
-                if name == "memory" and isinstance(cfg, dict):
-                    if cfg.get("vector_store"):
-                        self.has_vector_memory = True
-                        vs_type = cfg["vector_store"].get("type", "")
-                        if vs_type.endswith("PgVectorStore"):
-                            self.uses_pg_vector_store = True
                 if name == "vector_store" or cls.__name__ == "PgVectorStore":
                     self.has_vector_memory = True
                     if cls.__name__ == "PgVectorStore":

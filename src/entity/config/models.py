@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
 
 class PluginConfig(BaseModel):
@@ -16,31 +16,12 @@ class PluginConfig(BaseModel):
         extra = "allow"
 
 
-class BackendConfig(BaseModel):
-    """Generic backend configuration."""
-
-    type: str
-
-    class Config:
-        extra = "allow"
-
-
-class MemoryConfig(PluginConfig):
-    database: BackendConfig | None = None
-    vector_store: PluginConfig | None = None
-
-
 class EmbeddingModelConfig(BaseModel):
     name: str
     dimensions: int | None = None
 
     class Config:
         extra = "allow"
-
-
-class VectorMemoryConfig(PluginConfig):
-    table: str
-    embedding_model: EmbeddingModelConfig
 
 
 class PluginsSection(BaseModel):
@@ -53,24 +34,6 @@ class PluginsSection(BaseModel):
     tools: Dict[str, PluginConfig] = Field(default_factory=dict)
     adapters: Dict[str, PluginConfig] = Field(default_factory=dict)
     prompts: Dict[str, PluginConfig] = Field(default_factory=dict)
-
-    @model_validator(mode="before")
-    def _specialize_resources(cls, values: Dict[str, Any]) -> Dict[str, Any]:
-        for section in (
-            "resources",
-            "agent_resources",
-            "custom_resources",
-            "infrastructure",
-        ):
-            entries = values.get(section, {}) or {}
-            if "memory" in entries:
-                entries["memory"] = MemoryConfig.model_validate(entries["memory"])
-            if "vector_store" in entries:
-                entries["vector_store"] = VectorMemoryConfig.model_validate(
-                    entries["vector_store"]
-                )
-            values[section] = entries
-        return values
 
 
 class ServerConfig(BaseModel):
@@ -126,10 +89,7 @@ def validate_config(data: Dict[str, Any]) -> None:
 
 __all__ = [
     "PluginConfig",
-    "BackendConfig",
-    "MemoryConfig",
     "EmbeddingModelConfig",
-    "VectorMemoryConfig",
     "PluginsSection",
     "ServerConfig",
     "ToolRegistryConfig",

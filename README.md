@@ -21,4 +21,20 @@ Check the [hero landing page](https://entity.readthedocs.io/en/latest/) for a vi
 poetry run entity-cli --config config/dev.yaml
 ```
 
+A typical configuration defines each resource separately:
+
+```yaml
+plugins:
+  resources:
+    database:
+      type: entity.infrastructure.duckdb:DuckDBInfrastructure
+      path: ./agent.duckdb
+    vector_store:
+      type: plugins.builtin.resources.duckdb_vector_store:DuckDBVectorStore
+  agent_resources:
+    memory:
+      type: entity.resources.memory:Memory
+      dependencies: [database, vector_store]
+```
+
 See the [Quick Start](docs/source/quick_start.md) for step-by-step setup or browse the [full documentation](https://entity.readthedocs.io/en/latest/).
