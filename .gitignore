@@ -192,3 +192,4 @@ talking.log
 
 audio_output/*
 .claude/*
+*.duckdb
