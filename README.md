@@ -115,6 +115,10 @@ This project uses `mise` for Python version management. The `.python-version` fi
 ```bash
 mise install
 ```
+### Secrets Management
+
+Store API keys and credentials in `secrets/<env>.env` files. The `load_env()` helper first loads `.env` and then overrides values with the matching secrets file, keeping existing environment variables intact. Ensure the `secrets/` directory remains untracked.
+
 
 
 ## Examples
