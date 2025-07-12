@@ -11,7 +11,6 @@ asyncio.set_event_loop(loop)
 from entity.core.context import PluginContext
 from entity.core.state import PipelineState, ConversationEntry
 from entity.resources import Memory
-from entity.resources import memory as memory_module
 from entity.resources.interfaces.database import DatabaseResource
 from pipeline.errors import ResourceInitializationError
 import pytest
