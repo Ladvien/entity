@@ -1,8 +1,9 @@
 from contextlib import asynccontextmanager
 
 from entity.resources import LLM, Memory, Storage, StandardResources
-from entity.resources import memory as memory_module
 from entity.resources.interfaces.database import DatabaseResource
+from entity.resources.interfaces.llm import LLMResource
+from entity.core.state import LLMResponse
 from entity.resources.interfaces.storage import StorageResource
 
 
@@ -48,16 +49,19 @@ class DummyVector(VectorStoreResource):
         return []
 
 
+class DummyLLMProvider(LLMResource):
+    async def generate(self, prompt: str) -> LLMResponse:
+        return LLMResponse(content=prompt)
+
+
 def test_standard_resources_types() -> None:
     db = DummyDatabase()
-    memory_module.database = db
-    memory_module.vector_store = None
-    memory = Memory(config={})
+    memory = Memory(database=db, vector_store=None, config={})
 
     res = StandardResources(
         memory=memory,
-        llm=LLM(config={}),
-        storage=Storage(backend=DummyBackend(), config={}),
+        llm=LLM(provider=DummyLLMProvider({}), config={}),
+        storage=Storage(config={}),
     )
     assert isinstance(res.memory, Memory)
     assert isinstance(res.llm, LLM)

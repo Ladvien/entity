@@ -7,18 +7,15 @@ from typing import Any, Dict
 from ..core.plugins import ValidationResult
 
 from .base import AgentResource
-from .interfaces.llm import LLMResource as LLMProvider
+from .interfaces.llm import LLMResource
 
 
 class LLM(AgentResource):
     """Simple LLM wrapper."""
 
     name = "llm"
-    dependencies: list[str] = ["llm_provider?"]
 
-    def __init__(
-        self, provider: LLMProvider | None = None, config: Dict | None = None
-    ) -> None:
+    def __init__(self, provider: LLMResource, config: Dict | None = None) -> None:
         super().__init__(config or {})
         self.provider = provider
 
