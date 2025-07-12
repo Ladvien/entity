@@ -3,9 +3,9 @@ import logging
 import pytest
 import yaml
 from entity.core.plugins import PromptPlugin, ResourcePlugin
-from pipeline.initializer import SystemInitializer
-from pipeline.stages import PipelineStage
-from entity.core.registry_validator import ClassRegistry, RegistryValidator
+from entity.core.stages import PipelineStage
+from entity.core.registry_validator import RegistryValidator
+from pipeline.initializer import ClassRegistry
 
 
 class A(ResourcePlugin):
@@ -54,6 +54,13 @@ class VectorStoreResource(ResourcePlugin):
         pass
 
 
+class PostgresResource(ResourcePlugin):
+    stages: list = []
+
+    async def _execute_impl(self, context):  # pragma: no cover - stub
+        pass
+
+
 class ComplexPrompt(PromptPlugin):
     stages = [PipelineStage.THINK]
     dependencies = ["memory"]
@@ -98,9 +105,10 @@ def test_validator_cycle_detection(tmp_path):
 
 def test_complex_prompt_requires_vector_store(tmp_path):
     plugins = {
+        "resources": {"memory": {"type": "entity.resources.memory:Memory"}},
         "prompts": {
             "complex_prompt": {"type": "tests.test_registry_validator:ComplexPrompt"}
-        }
+        },
     }
     path = _write_config(tmp_path, plugins)
     with pytest.raises(SystemError, match="vector store"):
@@ -151,8 +159,8 @@ def test_memory_with_postgres(tmp_path):
                     "type": "plugins.builtin.resources.pg_vector_store:PgVectorStore"
                 },
             },
-            "database": {"type": "plugins.builtin.resources.postgres:PostgresResource"},
-        }
+            "database": {"type": "tests.test_registry_validator:PostgresResource"},
+        },
     }
     path = _write_config(tmp_path, plugins)
     RegistryValidator(str(path)).run()

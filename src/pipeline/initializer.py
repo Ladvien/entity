@@ -16,7 +16,7 @@ from entity.core.resources.container import ResourceContainer
 from entity.utils.logging import configure_logging, get_logger
 from entity.workflows.discovery import discover_workflows, register_module_workflows
 from pipeline.config import ConfigLoader
-from entity.core.resources.container import DependencyGraph
+from pipeline.utils import DependencyGraph, resolve_stages
 from pipeline.reliability import CircuitBreaker
 from pipeline.exceptions import CircuitBreakerTripped
 
@@ -98,51 +98,17 @@ class ClassRegistry:
         """Determine final stages and whether they were explicit."""
 
         cfg_value = config.get("stages") or config.get("stage")
-        explicit_source = None
 
-        attr_stages = [PipelineStage.ensure(s) for s in getattr(cls, "stages", [])]
-        attr_explicit = bool(attr_stages)
-        type_defaults = self._type_default_stages(cls)
-
-        stages: list[PipelineStage] = []
-        explicit = False
-
-        if cfg_value is not None:
-            stages = cfg_value if isinstance(cfg_value, list) else [cfg_value]
-            stages = [PipelineStage.ensure(s) for s in stages]
-            explicit = True
-            explicit_source = "config"
-            if attr_explicit and set(stages) != set(attr_stages):
-                logger.warning(
-                    "Plugin '%s' config stages %s override class stages %s",
-                    cls.__name__,
-                    [str(s) for s in stages],
-                    [str(s) for s in attr_stages],
-                )
-        elif attr_explicit:
-            stages = attr_stages
-            explicit = True
-            explicit_source = "class"
-        elif type_defaults:
-            stages = type_defaults
-
-        if explicit and type_defaults and set(stages) != set(type_defaults):
-            source = explicit_source or "config"
-            logger.warning(
-                "Plugin '%s' explicit %s stages %s override type defaults %s",
-                cls.__name__,
-                source,
-                [str(s) for s in stages],
-                [str(s) for s in type_defaults],
-            )
-
-        if not stages:
-            stages = attr_stages or type_defaults
-
-        if not stages:
-            raise SystemError(f"No stage specified for {cls.__name__}")
-
-        return stages, explicit
+        return resolve_stages(
+            cls.__name__,
+            cfg_value=cfg_value,
+            attr_stages=getattr(cls, "stages", []),
+            explicit_attr=bool(getattr(cls, "stages", [])),
+            type_defaults=self._type_default_stages(cls),
+            ensure_stage=PipelineStage.ensure,
+            logger=logger,
+            error_type=SystemError,
+        )
 
     def _validate_stage_assignment(
         self, name: str, cls: type[BasePlugin], config: Dict
@@ -318,53 +284,18 @@ class SystemInitializer:
         """Determine final stages and whether they were explicit."""
 
         cfg_value = config.get("stages") or config.get("stage")
-        explicit_source = None
 
-        attr_stages = [PipelineStage.ensure(s) for s in getattr(instance, "stages", [])]
-        attr_explicit = getattr(instance, "_explicit_stages", False)
-        auto_inferred = getattr(instance, "_auto_inferred_stages", False)
-        type_defaults = self._type_default_stages(cls)
-
-        stages: list[PipelineStage] = []
-        explicit = False
-
-        if cfg_value is not None:
-            stages = cfg_value if isinstance(cfg_value, list) else [cfg_value]
-            stages = [PipelineStage.ensure(s) for s in stages]
-            explicit = True
-            explicit_source = "config"
-            if attr_explicit and set(stages) != set(attr_stages):
-                logger.warning(
-                    "Plugin '%s' config stages %s override class stages %s",
-                    cls.__name__,
-                    [str(s) for s in stages],
-                    [str(s) for s in attr_stages],
-                )
-        elif attr_explicit:
-            stages = attr_stages
-            explicit = True
-            explicit_source = "class"
-        elif type_defaults:
-            stages = type_defaults
-        elif auto_inferred:
-            stages = attr_stages
-
-        if not stages:
-            stages = attr_stages or type_defaults
-
-        if explicit and type_defaults and set(stages) != set(type_defaults):
-            source = explicit_source or "config"
-            logger.warning(
-                "Plugin '%s' explicit %s stages %s override type defaults %s",
-                cls.__name__,
-                source,
-                [str(s) for s in stages],
-                [str(s) for s in type_defaults],
-            )
-
-        if not stages:
-            raise SystemError(f"No stage specified for {cls.__name__}")
-        return stages, explicit
+        return resolve_stages(
+            cls.__name__,
+            cfg_value=cfg_value,
+            attr_stages=getattr(instance, "stages", []),
+            explicit_attr=getattr(instance, "_explicit_stages", False),
+            type_defaults=self._type_default_stages(cls),
+            ensure_stage=PipelineStage.ensure,
+            logger=logger,
+            auto_inferred=getattr(instance, "_auto_inferred_stages", False),
+            error_type=SystemError,
+        )
 
     async def initialize(self):
         self._discover_plugins()
