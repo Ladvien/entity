@@ -251,7 +251,9 @@ class EntityCLI:
         if not getattr(plugin_cls, "stages", None):
             logger.error("Plugin does not define stages")
             return 1
-        result = plugin_cls.validate_config(getattr(plugin_cls, "config", {}))
+        result = asyncio.run(
+            plugin_cls.validate_config(getattr(plugin_cls, "config", {}))
+        )
         if not isinstance(result, ValidationResult) or not result.success:
             logger.error("Config validation failed: %s", result.error_message)
             return 1

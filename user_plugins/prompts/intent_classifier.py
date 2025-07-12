@@ -16,7 +16,7 @@ class IntentClassifierPrompt(PromptPlugin):
     stages = [PipelineStage.THINK]
 
     @classmethod
-    def validate_config(cls, config: dict) -> ValidationResult:
+    async def validate_config(cls, config: dict) -> ValidationResult:
         if "confidence_threshold" not in config:
             return ValidationResult.error_result("missing confidence_threshold")
         try:

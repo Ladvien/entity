@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-12: Updated tests for Plugin base and added lifecycle checks
+AGENT NOTE - 2025-07-12: Added async lifecycle methods to Plugin base class
 AGENT NOTE - 2025-07-12: Added plugin lifecycle hooks and updated CLI
 AGENT NOTE - 2025-07-12: Enforced explicit plugin stages and simplified precedence
 AGENT NOTE - 2025-07-12: Added config and dependency hooks for plugins

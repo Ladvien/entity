@@ -399,7 +399,7 @@ class SystemInitializer:
 
         # Validate dependencies declared by each plugin class
         for plugin_class, _ in registry.all_plugin_classes():
-            result = plugin_class.validate_dependencies(registry)
+            result = await plugin_class.validate_dependencies(registry)
             if not result.success:
                 raise SystemError(
                     f"Dependency validation failed for {plugin_class.__name__}:"
@@ -409,7 +409,7 @@ class SystemInitializer:
         # Phase 2: dependency validation
         self._validate_dependency_graph(registry, dep_graph)
         for plugin_class, config in registry.all_plugin_classes():
-            result = plugin_class.validate_config(config)
+            result = await plugin_class.validate_config(config)
             if not result.success:
                 raise SystemError(
                     f"Config validation failed for {plugin_class.__name__}: {result.error_message}"
