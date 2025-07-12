@@ -75,6 +75,22 @@ class AdvancedContext:
     def get_metadata(self, key: str, default: Any | None = None) -> Any:
         return self._parent._state.metadata.get(key, default)
 
+    # ------------------------------------------------------------------
+    # Temporary thought helpers
+    # ------------------------------------------------------------------
+
+    async def think_temp(self, key: str, value: Any) -> None:
+        """Store a temporary thought only accessible via ``advanced``."""
+        self._parent._temporary_thoughts[key] = value
+
+    async def reflect_temp(self, key: str, default: Any | None = None) -> Any:
+        """Retrieve a temporary thought stored via ``think_temp``."""
+        return self._parent._temporary_thoughts.get(key, default)
+
+    async def clear_temp(self) -> None:
+        """Remove all temporary thoughts stored via ``think_temp``."""
+        self._parent._temporary_thoughts.clear()
+
 
 class PluginContext:
     """Runtime context passed to plugins."""
@@ -239,20 +255,24 @@ class PluginContext:
         return self.advanced.discover_tools(**filters)
 
     # ------------------------------------------------------------------
-    # Temporary stage result helpers ("think"/"reflect")
+    # Stage result helpers ("think"/"reflect")
     # ------------------------------------------------------------------
 
     async def think(self, key: str, value: Any) -> None:
-        """Store a temporary stage result for later reflection."""
-        self._temporary_thoughts[key] = value
+        """Store a stage result for later reflection."""
+        self._state.stage_results[key] = value
+        max_results = self._state.max_stage_results
+        if max_results is not None and len(self._state.stage_results) > max_results:
+            oldest = next(iter(self._state.stage_results))
+            del self._state.stage_results[oldest]
 
     async def reflect(self, key: str, default: Any | None = None) -> Any:
-        """Retrieve a previously stored temporary stage result."""
-        return self._temporary_thoughts.get(key, default)
+        """Retrieve a previously stored stage result."""
+        return self._state.stage_results.get(key, default)
 
     async def clear_thoughts(self) -> None:
-        """Remove all stored temporary stage results."""
-        self._temporary_thoughts.clear()
+        """Remove all stored stage results."""
+        self._state.stage_results.clear()
 
     # ------------------------------------------------------------------
     # Persistent memory helpers

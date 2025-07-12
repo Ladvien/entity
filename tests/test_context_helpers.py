@@ -21,8 +21,19 @@ async def test_think_reflect_and_clear():
     ctx = make_context()
     await ctx.think("x", 1)
     assert await ctx.reflect("x") == 1
+    assert ctx._state.stage_results["x"] == 1
     await ctx.clear_thoughts()
     assert await ctx.reflect("x") is None
+    assert ctx._state.stage_results == {}
+
+
+@pytest.mark.asyncio
+async def test_advanced_temp_helpers():
+    ctx = make_context()
+    await ctx.advanced.think_temp("y", 2)
+    assert await ctx.advanced.reflect_temp("y") == 2
+    await ctx.advanced.clear_temp()
+    assert await ctx.advanced.reflect_temp("y") is None
 
 
 def test_get_resource_helpers():

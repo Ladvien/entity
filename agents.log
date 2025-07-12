@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-13: Unified context.think/reflect with stage_results and added advanced temporary helpers
 AGENT NOTE - 2025-07-12: Added restart check for unknown plugins in CLI reload
 AGENT NOTE - 2025-07-13: Updated tests for Memory initialization
 AGENT NOTE - 2025-07-13: Memory now persists to DuckDB and vector store
