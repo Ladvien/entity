@@ -38,7 +38,7 @@ plugins:
   agent_resources:
     memory:
       type: entity.resources.memory:Memory
-      dependencies: [database, vector_store]
+      dependencies: [database, vector_store?]
 ```
 
 See the [Quick Start](docs/source/quick_start.md) for step-by-step setup or browse the [full documentation](https://entity.readthedocs.io/en/latest/).

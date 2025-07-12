@@ -14,6 +14,7 @@ from .interfaces.database import DatabaseResource as DatabaseInterface
 from .interfaces.vector_store import VectorStoreResource as VectorStoreInterface
 from ..core.plugins import ValidationResult
 from ..core.state import ConversationEntry
+from pipeline.errors import ResourceInitializationError
 
 
 def _cosine_similarity(a: Iterable[float], b: Iterable[float]) -> float:
@@ -68,15 +69,24 @@ class Memory(AgentResource):
     """Store key/value pairs, conversation history, and vectors."""
 
     name = "memory"
-    dependencies: list[str] = ["database", "vector_store"]
+    dependencies: list[str] = ["database", "vector_store?"]
 
-    def __init__(self, config: Dict | None = None) -> None:
+    def __init__(
+        self,
+        database: DatabaseInterface | None = None,
+        vector_store: VectorStoreInterface | None = None,
+        config: Dict | None = None,
+    ) -> None:
         super().__init__(config or {})
         self._kv: Dict[str, Any] = {}
         self._conversations: Dict[str, List[ConversationEntry]] = {}
         self._vectors: Dict[str, List[float]] = {}
         self.database = database
         self.vector_store = vector_store
+
+    async def initialize(self) -> None:
+        if self.database is None:
+            raise ResourceInitializationError("Database dependency not injected")
 
     async def _execute_impl(self, context: Any) -> None:  # noqa: D401, ARG002
         return None

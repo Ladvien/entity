@@ -39,6 +39,10 @@ class ResourceError(PipelineError):
     pass
 
 
+class ResourceInitializationError(ResourceError):
+    """Raised when a resource is missing required dependencies."""
+
+
 class ToolExecutionError(PipelineError):
     pass
 
@@ -108,6 +112,7 @@ __all__ = [
     "PluginContextError",
     "PluginExecutionError",
     "ResourceError",
+    "ResourceInitializationError",
     "StageExecutionError",
     "ToolExecutionError",
     "ErrorResponse",

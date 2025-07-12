@@ -1048,14 +1048,14 @@ Pipeline Execution 2:
 - `Memory` class provides advanced technical interface for complex operations
 - Serves as backend for PluginContext anthropomorphic methods (`remember()`, `recall()`, `think()`, `say()`)
 - Core conversation methods `save_conversation()` and `load_conversation()` handle external conversation persistence
-- Required database and vector_store backends for durable persistence and similarity search
+- Requires a database backend for persistence; optionally uses a vector_store for similarity search
 - Replaces SimpleMemoryResource, MemoryResource, ConversationManager, and Memory interface
 - **External persistence guarantee**: All data persisted to database/storage, never held in Memory resource instance variables
 
 **External Persistence Architecture with Post-Construction Dependency Injection**:
 ```python
 class Memory(ResourcePlugin):
-    dependencies = ["database", "vector_store"]
+    dependencies = ["database", "vector_store?"]
     
     def __init__(self, config: Dict | None = None):
         super().__init__(config or {})
@@ -1069,8 +1069,6 @@ class Memory(ResourcePlugin):
         # Validation that required dependencies were injected
         if self.database is None:
             raise ResourceInitializationError("Database dependency not injected")
-        if self.vector_store is None:
-            raise ResourceInitializationError("VectorStore dependency not injected")
     
     # Advanced technical interface for complex operations
     async def query(self, sql: str, params: list = None) -> List[Dict]:
