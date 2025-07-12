@@ -9,9 +9,10 @@ from entity.resources.logging import LoggingResource
 
 
 @pytest.mark.asyncio
-async def test_logging_file_and_console(tmp_path, capsys):
+async def test_logging_file_and_console(tmp_path, capsys, monkeypatch):
     log_file = tmp_path / "log.jsonl"
     container = ResourceContainer()
+    monkeypatch.setattr(LoggingResource, "dependencies", [])
     container.register(
         "logging",
         LoggingResource,
@@ -31,8 +32,9 @@ async def test_logging_file_and_console(tmp_path, capsys):
 
 
 @pytest.mark.asyncio
-async def test_logging_stream_output(tmp_path):
+async def test_logging_stream_output(tmp_path, monkeypatch):
     container = ResourceContainer()
+    monkeypatch.setattr(LoggingResource, "dependencies", [])
     container.register(
         "logging",
         LoggingResource,
@@ -52,8 +54,9 @@ async def test_logging_stream_output(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_logging_auto_registration():
+async def test_logging_auto_registration(monkeypatch):
     container = ResourceContainer()
+    monkeypatch.setattr(LoggingResource, "dependencies", [])
     await container.build_all()
     logger = container.get("logging")
     assert isinstance(logger, LoggingResource)

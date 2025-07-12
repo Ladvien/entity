@@ -1,10 +1,10 @@
 import pathlib
 import sys
 import asyncio
-import types
 import pytest
 from entity.core.resources.container import ResourceContainer
 from entity.pipeline.errors import InitializationError
+from entity.resources.logging import LoggingResource
 
 
 sys.path.insert(0, str(pathlib.Path("src").resolve()))
@@ -93,4 +93,9 @@ def test_initializer_accepts_all_canonical_resources(monkeypatch):
 
     # Skip resource initialization complexity
     monkeypatch.setattr(ResourceContainer, "build_all", _noop)
-    asyncio.run(init.initialize())
+
+    original_deps = LoggingResource.dependencies.copy()
+    try:
+        asyncio.run(init.initialize())
+    finally:
+        LoggingResource.dependencies = original_deps
