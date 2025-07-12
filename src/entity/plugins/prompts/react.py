@@ -52,7 +52,7 @@ class ReActPrompt(PromptPlugin):
                 answer = decision.content.replace("Final Answer:", "").strip()
                 context.set_response(answer)
                 steps.append(step_record)
-                context.store("react_steps", steps)
+                await context.think("react_steps", steps)
                 return
 
             if decision.content.startswith("Action:"):
@@ -70,7 +70,7 @@ class ReActPrompt(PromptPlugin):
         context.set_response(
             "I've reached my reasoning limit without finding a definitive answer."
         )
-        context.store("react_steps", steps)
+        await context.think("react_steps", steps)
 
     def _build_step_context(
         self, conversation: List[ConversationEntry], question: str
