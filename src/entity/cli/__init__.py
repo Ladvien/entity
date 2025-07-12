@@ -15,6 +15,8 @@ import yaml
 
 from entity.core.agent import Agent
 from entity.core.plugins import BasePlugin, ValidationResult
+from entity.core.builder import _AgentBuilder
+from pipeline.config.config_update import update_plugin_configuration
 from entity.utils.logging import get_logger
 from importlib import import_module
 from pathlib import Path
@@ -439,10 +441,42 @@ class EntityCLI:
         return asyncio.run(_run())
 
     def _reload_config(self, agent: Agent, file_path: str) -> int:
-        logger.info(
-            "Reloading configuration is not supported in this simplified build."
-        )
-        return 0
+        """Hot-reload plugin parameters from ``file_path``."""
+
+        if agent._runtime is None:
+            if agent.config_path:
+                builder = _AgentBuilder.from_yaml(agent.config_path)
+                agent._builder = builder
+                agent._runtime = builder.build_runtime()
+            else:
+                agent._runtime = agent.builder.build_runtime()
+
+        async def _run() -> int:
+
+            with open(file_path, "r", encoding="utf-8") as handle:
+                new_cfg = yaml.safe_load(handle) or {}
+
+            registry = agent.runtime.capabilities.plugins
+            pipeline_manager = getattr(agent.runtime, "manager", None)
+
+            plugins = new_cfg.get("plugins", {})
+            for section in plugins.values():
+                if not isinstance(section, dict):
+                    continue
+                for name, config in section.items():
+                    result = await update_plugin_configuration(
+                        registry,
+                        name,
+                        config,
+                        pipeline_manager=pipeline_manager,
+                    )
+                    if not result.success:
+                        logger.error(result.error_message)
+                        return 2 if result.requires_restart else 1
+            logger.info("Configuration updated successfully")
+            return 0
+
+        return asyncio.run(_run())
 
     def _create_project(self, path: str) -> int:
         target = Path(path)
