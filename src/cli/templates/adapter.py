@@ -19,6 +19,7 @@ class {class_name}(AdapterPlugin):
     # List position controls execution order and SystemInitializer preserves it.
 
     async def _execute_impl(self, context):
-        response = await context.reflect("response")
-        if response is not None:
-            await context.advanced.queue_tool_use("send", {"text": response})
+        if await context.reflect("response") is not None:
+            await context.advanced.queue_tool_use(
+                "send", {"text": await context.reflect("response")}
+            )

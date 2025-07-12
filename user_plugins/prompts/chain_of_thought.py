@@ -54,8 +54,8 @@ class ChainOfThoughtPrompt(PromptPlugin):
             if "final answer" in reasoning.content.lower():
                 break
 
-        context.store("reasoning_complete", True)
-        context.store("reasoning_steps", reasoning_steps)
+        await context.think("reasoning_complete", True)
+        await context.think("reasoning_steps", reasoning_steps)
 
     def _needs_tools(self, reasoning_text: str) -> bool:
         """Return True if ``reasoning_text`` suggests tool usage."""

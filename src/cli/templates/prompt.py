@@ -19,9 +19,8 @@ class {class_name}(PromptPlugin):
     # List position controls execution order and SystemInitializer preserves it.
 
     async def _execute_impl(self, context):
-        existing = await context.reflect("answer")
-        if existing is not None:
-            context.say(existing)
+        if await context.reflect("answer") is not None:
+            context.say(await context.reflect("answer"))
             return
 
         result = await context.tool_use("some_tool", query=context.message)
