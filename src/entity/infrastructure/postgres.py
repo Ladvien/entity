@@ -3,7 +3,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from typing import Any, Dict
 
-from entity.infrastructure.postgres import PostgresInfrastructure
+from entity.core.plugins import InfrastructurePlugin
 
 
 class _DummyConn:
@@ -22,10 +22,13 @@ class _DummyPool:
         return None
 
 
-class PostgresResource(PostgresInfrastructure):
-    """Minimal Postgres implementation used in tests."""
+class PostgresInfrastructure(InfrastructurePlugin):
+    """Minimal Postgres infrastructure stub used in tests."""
 
-    # ``PostgresInfrastructure`` already defines the key attributes
+    name = "postgres"
+    infrastructure_type = "database"
+    stages: list = []
+    dependencies: list[str] = []
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})

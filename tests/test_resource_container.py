@@ -4,7 +4,7 @@ import sys
 
 import pytest
 from pipeline import PipelineStage
-from entity.core.plugins import AgentResource
+from entity.core.plugins import AgentResource, ResourcePlugin
 
 from entity.core.resources.container import ResourceContainer
 

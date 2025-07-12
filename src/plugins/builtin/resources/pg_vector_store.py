@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from entity.core.plugins import ResourcePlugin
+from entity.resources.interfaces.vector_store import VectorStoreResource
 
 
-class PgVectorStore(ResourcePlugin):
+class PgVectorStore(VectorStoreResource):
     """Placeholder pgvector-based store."""
 
     name = "pg_vector_store"
