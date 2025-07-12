@@ -8,7 +8,7 @@ Use this document when preparing changes or reviewing pull requests.
 - **You must adhere to architectural guidelines when making changes.** See `ARCHITECTURE.md` for details on the architectural design and principles.
 - **DO NOT change the `ARCHITECTURE.md` file!** It contains 31 architectural decisions that define the framework.
 - Refer to `CONTRIBUTING.md` for general contribution guidelines.
-- The project is pre-alpha; remove unused code rather than keeping backward compatibility.
+- The project is pre-alpha; remove unused code rather than keeping backward compatibility.  Actively remove deprecated, unused, or legacy code when adding new features.
 - Prefer adding `TODO:` comments when scope is unclear.
 - Create `AGENT NOTE:` comments for other agents.
 - Always use the Poetry environment for development.
