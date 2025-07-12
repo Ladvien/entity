@@ -13,6 +13,13 @@ Use this document when preparing changes or reviewing pull requests.
 - Create `AGENT NOTE:` comments for other agents.
 - Always use the Poetry environment for development.
 - Run `poetry install --with dev` before executing any quality checks or tests.
+- After completing work create a note at the top of the `agents.log` file with the following format:
+  ```
+  AGENT NOTE - <DATE>: <Your note here>
+  ```
+- Use the `agents.log` file to track changes and decisions made during development.
+- **DO NOT use the `agents.log` file for architectural decisions!** Architectural decisions must be documented in `ARCHITECTURE.md`.
+- 
 
 ## Code Review Checklist
 
