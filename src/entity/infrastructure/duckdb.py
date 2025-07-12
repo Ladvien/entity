@@ -3,9 +3,12 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from typing import Any, Dict, Iterator
 
+from pipeline.exceptions import CircuitBreakerTripped
+from pipeline.reliability import CircuitBreaker
+
 import duckdb
 
-from entity.core.plugins import InfrastructurePlugin
+from entity.core.plugins import InfrastructurePlugin, ValidationResult
 
 
 class DuckDBInfrastructure(InfrastructurePlugin):
@@ -20,6 +23,10 @@ class DuckDBInfrastructure(InfrastructurePlugin):
         super().__init__(config or {})
         self.path: str = self.config.get("path", ":memory:")
         self._conn: duckdb.DuckDBPyConnection | None = None
+        self._breaker = CircuitBreaker(
+            failure_threshold=self.config.get("failure_threshold", 3),
+            recovery_timeout=self.config.get("recovery_timeout", 60.0),
+        )
 
     async def _execute_impl(self, context: Any) -> None:  # pragma: no cover - stub
         return None
@@ -42,3 +49,18 @@ class DuckDBInfrastructure(InfrastructurePlugin):
         if self._conn is not None:
             self._conn.close()
             self._conn = None
+
+    async def validate_runtime(self) -> ValidationResult:
+        """Check connectivity using a simple query."""
+
+        async def _query() -> None:
+            async with self.connection() as conn:
+                conn.execute("SELECT 1")
+
+        try:
+            await self._breaker.call(_query)
+        except CircuitBreakerTripped:
+            return ValidationResult.error_result("circuit breaker open")
+        except Exception as exc:  # noqa: BLE001 - return as validation error
+            return ValidationResult.error_result(str(exc))
+        return ValidationResult.success_result()
