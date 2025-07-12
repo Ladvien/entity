@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-12: Added .mise.toml to enable python idiomatic version file
 AGENT NOTE - 2025-07-12: Added temporary DuckDB-based Memory fixture in tests
 AGENT NOTE - 2025-07-12: Removed ConversationHistory helper class
 
