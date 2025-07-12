@@ -11,3 +11,5 @@ Run any example with:
 ```bash
 poetry run python examples/<name>/main.py
 ```
+
+The `PluginContext` in each example provides `get_llm()`, `get_memory()`, and `get_storage()` helpers for quick resource access.

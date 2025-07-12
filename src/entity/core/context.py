@@ -102,6 +102,14 @@ class PluginContext:
         """Return the configured LLM resource."""
         return self._registries.resources.get("llm")
 
+    def get_memory(self) -> Any | None:
+        """Return the configured Memory resource."""
+        return self.get_resource("memory")
+
+    def get_storage(self) -> Any | None:
+        """Return the configured Storage resource."""
+        return self.get_resource("storage")
+
     def say(self, content: str, *, metadata: Dict[str, Any] | None = None) -> None:
         """Append an assistant message to the conversation."""
         self.add_conversation_entry(
