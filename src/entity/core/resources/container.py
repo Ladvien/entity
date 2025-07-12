@@ -106,7 +106,12 @@ class ResourcePool:
 
 
 class ResourceContainer:
-    """Instantiate resources with dependency injection and optional pools."""
+    """Instantiate resources with dependency injection and optional pools.
+
+    Declare dependencies on resource classes via the ``dependencies`` class
+    attribute. Append ``?`` to a dependency name to mark it as optional. Missing
+    optional dependencies are injected as ``None`` instead of raising an error.
+    """
 
     def __init__(self) -> None:
         self._resources: Dict[str, Any] = {}
@@ -233,19 +238,30 @@ class ResourceContainer:
         return cls(config=cfg)
 
     def _inject_dependencies(self, name: str, instance: Any) -> None:
+        """Attach dependencies to ``instance``.
+
+        Dependencies ending with ``?`` are optional and will be injected as
+        ``None`` when absent. Required dependencies raise ``SystemError`` if
+        missing.
+        """
+
         for dep in self._deps.get(name, []):
-            dep_obj = self.get(dep)
-            if dep_obj is None:
+            optional = dep.endswith("?")
+            dep_name = dep[:-1] if optional else dep
+            dep_obj = self.get(dep_name)
+            if dep_obj is None and not optional:
                 raise SystemError(
-                    f"Resource '{name}' requires '{dep}' which is missing"
+                    f"Resource '{name}' requires '{dep_name}' which is missing"
                 )
-            setattr(instance, dep, dep_obj)
+            setattr(instance, dep_name, dep_obj)
 
     def _resolve_order(self) -> List[str]:
         # Build dependency graph with edges from each dependency to its dependents
         graph_map: Dict[str, List[str]] = {name: [] for name in self._deps}
         for name, deps in self._deps.items():
             for dep in deps:
-                graph_map.setdefault(dep, []).append(name)
+                dep_name = dep[:-1] if dep.endswith("?") else dep
+                if dep_name in graph_map:
+                    graph_map[dep_name].append(name)
         graph = DependencyGraph(graph_map)
         return graph.topological_sort()
