@@ -16,7 +16,7 @@ from entity.core.resources.container import ResourceContainer
 from entity.utils.logging import configure_logging, get_logger
 from entity.workflows.discovery import discover_workflows, register_module_workflows
 from pipeline.config import ConfigLoader
-from pipeline.utils import DependencyGraph, resolve_stages
+from pipeline.utils import DependencyGraph, resolve_stages, StageResolver
 from pipeline.reliability import CircuitBreaker
 from pipeline.exceptions import CircuitBreakerTripped
 from pipeline.errors import InitializationError

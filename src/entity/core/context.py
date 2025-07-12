@@ -84,6 +84,7 @@ class PluginContext:
         self._memory = registries.resources.get("memory")
         self._plugin_name: str | None = None
         self._advanced = AdvancedContext(self)
+        self._temporary_thoughts: dict[str, Any] = {}
 
     # ------------------------------------------------------------------
     @property
@@ -247,6 +248,22 @@ class PluginContext:
     def has(self, key: str) -> bool:
         """Return ``True`` if ``key`` exists in stage results."""
         return key in self._state.stage_results
+
+    # ------------------------------------------------------------------
+    # Anthropomorphic temporary storage helpers
+    # ------------------------------------------------------------------
+
+    async def think(self, key: str, value: Any) -> None:
+        """Store a temporary value for later reflection."""
+        self._temporary_thoughts[key] = value
+
+    async def reflect(self, key: str, default: Any | None = None) -> Any:
+        """Retrieve a previously stored thought."""
+        return self._temporary_thoughts.get(key, default)
+
+    async def clear_thoughts(self) -> None:
+        """Remove all stored thoughts."""
+        self._temporary_thoughts.clear()
 
     # ------------------------------------------------------------------
     # Persistent memory helpers
