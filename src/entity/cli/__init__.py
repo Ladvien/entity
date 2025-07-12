@@ -122,6 +122,13 @@ class EntityCLI:
         gen.add_argument("--out", default="src")
         gen.add_argument("--docs-dir", default="docs/source")
 
+        scaffold = plug_sub.add_parser(
+            "scaffold", help="Create a standalone plugin project"
+        )
+        scaffold.add_argument("name")
+        scaffold.add_argument("--type", required=True, choices=list(PLUGIN_TYPES))
+        scaffold.add_argument("--out", default="user_plugins")
+
         val = plug_sub.add_parser("validate", help="Validate plugin structure")
         val.add_argument("path")
 
@@ -243,6 +250,10 @@ class EntityCLI:
         if pcmd == "validate":
             assert self.args.path
             return self._plugin_validate(self.args.path)
+        if pcmd == "scaffold":
+            assert self.args.name and self.args.type
+            out = Path(self.args.out or "user_plugins")
+            return self._plugin_scaffold(self.args.name, self.args.type, out)
         if pcmd == "test":
             assert self.args.path
             return self._plugin_test(self.args.path)
@@ -274,6 +285,18 @@ class EntityCLI:
         )
         if not isinstance(result, ValidationResult) or not result.success:
             logger.error("Config validation failed: %s", result.error_message)
+            return 1
+
+        class _DummyRegistry:
+            def has_plugin(self, _name: str) -> bool:  # noqa: D401 - simple impl
+                return False
+
+            def list_plugins(self) -> list[str]:
+                return []
+
+        dep_result = asyncio.run(plugin_cls.validate_dependencies(_DummyRegistry()))
+        if not isinstance(dep_result, ValidationResult) or not dep_result.success:
+            logger.error("Dependency validation failed: %s", dep_result.error_message)
             return 1
         logger.info("Validation succeeded")
         return 0
@@ -326,6 +349,36 @@ class EntityCLI:
             deps = getattr(cls, "dependencies", [])
             name = cls.__name__
             logger.info("%s: %s", name, ", ".join(deps) if deps else "no dependencies")
+        return 0
+
+    def _plugin_scaffold(self, name: str, ptype: str, dest: Path) -> int:
+        if dest.exists() and any(dest.iterdir()):
+            logger.error("%s already exists and is not empty", dest)
+            return 1
+        src_dir = dest / "src"
+        docs_dir = dest / "docs"
+        tests_dir = dest / "tests"
+        src_dir.mkdir(parents=True, exist_ok=True)
+        docs_dir.mkdir(parents=True, exist_ok=True)
+        tests_dir.mkdir(parents=True, exist_ok=True)
+
+        template = Path("templates/plugins") / f"{ptype}.py"
+        class_name = "".join(part.capitalize() for part in name.split("_"))
+        content = template.read_text().format(class_name=class_name)
+        (src_dir / f"{name}.py").write_text(content)
+        (docs_dir / f"{name}.md").write_text(
+            f"## {class_name}\n\n.. automodule:: {name}\n    :members:\n"
+        )
+        test_path = tests_dir / f"test_{name}.py"
+        test_code = (
+            "from pathlib import Path\n"
+            "from tests.plugins.harness import run_plugin\n\n"
+            f"def test_{name}():\n"
+            "    path = Path(__file__).parents[1] / 'src' / '{name}.py'\n"
+            "    run_plugin(str(path))\n"
+        )
+        test_path.write_text(test_code)
+        logger.info("Created plugin project at %s", dest)
         return 0
 
     def _plugin_docs(self, path: str, out_dir: Path) -> int:
