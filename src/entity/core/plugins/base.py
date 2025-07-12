@@ -9,7 +9,7 @@ They offer a small, easy to understand surface for plugin authors.
 
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Type
+from typing import Any, Dict, List
 
 from entity.utils.logging import get_logger
 
@@ -73,8 +73,22 @@ class BasePlugin:
         return response
 
 
+class InfrastructurePlugin(BasePlugin):
+    """Layer 1 plugin providing infrastructure primitives."""
+
+    infrastructure_type: str = ""
+    stages: List[PipelineStage] = []
+    dependencies: List[str] = []
+
+
 class ResourcePlugin(BasePlugin):
-    """Infrastructure plugin providing persistent resources."""
+    """Layer 2 resource interface over infrastructure."""
+
+    infrastructure_dependencies: List[str] = []
+
+
+class AgentResource(ResourcePlugin):
+    """Layer 3 canonical or custom agent resource."""
 
 
 class ToolPlugin(BasePlugin):

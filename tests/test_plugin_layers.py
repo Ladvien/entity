@@ -3,7 +3,7 @@ import asyncio
 from pipeline import (
     PipelineStage,
     PluginRegistry,
-    ResourcePlugin,
+    AgentResource,
     SystemRegistries,
     ToolPlugin,
     ToolRegistry,
@@ -15,7 +15,7 @@ from entity.core.context import PluginContext
 from entity.core.resources.container import ResourceContainer
 
 
-class MyResource(ResourcePlugin):
+class MyResource(AgentResource):
     stages = [PipelineStage.PARSE]
 
     async def _execute_impl(self, context):
