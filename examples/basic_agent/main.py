@@ -14,6 +14,7 @@ from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistr
 from entity.core.resources.container import ResourceContainer
 from entity.infrastructure.duckdb import DuckDBInfrastructure
 from entity.resources.memory import Memory
+from entity.resources.logging import LoggingResource
 from pipeline.pipeline import execute_pipeline, generate_pipeline_id
 
 sys.path.append(str(Path(__file__).resolve().parents[2]))
@@ -45,6 +46,9 @@ async def main() -> None:
     await db.initialize()
     await resources.add("database", db)
     await resources.add("memory", memory)
+    resources.register("logging", LoggingResource, {}, layer=3)
+    await resources.build_all()
+    logger: LoggingResource = resources.get("logging")  # type: ignore[assignment]
 
     caps = SystemRegistries(resources=resources, tools=ToolRegistry(), plugins=plugins)
 
@@ -55,6 +59,9 @@ async def main() -> None:
         pipeline_id=generate_pipeline_id(),
     )
     result: dict[str, Any] = await execute_pipeline("Hello", caps, state=state)
+    await logger.log(
+        "info", "pipeline finished", component="pipeline", pipeline_id=state.pipeline_id
+    )
     print(result)
 
 
