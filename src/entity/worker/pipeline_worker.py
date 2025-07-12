@@ -34,3 +34,6 @@ class PipelineWorker:
         result = await self.run_stages(state)
         await memory.save_conversation(conversation_id, state.conversation)
         return result
+
+
+__all__ = ["PipelineWorker"]

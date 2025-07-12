@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-12: Updated tests to require database for Memory and verified persistence via connection pool
+AGENT NOTE - 2025-07-12: Consolidated PipelineWorker to single implementation
 AGENT NOTE - 2025-07-12: Replaced SystemError with InitializationError messages
 AGENT NOTE - 2025-07-12: Simplified plugin analysis output
 
