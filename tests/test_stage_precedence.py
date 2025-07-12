@@ -33,9 +33,10 @@ def test_builder_class_attribute_overrides():
     assert stages == [PipelineStage.DO]
 
 
-def test_builder_type_default():
+def test_builder_fallback_stage():
     builder = _AgentBuilder()
     plugin = InferredPrompt({})
+
     stages = builder._resolve_plugin_stages(plugin, None)
 
     assert stages == [PipelineStage.THINK]
@@ -65,7 +66,7 @@ def test_initializer_class_attribute_overrides():
     assert explicit is True
 
 
-def test_initializer_type_default():
+def test_initializer_fallback_stage():
     init = SystemInitializer({})
     plugin = InferredPrompt({})
 
