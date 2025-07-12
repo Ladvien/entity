@@ -81,6 +81,7 @@ class FailureInfo:
     error_message: str
     original_exception: Exception | None = None
     timestamp: datetime = field(default_factory=datetime.now)
+    context_snapshot: dict[str, Any] | None = None
 
 
 @dataclass

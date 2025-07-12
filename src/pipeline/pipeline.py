@@ -31,7 +31,6 @@ from .exceptions import (
 )
 from .observability.tracing import start_span
 from .stages import PipelineStage
-from .workflow import Workflow
 from .tools.execution import execute_pending_tools
 from .workflow import Workflow
 
@@ -136,6 +135,7 @@ async def execute_stage(
                     error_type="circuit_breaker",
                     error_message=str(exc),
                     original_exception=exc,
+                    context_snapshot=state.to_dict(),
                 )
             except PluginExecutionError as exc:
                 logger.exception(
@@ -152,6 +152,7 @@ async def execute_stage(
                     error_type=exc.original_exception.__class__.__name__,
                     error_message=str(exc.original_exception),
                     original_exception=exc.original_exception,
+                    context_snapshot=state.to_dict(),
                 )
             except ToolExecutionError as exc:
                 logger.exception(
@@ -168,6 +169,7 @@ async def execute_stage(
                     error_type=exc.original_exception.__class__.__name__,
                     error_message=str(exc.original_exception),
                     original_exception=exc.original_exception,
+                    context_snapshot=state.to_dict(),
                 )
             except ResourceError as exc:
                 logger.exception(
@@ -184,6 +186,7 @@ async def execute_stage(
                     error_type=exc.__class__.__name__,
                     error_message=str(exc),
                     original_exception=exc,
+                    context_snapshot=state.to_dict(),
                 )
             except PipelineError as exc:
                 logger.exception(
@@ -200,6 +203,7 @@ async def execute_stage(
                     error_type=exc.__class__.__name__,
                     error_message=str(exc),
                     original_exception=exc,
+                    context_snapshot=state.to_dict(),
                 )
             except Exception as exc:  # noqa: BLE001
                 logger.exception(
@@ -219,6 +223,7 @@ async def execute_stage(
                     error_type=exc.__class__.__name__,
                     error_message=message,
                     original_exception=exc,
+                    context_snapshot=state.to_dict(),
                 )
             if state.failure_info:
                 break
@@ -305,6 +310,7 @@ async def execute_pipeline(
                             original_exception=RuntimeError(
                                 "max iteration limit reached"
                             ),
+                            context_snapshot=state.to_dict(),
                         )
                     break
 
