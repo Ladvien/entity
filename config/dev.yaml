@@ -8,25 +8,27 @@ tool_registry:
   concurrency_limit: 5
 
 plugins:
+  infrastructure: {}
   resources:
     database:
       type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
       path: ./agent.duckdb
-    # llm:
-    #   type: plugins.builtin.resources.llm.unified:UnifiedLLMResource
-    #   provider: ollama
-    #   base_url: "${OLLAMA_BASE_URL}"
-    #   model: "${OLLAMA_MODEL}"
-    #   retries: 3
-    #   backoff: 1.0
+  # llm:
+  #   type: plugins.builtin.resources.llm.unified:UnifiedLLMResource
+  #   provider: ollama
+  #   base_url: "${OLLAMA_BASE_URL}"
+  #   model: "${OLLAMA_MODEL}"
+  #   retries: 3
+  #   backoff: 1.0
+  agent_resources:
     memory:
       type: entity.resources.memory:Memory
       dependencies: [database]
-    # vector_store:
-    #   type: plugins.builtin.resources.duckdb_vector_store:DuckDBVectorStore
-    #   table: vector_mem
-    #   embedding_model:
-    #     name: dummy
+  # vector_store:
+  #   type: plugins.builtin.resources.duckdb_vector_store:DuckDBVectorStore
+  #   table: vector_mem
+  #   embedding_model:
+  #     name: dummy
     #     dimensions: 3
     # filesystem:
     #   type: plugins.builtin.resources.s3_filesystem:S3FileSystem
@@ -51,6 +53,7 @@ plugins:
 #       type: plugins.builtin.resources.s3_filesystem:S3FileSystem
 #       bucket: agent-files
 #       region: us-east-1
+  custom_resources: {}
   tools:
     weather:
       type: user_plugins.tools.weather_api_tool:WeatherApiTool

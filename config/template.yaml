@@ -5,6 +5,7 @@ server:
   log_level: "info"
 
 plugins:
+  infrastructure: {}
   resources:
     database:
       type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
@@ -13,11 +14,13 @@ plugins:
     #   provider: ollama
     #   base_url: "${OLLAMA_BASE_URL}"
     #   model: "${OLLAMA_MODEL}"
+  agent_resources:
     memory:
       type: entity.resources.memory:Memory
       dependencies: [database]
     # storage:
     #   type: plugins.builtin.resources.storage_resource:StorageResource
+  custom_resources: {}
   tools:
     weather:
       type: user_plugins.tools.weather_api_tool:WeatherApiTool

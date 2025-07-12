@@ -7,7 +7,7 @@ from pydantic import ValidationError
 def test_valid_config_load():
     data = {
         "server": {"host": "localhost", "port": 8000},
-        "plugins": {"resources": {"a": {"type": "tests.test_initializer:A"}}},
+        "plugins": {"agent_resources": {"a": {"type": "tests.test_initializer:A"}}},
     }
     parsed = EntityConfig.from_dict(ConfigLoader.from_dict(data))
     assert parsed.server.port == 8000

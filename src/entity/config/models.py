@@ -46,21 +46,30 @@ class VectorMemoryConfig(PluginConfig):
 class PluginsSection(BaseModel):
     """Collection of user-defined plugins grouped by category."""
 
+    infrastructure: Dict[str, PluginConfig] = Field(default_factory=dict)
     resources: Dict[str, PluginConfig] = Field(default_factory=dict)
+    agent_resources: Dict[str, PluginConfig] = Field(default_factory=dict)
+    custom_resources: Dict[str, PluginConfig] = Field(default_factory=dict)
     tools: Dict[str, PluginConfig] = Field(default_factory=dict)
     adapters: Dict[str, PluginConfig] = Field(default_factory=dict)
     prompts: Dict[str, PluginConfig] = Field(default_factory=dict)
 
     @model_validator(mode="before")
     def _specialize_resources(cls, values: Dict[str, Any]) -> Dict[str, Any]:
-        resources = values.get("resources", {}) or {}
-        if "memory" in resources:
-            resources["memory"] = MemoryConfig.model_validate(resources["memory"])
-        if "vector_store" in resources:
-            resources["vector_store"] = VectorMemoryConfig.model_validate(
-                resources["vector_store"]
-            )
-        values["resources"] = resources
+        for section in (
+            "resources",
+            "agent_resources",
+            "custom_resources",
+            "infrastructure",
+        ):
+            entries = values.get(section, {}) or {}
+            if "memory" in entries:
+                entries["memory"] = MemoryConfig.model_validate(entries["memory"])
+            if "vector_store" in entries:
+                entries["vector_store"] = VectorMemoryConfig.model_validate(
+                    entries["vector_store"]
+                )
+            values[section] = entries
         return values
 
 

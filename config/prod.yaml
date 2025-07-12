@@ -8,6 +8,7 @@ tool_registry:
   concurrency_limit: 10
 
 plugins:
+  infrastructure: {}
   resources:
     database:
       type: plugins.builtin.resources.duckdb_database:DuckDBDatabaseResource
@@ -20,6 +21,7 @@ plugins:
     #   temperature: 0.7
     #   retries: 5
     #   backoff: 2.0
+  agent_resources:
     memory:
       type: entity.resources.memory:Memory
       dependencies: [database]
@@ -52,6 +54,7 @@ plugins:
 #       type: plugins.builtin.resources.s3_filesystem:S3FileSystem
 #       bucket: agent-files
 #       region: us-east-1
+  custom_resources: {}
   tools:
     weather:
       type: user_plugins.tools.weather_api_tool:WeatherApiTool

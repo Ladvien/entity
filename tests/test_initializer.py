@@ -95,7 +95,7 @@ def test_initializer_env_and_dependencies(tmp_path):
     os.environ["TEST_VALUE"] = "ok"
     config = {
         "plugins": {
-            "resources": {
+            "agent_resources": {
                 "a": {"type": "tests.test_initializer:A", "val": "${TEST_VALUE}"}
             },
             "prompts": {
@@ -130,7 +130,7 @@ def test_validate_dependencies_missing(tmp_path):
 def test_initializer_from_json_and_dict(tmp_path):
     config = {
         "plugins": {
-            "resources": {
+            "agent_resources": {
                 "a": {"type": "tests.test_initializer:A"},
             },
             "prompts": {
@@ -165,7 +165,7 @@ def test_initializer_from_json_and_dict(tmp_path):
 def test_llm_resource_registration(tmp_path):
     config = {
         "plugins": {
-            "resources": {
+            "agent_resources": {
                 "llm": {
                     "type": "plugins.builtin.resources.llm.unified:UnifiedLLMResource",
                     "provider": "ollama",
@@ -189,7 +189,9 @@ def test_llm_resource_registration(tmp_path):
 def test_runtime_validation_failure(tmp_path):
     config = {
         "runtime_validation_breaker": {"failure_threshold": 1},
-        "plugins": {"resources": {"bad": {"type": "tests.test_initializer:BadRes"}}},
+        "plugins": {
+            "agent_resources": {"bad": {"type": "tests.test_initializer:BadRes"}}
+        },
     }
 
     path = tmp_path / "cfg.yml"
@@ -205,7 +207,9 @@ def test_runtime_validation_failure(tmp_path):
 def test_runtime_validation_threshold_allows_pass(tmp_path):
     config = {
         "runtime_validation_breaker": {"failure_threshold": 2},
-        "plugins": {"resources": {"bad": {"type": "tests.test_initializer:BadRes"}}},
+        "plugins": {
+            "agent_resources": {"bad": {"type": "tests.test_initializer:BadRes"}}
+        },
     }
 
     path = tmp_path / "cfg.yml"
@@ -219,7 +223,7 @@ def test_runtime_validation_threshold_allows_pass(tmp_path):
 def test_health_check_failure(tmp_path):
     config = {
         "plugins": {
-            "resources": {"bad": {"type": "tests.test_initializer:UnhealthyRes"}}
+            "agent_resources": {"bad": {"type": "tests.test_initializer:UnhealthyRes"}}
         }
     }
 
@@ -234,7 +238,7 @@ def test_health_check_failure(tmp_path):
 def test_initialization_breaker(tmp_path):
     config = {
         "plugins": {
-            "resources": {"boom": {"type": "tests.test_initializer:BreakerRes"}}
+            "agent_resources": {"boom": {"type": "tests.test_initializer:BreakerRes"}}
         }
     }
 

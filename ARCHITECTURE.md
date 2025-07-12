@@ -1146,16 +1146,21 @@ class ResourceContainer:
 **Configuration Example**:
 ```yaml
 plugins:
+  infrastructure:
+    postgres:
+      type: entity.infrastructure.postgres:PostgresInfrastructure
+
   resources:
     database:
       type: entity.resources.database:PostgresResource
       host: localhost
       port: 5432
-      
+
     vector_store:
       type: entity.resources.vector:PgVectorStore
       dimensions: 768
-      
+
+  agent_resources:
     memory:
       type: entity.resources.memory:Memory
       # Dependencies automatically injected by container
