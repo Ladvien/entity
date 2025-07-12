@@ -34,7 +34,7 @@ class ChainOfThoughtPrompt(PromptPlugin):
 
     async def _execute_impl(self, context: PluginContext) -> None:
         user = next((e.content for e in context.conversation() if e.role == "user"), "")
-        context.say(f"Thought about: {user}")
+        await context.think("thought", f"Thought about: {user}")
 
 
 class FinalResponder(PromptPlugin):
@@ -43,10 +43,8 @@ class FinalResponder(PromptPlugin):
     stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context: PluginContext) -> None:
-        assistant_messages = [
-            e.content for e in context.conversation() if e.role == "assistant"
-        ]
-        context.say(assistant_messages[-1] if assistant_messages else "")
+        thought = await context.reflect("thought")
+        context.say(thought or "")
 
 
 async def main() -> None:
