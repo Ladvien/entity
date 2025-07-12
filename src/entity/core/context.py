@@ -20,7 +20,8 @@ class PluginContext:
         self._state = state
         self._registries = registries
         self._user_id = user_id or "default"
-        self._memory = getattr(registries.resources, "memory", None)
+        # Use registry helper to fetch memory if registered
+        self._memory = registries.resources.get("memory")
         self._plugin_name: str | None = None
 
     class AdvancedContext:
@@ -204,16 +205,18 @@ class PluginContext:
 
     def remember(self, key: str, value: Any) -> None:
         """Persist ``value`` in the configured memory resource."""
-        if self._memory is not None:
+        memory = self.get_resource("memory")
+        if memory is not None:
             namespaced_key = f"{self._user_id}:{key}"
-            self._memory.remember(namespaced_key, value)
+            memory.remember(namespaced_key, value)
 
     def memory(self, key: str, default: Any | None = None) -> Any:
         """Retrieve a value from persistent memory."""
-        if self._memory is None:
+        memory = self.get_resource("memory")
+        if memory is None:
             return default
         namespaced_key = f"{self._user_id}:{key}"
-        return self._memory.get(namespaced_key, default)
+        return memory.get(namespaced_key, default)
 
     def set_metadata(self, key: str, value: Any) -> None:
         self._state.metadata[key] = value
