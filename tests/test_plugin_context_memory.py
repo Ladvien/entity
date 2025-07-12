@@ -1,5 +1,6 @@
 import types
-import pytest
+import duckdb
+from contextlib import asynccontextmanager
 
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
@@ -8,87 +9,46 @@ from contextlib import asynccontextmanager
 from entity.core.context import PluginContext
 from entity.core.state import PipelineState
 from entity.resources import Memory
-from entity.resources import memory as memory_module
 from entity.resources.interfaces.database import DatabaseResource
-from entity.core.resources.container import PoolConfig, ResourcePool
 
 
-class DummyConnection:
-    def __init__(self, store: dict) -> None:
-        self.store = store
-
-    async def execute(self, query: str, params: tuple) -> None:
-        if query.startswith("DELETE FROM conversation_history"):
-            cid = params[0] if isinstance(params, tuple) else params
-            self.store["history"].pop(cid, None)
-        elif query.startswith("INSERT INTO conversation_history"):
-            cid, role, content, metadata, ts = params
-            self.store.setdefault("history", {}).setdefault(cid, []).append(
-                (role, content, json.loads(metadata), ts)
-            )
-        elif query.startswith("DELETE FROM kv_store"):
-            key = params[0] if isinstance(params, tuple) else params
-            self.store.setdefault("kv", {}).pop(key, None)
-        elif query.startswith("INSERT INTO kv_store"):
-            key, value = params
-            self.store.setdefault("kv", {})[key] = json.loads(value)
-
-    async def fetch(self, query: str, params: tuple) -> list:
-        if query.startswith(
-            "SELECT role, content, metadata, timestamp FROM conversation_history"
-        ):
-            cid = params[0] if isinstance(params, tuple) else params
-            return [
-                (role, content, metadata, ts)
-                for role, content, metadata, ts in self.store.get("history", {}).get(
-                    cid, []
-                )
-            ]
-        if query.startswith("SELECT value FROM kv_store"):
-            key = params[0] if isinstance(params, tuple) else params
-            if key in self.store.get("kv", {}):
-                return [(json.dumps(self.store["kv"][key]),)]
-        return []
-
-    async def fetch(self, query: str, params: tuple) -> list:
-        return await self.execute(query, params)
-
-
-class DummyDB(DatabaseResource):
-    def __init__(self) -> None:
+class DuckDBResource(DatabaseResource):
+    def __init__(self, path: str) -> None:
         super().__init__({})
-        self.data: dict = {"history": {}, "kv": {}}
-        self.pool = ResourcePool(lambda: DummyConnection(self.data), PoolConfig())
-        asyncio.get_event_loop().run_until_complete(self.pool.initialize())
+        self.conn = duckdb.connect(path)
+        self.conn.execute(
+            "CREATE TABLE IF NOT EXISTS memory_kv (key TEXT PRIMARY KEY, value TEXT)"
+        )
+        self.conn.execute(
+            "CREATE TABLE IF NOT EXISTS conversation_history (conversation_id TEXT, role TEXT, content TEXT, metadata TEXT, timestamp TEXT)"
+        )
 
     @asynccontextmanager
     async def connection(self):
-        async with self.pool as conn:
-            yield conn
+        yield self.conn
 
-    def get_connection_pool(self) -> ResourcePool:
-        return self.pool
+    def get_connection_pool(self):
+        return self.conn
 
 
 class DummyRegistries:
-    def __init__(self) -> None:
-        db = DummyDatabase()
-        memory_module.database = db
-        memory_module.vector_store = None
-        memory = Memory(config={})
-        self.resources = {"memory": memory}
+    def __init__(self, path: str) -> None:
+        db = DuckDBResource(path)
+        mem = Memory(config={})
+        mem.database = db
+        mem.vector_store = None
+        self.resources = {"memory": mem}
         self.tools = types.SimpleNamespace()
 
 
-def make_context(memory) -> PluginContext:
+def make_context(tmp_path) -> PluginContext:
     state = PipelineState(conversation=[])
-    return PluginContext(state, DummyRegistries(memory))
+    regs = DummyRegistries(str(tmp_path / "mem.duckdb"))
+    return PluginContext(state, regs)
 
 
-def test_memory_roundtrip() -> None:
-    asyncio.set_event_loop(asyncio.new_event_loop())
-    loop = asyncio.get_event_loop()
-    ctx = make_context()
+def test_memory_roundtrip(tmp_path) -> None:
+    ctx = make_context(tmp_path)
     ctx.remember("foo", "bar")
 
     assert ctx.memory("foo") == "bar"

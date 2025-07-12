@@ -48,6 +48,12 @@ class DuckDBInfrastructure(InfrastructurePlugin):
         async with self._pool as conn:
             yield conn
 
+    def get_connection_pool(self) -> duckdb.DuckDBPyConnection:
+        """Return the shared DuckDB connection."""
+        if self._conn is None:
+            self._conn = duckdb.connect(self.path)
+        return self._conn
+
     async def shutdown(self) -> None:
         while not self._pool._pool.empty():
             conn = await self._pool._pool.get()

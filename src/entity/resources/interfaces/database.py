@@ -25,6 +25,8 @@ class DatabaseResource(ResourcePlugin):
 
     @asynccontextmanager
     async def connection(self) -> Iterator[Any]:  # pragma: no cover - stub
-        pool = self.get_connection_pool()
-        async with pool as conn:
-            yield conn
+        yield None
+
+    def get_connection_pool(self) -> Any:  # pragma: no cover - stub
+        """Return the underlying connection or pool."""
+        return None

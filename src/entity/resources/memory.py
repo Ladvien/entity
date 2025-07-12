@@ -1,12 +1,10 @@
-"""Unified Memory resource."""
+"""Unified Memory resource without in-memory state."""
 
 from __future__ import annotations
 
-from math import sqrt
-from typing import Any, Dict, Iterable, List, cast
 from datetime import datetime
+from typing import Any, Dict, List
 import json
-import inspect
 
 from .base import AgentResource
 from .interfaces.database import DatabaseResource as DatabaseInterface
@@ -18,61 +16,8 @@ from ..core.state import ConversationEntry
 from pipeline.errors import InitializationError
 
 
-class Conversation:
-    """Simple conversation helper used by tests."""
-
-    def __init__(self, capabilities: SystemRegistries) -> None:
-        self._caps = capabilities
-
-    async def process_request(self, message: str) -> Any:
-        result = await execute_pipeline(message, self._caps)
-        while isinstance(result, dict) and result.get("type") == "continue_processing":
-            next_msg = result.get("message", "")
-            result = await execute_pipeline(next_msg, self._caps)
-        return result
-
-
-def _normalize_args(args: tuple[Any, ...]) -> Any:
-    if not args:
-        return ()
-    if len(args) == 1 and not isinstance(args[0], (list, tuple, dict)):
-        return (args[0],)
-    return args
-
-
-async def _exec(conn: Any, query: str, *args: Any) -> Any:
-    """Execute query supporting sync or async connections."""
-    fn = getattr(conn, "execute", None)
-    if fn is None:
-        return None
-    params = _normalize_args(args)
-    result = fn(query, params)
-    if inspect.isawaitable(result):
-        result = await result
-    return result
-
-
-async def _fetchall(conn: Any, query: str, *args: Any) -> List[Any]:
-    """Fetch all rows from the given query."""
-    params = _normalize_args(args)
-    if hasattr(conn, "fetch"):
-        result = conn.fetch(query, params)
-        if inspect.isawaitable(result):
-            result = await result
-        return list(result)
-    result = conn.execute(query, params)
-    if inspect.isawaitable(result):
-        result = await result
-    if hasattr(result, "fetchall"):
-        rows = result.fetchall()
-        if inspect.isawaitable(rows):
-            rows = await rows
-        return list(rows)
-    return []
-
-
-class Memory(AgentResource):  # type: ignore[misc]
-    """Store key/value pairs, conversation history, and vectors."""
+class Memory(AgentResource):
+    """Persist conversations, key/value pairs and vectors."""
 
     name = "memory"
     dependencies: list[str] = ["database", "vector_store"]
@@ -84,95 +29,51 @@ class Memory(AgentResource):  # type: ignore[misc]
         config: Dict[str, Any] | None = None,
     ) -> None:
         super().__init__(config or {})
-        self.database: DatabaseInterface | None = database
-        self.vector_store: VectorStoreInterface | None = vector_store
+        self.database: DatabaseInterface | None = None
+        self.vector_store: VectorStoreInterface | None = None
+        self._pool: Any | None = None
+        self._kv_table = self.config.get("kv_table", "memory_kv")
+        self._history_table = self.config.get("history_table", "conversation_history")
 
     async def initialize(self) -> None:
-        if self.database is None:
-            raise InitializationError(
-                self.name,
-                "dependency injection",
-                "Database dependency not injected.",
-                kind="Resource",
-            )
-        if self.vector_store is None:
-            raise InitializationError(
-                self.name,
-                "dependency injection",
-                "Vector store dependency not injected.",
-                kind="Resource",
-            )
-        assert self.database is not None
-        assert self.vector_store is not None
-        self.database = cast(DatabaseInterface, self.database)
-        self.vector_store = cast(VectorStoreInterface, self.vector_store)
+        if self.database is not None:
+            self._pool = self.database.get_connection_pool()
+            async with self.database.connection() as conn:
+                conn.execute(
+                    f"CREATE TABLE IF NOT EXISTS {self._kv_table} (key TEXT PRIMARY KEY, value TEXT)"
+                )
+                conn.execute(
+                    f"CREATE TABLE IF NOT EXISTS {self._history_table} ("
+                    "conversation_id TEXT, role TEXT, content TEXT, metadata TEXT, timestamp TEXT)"
+                )
 
-    async def _execute_impl(self, context: Any) -> None:  # noqa: D401, ARG002
+    async def _execute_impl(self, context: Any) -> None:  # pragma: no cover - stub
         return None
 
     # ------------------------------------------------------------------
     # Key-value helpers
     # ------------------------------------------------------------------
     def get(self, key: str, default: Any | None = None) -> Any:
-        """Return ``key`` from memory or ``default`` when missing."""
-        db = self.database
-        assert db is not None
-        table = db.config.get("kv_table", "kv_store")
-
-        async def _get() -> Any:
-            async with db.connection() as conn:
-                rows = await _fetchall(
-                    conn,
-                    f"SELECT value FROM {table} WHERE key = ?",
-                    key,
-                )
-            if not rows:
-                return default
-            value = rows[0][0] if not isinstance(rows[0], dict) else rows[0]["value"]
-            try:
-                return json.loads(value)
-            except Exception:
-                return value
-
-        return asyncio.get_event_loop().run_until_complete(_get())
+        if self._pool is None:
+            return default
+        row = self._pool.execute(
+            f"SELECT value FROM {self._kv_table} WHERE key = ?", (key,)
+        ).fetchone()
+        return json.loads(row[0]) if row else default
 
     def set(self, key: str, value: Any) -> None:
-        """Persist ``value`` for later retrieval."""
-        db = self.database
-        assert db is not None
-        table = db.config.get("kv_table", "kv_store")
+        if self._pool is None:
+            return
+        self._pool.execute(
+            f"INSERT OR REPLACE INTO {self._kv_table} VALUES (?, ?)",
+            (key, json.dumps(value)),
+        )
 
-        async def _set() -> None:
-            async with db.connection() as conn:
-                await _exec(
-                    conn,
-                    f"DELETE FROM {table} WHERE key = ?",
-                    key,
-                )
-                await _exec(
-                    conn,
-                    f"INSERT INTO {table} VALUES (?, ?)",
-                    key,
-                    json.dumps(value),
-                )
-
-        asyncio.get_event_loop().run_until_complete(_set())
-        return None
-
-    # Backwards compatibility
     remember = set
 
     def clear(self) -> None:
-        db = self.database
-        assert db is not None
-        table = db.config.get("kv_table", "kv_store")
-
-        async def _clear() -> None:
-            async with db.connection() as conn:
-                await _exec(conn, f"DELETE FROM {table}")
-
-        asyncio.get_event_loop().run_until_complete(_clear())
-        return None
+        if self._pool is not None:
+            self._pool.execute(f"DELETE FROM {self._kv_table}")
 
     # ------------------------------------------------------------------
     # Conversation helpers
@@ -180,86 +81,56 @@ class Memory(AgentResource):  # type: ignore[misc]
     async def save_conversation(
         self, conversation_id: str, history: List[ConversationEntry]
     ) -> None:
-        db = self.database
-        assert db is not None
-        table = db.config.get("history_table", "conversation_history")
-        async with db.connection() as conn:
-            await _exec(
-                conn,
-                f"DELETE FROM {table} WHERE conversation_id = ?",
-                conversation_id,
-            )
-            for entry in history:
-                await _exec(
-                    conn,
-                    f"INSERT INTO {table} VALUES (?, ?, ?, ?, ?)",
+        if self._pool is None:
+            return
+        self._pool.execute(
+            f"DELETE FROM {self._history_table} WHERE conversation_id = ?",
+            (conversation_id,),
+        )
+        for entry in history:
+            self._pool.execute(
+                f"INSERT INTO {self._history_table} VALUES (?, ?, ?, ?, ?)",
+                (
                     conversation_id,
                     entry.role,
                     entry.content,
                     json.dumps(entry.metadata),
                     entry.timestamp.isoformat(),
-                )
-        return None
+                ),
+            )
 
     async def load_conversation(self, conversation_id: str) -> List[ConversationEntry]:
-        db = self.database
-        assert db is not None
-        table = db.config.get("history_table", "conversation_history")
-        async with db.connection() as conn:
-            rows = await _fetchall(
-                conn,
-                f"SELECT role, content, metadata, timestamp FROM {table} WHERE conversation_id = ? ORDER BY timestamp",
-                conversation_id,
+        if self._pool is None:
+            return []
+        rows = self._pool.execute(
+            f"SELECT role, content, metadata, timestamp FROM {self._history_table} "
+            "WHERE conversation_id = ? ORDER BY timestamp",
+            (conversation_id,),
+        ).fetchall()
+        result: List[ConversationEntry] = []
+        for row in rows:
+            metadata = json.loads(row[2]) if row[2] else {}
+            result.append(
+                ConversationEntry(
+                    content=row[1],
+                    role=row[0],
+                    timestamp=datetime.fromisoformat(row[3]),
+                    metadata=metadata,
+                )
             )
-            result: List[ConversationEntry] = []
-            for row in rows:
-                role = row[0] if not isinstance(row, dict) else row["role"]
-                content = row[1] if not isinstance(row, dict) else row["content"]
-                metadata = (
-                    row[2] if not isinstance(row, dict) else row.get("metadata", {})
-                )
-                timestamp = row[3] if not isinstance(row, dict) else row["timestamp"]
-                if isinstance(timestamp, str):
-                    timestamp = datetime.fromisoformat(timestamp)
-                result.append(
-                    ConversationEntry(
-                        content=content,
-                        role=role,
-                        timestamp=timestamp,
-                        metadata=metadata,
-                    )
-                )
         return result
 
     # ------------------------------------------------------------------
     # Vector helpers
     # ------------------------------------------------------------------
-    async def add_embedding(self, key: str, vector: List[float]) -> None:
-        db = self.database
-        assert db is not None
-        table = db.config.get("vector_table", "vectors")
-        async with db.connection() as conn:
-            await _exec(conn, f"DELETE FROM {table} WHERE key = ?", key)
-            await _exec(
-                conn, f"INSERT INTO {table} VALUES (?, ?)", key, json.dumps(vector)
-            )
+    async def add_embedding(self, text: str) -> None:
+        if self.vector_store is not None:
+            await self.vector_store.add_embedding(text)
 
-    async def search_similar(self, vector: List[float], k: int = 5) -> List[str]:
-        db = self.database
-        assert db is not None
-        table = db.config.get("vector_table", "vectors")
-        async with db.connection() as conn:
-            rows = await _fetchall(conn, f"SELECT key, vector FROM {table}")
-        scores: Dict[str, float] = {}
-        for row in rows:
-            key = row[0] if not isinstance(row, dict) else row["key"]
-            val = row[1] if not isinstance(row, dict) else row["vector"]
-            vec = json.loads(val) if isinstance(val, str) else val
-            scores[key] = _cosine_similarity(vector, vec)
-        return [
-            item[0]
-            for item in sorted(scores.items(), key=lambda it: it[1], reverse=True)[:k]
-        ]
+    async def search_similar(self, text: str, k: int = 5) -> List[str]:
+        if self.vector_store is None:
+            return []
+        return await self.vector_store.query_similar(text, k)
 
     @classmethod
     async def validate_config(

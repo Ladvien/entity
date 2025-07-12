@@ -20,6 +20,9 @@ class _DummyConn:
 async def _create_conn() -> _DummyConn:
     return _DummyConn()
 
+    def get_pool(self) -> "_DummyPool":
+        return self
+
 
 class PostgresInfrastructure(InfrastructurePlugin):
     """Minimal Postgres infrastructure stub used in tests."""
@@ -50,12 +53,11 @@ class PostgresInfrastructure(InfrastructurePlugin):
         async with self._pool as conn:
             yield conn
 
-    def get_connection_pool(self) -> ResourcePool:
+    def get_connection_pool(self) -> Any:
+        """Return the underlying connection pool."""
         return self._pool
 
-    async def validate_runtime(
-        self, breaker: CircuitBreaker | None = None
-    ) -> ValidationResult:
+    async def validate_runtime(self) -> ValidationResult:
         """Check connectivity using a simple query."""
 
         if not hasattr(self._pool, "acquire"):
