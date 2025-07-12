@@ -17,6 +17,8 @@ from entity.core.agent import Agent
 from entity.core.plugins import Plugin, ValidationResult
 from entity.core.builder import _AgentBuilder
 from pipeline.config.config_update import update_plugin_configuration
+from pipeline.exceptions import CircuitBreakerTripped
+from pipeline.reliability import CircuitBreaker
 from entity.utils.logging import get_logger
 from importlib import import_module
 import sys
@@ -508,6 +510,12 @@ class EntityCLI:
             registry = agent.runtime.capabilities.plugins
             pipeline_manager = getattr(agent.runtime, "manager", None)
 
+            breaker_cfg = new_cfg.get("runtime_validation_breaker", {})
+            breaker = CircuitBreaker(
+                failure_threshold=breaker_cfg.get("failure_threshold", 3),
+                recovery_timeout=breaker_cfg.get("recovery_timeout", 60.0),
+            )
+
             plugins = new_cfg.get("plugins", {})
             for section in plugins.values():
                 if not isinstance(section, dict):
@@ -522,6 +530,37 @@ class EntityCLI:
                     if not result.success:
                         logger.error(result.error_message)
                         return 2 if result.requires_restart else 1
+
+                    plugin = registry.get_plugin(name)
+                    if plugin is None:
+                        continue
+                    validate = getattr(plugin, "validate_runtime", None)
+                    if not callable(validate):
+                        continue
+
+                    async def _run_validation() -> None:
+                        v_result = await validate()
+                        if not v_result.success:
+                            raise RuntimeError(v_result.message)
+
+                    try:
+                        await breaker.call(_run_validation)
+                    except CircuitBreakerTripped as exc:
+                        logger.error(
+                            "Runtime validation failure threshold exceeded: %s",
+                            exc,
+                        )
+                        await plugin.rollback_config(plugin.config_version - 1)
+                        return 1
+                    except Exception as exc:
+                        logger.error("Runtime validation failed for %s: %s", name, exc)
+                        await plugin.rollback_config(plugin.config_version - 1)
+                        if breaker._failure_count >= breaker.failure_threshold:
+                            logger.error(
+                                "Runtime validation failure threshold exceeded"
+                            )
+                            return 1
+                        return 1
             logger.info("Configuration updated successfully")
             return 0
 
