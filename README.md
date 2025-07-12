@@ -64,7 +64,8 @@ See [`config/dev.yaml`](config/dev.yaml) for the complete example.
 
 ### Zero-Config Plugins
 
-Register a tool and prompt without specifying stages:
+Register a tool and prompt. The prompt plugin runs in the OUTPUT stage
+so any call to `ctx.say()` occurs at the correct point in the pipeline:
 
 ```python
 from entity import Agent
@@ -76,7 +77,9 @@ async def add(a: int, b: int) -> int:
     return a + b
 
 
-@agent.prompt
+from pipeline.stages import PipelineStage
+
+@agent.prompt(stage=PipelineStage.OUTPUT)
 async def final(ctx):
     result = await ctx.tool_use("add", a=2, b=2)
     ctx.say(str(result))

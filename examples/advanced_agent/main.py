@@ -38,7 +38,9 @@ class ReActPrompt(PromptPlugin):
             (e.content for e in context.conversation() if e.role == "user"), ""
         )
         tool_result = await context.tool_use("calc", expression="2+2")
-        context.say(f"Thinking about {question} using tool result {tool_result}")
+        await context.think(
+            "analysis", f"Thinking about {question} using tool result {tool_result}"
+        )
 
 
 class FinalResponder(PromptPlugin):
@@ -47,8 +49,8 @@ class FinalResponder(PromptPlugin):
     stages = [PipelineStage.OUTPUT]
 
     async def _execute_impl(self, context: PluginContext) -> None:
-        assistant = [e.content for e in context.conversation() if e.role == "assistant"]
-        context.say(assistant[-1] if assistant else "")
+        analysis = await context.reflect("analysis")
+        context.say(analysis or "")
 
 
 async def main() -> None:
