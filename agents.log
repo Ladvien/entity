@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-12: Added restart logic and shutdown checks in ResourceContainer
 AGENT NOTE - 2025-07-12: Verified sandbox references removed and executed quality checks
 AGENT NOTE - 2025-07-12: Verified metrics_collector removal; file already absent
 AGENT NOTE - 2025-07-12: Removed sandbox infrastructure and unused plugins
