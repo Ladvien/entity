@@ -120,7 +120,6 @@ agent.tool_plugin = tool_plugin
 __all__ = [
     "core",
     "Agent",
-    "AgentBuilder",
     "agent",
 ]
 

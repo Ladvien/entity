@@ -1,4 +1,3 @@
-import asyncio
 import yaml
 import pytest
 from pathlib import Path
@@ -25,8 +24,8 @@ class SimplePlugin(Plugin):
 async def test_reload_requires_restart_when_plugin_missing(tmp_path: Path) -> None:
     agent = Agent()
     plugin = SimplePlugin({})
-    await agent.builder.add_plugin(plugin)
-    agent._runtime = await agent.builder.build_runtime()
+    await agent.add_plugin(plugin)
+    await agent.build_runtime()
 
     cli = EntityCLI.__new__(EntityCLI)
     cfg = {"plugins": {"prompts": {"unknown": {}}}}

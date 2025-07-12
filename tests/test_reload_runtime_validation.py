@@ -33,8 +33,8 @@ async def run_reload(cli: EntityCLI, agent: Agent, cfg_path: Path) -> int:
 async def test_reload_aborts_on_failed_runtime_validation(tmp_path):
     agent = Agent()
     plugin = RuntimeCheckPlugin({"valid": True})
-    await agent.builder.add_plugin(plugin)
-    agent._runtime = await agent.builder.build_runtime()
+    await agent.add_plugin(plugin)
+    await agent.build_runtime()
 
     # Ensure config updates do not call async validator
     RuntimeCheckPlugin.validate_config = classmethod(

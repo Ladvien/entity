@@ -13,6 +13,7 @@ from .plugin_utils import PluginAutoClassifier
 from entity.pipeline.exceptions import PipelineError
 from entity.pipeline.utils import StageResolver
 from entity.pipeline.workflow import Pipeline
+from entity.pipeline.stages import PipelineStage
 
 from .plugins import (
     AdapterPlugin,
@@ -384,6 +385,37 @@ class Agent:
         """Import a package and register any plugins it contains."""
 
         self.builder.load_plugins_from_package(package_name)
+
+    def register_resource(
+        self,
+        name: str,
+        cls: type,
+        config: Mapping[str, Any] | None = None,
+        *,
+        layer: int | None = None,
+    ) -> None:
+        """Register a resource with the underlying builder."""
+
+        self.builder.resource_registry.register(name, cls, config or {}, layer=layer)
+
+    def has_plugin(self, name: str) -> bool:
+        """Return True if a plugin, resource or tool named ``name`` exists."""
+
+        return self.builder.has_plugin(name)
+
+    async def build_runtime(
+        self,
+        workflow: Mapping[PipelineStage | str, Iterable[str]] | None = None,
+    ) -> AgentRuntime:
+        """Build and assign a runtime using the internal builder."""
+
+        self._runtime = await self.builder.build_runtime(workflow)
+        return self._runtime
+
+    def shutdown(self) -> None:
+        """Shut down plugins and resources."""
+
+        self.builder.shutdown()
 
     # ------------------------------------------------------------------
     # Workflow helpers

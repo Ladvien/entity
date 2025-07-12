@@ -25,5 +25,5 @@ def test_agent_handle(monkeypatch):
 
 
 def test_plugins_registered():
-    assert agent.builder.has_plugin("add")
-    assert agent.builder.has_plugin("final")
+    assert agent.has_plugin("add")
+    assert agent.has_plugin("final")
