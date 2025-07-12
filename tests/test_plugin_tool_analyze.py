@@ -37,8 +37,8 @@ def test_analyze_plugin_override(tmp_path, monkeypatch, caplog):
     monkeypatch.setattr("builtins.input", lambda *_: "parse,deliver")
 
     with caplog.at_level(logging.INFO):
-        cli._analyze_plugin()
+        result = cli._analyze_plugin()
 
     log = "\n".join(r.message for r in caplog.records)
-    assert "input" in log
-    assert "output" in log
+    assert result == 1
+    assert "Invalid stage" in log
