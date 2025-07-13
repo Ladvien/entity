@@ -56,14 +56,23 @@ class ResourcePool(Generic[T]):
     """Asynchronous pool for expensive resources."""
 
     def __init__(
-        self, factory: Callable[[], Awaitable[T] | T], config: PoolConfig
+        self,
+        factory: Callable[[], Awaitable[T] | T],
+        config: PoolConfig,
+        name: str = "resource",
     ) -> None:
         self._factory = factory
         self._cfg = config
+        self._name = name
         self._pool: asyncio.Queue[T] = asyncio.Queue()
         self._total_size = 0
         self._lock = asyncio.Lock()
         self._ctx_resource: T | None = None
+        self._util_history: List[float] = []
+        self._metrics: Any | None = None
+
+    def set_metrics_collector(self, metrics: Any) -> None:
+        self._metrics = metrics
 
     async def initialize(self) -> None:
         for _ in range(self._cfg.min_size):
@@ -76,6 +85,22 @@ class ResourcePool(Generic[T]):
         resource = await result if asyncio.iscoroutine(result) else result
         await self._pool.put(resource)
         self._total_size += 1
+        await self._record_metric("grow")
+
+    async def _shrink(self) -> None:
+        if self._total_size <= self._cfg.min_size:
+            return
+        if self._pool.empty():
+            return
+        resource = await self._pool.get()
+        close = getattr(resource, "shutdown", None)
+        if callable(close):
+            try:
+                await close()
+            except Exception:  # noqa: BLE001
+                pass
+        self._total_size -= 1
+        await self._record_metric("shrink")
 
     def _utilization(self) -> float:
         if self._total_size == 0:
@@ -83,11 +108,59 @@ class ResourcePool(Generic[T]):
         in_use = self._total_size - self._pool.qsize()
         return in_use / self._total_size
 
+    async def _ensure_healthy(self, resource: T) -> T:
+        check = getattr(resource, "health_check", None)
+        if callable(check):
+            healthy = await check()
+            if not healthy:
+                restart = getattr(resource, "restart", None)
+                if callable(restart):
+                    try:
+                        await restart()
+                        healthy = await check()
+                    except Exception:  # noqa: BLE001
+                        healthy = False
+                if not healthy:
+                    result = self._factory()
+                    resource = await result if asyncio.iscoroutine(result) else result
+                    await self._record_metric("recover")
+        return resource
+
+    async def _record_metric(self, operation: str) -> None:
+        if self._metrics is None:
+            return
+        try:
+            await self._metrics.record_custom_metric(
+                pipeline_id="system",
+                metric_name=f"{self._name}:{operation}",
+                value=self._total_size,
+            )
+        except Exception:  # noqa: BLE001
+            pass
+
+    def _record_history(self) -> None:
+        self._util_history.append(self._utilization())
+        if len(self._util_history) > 100:
+            self._util_history.pop(0)
+
+    async def _adjust_pool_size(self) -> None:
+        if not self._util_history:
+            return
+        avg = sum(self._util_history) / len(self._util_history)
+        if avg > self._cfg.scale_threshold and self._total_size < self._cfg.max_size:
+            await self._grow()
+        elif (
+            avg < self._cfg.scale_threshold / 2
+            and self._total_size > self._cfg.min_size
+        ):
+            await self._shrink()
+
     async def acquire(self) -> T:
         async with self._lock:
             if self._pool.empty() and self._total_size < self._cfg.max_size:
                 await self._grow()
         resource = await self._pool.get()
+        resource = await self._ensure_healthy(resource)
         async with self._lock:
             if (
                 self._utilization() > self._cfg.scale_threshold
@@ -97,11 +170,14 @@ class ResourcePool(Generic[T]):
                     min(self._cfg.scale_step, self._cfg.max_size - self._total_size)
                 ):
                     await self._grow()
+        self._record_history()
         return resource
 
     async def release(self, resource: T) -> None:
         async with self._lock:
             await self._pool.put(resource)
+            self._record_history()
+            await self._adjust_pool_size()
 
     def metrics(self) -> Dict[str, int]:
         return {
@@ -313,7 +389,10 @@ class ResourceContainer:
         config: Optional[Dict[str, Any]] = None,
     ) -> None:
         cfg = PoolConfig(**(config or {}))
-        pool = ResourcePool(factory, cfg)
+        pool = ResourcePool(factory, cfg, name)
+        metrics = self.get("metrics_collector")
+        if metrics is not None:
+            pool.set_metrics_collector(metrics)
         await pool.initialize()
         self._pools[name] = pool
         await self.add(name, pool)

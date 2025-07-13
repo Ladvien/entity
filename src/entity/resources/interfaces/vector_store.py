@@ -18,7 +18,10 @@ class VectorStoreResource(ResourcePlugin):
 
     async def initialize(self) -> None:
         pool_cfg = PoolConfig(**self.config.get("pool", {}))
-        self._pool = ResourcePool(self._create_client, pool_cfg)
+        self._pool = ResourcePool(self._create_client, pool_cfg, "vector_store")
+        metrics = getattr(self, "metrics_collector", None)
+        if metrics is not None:
+            self._pool.set_metrics_collector(metrics)
         await self._pool.initialize()
 
     async def _create_client(self) -> "VectorStoreResource":
