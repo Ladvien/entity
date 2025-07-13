@@ -69,9 +69,27 @@ class BasePlugin:
 
         if version < 1 or version > len(self._config_history):
             raise ValueError("invalid version")
-        self.config = self._config_history[version - 1].copy()
+        target = self._config_history[version - 1].copy()
+        await self._handle_reconfiguration(self.config, target)
+        self.config = target
         self.config_version = version
         self._config_history = self._config_history[:version]
+
+    async def _handle_reconfiguration(
+        self, old_config: Dict[str, Any], new_config: Dict[str, Any]
+    ) -> None:
+        """Update internal state to reflect ``new_config``."""
+
+        for key, value in new_config.items():
+            if old_config.get(key) != value and hasattr(self, key):
+                setattr(self, key, value)
+
+    async def on_dependency_reconfigured(
+        self, name: str, old_config: Dict[str, Any], new_config: Dict[str, Any]
+    ) -> bool:
+        """Handle updates to ``name`` dependency."""
+
+        return True
 
     async def validate_runtime(self) -> "ValidationResult":
         """Validate the runtime environment for the plugin."""
