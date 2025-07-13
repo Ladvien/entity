@@ -298,43 +298,31 @@ class Memory(AgentResource):
 
         async with self.database.connection() as conn:
             rows = conn.execute(
-                f"SELECT conversation_id, timestamp FROM {self._history_table} "
-                "WHERE conversation_id LIKE ?",
+                f"SELECT conversation_id, content, timestamp FROM {self._history_table} "
+                "WHERE conversation_id LIKE ? ORDER BY timestamp",
                 (f"{user_id}%",),
             ).fetchall()
 
-        durations: Dict[str, float] = {}
-        counts: Dict[str, int] = {}
-        start_times: Dict[str, datetime] = {}
+        conv_ids: set[str] = set()
+        total_length = 0
         last_activity: datetime | None = None
-        periods: Dict[int, int] = {}
 
-        for conv_id, ts in rows:
+        for conv_id, content, ts in rows:
+            conv_ids.add(conv_id)
+            total_length += len(content)
             timestamp = datetime.fromisoformat(ts)
             last_activity = (
                 max(last_activity, timestamp) if last_activity else timestamp
             )
-            periods[timestamp.hour] = periods.get(timestamp.hour, 0) + 1
 
-            if conv_id not in counts:
-                counts[conv_id] = 0
-                start_times[conv_id] = timestamp
-            counts[conv_id] += 1
-            durations[conv_id] = (timestamp - start_times[conv_id]).total_seconds()
-        conversations = len(counts)
-        total_messages = sum(counts.values())
-        average_length = (total_messages / conversations) if conversations else 0
-        most_active = []
-        if periods:
-            max_count = max(periods.values())
-            most_active = [h for h, c in periods.items() if c == max_count]
+        total_messages = len(rows)
+        conversations = len(conv_ids)
+        average_length = total_length / total_messages if total_messages else 0
 
         return {
             "conversations": conversations,
             "messages": total_messages,
             "average_length": average_length,
-            "durations": durations,
-            "most_active_periods": most_active,
             "last_activity": last_activity.isoformat() if last_activity else None,
         }
 
