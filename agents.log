@@ -1,10 +1,6 @@
-<<<<<<< HEAD
-AGENT NOTE - 2025-07-13: Implemented BasicErrorHandler, updated default workflow, and added tests
-<<<<<<< HEAD
-=======
+AGENT NOTE - 2025-08-04: Resolved lingering merge markers and restored notes
 AGENT NOTE - 2025-08-02: Resolved remaining merge conflict markers
 AGENT NOTE - 2025-08-01: Document example plugins with literalinclude
->>>>>>> pr-1470
 AGENT NOTE - 2025-07-13: Cleaned merge markers and updated default agent setup
 AGENT NOTE - 2025-07-13: Integrated pipeline duration metric and cleared stage results after execution
 AGENT NOTE - 2025-07-13: Verified merge conflict cleanup and preserved all notes

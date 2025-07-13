@@ -119,13 +119,6 @@ class ToolRegistry:
             items = [(k, v) for k, v in items if n in k.lower()]
         if intent is not None:
             i = intent.lower()
-<<<<<<< HEAD
-            items = [
-                (k, v)
-                for k, v in items
-                if i in {t.lower() for t in getattr(v, "intents", [])}
-            ]
-=======
 
             def _match(tool: Any) -> bool:
                 declared = getattr(
@@ -134,7 +127,6 @@ class ToolRegistry:
                 return any(i == str(t).lower() for t in declared)
 
             items = [(k, v) for k, v in items if _match(v)]
->>>>>>> pr-1470
         return items
 
 

@@ -292,15 +292,9 @@ async def execute_pipeline(
                 pipeline_id=f"{user_id}_{generate_pipeline_id()}",
             )
 
-<<<<<<< HEAD
-    # Stage results should persist across iterations within a single
-    # message. They are cleared after the pipeline completes so they
-    # do not leak into subsequent messages.
-=======
     # Thoughts persist for the duration of a single message run
     # so they can be referenced across iterations. They are cleared
     # only once the message has been fully processed.
->>>>>>> pr-1463
     _start = time.time()
     resource_manager = (
         capabilities.resources
