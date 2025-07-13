@@ -19,20 +19,23 @@ _DEFINITIONS = [
 
 
 def _stage_of(decorator):
-    _ = Agent()
+    ag = Agent()
 
-    @decorator
+    bound = getattr(ag, decorator.__name__)
+
+    @bound
     async def dummy(context):
         pass
 
-    return dummy.__entity_plugin__.stages
+    return ag.builder._added_plugins[-1]
 
 
 for dec, stage in _DEFINITIONS:
 
     def _make_test(dec=dec, stage=stage):
         def test_func():
-            assert _stage_of(dec) == [stage]
+            plugin = _stage_of(dec)
+            assert plugin.stages == [stage]
 
         return test_func
 
