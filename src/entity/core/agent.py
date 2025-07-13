@@ -308,7 +308,7 @@ class _AgentBuilder:
             container.register("database_backend", DuckDBInfrastructure, {}, layer=1)
 
         if not container.has_plugin("database"):
-            from plugins.builtin.resources.duckdb_resource import DuckDBResource
+            from entity.resources.interfaces.duckdb_resource import DuckDBResource
 
             container.register("database", DuckDBResource, {}, layer=2)
 

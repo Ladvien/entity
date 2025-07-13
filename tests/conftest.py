@@ -4,7 +4,7 @@ import pytest
 
 from entity.infrastructure import DuckDBInfrastructure
 from entity.resources import Memory
-from plugins.builtin.resources.duckdb_resource import DuckDBResource
+from entity.resources.interfaces.duckdb_resource import DuckDBResource
 
 
 @pytest.fixture()
