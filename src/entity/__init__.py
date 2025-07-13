@@ -16,8 +16,10 @@ from entity.core.resources.container import ResourceContainer
 
 def _create_default_agent() -> Agent:
     setup = Layer0SetupManager()
+    import asyncio
+
     try:
-        setup.setup_resources()
+        asyncio.run(setup.setup())
     except Exception:  # noqa: BLE001 - best effort setup
         pass
     agent = Agent()
