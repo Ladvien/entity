@@ -88,6 +88,11 @@ class PluginRegistry:
     def list_plugins(self) -> List[Any]:
         return list(self._names.keys())
 
+    def has_plugin(self, name: str) -> bool:
+        """Return ``True`` if a plugin registered under ``name`` exists."""
+
+        return any(n == name for n in self._names.values())
+
     def get_capabilities(self, plugin: Any) -> PluginCapabilities | None:
         return self._capabilities.get(plugin)
 
