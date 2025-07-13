@@ -2,6 +2,7 @@ import pytest
 from contextlib import asynccontextmanager
 
 from entity.infrastructure import DuckDBInfrastructure, PostgresInfrastructure
+from entity.pipeline.reliability import CircuitBreaker
 
 
 @pytest.mark.asyncio
