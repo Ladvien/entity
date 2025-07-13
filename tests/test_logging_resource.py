@@ -113,8 +113,15 @@ async def test_log_rotation(tmp_path, monkeypatch):
     rotated = log_file.with_name(log_file.name + ".1")
     assert rotated.exists()
     with rotated.open("r", encoding="utf-8") as handle:
-        first_entry = json.loads(handle.readline())
+        lines = handle.readlines()
+    assert len(lines) == 1
+    first_entry = json.loads(lines[0])
     assert first_entry["message"] == "first"
+    with log_file.open("r", encoding="utf-8") as handle:
+        current_lines = handle.readlines()
+    assert len(current_lines) == 1
+    second_entry = json.loads(current_lines[0])
+    assert second_entry["message"] == "second"
 
 
 @pytest.mark.asyncio

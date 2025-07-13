@@ -88,11 +88,12 @@ class StructuredFileOutput(LogOutput):
         self._handle = self.path.open("a", encoding="utf-8")
         self._lock = asyncio.Lock()
 
-    def _should_rotate(self) -> bool:
+    def _should_rotate(self, additional_bytes: int = 0) -> bool:
+        """Return True if writing ``additional_bytes`` would exceed ``max_bytes``."""
         if self.max_bytes <= 0:
             return False
         self._handle.flush()
-        return self.path.stat().st_size >= self.max_bytes
+        return (self.path.stat().st_size + additional_bytes) >= self.max_bytes
 
     def _rotate(self) -> None:
         self._handle.close()
@@ -112,10 +113,11 @@ class StructuredFileOutput(LogOutput):
 
     async def write(self, entry: Dict[str, Any]) -> None:
         async with self._lock:
-            self._handle.write(json.dumps(entry) + "\n")
-            self._handle.flush()
-            if self.max_bytes > 0 and self._should_rotate():
+            data = json.dumps(entry) + "\n"
+            if self._should_rotate(len(data.encode("utf-8"))):
                 self._rotate()
+            self._handle.write(data)
+            self._handle.flush()
 
     def close(self) -> None:
         self._handle.close()
