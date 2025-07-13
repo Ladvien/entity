@@ -101,3 +101,4 @@ async def test_update_handles_failed_rollback():
     result = await update_plugin_configuration(registry, "cfg", {"value": 2})
     assert not result.success and not result.requires_restart
     assert base.value == 2
+    assert base.config_version == 2
