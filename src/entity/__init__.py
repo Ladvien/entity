@@ -5,17 +5,14 @@ from __future__ import annotations
 from .core.agent import Agent
 from .infrastructure import DuckDBInfrastructure
 from .resources import LLM, Memory, Storage
-<<<<<<< HEAD
 from .resources.logging import LoggingResource
-from .resources.interfaces.vector_store import VectorStoreResource
-=======
 from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
->>>>>>> pr-1438
 from plugins.builtin.resources.ollama_llm import OllamaLLMResource
 from .core.stages import PipelineStage
 from .core.plugins import PromptPlugin, ToolPlugin
 from .plugins.prompts.basic_error_handler import BasicErrorHandler
 from .utils.setup_manager import Layer0SetupManager
+from entity.workflows.default import DefaultWorkflow
 from entity.core.registries import SystemRegistries
 from entity.core.runtime import AgentRuntime
 from entity.core.resources.container import ResourceContainer
@@ -37,49 +34,42 @@ def _create_default_agent() -> Agent:
     db = DuckDBInfrastructure({"path": str(setup.db_path)})
     llm_provider = OllamaLLMResource({"model": setup.model, "base_url": setup.base_url})
     llm = LLM({})
-    vector_store = VectorStoreResource({})
+    vector_store = DuckDBVectorStore({})
     memory = Memory({})
     storage = Storage({})
-<<<<<<< HEAD
     logging_res = LoggingResource({})
 
     llm.provider = llm_provider
     memory.database = db
-=======
-    vector_store = DuckDBVectorStore({})
-
-    llm.provider = llm_provider
-    memory.database = db
     vector_store.database = db
->>>>>>> pr-1438
     memory.vector_store = vector_store
 
     resources = ResourceContainer()
-    import asyncio
 
-    asyncio.run(db.initialize())
-    asyncio.run(vector_store.initialize())
-    asyncio.run(memory.initialize())
-    asyncio.run(logging_res.initialize())
-    asyncio.run(resources.add("database", db))
-    asyncio.run(resources.add("vector_store", vector_store))
-    asyncio.run(resources.add("llm_provider", llm_provider))
-    asyncio.run(resources.add("llm", llm))
-    asyncio.run(resources.add("memory", memory))
-    asyncio.run(resources.add("storage", storage))
-    asyncio.run(resources.add("logging", logging_res))
+    async def init_resources() -> None:
+        await db.initialize()
+        await vector_store.initialize()
+        await memory.initialize()
+        await logging_res.initialize()
+
+        await resources.add("database", db)
+        await resources.add("vector_store", vector_store)
+        await resources.add("llm_provider", llm_provider)
+        await resources.add("llm", llm)
+        await resources.add("memory", memory)
+        await resources.add("storage", storage)
+        await resources.add("logging", logging_res)
+
+    asyncio.run(init_resources())
 
     caps = SystemRegistries(
         resources=resources,
         tools=builder.tool_registry,
         plugins=builder.plugin_registry,
     )
-<<<<<<< HEAD
-    agent._runtime = AgentRuntime(caps, workflow=setup.workflow)
-=======
     asyncio.run(builder.add_plugin(BasicErrorHandler({})))
-    agent._runtime = AgentRuntime(caps)
->>>>>>> pr-1433
+    workflow = getattr(setup, "workflow", DefaultWorkflow())
+    agent._runtime = AgentRuntime(caps, workflow=workflow)
     return agent
 
 

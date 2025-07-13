@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from collections import OrderedDict
 from typing import Any, Awaitable, Callable, Dict, List
 
-from entity.core.validation import verify_dependencies, verify_stage_assignment
+from entity.core.validation import verify_stage_assignment
 from entity.pipeline.stages import PipelineStage
 
 
@@ -19,11 +19,11 @@ class PluginCapabilities:
 
 
 class PluginRegistry:
-    """Register plugins for pipeline stages preserving order and capabilities."""
+    """Register plugins for each pipeline stage preserving insertion order and track capabilities."""
 
     def __init__(self) -> None:
         self._stage_plugins: Dict[str, OrderedDict[Any, str]] = {}
-        self._names: OrderedDict[Any, str] = OrderedDict()
+        self._names: "OrderedDict[Any, str]" = OrderedDict()
         self._capabilities: Dict[Any, PluginCapabilities] = {}
 
     async def register_plugin_for_stage(
@@ -31,16 +31,18 @@ class PluginRegistry:
     ) -> None:
         stage_enum = PipelineStage.ensure(stage)
         plugin_name = name or getattr(plugin, "name", plugin.__class__.__name__)
-
         verify_stage_assignment(plugin, stage_enum)
-        verify_dependencies(plugin, self._names.values())
+
+        validator = getattr(plugin, "validate_registration_stage", None)
+        if callable(validator):
+            validator(stage_enum)
 
         key = str(stage_enum)
         if key not in self._stage_plugins:
             self._stage_plugins[key] = OrderedDict()
-
         self._stage_plugins[key][plugin] = plugin_name
-        self._names[plugin] = plugin_name
+        if plugin not in self._names:
+            self._names[plugin] = plugin_name
         caps = self._capabilities.get(plugin)
         if caps is None:
             deps = list(getattr(plugin, "dependencies", []))

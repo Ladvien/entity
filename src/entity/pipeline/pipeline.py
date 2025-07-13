@@ -407,10 +407,7 @@ async def execute_pipeline(
             result = create_default_response("No response generated", state.pipeline_id)
         else:
             result = state.response
-<<<<<<< HEAD
 
-        state.stage_results.clear()
-=======
         elapsed_ms = (time.time() - _start) * 1000
         if metrics is not None:
             await metrics.record_custom_metric(
@@ -418,7 +415,7 @@ async def execute_pipeline(
                 metric_name="pipeline_duration_ms",
                 value=elapsed_ms,
             )
->>>>>>> pr-1431
+        state.stage_results.clear()
         return result
 
 
