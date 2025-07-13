@@ -191,6 +191,7 @@ class ResourceContainer:
         """Register a resource class and its configuration."""
 
         from entity.core.plugins import InfrastructurePlugin, ResourcePlugin
+        from entity.resources.base import AgentResource as CanonicalResource
 
         if layer is None:
             if issubclass(cls, InfrastructurePlugin):
@@ -427,7 +428,11 @@ class ResourceContainer:
     def _validate_layers(self) -> None:
         """Ensure layer dependencies follow the 4-layer architecture."""
 
-        from entity.core.plugins import InfrastructurePlugin, ResourcePlugin
+        from entity.core.plugins import (
+            InfrastructurePlugin,
+            ResourcePlugin,
+            AgentResource as PluginAgentResource,
+        )
         from entity.resources.base import AgentResource as CanonicalResource
 
         for name, layer in self._layers.items():
@@ -441,13 +446,22 @@ class ResourceContainer:
             cls = self._classes[name]
 
             is_infra = issubclass(cls, InfrastructurePlugin)
-            is_canonical = _is_builtin_canonical(cls)
-            is_interface = issubclass(cls, ResourcePlugin) and not issubclass(
-                cls, CanonicalResource
+            is_builtin_canonical = _is_builtin_canonical(cls)
+            is_plugin_canonical = issubclass(cls, PluginAgentResource)
+            is_interface = (
+                issubclass(cls, ResourcePlugin)
+                and not issubclass(cls, CanonicalResource)
+                and not is_plugin_canonical
             )
 
             expected = (
-                1 if is_infra else 3 if is_canonical else 2 if is_interface else 4
+                1
+                if is_infra
+                else (
+                    3
+                    if is_builtin_canonical or is_plugin_canonical
+                    else 2 if is_interface else 4
+                )
             )
 
             if layer != expected:
@@ -478,7 +492,7 @@ class ResourceContainer:
 
             if (
                 is_interface
-                and not is_canonical
+                and not is_builtin_canonical
                 and not getattr(cls, "infrastructure_dependencies", None)
             ):
                 raise InitializationError(
