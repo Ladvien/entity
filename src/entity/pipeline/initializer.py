@@ -551,7 +551,6 @@ class SystemInitializer:
         }
 
         plugins_cfg = self.config.get("plugins", {})
-        add_metrics = "metrics_collector" in plugins_cfg.get("resources", {})
 
         for section in resource_sections:
             entries = plugins_cfg.get(section, {})
@@ -564,21 +563,20 @@ class SystemInitializer:
                     )
                 cls = import_plugin_class(cls_path)
                 deps = list(getattr(cls, "dependencies", []))
-                if not add_metrics and "metrics_collector" in deps:
-                    deps.remove("metrics_collector")
-                if "logging" not in deps and cls.__name__ != "LoggingResource":
-                    deps.append("logging")
                 from entity.core.plugins import InfrastructurePlugin
 
                 if issubclass(cls, InfrastructurePlugin):
                     deps = [
                         d for d in deps if d not in {"logging", "metrics_collector"}
                     ]
-                if add_metrics and (
-                    cls.__name__ != "MetricsCollectorResource"
-                    and "metrics_collector" not in deps
-                ):
-                    deps.append("metrics_collector")
+                else:
+                    if cls.__name__ != "LoggingResource" and "logging" not in deps:
+                        deps.append("logging")
+                    if (
+                        cls.__name__ != "MetricsCollectorResource"
+                        and "metrics_collector" not in deps
+                    ):
+                        deps.append("metrics_collector")
                 cls.dependencies = deps
                 registry.register_class(cls, config, name, layer, section)
                 dep_graph[name] = deps
@@ -593,11 +591,9 @@ class SystemInitializer:
                     )
                 cls = import_plugin_class(cls_path)
                 deps = list(getattr(cls, "dependencies", []))
-                if not add_metrics and "metrics_collector" in deps:
-                    deps.remove("metrics_collector")
-                if "logging" not in deps and cls.__name__ != "LoggingResource":
+                if cls.__name__ != "LoggingResource" and "logging" not in deps:
                     deps.append("logging")
-                if add_metrics and (
+                if (
                     cls.__name__ != "MetricsCollectorResource"
                     and "metrics_collector" not in deps
                 ):
