@@ -547,6 +547,29 @@ class ResourceContainer:
             if expected == 4 and not self._deps.get(name):
                 allowed_layers.add(3)
 
+            if layer == 1:
+                if self._deps.get(name):
+                    raise InitializationError(
+                        name,
+                        "layer validation",
+                        "Layer-1 plugins cannot have dependencies.",
+                        kind="Resource",
+                    )
+                if not getattr(cls, "infrastructure_type", ""):
+                    raise InitializationError(
+                        name,
+                        "layer validation",
+                        "Layer-1 plugins must define infrastructure_type.",
+                        kind="Resource",
+                    )
+            if layer == 2 and not getattr(cls, "infrastructure_dependencies", None):
+                raise InitializationError(
+                    name,
+                    "layer validation",
+                    "Layer-2 plugins must declare infrastructure_dependencies.",
+                    kind="Resource",
+                )
+
             if layer not in allowed_layers:
                 message = (
                     f"Provided layer {layer} for {cls.__name__} is invalid."
