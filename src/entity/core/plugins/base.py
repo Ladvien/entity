@@ -227,7 +227,13 @@ class Plugin(BasePlugin):
     def validate_registration_stage(self, stage: PipelineStage) -> None:
         """Verify plugin registration ``stage`` is allowed."""
 
-        return None
+        stage_enum = PipelineStage.ensure(stage)
+        allowed = set(_normalize_stages(getattr(self, "stages", [])))
+        if stage_enum not in allowed:
+            names = ", ".join(s.name for s in allowed)
+            raise ConfigurationError(
+                f"{self.__class__.__name__} can only register for {names}"
+            )
 
     async def _handle_reconfiguration(
         self, old_config: Dict[str, Any], new_config: Dict[str, Any]
