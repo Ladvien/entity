@@ -28,6 +28,7 @@ try:
     from plugins.builtin.resources.ollama_llm import OllamaLLMResource
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     from plugins.builtin.basic_error_handler import BasicErrorHandler
 <<<<<<< HEAD
     from plugins.examples import InputLogger, MessageParser, ResponseReviewer
@@ -37,10 +38,13 @@ try:
     from user_plugins.responders import ComplexPromptResponder
 >>>>>>> pr-1521
 =======
+=======
+>>>>>>> pr-1515
     from .plugins.prompts.basic_error_handler import BasicErrorHandler
     from plugins.examples import InputLogger
     from user_plugins.prompts import ComplexPrompt
     from user_plugins.responders import ComplexPromptResponder
+<<<<<<< HEAD
 >>>>>>> pr-1520
 =======
 >>>>>>> pr-1519
@@ -50,6 +54,8 @@ try:
     from user_plugins.prompts import ComplexPrompt
     from user_plugins.responders import ComplexPromptResponder
 >>>>>>> pr-1517
+=======
+>>>>>>> pr-1515
     from .core.stages import PipelineStage
     from .core.plugins import PromptPlugin, ToolPlugin
     from .utils.setup_manager import Layer0SetupManager
