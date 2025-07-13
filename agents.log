@@ -1,104 +1,26 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-AGENT NOTE - 2025-07-13: Implemented DuckDBVectorStore setup and minimal workflow tests
->>>>>>> pr-1506
-=======
-AGENT NOTE - 2025-07-13: pytest now works with the unified entity.cli.plugin_tool structure
->>>>>>> pr-1505
-=======
-AGENT NOTE - 2025-07-13: Added pythonpath configuration for pytest
->>>>>>> pr-1504
-=======
+AGENT NOTE - 2025-07-13: Cleaned merge markers and deduplicated entries
 AGENT NOTE - 2025-08-10: Moved plugin_tool under entity.cli and updated imports
->>>>>>> pr-1503
-=======
-AGENT NOTE - 2025-07-13: Install and pytest run; tests failing due to missing package paths
->>>>>>> pr-1502
-=======
-AGENT NOTE - 2025-07-13: Added tool intent discovery tests
->>>>>>> pr-1501
-=======
-AGENT NOTE - 2025-07-13: Added workflow support and composition helpers
->>>>>>> pr-1500
-=======
-AGENT NOTE - 2025-07-13: Detect cycles in resource initialization order and add regression tests
->>>>>>> pr-1499
-=======
-AGENT NOTE - 2025-07-13: Added lifecycle hooks with state tracking and tests
->>>>>>> pr-1498
-=======
-AGENT NOTE - 2025-07-13: Enforced adapter stage resolution in StageResolver
->>>>>>> pr-1497
-=======
-AGENT NOTE - 2025-07-13: Preserved YAML stage sequence in PluginRegistry
->>>>>>> pr-1496
-=======
 AGENT NOTE - 2025-08-10: Added infrastructure_type attribute test
->>>>>>> pr-1495
-=======
 AGENT NOTE - 2025-08-10: Inject default DuckDBVectorStore and keep interfaces under entity.resources.interfaces
->>>>>>> pr-1494
-=======
 AGENT NOTE - 2025-08-10: Stage results persist across runs and temporary thoughts moved to PipelineState
->>>>>>> pr-1507
-=======
-AGENT NOTE - 2025-07-13: Moved BasicErrorHandler to builtin and added example plugin tests
->>>>>>> pr-1508
 AGENT NOTE - 2025-08-09: Documented examples package and exported key modules
-=======
-AGENT NOTE - 2025-07-13: Ensured pipeline package sets __path__ for plugin discovery
->>>>>>> pr-1493
 AGENT NOTE - 2025-08-08: Cleaned merge conflict markers in agents.log
 AGENT NOTE - 2025-08-07: Added example plugins and registered them in default workflow
-AGENT NOTE - 2025-07-13: Resolved merge conflicts for LlamaCppInfrastructure documentation and tests
 AGENT NOTE - 2025-08-06: Revised LlamaCppInfrastructure runtime validation with timeout and status checks
 AGENT NOTE - 2025-08-05: Added LlamaCppInfrastructure plugin for launching local llama.cpp servers
-AGENT NOTE - 2025-07-13: Added has_plugin method to PluginRegistry to fix workflow validation
 AGENT NOTE - 2025-08-04: Resolved lingering merge markers and restored notes
 AGENT NOTE - 2025-08-02: Resolved remaining merge conflict markers
 AGENT NOTE - 2025-08-01: Document example plugins with literalinclude
-AGENT NOTE - 2025-07-13: Cleaned merge markers and updated default agent setup
-AGENT NOTE - 2025-07-13: Integrated pipeline duration metric and cleared stage results after execution
-AGENT NOTE - 2025-07-13: Verified merge conflict cleanup and preserved all notes
 AGENT NOTE - 2025-07-31: Resolved merge conflicts in pipeline and CLI after PRs 1416-1427
 AGENT NOTE - 2025-07-25: ToolRegistry discovery now filters by intents
-AGENT NOTE - 2025-07-13: Added runtime plugin validation for stage assignments and dependencies
-AGENT NOTE - 2025-07-13: Added branching and checkpoint support in Pipeline
 AGENT NOTE - 2025-07-25: Added debugging tracer module and CLI step command
-AGENT NOTE - 2025-07-13: Added config inheritance, linting, and diff tools
-AGENT NOTE - 2025-07-13: Adjust stage result clearing to persist across iterations but reset between messages
 AGENT NOTE - 2025-07-25: Extended ResourcePool with scaling and health checks
-AGENT NOTE - 2025-07-24: Added plugin capabilities and compatibility matrix with pipeline benchmarks
 AGENT NOTE - 2025-07-25: Changed DuckDBResource to subclass ResourcePlugin and adjusted default layer
-AGENT NOTE - 2025-07-13: Added infrastructure_type to AWSStandardInfrastructure
-AGENT NOTE - 2025-07-13: Added vector store and logging to default setup
-AGENT NOTE - 2025-07-13: No resource interface modules found to move, canonical resources already depend on interfaces.
-AGENT NOTE - 2025-07-13: Added DefaultWorkflow and zero-config setup
 AGENT NOTE - 2025-07-25: Added DuckDBVectorStore and zero-config registration
-AGENT NOTE - 2025-07-24: PluginRegistry now preserves registration order with OrderedDict
-AGENT NOTE - 2025-07-13: Enforced adapter stage registration and added tests
-AGENT NOTE - 2025-07-13: Implemented plugin lifecycle state tracking and metrics logging
-AGENT NOTE - 2025-07-13: Added automatic logging resource injection and tests
-AGENT NOTE - 2025-07-13: Added BasicErrorHandler plugin for error handling in zero config
-AGENT NOTE - 2025-07-24: Updated DuckDBResource to subclass AgentResource and use database_backend
-AGENT NOTE - 2025-07-24: PluginRegistry now preserves registration order with OrderedDict
-AGENT NOTE - 2025-07-24: Pipeline now validates workflow plugins during initialization
 AGENT NOTE - 2025-07-24: Added plugin capabilities and compatibility matrix with pipeline benchmarks
+AGENT NOTE - 2025-07-24: PluginRegistry now preserves registration order with OrderedDict
+AGENT NOTE - 2025-07-24: Updated DuckDBResource to subclass AgentResource and use database_backend
+AGENT NOTE - 2025-07-24: Pipeline now validates workflow plugins during initialization
 AGENT NOTE - 2025-07-23: Fixed DatabaseResource import and updated async usage in plugin context memory test
 AGENT NOTE - 2025-07-23: Allow layer 3 for custom resources without dependencies
 AGENT NOTE - 2025-07-22: RegistryValidator config stripping and canonical resource tests added
@@ -108,27 +30,43 @@ AGENT NOTE - 2025-07-20: Updated load_env precedence and tests
 AGENT NOTE - 2025-07-18: Added integration pipeline tests covering workflows, multi-user isolation, error handling, and metrics
 AGENT NOTE - 2025-07-16: Revised built-in resource config validation and tests
 AGENT NOTE - 2025-07-14: Unified builder and runtime inside Agent
+AGENT NOTE - 2025-07-13: Implemented DuckDBVectorStore setup and minimal workflow tests
+AGENT NOTE - 2025-07-13: pytest now works with the unified entity.cli.plugin_tool structure
+AGENT NOTE - 2025-07-13: Added pythonpath configuration for pytest
+AGENT NOTE - 2025-07-13: Install and pytest run; tests failing due to missing package paths
+AGENT NOTE - 2025-07-13: Added tool intent discovery tests
+AGENT NOTE - 2025-07-13: Added workflow support and composition helpers
+AGENT NOTE - 2025-07-13: Detect cycles in resource initialization order and add regression tests
+AGENT NOTE - 2025-07-13: Added lifecycle hooks with state tracking and tests
+AGENT NOTE - 2025-07-13: Enforced adapter stage resolution in StageResolver
+AGENT NOTE - 2025-07-13: Preserved YAML stage sequence in PluginRegistry
+AGENT NOTE - 2025-07-13: Moved BasicErrorHandler to builtin and added example plugin tests
+AGENT NOTE - 2025-07-13: Ensured pipeline package sets __path__ for plugin discovery
+AGENT NOTE - 2025-07-13: Resolved merge conflicts for LlamaCppInfrastructure documentation and tests
+AGENT NOTE - 2025-07-13: Added has_plugin method to PluginRegistry to fix workflow validation
+AGENT NOTE - 2025-07-13: Cleaned merge markers and updated default agent setup
+AGENT NOTE - 2025-07-13: Integrated pipeline duration metric and cleared stage results after execution
 AGENT NOTE - 2025-07-13: Verified merge conflict cleanup and preserved all notes
+AGENT NOTE - 2025-07-13: Added runtime plugin validation for stage assignments and dependencies
+AGENT NOTE - 2025-07-13: Added branching and checkpoint support in Pipeline
+AGENT NOTE - 2025-07-13: Added config inheritance, linting, and diff tools
+AGENT NOTE - 2025-07-13: Adjust stage result clearing to persist across iterations but reset between messages
+AGENT NOTE - 2025-07-13: Added infrastructure_type to AWSStandardInfrastructure
+AGENT NOTE - 2025-07-13: Added vector store and logging to default setup
+AGENT NOTE - 2025-07-13: No resource interface modules found to move, canonical resources already depend on interfaces.
+AGENT NOTE - 2025-07-13: Added DefaultWorkflow and zero-config setup
+AGENT NOTE - 2025-07-13: Enforced adapter stage registration and added tests
+AGENT NOTE - 2025-07-13: Implemented plugin lifecycle state tracking and metrics logging
+AGENT NOTE - 2025-07-13: Added automatic logging resource injection and tests
+AGENT NOTE - 2025-07-13: Added BasicErrorHandler plugin for error handling in zero config
 AGENT NOTE - 2025-07-13: Updated tests for Memory initialization
 AGENT NOTE - 2025-07-13: Stage results cleared after pipeline completion and tests added for thought accumulation
-AGENT NOTE - 2025-07-13: No resource interface modules found to move, canonical resources already depend on interfaces.
 AGENT NOTE - 2025-07-13: Memory now persists to DuckDB and vector store
 AGENT NOTE - 2025-07-13: Improved layer validation cycle checks
-AGENT NOTE - 2025-07-13: Implemented plugin lifecycle state tracking and metrics logging
-AGENT NOTE - 2025-07-13: Enforced adapter stage registration and added tests
 AGENT NOTE - 2025-07-13: Consolidated pipeline under entity.pipeline
 AGENT NOTE - 2025-07-13: Agent constructor now accepts optional workflow parameter and workflow validation added
-AGENT NOTE - 2025-07-13: Adjust stage result clearing to persist across iterations but reset between messages
-AGENT NOTE - 2025-07-13: Added vector store and logging to default setup
-AGENT NOTE - 2025-07-13: Added runtime plugin validation for stage assignments and dependencies
 AGENT NOTE - 2025-07-13: Added logging resource to integration registries for PipelineWorker tests
-AGENT NOTE - 2025-07-13: Added infrastructure_type to AWSStandardInfrastructure
-AGENT NOTE - 2025-07-13: Added config inheritance, linting, and diff tools
-AGENT NOTE - 2025-07-13: Added branching and checkpoint support in Pipeline
 AGENT NOTE - 2025-07-13: Added automatic metrics injection and startup warning when metrics resource missing
-AGENT NOTE - 2025-07-13: Added automatic logging resource injection and tests
-AGENT NOTE - 2025-07-13: Added DefaultWorkflow and zero-config setup
-AGENT NOTE - 2025-07-13: Added BasicErrorHandler plugin for error handling in zero config
 AGENT NOTE - 2025-07-12: Verified sandbox references removed and executed quality checks
 AGENT NOTE - 2025-07-12: Verified metrics_collector removal; file already absent
 AGENT NOTE - 2025-07-12: Updated ResourceContainer build sequence and tests
