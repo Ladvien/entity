@@ -10,6 +10,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 AGENT NOTE - 2025-07-13: Implemented DuckDBVectorStore setup and minimal workflow tests
 >>>>>>> pr-1506
@@ -43,6 +44,9 @@ AGENT NOTE - 2025-07-13: Enforced adapter stage resolution in StageResolver
 =======
 AGENT NOTE - 2025-07-13: Preserved YAML stage sequence in PluginRegistry
 >>>>>>> pr-1496
+=======
+AGENT NOTE - 2025-08-10: Added infrastructure_type attribute test
+>>>>>>> pr-1495
 AGENT NOTE - 2025-08-09: Documented examples package and exported key modules
 =======
 AGENT NOTE - 2025-07-13: Ensured pipeline package sets __path__ for plugin discovery
