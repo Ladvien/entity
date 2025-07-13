@@ -54,7 +54,7 @@ class DummyRegistries:
         mem.database = db
         self.resources = {"memory": mem}
         self.tools = types.SimpleNamespace()
-        self.plugins = PluginRegistry()
+        self.plugins: PluginRegistry = PluginRegistry()
 
 
 @pytest.mark.asyncio

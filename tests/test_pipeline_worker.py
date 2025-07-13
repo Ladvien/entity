@@ -105,8 +105,8 @@ class DummyRegistries:
 
         self.resources = _Resources(memory=DummyMemory())
         self.tools = types.SimpleNamespace()
+        self.plugins: PluginRegistry = PluginRegistry()
         self.validators = None
-        self.plugins = PluginRegistry()
 
 
 class DBRegistries:
@@ -126,8 +126,8 @@ class DBRegistries:
         asyncio.run(mem.initialize())
         self.resources = _Resources(memory=mem)
         self.tools = types.SimpleNamespace()
+        self.plugins: PluginRegistry = PluginRegistry()
         self.validators = None
-        self.plugins = PluginRegistry()
 
 
 class ThoughtPlugin(Plugin):
@@ -153,7 +153,6 @@ class EchoPlugin(Plugin):
 @pytest.mark.asyncio
 async def test_conversation_id_generation():
     regs = DummyRegistries()
-    regs.plugins = PluginRegistry()
     await regs.plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.OUTPUT)
     worker = PipelineWorker(regs)
     result = await worker.execute_pipeline("pipe1", "hello", user_id="u123")
@@ -183,7 +182,6 @@ async def test_pipeline_persists_conversation(memory_db):
 @pytest.mark.asyncio
 async def test_thoughts_do_not_leak_between_executions():
     regs = DummyRegistries()
-    regs.plugins = PluginRegistry()
     await regs.plugins.register_plugin_for_stage(ThoughtPlugin({}), PipelineStage.THINK)
     await regs.plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.OUTPUT)
 
