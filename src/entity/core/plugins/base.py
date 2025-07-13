@@ -303,6 +303,21 @@ class ResourcePlugin(Plugin):
                     metadata=metadata,
                 )
 
+    async def health_check(self) -> bool:
+        """Return ``True`` when the resource is healthy."""
+
+        return True
+
+    async def restart(self) -> None:
+        """Restart the resource using ``shutdown`` and ``initialize`` hooks."""
+
+        shutdown = getattr(self, "shutdown", None)
+        if callable(shutdown):
+            await shutdown()
+        init = getattr(self, "initialize", None)
+        if callable(init):
+            await init()
+
 
 class AgentResource(ResourcePlugin):
     """Layer 3 canonical or custom agent resource."""
