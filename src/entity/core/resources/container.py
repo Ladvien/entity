@@ -370,56 +370,48 @@ class ResourceContainer:
                     kind="Resource",
                 )
             cls = self._classes[name]
-            if issubclass(cls, InfrastructurePlugin):
-                expected = 1
-            elif issubclass(cls, (CanonicalResource, PluginAgentResource)):
-                expected = 3
-            elif issubclass(cls, ResourcePlugin):
-                expected = 2
-            else:
-                expected = 4
+
+            is_infra = issubclass(cls, InfrastructurePlugin)
+            is_interface = issubclass(cls, ResourcePlugin)
+            is_canonical = issubclass(cls, (CanonicalResource, PluginAgentResource))
+
+            expected = (
+                1 if is_infra else 2 if is_interface else 3 if is_canonical else 4
+            )
 
             if layer != expected:
                 message = (
                     f"Provided layer {layer} for {cls.__name__} is invalid."
                     if expected == 3
-                    else (
-                        f"Incorrect layer {layer} for {cls.__name__}. "
-                        f"Expected {expected}."
+                    else f"Incorrect layer {layer} for {cls.__name__}. Expected {expected}."
+                )
+                raise InitializationError(
+                    name, "layer validation", message, kind="Resource"
+                )
+
+            if is_infra:
+                if self._deps.get(name):
+                    raise InitializationError(
+                        name,
+                        "layer validation",
+                        "Infrastructure resources cannot have dependencies.",
+                        kind="Resource",
                     )
-                )
-                raise InitializationError(
-                    name,
-                    "layer validation",
-                    message,
-                    kind="Resource",
-                )
-            if layer == 1 and self._deps.get(name):
-                raise InitializationError(
-                    name,
-                    "layer validation",
-                    "Infrastructure resources cannot have dependencies.",
-                    kind="Resource",
-                )
-            if layer == 1:
-                itype = getattr(self._classes[name], "infrastructure_type", "")
-                if not itype:
+                if not getattr(cls, "infrastructure_type", ""):
                     raise InitializationError(
                         name,
                         "layer validation",
                         "Infrastructure resource missing infrastructure_type.",
                         kind="Resource",
                     )
-            if layer == 2:
-                if not getattr(
-                    self._classes[name], "infrastructure_dependencies", None
-                ):
-                    raise InitializationError(
-                        name,
-                        "layer validation",
-                        "Resource interface must declare infrastructure_dependencies.",
-                        kind="Resource",
-                    )
+
+            if is_interface and not getattr(cls, "infrastructure_dependencies", None):
+                raise InitializationError(
+                    name,
+                    "layer validation",
+                    "Resource interface must declare infrastructure_dependencies.",
+                    kind="Resource",
+                )
 
         for name, deps in self._deps.items():
             for dep in deps:
@@ -452,4 +444,12 @@ class ResourceContainer:
                 if dep_name in graph_map:
                     graph_map[dep_name].append(name)
         graph = DependencyGraph(graph_map)
-        return graph.topological_sort()
+        try:
+            return graph.topological_sort()
+        except InitializationError as exc:
+            raise InitializationError(
+                ", ".join(sorted(graph_map.keys())),
+                "dependency graph",
+                str(exc),
+                kind="Resource",
+            ) from exc
