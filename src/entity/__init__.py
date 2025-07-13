@@ -5,6 +5,7 @@ from __future__ import annotations
 from .core.agent import Agent
 from .infrastructure import DuckDBInfrastructure
 from .resources import LLM, Memory, Storage
+from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
 from plugins.builtin.resources.ollama_llm import OllamaLLMResource
 from .core.stages import PipelineStage
 from .core.plugins import PromptPlugin, ToolPlugin
@@ -32,16 +33,21 @@ def _create_default_agent() -> Agent:
     llm = LLM({})
     memory = Memory({})
     storage = Storage({})
+    vector_store = DuckDBVectorStore({})
 
     llm.provider = llm_provider
     memory.database = db
+    vector_store.database = db
+    memory.vector_store = vector_store
 
     resources = ResourceContainer()
     import asyncio
 
     asyncio.run(db.initialize())
+    asyncio.run(vector_store.initialize())
     asyncio.run(memory.initialize())
     asyncio.run(resources.add("database", db))
+    asyncio.run(resources.add("vector_store", vector_store))
     asyncio.run(resources.add("llm_provider", llm_provider))
     asyncio.run(resources.add("llm", llm))
     asyncio.run(resources.add("memory", memory))
