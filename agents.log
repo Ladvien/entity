@@ -2,6 +2,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 AGENT NOTE - 2025-07-13: Implemented DuckDBVectorStore setup and minimal workflow tests
 >>>>>>> pr-1506
@@ -11,6 +12,9 @@ AGENT NOTE - 2025-07-13: pytest now works with the unified entity.cli.plugin_too
 =======
 AGENT NOTE - 2025-07-13: Added pythonpath configuration for pytest
 >>>>>>> pr-1504
+=======
+AGENT NOTE - 2025-08-10: Moved plugin_tool under entity.cli and updated imports
+>>>>>>> pr-1503
 AGENT NOTE - 2025-08-09: Documented examples package and exported key modules
 =======
 AGENT NOTE - 2025-07-13: Ensured pipeline package sets __path__ for plugin discovery
