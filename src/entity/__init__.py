@@ -5,16 +5,11 @@ from __future__ import annotations
 from .core.agent import Agent
 from .infrastructure import DuckDBInfrastructure
 from .resources import LLM, Memory, Storage
-<<<<<<< HEAD
 from .resources.logging import LoggingResource
 from .resources.interfaces.vector_store import VectorStoreResource
-=======
-from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
->>>>>>> pr-1438
 from plugins.builtin.resources.ollama_llm import OllamaLLMResource
 from .core.stages import PipelineStage
 from .core.plugins import PromptPlugin, ToolPlugin
-from .plugins.prompts.basic_error_handler import BasicErrorHandler
 from .utils.setup_manager import Layer0SetupManager
 from entity.core.registries import SystemRegistries
 from entity.core.runtime import AgentRuntime
@@ -40,18 +35,10 @@ def _create_default_agent() -> Agent:
     vector_store = VectorStoreResource({})
     memory = Memory({})
     storage = Storage({})
-<<<<<<< HEAD
     logging_res = LoggingResource({})
 
     llm.provider = llm_provider
     memory.database = db
-=======
-    vector_store = DuckDBVectorStore({})
-
-    llm.provider = llm_provider
-    memory.database = db
-    vector_store.database = db
->>>>>>> pr-1438
     memory.vector_store = vector_store
 
     resources = ResourceContainer()
@@ -74,12 +61,7 @@ def _create_default_agent() -> Agent:
         tools=builder.tool_registry,
         plugins=builder.plugin_registry,
     )
-<<<<<<< HEAD
-    agent._runtime = AgentRuntime(caps, workflow=setup.workflow)
-=======
-    asyncio.run(builder.add_plugin(BasicErrorHandler({})))
     agent._runtime = AgentRuntime(caps)
->>>>>>> pr-1433
     return agent
 
 
@@ -121,8 +103,6 @@ def tool(func=None, **hints):
         class _WrappedTool(ToolPlugin):
             async def execute_function(self, params_dict):
                 return await f(**params_dict)
-
-        _WrappedTool.intents = list(hints.get("intents", []))
 
         asyncio.run(agent.builder.tool_registry.add(f.__name__, _WrappedTool({})))
         return f
