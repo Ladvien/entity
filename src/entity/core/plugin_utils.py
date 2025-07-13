@@ -127,6 +127,9 @@ class PluginAutoClassifier:
             name=name,
             base_class=cast(Type, base_cls),
         )
+        plugin_obj.config["stages" if len(plugin_obj.stages) > 1 else "stage"] = (
+            plugin_obj.stages if len(plugin_obj.stages) > 1 else plugin_obj.stages[0]
+        )
         plugin_obj._explicit_stages = explicit
         return plugin_obj
 
