@@ -40,6 +40,11 @@ class CycleA:
 
 class CycleB:
     stages: list = []
+    dependencies = ["c"]
+
+
+class CycleC:
+    stages: list = []
     dependencies = ["a"]
 
 
@@ -82,3 +87,15 @@ async def test_cycle_detection():
     container.register("b", CycleB, {}, layer=4)
     with pytest.raises(InitializationError, match="Circular dependency"):
         container._validate_layers()
+
+
+@pytest.mark.asyncio
+async def test_long_cycle_detection():
+    container = ResourceContainer()
+    container.register("a", CycleA, {}, layer=4)
+    container.register("b", CycleB, {}, layer=4)
+    container.register("c", CycleC, {}, layer=4)
+    with pytest.raises(InitializationError) as exc:
+        container._validate_layers()
+    assert "Circular dependency" in str(exc.value)
+    assert set(exc.value.name.split(", ")) == {"a", "b", "c"}
