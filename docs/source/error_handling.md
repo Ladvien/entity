@@ -28,6 +28,12 @@ poetry run entity-cli validate --config config/dev.yaml
 
 This command executes Phases&nbsp;1 and&nbsp;2 and reports any problems before the pipeline starts.
 
+### Stage Mismatch Warnings
+
+By default the initializer only logs a warning when a plugin's configured stages
+override those declared on the class. Run the CLI with ``--strict-stages`` to
+escalate these warnings into errors.
+
 ## Tuning Circuit Breaker Thresholds
 
 You can override defaults in your configuration:

@@ -239,6 +239,7 @@ class SystemInitializer:
         plugin_registry_cls: Type[PluginRegistry] = PluginRegistry,
         tool_registry_cls: Type[ToolRegistry] = ToolRegistry,
         resource_container_cls: Type[ResourceContainer] = ResourceContainer,
+        strict_stages: bool = False,
     ) -> None:
         load_env(env_file)
         configure_logging()
@@ -270,6 +271,7 @@ class SystemInitializer:
         self.plugin_registry_cls = plugin_registry_cls
         self.tool_registry_cls = tool_registry_cls
         self.resource_container_cls = resource_container_cls
+        self.strict_stages = strict_stages
         self.workflows: Dict[str, Type] = {}
         self._plugins: list[Plugin] = []
         self.plugin_registry: PluginRegistry | None = None
@@ -321,24 +323,28 @@ class SystemInitializer:
                 )
 
     @classmethod
-    def from_yaml(cls, yaml_path: str, env_file: str = ".env") -> "SystemInitializer":
+    def from_yaml(
+        cls, yaml_path: str, env_file: str = ".env", *, strict_stages: bool = False
+    ) -> "SystemInitializer":
         data = ConfigLoader.from_yaml(yaml_path, env_file)
         model = EntityConfig.from_dict(data)
-        return cls(model, env_file)
+        return cls(model, env_file, strict_stages=strict_stages)
 
     @classmethod
-    def from_json(cls, json_path: str, env_file: str = ".env") -> "SystemInitializer":
+    def from_json(
+        cls, json_path: str, env_file: str = ".env", *, strict_stages: bool = False
+    ) -> "SystemInitializer":
         data = ConfigLoader.from_json(json_path, env_file)
         model = EntityConfig.from_dict(data)
-        return cls(model, env_file)
+        return cls(model, env_file, strict_stages=strict_stages)
 
     @classmethod
     def from_dict(
-        cls, cfg: Dict[str, Any], env_file: str = ".env"
+        cls, cfg: Dict[str, Any], env_file: str = ".env", *, strict_stages: bool = False
     ) -> "SystemInitializer":
         data = ConfigLoader.from_dict(cfg, env_file)
         model = EntityConfig.from_dict(data)
-        return cls(model, env_file)
+        return cls(model, env_file, strict_stages=strict_stages)
 
     # --------------------------- plugin discovery ---------------------------
     def _discover_plugins(self) -> None:
@@ -478,6 +484,29 @@ class SystemInitializer:
             explicit = True
         return stages, explicit
 
+    def _warn_stage_mismatches(self, registry: ClassRegistry) -> None:
+        """Log a warning when config stages override class stages."""
+
+        for cls, config in registry.all_plugin_classes():
+            cfg_value = config.get("stages") or config.get("stage")
+            class_value = getattr(cls, "stages", None) or getattr(cls, "stage", None)
+            if cfg_value is None or class_value is None:
+                continue
+
+            cfg_stages = resolve_stages(cls, config)
+            class_stages = (
+                class_value if isinstance(class_value, list) else [class_value]
+            )
+            class_stages = [PipelineStage.ensure(s) for s in class_stages]
+            if cfg_stages != class_stages:
+                msg = (
+                    f"{cls.__name__} configured stages {cfg_stages} "
+                    f"differ from class stages {class_stages}"
+                )
+                if self.strict_stages:
+                    raise InitializationError(cls.__name__, "stage validation", msg)
+                logger.warning(msg)
+
     def _register_plugins(
         self, registry: ClassRegistry, dep_graph: Dict[str, List[str]]
     ) -> None:
@@ -563,6 +592,8 @@ class SystemInitializer:
 
         # Phase 1: register all plugin classes
         self._register_plugins(registry, dep_graph)
+
+        self._warn_stage_mismatches(registry)
 
         # Validate workflow references
         for stage_plugins in workflow.stage_map.values():

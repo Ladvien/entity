@@ -61,6 +61,7 @@ class CLIArgs:
     infra_cmd: Optional[str] = None
     infra_type: Optional[str] = None
     infra_path: Optional[str] = None
+    strict_stages: bool = False
 
 
 class EntityCLI:
@@ -79,6 +80,7 @@ class EntityCLI:
         parser.add_argument("--config", "-c")
         parser.add_argument("--env")
         parser.add_argument("--state-log", dest="state_log")
+        parser.add_argument("--strict-stages", action="store_true")
 
         sub = parser.add_subparsers(dest="command", required=True)
         sub.add_parser("run", help="Start the agent")
@@ -188,6 +190,7 @@ class EntityCLI:
             infra_cmd=getattr(parsed, "infra_cmd", None),
             infra_type=getattr(parsed, "infra_type", None),
             infra_path=getattr(parsed, "infra_path", None),
+            strict_stages=getattr(parsed, "strict_stages", False),
         )
 
     # -----------------------------------------------------
@@ -225,7 +228,7 @@ class EntityCLI:
             return 0
         if self.args.config:
             cfg = self._load_config_files(self.args.config)
-            agent = Agent.from_config(cfg)
+            agent = Agent.from_config(cfg, strict_stages=self.args.strict_stages)
         else:
             agent = Agent()
         if cmd == "reload-config":
@@ -589,7 +592,9 @@ class EntityCLI:
 
             try:
                 data = yaml.safe_load(Path(config_path).read_text()) or {}
-                initializer = SystemInitializer(data)
+                initializer = SystemInitializer(
+                    data, strict_stages=self.args.strict_stages
+                )
                 await initializer.initialize()
             except Exception as exc:  # noqa: BLE001
                 logger.error("Plugin validation failed: %s", exc)
@@ -605,7 +610,9 @@ class EntityCLI:
 
             try:
                 data = self._load_config_files(config_path)
-                initializer = SystemInitializer(data)
+                initializer = SystemInitializer(
+                    data, strict_stages=self.args.strict_stages
+                )
                 await initializer.initialize()
             except Exception as exc:  # noqa: BLE001
                 logger.error("Validation failed: %s", exc)
@@ -620,7 +627,9 @@ class EntityCLI:
 
         if agent._runtime is None:
             if agent.config_path:
-                tmp = Agent.from_config(agent.config_path)
+                tmp = Agent.from_config(
+                    agent.config_path, strict_stages=self.args.strict_stages
+                )
                 agent._builder = tmp._builder
                 agent._runtime = tmp._runtime
 
