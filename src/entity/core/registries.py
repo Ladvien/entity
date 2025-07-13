@@ -9,12 +9,21 @@ from entity.core.validation import verify_dependencies, verify_stage_assignment
 from entity.pipeline.stages import PipelineStage
 
 
+@dataclass
+class PluginCapabilities:
+    """Describe a plugin's declared capabilities."""
+
+    supported_stages: list[str]
+    required_resources: list[str]
+
+
 class PluginRegistry:
-    """Register plugins for each pipeline stage."""
+    """Register plugins for each pipeline stage and track capabilities."""
 
     def __init__(self) -> None:
         self._stage_plugins: Dict[str, List[Any]] = {}
         self._names: Dict[Any, str] = {}
+        self._capabilities: Dict[Any, PluginCapabilities] = {}
 
     async def register_plugin_for_stage(
         self, plugin: Any, stage: str | PipelineStage, name: str | None = None
@@ -28,6 +37,33 @@ class PluginRegistry:
         key = str(stage_enum)
         self._stage_plugins.setdefault(key, []).append(plugin)
         self._names[plugin] = plugin_name
+        caps = self._capabilities.get(plugin)
+        if caps is None:
+            deps = list(getattr(plugin, "dependencies", []))
+            caps = PluginCapabilities([], deps)
+            self._capabilities[plugin] = caps
+        if stage not in caps.supported_stages:
+            caps.supported_stages.append(stage)
+
+    async def declare_capabilities(
+        self,
+        plugin: Any,
+        *,
+        stages: list[str] | None = None,
+        required_resources: list[str] | None = None,
+    ) -> None:
+        caps = self._capabilities.setdefault(
+            plugin,
+            PluginCapabilities([], list(getattr(plugin, "dependencies", []))),
+        )
+        if stages is not None:
+            for st in stages:
+                if st not in caps.supported_stages:
+                    caps.supported_stages.append(st)
+        if required_resources is not None:
+            for dep in required_resources:
+                if dep not in caps.required_resources:
+                    caps.required_resources.append(dep)
 
     def get_plugins_for_stage(self, stage: str) -> List[Any]:
         return list(self._stage_plugins.get(stage, []))
@@ -48,6 +84,9 @@ class PluginRegistry:
         for plist in self._stage_plugins.values():
             plugins.extend(plist)
         return plugins
+
+    def get_capabilities(self, plugin: Any) -> PluginCapabilities | None:
+        return self._capabilities.get(plugin)
 
     def get_plugin_name(self, plugin: Any) -> str:
         name = self._names.get(plugin)
@@ -94,3 +133,6 @@ class SystemRegistries:
     tools: ToolRegistry
     plugins: PluginRegistry
     validators: Any | None = None
+
+
+__all__ = ["PluginCapabilities", "PluginRegistry", "ToolRegistry", "SystemRegistries"]
