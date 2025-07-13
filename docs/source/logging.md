@@ -24,7 +24,14 @@ plugins:
         - type: console
         - type: structured_file
           path: ./logs/agent.jsonl
+          max_bytes: 10MB
+          backup_count: 2
 ```
+
+`max_bytes` sets the file size threshold for rotation using common size suffixes
+like `KB`, `MB`, and `GB`. When the active file exceeds this threshold it is
+renamed with a numbered suffix and a new file is created. `backup_count`
+controls how many rotated files to keep.
 
 ## Automatic Logging
 

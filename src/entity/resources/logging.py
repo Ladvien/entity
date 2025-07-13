@@ -78,21 +78,21 @@ class StructuredFileOutput(LogOutput):
     """Append structured logs to a JSON Lines file with optional rotation."""
 
     def __init__(
-        self, path: str, level: int, max_size: int = 0, backup_count: int = 0
+        self, path: str, level: int, max_bytes: int = 0, backup_count: int = 0
     ) -> None:
         super().__init__(level)
         self.path = Path(path)
-        self.max_size = max_size
+        self.max_bytes = max_bytes
         self.backup_count = backup_count
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._handle = self.path.open("a", encoding="utf-8")
         self._lock = asyncio.Lock()
 
     def _should_rotate(self) -> bool:
-        if self.max_size <= 0:
+        if self.max_bytes <= 0:
             return False
         self._handle.flush()
-        return self.path.stat().st_size >= self.max_size
+        return self.path.stat().st_size >= self.max_bytes
 
     def _rotate(self) -> None:
         self._handle.close()
@@ -112,7 +112,6 @@ class StructuredFileOutput(LogOutput):
 
     async def write(self, entry: Dict[str, Any]) -> None:
         async with self._lock:
-            self._rotate()
             self._handle.write(json.dumps(entry) + "\n")
             self._handle.flush()
             if self._should_rotate():
@@ -196,10 +195,11 @@ class LoggingResource(AgentResource):
                 self._outputs.append(ConsoleLogOutput(level))
             elif otype in {"structured_file", "file"}:
                 path = out.get("path", "agent.log")
-                max_size = int(out.get("max_size", 0))
+                size = _parse_size(out.get("max_bytes", out.get("max_size", 0)))
+                max_bytes = 0 if size is None else size
                 backup_count = int(out.get("backup_count", 0))
                 self._outputs.append(
-                    StructuredFileOutput(path, level, max_size, backup_count)
+                    StructuredFileOutput(path, level, max_bytes, backup_count)
                 )
             elif otype in {"real_time_stream", "stream"}:
                 host = out.get("host", "127.0.0.1")
