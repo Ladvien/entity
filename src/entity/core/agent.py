@@ -337,6 +337,17 @@ class _AgentBuilder:
 
             container.register("storage", Storage, {}, layer=3)
 
+    def _assign_shared_resources(self, plugin: Plugin) -> None:
+        """Attach common resources to ``plugin`` if available."""
+
+        metrics = self.resource_registry.get("metrics_collector")
+        if metrics is not None:
+            setattr(plugin, "metrics_collector", metrics)
+
+        logger_res = self.resource_registry.get("logging")
+        if logger_res is not None:
+            setattr(plugin, "logging", logger_res)
+
     # ------------------------------ runtime build -----------------------------
     async def build_runtime(
         self, workflow: Mapping[PipelineStage | str, Iterable[str]] | None = None
@@ -344,6 +355,7 @@ class _AgentBuilder:
         self._register_default_resources()
         await self.resource_registry.build_all()
         for plugin in self._added_plugins:
+            self._assign_shared_resources(plugin)
             init = getattr(plugin, "initialize", None)
             if callable(init):
                 await init()

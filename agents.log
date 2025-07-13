@@ -1,3 +1,5 @@
+AGENT NOTE - 2025-07-13: Added logging resource injection for AgentBuilder
+
 <<<<<<< HEAD
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-13: Plugin registry now preserves registration order using OrderedDict
