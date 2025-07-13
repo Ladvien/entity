@@ -12,26 +12,32 @@ import yaml
 from dotenv import dotenv_values, load_dotenv
 
 
+class EnvironmentLoader:
+    """Load configuration variables from .env and secrets files."""
+
+    def __init__(self, env_file: str | Path = ".env", env: str | None = None) -> None:
+        self.env_path = Path(env_file)
+        self.env = env
+
+    def _collect_values(self) -> dict[str, str]:
+        values = dotenv_values(self.env_path) if self.env_path.exists() else {}
+        if self.env:
+            secret_path = Path("secrets") / f"{self.env}.env"
+            if secret_path.exists():
+                values.update(dotenv_values(secret_path))
+        return values
+
+    def load(self) -> None:
+        for key, value in self._collect_values().items():
+            os.environ.setdefault(key, value)
+
+        load_dotenv(self.env_path, override=False)
+
+
 def load_env(env_file: str | Path = ".env", env: str | None = None) -> None:
-    """Load variables from ``env_file`` and ``secrets/<env>.env``.
+    """Convenience wrapper around :class:`EnvironmentLoader`."""
 
-    Existing process variables are never overwritten. Values from
-    ``secrets/<env>.env`` override entries from ``env_file`` when both
-    are present.
-    """
-
-    env_path = Path(env_file)
-    env_values = dotenv_values(env_path) if env_path.exists() else {}
-
-    if env:
-        secret_path = Path("secrets") / f"{env}.env"
-        if secret_path.exists():
-            env_values.update(dotenv_values(secret_path))
-
-    for key, value in env_values.items():
-        os.environ.setdefault(key, value)
-
-    load_dotenv(env_path, override=False)
+    EnvironmentLoader(env_file, env).load()
 
 
 def _merge(

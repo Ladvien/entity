@@ -35,7 +35,10 @@ class CustomMetricRecord:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
-class MetricsCollectorResource(ResourcePlugin):
+from .base import AgentResource
+
+
+class MetricsCollectorResource(AgentResource):
     """Simple in-memory metrics collector."""
 
     name = "metrics_collector"
