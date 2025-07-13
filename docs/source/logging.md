@@ -40,3 +40,5 @@ the start, success, and failure of their ``execute`` method. Resource classes
 derived from :class:`~entity.core.plugins.ResourcePlugin` log each operation
 tracked via ``_track_operation``. No additional code is required other than
 having a ``LoggingResource`` registered in the system.
+Plugins also depend on ``metrics_collector`` by default, enabling automatic
+recording of execution metrics.

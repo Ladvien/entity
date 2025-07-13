@@ -44,6 +44,9 @@ plugins:
       buffer_size: 1000
 ```
 
+All plugins declare a dependency on ``metrics_collector`` by default, ensuring
+metrics are recorded without additional configuration.
+
 ## DatabaseResource
 
 `DuckDBResource` provides a zero-config persistent database. It depends on the

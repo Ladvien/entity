@@ -40,7 +40,12 @@ class ToolExecutionError(Exception):
 
 
 class BasePlugin:
-    """Lightweight plugin foundation."""
+    """Lightweight plugin foundation.
+
+    All subclasses depend on ``metrics_collector`` and ``logging`` resources
+    by default so they can record metrics and emit logs without extra
+    configuration.
+    """
 
     stages: List[PipelineStage]
     dependencies: List[str] = ["metrics_collector", "logging"]
