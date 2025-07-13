@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-13: Clarified dev dependencies required before tests in README
+=======
+AGENT NOTE - 2025-07-13: Ran poetry install and executed pytest as requested
+>>>>>>> pr-1473
 AGENT NOTE - 2025-07-13: Added has_plugin method to PluginRegistry to fix workflow validation
 AGENT NOTE - 2025-08-04: Resolved lingering merge markers and restored notes
 AGENT NOTE - 2025-08-02: Resolved remaining merge conflict markers
