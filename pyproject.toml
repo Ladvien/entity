@@ -9,7 +9,6 @@ package-mode = true
 
 packages = [
     { include = "entity", from = "src" },
-    { include = "cli", from = "src" },
 ]
 
 [tool.poetry.scripts]

@@ -30,17 +30,17 @@ from entity.infrastructure import (
     AWSStandardInfrastructure,
 )  # noqa: E402
 
-try:  # Resolve plugin helpers from installed "cli" package
-    generate_plugin = import_module("cli.plugin_tool.generate").generate_plugin
-    load_plugin = import_module("cli.plugin_tool.utils").load_plugin
-    PLUGIN_TYPES = import_module("cli.plugin_tool.main").PLUGIN_TYPES
+try:  # Resolve plugin helpers from installed package
+    generate_plugin = import_module("entity.cli.plugin_tool.generate").generate_plugin
+    load_plugin = import_module("entity.cli.plugin_tool.utils").load_plugin
+    PLUGIN_TYPES = import_module("entity.cli.plugin_tool.main").PLUGIN_TYPES
 except ModuleNotFoundError:  # Fallback for local executions without package mode
     cli_path = Path(__file__).resolve().parents[2] / "cli"
     if str(cli_path) not in sys.path:
         sys.path.insert(0, str(cli_path))
-    generate_plugin = import_module("plugin_tool.generate").generate_plugin
-    load_plugin = import_module("plugin_tool.utils").load_plugin
-    PLUGIN_TYPES = import_module("plugin_tool.main").PLUGIN_TYPES
+    generate_plugin = import_module("entity.cli.plugin_tool.generate").generate_plugin
+    load_plugin = import_module("entity.cli.plugin_tool.utils").load_plugin
+    PLUGIN_TYPES = import_module("entity.cli.plugin_tool.main").PLUGIN_TYPES
 
 logger = get_logger(__name__)
 

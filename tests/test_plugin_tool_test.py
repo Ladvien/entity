@@ -1,5 +1,5 @@
 import logging
-from cli.plugin_tool.main import PluginToolCLI, PluginToolArgs
+from entity.cli.plugin_tool.main import PluginToolCLI, PluginToolArgs
 
 
 def _make_cli(path: str) -> PluginToolCLI:
