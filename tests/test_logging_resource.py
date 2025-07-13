@@ -97,7 +97,7 @@ async def test_log_rotation(tmp_path, monkeypatch):
                 {
                     "type": "structured_file",
                     "path": str(log_file),
-                    "max_size": 10,
+                    "max_bytes": 10,
                     "backup_count": 1,
                 }
             ],
