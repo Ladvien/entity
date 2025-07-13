@@ -116,7 +116,7 @@ class RegistryValidator:
             )
 
     def _register_classes(self) -> None:
-        plugins_cfg = self.initializer.config.get("plugins", {})
+        plugins_cfg = self.initializer.config.get("plugins", {}) or {}
         for section in [
             "resources",
             "agent_resources",
@@ -125,7 +125,8 @@ class RegistryValidator:
             "adapters",
             "prompts",
         ]:
-            for name, cfg in plugins_cfg.get(section, {}).items():
+            section_cfg = plugins_cfg.get(section) or {}
+            for name, cfg in section_cfg.items():
                 cls = import_plugin_class(cfg.get("type", name))
                 self._validate_plugin_type(name, cls, section)
                 self.registry.register_class(cls, cfg, name)
@@ -283,6 +284,19 @@ class RegistryValidator:
                 "PgVectorStore vector store requires the PostgresResource to be registered"
             )
 
+    def graph_dependencies(self) -> str:
+        """Return the dependency graph in GraphViz DOT format."""
+
+        lines = ["digraph dependencies {"]
+        for plugin, deps in self.dep_graph.items():
+            if not deps:
+                lines.append(f'    "{plugin}"')
+            for dep in deps:
+                dep_name = dep[:-1] if dep.endswith("?") else dep
+                lines.append(f'    "{plugin}" -> "{dep_name}"')
+        lines.append("}")
+        return "\n".join(lines)
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -290,13 +304,24 @@ def main() -> None:
     )
     parser.add_argument(
         "--config",
-        required=True,
+        default="config/dev.yaml",
         help="Path to the YAML configuration file",
+    )
+    parser.add_argument(
+        "--graph",
+        help="Write GraphViz dependency graph to the given file. Use '-' for stdout.",
     )
     args = parser.parse_args()
 
     try:
-        RegistryValidator(args.config).run()
+        validator = RegistryValidator(args.config)
+        validator.run()
+        if args.graph is not None:
+            dot = validator.graph_dependencies()
+            if args.graph == "-":
+                print(dot)
+            else:
+                pathlib.Path(args.graph).write_text(dot, encoding="utf-8")
     except SystemError as exc:  # pragma: no cover - CLI only
         logger.error("Validation failed: %s", exc)
         raise SystemExit(1)

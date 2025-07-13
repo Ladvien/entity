@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 AGENT NOTE - 2025-08-21: Added user_id propagation in pipeline and multi-user tests
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-13: Added websocket broadcast logging, file rotation, and structured pipeline logs.
@@ -59,6 +60,9 @@ AGENT NOTE - 2025-08-10: Added infrastructure_type attribute test
 AGENT NOTE - 2025-08-10: Inject default DuckDBVectorStore and keep interfaces under entity.resources.interfaces
 AGENT NOTE - 2025-08-10: Stage results persist across runs and temporary thoughts moved to PipelineState
 AGENT NOTE - 2025-07-13: Moved BasicErrorHandler to builtin and added example plugin tests
+=======
+AGENT NOTE - 2025-07-13: Improved layer validation with cycle detection and dependency graph tooling
+>>>>>>> pr-1509
 AGENT NOTE - 2025-08-09: Documented examples package and exported key modules
 AGENT NOTE - 2025-07-13: Ensured pipeline package sets __path__ for plugin discovery
 =======

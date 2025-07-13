@@ -552,7 +552,11 @@ class ResourceContainer:
             )
 
             allowed_layers = {expected}
-            if expected == 4 and not self._deps.get(name):
+            if (
+                expected == 4
+                and not issubclass(cls, CanonicalResource)
+                and not self._deps.get(name)
+            ):
                 allowed_layers.add(3)
 
             if layer == 1:
@@ -624,13 +628,13 @@ class ResourceContainer:
 
         def traverse(node: str) -> None:
             if node in stack:
-                cycle = stack[stack.index(node) :]
-                cycle.append(node)
+                cycle = stack[stack.index(node) :] + [node]
+                cycle_str = " -> ".join(cycle)
                 names = ", ".join(sorted(cycle))
                 raise InitializationError(
                     names,
                     "layer validation",
-                    "Circular dependency detected.",
+                    f"Circular dependency detected: {cycle_str}.",
                     kind="Resource",
                 )
             if node in visited:
@@ -651,16 +655,19 @@ class ResourceContainer:
                         kind="Resource",
                     )
 
+                traverse(dep_name)
                 dep_layer = self._layers[dep_name]
                 if self._layers[node] - dep_layer != 1:
                     raise InitializationError(
                         f"{node}, {dep_name}",
                         "layer validation",
-                        f"Resource depends on '{dep_name}' and violates layer rules.",
+                        (
+                            f"Resource '{node}' (layer {self._layers[node]}) depends on "
+                            f"'{dep_name}' (layer {dep_layer}) and violates layer rules "
+                            "(one-layer step)."
+                        ),
                         kind="Resource",
                     )
-
-                traverse(dep_name)
 
             stack.pop()
             visited.add(node)
