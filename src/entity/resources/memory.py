@@ -218,50 +218,26 @@ class Memory(AgentResource):
                     entry.timestamp.isoformat(),
                 ),
             )
+        if self.vector_store is not None:
+            await self.vector_store.add_embedding(entry.content)
 
     async def conversation_search(
-        self, query: str, user_id: str | None = None, days: int | None = None
+        self,
+        query: str,
+        user_id: str | None = None,
+        days: int | None = None,
+        k: int = 5,
     ) -> List[Dict[str, Any]]:
-        """Search conversation history, preferring vector store results."""
+        """Search conversation history using vector similarity when possible."""
         if self._pool is None:
             return []
-
-        if self.vector_store is not None:
-            texts = await self.vector_store.query_similar(query)
-            if texts:
-                placeholders = ",".join("?" for _ in texts)
-                sql = (
-                    f"SELECT conversation_id, role, content, metadata, timestamp "
-                    f"FROM {self._history_table} WHERE content IN ({placeholders})"
-                )
-                params: List[Any] = list(texts)
-                if user_id:
-                    sql += " AND conversation_id LIKE ?"
-                    params.append(f"{user_id}%")
-                if days is not None:
-                    since = (datetime.now() - timedelta(days=days)).isoformat()
-                    sql += " AND timestamp >= ?"
-                    params.append(since)
-                sql += " ORDER BY timestamp DESC"
-                async with self.database.connection() as conn:
-                    rows = conn.execute(sql, params).fetchall()
-                return [
-                    {
-                        "conversation_id": row[0],
-                        "role": row[1],
-                        "content": row[2],
-                        "metadata": json.loads(row[3]) if row[3] else {},
-                        "timestamp": row[4],
-                    }
-                    for row in rows
-                ]
-
         sql = (
             f"SELECT conversation_id, role, content, metadata, timestamp "
             f"FROM {self._history_table}"
         )
-        clauses = []
+        clauses: List[str] = []
         params: List[Any] = []
+
         if user_id:
             clauses.append("conversation_id LIKE ?")
             params.append(f"{user_id}%")
@@ -269,9 +245,19 @@ class Memory(AgentResource):
             since = (datetime.now() - timedelta(days=days)).isoformat()
             clauses.append("timestamp >= ?")
             params.append(since)
+
         if query:
-            clauses.append("content LIKE ?")
-            params.append(f"%{query}%")
+            if self.vector_store is not None:
+                similar = await self.vector_store.query_similar(query, k)
+                if not similar:
+                    return []
+                placeholders = ", ".join("?" for _ in similar)
+                clauses.append(f"content IN ({placeholders})")
+                params.extend(similar)
+            else:
+                clauses.append("content LIKE ?")
+                params.append(f"%{query}%")
+
         if clauses:
             sql += " WHERE " + " AND ".join(clauses)
         sql += " ORDER BY timestamp DESC"
@@ -290,22 +276,30 @@ class Memory(AgentResource):
         ]
 
     async def conversation_statistics(self, user_id: str) -> Dict[str, Any]:
-        """Return simple statistics for a user's conversations."""
+        """Return message counts and durations for ``user_id`` conversations."""
         if self._pool is None:
             return {}
         async with self.database.connection() as conn:
-            conv_rows = conn.execute(
-                f"SELECT DISTINCT conversation_id FROM {self._history_table} "
-                "WHERE conversation_id LIKE ?",
+            rows = conn.execute(
+                f"SELECT conversation_id, COUNT(*) as count, "
+                f"MIN(timestamp) as start, MAX(timestamp) as end "
+                f"FROM {self._history_table} "
+                "WHERE conversation_id LIKE ? GROUP BY conversation_id",
                 (f"{user_id}%",),
             ).fetchall()
-            total_messages = conn.execute(
-                f"SELECT COUNT(*) FROM {self._history_table} WHERE conversation_id LIKE ?",
-                (f"{user_id}%",),
-            ).fetchone()[0]
+
+        stats: Dict[str, float] = {}
+        total_messages = 0
+        for row in rows:
+            total_messages += row[1]
+            start = datetime.fromisoformat(row[2])
+            end = datetime.fromisoformat(row[3])
+            stats[row[0]] = (end - start).total_seconds()
+
         return {
-            "conversations": len(conv_rows),
+            "conversations": len(rows),
             "messages": total_messages,
+            "durations": stats,
         }
 
     # ------------------------------------------------------------------
