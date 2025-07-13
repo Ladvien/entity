@@ -5,9 +5,6 @@ from datetime import datetime
 import duckdb
 from contextlib import asynccontextmanager
 
-loop = asyncio.new_event_loop()
-asyncio.set_event_loop(loop)
-
 from entity.core.context import PluginContext  # noqa: E402
 from entity.core.state import PipelineState, ConversationEntry  # noqa: E402
 from entity.resources import Memory  # noqa: E402
@@ -140,43 +137,47 @@ def test_memory_roundtrip(tmp_path) -> None:
     assert asyncio.run(ctx.recall("foo")) == "bar"
 
 
-def test_memory_persists_between_instances() -> None:
-    asyncio.set_event_loop(asyncio.new_event_loop())
+@pytest.mark.asyncio
+async def test_memory_persists_between_instances() -> None:
     db = DummyDatabase()
+
     mem1 = Memory(config={})
     mem1.database = db
     mem1.vector_store = None
-    asyncio.get_event_loop().run_until_complete(mem1.initialize())
-    loop.run_until_complete(mem1.set("foo", "bar", user_id="default"))
+    await mem1.initialize()
+    await mem1.set("foo", "bar", user_id="default")
     entry = ConversationEntry("hi", "user", datetime.now())
-    asyncio.run(mem1.save_conversation("cid", [entry], user_id="default"))
+    await mem1.save_conversation("cid", [entry], user_id="default")
 
     mem2 = Memory(config={})
     mem2.database = db
     mem2.vector_store = None
-    asyncio.get_event_loop().run_until_complete(mem2.initialize())
-    assert loop.run_until_complete(mem2.get("foo", user_id="default")) == "bar"
-    history = loop.run_until_complete(mem2.load_conversation("cid", user_id="default"))
+    await mem2.initialize()
+
+    assert await mem2.get("foo", user_id="default") == "bar"
+    history = await mem2.load_conversation("cid", user_id="default")
     assert history == [entry]
 
 
-def test_memory_persists_with_connection_pool() -> None:
-    asyncio.set_event_loop(asyncio.new_event_loop())
+@pytest.mark.asyncio
+async def test_memory_persists_with_connection_pool() -> None:
     pool = DummyPool()
+
     mem1 = Memory(config={})
     mem1.database = pool
     mem1.vector_store = None
-    asyncio.get_event_loop().run_until_complete(mem1.initialize())
-    loop.run_until_complete(mem1.set("foo", "bar", user_id="default"))
+    await mem1.initialize()
+    await mem1.set("foo", "bar", user_id="default")
     entry = ConversationEntry("hi", "user", datetime.now())
-    asyncio.run(mem1.save_conversation("cid", [entry], user_id="default"))
+    await mem1.save_conversation("cid", [entry], user_id="default")
 
     mem2 = Memory(config={})
     mem2.database = pool
     mem2.vector_store = None
-    asyncio.get_event_loop().run_until_complete(mem2.initialize())
-    assert loop.run_until_complete(mem2.get("foo", user_id="default")) == "bar"
-    history = loop.run_until_complete(mem2.load_conversation("cid", user_id="default"))
+    await mem2.initialize()
+
+    assert await mem2.get("foo", user_id="default") == "bar"
+    history = await mem2.load_conversation("cid", user_id="default")
     assert history == [entry]
 
 
