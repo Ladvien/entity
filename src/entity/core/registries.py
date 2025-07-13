@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Simplified plugin and resource registries."""
+
+from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Dict, List
@@ -68,11 +68,14 @@ class ToolRegistry:
             items = [(k, v) for k, v in items if n in k.lower()]
         if intent is not None:
             i = intent.lower()
-            items = [
-                (k, v)
-                for k, v in items
-                if any(i in t.lower() for t in getattr(v, "intents", []))
-            ]
+
+            def _match(tool: Any) -> bool:
+                declared = getattr(
+                    tool, "intents", getattr(tool.__class__, "intents", [])
+                )
+                return any(i == str(t).lower() for t in declared)
+
+            items = [(k, v) for k, v in items if _match(v)]
         return items
 
 

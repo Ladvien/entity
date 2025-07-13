@@ -3,6 +3,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-13: Stage results cleared after pipeline completion and tests added for thought accumulation
 =======
 AGENT NOTE - 2025-07-13: Improved layer validation cycle checks
@@ -19,6 +20,9 @@ AGENT NOTE - 2025-07-24: Pipeline now validates workflow plugins during initiali
 =======
 AGENT NOTE - 2025-07-25: Added plugin examples for INPUT, PARSE, and REVIEW stages
 >>>>>>> pr-1421
+=======
+AGENT NOTE - 2025-07-25: ToolRegistry discovery now filters by intents
+>>>>>>> pr-1420
 AGENT NOTE - 2025-07-24: Updated DuckDBResource to subclass AgentResource and use database_backend
 AGENT NOTE - 2025-07-23: Allow layer 3 for custom resources without dependencies
 AGENT NOTE - 2025-07-23: Fixed DatabaseResource import and updated async usage in plugin context memory test

@@ -95,6 +95,8 @@ def tool(func=None, **hints):
             async def execute_function(self, params_dict):
                 return await f(**params_dict)
 
+        _WrappedTool.intents = list(hints.get("intents", []))
+
         asyncio.run(agent.builder.tool_registry.add(f.__name__, _WrappedTool({})))
         return f
 
