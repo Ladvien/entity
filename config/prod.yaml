@@ -96,9 +96,6 @@ plugins:
       max_steps: 5
     conversation_history:
       type: user_plugins.prompts.conversation_history:ConversationHistory
-      db_schema: public
-      history_table: chat_history
-      stages: [parse, deliver]
     memory_retrieval:
       type: user_plugins.prompts.memory_retrieval:MemoryRetrievalPrompt
       max_context_length: 4000
