@@ -31,7 +31,23 @@ async def update_plugin_configuration(
 
     result = validate_reconfiguration_params(plugin.config, new_config)
     if not result.success:
-        return ConfigUpdateResult(False, True, result.message)
+        plugin._config_history.append(plugin.config.copy())
+        diff = {
+            k: (plugin.config.get(k), new_config.get(k))
+            for k in set(plugin.config) | set(new_config)
+            if plugin.config.get(k) != new_config.get(k)
+        }
+        msg = f"{result.message}. Differences: {diff}" if diff else result.message
+        return ConfigUpdateResult(False, True, msg)
+
+    unknown_keys = set(new_config) - set(plugin.config)
+    if unknown_keys:
+        plugin._config_history.append(plugin.config.copy())
+        diff = {k: new_config[k] for k in unknown_keys}
+        msg = (
+            f"Unknown configuration fields: {sorted(unknown_keys)}. Differences: {diff}"
+        )
+        return ConfigUpdateResult(False, True, msg)
 
     validator = getattr(plugin.__class__, "validate_config", None)
     if callable(validator):

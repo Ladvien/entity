@@ -7,6 +7,8 @@ from entity.core.agent import Agent
 from entity.core.plugins import Plugin, ValidationResult
 from entity.core.stages import PipelineStage
 from entity.cli import EntityCLI
+from entity.core.registries import PluginRegistry
+from entity.pipeline.config.config_update import update_plugin_configuration
 
 
 class RuntimeCheckPlugin(Plugin):
@@ -120,4 +122,19 @@ async def test_reload_failed_reconfiguration(tmp_path):
     result = await run_reload(cli, agent, cfg_file)
     assert result == 1
     assert plugin.config["value"] == 1
+    assert plugin.config_version == 1
+
+
+@pytest.mark.asyncio
+async def test_invalid_config_keys_require_restart() -> None:
+    registry = PluginRegistry()
+    plugin = ReconfigPlugin({"value": 1})
+    await registry.register_plugin_for_stage(
+        plugin, str(PipelineStage.THINK), "reconfiger"
+    )
+
+    result = await update_plugin_configuration(
+        registry, "reconfiger", {"value": 1, "extra": 5}
+    )
+    assert not result.success and result.requires_restart
     assert plugin.config_version == 1
