@@ -60,3 +60,9 @@ poetry install --with dev
 pip install -e ".[dev]"
 ```
 
+With dependencies installed you can run the included poe tasks:
+
+```bash
+poe test
+```
+
