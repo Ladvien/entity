@@ -27,7 +27,6 @@ class A(AgentResource):
 
 
 A.dependencies = []
-A.stages = []
 
 
 class B(Plugin):
@@ -97,7 +96,6 @@ class VectorStoreResource(AgentResource):
 
 
 VectorStoreResource.dependencies = []
-VectorStoreResource.stages = []
 
 
 class PostgresResource(AgentResource):
