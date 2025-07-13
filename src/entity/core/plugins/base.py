@@ -443,12 +443,9 @@ class InputAdapterPlugin(AdapterPlugin):
 
     stages = [PipelineStage.INPUT]
 
-    def __init_subclass__(cls, **kwargs: Any) -> None:  # type: ignore[override]
-        super().__init_subclass__(**kwargs)
-        if _normalize_stages(getattr(cls, "stages", [])) != [PipelineStage.INPUT]:
-            raise ConfigurationError("InputAdapterPlugin must use PipelineStage.INPUT")
-
     def validate_registration_stage(self, stage: PipelineStage) -> None:
+        if _normalize_stages(getattr(self, "stages", [])) != [PipelineStage.INPUT]:
+            raise ConfigurationError("InputAdapterPlugin must use PipelineStage.INPUT")
         if PipelineStage.ensure(stage) != PipelineStage.INPUT:
             raise ConfigurationError(
                 "InputAdapterPlugin can only register for PipelineStage.INPUT"
@@ -460,14 +457,11 @@ class OutputAdapterPlugin(AdapterPlugin):
 
     stages = [PipelineStage.OUTPUT]
 
-    def __init_subclass__(cls, **kwargs: Any) -> None:  # type: ignore[override]
-        super().__init_subclass__(**kwargs)
-        if _normalize_stages(getattr(cls, "stages", [])) != [PipelineStage.OUTPUT]:
+    def validate_registration_stage(self, stage: PipelineStage) -> None:
+        if _normalize_stages(getattr(self, "stages", [])) != [PipelineStage.OUTPUT]:
             raise ConfigurationError(
                 "OutputAdapterPlugin must use PipelineStage.OUTPUT"
             )
-
-    def validate_registration_stage(self, stage: PipelineStage) -> None:
         if PipelineStage.ensure(stage) != PipelineStage.OUTPUT:
             raise ConfigurationError(
                 "OutputAdapterPlugin can only register for PipelineStage.OUTPUT"
