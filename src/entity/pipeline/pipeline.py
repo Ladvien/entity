@@ -276,19 +276,6 @@ async def execute_pipeline(
     user_id = user_id or "default"
     memory = capabilities.resources.get("memory") if capabilities.resources else None
     if state is None:
-<<<<<<< HEAD
-        state = PipelineState(
-            conversation=[
-                ConversationEntry(
-                    content=user_message,
-                    role="user",
-                    timestamp=datetime.now(),
-                )
-            ],
-            pipeline_id=f"{user_id}_{generate_pipeline_id()}",
-        )
-<<<<<<< HEAD
-=======
         if checkpoint_key and memory:
             saved = await memory.fetch_persistent(checkpoint_key, None, user_id=user_id)
             if saved:
@@ -304,13 +291,10 @@ async def execute_pipeline(
                 ],
                 pipeline_id=f"{user_id}_{generate_pipeline_id()}",
             )
-            state.stage_results.clear()
->>>>>>> pr-1418
-=======
+
     # Clear stage results at the start of each message so that
     # thoughts from previous executions do not leak into the next one.
     state.stage_results.clear()
->>>>>>> pr-1427
     _start = time.time()
     resource_manager = (
         capabilities.resources

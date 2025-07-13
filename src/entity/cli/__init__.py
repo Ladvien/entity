@@ -68,11 +68,8 @@ class CLIArgs:
     infra_type: Optional[str] = None
     infra_path: Optional[str] = None
     user_id: Optional[str] = None
-<<<<<<< HEAD
     message: Optional[str] = None
-=======
     files: Optional[list[str]] = None
->>>>>>> pr-1416
 
 
 class EntityCLI:
@@ -220,11 +217,8 @@ class EntityCLI:
             infra_type=getattr(parsed, "infra_type", None),
             infra_path=getattr(parsed, "infra_path", None),
             user_id=getattr(parsed, "user_id", None),
-<<<<<<< HEAD
             message=getattr(parsed, "message", None),
-=======
             files=getattr(parsed, "files", None),
->>>>>>> pr-1416
         )
 
     # -----------------------------------------------------

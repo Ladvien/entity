@@ -1,48 +1,17 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
+AGENT NOTE - 2025-07-13: Verified merge conflict cleanup and preserved all notes
+AGENT NOTE - 2025-07-31: Resolved merge conflicts in pipeline and CLI after PRs 1416-1427
 AGENT NOTE - 2025-07-13: Stage results cleared after pipeline completion and tests added for thought accumulation
-=======
 AGENT NOTE - 2025-07-13: Improved layer validation cycle checks
->>>>>>> pr-1425
-=======
 AGENT NOTE - 2025-07-13: Added automatic metrics injection and startup warning when metrics resource missing
->>>>>>> pr-1424
-=======
 AGENT NOTE - 2025-07-13: Agent constructor now accepts optional workflow parameter and workflow validation added
->>>>>>> pr-1423
-=======
 AGENT NOTE - 2025-07-24: Pipeline now validates workflow plugins during initialization
->>>>>>> pr-1422
-=======
 AGENT NOTE - 2025-07-25: Added plugin examples for INPUT, PARSE, and REVIEW stages
->>>>>>> pr-1421
-=======
 AGENT NOTE - 2025-07-25: ToolRegistry discovery now filters by intents
->>>>>>> pr-1420
-=======
 AGENT NOTE - 2025-07-13: Added runtime plugin validation for stage assignments and dependencies
->>>>>>> pr-1419
-=======
 AGENT NOTE - 2025-07-13: Added branching and checkpoint support in Pipeline
->>>>>>> pr-1418
-=======
 AGENT NOTE - 2025-07-25: Added debugging tracer module and CLI step command
->>>>>>> pr-1417
-=======
 AGENT NOTE - 2025-07-13: Added config inheritance, linting, and diff tools
->>>>>>> pr-1416
-=======
 AGENT NOTE - 2025-07-13: Adjust stage result clearing to persist across iterations but reset between messages
->>>>>>> pr-1427
 AGENT NOTE - 2025-07-24: Updated DuckDBResource to subclass AgentResource and use database_backend
 AGENT NOTE - 2025-07-23: Allow layer 3 for custom resources without dependencies
 AGENT NOTE - 2025-07-23: Fixed DatabaseResource import and updated async usage in plugin context memory test
