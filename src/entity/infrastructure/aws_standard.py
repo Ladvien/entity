@@ -9,6 +9,7 @@ class AWSStandardInfrastructure(OpenTofuInfrastructure):
     """Basic AWS deployment using ECS, RDS and S3."""
 
     name = "aws-standard"
+    infrastructure_type = "cloud"
     provider = "aws"
 
     def __init__(self, region: str = "us-east-1", config: Dict | None = None) -> None:
