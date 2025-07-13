@@ -6,6 +6,7 @@ from typing import Any
 
 from entity.core.plugins import ValidationResult
 from entity.core.registries import PluginRegistry
+from entity.pipeline.initializer import validate_reconfiguration_params
 
 
 @dataclass
@@ -28,24 +29,15 @@ async def update_plugin_configuration(
     if plugin is None:
         return ConfigUpdateResult(False, True, f"Plugin '{name}' not registered")
 
-    stages = new_config.get("stages")
-    if stages is not None and stages != getattr(plugin, "stages", None):
-        return ConfigUpdateResult(
-            False,
-            True,
-            "Topology changes require restart",
-        )
-    deps = new_config.get("dependencies")
-    if deps is not None and deps != getattr(plugin, "dependencies", None):
-        return ConfigUpdateResult(
-            False,
-            True,
-            "Topology changes require restart",
-        )
+    result = validate_reconfiguration_params(plugin.config, new_config)
+    if not result.success:
+        return ConfigUpdateResult(False, True, result.message)
 
     validator = getattr(plugin.__class__, "validate_config", None)
     if callable(validator):
         result = validator(new_config)
+        if asyncio.iscoroutine(result):
+            result = await result
         if not isinstance(result, ValidationResult):
             raise TypeError("validate_config must return ValidationResult")
         if not result.success:
@@ -88,7 +80,10 @@ async def update_plugin_configuration(
                         )
         return ConfigUpdateResult(True)
     except Exception as exc:  # noqa: BLE001 - report error and rollback
-        plugin.config = old_config
-        plugin._config_history.pop()
-        plugin.config_version -= 1
+        version = (
+            plugin.config_version - 1
+            if len(plugin._config_history) > 1
+            else plugin.config_version
+        )
+        await plugin.rollback_config(version)
         return ConfigUpdateResult(False, False, f"Failed to update: {exc}")

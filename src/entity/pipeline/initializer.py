@@ -630,3 +630,17 @@ class SystemInitializer:
             from entity.resources.logging import LoggingResource
 
             container.register("logging", LoggingResource, {}, layer=3)
+
+
+def validate_reconfiguration_params(
+    old_config: Dict[str, Any], new_config: Dict[str, Any]
+) -> "ValidationResult":
+    """Ensure only configuration values are changed on reload."""
+
+    from entity.core.plugins import ValidationResult
+
+    for key in ("type", "stage", "stages", "dependencies"):
+        if key in new_config and new_config.get(key) != old_config.get(key):
+            return ValidationResult.error_result("Topology changes require restart")
+
+    return ValidationResult.success_result()
