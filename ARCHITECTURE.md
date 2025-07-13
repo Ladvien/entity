@@ -3202,3 +3202,6 @@ Future Features List
 
 ## SOTA and Innovations
 - https://github.com/HazyResearch/minions
+
+## Local
+- https://docs.vllm.ai/en/latest/index.html
