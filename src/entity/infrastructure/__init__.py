@@ -3,6 +3,7 @@ from .duckdb import DuckDBInfrastructure
 from .docker import DockerInfrastructure
 from .opentofu import OpenTofuInfrastructure
 from .aws_standard import AWSStandardInfrastructure
+from .llamacpp import LlamaCppInfrastructure
 
 __all__ = [
     "PostgresInfrastructure",
@@ -10,4 +11,5 @@ __all__ = [
     "DockerInfrastructure",
     "OpenTofuInfrastructure",
     "AWSStandardInfrastructure",
+    "LlamaCppInfrastructure",
 ]
