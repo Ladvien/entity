@@ -22,6 +22,7 @@ def load_env(env_file: str | Path = ".env", env: str | None = None) -> None:
 
     env_path = Path(env_file)
     env_values = dotenv_values(env_path) if env_path.exists() else {}
+    secret_path: Path | None = None
 
     if env:
         secret_path = Path("secrets") / f"{env}.env"
@@ -31,7 +32,10 @@ def load_env(env_file: str | Path = ".env", env: str | None = None) -> None:
     for key, value in env_values.items():
         os.environ.setdefault(key, value)
 
-    load_dotenv(env_path, override=False)
+    if env_path.exists():
+        load_dotenv(env_path, override=False)
+    if secret_path and secret_path.exists():
+        load_dotenv(secret_path, override=False)
 
 
 def _merge(
