@@ -29,17 +29,19 @@ class SqliteDB(DatabaseResource):
 
 
 class DummyVector(VectorStoreResource):
-    def __init__(self, results: list[str]) -> None:
+    def __init__(self, results: list[str] | None = None) -> None:
         super().__init__({})
-        self.results = results
+        self.results = results or []
         self.queries: list[str] = []
+        self.added: list[str] = []
 
     async def add_embedding(self, text: str) -> None:
-        return None
+        self.added.append(text)
 
     async def query_similar(self, query: str, k: int = 5):
         self.queries.append(query)
-        return self.results[:k]
+        candidates = self.results + self.added
+        return [t for t in candidates if query in t][:k]
 
 
 @pytest.fixture()
@@ -79,3 +81,24 @@ async def test_remember_alias(simple_memory: Memory) -> None:
     assert Memory.remember is Memory.store_persistent
     await simple_memory.remember("alpha", 123, user_id="default")
     assert await simple_memory.get("alpha", user_id="default") == 123
+
+
+@pytest.mark.asyncio
+async def test_batch_store(simple_memory: Memory) -> None:
+    pairs = {"k1": "v1", "k2": "v2"}
+    await simple_memory.batch_store(pairs, user_id="default")
+    for key, value in pairs.items():
+        assert await simple_memory.get(key, user_id="default") == value
+
+
+@pytest.mark.asyncio
+async def test_vector_search(vector_memory: Memory) -> None:
+    results = await vector_memory.vector_search("hello", k=1)
+    assert results == ["hello world"]
+    assert vector_memory.vector_store.queries == ["hello"]
+
+
+@pytest.mark.asyncio
+async def test_add_embedding(vector_memory: Memory) -> None:
+    await vector_memory.add_embedding("foo")
+    assert "foo" in vector_memory.vector_store.added
