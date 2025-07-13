@@ -21,11 +21,20 @@ class BetaTool(ToolPlugin):
         return "b"
 
 
+class MultiTool(ToolPlugin):
+    stages = [PipelineStage.DO]
+    intents = ["calc", "text"]
+
+    async def execute_function(self, params):
+        return "c"
+
+
 @pytest.mark.asyncio
 async def test_discover_tools_by_intent() -> None:
     registry = ToolRegistry()
     await registry.add("alpha", AlphaTool())
     await registry.add("beta", BetaTool())
+    await registry.add("multi", MultiTool())
 
     found = registry.discover(intent="calc")
     assert len(found) == 1
@@ -35,3 +44,8 @@ async def test_discover_tools_by_intent() -> None:
     found_ci = registry.discover(intent="CALC")
     assert len(found_ci) == 1
     assert found_ci[0][0] == "alpha"
+
+    found_text = registry.discover(intent="text")
+    assert len(found_text) == 2
+    names = {name for name, _ in found_text}
+    assert names == {"beta", "multi"}
