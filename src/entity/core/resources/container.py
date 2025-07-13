@@ -591,7 +591,7 @@ class ResourceContainer:
         visited: set[str] = set()
         stack: list[str] = []
 
-        def visit(node: str) -> None:
+        def traverse(node: str) -> None:
             if node in stack:
                 cycle = stack[stack.index(node) :]
                 cycle.append(node)
@@ -604,38 +604,38 @@ class ResourceContainer:
                 )
             if node in visited:
                 return
+
             stack.append(node)
             for dep in self._deps.get(node, []):
-                dep_name = dep[:-1] if dep.endswith("?") else dep
-                if dep_name in self._deps:
-                    visit(dep_name)
-            stack.pop()
-            visited.add(node)
-
-        for resource in self._deps.keys():
-            visit(resource)
-
-        for name, deps in self._deps.items():
-            for dep in deps:
                 optional = dep.endswith("?")
                 dep_name = dep[:-1] if optional else dep
-                dep_layer = self._layers.get(dep_name)
-                if dep_layer is None:
+
+                if dep_name not in self._layers:
                     if optional:
                         continue
                     raise InitializationError(
-                        name,
+                        f"{node}, {dep_name}",
                         "layer validation",
                         f"Resource depends on '{dep_name}' but it is not registered.",
                         kind="Resource",
                     )
-                if self._layers[name] - dep_layer != 1:
+
+                dep_layer = self._layers[dep_name]
+                if self._layers[node] - dep_layer != 1:
                     raise InitializationError(
-                        name,
+                        f"{node}, {dep_name}",
                         "layer validation",
                         f"Resource depends on '{dep_name}' and violates layer rules.",
                         kind="Resource",
                     )
+
+                traverse(dep_name)
+
+            stack.pop()
+            visited.add(node)
+
+        for resource in self._deps.keys():
+            traverse(resource)
 
     def _resolve_order(self) -> List[str]:
         # Build dependency graph with edges from each dependency to its dependents
