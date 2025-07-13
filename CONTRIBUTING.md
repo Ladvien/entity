@@ -61,11 +61,15 @@ poetry run python -m src.entity.core.registry_validator
 Execute the full test suite:
 
 ```bash
+poetry install --with dev  # includes pytest-asyncio
 pytest
 pytest tests/integration/ -v
 pytest tests/infrastructure/ -v
 pytest tests/performance/ -m benchmark
 ```
+
+`pytest-asyncio` must be installed; without it pytest reports
+`Unknown config option: asyncio_mode`.
 
 **Test requirements:**
 - Add tests for all new functionality
