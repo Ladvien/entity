@@ -31,8 +31,9 @@ This command executes Phases&nbsp;1 and&nbsp;2 and reports any problems before t
 ### Stage Mismatch Warnings
 
 By default the initializer only logs a warning when a plugin's configured stages
-override those declared on the class. Run the CLI with ``--strict-stages`` to
-escalate these warnings into errors.
+override those declared on the class. The warning message reads:
+``MyPlugin configured stages [REVIEW] override class stages [DO]``.
+Run the CLI with ``--strict-stages`` to escalate these warnings into errors.
 
 ## Tuning Circuit Breaker Thresholds
 

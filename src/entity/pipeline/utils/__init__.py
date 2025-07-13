@@ -84,7 +84,7 @@ class StageResolver:
             and logger is not None
         ):
             logger.warning(
-                "%s resolved stages %s differ from declared stages %s",
+                "%s resolved stages %s override class stages %s",
                 plugin_class.__name__,
                 stages,
                 _normalize_stages(declared_value),

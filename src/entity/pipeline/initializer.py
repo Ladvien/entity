@@ -501,7 +501,7 @@ class SystemInitializer:
             if cfg_stages != class_stages:
                 msg = (
                     f"{cls.__name__} configured stages {cfg_stages} "
-                    f"differ from class stages {class_stages}"
+                    f"override class stages {class_stages}"
                 )
                 if self.strict_stages:
                     raise InitializationError(cls.__name__, "stage validation", msg)
