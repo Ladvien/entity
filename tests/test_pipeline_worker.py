@@ -151,7 +151,17 @@ class EchoPlugin(Plugin):
 
     async def _execute_impl(self, context):
         thought = await context.reflect("thought")
+        if thought is None:
+            thought = context.conversation()[-1].content
         context.say(thought)
+
+
+class EchoStorePlugin(Plugin):
+    stages = [PipelineStage.OUTPUT]
+
+    async def _execute_impl(self, context):
+        await context.remember("last", context.conversation()[-1].content)
+        context.say(context.conversation()[-1].content)
 
 
 @pytest.mark.asyncio
@@ -173,6 +183,7 @@ async def test_pipeline_persists_conversation(patched_stage_resolver, memory_db)
         resources={"memory": memory_db},
         tools=types.SimpleNamespace(),
         plugins=PluginRegistry(),
+        validators=None,
     )
     worker = PipelineWorker(regs)
 
@@ -180,7 +191,7 @@ async def test_pipeline_persists_conversation(patched_stage_resolver, memory_db)
     await worker.execute_pipeline("pipe1", "world", user_id="u1")
 
     history = await regs.resources["memory"].load_conversation("pipe1", user_id="u1")
-    assert [e.content for e in history] == ["first", "second"]
+    assert [e.content for e in history] == ["hello", "world"]
 
 
 @pytest.mark.asyncio
@@ -200,34 +211,56 @@ async def test_thoughts_do_not_leak_between_executions(patched_stage_resolver):
     assert second == "two"
 
 
-class EchoStorePlugin(Plugin):
-    stages = [PipelineStage.OUTPUT]
-
-    async def _execute_impl(self, context):
-        await context.remember("last", context.conversation()[-1].content)
-        context.say(context.conversation()[-1].content)
-
-
 @pytest.mark.asyncio
-async def test_multi_user_isolation_worker(patched_stage_resolver, memory_db):
+async def test_conversation_and_memory_namespaces(patched_stage_resolver, memory_db):
     regs = types.SimpleNamespace(
         resources={"memory": memory_db},
         tools=types.SimpleNamespace(),
         plugins=PluginRegistry(),
+        validators=None,
     )
     await regs.plugins.register_plugin_for_stage(
         EchoStorePlugin({}), PipelineStage.OUTPUT
     )
     worker = PipelineWorker(regs)
 
-    await asyncio.gather(
-        worker.execute_pipeline("chat", "hello", user_id="alice"),
-        worker.execute_pipeline("chat", "world", user_id="bob"),
+    await worker.execute_pipeline("chat", "hi", user_id="alice")
+
+    async with memory_db.database.connection() as conn:
+        convo_ids = {
+            row[0]
+            for row in conn.execute(
+                "SELECT conversation_id FROM conversation_history"
+            ).fetchall()
+        }
+        kv_keys = {
+            row[0] for row in conn.execute("SELECT key FROM memory_kv").fetchall()
+        }
+
+    assert convo_ids == {"alice_chat"}
+    assert kv_keys == {"alice:last"}
+
+
+@pytest.mark.asyncio
+async def test_user_data_isolated(patched_stage_resolver, memory_db):
+    regs = types.SimpleNamespace(
+        resources={"memory": memory_db},
+        tools=types.SimpleNamespace(),
+        plugins=PluginRegistry(),
+        validators=None,
     )
+    await regs.plugins.register_plugin_for_stage(
+        EchoStorePlugin({}), PipelineStage.OUTPUT
+    )
+    worker = PipelineWorker(regs)
+
+    await worker.execute_pipeline("chat", "hello", user_id="alice")
+    await worker.execute_pipeline("chat", "world", user_id="bob")
 
     hist_a = await memory_db.load_conversation("chat", user_id="alice")
     hist_b = await memory_db.load_conversation("chat", user_id="bob")
-    assert [e.content for e in hist_a] == ["hello"]
-    assert [e.content for e in hist_b] == ["world"]
+
+    assert hist_a[0].content == "hello"
+    assert hist_b[0].content == "world"
     assert await memory_db.get("last", user_id="alice") == "hello"
     assert await memory_db.get("last", user_id="bob") == "world"

@@ -15,10 +15,16 @@ class PipelineWorker:
     def __init__(self, registries: SystemRegistries) -> None:
         self.registries = registries
 
-    async def run_stages(self, state: PipelineState) -> Any:
+    async def run_stages(self, state: PipelineState, user_id: str) -> Any:
         """Delegate pipeline execution to the existing driver."""
         # user_message is ignored when ``state`` is provided
-        return await execute_pipeline("", self.registries, state=state, workflow=None)
+        return await execute_pipeline(
+            "",
+            self.registries,
+            state=state,
+            workflow=None,
+            user_id=user_id,
+        )
 
     async def execute_pipeline(
         self, pipeline_id: str, message: str, *, user_id: str
@@ -30,7 +36,7 @@ class PipelineWorker:
             ConversationEntry(content=message, role="user", timestamp=datetime.now())
         )
         state = PipelineState(conversation=conversation, pipeline_id=pipeline_id)
-        result = await self.run_stages(state)
+        result = await self.run_stages(state, user_id)
         await memory.save_conversation(pipeline_id, state.conversation, user_id=user_id)
         return result
 
