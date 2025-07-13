@@ -6,7 +6,7 @@ from entity.pipeline.stages import PipelineStage
 
 
 class DummyPlugin(Plugin):
-    stages = [PipelineStage.THINK]
+    stages = [PipelineStage.THINK, PipelineStage.DO, PipelineStage.INPUT]
 
     async def _execute_impl(self, context):
         pass
@@ -39,3 +39,16 @@ async def test_list_plugins_uses_insertion_order():
     await registry.register_plugin_for_stage(c, PipelineStage.INPUT, "c")
 
     assert registry.list_plugins() == [a, b, c]
+
+
+@pytest.mark.asyncio
+async def test_get_plugin_name_preserves_registration_order():
+    registry = PluginRegistry()
+    a = DummyPlugin({})
+    b = DummyPlugin({})
+
+    await registry.register_plugin_for_stage(a, PipelineStage.THINK, "first")
+    await registry.register_plugin_for_stage(b, PipelineStage.THINK, "second")
+
+    names = [registry.get_plugin_name(p) for p in registry.list_plugins()]
+    assert names == ["first", "second"]

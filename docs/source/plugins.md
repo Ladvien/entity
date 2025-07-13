@@ -1,8 +1,8 @@
 # Plugin Execution Order
 
 Plugins are executed in the order they are registered. The `PluginRegistry`
-uses an ordered dictionary so iteration yields plugins in the same sequence
-in which they were added. Workflows select which plugins run at each stage,
-but the registry guarantees deterministic execution when multiple plugins
-share a stage.
+stores plugins in an `OrderedDict` so iteration yields them in exactly the
+same sequence in which they were added. Both `get_plugins_for_stage()` and
+`list_plugins()` return plugins in registration order, guaranteeing
+deterministic execution whenever multiple plugins share a stage.
 
