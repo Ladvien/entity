@@ -49,6 +49,8 @@ class _AgentRuntime:
     ) -> None:
         self.capabilities = capabilities
         self.workflow = workflow
+        if self.workflow is not None:
+            self.workflow.validate_plugins(capabilities.plugins)
         self.__post_init__()
 
     def __post_init__(self) -> None:
@@ -410,7 +412,7 @@ class _AgentBuilder:
                 continue
 
 
-@dataclass
+@dataclass(init=False)
 class Agent:
     """High level agent wrapper combining builder and runtime."""
 
@@ -420,6 +422,19 @@ class Agent:
     _builder: _AgentBuilder | None = field(default=None, init=False)
     _runtime: AgentRuntime | None = field(default=None, init=False)
     _workflows: dict[str, type] = field(default_factory=dict, init=False)
+
+    def __init__(
+        self,
+        config_path: str | None = None,
+        pipeline: Pipeline | None = None,
+        workflow: Workflow | None = None,
+    ) -> None:
+        self.config_path = config_path
+        self.pipeline = pipeline
+        self.workflow = workflow
+        self._builder = None
+        self._runtime = None
+        self._workflows = {}
 
     @property
     def builder(self) -> _AgentBuilder:
