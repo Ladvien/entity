@@ -3,7 +3,7 @@ import pytest
 from entity.core.agent import Agent, _AgentBuilder
 from entity.core.plugins import Plugin
 from entity.pipeline.stages import PipelineStage
-from entity.workflows.base import Workflow
+from entity.pipeline.workflow import Pipeline, Workflow
 
 
 class ThoughtPlugin(Plugin):
@@ -40,8 +40,9 @@ async def test_agent_handle_runs_workflow():
     agent = Agent()
     await agent.add_plugin(ThoughtPlugin({}))
     await agent.add_plugin(EchoPlugin({}))
-    agent.pipeline = Workflow(
+    wf = Workflow(
         {PipelineStage.THINK: ["ThoughtPlugin"], PipelineStage.OUTPUT: ["EchoPlugin"]}
     )
+    agent.pipeline = Pipeline(workflow=wf)
     result = await agent.handle("bye")
     assert result == "bye!"
