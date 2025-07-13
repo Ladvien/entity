@@ -1,3 +1,5 @@
+AGENT NOTE - 2025-07-13: Added DefaultWorkflow and zero-config setup
+
 AGENT NOTE - 2025-07-24: Updated DuckDBResource to subclass AgentResource and use database_backend
 AGENT NOTE - 2025-07-23: Allow layer 3 for custom resources without dependencies
 AGENT NOTE - 2025-07-23: Fixed DatabaseResource import and updated async usage in plugin context memory test

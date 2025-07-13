@@ -52,7 +52,7 @@ def _create_default_agent() -> Agent:
         tools=builder.tool_registry,
         plugins=builder.plugin_registry,
     )
-    agent._runtime = AgentRuntime(caps)
+    agent._runtime = AgentRuntime(caps, workflow=setup.workflow)
     return agent
 
 
