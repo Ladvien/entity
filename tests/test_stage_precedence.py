@@ -1,6 +1,10 @@
 from entity.core.plugins import Plugin, PromptPlugin
-from entity.pipeline.utils import StageResolver
 from entity.core.stages import PipelineStage
+import importlib
+import entity.pipeline.utils as pipeline_utils
+
+# Reload pipeline_utils to ensure the original StageResolver is used
+StageResolver = importlib.reload(pipeline_utils).StageResolver
 
 
 class AttrPrompt(Plugin):
