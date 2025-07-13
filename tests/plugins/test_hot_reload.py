@@ -83,3 +83,21 @@ async def test_update_rejects_type_change():
         {"value": 1, "type": "some.other:Class"},
     )
     assert not result.success and result.requires_restart
+
+
+class FailingRollbackPlugin(ConfigPlugin):
+    async def rollback_config(self, version: int) -> None:
+        raise RuntimeError("boom")
+
+
+@pytest.mark.asyncio
+async def test_update_handles_failed_rollback():
+    registry = PluginRegistry()
+    base = FailingRollbackPlugin({"value": 1})
+    dep = RejectPlugin()
+    await registry.register_plugin_for_stage(base, str(PipelineStage.THINK), "cfg")
+    await registry.register_plugin_for_stage(dep, str(PipelineStage.THINK), "dep")
+
+    result = await update_plugin_configuration(registry, "cfg", {"value": 2})
+    assert not result.success and not result.requires_restart
+    assert base.value == 2
