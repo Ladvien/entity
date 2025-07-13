@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-12: Log config stage overrides and enforce plugin stage hints
 AGENT NOTE - 2025-07-12: Verified sandbox references removed and executed quality checks
 AGENT NOTE - 2025-07-12: Verified metrics_collector removal; file already absent
 AGENT NOTE - 2025-07-12: Removed sandbox infrastructure and unused plugins

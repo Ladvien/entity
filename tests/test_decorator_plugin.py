@@ -1,5 +1,6 @@
 import pathlib
 import sys
+import pytest
 
 sys.path.insert(0, str(pathlib.Path("src").resolve()))
 
@@ -33,8 +34,7 @@ async def hinted(_context):
     pass
 
 
-@plugin
-async def default(_context):
+async def _noop(_context):
     pass
 
 
@@ -45,6 +45,5 @@ def test_plugin_with_hints():
 
 
 def test_plugin_without_hints():
-    obj = default.__entity_plugin__
-    assert obj.stages == [PipelineStage.THINK]
-    assert obj.base_class is PromptPlugin
+    with pytest.raises(ValueError):
+        plugin(_noop)

@@ -45,15 +45,34 @@ class StageResolver:
         _instance: Any | None = None,
         logger: Any | None = None,
     ) -> tuple[list[PipelineStage], bool]:
-        stages = resolve_stages(plugin_class, config)
+        cfg_value = config.get("stages") or config.get("stage")
+        class_value = getattr(plugin_class, "stages", None) or getattr(
+            plugin_class, "stage", None
+        )
 
-        explicit_cfg = bool(config.get("stage") or config.get("stages"))
+        if cfg_value is not None:
+            stages = _normalize_stages(cfg_value)
+            if (
+                class_value is not None
+                and _normalize_stages(class_value) != stages
+                and logger is not None
+            ):
+                logger.warning(
+                    "%s config overrides declared stage %s -> %s",
+                    plugin_class.__name__,
+                    _normalize_stages(class_value),
+                    stages,
+                )
+        elif class_value is not None:
+            stages = _normalize_stages(class_value)
+        else:
+            stages = [PipelineStage.THINK]
+
+        explicit_cfg = bool(cfg_value)
 
         explicit_instance = bool(getattr(_instance, "_explicit_stages", False))
 
-        class_stages = getattr(plugin_class, "stages", None)
-        class_stage = getattr(plugin_class, "stage", None)
-        explicit_class = bool(class_stages) or bool(class_stage)
+        explicit_class = bool(class_value)
 
         explicit = explicit_cfg or explicit_instance or explicit_class
 
