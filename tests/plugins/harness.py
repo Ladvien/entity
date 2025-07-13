@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+from entity.core.plugins import Plugin
 
 from cli.plugin_tool.utils import load_plugin
 
@@ -25,11 +26,21 @@ def run_plugin(path: str) -> None:
             else:
                 init()
         execute = getattr(instance, "_execute_impl", None)
-        if callable(execute):
-            ctx = DummyContext()
+        ctx = DummyContext()
+        if (
+            callable(execute)
+            and getattr(execute, "__func__", None) is not Plugin._execute_impl
+        ):
             if inspect.iscoroutinefunction(execute):
                 await execute(ctx)
             else:
                 execute(ctx)
+        else:
+            tool_call = getattr(instance, "execute_function", None)
+            if callable(tool_call):
+                if inspect.iscoroutinefunction(tool_call):
+                    await tool_call({})
+                else:
+                    tool_call({})
 
     asyncio.run(_runner())
