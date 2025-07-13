@@ -3,9 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from collections import OrderedDict
 from typing import Any, Awaitable, Callable, Dict, List
+import logging
 
 from entity.core.validation import verify_stage_assignment
 from entity.pipeline.stages import PipelineStage
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -38,6 +42,12 @@ class PluginRegistry:
         if key not in self._stage_plugins:
             self._stage_plugins[key] = OrderedDict()
         self._stage_plugins[key][plugin] = plugin_name
+        logger.debug(
+            "Registered plugin %s for stage %s at position %d",
+            plugin_name,
+            key,
+            len(self._stage_plugins[key]),
+        )
         if plugin not in self._names:
             self._names[plugin] = plugin_name
         caps = self._capabilities.get(plugin)
