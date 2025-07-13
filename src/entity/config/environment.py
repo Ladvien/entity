@@ -12,30 +12,32 @@ import yaml
 from dotenv import dotenv_values
 
 
+class EnvironmentLoader:
+    """Load configuration variables from .env and secrets files."""
+
+    def __init__(self, env_file: str | Path = ".env", env: str | None = None) -> None:
+        self.env_path = Path(env_file)
+        self.env = env
+
+    def _collect_values(self) -> dict[str, str]:
+        values = dotenv_values(self.env_path) if self.env_path.exists() else {}
+        if self.env:
+            secret_path = Path("secrets") / f"{self.env}.env"
+            if secret_path.exists():
+                values.update(dotenv_values(secret_path))
+        return values
+
+    def load(self) -> None:
+        for key, value in self._collect_values().items():
+            os.environ.setdefault(key, value)
+
+        load_dotenv(self.env_path, override=False)
+
+
 def load_env(env_file: str | Path = ".env", env: str | None = None) -> None:
-    """Load variables from ``env_file`` and optional ``secrets/<env>.env``.
+    """Convenience wrapper around :class:`EnvironmentLoader`."""
 
-    Existing environment variables are never overwritten. When both files
-    define the same key, the secrets file takes precedence over ``env_file``.
-    """
-
-    env_path = Path(env_file)
-    original_keys = set(os.environ)
-
-    if env_path.exists():
-        values = dotenv_values(env_path)
-        for key, value in values.items():
-            if key not in original_keys:
-                os.environ[key] = value
-
-    secret_path: Path | None = None
-    if env:
-        secret_path = Path("secrets") / f"{env}.env"
-        if secret_path.exists():
-            values = dotenv_values(secret_path)
-            for key, value in values.items():
-                if key not in original_keys:
-                    os.environ[key] = value
+    EnvironmentLoader(env_file, env).load()
 
 
 def _merge(
