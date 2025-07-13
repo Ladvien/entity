@@ -1,6 +1,13 @@
 from entity.core.plugins import Plugin, PromptPlugin
-from entity.pipeline.utils import StageResolver
+import importlib
+import entity.pipeline.utils as pipeline_utils
 from entity.core.stages import PipelineStage
+
+# Reload pipeline utilities to restore the original StageResolver in case other
+# tests have replaced it.  This ensures explicit stage detection works as
+# expected in these tests.
+pipeline_utils = importlib.reload(pipeline_utils)
+StageResolver = pipeline_utils.StageResolver
 
 
 class AttrPrompt(Plugin):
