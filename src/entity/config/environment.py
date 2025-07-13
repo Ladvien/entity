@@ -10,6 +10,7 @@ from typing import Any, MutableMapping, Mapping
 import yaml
 
 from dotenv import dotenv_values
+from dotenv import load_dotenv
 
 
 class EnvironmentLoader:
