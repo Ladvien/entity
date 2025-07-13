@@ -102,6 +102,7 @@ def __getattr__(name: str) -> Any:
         "Workflow": "entity.pipeline.workflow",
         "PipelineWorker": "entity.worker.pipeline_worker",
         "execute_pipeline": "entity.pipeline.pipeline",
+        "visualize_execution_plan": "entity.pipeline.pipeline",
         "create_default_response": "entity.pipeline.pipeline",
         "create_static_error_response": "entity.pipeline.errors",
         "ConfigUpdateResult": "entity.pipeline.config.config_update",

@@ -38,6 +38,8 @@ class PipelineState:
     iteration: int = 0
     current_stage: Optional[PipelineStage] = None
     last_completed_stage: Optional[PipelineStage] = None
+    next_stage: Optional[PipelineStage] = None
+    skip_stages: set[PipelineStage] = field(default_factory=set)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -69,8 +71,49 @@ class PipelineState:
             "last_completed_stage": (
                 str(self.last_completed_stage) if self.last_completed_stage else None
             ),
+            "next_stage": str(self.next_stage) if self.next_stage else None,
+            "skip_stages": [str(s) for s in self.skip_stages],
             "max_stage_results": self.max_stage_results,
         }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "PipelineState":
+        conversation = [
+            ConversationEntry(
+                content=e["content"],
+                role=e["role"],
+                timestamp=datetime.fromisoformat(e["timestamp"]),
+                metadata=e.get("metadata", {}),
+            )
+            for e in data.get("conversation", [])
+        ]
+
+        state = cls(conversation=conversation)
+        state.response = data.get("response")
+        state.prompt = data.get("prompt", "")
+        state.stage_results = data.get("stage_results", {})
+        state.pending_tool_calls = [
+            ToolCall(
+                name=c["name"],
+                params=c.get("params", {}),
+                result_key=c.get("result_key", ""),
+                source=c.get("source", "direct_execution"),
+            )
+            for c in data.get("pending_tool_calls", [])
+        ]
+        state.metadata = data.get("metadata", {})
+        state.pipeline_id = data.get("pipeline_id", "")
+        state.iteration = data.get("iteration", 0)
+        current = data.get("current_stage")
+        state.current_stage = PipelineStage.from_str(current) if current else None
+        last = data.get("last_completed_stage")
+        state.last_completed_stage = PipelineStage.from_str(last) if last else None
+        nxt = data.get("next_stage")
+        state.next_stage = PipelineStage.from_str(nxt) if nxt else None
+        skips = data.get("skip_stages", [])
+        state.skip_stages = {PipelineStage.from_str(s) for s in skips}
+        state.max_stage_results = data.get("max_stage_results")
+        return state
 
 
 @dataclass
