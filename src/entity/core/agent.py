@@ -6,7 +6,7 @@ import asyncio
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Callable, Dict, Iterable, Mapping, Optional, cast
+from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Type, cast
 
 from entity.core import plugin_utils
 from .plugin_utils import PluginAutoClassifier
@@ -535,11 +535,20 @@ class Agent:
 
     async def build_runtime(
         self,
-        workflow: Mapping[PipelineStage | str, Iterable[str]] | None = None,
+        workflow: Mapping[PipelineStage | str, Iterable[str]] | Workflow | None = None,
     ) -> AgentRuntime:
         """Build and assign a runtime using the internal builder."""
 
-        self._runtime = await self.builder.build_runtime(workflow)
+        wf_obj = None
+        if workflow is not None:
+            wf_obj = (
+                workflow
+                if isinstance(workflow, Workflow)
+                else Workflow.from_dict(workflow)
+            )
+            wf_obj.validate_plugins(self.builder)
+
+        self._runtime = await self.builder.build_runtime(wf_obj)
         return self._runtime
 
     def shutdown(self) -> None:
