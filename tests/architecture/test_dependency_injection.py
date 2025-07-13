@@ -1,4 +1,3 @@
-import asyncio
 from contextlib import asynccontextmanager
 from datetime import datetime
 import sqlite3
@@ -6,7 +5,6 @@ import sqlite3
 import pytest
 
 from entity.core.plugins import ValidationResult, InfrastructurePlugin, ResourcePlugin
-from entity.pipeline.errors import InitializationError
 from entity.resources.base import AgentResource
 from entity.resources import Memory
 from entity.core.state import ConversationEntry
