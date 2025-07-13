@@ -114,7 +114,7 @@ class StructuredFileOutput(LogOutput):
         async with self._lock:
             self._handle.write(json.dumps(entry) + "\n")
             self._handle.flush()
-            if self._should_rotate():
+            if self.max_bytes > 0 and self._should_rotate():
                 self._rotate()
 
     def close(self) -> None:

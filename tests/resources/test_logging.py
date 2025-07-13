@@ -71,5 +71,43 @@ async def test_file_rotation(tmp_path, monkeypatch):
     for i in range(100):
         await logger.log("info", f"msg {i}", component="test")
     await container.shutdown_all()
-    rotated = log_file.with_suffix(".1")
+    rotated = log_file.with_name(log_file.name + ".1")
     assert rotated.exists()
+
+
+@pytest.mark.asyncio
+async def test_file_rotation_no_data_loss(tmp_path, monkeypatch):
+    log_file = tmp_path / "rot.log"
+    container = ResourceContainer()
+    monkeypatch.setattr(LoggingResource, "dependencies", [])
+    container.register(
+        "logging",
+        LoggingResource,
+        {
+            "outputs": [
+                {
+                    "type": "structured_file",
+                    "path": str(log_file),
+                    "max_bytes": 100,
+                    "backup_count": 30,
+                }
+            ]
+        },
+        layer=3,
+    )
+    await container.build_all()
+    logger: LoggingResource = container.get("logging")  # type: ignore[assignment]
+    messages = [f"msg {i}" for i in range(30)]
+    for msg in messages:
+        await logger.log("info", msg, component="test")
+    await container.shutdown_all()
+
+    files = [log_file.with_name(f"{log_file.name}.{i}") for i in range(30, 0, -1)] + [
+        log_file
+    ]
+    read_messages = []
+    for f in files:
+        if f.exists():
+            with f.open("r", encoding="utf-8") as handle:
+                read_messages.extend(json.loads(line)["message"] for line in handle)
+    assert read_messages == messages
