@@ -7,6 +7,10 @@ from typing import Any
 from entity.core.plugins import ValidationResult
 from entity.core.registries import PluginRegistry
 from entity.pipeline.initializer import validate_reconfiguration_params
+from entity.utils.logging import get_logger
+
+
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -101,5 +105,8 @@ async def update_plugin_configuration(
             if len(plugin._config_history) > 1
             else plugin.config_version
         )
-        await plugin.rollback_config(version)
+        try:
+            await plugin.rollback_config(version)
+        except Exception as rollback_exc:  # noqa: BLE001 - ignore nested error
+            logger.exception("Failed to rollback plugin '%s': %s", name, rollback_exc)
         return ConfigUpdateResult(False, False, f"Failed to update: {exc}")
