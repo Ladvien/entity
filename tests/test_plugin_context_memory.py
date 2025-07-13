@@ -133,7 +133,7 @@ async def make_context(tmp_path) -> PluginContext:
 
 @pytest.mark.asyncio
 async def test_memory_roundtrip(tmp_path) -> None:
-    ctx = make_context(tmp_path)
+    ctx = await make_context(tmp_path)
     await ctx.remember("foo", "bar")
     assert await ctx.recall("foo") == "bar"
 
