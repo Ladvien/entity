@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import importlib.util
 import inspect
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Awaitable, Callable, Optional, Type
+from typing import Any, Optional, Type
 
 from entity.core.stages import PipelineStage
 
@@ -185,33 +186,36 @@ class PluginToolCLI:
     def _test(self) -> int:
         assert self.args.path is not None
         plugin_cls = self._load_plugin(self.args.path)
-        instance = plugin_cls(getattr(plugin_cls, "config", {}))
-        if hasattr(instance, "initialize") and callable(instance.initialize):
-            logger.info("Initializing plugin...")
-            import asyncio
 
-            asyncio.run(instance.initialize())
-        if hasattr(instance, "_execute_impl"):
-            logger.info("Executing plugin...")
+        async def _run() -> None:
+            plugin = plugin_cls(getattr(plugin_cls, "config", {}))
+            if hasattr(plugin, "initialize") and callable(plugin.initialize):
+                logger.info("Initializing plugin...")
+                await plugin.initialize()
 
-            class DummyContext:
-                async def __getattr__(self, _: str) -> Callable[..., Awaitable[None]]:
-                    async def _noop(*_a: Any, **_kw: Any) -> None:
-                        return None
+            from entity.core.agent import _AgentBuilder
+            from entity.pipeline.workflow import Pipeline as PipelineWrapper
 
-                    return _noop
+            # Tool plugins execute directly since pipelines don't call them
+            if issubclass(plugin_cls, ToolPlugin):
+                logger.info("Executing tool function...")
+                await plugin.execute_function({})
+                return
 
-            ctx = DummyContext()
-            try:
-                if inspect.iscoroutinefunction(instance._execute_impl):
-                    import asyncio
+            builder = _AgentBuilder()
+            await builder.add_plugin(plugin)
+            wf = {stage: [plugin_cls.__name__] for stage in plugin_cls.stages}
+            pipeline = PipelineWrapper(builder=builder, workflow=wf)
+            runtime = await pipeline.build_runtime()
+            result = await runtime.handle("test")
+            logger.info("Pipeline result: %s", result)
 
-                    asyncio.run(instance._execute_impl(ctx))
-                else:
-                    instance._execute_impl(ctx)
-            except Exception as exc:  # pragma: no cover - manual testing
-                logger.error("Execution failed: %s", exc)
-                return 1
+        try:
+            asyncio.run(_run())
+        except Exception as exc:  # pragma: no cover - manual testing
+            logger.error("Execution failed: %s", exc)
+            return 1
+
         logger.info("Plugin executed successfully")
         return 0
 
