@@ -140,7 +140,9 @@ async def execute_stage(
                 if stage == PipelineStage.OUTPUT and state.response is not None:
                     break
                 if state.pending_tool_calls:
-                    tool_results = await execute_pending_tools(state, registries)
+                    tool_results = await execute_pending_tools(
+                        state, registries, user_id=user_id
+                    )
                     for call in state.pending_tool_calls:
                         result = tool_results.get(call.result_key)
                         context.add_conversation_entry(

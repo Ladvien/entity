@@ -11,7 +11,7 @@ from entity.core.registries import SystemRegistries
 
 
 async def execute_pending_tools(
-    state: PipelineState, registries: SystemRegistries
+    state: PipelineState, registries: SystemRegistries, *, user_id: str
 ) -> Dict[str, Any]:
     """Run queued tools respecting registry options."""
     results: Dict[str, Any] = {}
@@ -19,7 +19,7 @@ async def execute_pending_tools(
         return results
     tools = registries.tools
     sem = asyncio.Semaphore(tools.concurrency_limit)
-    context = PluginContext(state, registries)
+    context = PluginContext(state, registries, user_id=user_id)
 
     async def run_call(call: ToolCall) -> None:
         tool = tools.get(call.name)

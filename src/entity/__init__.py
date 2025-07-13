@@ -31,6 +31,7 @@ try:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     from plugins.builtin.basic_error_handler import BasicErrorHandler
 <<<<<<< HEAD
     from plugins.examples import InputLogger, MessageParser, ResponseReviewer
@@ -60,6 +61,12 @@ try:
 >>>>>>> pr-1515
 =======
 >>>>>>> pr-1513
+=======
+    from plugins.builtin.basic_error_handler import BasicErrorHandler
+    from plugins.examples import InputLogger, MessageParser, ResponseReviewer
+    from user_plugins.prompts import ComplexPrompt
+    from user_plugins.responders import ComplexPromptResponder
+>>>>>>> pr-1511
     from .core.stages import PipelineStage
     from .core.plugins import PromptPlugin, ToolPlugin
     from .utils.setup_manager import Layer0SetupManager

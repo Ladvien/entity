@@ -66,3 +66,25 @@ async def test_history_persists_per_user(memory_db):
 
     assert [e.content for e in hist_a if e.role == "user"] == ["one", "three"]
     assert [e.content for e in hist_b if e.role == "user"] == ["two"]
+
+
+@pytest.mark.asyncio
+async def test_cross_user_access_denied(memory_db):
+    logging_res = LoggingResource({})
+    await logging_res.initialize()
+    regs = SystemRegistries(
+        resources={"memory": memory_db, "logging": logging_res},
+        tools=ToolRegistry(),
+        plugins=PluginRegistry(),
+        validators=None,
+    )
+    await regs.plugins.register_plugin_for_stage(
+        EchoStorePlugin({}), PipelineStage.OUTPUT
+    )
+    worker = PipelineWorker(regs)
+
+    await worker.execute_pipeline("chat", "secret", user_id="alice")
+
+    hist = await memory_db.load_conversation("chat", user_id="bob")
+    assert hist == []
+    assert await memory_db.get("last", user_id="bob") is None
