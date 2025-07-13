@@ -75,7 +75,7 @@ async def test_reload_aborts_on_failed_runtime_validation(tmp_path):
     cfg_file = tmp_path / "reload.yaml"
     cfg_file.write_text(yaml.safe_dump(cfg))
 
-    result = cli._reload_config(agent, str(cfg_file))
+    result = await run_reload(cli, agent, cfg_file)
     assert result == 1
 
 
@@ -95,7 +95,7 @@ async def test_reload_successful_reconfiguration(tmp_path):
     cfg_file = tmp_path / "reload.yaml"
     cfg_file.write_text(yaml.safe_dump(cfg))
 
-    result = cli._reload_config(agent, str(cfg_file))
+    result = await run_reload(cli, agent, cfg_file)
     assert result == 0
     assert plugin.config["value"] == 2
     assert plugin.config_version == 2
@@ -118,7 +118,7 @@ async def test_reload_failed_reconfiguration(tmp_path):
     cfg_file = tmp_path / "reload.yaml"
     cfg_file.write_text(yaml.safe_dump(cfg))
 
-    result = cli._reload_config(agent, str(cfg_file))
+    result = await run_reload(cli, agent, cfg_file)
     assert result == 1
     assert plugin.config["value"] == 1
     assert plugin.config_version == 1

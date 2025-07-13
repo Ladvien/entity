@@ -7,6 +7,8 @@ from entity.core.plugins import Plugin, ValidationResult
 from entity.core.stages import PipelineStage
 from entity.cli import EntityCLI
 
+from .test_reload_runtime_validation import run_reload
+
 
 class SimplePlugin(Plugin):
     name = "simple"
@@ -32,5 +34,5 @@ async def test_reload_requires_restart_when_plugin_missing(tmp_path: Path) -> No
     cfg_file = tmp_path / "reload.yaml"
     cfg_file.write_text(yaml.safe_dump(cfg))
 
-    result = cli._reload_config(agent, str(cfg_file))
+    result = await run_reload(cli, agent, cfg_file)
     assert result == 2
