@@ -1,5 +1,4 @@
 import logging
-
 from entity.pipeline import Plugin  # noqa: F401 - configure plugins
 
 from entity.core.plugin_utils import PluginAutoClassifier

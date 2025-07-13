@@ -1,8 +1,4 @@
-import pathlib
-import sys
 import pytest
-
-sys.path.insert(0, str(pathlib.Path("src").resolve()))
 
 from entity.core import plugin_utils
 from entity.core.plugins import (

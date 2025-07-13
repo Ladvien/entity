@@ -1,8 +1,3 @@
-import pathlib
-import sys
-
-sys.path.insert(0, str(pathlib.Path("src").resolve()))
-
 import pytest
 import yaml
 from entity.core.plugins import (

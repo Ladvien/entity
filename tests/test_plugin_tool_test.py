@@ -1,9 +1,4 @@
 import logging
-import pathlib
-import sys
-
-sys.path.insert(0, str(pathlib.Path("src").resolve()))
-
 from cli.plugin_tool.main import PluginToolCLI, PluginToolArgs
 
 

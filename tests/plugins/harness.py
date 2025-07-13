@@ -2,10 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-import sys
-import pathlib
-
-sys.path.insert(0, str(pathlib.Path("src").resolve()))
 
 from entity.core.plugins import Plugin
 from cli.plugin_tool.utils import load_plugin
