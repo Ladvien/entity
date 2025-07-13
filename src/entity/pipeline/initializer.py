@@ -19,7 +19,7 @@ from entity.utils.logging import configure_logging, get_logger
 from entity.workflows.discovery import discover_workflows, register_module_workflows
 from .config import ConfigLoader
 from .utils import DependencyGraph, resolve_stages, StageResolver
-from .reliability import CircuitBreaker
+from entity.core.circuit_breaker import CircuitBreaker, BreakerManager
 from .exceptions import CircuitBreakerTripped
 from .errors import InitializationError
 
@@ -415,14 +415,14 @@ class SystemInitializer:
                         f"Unknown plugin referenced. Available plugins: {available}",
                     )
 
-        # Validate dependencies declared by each plugin class
-        for plugin_class, _ in registry.all_plugin_classes():
-            result = await plugin_class.validate_dependencies(registry)
+        # Phase 1: syntax validation
+        for plugin_class, config in registry.all_plugin_classes():
+            result = await plugin_class.validate_config(config)
             if not result.success:
                 raise InitializationError(
                     plugin_class.__name__,
-                    "dependency validation",
-                    f"{result.message}. Fix plugin dependencies.",
+                    "syntax validation",
+                    f"{result.message}. Update the plugin configuration.",
                 )
 
         # Register resources early so we can verify canonical ones exist
@@ -436,13 +436,13 @@ class SystemInitializer:
 
         # Phase 2: dependency validation
         self._validate_dependency_graph(registry, dep_graph)
-        for plugin_class, config in registry.all_plugin_classes():
-            result = await plugin_class.validate_config(config)
+        for plugin_class, _ in registry.all_plugin_classes():
+            result = await plugin_class.validate_dependencies(registry)
             if not result.success:
                 raise InitializationError(
                     plugin_class.__name__,
-                    "config validation",
-                    f"{result.message}. Update the plugin configuration.",
+                    "dependency validation",
+                    f"{result.message}. Fix plugin dependencies.",
                 )
 
         # Fail fast if any canonical resources are missing before initialization
@@ -460,28 +460,7 @@ class SystemInitializer:
             cfg = model.runtime_validation_breaker
             settings = model.breaker_settings
 
-            breaker_map = {
-                "database": CircuitBreaker(
-                    failure_threshold=cfg.database
-                    or settings.database.failure_threshold,
-                    recovery_timeout=cfg.recovery_timeout,
-                ),
-                "api": CircuitBreaker(
-                    failure_threshold=cfg.api
-                    or settings.external_api.failure_threshold,
-                    recovery_timeout=cfg.recovery_timeout,
-                ),
-                "filesystem": CircuitBreaker(
-                    failure_threshold=cfg.filesystem
-                    or settings.file_system.failure_threshold,
-                    recovery_timeout=cfg.recovery_timeout,
-                ),
-            }
-
-            default_breaker = CircuitBreaker(
-                failure_threshold=cfg.failure_threshold,
-                recovery_timeout=cfg.recovery_timeout,
-            )
+            breaker_mgr = BreakerManager.from_config(cfg, settings)
 
             tasks: list[asyncio.Task] = []
             resources: list[tuple[str, CircuitBreaker]] = []
@@ -495,7 +474,7 @@ class SystemInitializer:
                 if not category:
                     category = getattr(resource, "infrastructure_type", "").lower()
 
-                breaker = breaker_map.get(category, default_breaker)
+                breaker = breaker_mgr.get(category)
 
                 async def _call_validation(
                     validate=validate,
@@ -601,7 +580,8 @@ class SystemInitializer:
                         plugin_name,
                         "dependency graph validation",
                         (
-                            f"Missing dependency '{dep_name}'. Registered plugins: {available}."
+                            f"Missing dependency '{dep_name}'. "
+                            "Ensure it is registered and declared correctly."
                         ),
                     )
                 if dep_name in graph_map:

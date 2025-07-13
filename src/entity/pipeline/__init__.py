@@ -4,7 +4,7 @@ from importlib import import_module
 from typing import TYPE_CHECKING, Any
 
 from .exceptions import CircuitBreakerTripped
-from .reliability import CircuitBreaker, RetryPolicy
+from entity.core.circuit_breaker import CircuitBreaker, RetryPolicy
 
 # Registry classes are no longer imported eagerly.
 # Access ``PluginRegistry`` and related classes via ``registry`` or

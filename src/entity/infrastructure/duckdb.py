@@ -5,7 +5,7 @@ from typing import Any, Dict, Iterator
 import os
 
 from entity.pipeline.exceptions import CircuitBreakerTripped
-from entity.pipeline.reliability import CircuitBreaker
+from entity.core.circuit_breaker import CircuitBreaker
 
 import duckdb
 

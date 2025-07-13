@@ -17,7 +17,7 @@ from entity.core.agent import Agent
 from entity.core.plugins import Plugin, ValidationResult
 from entity.pipeline.config.config_update import update_plugin_configuration
 from entity.pipeline.exceptions import CircuitBreakerTripped
-from entity.pipeline.reliability import CircuitBreaker
+from entity.core.circuit_breaker import CircuitBreaker
 from entity.utils.logging import get_logger
 from entity.config.environment import load_config
 from importlib import import_module
