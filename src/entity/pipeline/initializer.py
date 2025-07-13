@@ -806,9 +806,29 @@ class SystemInitializer:
     def _ensure_canonical_resources(self, container: ResourceContainer) -> None:
         """Verify required canonical resources are registered."""
 
-        required = {"memory", "llm", "storage"}
         registered = set(container._classes)
-        missing = required - registered
+
+        # Ensure logging is available for dependency checks
+        if "logging" not in registered:
+            from entity.resources.logging import LoggingResource
+
+            container.register("logging", LoggingResource, {}, layer=3)
+            registered.add("logging")
+
+        if "database_backend" not in registered:
+            from entity.infrastructure.duckdb import DuckDBInfrastructure
+
+            container.register("database_backend", DuckDBInfrastructure, {}, layer=1)
+            registered.add("database_backend")
+
+        if "database" not in registered:
+            from plugins.builtin.resources.duckdb_resource import DuckDBResource
+
+            container.register("database", DuckDBResource, {}, layer=3)
+            registered.add("database")
+
+        required = {"memory", "llm", "storage"}
+        missing = required - set(container._classes)
         if missing:
             missing_list = ", ".join(sorted(missing))
             raise InitializationError(
@@ -817,18 +837,6 @@ class SystemInitializer:
                 f"Missing canonical resources: {missing_list}. Add them to your configuration.",
                 kind="Resource",
             )
-        if "logging" not in registered:
-            from entity.resources.logging import LoggingResource
-
-            container.register("logging", LoggingResource, {}, layer=3)
-        if "database_backend" not in registered:
-            from entity.infrastructure.duckdb import DuckDBInfrastructure
-
-            container.register("database_backend", DuckDBInfrastructure, {}, layer=1)
-        if "database" not in registered:
-            from plugins.builtin.resources.duckdb_resource import DuckDBResource
-
-            container.register("database", DuckDBResource, {}, layer=3)
 
 
 def validate_reconfiguration_params(
