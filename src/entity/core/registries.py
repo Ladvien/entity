@@ -145,7 +145,7 @@ class ToolRegistry:
             items = [
                 (k, v)
                 for k, v in items
-                if any(i in t.lower() for t in getattr(v, "intents", []))
+                if i in {t.lower() for t in getattr(v, "intents", [])}
             ]
         return items
 

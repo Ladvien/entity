@@ -18,6 +18,7 @@ class {class_name}(ToolPlugin):
     """Example tool plugin."""
 
     stages = [PipelineStage.DO]
+    intents: list[str] = []
     # List position controls execution order and SystemInitializer preserves it.
 
     async def execute_function(self, params: Dict[str, Any]) -> Any:
