@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from collections import OrderedDict
 from dataclasses import dataclass
+from collections import OrderedDict
 from typing import Any, Awaitable, Callable, Dict, List
 
 from entity.core.validation import verify_stage_assignment
@@ -68,9 +68,8 @@ class PluginRegistry:
                 if dep not in caps.required_resources:
                     caps.required_resources.append(dep)
 
-    def get_plugins_for_stage(self, stage: str | PipelineStage) -> List[Any]:
-        key = str(PipelineStage.ensure(stage))
-        plugins = self._stage_plugins.get(key)
+    def get_plugins_for_stage(self, stage: str) -> List[Any]:
+        plugins = self._stage_plugins.get(stage)
         if plugins is None:
             return []
         return list(plugins.keys())
@@ -82,15 +81,15 @@ class PluginRegistry:
                 return plugin
         return None
 
-    def has_plugin(self, name: str) -> bool:
-        return any(plugin_name == name for plugin_name in self._names.values())
-
     # Backward compatibility for older API
     def get_by_name(self, name: str) -> Any | None:
         return self.get_plugin(name)
 
     def list_plugins(self) -> List[Any]:
         return list(self._names.keys())
+
+    def get_capabilities(self, plugin: Any) -> PluginCapabilities | None:
+        return self._capabilities.get(plugin)
 
     def get_plugin_name(self, plugin: Any) -> str:
         name = self._names.get(plugin)
@@ -120,11 +119,22 @@ class ToolRegistry:
             items = [(k, v) for k, v in items if n in k.lower()]
         if intent is not None:
             i = intent.lower()
+<<<<<<< HEAD
             items = [
                 (k, v)
                 for k, v in items
                 if i in {t.lower() for t in getattr(v, "intents", [])}
             ]
+=======
+
+            def _match(tool: Any) -> bool:
+                declared = getattr(
+                    tool, "intents", getattr(tool.__class__, "intents", [])
+                )
+                return any(i == str(t).lower() for t in declared)
+
+            items = [(k, v) for k, v in items if _match(v)]
+>>>>>>> pr-1470
         return items
 
 
@@ -136,4 +146,4 @@ class SystemRegistries:
     validators: Any | None = None
 
 
-__all__ = ["PluginRegistry", "ToolRegistry", "SystemRegistries"]
+__all__ = ["PluginCapabilities", "PluginRegistry", "ToolRegistry", "SystemRegistries"]
