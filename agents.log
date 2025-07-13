@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-13: Verified zero_config example uses monkeypatch.setattr; example tests pass
+AGENT NOTE - 2025-07-13: Added PluginRegistry to dummy registries for worker tests
 AGENT NOTE - 2025-07-18: Added integration pipeline tests covering workflows, multi-user isolation, error handling, and metrics
 AGENT NOTE - 2025-07-12: Verified sandbox references removed and executed quality checks
 AGENT NOTE - 2025-07-12: Verified metrics_collector removal; file already absent
