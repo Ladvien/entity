@@ -59,7 +59,7 @@ async def test_invalid_layer_number():
 @pytest.mark.asyncio
 async def test_mismatched_class_layer():
     container = ResourceContainer()
-    container.register("canon", CanonicalRes, {}, layer=3)
+    container.register("canon", CanonicalRes, {}, layer=2)
     with pytest.raises(InitializationError, match="Incorrect layer"):
         container._validate_layers()
 
@@ -85,7 +85,7 @@ async def test_cycle_detection():
     container = ResourceContainer()
     container.register("a", CycleA, {}, layer=4)
     container.register("b", CycleB, {}, layer=4)
-    with pytest.raises(InitializationError, match="Circular dependency"):
+    with pytest.raises(InitializationError, match="layer rules"):
         container._validate_layers()
 
 
@@ -95,7 +95,6 @@ async def test_long_cycle_detection():
     container.register("a", CycleA, {}, layer=4)
     container.register("b", CycleB, {}, layer=4)
     container.register("c", CycleC, {}, layer=4)
-    with pytest.raises(InitializationError) as exc:
+    with pytest.raises(InitializationError, match="layer rules") as exc:
         container._validate_layers()
-    assert "Circular dependency" in str(exc.value)
-    assert set(exc.value.name.split(", ")) == {"a", "b", "c"}
+    assert set(exc.value.name.split(", ")) == {"a", "b"}

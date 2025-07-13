@@ -281,10 +281,16 @@ class ResourcePlugin(Plugin):
     stages: List[PipelineStage] = []
 
     async def _on_initialize(self) -> None:
-        await self._track_operation(operation="initialize", func=lambda: None)
+        async def _noop() -> None:
+            return None
+
+        await self._track_operation(operation="initialize", func=_noop)
 
     async def _on_shutdown(self) -> None:
-        await self._track_operation(operation="shutdown", func=lambda: None)
+        async def _noop() -> None:
+            return None
+
+        await self._track_operation(operation="shutdown", func=_noop)
 
     async def _track_operation(
         self,
