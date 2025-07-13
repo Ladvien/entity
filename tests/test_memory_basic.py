@@ -36,12 +36,12 @@ async def simple_memory() -> Memory:
 
 @pytest.mark.asyncio
 async def test_set_get(simple_memory: Memory) -> None:
-    await simple_memory.set("foo", "bar")
-    assert await simple_memory.get("foo") == "bar"
+    await simple_memory.set("foo", "bar", user_id="default")
+    assert await simple_memory.get("foo", user_id="default") == "bar"
 
 
 @pytest.mark.asyncio
 async def test_remember_alias(simple_memory: Memory) -> None:
     assert Memory.remember is Memory.store_persistent
-    await simple_memory.remember("alpha", 123)
-    assert await simple_memory.get("alpha") == 123
+    await simple_memory.remember("alpha", 123, user_id="default")
+    assert await simple_memory.get("alpha", user_id="default") == 123

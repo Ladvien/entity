@@ -52,19 +52,22 @@ class AdvancedContext:
 
     async def remember(self, key: str, value: Any) -> None:
         if self._parent._memory is not None:
-            namespaced_key = f"{self._parent._user_id}:{key}"
-            await self._parent._memory.store_persistent(namespaced_key, value)
+            await self._parent._memory.store_persistent(
+                key, value, user_id=self._parent._user_id
+            )
 
     async def memory(self, key: str, default: Any | None = None) -> Any:
         if self._parent._memory is None:
             return default
-        namespaced_key = f"{self._parent._user_id}:{key}"
-        return await self._parent._memory.fetch_persistent(namespaced_key, default)
+        return await self._parent._memory.fetch_persistent(
+            key, default, user_id=self._parent._user_id
+        )
 
     async def forget(self, key: str) -> None:
         if self._parent._memory is not None:
-            namespaced_key = f"{self._parent._user_id}:{key}"
-            await self._parent._memory.delete_persistent(namespaced_key)
+            await self._parent._memory.delete_persistent(
+                key, user_id=self._parent._user_id
+            )
 
     def set_metadata(self, key: str, value: Any) -> None:
         self._parent._state.metadata[key] = value

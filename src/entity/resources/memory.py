@@ -52,11 +52,13 @@ class Memory(AgentResource):
     # ------------------------------------------------------------------
     # Key-value helpers
     # ------------------------------------------------------------------
-    async def get(self, key: str, default: Any | None = None) -> Any:
-        return await self.fetch_persistent(key, default)
+    async def get(
+        self, key: str, default: Any | None = None, *, user_id: str = "default"
+    ) -> Any:
+        return await self.fetch_persistent(key, default, user_id=user_id)
 
-    async def set(self, key: str, value: Any) -> None:
-        await self.store_persistent(key, value)
+    async def set(self, key: str, value: Any, *, user_id: str = "default") -> None:
+        await self.store_persistent(key, value, user_id=user_id)
 
     # ``store_persistent`` and ``fetch_persistent`` are implemented below.
 
@@ -70,8 +72,13 @@ class Memory(AgentResource):
     # Conversation helpers
     # ------------------------------------------------------------------
     async def save_conversation(
-        self, conversation_id: str, history: List[ConversationEntry]
+        self,
+        pipeline_id: str,
+        history: List[ConversationEntry],
+        *,
+        user_id: str = "default",
     ) -> None:
+        conversation_id = f"{user_id}_{pipeline_id}"
         if self._pool is None:
             return
         async with self.database.connection() as conn:
@@ -91,7 +98,10 @@ class Memory(AgentResource):
                     ),
                 )
 
-    async def load_conversation(self, conversation_id: str) -> List[ConversationEntry]:
+    async def load_conversation(
+        self, pipeline_id: str, *, user_id: str = "default"
+    ) -> List[ConversationEntry]:
+        conversation_id = f"{user_id}_{pipeline_id}"
         if self._pool is None:
             return []
         async with self.database.connection() as conn:
@@ -153,50 +163,63 @@ class Memory(AgentResource):
             return []
         return await self.vector_store.query_similar(query, k)
 
-    async def batch_store(self, key_value_pairs: Dict[str, Any]) -> None:
+    async def batch_store(
+        self, key_value_pairs: Dict[str, Any], *, user_id: str = "default"
+    ) -> None:
         """Store multiple key/value pairs efficiently."""
         if self._pool is None:
             return
-        rows = [(key, json.dumps(value)) for key, value in key_value_pairs.items()]
+        rows = [
+            (f"{user_id}:{key}", json.dumps(value))
+            for key, value in key_value_pairs.items()
+        ]
         async with self.database.connection() as conn:
             conn.executemany(
                 f"INSERT OR REPLACE INTO {self._kv_table} VALUES (?, ?)", rows
             )
 
-    async def store_persistent(self, key: str, value: Any) -> None:
+    async def store_persistent(
+        self, key: str, value: Any, *, user_id: str = "default"
+    ) -> None:
         """Persist ``value`` under ``key``."""
         if self._pool is None:
             return
+        namespaced_key = f"{user_id}:{key}"
         async with self.database.connection() as conn:
             conn.execute(
                 f"INSERT OR REPLACE INTO {self._kv_table} VALUES (?, ?)",
-                (key, json.dumps(value)),
+                (namespaced_key, json.dumps(value)),
             )
 
-    async def fetch_persistent(self, key: str, default: Any = None) -> Any:
+    async def fetch_persistent(
+        self, key: str, default: Any = None, *, user_id: str = "default"
+    ) -> Any:
         """Retrieve a persisted value."""
         if self._pool is None:
             return default
+        namespaced_key = f"{user_id}:{key}"
         async with self.database.connection() as conn:
             row = conn.execute(
                 f"SELECT value FROM {self._kv_table} WHERE key = ?",
-                (key,),
+                (namespaced_key,),
             ).fetchone()
         return json.loads(row[0]) if row else default
 
-    async def delete_persistent(self, key: str) -> None:
+    async def delete_persistent(self, key: str, *, user_id: str = "default") -> None:
         """Remove ``key`` from persistent storage."""
         if self._pool is None:
             return
+        namespaced_key = f"{user_id}:{key}"
         async with self.database.connection() as conn:
             conn.execute(
                 f"DELETE FROM {self._kv_table} WHERE key = ?",
-                (key,),
+                (namespaced_key,),
             )
 
     async def add_conversation_entry(
-        self, conversation_id: str, entry: ConversationEntry
+        self, pipeline_id: str, entry: ConversationEntry, *, user_id: str = "default"
     ) -> None:
+        conversation_id = f"{user_id}_{pipeline_id}"
         """Append a single entry to ``conversation_id``."""
         if self._pool is None:
             return

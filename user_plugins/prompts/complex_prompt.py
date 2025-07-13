@@ -33,7 +33,9 @@ class ComplexPrompt(PromptPlugin):
 
         history: List[ConversationEntry] = []
         if memory:
-            history = await memory.load_conversation(context.pipeline_id)
+            history = await memory.load_conversation(
+                context.pipeline_id, user_id=context.user_id
+            )
         history_text = "\n".join(f"{h.role}: {h.content}" for h in history)
 
         last_message = ""
@@ -60,4 +62,6 @@ class ComplexPrompt(PromptPlugin):
 
         await context.think("complex_response", response.content)
         if memory:
-            await memory.save_conversation(context.pipeline_id, context.conversation())
+            await memory.save_conversation(
+                context.pipeline_id, context.conversation(), user_id=context.user_id
+            )
