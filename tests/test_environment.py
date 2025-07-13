@@ -82,7 +82,7 @@ async def test_ensure_ollama_pulls_when_missing(monkeypatch):
 
     mgr = Layer0SetupManager()
     result = await mgr.ensure_ollama()
-    assert result is False
+    assert result is True
 
 
 @pytest.mark.asyncio

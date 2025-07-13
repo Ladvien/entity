@@ -39,8 +39,18 @@ async def test_ensure_ollama_missing_model(monkeypatch):
 
         return R()
 
+    async def fake_exec(*args, **kwargs):
+        class P:
+            returncode = 0
+
+            async def communicate(self):
+                return b"", b""
+
+        return P()
+
     monkeypatch.setattr(httpx.AsyncClient, "get", fake_get)
-    assert await mgr.ensure_ollama() is False
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
+    assert await mgr.ensure_ollama() is True
 
 
 @pytest.mark.asyncio

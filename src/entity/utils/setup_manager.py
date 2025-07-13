@@ -1,15 +1,47 @@
 from __future__ import annotations
 
 from pathlib import Path
-import duckdb
-import httpx
-from logging import Logger
 import asyncio
+import importlib
+from logging import Logger
+import httpx
+
+try:  # attempt to load duckdb lazily
+    duckdb = importlib.import_module("duckdb")
+except ModuleNotFoundError:  # pragma: no cover - environment may omit duckdb
+    duckdb = None
 
 from .logging import get_logger
 
 
 logger = get_logger(__name__)
+
+
+async def pull_model(model: str, *, logger: Logger | None = None) -> bool:
+    """Download ``model`` using ``ollama pull``.
+
+    Returns ``True`` if the command completes successfully.
+    """
+    logger = logger or get_logger("ollama")
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            "ollama",
+            "pull",
+            model,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+    except FileNotFoundError:  # pragma: no cover - runtime dependency missing
+        logger.error("Ollama CLI not found. Install from https://ollama.com.")
+        return False
+
+    out, err = await proc.communicate()
+    if proc.returncode != 0:
+        logger.error("Failed to pull %s: %s", model, err.decode() or out.decode())
+        return False
+
+    logger.info("Model '%s' downloaded", model)
+    return True
 
 
 class Layer0SetupManager:
@@ -30,19 +62,6 @@ class Layer0SetupManager:
         self.base_url = base_url.rstrip("/")
         self.logger = logger or get_logger(self.__class__.__name__)
 
-    async def _pull_model(self) -> None:
-        """Download the configured model via ``ollama pull``."""
-        proc = await asyncio.create_subprocess_exec(
-            "ollama",
-            "pull",
-            self.model,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        out, err = await proc.communicate()
-        if proc.returncode != 0:
-            raise RuntimeError(err.decode() or out.decode())
-
     async def ensure_ollama(self) -> bool:
         """Return ``True`` when Ollama and the desired model are available."""
         url = f"{self.base_url}/api/tags"
@@ -58,25 +77,27 @@ class Layer0SetupManager:
         tags = resp.json().get("models", [])
         if not tags:
             self.logger.warning(
-                "No Ollama models installed. Running 'ollama pull %s'.",
+                "No Ollama models installed. Attempting download of '%s'.",
                 self.model,
             )
-            await self._pull_model()
-            return True
+            return await pull_model(self.model, logger=self.logger)
         names = [m.get("name") for m in tags]
         if self.model not in names:
             self.logger.warning(
-                "Model '%s' missing. Running 'ollama pull %s'.",
-                self.model,
+                "Model '%s' missing. Attempting download.",
                 self.model,
             )
-            await self._pull_model()
-            return True
+            return await pull_model(self.model, logger=self.logger)
         return True
 
     def setup_resources(self) -> None:
         """Create local resources if they do not exist."""
-        if not self.db_path.exists():
+        if duckdb is None:
+            self.logger.error(
+                "DuckDB not installed. Run 'poetry install --with dev' to enable local storage."
+            )
+        elif not self.db_path.exists():
+            self.db_path.parent.mkdir(parents=True, exist_ok=True)
             conn = duckdb.connect(str(self.db_path))
             conn.close()
             self.logger.info("Created DuckDB database at %s", self.db_path)
