@@ -511,7 +511,11 @@ class Agent:
 
     @classmethod
     def from_config(
-        cls, cfg: str | Mapping[str, Any], *, env_file: str = ".env"
+        cls,
+        cfg: str | Mapping[str, Any],
+        *,
+        env_file: str = ".env",
+        strict_stages: bool = False,
     ) -> "Agent":
         """Instantiate an agent from a YAML/JSON path or mapping."""
 
@@ -521,15 +525,21 @@ class Agent:
         from entity.pipeline.initializer import SystemInitializer
 
         if isinstance(cfg, Mapping):
-            initializer = SystemInitializer.from_dict(cfg, env_file)
+            initializer = SystemInitializer.from_dict(
+                cfg, env_file, strict_stages=strict_stages
+            )
             path = None
         else:
             path = str(cfg)
             suffix = Path(path).suffix
             if suffix == ".json":
-                initializer = SystemInitializer.from_json(path, env_file)
+                initializer = SystemInitializer.from_json(
+                    path, env_file, strict_stages=strict_stages
+                )
             else:
-                initializer = SystemInitializer.from_yaml(path, env_file)
+                initializer = SystemInitializer.from_yaml(
+                    path, env_file, strict_stages=strict_stages
+                )
 
         async def _build() -> tuple[AgentRuntime, dict[str, type]]:
             plugins, resources, tools, wf = await initializer.initialize()
