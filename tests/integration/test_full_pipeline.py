@@ -5,6 +5,7 @@ import types
 import pytest
 
 from entity.resources import Memory, MetricsCollectorResource
+from entity.resources.logging import LoggingResource
 from entity.pipeline.worker import PipelineWorker
 from entity.core.registries import PluginRegistry
 from entity.core.plugins import Plugin
@@ -51,6 +52,8 @@ class ErrorPlugin(Plugin):
 async def registries(memory_db: Memory) -> types.SimpleNamespace:
     metrics = MetricsCollectorResource({})
     await metrics.initialize()
+    logging_res = LoggingResource({})
+    await logging_res.initialize()
 
     class _Resources(dict):
         async def __aenter__(self):
@@ -59,7 +62,9 @@ async def registries(memory_db: Memory) -> types.SimpleNamespace:
         async def __aexit__(self, exc_type, exc, tb):
             return False
 
-    resources = _Resources(memory=memory_db, metrics_collector=metrics)
+    resources = _Resources(
+        memory=memory_db, metrics_collector=metrics, logging=logging_res
+    )
     resources.get = lambda name: resources[name]
 
     return types.SimpleNamespace(

@@ -5,6 +5,7 @@ from entity.worker.pipeline_worker import PipelineWorker
 from entity.core.plugins import Plugin
 from entity.core.registries import PluginRegistry
 from entity.pipeline.stages import PipelineStage
+from entity.resources.logging import LoggingResource
 
 
 class EchoStorePlugin(Plugin):
@@ -17,8 +18,12 @@ class EchoStorePlugin(Plugin):
 
 @pytest.mark.asyncio
 async def test_user_isolation(memory_db):
+    logging_res = LoggingResource({})
+    await logging_res.initialize()
     regs = types.SimpleNamespace(
-        resources={"memory": memory_db}, tools=types.SimpleNamespace()
+        resources={"memory": memory_db, "logging": logging_res},
+        tools=types.SimpleNamespace(),
+        validators=None,
     )
     plugins = PluginRegistry()
     await plugins.register_plugin_for_stage(EchoStorePlugin({}), PipelineStage.OUTPUT)
@@ -31,7 +36,7 @@ async def test_user_isolation(memory_db):
     hist_a = await memory_db.load_conversation("chat", user_id="alice")
     hist_b = await memory_db.load_conversation("chat", user_id="bob")
 
-    assert [e.content for e in hist_a] == ["hello"]
-    assert [e.content for e in hist_b] == ["world"]
+    assert [e.content for e in hist_a if e.role == "user"] == ["hello"]
+    assert [e.content for e in hist_b if e.role == "user"] == ["world"]
     assert await memory_db.get("last", user_id="alice") == "hello"
     assert await memory_db.get("last", user_id="bob") == "world"
