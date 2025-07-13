@@ -81,15 +81,15 @@ class AdvancedContext:
 
     async def think_temp(self, key: str, value: Any) -> None:
         """Store a temporary thought only accessible via ``advanced``."""
-        self._parent._temporary_thoughts[key] = value
+        self._parent._state.temporary_thoughts[key] = value
 
     async def reflect_temp(self, key: str, default: Any | None = None) -> Any:
         """Retrieve a temporary thought stored via ``think_temp``."""
-        return self._parent._temporary_thoughts.get(key, default)
+        return self._parent._state.temporary_thoughts.get(key, default)
 
     async def clear_temp(self) -> None:
         """Remove all temporary thoughts stored via ``think_temp``."""
-        self._parent._temporary_thoughts.clear()
+        self._parent._state.temporary_thoughts.clear()
 
     # ------------------------------------------------------------------
     # Stage control helpers
@@ -118,7 +118,6 @@ class PluginContext:
         self._memory = self._resources.get("memory")
         self._plugin_name: str | None = None
         self._advanced = AdvancedContext(self)
-        self._temporary_thoughts: dict[str, Any] = {}
 
     # ------------------------------------------------------------------
     @property
@@ -288,11 +287,7 @@ class PluginContext:
         return self._state.stage_results.get(key, default)
 
     async def clear_thoughts(self) -> None:
-        """Remove all stored stage results.
-
-        This is invoked automatically at the end of a pipeline run so that
-        interim reasoning does not leak between user messages.
-        """
+        """Remove all stored stage results on the current state."""
         self._state.stage_results.clear()
 
     # ------------------------------------------------------------------
