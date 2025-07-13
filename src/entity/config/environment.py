@@ -25,6 +25,10 @@ def load_env(env_file: str | Path = ".env", env: str | None = None) -> None:
     env_path = Path(env_file)
     if env_path.exists():
         env_values.update(dotenv_values(env_path))
+    else:
+        example = env_path.with_name(env_path.name + ".example")
+        if example.exists():
+            env_values.update(dotenv_values(example))
 
     if env:
         secret_file = Path("secrets") / f"{env}.env"

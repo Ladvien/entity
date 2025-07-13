@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-19: Added retry logic for WebSocket tests and explicit connection closure
+AGENT NOTE - 2025-07-18: Fixed environment loader and initializer tests
 AGENT NOTE - 2025-07-18: Added integration pipeline tests covering workflows, multi-user isolation, error handling, and metrics
 AGENT NOTE - 2025-07-12: Verified sandbox references removed and executed quality checks
 AGENT NOTE - 2025-07-12: Verified metrics_collector removal; file already absent

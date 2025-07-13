@@ -17,7 +17,7 @@ class LLM(AgentResource):
     """Simple LLM wrapper."""
 
     name = "llm"
-    dependencies = ["llm_provider"]
+    dependencies = ["llm_provider?"]
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})

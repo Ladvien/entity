@@ -40,6 +40,7 @@ class MetricsCollectorResource(ResourcePlugin):
 
     name = "metrics_collector"
     dependencies = ["database"]
+    infrastructure_dependencies: list[str] = []
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
         super().__init__(config or {})
