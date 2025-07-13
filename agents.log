@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-13: Added pythonpath configuration for pytest
 AGENT NOTE - 2025-08-09: Documented examples package and exported key modules
 AGENT NOTE - 2025-08-08: Cleaned merge conflict markers in agents.log
 AGENT NOTE - 2025-08-07: Added example plugins and registered them in default workflow
