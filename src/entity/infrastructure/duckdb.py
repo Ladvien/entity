@@ -7,7 +7,12 @@ import os
 from entity.pipeline.exceptions import CircuitBreakerTripped
 from entity.core.circuit_breaker import CircuitBreaker
 
-import duckdb
+import importlib
+
+try:
+    duckdb = importlib.import_module("duckdb")
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    duckdb = None
 
 from entity.core.plugins import InfrastructurePlugin, ValidationResult
 from entity.core.resources.container import PoolConfig, ResourcePool
@@ -38,14 +43,27 @@ class DuckDBInfrastructure(InfrastructurePlugin):
 
     async def initialize(self) -> None:
         """Initialize the connection pool."""
+        if duckdb is None:
+            print(
+                "DuckDB not installed. Run 'poetry install --with dev' to enable local storage."
+            )
+            return
         await self._pool.initialize()
 
     async def _create_conn(self) -> duckdb.DuckDBPyConnection:
+        if duckdb is None:
+            raise RuntimeError(
+                "DuckDB missing. Install with 'poetry install --with dev'."
+            )
         return duckdb.connect(self.path)
 
     @asynccontextmanager
     async def connection(self) -> Iterator[duckdb.DuckDBPyConnection]:
         """Yield an existing connection or acquire one from the pool."""
+        if duckdb is None:
+            raise RuntimeError(
+                "DuckDB missing. Install with 'poetry install --with dev'."
+            )
         if self._conn is not None:
             yield self._conn
         else:
@@ -64,6 +82,11 @@ class DuckDBInfrastructure(InfrastructurePlugin):
         self, breaker: CircuitBreaker | None = None
     ) -> ValidationResult:
         """Check connectivity using a simple query."""
+
+        if duckdb is None:
+            return ValidationResult.error_result(
+                "duckdb package missing. Run 'poetry install --with dev'."
+            )
 
         if self.path != ":memory:":
             directory = os.path.dirname(self.path) or "."
