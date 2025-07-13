@@ -10,15 +10,17 @@ from ...core.stages import PipelineStage
 class BasicErrorHandler(FailurePlugin):
     """Log failure information and generate a fallback message."""
 
+    name = "basic_error_handler"
     dependencies = ["logging"]
     stages = [PipelineStage.ERROR]
 
     async def _execute_impl(self, context: PluginContext) -> Any:
-        logging_res = context.get_resource("logging")
+        logger = context.get_resource("logging")
         info = context.failure_info
+
         if info is None:
-            if logging_res is not None:
-                await logging_res.log(
+            if logger is not None:
+                await logger.log(
                     "error",
                     "pipeline failure",
                     component="pipeline",
@@ -33,8 +35,8 @@ class BasicErrorHandler(FailurePlugin):
                 "type": "static_fallback",
             }
         else:
-            if logging_res is not None:
-                await logging_res.log(
+            if logger is not None:
+                await logger.log(
                     "error",
                     "plugin failure",
                     component="pipeline",
@@ -53,4 +55,5 @@ class BasicErrorHandler(FailurePlugin):
                 "stage": info.stage,
                 "type": "plugin_error",
             }
+
         context._state.response = message

@@ -8,7 +8,7 @@ from .resources import LLM, Memory, Storage
 from .resources.logging import LoggingResource
 from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
 from plugins.builtin.resources.ollama_llm import OllamaLLMResource
-from entity.plugins.prompts import BasicErrorHandler
+from .plugins.prompts.basic_error_handler import BasicErrorHandler
 from .core.stages import PipelineStage
 from .core.plugins import PromptPlugin, ToolPlugin
 from .plugins.prompts import BasicErrorHandler

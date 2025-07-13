@@ -1,5 +1,3 @@
-"""Simplified plugin and resource registries."""
-
 from __future__ import annotations
 
 from collections import OrderedDict
