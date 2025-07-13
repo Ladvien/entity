@@ -30,6 +30,10 @@ class PluginRegistry:
                 return plugin
         return None
 
+    # Backward compatibility for older API
+    def get_by_name(self, name: str) -> Any | None:
+        return self.get_plugin(name)
+
     def list_plugins(self) -> List[Any]:
         plugins: List[Any] = []
         for plist in self._stage_plugins.values():

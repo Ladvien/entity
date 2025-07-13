@@ -43,6 +43,7 @@ class Interface(ResourcePlugin):
 
 
 class FailingResource(AgentResource):
+    __module__ = "entity.resources.tests"
     dependencies = ["iface"]
     stages: list = []
 
