@@ -62,6 +62,7 @@ class CLIArgs:
     infra_type: Optional[str] = None
     infra_path: Optional[str] = None
     user_id: Optional[str] = None
+    message: Optional[str] = None
 
 
 class EntityCLI:
@@ -100,6 +101,9 @@ class EntityCLI:
             "get-conversation-stats", help="Show conversation metrics"
         )
         stats.add_argument("user_id")
+
+        debug = sub.add_parser("debug", help="Step through pipeline execution")
+        debug.add_argument("message", help="Input message")
 
         new_p = sub.add_parser("new", help="Scaffold a new project")
         new_p.add_argument("path")
@@ -196,6 +200,7 @@ class EntityCLI:
             infra_type=getattr(parsed, "infra_type", None),
             infra_path=getattr(parsed, "infra_path", None),
             user_id=getattr(parsed, "user_id", None),
+            message=getattr(parsed, "message", None),
         )
 
     # -----------------------------------------------------
@@ -236,6 +241,9 @@ class EntityCLI:
             agent = Agent.from_config(cfg, strict_stages=self.args.strict_stages)
         else:
             agent = Agent()
+        if cmd == "debug":
+            assert self.args.message is not None
+            return asyncio.run(self._debug_run(agent, self.args.message))
         if cmd == "get-conversation-stats":
             assert self.args.user_id is not None
             return asyncio.run(self._get_conversation_stats(agent, self.args.user_id))
@@ -495,6 +503,18 @@ class EntityCLI:
             return 1
         stats = await memory.conversation_statistics(user_id)
         print(yaml.safe_dump(stats))
+        return 0
+
+    async def _debug_run(self, agent: Agent, message: str) -> int:
+        await agent._ensure_runtime()
+        from entity.debug import PipelineDebugger
+
+        debugger = PipelineDebugger(agent.runtime.capabilities)
+        response, tracer = await debugger.run(
+            message, user_id=self.args.user_id or "debug"
+        )
+        print(yaml.safe_dump(response))
+        print(yaml.safe_dump(tracer.report()))
         return 0
 
     @staticmethod
