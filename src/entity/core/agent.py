@@ -152,7 +152,21 @@ class _AgentBuilder:
                 raise ValueError("plugin() requires 'plugin_class' or stage hints")
 
             plugin = PluginAutoClassifier.classify(f, hints)
-            asyncio.run(self.add_plugin(plugin))
+            stage_hint = hints.get("stages") or hints.get("stage")
+            if stage_hint is not None:
+                stages = StageResolver._resolve_plugin_stages(
+                    plugin.__class__, {"stages": stage_hint}, plugin
+                )[0]
+                name = getattr(plugin, "name", plugin.__class__.__name__)
+                for stage in stages:
+                    asyncio.run(
+                        self.plugin_registry.register_plugin_for_stage(
+                            plugin, stage, name
+                        )
+                    )
+                self._added_plugins.append(plugin)
+            else:
+                asyncio.run(self.add_plugin(plugin))
             return f
 
         return decorator(func) if func else decorator
@@ -365,6 +379,15 @@ class Agent:
         """Register a plugin on the underlying builder."""
 
         await self.builder.add_plugin(plugin)
+        if self._runtime is not None:
+            stages, _ = StageResolver._resolve_plugin_stages(
+                plugin.__class__, plugin.config, plugin
+            )
+            for stage in stages:
+                name = getattr(plugin, "name", plugin.__class__.__name__)
+                await self._runtime.capabilities.plugins.register_plugin_for_stage(
+                    plugin, stage, name
+                )
 
     def plugin(
         self,

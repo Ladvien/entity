@@ -63,7 +63,7 @@ class Memory(AgentResource):
     # ``store_persistent`` and ``fetch_persistent`` are implemented below.
 
     async def clear(self) -> None:
-        if self._pool is None:
+        if self.database is None:
             return
         async with self.database.connection() as conn:
             conn.execute(f"DELETE FROM {self._kv_table}")
@@ -102,7 +102,7 @@ class Memory(AgentResource):
         self, pipeline_id: str, *, user_id: str = "default"
     ) -> List[ConversationEntry]:
         conversation_id = f"{user_id}_{pipeline_id}"
-        if self._pool is None:
+        if self.database is None:
             return []
         async with self.database.connection() as conn:
             rows = conn.execute(
