@@ -32,21 +32,27 @@ async def test_output_adapter_registration_restricted():
         await registry.register_plugin_for_stage(plugin, PipelineStage.INPUT)
 
 
-def test_input_adapter_class_stage_restricted():
+@pytest.mark.asyncio
+async def test_input_adapter_class_stage_restricted():
+    class BadInput(InputAdapterPlugin):
+        stages = [PipelineStage.OUTPUT]
+
+        async def _execute_impl(self, context):
+            pass
+
+    registry = PluginRegistry()
     with pytest.raises(ConfigurationError):
-
-        class BadInput(InputAdapterPlugin):
-            stages = [PipelineStage.OUTPUT]
-
-            async def _execute_impl(self, context):
-                pass
+        await registry.register_plugin_for_stage(BadInput({}), PipelineStage.INPUT)
 
 
-def test_output_adapter_class_stage_restricted():
+@pytest.mark.asyncio
+async def test_output_adapter_class_stage_restricted():
+    class BadOutput(OutputAdapterPlugin):
+        stages = [PipelineStage.INPUT]
+
+        async def _execute_impl(self, context):
+            pass
+
+    registry = PluginRegistry()
     with pytest.raises(ConfigurationError):
-
-        class BadOutput(OutputAdapterPlugin):
-            stages = [PipelineStage.INPUT]
-
-            async def _execute_impl(self, context):
-                pass
+        await registry.register_plugin_for_stage(BadOutput({}), PipelineStage.OUTPUT)

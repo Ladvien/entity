@@ -26,7 +26,13 @@ try:
     from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
     from plugins.builtin.resources.ollama_llm import OllamaLLMResource
     from plugins.builtin.basic_error_handler import BasicErrorHandler
+<<<<<<< HEAD
     from plugins.examples import InputLogger, MessageParser, ResponseReviewer
+=======
+    from plugins.examples import InputLogger
+    from user_plugins.prompts import ComplexPrompt
+    from user_plugins.responders import ComplexPromptResponder
+>>>>>>> pr-1521
     from .core.stages import PipelineStage
     from .core.plugins import PromptPlugin, ToolPlugin
     from .utils.setup_manager import Layer0SetupManager
@@ -180,6 +186,7 @@ __all__ = [
     "Agent",
     "agent",
     "_create_default_agent",
+<<<<<<< HEAD
     "plugin",
     "input",
     "parse",
@@ -189,6 +196,8 @@ __all__ = [
     "output",
     "prompt_plugin",
     "tool_plugin",
+=======
+>>>>>>> pr-1521
 ]
 
 
