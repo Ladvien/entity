@@ -638,6 +638,8 @@ class ResourceContainer:
             traverse(resource)
 
     def _resolve_order(self) -> List[str]:
+        """Return initialization order or raise if a cycle exists."""
+
         # Build dependency graph with edges from each dependency to its dependents
         graph_map: Dict[str, List[str]] = {name: [] for name in self._deps}
         for name, deps in self._deps.items():
@@ -652,6 +654,6 @@ class ResourceContainer:
             raise InitializationError(
                 ", ".join(sorted(graph_map.keys())),
                 "dependency graph",
-                str(exc),
+                exc.remediation,
                 kind="Resource",
             ) from exc
