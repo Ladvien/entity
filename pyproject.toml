@@ -48,6 +48,7 @@ cryptography = "^45.0.5"
 websockets = "^15.0"
 grpcio = "^1.62.2"
 grpcio-tools = "^1.62.2"
+jsonschema = "^4.24.0"
 
 [tool.poetry.extras]
 examples = [
