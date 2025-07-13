@@ -1,9 +1,8 @@
-import types
 import pytest
 
 from entity.worker.pipeline_worker import PipelineWorker
 from entity.core.plugins import Plugin
-from entity.core.registries import PluginRegistry
+from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
 from entity.pipeline.stages import PipelineStage
 from entity.resources.logging import LoggingResource
 
@@ -20,14 +19,15 @@ class EchoStorePlugin(Plugin):
 async def test_user_isolation(memory_db):
     logging_res = LoggingResource({})
     await logging_res.initialize()
-    regs = types.SimpleNamespace(
+    regs = SystemRegistries(
         resources={"memory": memory_db, "logging": logging_res},
-        tools=types.SimpleNamespace(),
+        tools=ToolRegistry(),
+        plugins=PluginRegistry(),
         validators=None,
     )
-    plugins = PluginRegistry()
-    await plugins.register_plugin_for_stage(EchoStorePlugin({}), PipelineStage.OUTPUT)
-    regs.plugins = plugins
+    await regs.plugins.register_plugin_for_stage(
+        EchoStorePlugin({}), PipelineStage.OUTPUT
+    )
     worker = PipelineWorker(regs)
 
     await worker.execute_pipeline("chat", "hello", user_id="alice")

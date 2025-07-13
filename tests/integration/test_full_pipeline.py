@@ -1,13 +1,12 @@
 import asyncio
 import time
-import types
 
 import pytest
 
 from entity.resources import Memory, MetricsCollectorResource
 from entity.resources.logging import LoggingResource
 from entity.pipeline.worker import PipelineWorker
-from entity.core.registries import PluginRegistry
+from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
 from entity.core.plugins import Plugin
 from entity.core.context import PluginContext
 from entity.core.stages import PipelineStage
@@ -49,7 +48,7 @@ class ErrorPlugin(Plugin):
 
 
 @pytest.fixture()
-async def registries(memory_db: Memory) -> types.SimpleNamespace:
+async def registries(memory_db: Memory) -> SystemRegistries:
     metrics = MetricsCollectorResource({})
     await metrics.initialize()
     logging_res = LoggingResource({})
@@ -67,17 +66,18 @@ async def registries(memory_db: Memory) -> types.SimpleNamespace:
     )
     resources.get = lambda name: resources[name]
 
-    return types.SimpleNamespace(
+    regs = SystemRegistries(
         resources=resources,
-        tools=types.SimpleNamespace(),
-        validators=None,
+        tools=ToolRegistry(),
         plugins=PluginRegistry(),
-        metrics=metrics,
+        validators=None,
     )
+    regs.metrics = metrics
+    return regs
 
 
 @pytest.mark.asyncio
-async def test_standard_workflow(registries: types.SimpleNamespace) -> None:
+async def test_standard_workflow(registries: SystemRegistries) -> None:
     plugin = EchoPlugin({})
     plugin.metrics_collector = registries.metrics
     await registries.plugins.register_plugin_for_stage(plugin, PipelineStage.OUTPUT)
@@ -87,7 +87,7 @@ async def test_standard_workflow(registries: types.SimpleNamespace) -> None:
 
 
 @pytest.mark.asyncio
-async def test_multi_user_isolation(registries: types.SimpleNamespace) -> None:
+async def test_multi_user_isolation(registries: SystemRegistries) -> None:
     plugin = EchoPlugin({})
     plugin.metrics_collector = registries.metrics
     await registries.plugins.register_plugin_for_stage(plugin, PipelineStage.OUTPUT)
@@ -103,7 +103,7 @@ async def test_multi_user_isolation(registries: types.SimpleNamespace) -> None:
 
 
 @pytest.mark.asyncio
-async def test_error_handling_and_recovery(registries: types.SimpleNamespace) -> None:
+async def test_error_handling_and_recovery(registries: SystemRegistries) -> None:
     fail = FailPlugin({}, fail=True)
     fail.metrics_collector = registries.metrics
     await registries.plugins.register_plugin_for_stage(fail, PipelineStage.THINK)
@@ -130,7 +130,7 @@ async def test_error_handling_and_recovery(registries: types.SimpleNamespace) ->
 
 
 @pytest.mark.asyncio
-async def test_performance_metrics(registries: types.SimpleNamespace) -> None:
+async def test_performance_metrics(registries: SystemRegistries) -> None:
     plugin = EchoPlugin({})
     plugin.metrics_collector = registries.metrics
     await registries.plugins.register_plugin_for_stage(plugin, PipelineStage.OUTPUT)
