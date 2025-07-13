@@ -62,6 +62,8 @@ class BasePlugin:
         self.config_version: int = 1
         self.metrics_collector = None  # injected by container
         self.logging = None  # injected by container
+        self.is_initialized: bool = False
+        self.is_shutdown: bool = False
 
     # -----------------------------------------------------
     def supports_runtime_reconfiguration(self) -> bool:
@@ -161,12 +163,66 @@ class Plugin(BasePlugin):
     async def initialize(self) -> None:
         """Optional startup hook for plugins."""
 
-        return None
+        if self.is_initialized and not self.is_shutdown:
+            return
+
+        start = time.perf_counter()
+        self.is_initialized = True
+        self.is_shutdown = False
+
+        logger = getattr(self, "logging", None)
+        if logger is not None:
+            await logger.log(
+                "info",
+                "Plugin initialized",
+                component="plugin",
+                plugin_name=self.__class__.__name__,
+                pipeline_id="system",
+            )
+
+        duration = (time.perf_counter() - start) * 1000
+        metrics = getattr(self, "metrics_collector", None)
+        if metrics is not None:
+            await metrics.record_resource_operation(
+                pipeline_id="system",
+                resource_name=self.__class__.__name__,
+                operation="initialize",
+                duration_ms=duration,
+                success=True,
+                metadata={},
+            )
 
     async def shutdown(self) -> None:
         """Optional shutdown hook for plugins."""
 
-        return None
+        if self.is_shutdown:
+            return
+
+        start = time.perf_counter()
+        self.is_initialized = False
+        self.is_shutdown = True
+
+        logger = getattr(self, "logging", None)
+        if logger is not None:
+            await logger.log(
+                "info",
+                "Plugin shutdown",
+                component="plugin",
+                plugin_name=self.__class__.__name__,
+                pipeline_id="system",
+            )
+
+        duration = (time.perf_counter() - start) * 1000
+        metrics = getattr(self, "metrics_collector", None)
+        if metrics is not None:
+            await metrics.record_resource_operation(
+                pipeline_id="system",
+                resource_name=self.__class__.__name__,
+                operation="shutdown",
+                duration_ms=duration,
+                success=True,
+                metadata={},
+            )
 
     def validate_registration_stage(self, stage: PipelineStage) -> None:
         """Verify plugin registration ``stage`` is allowed."""
@@ -253,6 +309,26 @@ class ResourcePlugin(Plugin):
     infrastructure_dependencies: List[str] = []
     resource_category: str = ""
     stages: List[PipelineStage] = []
+
+    async def initialize(self) -> None:
+        if self.is_initialized and not self.is_shutdown:
+            return
+
+        async def _init() -> None:
+            self.is_initialized = True
+            self.is_shutdown = False
+
+        await self._track_operation(operation="initialize", func=_init)
+
+    async def shutdown(self) -> None:
+        if self.is_shutdown:
+            return
+
+        async def _shut() -> None:
+            self.is_initialized = False
+            self.is_shutdown = True
+
+        await self._track_operation(operation="shutdown", func=_shut)
 
     async def _track_operation(
         self,
