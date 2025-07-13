@@ -1,9 +1,8 @@
 from entity.core.plugins import Plugin, PromptPlugin
 import importlib
+import logging
 import entity.pipeline.utils as pipeline_utils
 from entity.core.stages import PipelineStage
-import importlib
-import entity.pipeline.utils as pipeline_utils
 
 # Reload pipeline_utils to ensure the original StageResolver is used
 StageResolver = importlib.reload(pipeline_utils).StageResolver
@@ -105,3 +104,12 @@ def test_initializer_inherited_stage_not_explicit():
 
     assert stages == [PipelineStage.THINK]
     assert explicit is False
+
+
+def test_warning_for_stage_override(caplog):
+    plugin = AttrPrompt({})
+    with caplog.at_level(logging.WARNING):
+        StageResolver._resolve_plugin_stages(
+            AttrPrompt, {"stage": PipelineStage.REVIEW}, plugin
+        )
+    assert any("differ from declared" in r.message for r in caplog.records)

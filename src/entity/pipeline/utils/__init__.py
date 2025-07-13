@@ -59,34 +59,36 @@ class StageResolver:
         the fallback stage is also treated as explicit.
         """
         cfg_value = config.get("stages") or config.get("stage")
+        declared_value = getattr(plugin_class, "stages", None) or getattr(
+            plugin_class, "stage", None
+        )
         class_value = plugin_class.__dict__.get("stages") or plugin_class.__dict__.get(
             "stage"
         )
         inherited_value = None
         if class_value is None:
-            inherited_value = getattr(plugin_class, "stages", None) or getattr(
-                plugin_class, "stage", None
-            )
+            inherited_value = declared_value
 
         if cfg_value is not None:
             stages = _normalize_stages(cfg_value)
-            if (
-                class_value is not None
-                and _normalize_stages(class_value) != stages
-                and logger is not None
-            ):
-                logger.warning(
-                    "%s config overrides declared stage %s -> %s",
-                    plugin_class.__name__,
-                    _normalize_stages(class_value),
-                    stages,
-                )
         elif class_value is not None:
             stages = _normalize_stages(class_value)
         elif inherited_value is not None:
             stages = _normalize_stages(inherited_value)
         else:
             stages = [PipelineStage.THINK]
+
+        if (
+            declared_value is not None
+            and _normalize_stages(declared_value) != stages
+            and logger is not None
+        ):
+            logger.warning(
+                "%s resolved stages %s differ from declared stages %s",
+                plugin_class.__name__,
+                stages,
+                _normalize_stages(declared_value),
+            )
 
         explicit_cfg = bool(cfg_value)
 
