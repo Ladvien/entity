@@ -26,6 +26,9 @@ class A(AgentResource):
         pass
 
 
+A.dependencies = []
+
+
 class B(Plugin):
     stages = [PipelineStage.THINK]
     dependencies = ["a"]
@@ -36,6 +39,9 @@ class B(Plugin):
 
     async def _execute_impl(self, context):
         pass
+
+
+B.dependencies = ["a"]
 
 
 class C(Plugin):
@@ -51,6 +57,9 @@ class C(Plugin):
         pass
 
 
+C.dependencies = ["missing"]
+
+
 class D(Plugin):
     stages = [PipelineStage.PARSE]
     dependencies = ["e"]
@@ -60,6 +69,9 @@ class D(Plugin):
 
     async def _execute_impl(self, context):
         pass
+
+
+D.dependencies = ["e"]
 
 
 class E(Plugin):
@@ -73,6 +85,9 @@ class E(Plugin):
         pass
 
 
+E.dependencies = ["d"]
+
+
 class VectorStoreResource(AgentResource):
     stages = [PipelineStage.PARSE]
 
@@ -80,11 +95,17 @@ class VectorStoreResource(AgentResource):
         pass
 
 
+VectorStoreResource.dependencies = []
+
+
 class PostgresResource(AgentResource):
     stages: list = []
 
     async def _execute_impl(self, context):  # pragma: no cover - stub
         pass
+
+
+PostgresResource.dependencies = []
 
 
 class DBInterface(ResourcePlugin):
@@ -95,12 +116,18 @@ class DBInterface(ResourcePlugin):
         pass
 
 
+DBInterface.dependencies = []
+
+
 class InfraDatabase(InfrastructurePlugin):
     infrastructure_type = "database"
     stages: list = []
 
     async def _execute_impl(self, context):
         pass
+
+
+InfraDatabase.dependencies = []
 
 
 class BadPromptInterface(Plugin):
@@ -111,12 +138,18 @@ class BadPromptInterface(Plugin):
         pass
 
 
+BadPromptInterface.dependencies = ["db_interface"]
+
+
 class BadPromptInfra(Plugin):
     stages = [PipelineStage.THINK]
     dependencies = ["infra_db"]
 
     async def _execute_impl(self, context):
         pass
+
+
+BadPromptInfra.dependencies = ["infra_db"]
 
 
 class ComplexPrompt(Plugin):
@@ -131,6 +164,9 @@ class ComplexPrompt(Plugin):
 
     async def _execute_impl(self, context):
         pass
+
+
+ComplexPrompt.dependencies = ["memory"]
 
 
 def _write_config(tmp_path, plugins):
