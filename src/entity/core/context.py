@@ -276,7 +276,11 @@ class PluginContext:
         return self._state.stage_results.get(key, default)
 
     async def clear_thoughts(self) -> None:
-        """Remove all stored stage results."""
+        """Remove all stored stage results.
+
+        This is invoked automatically at the end of a pipeline run so that
+        interim reasoning does not leak between user messages.
+        """
         self._state.stage_results.clear()
 
     # ------------------------------------------------------------------

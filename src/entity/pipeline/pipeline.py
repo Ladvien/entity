@@ -275,7 +275,6 @@ async def execute_pipeline(
             ],
             pipeline_id=f"{user_id}_{generate_pipeline_id()}",
         )
-        state.stage_results.clear()
     _start = time.time()
     resource_manager = (
         capabilities.resources
@@ -371,6 +370,8 @@ async def execute_pipeline(
             result = create_default_response("No response generated", state.pipeline_id)
         else:
             result = state.response
+
+        state.stage_results.clear()
         return result
 
 
