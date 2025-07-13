@@ -61,9 +61,7 @@ async def update_plugin_configuration(
 
     old_config = plugin.config.copy()
     try:
-        handler = getattr(plugin, "_handle_reconfiguration", None)
-        if asyncio.iscoroutinefunction(handler):
-            await handler(old_config, new_config)
+        await plugin._handle_reconfiguration(old_config, new_config)
         plugin._config_history.append(new_config.copy())
         plugin.config_version += 1
         plugin.config = new_config
@@ -85,5 +83,10 @@ async def update_plugin_configuration(
             if len(plugin._config_history) > 1
             else plugin.config_version
         )
-        await plugin.rollback_config(version)
+        try:
+            await plugin.rollback_config(version)
+        except Exception:
+            plugin.config = old_config
+            plugin.config_version = version
+            plugin._config_history = plugin._config_history[:version]
         return ConfigUpdateResult(False, False, f"Failed to update: {exc}")
