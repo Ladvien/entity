@@ -310,6 +310,13 @@ class _AgentBuilder:
 
             container.register("database", DuckDBResource, {}, layer=2)
 
+        if not container.has_plugin("vector_store"):
+            from entity.resources.interfaces.duckdb_vector_store import (
+                DuckDBVectorStore,
+            )
+
+            container.register("vector_store", DuckDBVectorStore, {}, layer=2)
+
         if not container.has_plugin("memory"):
             from entity.resources.memory import Memory
 

@@ -5,8 +5,12 @@ from __future__ import annotations
 from .core.agent import Agent
 from .infrastructure import DuckDBInfrastructure
 from .resources import LLM, Memory, Storage
+<<<<<<< HEAD
 from .resources.logging import LoggingResource
 from .resources.interfaces.vector_store import VectorStoreResource
+=======
+from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
+>>>>>>> pr-1438
 from plugins.builtin.resources.ollama_llm import OllamaLLMResource
 from .core.stages import PipelineStage
 from .core.plugins import PromptPlugin, ToolPlugin
@@ -35,10 +39,18 @@ def _create_default_agent() -> Agent:
     vector_store = VectorStoreResource({})
     memory = Memory({})
     storage = Storage({})
+<<<<<<< HEAD
     logging_res = LoggingResource({})
 
     llm.provider = llm_provider
     memory.database = db
+=======
+    vector_store = DuckDBVectorStore({})
+
+    llm.provider = llm_provider
+    memory.database = db
+    vector_store.database = db
+>>>>>>> pr-1438
     memory.vector_store = vector_store
 
     resources = ResourceContainer()
