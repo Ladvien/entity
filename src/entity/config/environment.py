@@ -9,7 +9,8 @@ from typing import Any, MutableMapping, Mapping
 
 import yaml
 
-from dotenv import dotenv_values, load_dotenv
+from dotenv import dotenv_values
+from dotenv import load_dotenv
 
 
 def load_env(env_file: str | Path = ".env", env: str | None = None) -> None:
