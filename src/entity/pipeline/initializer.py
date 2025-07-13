@@ -155,19 +155,43 @@ class ClassRegistry(StageResolver):
 
         if issubclass(cls, ToolPlugin) and any(s != PipelineStage.DO for s in stages):
             raise InitializationError(
-                name, "stage validation", "ToolPlugin must use DO stage"
+                name,
+                "stage validation",
+                "ToolPlugin must use DO stage",
             )
+
+        if any(s == PipelineStage.INPUT for s in stages) and not issubclass(
+            cls, InputAdapterPlugin
+        ):
+            raise InitializationError(
+                name,
+                "stage validation",
+                "Only InputAdapterPlugin can register for INPUT stage",
+            )
+        if any(s == PipelineStage.OUTPUT for s in stages) and not issubclass(
+            cls, OutputAdapterPlugin
+        ):
+            raise InitializationError(
+                name,
+                "stage validation",
+                "Only OutputAdapterPlugin can register for OUTPUT stage",
+            )
+
         if issubclass(cls, InputAdapterPlugin) and any(
             s != PipelineStage.INPUT for s in stages
         ):
             raise InitializationError(
-                name, "stage validation", "InputAdapterPlugin must use INPUT stage"
+                name,
+                "stage validation",
+                "InputAdapterPlugin must use INPUT stage",
             )
         if issubclass(cls, OutputAdapterPlugin) and any(
             s != PipelineStage.OUTPUT for s in stages
         ):
             raise InitializationError(
-                name, "stage validation", "OutputAdapterPlugin must use OUTPUT stage"
+                name,
+                "stage validation",
+                "OutputAdapterPlugin must use OUTPUT stage",
             )
         if issubclass(cls, AdapterPlugin) and any(
             s not in {PipelineStage.INPUT, PipelineStage.OUTPUT} for s in stages
@@ -683,6 +707,15 @@ class SystemInitializer:
                             f"Missing dependency '{dep_name}'. "
                             "Ensure it is registered and declared correctly."
                         ),
+                    )
+                dep_cls = registry._classes.get(dep_name)
+                from entity.core.plugins import ResourcePlugin
+
+                if dep_cls is not None and not issubclass(dep_cls, ResourcePlugin):
+                    raise InitializationError(
+                        plugin_name,
+                        "dependency graph validation",
+                        f"Dependency '{dep_name}' is not a resource plugin.",
                     )
                 if dep_name in graph_map:
                     graph_map[dep_name].append(plugin_name)
