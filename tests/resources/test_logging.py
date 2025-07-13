@@ -8,6 +8,15 @@ from entity.core.resources.container import ResourceContainer
 from entity.resources.logging import LoggingResource
 
 
+async def _connect(uri: str, attempts: int = 10, delay: float = 0.05):
+    for _ in range(attempts):
+        try:
+            return await websockets.connect(uri)
+        except (ConnectionRefusedError, OSError):
+            await asyncio.sleep(delay)
+    raise RuntimeError("WebSocket server not ready")
+
+
 @pytest.mark.asyncio
 async def test_websocket_broadcast(tmp_path, monkeypatch):
     container = ResourceContainer()
@@ -22,10 +31,16 @@ async def test_websocket_broadcast(tmp_path, monkeypatch):
     logger: LoggingResource = container.get("logging")  # type: ignore[assignment]
     stream = logger._stream_outputs[0]
     uri = f"ws://{stream.host}:{stream.port}"
-    async with websockets.connect(uri) as ws1, websockets.connect(uri) as ws2:
-        await logger.log("info", "message", component="test")
-        msg1 = await asyncio.wait_for(ws1.recv(), timeout=2)
-        msg2 = await asyncio.wait_for(ws2.recv(), timeout=2)
+    ws1 = await _connect(uri)
+    ws2 = await _connect(uri)
+    await logger.log("info", "message", component="test")
+    msg1 = await asyncio.wait_for(ws1.recv(), timeout=2)
+    msg2 = await asyncio.wait_for(ws2.recv(), timeout=2)
+    for ws in (ws1, ws2):
+        try:
+            await ws.close()
+        except websockets.exceptions.ConnectionClosedOK:
+            pass
     await container.shutdown_all()
     assert json.loads(msg1)["message"] == "message"
     assert msg1 == msg2

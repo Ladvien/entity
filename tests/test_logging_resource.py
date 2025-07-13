@@ -10,6 +10,15 @@ import os
 import socket
 
 
+async def _connect(uri: str, attempts: int = 10, delay: float = 0.05):
+    for _ in range(attempts):
+        try:
+            return await websockets.connect(uri)
+        except (ConnectionRefusedError, OSError):
+            await asyncio.sleep(delay)
+    raise RuntimeError("WebSocket server not ready")
+
+
 @pytest.mark.asyncio
 async def test_logging_file_and_console(tmp_path, capsys, monkeypatch):
     log_file = tmp_path / "log.jsonl"
@@ -52,9 +61,13 @@ async def test_logging_stream_output(tmp_path, monkeypatch):
     logger: LoggingResource = container.get("logging")  # type: ignore[assignment]
     stream = next(o for o in logger._stream_outputs)
     uri = f"ws://{stream.host}:{stream.port}"
-    async with websockets.connect(uri) as ws:
-        await logger.log("info", "hi", component="resource")
-        msg = await asyncio.wait_for(ws.recv(), timeout=2)
+    ws = await _connect(uri)
+    await logger.log("info", "hi", component="resource")
+    msg = await asyncio.wait_for(ws.recv(), timeout=2)
+    try:
+        await ws.close()
+    except websockets.exceptions.ConnectionClosedOK:
+        pass
     await container.shutdown_all()
     data = json.loads(msg)
     assert data["message"] == "hi"
