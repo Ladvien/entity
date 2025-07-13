@@ -52,7 +52,7 @@ def test_config_overrides_class_stage(caplog: pytest.LogCaptureFixture) -> None:
             logger=logger,
         )
     assert stages == [PipelineStage.REVIEW]
-    assert "overrides" in caplog.text
+    assert "override" in caplog.text
 
 
 def test_class_stage_used_without_config() -> None:

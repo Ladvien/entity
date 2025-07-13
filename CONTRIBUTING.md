@@ -84,6 +84,7 @@ pytest tests/performance/ -m benchmark
 - **Import restrictions:** Plugins must NOT import core modules directly (enforces architectural boundaries)
 - **Allowed imports:** Plugin base classes, resource interfaces, and utility functions are permitted
 - **Stage assignment:** Always explicitly declare plugin stages in configuration or class definition
+- **Stage mismatch warnings:** When configuration overrides class stages the initializer logs a message like `MyPlugin configured stages [REVIEW] override class stages [DO]`.
 - **Dependencies:** Use explicit dependency declarations rather than constructor injection
 
 ### Plugin Testing

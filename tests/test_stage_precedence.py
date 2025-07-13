@@ -112,4 +112,4 @@ def test_warning_for_stage_override(caplog):
         StageResolver._resolve_plugin_stages(
             AttrPrompt, {"stage": PipelineStage.REVIEW}, plugin
         )
-    assert any("differ from declared" in r.message for r in caplog.records)
+    assert any("override class stages" in r.message for r in caplog.records)
