@@ -6,7 +6,6 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Dict, List
 
-<<<<<<< HEAD
 from entity.core.validation import verify_stage_assignment
 from entity.pipeline.stages import PipelineStage
 
@@ -21,27 +20,16 @@ class PluginCapabilities:
 
 class PluginRegistry:
     """Register plugins for each pipeline stage preserving insertion order and track capabilities."""
-=======
-from entity.pipeline.stages import PipelineStage
-
-
-class PluginRegistry:
-    """Register plugins for each pipeline stage preserving insertion order."""
->>>>>>> pr-1448
 
     def __init__(self) -> None:
         self._stage_plugins: Dict[str, OrderedDict[Any, str]] = {}
         self._names: "OrderedDict[Any, str]" = OrderedDict()
-<<<<<<< HEAD
         self._capabilities: Dict[Any, PluginCapabilities] = {}
-=======
->>>>>>> pr-1448
 
     async def register_plugin_for_stage(
         self, plugin: Any, stage: str | PipelineStage, name: str | None = None
     ) -> None:
         stage_enum = PipelineStage.ensure(stage)
-<<<<<<< HEAD
         plugin_name = name or getattr(plugin, "name", plugin.__class__.__name__)
         verify_stage_assignment(plugin, stage_enum)
 
@@ -50,16 +38,11 @@ class PluginRegistry:
             validator(stage_enum)
 
         key = str(stage_enum)
-=======
-        key = str(stage_enum)
-        plugin_name = name or getattr(plugin, "name", plugin.__class__.__name__)
->>>>>>> pr-1448
         if key not in self._stage_plugins:
             self._stage_plugins[key] = OrderedDict()
         self._stage_plugins[key][plugin] = plugin_name
         if plugin not in self._names:
             self._names[plugin] = plugin_name
-<<<<<<< HEAD
         caps = self._capabilities.get(plugin)
         if caps is None:
             deps = list(getattr(plugin, "dependencies", []))
@@ -87,8 +70,6 @@ class PluginRegistry:
             for dep in required_resources:
                 if dep not in caps.required_resources:
                     caps.required_resources.append(dep)
-=======
->>>>>>> pr-1448
 
     def get_plugins_for_stage(self, stage: str | PipelineStage) -> List[Any]:
         key = str(PipelineStage.ensure(stage))
