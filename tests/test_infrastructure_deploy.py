@@ -9,6 +9,9 @@ async def test_docker_deploy_creates_files(tmp_path):
     await infra.deploy()
     assert (tmp_path / "Dockerfile").exists()
     assert (tmp_path / "docker-compose.yml").exists()
+    compose_content = (tmp_path / "docker-compose.yml").read_text()
+    assert "volumes:" in compose_content
+    assert "networks:" in compose_content
     assert infra.deployed
 
     await infra.destroy()
@@ -24,6 +27,10 @@ async def test_opentofu_deploy_creates_main(tmp_path):
     )
     await infra.deploy()
     assert (tmp_path / "main.tf").exists()
+    assert (tmp_path / "ecs.tf").exists()
+    assert (tmp_path / "rds.tf").exists()
+    assert (tmp_path / "s3.tf").exists()
+    assert (tmp_path / "variables.tf").exists()
     assert infra.deployed
 
     await infra.destroy()

@@ -28,6 +28,10 @@ class AWSStandardInfrastructure(OpenTofuInfrastructure):
         )
         return templates
 
+    async def deploy(self) -> None:
+        """Write AWS resources using the OpenTofu backend."""
+        await super().deploy()
+
     def _ecs_module(self) -> str:
         return (
             'resource "aws_ecs_cluster" "agent" {}\n'

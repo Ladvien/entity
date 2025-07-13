@@ -24,7 +24,7 @@ class DockerInfrastructure(InfrastructurePlugin):
     # helpers
     # ---------------------------------------------------------
     def generate_compose(self) -> str:
-        """Return minimal docker-compose configuration."""
+        """Return full docker-compose configuration."""
 
         lines = [
             "version: '3.8'",
@@ -32,8 +32,17 @@ class DockerInfrastructure(InfrastructurePlugin):
             "  agent:",
             "    build: .",
             "    container_name: agent",
+            "    image: agent:latest",
             "    ports:",
             "      - '8000:8000'",
+            "    volumes:",
+            "      - agent-data:/data",
+            "    networks:",
+            "      - agent-net",
+            "volumes:",
+            "  agent-data:",
+            "networks:",
+            "  agent-net:",
         ]
         return "\n".join(lines) + "\n"
 
