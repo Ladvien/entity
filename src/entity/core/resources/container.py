@@ -206,6 +206,14 @@ class ResourceContainer:
 
             self.register("logging", LoggingResource, {}, layer=3)
 
+        if (
+            "metrics_collector" not in self._classes
+            and "metrics_collector" not in self._resources
+        ):
+            from entity.resources.metrics import MetricsCollectorResource
+
+            self.register("metrics_collector", MetricsCollectorResource, {}, layer=3)
+
         self._validate_layers()
         self._order = self._resolve_order()
         self._init_order = []

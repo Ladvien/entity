@@ -332,16 +332,11 @@ class SystemInitializer:
         )
         return stages, explicit
 
-    async def initialize(self):
-        self._discover_plugins()
-        self._ensure_metrics_collector_config()
-        self._discover_workflows()
+    def _register_plugins(
+        self, registry: ClassRegistry, dep_graph: Dict[str, List[str]]
+    ) -> None:
+        """Register plugin classes and enforce default dependencies."""
 
-        registry = ClassRegistry()
-        dep_graph: Dict[str, List[str]] = {}
-        workflow = Workflow.from_dict(self.config.get("workflow"))
-
-        # Phase 1: register all plugin classes
         resource_sections = [
             "infrastructure",
             "resources",
@@ -354,6 +349,7 @@ class SystemInitializer:
             "agent_resources": 3,
             "custom_resources": 4,
         }
+
         for section in resource_sections:
             entries = self.config.get("plugins", {}).get(section, {})
             layer = layer_map[section]
@@ -365,9 +361,12 @@ class SystemInitializer:
                     )
                 cls = import_plugin_class(cls_path)
                 deps = list(getattr(cls, "dependencies", []))
-                if "metrics_collector" not in deps:
+                if (
+                    cls.__name__ != "MetricsCollectorResource"
+                    and "metrics_collector" not in deps
+                ):
                     deps.append("metrics_collector")
-                if "logging" not in deps:
+                if cls.__name__ != "LoggingResource" and "logging" not in deps:
                     deps.append("logging")
                 cls.dependencies = deps
                 registry.register_class(cls, config, name, layer)
@@ -382,13 +381,28 @@ class SystemInitializer:
                     )
                 cls = import_plugin_class(cls_path)
                 deps = list(getattr(cls, "dependencies", []))
-                if "metrics_collector" not in deps:
+                if (
+                    cls.__name__ != "MetricsCollectorResource"
+                    and "metrics_collector" not in deps
+                ):
                     deps.append("metrics_collector")
-                if "logging" not in deps:
+                if cls.__name__ != "LoggingResource" and "logging" not in deps:
                     deps.append("logging")
                 cls.dependencies = deps
                 registry.register_class(cls, config, name, 4)
                 dep_graph[name] = deps
+
+    async def initialize(self):
+        self._discover_plugins()
+        self._ensure_metrics_collector_config()
+        self._discover_workflows()
+
+        registry = ClassRegistry()
+        dep_graph: Dict[str, List[str]] = {}
+        workflow = Workflow.from_dict(self.config.get("workflow"))
+
+        # Phase 1: register all plugin classes
+        self._register_plugins(registry, dep_graph)
 
         # Validate workflow references
         for stage_plugins in workflow.stage_map.values():
