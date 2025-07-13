@@ -65,8 +65,8 @@ class StageResolver:
 
         The returned ``explicit`` flag is ``True`` when a stage comes from
         configuration, the plugin instance (``_explicit_stages``), or a class
-        attribute. When an instance is supplied and no explicit stage is found,
-        the fallback stage is also treated as explicit.
+        attribute. Fallback to ``THINK`` is considered implicit and does not set
+        this flag.
 
         When ``logger`` is ``None`` the method uses ``logging.getLogger(__name__)``
         so warnings are emitted even without an explicit logger.
@@ -77,6 +77,18 @@ class StageResolver:
         declared_value = getattr(plugin_class, "stages", None) or getattr(
             plugin_class, "stage", None
         )
+        if (
+            cfg_value is not None
+            and declared_value is not None
+            and _normalize_stages(cfg_value) != _normalize_stages(declared_value)
+            and logger is not None
+        ):
+            logger.warning(
+                "%s configuration stages %s override declared stages %s",
+                plugin_class.__name__,
+                _normalize_stages(cfg_value),
+                _normalize_stages(declared_value),
+            )
         class_value = plugin_class.__dict__.get("stages") or plugin_class.__dict__.get(
             "stage"
         )
@@ -134,8 +146,6 @@ class StageResolver:
         explicit_class = bool(class_value)
 
         explicit = explicit_cfg or explicit_instance or explicit_class
-        if _instance is not None and not explicit:
-            explicit = True
 
         return stages, explicit
 

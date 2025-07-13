@@ -12,7 +12,12 @@ from typing import Any, Dict, Iterable, List, Tuple, Type
 from entity.config.environment import load_env
 from entity.config.models import EntityConfig, PluginConfig, asdict
 from entity.core.plugin_utils import import_plugin_class
-from entity.core.plugins import Plugin, ResourcePlugin, ToolPlugin
+from entity.core.plugins import (
+    Plugin,
+    ResourcePlugin,
+    ToolPlugin,
+    ValidationResult,
+)
 from entity.core.registry_validator import RegistryValidator
 from entity.core.registries import PluginRegistry, ToolRegistry
 from entity.core.resources.container import ResourceContainer
@@ -494,8 +499,8 @@ class SystemInitializer:
         This mirrors :meth:`StageResolver._resolve_plugin_stages` but
         operates on an instantiated plugin. The returned ``explicit`` flag
         is ``True`` when stage information originates from configuration,
-        the instance, or class attributes. If no stage is defined, the
-        fallback ``THINK`` stage is considered explicit.
+        the instance, or class attributes. The fallback ``THINK`` stage is
+        considered implicit.
         """
 
         stages = resolve_stages(cls, config)
@@ -505,8 +510,6 @@ class SystemInitializer:
             or getattr(cls, "stages", None)
             or getattr(cls, "stage", None)
         )
-        if not explicit:
-            explicit = True
         return stages, explicit
 
     def _warn_stage_mismatches(self, registry: ClassRegistry) -> None:
@@ -861,7 +864,7 @@ class SystemInitializer:
 
 def validate_reconfiguration_params(
     old_config: Dict[str, Any], new_config: Dict[str, Any]
-) -> "ValidationResult":
+) -> ValidationResult:
     """Ensure only configuration values are changed on reload."""
 
     from entity.core.plugins import ValidationResult

@@ -6,10 +6,9 @@ import sys
 sys.path.insert(0, str(pathlib.Path("src").resolve()))
 import entity.pipeline.utils as pipeline_utils
 from entity.core.stages import PipelineStage
+from entity.core.plugins import Plugin, PromptPlugin
 
 StageResolver = importlib.reload(pipeline_utils).StageResolver
-
-from entity.core.plugins import Plugin, PromptPlugin
 
 
 class AttrPrompt(Plugin):
@@ -85,8 +84,7 @@ def test_initializer_fallback_stage():
     stages, explicit = StageResolver._resolve_plugin_stages(InferredPrompt, {}, plugin)
 
     assert stages == [PipelineStage.THINK]
-    # The initializer treats the default THINK stage as explicit
-    assert explicit is True
+    assert explicit is False
 
 
 def test_initializer_inherited_stage_not_explicit():
@@ -95,7 +93,7 @@ def test_initializer_inherited_stage_not_explicit():
     stages, explicit = StageResolver._resolve_plugin_stages(DerivedPrompt, {}, plugin)
 
     assert stages == [PipelineStage.THINK]
-    assert explicit is True
+    assert explicit is False
 
 
 def test_warning_for_stage_override(caplog):
@@ -104,4 +102,4 @@ def test_warning_for_stage_override(caplog):
         StageResolver._resolve_plugin_stages(
             AttrPrompt, {"stage": PipelineStage.REVIEW}, plugin
         )
-    assert any("override class stages" in r.message for r in caplog.records)
+    assert any("configuration stages" in r.message for r in caplog.records)
