@@ -20,23 +20,18 @@ def load_env(env_file: str | Path = ".env", env: str | None = None) -> None:
     are present.
     """
 
-    env_values: dict[str, str] = {}
-
     env_path = Path(env_file)
-    if env_path.exists():
-        env_values.update(dotenv_values(env_path))
-    else:
-        example = env_path.with_name(env_path.name + ".example")
-        if example.exists():
-            env_values.update(dotenv_values(example))
+    env_values = dotenv_values(env_path) if env_path.exists() else {}
 
     if env:
-        secret_file = Path("secrets") / f"{env}.env"
-        if secret_file.exists():
-            env_values.update(dotenv_values(secret_file))
+        secret_path = Path("secrets") / f"{env}.env"
+        if secret_path.exists():
+            env_values.update(dotenv_values(secret_path))
 
     for key, value in env_values.items():
         os.environ.setdefault(key, value)
+
+    load_dotenv(env_path, override=False)
 
 
 def _merge(

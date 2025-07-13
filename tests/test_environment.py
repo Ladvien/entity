@@ -60,7 +60,6 @@ def test_os_env_overrides_secret(monkeypatch, tmp_path):
 async def test_ensure_ollama_pulls_when_missing(monkeypatch):
     from entity.utils.setup_manager import Layer0SetupManager
     from httpx import AsyncClient
-    import asyncio
 
     async def fake_get(self, url):
         class R:
@@ -89,7 +88,6 @@ async def test_ensure_ollama_pulls_when_missing(monkeypatch):
 async def test_ensure_ollama_download_failure(monkeypatch):
     from entity.utils.setup_manager import Layer0SetupManager
     from httpx import AsyncClient
-    import asyncio
     import pytest
 
     async def fake_get(self, url):
