@@ -38,7 +38,8 @@ class InterfacePlugin(ResourcePlugin):
         self.initialized = True
 
 
-class CanonicalResource(AgentResource):
+class CustomResource(AgentResource):
+    __module__ = "entity.resources.tests"
     dependencies = ["iface"]
     stages: list = []
 
@@ -57,7 +58,7 @@ class CanonicalResource(AgentResource):
 
 InfraPlugin.dependencies = []
 InterfacePlugin.dependencies = []
-CanonicalResource.dependencies = ["iface"]
+CustomResource.dependencies = ["iface"]
 
 LoggingResource.dependencies = []
 
@@ -67,7 +68,7 @@ async def test_container_lifecycle_and_order():
     container = ResourceContainer()
     container.register("infra", InfraPlugin, {}, layer=1)
     container.register("iface", InterfacePlugin, {}, layer=2)
-    container.register("canon", CanonicalResource, {}, layer=3)
+    container.register("canon", CustomResource, {}, layer=3)
 
     await container.build_all()
 
@@ -133,6 +134,7 @@ def test_missing_infrastructure_type():
 @pytest.mark.asyncio
 async def test_health_check_failure_on_build():
     class UnhealthyResource(AgentResource):
+        __module__ = "entity.resources.tests"
         dependencies: list[str] = []
         stages: list = []
 
@@ -152,6 +154,7 @@ events: list[str] = []
 
 
 class RestartableResource(AgentResource):
+    __module__ = "entity.resources.tests"
     dependencies: list[str] = []
     stages: list = []
 

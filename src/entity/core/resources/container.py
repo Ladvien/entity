@@ -120,6 +120,19 @@ class ResourcePool(Generic[T]):
             self._ctx_resource = None
 
 
+def _is_builtin_canonical(cls: type) -> bool:
+    """Return True if ``cls`` is a canonical resource shipped with Entity."""
+
+    from entity.core.plugins import AgentResource as PluginAgentResource
+    from entity.resources.base import AgentResource as CanonicalResource
+
+    if not issubclass(cls, (CanonicalResource, PluginAgentResource)):
+        return False
+
+    mod = cls.__module__
+    return mod.startswith("entity.resources.") and "interfaces" not in mod
+
+
 class ResourceContainer:
     """Instantiate resources with dependency injection and optional pools.
 
@@ -180,14 +193,16 @@ class ResourceContainer:
         from entity.core.plugins import InfrastructurePlugin, ResourcePlugin
 
         if layer is None:
-            from entity.resources.base import AgentResource as CanonicalResource
-
             if issubclass(cls, InfrastructurePlugin):
                 layer = 1
-            elif issubclass(cls, ResourcePlugin):
+            elif _is_builtin_canonical(cls):
+                layer = 3
+            elif issubclass(cls, ResourcePlugin) and not issubclass(
+                cls, CanonicalResource
+            ):
                 layer = 2
             elif issubclass(cls, CanonicalResource):
-                layer = 3
+                layer = 4
             else:
                 layer = 4
 
@@ -412,11 +427,7 @@ class ResourceContainer:
     def _validate_layers(self) -> None:
         """Ensure layer dependencies follow the 4-layer architecture."""
 
-        from entity.core.plugins import (
-            AgentResource as PluginAgentResource,
-            InfrastructurePlugin,
-            ResourcePlugin,
-        )
+        from entity.core.plugins import InfrastructurePlugin, ResourcePlugin
         from entity.resources.base import AgentResource as CanonicalResource
 
         for name, layer in self._layers.items():
@@ -430,8 +441,10 @@ class ResourceContainer:
             cls = self._classes[name]
 
             is_infra = issubclass(cls, InfrastructurePlugin)
-            is_interface = issubclass(cls, ResourcePlugin)
-            is_canonical = issubclass(cls, (CanonicalResource, PluginAgentResource))
+            is_canonical = _is_builtin_canonical(cls)
+            is_interface = issubclass(cls, ResourcePlugin) and not issubclass(
+                cls, CanonicalResource
+            )
 
             expected = (
                 1 if is_infra else 3 if is_canonical else 2 if is_interface else 4
