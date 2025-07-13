@@ -256,7 +256,12 @@ class RegistryValidator:
 
                 result = ValidationResult.success_result()
             else:
-                result = validate(cfg)
+                clean_cfg = {
+                    k: v
+                    for k, v in cfg.items()
+                    if k not in {"type", "dependencies", "stage", "stages"}
+                }
+                result = validate(clean_cfg)
                 if inspect.isawaitable(result):
                     result = asyncio.run(result)
             if not result.success:
