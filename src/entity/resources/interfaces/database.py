@@ -11,7 +11,7 @@ from entity.core.plugins import ResourcePlugin
 class DatabaseResource(ResourcePlugin):
     """Abstract database interface over a concrete backend."""
 
-    infrastructure_dependencies = ["database"]
+    infrastructure_dependencies = ["database_backend"]
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})

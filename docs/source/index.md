@@ -43,3 +43,16 @@ plugins:
       retention_days: 90
       buffer_size: 1000
 ```
+
+## DatabaseResource
+
+`DuckDBResource` provides a zero-config persistent database. It depends on the
+automatically created DuckDB infrastructure and is registered if omitted.
+
+```yaml
+plugins:
+  resources:
+    database:
+      type: plugins.builtin.resources.duckdb_resource:DuckDBResource
+      path: ./agent.duckdb
+```

@@ -252,14 +252,21 @@ class SystemInitializer:
             self.config = asdict(self._config_model)
 
         infrastructure = self._config_model.plugins.infrastructure
-        if "database" not in infrastructure:
-            infrastructure["database"] = PluginConfig(
+        if "database_backend" not in infrastructure:
+            infrastructure["database_backend"] = PluginConfig(
                 type="entity.infrastructure.duckdb:DuckDBInfrastructure"
             )
             self.config.setdefault("plugins", {}).setdefault("infrastructure", {})[
-                "database"
+                "database_backend"
             ] = {"type": "entity.infrastructure.duckdb:DuckDBInfrastructure"}
         resources = self._config_model.plugins.resources
+        if "database" not in resources:
+            resources["database"] = PluginConfig(
+                type="plugins.builtin.resources.duckdb_resource:DuckDBResource"
+            )
+            self.config.setdefault("plugins", {}).setdefault("resources", {})[
+                "database"
+            ] = {"type": "plugins.builtin.resources.duckdb_resource:DuckDBResource"}
         if "logging" not in resources:
             resources["logging"] = PluginConfig(
                 type="entity.resources.logging:LoggingResource"
@@ -814,10 +821,14 @@ class SystemInitializer:
             from entity.resources.logging import LoggingResource
 
             container.register("logging", LoggingResource, {}, layer=3)
-        if "database" not in registered:
+        if "database_backend" not in registered:
             from entity.infrastructure.duckdb import DuckDBInfrastructure
 
-            container.register("database", DuckDBInfrastructure, {}, layer=1)
+            container.register("database_backend", DuckDBInfrastructure, {}, layer=1)
+        if "database" not in registered:
+            from plugins.builtin.resources.duckdb_resource import DuckDBResource
+
+            container.register("database", DuckDBResource, {}, layer=3)
 
 
 def validate_reconfiguration_params(

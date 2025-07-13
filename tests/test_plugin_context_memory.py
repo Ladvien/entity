@@ -2,34 +2,15 @@ import types
 import asyncio
 import json
 from datetime import datetime
-import duckdb
 from contextlib import asynccontextmanager
 
 from entity.core.context import PluginContext  # noqa: E402
 from entity.core.state import PipelineState, ConversationEntry  # noqa: E402
 from entity.resources import Memory  # noqa: E402
-from entity.resources.interfaces.database import DatabaseResource  # noqa: E402
+from plugins.builtin.resources.duckdb_resource import DuckDBResource
+from entity.infrastructure.duckdb import DuckDBInfrastructure
 from entity.pipeline.errors import ResourceInitializationError  # noqa: E402
 import pytest  # noqa: E402
-
-
-class DuckDBResource(DatabaseResource):
-    def __init__(self, path: str) -> None:
-        super().__init__({})
-        self.conn = duckdb.connect(path)
-        self.conn.execute(
-            "CREATE TABLE IF NOT EXISTS memory_kv (key TEXT PRIMARY KEY, value TEXT)"
-        )
-        self.conn.execute(
-            "CREATE TABLE IF NOT EXISTS conversation_history (conversation_id TEXT, role TEXT, content TEXT, metadata TEXT, timestamp TEXT)"
-        )
-
-    @asynccontextmanager
-    async def connection(self):
-        yield self.conn
-
-    def get_connection_pool(self):
-        return self.conn
 
 
 class DummyConnection:
@@ -122,7 +103,10 @@ class DummyRegistries:
 
 async def make_context(tmp_path) -> PluginContext:
     state = PipelineState(conversation=[])
-    db = DuckDBResource(str(tmp_path / "mem.duckdb"))
+    backend = DuckDBInfrastructure({"path": str(tmp_path / "mem.duckdb")})
+    await backend.initialize()
+    db = DuckDBResource({})
+    db.database = backend
     mem = Memory(config={})
     mem.database = db
     mem.vector_store = None
