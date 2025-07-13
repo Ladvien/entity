@@ -15,6 +15,7 @@ from entity.core.stages import PipelineStage
 from entity.core.registry_validator import RegistryValidator
 from entity.pipeline.errors import InitializationError
 from entity.pipeline.utils import StageResolver
+from entity.resources.logging import LoggingResource
 
 
 class A(AgentResource):
@@ -321,3 +322,38 @@ def test_stage_override_warning():
 
     assert stages == [PipelineStage.DO]
     assert explicit is True
+
+
+def test_canonical_resources_validate(tmp_path, monkeypatch):
+    plugins = {
+        "agent_resources": {
+            "memory": {"type": "entity.resources.memory:Memory"},
+            "llm": {"type": "entity.resources.llm:LLM"},
+            "storage": {"type": "entity.resources.storage:Storage"},
+            "logging": {"type": "entity.resources.logging:LoggingResource"},
+            "metrics_collector": {
+                "type": "entity.resources.metrics:MetricsCollectorResource"
+            },
+        },
+        "infrastructure": {
+            "database": {"type": "entity.infrastructure.duckdb:DuckDBInfrastructure"}
+        },
+    }
+    path = _write_config(tmp_path, plugins)
+
+    from entity.infrastructure.duckdb import DuckDBInfrastructure
+
+    from entity.resources.metrics import MetricsCollectorResource
+
+    original_log_deps = LoggingResource.dependencies.copy()
+    original_db_deps = DuckDBInfrastructure.dependencies.copy()
+    original_metrics_deps = MetricsCollectorResource.dependencies.copy()
+    LoggingResource.dependencies = []
+    DuckDBInfrastructure.dependencies = []
+    MetricsCollectorResource.dependencies = []
+    try:
+        RegistryValidator(str(path)).run()
+    finally:
+        LoggingResource.dependencies = original_log_deps
+        DuckDBInfrastructure.dependencies = original_db_deps
+        MetricsCollectorResource.dependencies = original_metrics_deps
