@@ -464,14 +464,21 @@ class ResourceContainer:
                 )
             )
 
-            if layer != expected:
+            allowed_layers = {expected}
+            if expected == 4 and not self._deps.get(name):
+                allowed_layers.add(3)
+
+            if layer not in allowed_layers:
                 message = (
                     f"Provided layer {layer} for {cls.__name__} is invalid."
                     if expected == 3
                     else f"Incorrect layer {layer} for {cls.__name__}. Expected {expected}."
                 )
                 raise InitializationError(
-                    name, "layer validation", message, kind="Resource"
+                    name,
+                    "layer validation",
+                    message,
+                    kind="Resource",
                 )
 
             if is_infra:
