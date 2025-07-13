@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-24: Updated strict stage tests with metrics_collector and documented default dependency
 AGENT NOTE - 2025-07-23: Fixed DatabaseResource import and updated async usage in plugin context memory test
 AGENT NOTE - 2025-07-22: RegistryValidator config stripping and canonical resource tests added
 AGENT NOTE - 2025-07-13: Added logging resource to integration registries for PipelineWorker tests
