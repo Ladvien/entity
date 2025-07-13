@@ -13,6 +13,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 AGENT NOTE - 2025-07-13: Implemented DuckDBVectorStore setup and minimal workflow tests
 >>>>>>> pr-1506
@@ -55,6 +56,9 @@ AGENT NOTE - 2025-08-10: Inject default DuckDBVectorStore and keep interfaces un
 =======
 AGENT NOTE - 2025-08-10: Stage results persist across runs and temporary thoughts moved to PipelineState
 >>>>>>> pr-1507
+=======
+AGENT NOTE - 2025-07-13: Moved BasicErrorHandler to builtin and added example plugin tests
+>>>>>>> pr-1508
 AGENT NOTE - 2025-08-09: Documented examples package and exported key modules
 =======
 AGENT NOTE - 2025-07-13: Ensured pipeline package sets __path__ for plugin discovery

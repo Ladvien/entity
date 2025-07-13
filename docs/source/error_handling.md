@@ -49,3 +49,9 @@ plugins:
 ```
 
 Lower thresholds provide rapid feedback during development. Production deployments typically use higher limits.
+
+## BasicErrorHandler
+
+`BasicErrorHandler` runs in the **ERROR** stage. It records the failure using the
+configured logging resource and produces a JSON error message for the caller.
+Import it from `plugins.builtin` when building custom workflows.
