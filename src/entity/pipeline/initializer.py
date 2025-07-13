@@ -393,7 +393,14 @@ class SystemInitializer:
     def _resolve_plugin_stages(
         self, cls: type[Plugin], instance: Plugin, config: Dict
     ) -> tuple[List[PipelineStage], bool]:
-        """Determine final stages and whether they were explicit."""
+        """Determine final stages and whether they were explicit.
+
+        This mirrors :meth:`StageResolver._resolve_plugin_stages` but
+        operates on an instantiated plugin. The returned ``explicit`` flag
+        is ``True`` when stage information originates from configuration,
+        the instance, or class attributes. If no stage is defined, the
+        fallback ``THINK`` stage is considered explicit.
+        """
 
         stages = resolve_stages(cls, config)
         explicit = bool(
@@ -402,6 +409,8 @@ class SystemInitializer:
             or getattr(cls, "stages", None)
             or getattr(cls, "stage", None)
         )
+        if not explicit:
+            explicit = True
         return stages, explicit
 
     def _register_plugins(

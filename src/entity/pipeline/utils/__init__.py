@@ -45,6 +45,19 @@ class StageResolver:
         _instance: Any | None = None,
         logger: Any | None = None,
     ) -> tuple[list[PipelineStage], bool]:
+        """Return stages and whether they were explicitly provided.
+
+        Stages are resolved in the following order:
+        1. ``stage``/``stages`` keys in ``config``.
+        2. ``stage`` or ``stages`` attributes on ``plugin_class``.
+        3. Inherited stage attributes on parent classes.
+        4. Fallback to ``PipelineStage.THINK``.
+
+        The returned ``explicit`` flag is ``True`` when a stage comes from
+        configuration, the plugin instance (``_explicit_stages``), or a class
+        attribute. When an instance is supplied and no explicit stage is found,
+        the fallback stage is also treated as explicit.
+        """
         cfg_value = config.get("stages") or config.get("stage")
         class_value = plugin_class.__dict__.get("stages") or plugin_class.__dict__.get(
             "stage"
@@ -82,6 +95,8 @@ class StageResolver:
         explicit_class = bool(class_value)
 
         explicit = explicit_cfg or explicit_instance or explicit_class
+        if _instance is not None and not explicit:
+            explicit = True
 
         return stages, explicit
 
