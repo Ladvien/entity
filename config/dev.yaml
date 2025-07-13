@@ -93,8 +93,6 @@ plugins:
       max_steps: 3
     conversation_history:
       type: user_plugins.prompts.conversation_history:ConversationHistory
-      history_table: chat_history
-      stages: [parse, deliver]
     memory_retrieval:
       type: user_plugins.prompts.memory_retrieval:MemoryRetrievalPrompt
       max_context_length: 4000
