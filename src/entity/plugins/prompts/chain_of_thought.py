@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import List
 
-from ..core.context import ConversationEntry, PluginContext
-from ..core.plugins import PromptPlugin
-from ..core.stages import PipelineStage
+from ...core.context import ConversationEntry, PluginContext
+from ...core.plugins import PromptPlugin
+from ...core.stages import PipelineStage
 
 
 class ChainOfThoughtPrompt(PromptPlugin):

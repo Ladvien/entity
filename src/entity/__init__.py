@@ -14,6 +14,7 @@ from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
 from plugins.builtin.resources.ollama_llm import OllamaLLMResource
 from .core.stages import PipelineStage
 from .core.plugins import PromptPlugin, ToolPlugin
+from .plugins.prompts.basic_error_handler import BasicErrorHandler
 from .utils.setup_manager import Layer0SetupManager
 from entity.core.registries import SystemRegistries
 from entity.core.runtime import AgentRuntime
@@ -73,7 +74,12 @@ def _create_default_agent() -> Agent:
         tools=builder.tool_registry,
         plugins=builder.plugin_registry,
     )
+<<<<<<< HEAD
     agent._runtime = AgentRuntime(caps, workflow=setup.workflow)
+=======
+    asyncio.run(builder.add_plugin(BasicErrorHandler({})))
+    agent._runtime = AgentRuntime(caps)
+>>>>>>> pr-1433
     return agent
 
 
