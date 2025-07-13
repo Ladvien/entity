@@ -720,4 +720,4 @@ class Agent:
 
 AgentRuntime = _AgentRuntime
 
-__all__ = ["Agent", "_AgentBuilder", "_AgentRuntime", "AgentRuntime"]
+__all__ = ["Agent", "_AgentRuntime", "AgentRuntime"]

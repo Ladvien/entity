@@ -193,7 +193,7 @@ class PluginToolCLI:
                 logger.info("Initializing plugin...")
                 await plugin.initialize()
 
-            from entity.core.agent import _AgentBuilder
+            from entity.core.agent import Agent
             from entity.pipeline.workflow import Pipeline as PipelineWrapper
 
             # Tool plugins execute directly since pipelines don't call them
@@ -202,10 +202,10 @@ class PluginToolCLI:
                 await plugin.execute_function({})
                 return
 
-            builder = _AgentBuilder()
-            await builder.add_plugin(plugin)
+            agent = Agent()
+            await agent.add_plugin(plugin)
             wf = {stage: [plugin_cls.__name__] for stage in plugin_cls.stages}
-            pipeline = PipelineWrapper(builder=builder, workflow=wf)
+            pipeline = PipelineWrapper(builder=agent.builder, workflow=wf)
             runtime = await pipeline.build_runtime()
             result = await runtime.handle("test")
             logger.info("Pipeline result: %s", result)

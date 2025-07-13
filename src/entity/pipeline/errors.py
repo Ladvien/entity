@@ -37,10 +37,15 @@ class PluginExecutionError(PipelineError):
 
 class ResourceError(PipelineError):
 <<<<<<< HEAD
+<<<<<<< HEAD
     """Raised when a resource encounters an operational failure."""
 
 =======
 >>>>>>> pr-1528
+=======
+    """Base class for resource errors."""
+
+>>>>>>> pr-1529
     pass
 
 

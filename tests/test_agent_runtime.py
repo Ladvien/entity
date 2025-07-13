@@ -1,6 +1,6 @@
 import pytest
 
-from entity.core.agent import Agent, _AgentBuilder
+from entity.core.agent import Agent
 from entity.core.plugins import Plugin
 from entity.pipeline.stages import PipelineStage
 from entity.pipeline.workflow import Pipeline, Workflow
@@ -24,7 +24,7 @@ class EchoPlugin(Plugin):
 
 @pytest.mark.asyncio
 async def test_builder_runtime_executes_workflow():
-    builder = _AgentBuilder()
+    builder = Agent().builder
     await builder.add_plugin(ThoughtPlugin({}))
     await builder.add_plugin(EchoPlugin({}))
     wf = Workflow(
@@ -54,7 +54,7 @@ async def test_agent_handle_runs_workflow():
 
 @pytest.mark.asyncio
 async def test_builder_registers_default_resources() -> None:
-    builder = _AgentBuilder()
+    builder = Agent().builder
     runtime = await builder.build_runtime()
     assert runtime is not None
     assert builder.resource_registry.get("memory") is not None
