@@ -541,8 +541,8 @@ class SystemInitializer:
                 deps = list(getattr(cls, "dependencies", []))
                 if not add_metrics and "metrics_collector" in deps:
                     deps.remove("metrics_collector")
-                if "logging" in deps and cls.__name__ != "LoggingResource":
-                    deps.remove("logging")
+                if "logging" not in deps and cls.__name__ != "LoggingResource":
+                    deps.append("logging")
                 from entity.core.plugins import InfrastructurePlugin
 
                 if issubclass(cls, InfrastructurePlugin):
@@ -567,8 +567,8 @@ class SystemInitializer:
                     )
                 cls = import_plugin_class(cls_path)
                 deps = list(getattr(cls, "dependencies", []))
-                if "logging" in deps and cls.__name__ != "LoggingResource":
-                    deps.remove("logging")
+                if "logging" not in deps and cls.__name__ != "LoggingResource":
+                    deps.append("logging")
                 if (
                     cls.__name__ != "MetricsCollectorResource"
                     and "metrics_collector" not in deps
