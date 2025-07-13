@@ -111,7 +111,7 @@ async def execute_stage(
     _start = time.perf_counter()
     async with start_span(f"stage.{stage.name.lower()}"):
         for plugin in stage_plugins:
-            context = PluginContext(state, registries)
+            context = PluginContext(state, registries, user_id=user_id)
             context.set_current_stage(stage)
             name = registries.plugins.get_plugin_name(plugin)
             context.set_current_plugin(name)
