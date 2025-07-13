@@ -3,43 +3,52 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path("src").resolve()))
 
-from entity import agent
-from entity.core.stages import PipelineStage
 from entity import Agent
+from entity.core import decorators
+from entity.core.stages import PipelineStage
 
 
-_DEFINITIONS = [
-    (agent.input, PipelineStage.INPUT),
-    (agent.parse, PipelineStage.PARSE),
-    (agent.prompt, PipelineStage.THINK),
-    (agent.tool, PipelineStage.DO),
-    (agent.review, PipelineStage.REVIEW),
-    (agent.output, PipelineStage.OUTPUT),
-]
-
-
-def _stage_of(decorator):
+def _plugin_from(decorator) -> "Plugin":
     ag = Agent()
 
-    bound = getattr(ag, decorator.__name__)
-
-    @bound
+    @decorator
     async def dummy(context):
         pass
 
+    import asyncio
+
+    asyncio.run(ag.builder.add_plugin(dummy.__entity_plugin__))
     return ag.builder._added_plugins[-1]
 
 
-for dec, stage in _DEFINITIONS:
+def test_agent_input_decorator():
+    plugin = _plugin_from(decorators.input)
+    assert plugin.stages == [PipelineStage.INPUT]
 
-    def _make_test(dec=dec, stage=stage):
-        def test_func():
-            plugin = _stage_of(dec)
-            assert plugin.stages == [stage]
 
-        return test_func
+def test_agent_parse_decorator():
+    plugin = _plugin_from(decorators.parse)
+    assert plugin.stages == [PipelineStage.PARSE]
 
-    globals()[f"test_{dec.__name__}_decorator"] = _make_test()
+
+def test_agent_prompt_decorator():
+    plugin = _plugin_from(decorators.prompt)
+    assert plugin.stages == [PipelineStage.THINK]
+
+
+def test_agent_tool_decorator():
+    plugin = _plugin_from(decorators.tool)
+    assert plugin.stages == [PipelineStage.DO]
+
+
+def test_agent_review_decorator():
+    plugin = _plugin_from(decorators.review)
+    assert plugin.stages == [PipelineStage.REVIEW]
+
+
+def test_agent_output_decorator():
+    plugin = _plugin_from(decorators.output)
+    assert plugin.stages == [PipelineStage.OUTPUT]
 
 
 def test_agent_tool_method_default_stage():
