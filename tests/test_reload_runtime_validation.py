@@ -51,8 +51,7 @@ class FailingReconfigPlugin(Plugin):
 
 
 async def run_reload(cli: EntityCLI, agent: Agent, cfg_path: Path) -> int:
-    loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(None, cli._reload_config, agent, str(cfg_path))
+    return await asyncio.to_thread(cli._reload_config, agent, str(cfg_path))
 
 
 @pytest.mark.asyncio
