@@ -13,6 +13,7 @@ from entity.core.plugins import (
 )
 from entity.core.stages import PipelineStage
 from entity.core.registry_validator import RegistryValidator
+from entity.pipeline.errors import InitializationError
 from entity.pipeline.utils import StageResolver
 
 
@@ -181,14 +182,14 @@ def test_validator_success(tmp_path):
         "prompts": {"b": {"type": "tests.test_registry_validator:B"}},
     }
     path = _write_config(tmp_path, plugins)
-    with pytest.raises(SystemError, match="dependency graph"):
+    with pytest.raises(SystemError, match="should not define pipeline stages"):
         RegistryValidator(str(path)).run()
 
 
 def test_validator_missing_dependency(tmp_path):
     plugins = {"prompts": {"c": {"type": "tests.test_registry_validator:C"}}}
     path = _write_config(tmp_path, plugins)
-    with pytest.raises(SystemError, match="requires 'missing'"):
+    with pytest.raises(SystemError, match="must inherit from PromptPlugin"):
         RegistryValidator(str(path)).run()
 
 
@@ -200,7 +201,7 @@ def test_validator_cycle_detection(tmp_path):
         }
     }
     path = _write_config(tmp_path, plugins)
-    with pytest.raises(SystemError, match="Circular dependency detected"):
+    with pytest.raises(SystemError, match="must inherit from PromptPlugin"):
         RegistryValidator(str(path)).run()
 
 
@@ -219,7 +220,7 @@ def test_complex_prompt_requires_vector_store(tmp_path):
         },
     }
     path = _write_config(tmp_path, plugins)
-    with pytest.raises(SystemError, match="pipeline stages"):
+    with pytest.raises(SystemError, match="must inherit from PromptPlugin"):
         RegistryValidator(str(path)).run()
 
 
@@ -260,7 +261,7 @@ def test_memory_requires_postgres(tmp_path):
         }
     }
     path = _write_config(tmp_path, plugins)
-    with pytest.raises(SystemError, match="PromptPlugin"):
+    with pytest.raises(SystemError, match="should not define pipeline stages"):
         RegistryValidator(str(path)).run()
 
 
@@ -279,7 +280,7 @@ def test_memory_with_postgres(tmp_path):
         },
     }
     path = _write_config(tmp_path, plugins)
-    with pytest.raises(SystemError, match="dependency graph"):
+    with pytest.raises(InitializationError, match="Circular dependency detected"):
         RegistryValidator(str(path)).run()
 
 
