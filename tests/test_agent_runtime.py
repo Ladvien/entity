@@ -3,8 +3,7 @@ import pytest
 from entity.core.agent import Agent, _AgentBuilder
 from entity.core.plugins import Plugin
 from entity.pipeline.stages import PipelineStage
-from entity.pipeline.workflow import Pipeline
-from entity.workflows.base import Workflow
+from entity.pipeline.workflow import Pipeline, Workflow
 
 
 class ThoughtPlugin(Plugin):
