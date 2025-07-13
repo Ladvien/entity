@@ -332,6 +332,7 @@ class ToolPlugin(Plugin):
     """Utility plugin executed via ``tool_use`` calls."""
 
     stages = [PipelineStage.DO]
+    intents: list[str] = []
     required_params: List[str] = []
 
     async def execute_function(self, params: Dict[str, Any]) -> Any:
