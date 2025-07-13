@@ -1,10 +1,42 @@
 import logging
+from pathlib import Path
 
+import pytest
 
 from entity.pipeline import Plugin  # noqa: F401 - triggers plugin configuration
+from entity.pipeline.initializer import SystemInitializer
+from entity.pipeline.errors import InitializationError
 
 from entity.core.decorators import plugin
 from entity.core.stages import PipelineStage
+from entity.core.plugins import (
+    InfrastructurePlugin,
+    PromptPlugin,
+    ResourcePlugin,
+)
+
+
+class EmptyStagePrompt(PromptPlugin):
+    stages: list = []
+
+    async def _execute_impl(self, context):  # pragma: no cover - stub
+        return None
+
+
+class MissingInfraType(InfrastructurePlugin):
+    stages: list = []
+    dependencies: list = []
+
+    async def _execute_impl(self, context):  # pragma: no cover - stub
+        return None
+
+
+class MissingDepsResource(ResourcePlugin):
+    stages: list = []
+    infrastructure_dependencies: list = []
+
+    async def _execute_impl(self, context):  # pragma: no cover - stub
+        return None
 
 
 def test_warning_logged_for_complex_function(caplog):
@@ -38,3 +70,45 @@ def test_warning_logged_for_complex_function(caplog):
         plugin(stage=PipelineStage.THINK)(complex_func)
 
     assert any("consider" in record.message for record in caplog.records)
+
+
+def test_discovered_prompt_requires_stages(tmp_path: Path) -> None:
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text(
+        """
+[tool.entity.plugins.prompts.bad]
+type = "tests.test_plugin_analyzer:EmptyStagePrompt"
+"""
+    )
+    initializer = SystemInitializer()
+    initializer.config["plugin_dirs"] = [str(tmp_path)]
+    with pytest.raises(InitializationError, match="stages"):
+        initializer._discover_plugins()
+
+
+def test_discovered_infra_requires_type(tmp_path: Path) -> None:
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text(
+        """
+[tool.entity.plugins.infrastructure.bad]
+type = "tests.test_plugin_analyzer:MissingInfraType"
+"""
+    )
+    initializer = SystemInitializer()
+    initializer.config["plugin_dirs"] = [str(tmp_path)]
+    with pytest.raises(InitializationError, match="infrastructure_type"):
+        initializer._discover_plugins()
+
+
+def test_discovered_resource_requires_dependencies(tmp_path: Path) -> None:
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text(
+        """
+[tool.entity.plugins.resources.bad]
+type = "tests.test_plugin_analyzer:MissingDepsResource"
+"""
+    )
+    initializer = SystemInitializer()
+    initializer.config["plugin_dirs"] = [str(tmp_path)]
+    with pytest.raises(InitializationError, match="infrastructure_dependencies"):
+        initializer._discover_plugins()
