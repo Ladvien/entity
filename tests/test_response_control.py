@@ -66,7 +66,7 @@ async def test_pipeline_terminates_after_say() -> None:
         conversation=[ConversationEntry("hi", "user", datetime.now())],
         pipeline_id="test",
     )
-    result = await execute_pipeline("hi", regs, state=state)
+    result = await execute_pipeline("hi", regs, state=state, workflow=None)
     assert result == "final:x"
 
 
@@ -80,5 +80,5 @@ async def test_pipeline_max_iteration_error() -> None:
         conversation=[ConversationEntry("hi", "user", datetime.now())],
         pipeline_id="pid",
     )
-    await execute_pipeline("hi", regs, state=state, max_iterations=2)
+    await execute_pipeline("hi", regs, state=state, max_iterations=2, workflow=None)
     assert state.failure_info and state.failure_info.error_type == "max_iterations"

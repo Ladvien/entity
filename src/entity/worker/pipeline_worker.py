@@ -18,7 +18,7 @@ class PipelineWorker:
     async def run_stages(self, state: PipelineState) -> Any:
         """Delegate pipeline execution to the existing driver."""
         # user_message is ignored when ``state`` is provided
-        return await execute_pipeline("", self.registries, state=state)
+        return await execute_pipeline("", self.registries, state=state, workflow=None)
 
     async def execute_pipeline(
         self, pipeline_id: str, message: str, *, user_id: str

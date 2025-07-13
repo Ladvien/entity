@@ -80,6 +80,7 @@ class Pipeline:
             user_id=user_id,
             state_logger=state_logger,
             state=state,
+            workflow=self.workflow,
             max_iterations=max_iterations,
         )
 
@@ -245,6 +246,7 @@ async def execute_pipeline(
     user_id: str | None = None,
     state_logger: "StateLogger" | None = None,
     state: PipelineState | None = None,
+    workflow: Workflow | None = None,
     max_iterations: int = 5,
 ) -> Dict[str, Any]:
     if capabilities is None:
@@ -280,6 +282,8 @@ async def execute_pipeline(
                     PipelineStage.REVIEW,
                     PipelineStage.OUTPUT,
                 ]:
+                    if workflow and not workflow.should_execute(stage, state):
+                        continue
                     if (
                         state.last_completed_stage is not None
                         and stage.value <= state.last_completed_stage.value

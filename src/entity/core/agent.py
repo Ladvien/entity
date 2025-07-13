@@ -58,7 +58,9 @@ class _AgentRuntime:
         from entity.pipeline.pipeline import Pipeline as ExecPipeline, execute_pipeline
 
         if self.workflow is None:
-            return await execute_pipeline(message, self.capabilities, user_id=user_id)
+            return await execute_pipeline(
+                message, self.capabilities, user_id=user_id, workflow=None
+            )
 
         pipeline = ExecPipeline(self.workflow)
         return await pipeline.run_message(message, self.capabilities, user_id=user_id)
