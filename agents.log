@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-23: Allow layer 3 for custom resources without dependencies
+AGENT NOTE - 2025-07-13: StageResolver now logs with module logger if none provided
 AGENT NOTE - 2025-07-23: Fixed DatabaseResource import and updated async usage in plugin context memory test
 AGENT NOTE - 2025-07-22: RegistryValidator config stripping and canonical resource tests added
 AGENT NOTE - 2025-07-13: Added logging resource to integration registries for PipelineWorker tests

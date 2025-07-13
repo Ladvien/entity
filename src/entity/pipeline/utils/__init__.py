@@ -2,6 +2,7 @@
 
 from entity.core.resources.container import DependencyGraph
 from typing import Any, Iterable, List, Mapping, Type
+import logging
 from ..stages import PipelineStage
 
 
@@ -36,7 +37,11 @@ get_plugin_stages = resolve_stages
 
 
 class StageResolver:
-    """Compatibility layer providing stage resolution helpers."""
+    """Compatibility layer providing stage resolution helpers.
+
+    If ``logger`` is not supplied, :meth:`_resolve_plugin_stages` uses
+    ``logging.getLogger(__name__)`` so warnings are emitted by default.
+    """
 
     @staticmethod
     def _resolve_plugin_stages(
@@ -57,7 +62,12 @@ class StageResolver:
         configuration, the plugin instance (``_explicit_stages``), or a class
         attribute. When an instance is supplied and no explicit stage is found,
         the fallback stage is also treated as explicit.
+
+        When ``logger`` is ``None`` the method uses ``logging.getLogger(__name__)``
+        so warnings are emitted even without an explicit logger.
         """
+        logger = logger or logging.getLogger(__name__)
+
         cfg_value = config.get("stages") or config.get("stage")
         declared_value = getattr(plugin_class, "stages", None) or getattr(
             plugin_class, "stage", None
