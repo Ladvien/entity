@@ -16,7 +16,7 @@ plugins:
   infrastructure: {}
   resources:
     database:
-      type: plugins.builtin.resources.duckdb_resource:DuckDBResource
+      type: entity.resources.interfaces.duckdb_resource:DuckDBResource
       path: ./agent.duckdb
     metrics_collector:
       type: entity.resources.metrics:MetricsCollectorResource

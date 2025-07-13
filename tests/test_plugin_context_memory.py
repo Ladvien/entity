@@ -8,7 +8,7 @@ from entity.core.context import PluginContext  # noqa: E402
 from entity.core.state import PipelineState, ConversationEntry  # noqa: E402
 from entity.resources import Memory  # noqa: E402
 from entity.resources.interfaces.database import DatabaseResource
-from plugins.builtin.resources.duckdb_resource import DuckDBResource
+from entity.resources.interfaces.duckdb_resource import DuckDBResource
 from entity.infrastructure.duckdb import DuckDBInfrastructure
 from entity.pipeline.errors import ResourceInitializationError  # noqa: E402
 import pytest  # noqa: E402

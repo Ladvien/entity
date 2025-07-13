@@ -19,7 +19,7 @@ plugins:
   infrastructure: {}
   resources:
     database:
-      type: plugins.builtin.resources.duckdb_resource:DuckDBResource
+      type: entity.resources.interfaces.duckdb_resource:DuckDBResource
       path: ./agent.duckdb
     # vector_store:
     #   type: plugins.builtin.resources.duckdb_vector_store:DuckDBVectorStore
