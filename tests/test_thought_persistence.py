@@ -48,10 +48,12 @@ async def test_thoughts_accumulate_across_iterations() -> None:
     )
     assert result == "3"
     assert state.iteration == 3
+    assert state.stage_results == {}
+    assert state.temporary_thoughts == {}
 
 
 @pytest.mark.asyncio
-async def test_thoughts_persist_between_runs() -> None:
+async def test_thoughts_cleared_between_runs() -> None:
     plugins = PluginRegistry()
     await plugins.register_plugin_for_stage(Counter({}), PipelineStage.THINK)
     await plugins.register_plugin_for_stage(TerminateOnThree({}), PipelineStage.OUTPUT)
@@ -61,7 +63,7 @@ async def test_thoughts_persist_between_runs() -> None:
         pipeline_id="pid",
     )
     await execute_pipeline("hi", regs, state=state, workflow=None, max_iterations=5)
-    assert state.stage_results["count"] == 3
+    assert state.stage_results == {}
 
     state.conversation.append(ConversationEntry("again", "user", datetime.now()))
     state.response = None
@@ -72,8 +74,10 @@ async def test_thoughts_persist_between_runs() -> None:
     result = await execute_pipeline(
         "", regs, state=state, workflow=None, max_iterations=5
     )
-    assert result == "4"
+    assert result == "3"
     assert state.iteration == 3
+    assert state.stage_results == {}
+    assert state.temporary_thoughts == {}
 
 
 @pytest.mark.asyncio
@@ -90,4 +94,5 @@ async def test_preexisting_thoughts_available_at_start() -> None:
         "hi", regs, state=state, workflow=None, max_iterations=1
     )
     assert result == "bar"
-    assert state.stage_results == {"foo": "bar"}
+    assert state.stage_results == {}
+    assert state.temporary_thoughts == {}

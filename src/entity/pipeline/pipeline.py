@@ -424,6 +424,8 @@ async def execute_pipeline(
                 metric_name="pipeline_duration_ms",
                 value=elapsed_ms,
             )
+        state.stage_results.clear()
+        state.temporary_thoughts.clear()
         return result
 
 
