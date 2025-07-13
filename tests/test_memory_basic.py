@@ -1,6 +1,6 @@
 import sqlite3
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pytest
 from entity.resources import Memory

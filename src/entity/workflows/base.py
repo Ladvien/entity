@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Workflow definitions for pipeline execution."""
 
-from typing import Any, Callable, ClassVar, Dict, Iterable, List, Mapping, Protocol
+from typing import Callable, ClassVar, Dict, Iterable, List, Mapping, Protocol
 
 
 class _HasPlugin(Protocol):

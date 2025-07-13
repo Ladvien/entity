@@ -1,4 +1,3 @@
-import asyncio
 import pytest
 
 from entity.core.resources.container import ResourceContainer
