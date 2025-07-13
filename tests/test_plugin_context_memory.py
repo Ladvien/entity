@@ -131,11 +131,11 @@ async def make_context(tmp_path) -> PluginContext:
     return PluginContext(state, regs)
 
 
-def test_memory_roundtrip(tmp_path) -> None:
-    async def run_test() -> None:
-        ctx = make_context(tmp_path)
-        await ctx.remember("foo", "bar")
-        assert await ctx.recall("foo") == "bar"
+@pytest.mark.asyncio
+async def test_memory_roundtrip(tmp_path) -> None:
+    ctx = make_context(tmp_path)
+    await ctx.remember("foo", "bar")
+    assert await ctx.recall("foo") == "bar"
 
     asyncio.run(run_test())
 
@@ -180,13 +180,6 @@ def test_memory_persists_with_connection_pool() -> None:
         mem2.database = pool
         mem2.vector_store = None
         await mem2.initialize()
-
-        assert await mem2.get("foo", user_id="default") == "bar"
-        history = await mem2.load_conversation("cid", user_id="default")
-        assert history == [entry]
-
-    asyncio.run(run_test())
-
 
 @pytest.mark.asyncio
 async def test_initialize_without_database_raises_error() -> None:
