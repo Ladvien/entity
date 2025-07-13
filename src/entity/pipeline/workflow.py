@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Iterable, Mapping, Optional, TYPE_CHECKING
+from typing import Iterable, Mapping, Optional, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
     from entity.core.agent import AgentRuntime, _AgentBuilder
@@ -29,9 +29,22 @@ class Pipeline:
     """Simple pipeline wrapper holding builder and workflow."""
 
     builder: "_AgentBuilder" = field(default_factory=_builder_factory)
-    workflow: Optional[WorkflowMapping] = None
+    workflow: Optional[Union[Workflow, WorkflowMapping]] = None
 
     async def build_runtime(self) -> AgentRuntime:
         """Build an AgentRuntime using the stored builder and workflow."""
 
-        return await self.builder.build_runtime(workflow=self.workflow)
+        wf_obj = (
+            self.workflow
+            if isinstance(self.workflow, Workflow)
+            else (
+                Workflow.from_dict(self.workflow) if self.workflow is not None else None
+            )
+        )
+        if wf_obj is not None:
+            for stage, names in wf_obj.stage_map.items():
+                for name in names:
+                    if not self.builder.has_plugin(name):
+                        raise KeyError(f"Plugin '{name}' not found")
+
+        return await self.builder.build_runtime(workflow=wf_obj)
