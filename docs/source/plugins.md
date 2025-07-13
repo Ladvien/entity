@@ -6,6 +6,11 @@ same sequence in which they were added. Both `get_plugins_for_stage()` and
 `list_plugins()` return plugins in registration order, guaranteeing
 deterministic execution whenever multiple plugins share a stage.
 
+Plugins declared in a YAML configuration file maintain this ordering as well.
+The initializer reads entries sequentially and registers each plugin as it
+appears, so restarting the system with the same YAML file yields identical
+execution order.
+
 ## LlamaCppInfrastructure
 
 `LlamaCppInfrastructure` manages a local [llama.cpp](https://github.com/ggerganov/llama.cpp)
