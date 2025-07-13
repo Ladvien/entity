@@ -168,6 +168,11 @@ class Plugin(BasePlugin):
 
         return None
 
+    def validate_registration_stage(self, stage: PipelineStage) -> None:
+        """Verify plugin registration ``stage`` is allowed."""
+
+        return None
+
     async def _handle_reconfiguration(
         self, old_config: Dict[str, Any], new_config: Dict[str, Any]
     ) -> None:
@@ -362,11 +367,35 @@ class InputAdapterPlugin(AdapterPlugin):
 
     stages = [PipelineStage.INPUT]
 
+    def __init_subclass__(cls, **kwargs: Any) -> None:  # type: ignore[override]
+        super().__init_subclass__(**kwargs)
+        if _normalize_stages(getattr(cls, "stages", [])) != [PipelineStage.INPUT]:
+            raise ConfigurationError("InputAdapterPlugin must use PipelineStage.INPUT")
+
+    def validate_registration_stage(self, stage: PipelineStage) -> None:
+        if PipelineStage.ensure(stage) != PipelineStage.INPUT:
+            raise ConfigurationError(
+                "InputAdapterPlugin can only register for PipelineStage.INPUT"
+            )
+
 
 class OutputAdapterPlugin(AdapterPlugin):
     """Adapter executed in the ``OUTPUT`` stage."""
 
     stages = [PipelineStage.OUTPUT]
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:  # type: ignore[override]
+        super().__init_subclass__(**kwargs)
+        if _normalize_stages(getattr(cls, "stages", [])) != [PipelineStage.OUTPUT]:
+            raise ConfigurationError(
+                "OutputAdapterPlugin must use PipelineStage.OUTPUT"
+            )
+
+    def validate_registration_stage(self, stage: PipelineStage) -> None:
+        if PipelineStage.ensure(stage) != PipelineStage.OUTPUT:
+            raise ConfigurationError(
+                "OutputAdapterPlugin can only register for PipelineStage.OUTPUT"
+            )
 
 
 class FailurePlugin(Plugin):

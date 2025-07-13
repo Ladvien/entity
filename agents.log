@@ -8,6 +8,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 AGENT NOTE - 2025-07-13: Verified merge conflict cleanup and preserved all notes
 >>>>>>> pr-1430
@@ -53,6 +54,9 @@ AGENT NOTE - 2025-07-25: Added DuckDBVectorStore and zero-config registration
 =======
 AGENT NOTE - 2025-07-24: PluginRegistry now preserves registration order with OrderedDict
 >>>>>>> pr-1437
+=======
+AGENT NOTE - 2025-07-13: Enforced adapter stage registration and added tests
+>>>>>>> pr-1436
 AGENT NOTE - 2025-07-24: Updated DuckDBResource to subclass AgentResource and use database_backend
 AGENT NOTE - 2025-07-23: Allow layer 3 for custom resources without dependencies
 AGENT NOTE - 2025-07-23: Fixed DatabaseResource import and updated async usage in plugin context memory test
