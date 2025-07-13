@@ -5,10 +5,10 @@ from typing import Any, AsyncIterator, Dict
 
 from entity.infrastructure.duckdb import DuckDBInfrastructure
 from entity.core.resources.container import PoolConfig, ResourcePool
-from entity.core.plugins import AgentResource
+from entity.core.plugins import ResourcePlugin
 
 
-class DuckDBResource(AgentResource):  # type: ignore[misc]
+class DuckDBResource(ResourcePlugin):  # type: ignore[misc]
     """Database resource backed by :class:`DuckDBInfrastructure`."""
 
     infrastructure_dependencies = ["database_backend"]

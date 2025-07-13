@@ -296,7 +296,7 @@ class _AgentBuilder:
         if not container.has_plugin("database"):
             from plugins.builtin.resources.duckdb_resource import DuckDBResource
 
-            container.register("database", DuckDBResource, {}, layer=3)
+            container.register("database", DuckDBResource, {}, layer=2)
 
         if not container.has_plugin("memory"):
             from entity.resources.memory import Memory
