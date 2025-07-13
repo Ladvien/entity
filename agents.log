@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-22: Mocked subprocess in ensure_ollama tests to avoid real CLI calls
+AGENT NOTE - 2025-07-22: Updated registry validator tests to match error messages
 AGENT NOTE - 2025-07-21: Added strict stage checks and CLI flag
 AGENT NOTE - 2025-07-21: Updated runtime tests to use Pipeline wrapper
 AGENT NOTE - 2025-07-20: Updated load_env precedence and tests
