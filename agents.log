@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-22: Updated integration tests to use SystemRegistries
 AGENT NOTE - 2025-07-13: Added logging resource to integration registries for PipelineWorker tests
 AGENT NOTE - 2025-07-21: Added strict stage checks and CLI flag
 AGENT NOTE - 2025-07-21: Updated runtime tests to use Pipeline wrapper
