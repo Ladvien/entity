@@ -13,11 +13,11 @@ def test_zero_config_example_runs(monkeypatch):
         pytest.skip("default_setup example not present")
 
     async def fake_post(self, url, json):
-        class R:
+        class Response:
             def json(self):
                 return {"response": "ok"}
 
-        return R()
+        return Response()
 
     monkeypatch.setattr(AsyncClient, "post", fake_post)
 
