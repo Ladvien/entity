@@ -294,6 +294,19 @@ class SystemInitializer:
                 "MetricsCollectorResource not configured; metrics will not be recorded"
             )
 
+    def _assign_shared_resources(
+        self, instance: Any, resource_container: "ResourceContainer"
+    ) -> None:
+        """Attach metrics and logging resources to ``instance`` if available."""
+
+        metrics = resource_container.get("metrics_collector")
+        if metrics is not None:
+            setattr(instance, "metrics_collector", metrics)
+
+        logger_res = resource_container.get("logging")
+        if logger_res is not None:
+            setattr(instance, "logging", logger_res)
+
     def _validate_plugin_attributes(
         self, name: str, cls: type[Plugin], section: str, cfg: Dict
     ) -> None:
@@ -730,12 +743,7 @@ class SystemInitializer:
             self.tool_registry = tool_registry
             for name, cls, config in registry.named_tool_classes():
                 instance = cls(config)
-                metrics = resource_container.get("metrics_collector")
-                if metrics is not None:
-                    setattr(instance, "metrics_collector", metrics)
-                log_res = resource_container.get("logging")
-                if log_res is not None:
-                    setattr(instance, "logging", log_res)
+                self._assign_shared_resources(instance, resource_container)
                 await tool_registry.add(name, instance)
 
             # Phase 4: instantiate prompt and adapter plugins
@@ -743,12 +751,7 @@ class SystemInitializer:
             self.plugin_registry = plugin_registry
             for cls, config in registry.non_resource_non_tool_classes():
                 instance = cls(config)
-                metrics = resource_container.get("metrics_collector")
-                if metrics is not None:
-                    setattr(instance, "metrics_collector", metrics)
-                log_res = resource_container.get("logging")
-                if log_res is not None:
-                    setattr(instance, "logging", log_res)
+                self._assign_shared_resources(instance, resource_container)
                 stages, _ = StageResolver._resolve_plugin_stages(
                     cls, config, instance, logger=logger
                 )
