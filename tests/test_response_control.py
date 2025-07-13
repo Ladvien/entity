@@ -8,7 +8,7 @@ import pytest
 from entity.core.context import PluginContext
 from entity.core.plugins import PromptPlugin
 from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
-from entity.core.state import ConversationEntry, PipelineState
+from entity.pipeline.state import PipelineState, ConversationEntry
 from entity.pipeline.stages import PipelineStage
 from entity.pipeline.pipeline import execute_pipeline
 from entity.pipeline.errors import PluginContextError
