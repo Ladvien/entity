@@ -1,7 +1,7 @@
 import pytest
 from entity.pipeline.initializer import SystemInitializer
 from entity.core.plugins import InfrastructurePlugin, ValidationResult
-from entity.pipeline.reliability import CircuitBreaker
+from entity.core.circuit_breaker import CircuitBreaker
 from entity.pipeline.exceptions import CircuitBreakerTripped, InitializationError
 
 
