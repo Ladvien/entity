@@ -1,6 +1,6 @@
 import pytest
 
-from entity.core.plugins import InfrastructurePlugin, ResourcePlugin
+from entity.core.plugins import InfrastructurePlugin
 from entity.core.resources.container import ResourceContainer
 from entity.resources.base import AgentResource as CanonicalBase
 from entity.pipeline.errors import InitializationError
@@ -28,6 +28,11 @@ class CustomRes:
     dependencies = ["infra"]
 
 
+class NoDepRes:
+    stages: list = []
+    dependencies: list = []
+
+
 @pytest.mark.asyncio
 async def test_invalid_layer_number():
     container = ResourceContainer()
@@ -51,3 +56,10 @@ async def test_dependency_layer_violation():
     container.register("custom", CustomRes, {}, layer=4)
     with pytest.raises(InitializationError, match="layer rules"):
         container._validate_layers()
+
+
+@pytest.mark.asyncio
+async def test_custom_no_dep_allowed_in_layer3():
+    container = ResourceContainer()
+    container.register("nodep", NoDepRes, {}, layer=3)
+    container._validate_layers()

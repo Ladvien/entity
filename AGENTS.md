@@ -117,6 +117,8 @@ class Memory(AgentResource):  # Layer 3
         pass
 ```
 
+Custom resources without dependencies may optionally be placed in **Layer 3**.
+
 **Decision #4: Stage Assignment Precedence**
 ```python
 # ✅ GOOD: Explicit stage assignment
