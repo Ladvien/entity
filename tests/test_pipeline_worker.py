@@ -11,13 +11,16 @@ from entity.resources.interfaces.database import DatabaseResource
 import entity.pipeline.utils as pipeline_utils
 
 
-class StageResolver:
-    @staticmethod
-    def _resolve_plugin_stages(cls, config, logger=None):
-        return pipeline_utils.resolve_stages(cls, config), True
+@pytest.fixture()
+def patched_stage_resolver(monkeypatch):
+    class StageResolver:
+        @staticmethod
+        def _resolve_plugin_stages(cls, config, logger=None):
+            return pipeline_utils.resolve_stages(cls, config), True
 
+    monkeypatch.setattr(pipeline_utils, "StageResolver", StageResolver)
+    yield
 
-pipeline_utils.StageResolver = StageResolver
 
 from entity.pipeline import pipeline as pipeline_module  # noqa: E402
 from entity.worker.pipeline_worker import PipelineWorker
@@ -151,7 +154,7 @@ class EchoPlugin(Plugin):
 
 
 @pytest.mark.asyncio
-async def test_conversation_id_generation():
+async def test_conversation_id_generation(patched_stage_resolver):
     regs = DummyRegistries()
     await regs.plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.OUTPUT)
     worker = PipelineWorker(regs)
@@ -164,7 +167,7 @@ async def test_conversation_id_generation():
 
 
 @pytest.mark.asyncio
-async def test_pipeline_persists_conversation(memory_db):
+async def test_pipeline_persists_conversation(patched_stage_resolver, memory_db):
     regs = types.SimpleNamespace(
         resources={"memory": memory_db},
         tools=types.SimpleNamespace(),
@@ -180,7 +183,7 @@ async def test_pipeline_persists_conversation(memory_db):
 
 
 @pytest.mark.asyncio
-async def test_thoughts_do_not_leak_between_executions():
+async def test_thoughts_do_not_leak_between_executions(patched_stage_resolver):
     regs = DummyRegistries()
     await regs.plugins.register_plugin_for_stage(ThoughtPlugin({}), PipelineStage.THINK)
     await regs.plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.OUTPUT)
