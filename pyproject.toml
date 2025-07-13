@@ -92,6 +92,9 @@ release = ["docs", "patch", "_publish"]
 test = { cmd = "pytest" }
 test-verbose = { cmd = "pytest -v" }
 test-coverage = { cmd = "pytest --cov=src --cov-report=html --cov-report=term-missing" }
+test-architecture = { cmd = "pytest tests/test_architecture/ -v" }
+test-plugins = { cmd = "pytest tests/test_plugins/ -v" }
+test-resources = { cmd = "pytest tests/test_resources/ -v" }
 setup-dev = { cmd = "poetry install --with dev" }
 [tool.poe.tasks.lint]
 sequence = [

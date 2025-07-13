@@ -1,10 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-import pathlib
-import sys
-
-sys.path.insert(0, str(pathlib.Path("src").resolve()))
 
 from tests.plugins.harness import run_plugin
 

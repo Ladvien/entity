@@ -1,12 +1,6 @@
 import types
 import pytest
 
-import sys
-import pathlib
-
-
-sys.path.insert(0, str(pathlib.Path("src").resolve()))
-
 from entity.core.context import PluginContext
 from entity.core.state import PipelineState
 from entity.core.stages import PipelineStage

@@ -1,10 +1,5 @@
 import logging
-import pathlib
-import sys
-
 import pytest
-
-sys.path.insert(0, str(pathlib.Path("src").resolve()))
 
 from entity.core.context import PluginContext
 from entity.core.plugins import Plugin, PromptPlugin

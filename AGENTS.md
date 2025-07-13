@@ -17,6 +17,7 @@ Use this document when preparing changes or reviewing pull requests.
 - Create `AGENT NOTE:` comments for other agents.
 - Always use the Poetry environment for development.
 - Run `poetry install --with dev` before executing any quality checks or tests.
+- Run tests using `poetry run poe test` or related tasks to ensure `PYTHONPATH` is set.
 - Use the `agents.log` file to track changes and decisions made during development.
 - **DO NOT use the `agents.log` file for architectural decisions!** Architectural decisions must be documented in `ARCHITECTURE.md`.
 - 
@@ -312,9 +313,9 @@ poetry run entity-cli --config config/prod.yaml verify
 poetry run python -m src.entity.core.registry_validator
 
 # Test architectural boundaries
-pytest tests/test_architecture/ -v
-pytest tests/test_plugins/ -v
-pytest tests/test_resources/ -v
+poetry run poe test-architecture
+poetry run poe test-plugins
+poetry run poe test-resources
 ```
 
 ## Review Decision Tree

@@ -1,8 +1,4 @@
 from datetime import datetime
-import pathlib
-import sys
-
-sys.path.insert(0, str(pathlib.Path("src").resolve()))
 import pytest
 
 from entity.core.context import PluginContext

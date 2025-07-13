@@ -1,8 +1,3 @@
-import pathlib
-import sys
-
-sys.path.insert(0, str(pathlib.Path("src").resolve()))
-
 from entity import Agent
 from entity.core import decorators
 from entity.core.stages import PipelineStage

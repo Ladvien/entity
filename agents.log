@@ -1,3 +1,5 @@
+AGENT NOTE - 2025-07-13: Use conftest to set PYTHONPATH and new poe test tasks
+AGENT NOTE - 2025-07-13: Added sys.path setup for tests to locate entity packages
 AGENT NOTE - 2025-07-13: Resolved merge conflicts for LlamaCppInfrastructure documentation and tests
 AGENT NOTE - 2025-08-06: Revised LlamaCppInfrastructure runtime validation with timeout and status checks
 AGENT NOTE - 2025-08-05: Added LlamaCppInfrastructure plugin for launching local llama.cpp servers

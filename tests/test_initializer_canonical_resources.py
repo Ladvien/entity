@@ -1,13 +1,8 @@
-import pathlib
-import sys
 import asyncio
 import pytest
 from entity.core.resources.container import ResourceContainer
 from entity.pipeline.errors import InitializationError
 from entity.resources.logging import LoggingResource
-
-
-sys.path.insert(0, str(pathlib.Path("src").resolve()))
 
 from entity.pipeline.initializer import SystemInitializer
 

@@ -1,13 +1,9 @@
-import pathlib
-import sys
 from typing import Iterable
 
 import pytest
 
 from entity.workflows.base import Workflow
 from entity.pipeline.stages import PipelineStage
-
-sys.path.insert(0, str(pathlib.Path("src").resolve()))
 
 from entity.cli import EntityCLI, CLIArgs
 
