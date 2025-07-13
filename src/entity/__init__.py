@@ -2,22 +2,39 @@
 
 from __future__ import annotations
 
-from .core.agent import Agent
-from .infrastructure import DuckDBInfrastructure
-from .resources import LLM, Memory, Storage
-from .resources.logging import LoggingResource
-from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
-from plugins.builtin.resources.ollama_llm import OllamaLLMResource
-from .plugins.prompts.basic_error_handler import BasicErrorHandler
-from .core.stages import PipelineStage
-from .core.plugins import PromptPlugin, ToolPlugin
-from .utils.setup_manager import Layer0SetupManager
-from entity.workflows.default import DefaultWorkflow
-from entity.core.registries import SystemRegistries
-from entity.core.runtime import AgentRuntime
-from entity.core.resources.container import ResourceContainer
-import inspect
 import asyncio
+import inspect
+
+
+def _handle_import_error(exc: ModuleNotFoundError) -> None:
+    """Re-raise missing optional dependency errors with guidance."""
+
+    missing = exc.name
+    mapping = {"yaml": "pyyaml", "dotenv": "python-dotenv", "httpx": "httpx"}
+    requirement = mapping.get(missing, missing)
+    raise ImportError(
+        f"Optional dependency '{requirement}' is required. "
+        f"Install it with `pip install {requirement}`."
+    ) from exc
+
+
+try:
+    from .core.agent import Agent
+    from .infrastructure import DuckDBInfrastructure
+    from .resources import LLM, Memory, Storage
+    from .resources.logging import LoggingResource
+    from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
+    from plugins.builtin.resources.ollama_llm import OllamaLLMResource
+    from .plugins.prompts.basic_error_handler import BasicErrorHandler
+    from .core.stages import PipelineStage
+    from .core.plugins import PromptPlugin, ToolPlugin
+    from .utils.setup_manager import Layer0SetupManager
+    from entity.workflows.default import DefaultWorkflow
+    from entity.core.registries import SystemRegistries
+    from entity.core.runtime import AgentRuntime
+    from entity.core.resources.container import ResourceContainer
+except ModuleNotFoundError as exc:  # pragma: no cover - missing optional deps
+    _handle_import_error(exc)
 
 
 def _create_default_agent() -> Agent:
