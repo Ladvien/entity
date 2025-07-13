@@ -14,12 +14,9 @@ from entity.core.registries import PluginRegistry
 class DummyConnection:
     def __init__(self, store: dict) -> None:
         self.store = store
-        self._last_query: str | None = None
-        self._last_params: tuple | None = None
+        self._last_result: list | None = None
 
     def execute(self, query: str, params: tuple | None = None) -> None:
-        self._last_query = query
-        self._last_params = params
         if query.startswith("DELETE FROM conversation_history"):
             cid = params[0]
             self.store["history"].pop(cid, None)
@@ -28,22 +25,17 @@ class DummyConnection:
             self.store.setdefault("history", {}).setdefault(cid, []).append(
                 (role, content, json.loads(metadata), ts)
             )
-        return self
-
-    def fetchall(self):
-        query = self._last_query or ""
-        params = self._last_params
-        if query.startswith(
+        elif query.startswith(
             "SELECT role, content, metadata, timestamp FROM conversation_history"
         ):
             cid = params[0]
-            return [
-                (role, content, metadata, ts)
+            self._last_result = [
+                (role, content, json.dumps(metadata), ts)
                 for role, content, metadata, ts in self.store.get("history", {}).get(
                     cid, []
                 )
             ]
-        return []
+        return self
 
     def fetch(self, query: str, params: tuple) -> list:
         if query.startswith(
@@ -57,6 +49,9 @@ class DummyConnection:
                 )
             ]
         return []
+
+    def fetchall(self) -> list:
+        return self._last_result or []
 
 
 class DummyDatabase(DatabaseResource):
