@@ -1,14 +1,26 @@
 # Configuration Reference
 
+## AdapterSettings
+
+Configuration for adapter plugins.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| stages | list | None |  |
+| auth_tokens | list | None |  |
+| rate_limit | ForwardRef('RateLimitConfig | None') | None |  |
+| audit_log_path | str | None | None |  |
+| dashboard | bool | False |  |
+
 ## BreakerSettings
 
 Circuit breaker settings for different resource types.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| database | ForwardRef('CircuitBreakerConfig') | Required |  |
-| external_api | ForwardRef('CircuitBreakerConfig') | Required |  |
-| file_system | ForwardRef('CircuitBreakerConfig') | Required |  |
+| database | ForwardRef('CircuitBreakerConfig') | None |  |
+| external_api | ForwardRef('CircuitBreakerConfig') | None |  |
+| file_system | ForwardRef('CircuitBreakerConfig') | None |  |
 
 ## CircuitBreakerConfig
 
@@ -33,12 +45,12 @@ Circuit breaker configuration.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| server | ForwardRef('ServerConfig') | Required |  |
-| plugins | ForwardRef('PluginsSection') | Required |  |
-| workflow | ForwardRef('Dict[str, list[str]] | None') | None |  |
-| tool_registry | ForwardRef('ToolRegistryConfig') | Required |  |
-| runtime_validation_breaker | ForwardRef('CircuitBreakerConfig') | Required |  |
-| breaker_settings | ForwardRef('BreakerSettings') | Required |  |
+| server | ForwardRef('ServerConfig') | None |  |
+| plugins | ForwardRef('PluginsSection') | None |  |
+| workflow | ForwardRef('WorkflowSettings | None') | None |  |
+| tool_registry | ForwardRef('ToolRegistryConfig') | None |  |
+| runtime_validation_breaker | ForwardRef('CircuitBreakerConfig') | None |  |
+| breaker_settings | ForwardRef('BreakerSettings') | None |  |
 
 ## LLMConfig
 
@@ -68,9 +80,7 @@ Settings controlling the :class:`LoggingResource`.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| host_name | str | socket.gethostname() |  |
-| process_id | int | os.getpid() |  |
-| outputs | ForwardRef('list[LogOutputConfig]') | Required |  |
+| outputs | ForwardRef('list[LogOutputConfig]') | None |  |
 
 ## MemoryConfig
 
@@ -88,6 +98,9 @@ Configuration for a single plugin.
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | type | str | Required |  |
+| dependencies | list | None |  |
+| stage | ForwardRef('PipelineStage | None') | None |  |
+| stages | ForwardRef('list[PipelineStage]') | None |  |
 
 ## PluginsSection
 
@@ -95,13 +108,22 @@ Collection of user-defined plugins grouped by category.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| infrastructure | ForwardRef('Dict[str, PluginConfig]') | Required |  |
-| resources | ForwardRef('Dict[str, PluginConfig]') | Required |  |
-| agent_resources | ForwardRef('Dict[str, PluginConfig]') | Required |  |
-| custom_resources | ForwardRef('Dict[str, PluginConfig]') | Required |  |
-| tools | ForwardRef('Dict[str, PluginConfig]') | Required |  |
-| adapters | ForwardRef('Dict[str, PluginConfig]') | Required |  |
-| prompts | ForwardRef('Dict[str, PluginConfig]') | Required |  |
+| infrastructure | ForwardRef('Dict[str, PluginConfig]') | None |  |
+| resources | ForwardRef('Dict[str, PluginConfig]') | None |  |
+| agent_resources | ForwardRef('Dict[str, PluginConfig]') | None |  |
+| custom_resources | ForwardRef('Dict[str, PluginConfig]') | None |  |
+| tools | ForwardRef('Dict[str, PluginConfig]') | None |  |
+| adapters | ForwardRef('Dict[str, PluginConfig]') | None |  |
+| prompts | ForwardRef('Dict[str, PluginConfig]') | None |  |
+
+## RateLimitConfig
+
+Request throttling settings for an adapter.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| requests | ConstrainedIntValue | 1 |  |
+| interval | ConstrainedIntValue | 60 |  |
 
 ## ServerConfig
 
@@ -127,3 +149,11 @@ Options controlling tool execution.
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | concurrency_limit | int | 5 |  |
+
+## WorkflowSettings
+
+Mapping of pipeline stages to plugin names.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| stages | ForwardRef('Dict[str, list[str]]') | None |  |

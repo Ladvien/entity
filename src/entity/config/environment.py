@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
 from typing import Any, MutableMapping, Mapping
 
 import yaml
 
-from dotenv import load_dotenv, dotenv_values
+from dotenv import dotenv_values, load_dotenv
 
 
 def load_env(env_file: str | Path = ".env", env: str | None = None) -> None:
@@ -25,11 +26,10 @@ def load_env(env_file: str | Path = ".env", env: str | None = None) -> None:
     if env_path.exists():
         env_values.update(dotenv_values(env_path))
 
-    env_name = env or os.getenv("ENTITY_ENV")
-    if env_name:
-        secret_path = Path("secrets") / f"{env_name}.env"
-        if secret_path.exists():
-            env_values.update(dotenv_values(secret_path))
+    if env:
+        secret_file = Path("secrets") / f"{env}.env"
+        if secret_file.exists():
+            env_values.update(dotenv_values(secret_file))
 
     for key, value in env_values.items():
         os.environ.setdefault(key, value)
@@ -52,6 +52,20 @@ def _merge(
     return base
 
 
+_PATTERN = re.compile(r"\$\{([^}]+)\}")
+
+
+def _interpolate(value: Any) -> Any:
+    """Recursively substitute ``${VAR}`` with environment values."""
+    if isinstance(value, dict):
+        return {k: _interpolate(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_interpolate(v) for v in value]
+    if isinstance(value, str):
+        return _PATTERN.sub(lambda m: os.getenv(m.group(1), m.group(0)), value)
+    return value
+
+
 def load_config(base: str | Path, overlay: str | Path | None = None) -> dict[str, Any]:
     """Return configuration from ``base`` merged with optional ``overlay``."""
 
@@ -61,7 +75,7 @@ def load_config(base: str | Path, overlay: str | Path | None = None) -> dict[str
         if overlay_path.exists():
             overlay_data = yaml.safe_load(overlay_path.read_text()) or {}
             base_data = _merge(base_data, overlay_data)
-    return base_data
+    return _interpolate(base_data)
 
 
 __all__ = ["load_env", "load_config"]
