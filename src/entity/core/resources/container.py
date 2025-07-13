@@ -509,6 +509,33 @@ class ResourceContainer:
                     kind="Resource",
                 )
 
+        visited: set[str] = set()
+        stack: list[str] = []
+
+        def visit(node: str) -> None:
+            if node in stack:
+                cycle = stack[stack.index(node) :]
+                cycle.append(node)
+                names = ", ".join(sorted(cycle))
+                raise InitializationError(
+                    names,
+                    "layer validation",
+                    "Circular dependency detected.",
+                    kind="Resource",
+                )
+            if node in visited:
+                return
+            stack.append(node)
+            for dep in self._deps.get(node, []):
+                dep_name = dep[:-1] if dep.endswith("?") else dep
+                if dep_name in self._deps:
+                    visit(dep_name)
+            stack.pop()
+            visited.add(node)
+
+        for resource in self._deps.keys():
+            visit(resource)
+
         for name, deps in self._deps.items():
             for dep in deps:
                 optional = dep.endswith("?")

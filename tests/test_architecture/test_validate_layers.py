@@ -33,6 +33,16 @@ class NoDepRes:
     dependencies: list = []
 
 
+class CycleA:
+    stages: list = []
+    dependencies = ["b"]
+
+
+class CycleB:
+    stages: list = []
+    dependencies = ["a"]
+
+
 @pytest.mark.asyncio
 async def test_invalid_layer_number():
     container = ResourceContainer()
@@ -63,3 +73,12 @@ async def test_custom_no_dep_allowed_in_layer3():
     container = ResourceContainer()
     container.register("nodep", NoDepRes, {}, layer=3)
     container._validate_layers()
+
+
+@pytest.mark.asyncio
+async def test_cycle_detection():
+    container = ResourceContainer()
+    container.register("a", CycleA, {}, layer=4)
+    container.register("b", CycleB, {}, layer=4)
+    with pytest.raises(InitializationError, match="Circular dependency"):
+        container._validate_layers()
