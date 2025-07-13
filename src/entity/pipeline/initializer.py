@@ -838,6 +838,14 @@ class SystemInitializer:
             container.register("database", DuckDBResource, {}, layer=2)
             registered.add("database")
 
+        if "vector_store" not in registered:
+            from entity.resources.interfaces.duckdb_vector_store import (
+                DuckDBVectorStore,
+            )
+
+            container.register("vector_store", DuckDBVectorStore, {}, layer=2)
+            registered.add("vector_store")
+
         required = {"memory", "llm", "storage"}
         missing = required - set(container._classes)
         if missing:
