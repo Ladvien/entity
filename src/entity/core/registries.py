@@ -1,27 +1,34 @@
-from __future__ import annotations
-
 """Simplified plugin and resource registries."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
+from collections import OrderedDict
 from typing import Any, Awaitable, Callable, Dict, List
 
 
 class PluginRegistry:
-    """Register plugins for each pipeline stage."""
+    """Register plugins for each pipeline stage preserving insertion order."""
 
     def __init__(self) -> None:
-        self._stage_plugins: Dict[str, List[Any]] = {}
-        self._names: Dict[Any, str] = {}
+        self._stage_plugins: Dict[str, OrderedDict[Any, str]] = {}
+        self._names: "OrderedDict[Any, str]" = OrderedDict()
 
     async def register_plugin_for_stage(
         self, plugin: Any, stage: str, name: str | None = None
     ) -> None:
         plugin_name = name or getattr(plugin, "name", plugin.__class__.__name__)
-        self._stage_plugins.setdefault(stage, []).append(plugin)
-        self._names[plugin] = plugin_name
+        if stage not in self._stage_plugins:
+            self._stage_plugins[stage] = OrderedDict()
+        self._stage_plugins[stage][plugin] = plugin_name
+        if plugin not in self._names:
+            self._names[plugin] = plugin_name
 
     def get_plugins_for_stage(self, stage: str) -> List[Any]:
-        return list(self._stage_plugins.get(stage, []))
+        plugins = self._stage_plugins.get(stage)
+        if plugins is None:
+            return []
+        return list(plugins.keys())
 
     def get_plugin(self, name: str) -> Any | None:
         """Return the plugin registered with ``name``."""
@@ -35,10 +42,7 @@ class PluginRegistry:
         return self.get_plugin(name)
 
     def list_plugins(self) -> List[Any]:
-        plugins: List[Any] = []
-        for plist in self._stage_plugins.values():
-            plugins.extend(plist)
-        return plugins
+        return list(self._names.keys())
 
     def get_plugin_name(self, plugin: Any) -> str:
         name = self._names.get(plugin)
