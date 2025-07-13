@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Dict, List
 
+from entity.pipeline.stages import PipelineStage
+
 
 class PluginRegistry:
     """Register plugins for each pipeline stage."""
@@ -17,6 +19,9 @@ class PluginRegistry:
         self, plugin: Any, stage: str, name: str | None = None
     ) -> None:
         plugin_name = name or getattr(plugin, "name", plugin.__class__.__name__)
+        validator = getattr(plugin, "validate_registration_stage", None)
+        if callable(validator):
+            validator(PipelineStage.ensure(stage))
         self._stage_plugins.setdefault(stage, []).append(plugin)
         self._names[plugin] = plugin_name
 
