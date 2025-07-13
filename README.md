@@ -24,3 +24,17 @@ Create Markdown docs from the plugin docstring:
 plugin-tool docs src/my_prompt.py --out docs
 ```
 
+## Default Workflow
+
+`Layer0SetupManager` creates basic resources and provides `DefaultWorkflow`.
+The global `agent` uses this workflow automatically.
+
+```python
+import asyncio
+from entity import agent
+from entity.utils.setup_manager import Layer0SetupManager
+
+asyncio.run(Layer0SetupManager().setup())
+print(asyncio.run(agent.handle("Hello")))
+```
+
