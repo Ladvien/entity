@@ -4,17 +4,20 @@ import pytest
 
 from entity.infrastructure import DuckDBInfrastructure
 from entity.resources import Memory
+from plugins.builtin.resources.duckdb_resource import DuckDBResource
 
 
 @pytest.fixture()
 async def memory_db(tmp_path: Path) -> Memory:
     db_path = tmp_path / "memory.duckdb"
-    db = DuckDBInfrastructure({"path": str(db_path)})
-    await db.initialize()
-    async with db.connection() as conn:
+    db_backend = DuckDBInfrastructure({"path": str(db_path)})
+    await db_backend.initialize()
+    async with db_backend.connection() as conn:
         conn.execute(
             "CREATE TABLE IF NOT EXISTS conversation_history (conversation_id TEXT, role TEXT, content TEXT, metadata TEXT, timestamp TEXT)"
         )
+    db = DuckDBResource({})
+    db.database = db_backend
     mem = Memory(config={})
     mem.database = db
     mem.vector_store = None
@@ -22,4 +25,4 @@ async def memory_db(tmp_path: Path) -> Memory:
     try:
         yield mem
     finally:
-        await db.shutdown()
+        await db_backend.shutdown()

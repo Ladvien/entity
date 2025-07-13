@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from entity.core.plugins import ResourcePlugin
 from entity.core.stages import PipelineStage
 
 
@@ -42,7 +41,7 @@ class MetricsCollectorResource(AgentResource):
     """Simple in-memory metrics collector."""
 
     name = "metrics_collector"
-    infrastructure_dependencies = ["database"]
+    infrastructure_dependencies = ["database_backend"]
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
         super().__init__(config or {})
