@@ -256,6 +256,46 @@ class SystemInitializer:
         """Metrics collector is optional; do nothing by default."""
         return
 
+    def _validate_plugin_attributes(
+        self, name: str, cls: type[Plugin], section: str, cfg: Dict
+    ) -> None:
+        """Ensure discovered plugin defines required class attributes."""
+
+        from entity.core.plugins import (
+            AgentResource,
+            InfrastructurePlugin,
+            ResourcePlugin,
+            PromptPlugin,
+        )
+
+        if issubclass(cls, PromptPlugin):
+            if not (
+                cfg.get("stage") or cfg.get("stages") or getattr(cls, "stages", None)
+            ):
+                raise InitializationError(
+                    name,
+                    "plugin discovery",
+                    "Prompt plugins must define non-empty 'stages'",
+                )
+
+        if issubclass(cls, InfrastructurePlugin) and not getattr(
+            cls, "infrastructure_type", ""
+        ):
+            raise InitializationError(
+                name,
+                "plugin discovery",
+                "Infrastructure plugins must define infrastructure_type",
+            )
+
+        if issubclass(cls, ResourcePlugin) and not issubclass(cls, AgentResource):
+            deps = getattr(cls, "infrastructure_dependencies", None)
+            if not deps:
+                raise InitializationError(
+                    name,
+                    "plugin discovery",
+                    "Resource plugins must declare infrastructure_dependencies",
+                )
+
     @classmethod
     def from_yaml(cls, yaml_path: str, env_file: str = ".env") -> "SystemInitializer":
         data = ConfigLoader.from_yaml(yaml_path, env_file)
@@ -324,6 +364,7 @@ class SystemInitializer:
                             RegistryValidator._validate_stage_assignment(
                                 name, cls, meta
                             )
+                            self._validate_plugin_attributes(name, cls, section, meta)
                         except SystemError as exc:
                             raise InitializationError(
                                 name, "plugin discovery", str(exc)
