@@ -18,7 +18,12 @@ async def test_logging_file_and_console(tmp_path, capsys, monkeypatch):
     container.register(
         "logging",
         LoggingResource,
-        {"outputs": [{"type": "structured_file", "path": str(log_file)}]},
+        {
+            "outputs": [
+                {"type": "structured_file", "path": str(log_file)},
+                {"type": "console"},
+            ]
+        },
         layer=3,
     )
     await container.build_all()
