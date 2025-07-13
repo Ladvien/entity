@@ -9,7 +9,7 @@ from typing import Any, MutableMapping, Mapping
 
 import yaml
 
-from dotenv import dotenv_values, load_dotenv
+from dotenv import dotenv_values
 
 
 def load_env(env_file: str | Path = ".env", env: str | None = None) -> None:
@@ -23,6 +23,7 @@ def load_env(env_file: str | Path = ".env", env: str | None = None) -> None:
     env_path = Path(env_file)
     env_values = dotenv_values(env_path) if env_path.exists() else {}
 
+    secret_path: Path | None = None
     if env:
         secret_path = Path("secrets") / f"{env}.env"
         if secret_path.exists():
@@ -30,8 +31,6 @@ def load_env(env_file: str | Path = ".env", env: str | None = None) -> None:
 
     for key, value in env_values.items():
         os.environ.setdefault(key, value)
-
-    load_dotenv(env_path, override=False)
 
 
 def _merge(
@@ -74,7 +73,7 @@ def load_config(base: str | Path, overlay: str | Path | None = None) -> dict[str
         if overlay_path.exists():
             overlay_data = yaml.safe_load(overlay_path.read_text()) or {}
             base_data = _merge(base_data, overlay_data)
-    return _interpolate(base_data)
+    return _interpolate(base_data)  # type: ignore[no-any-return]
 
 
 __all__ = ["load_env", "load_config"]
