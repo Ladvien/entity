@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 AGENT NOTE - 2025-10-06: Clear stage results and temporary thoughts after each pipeline run
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-13: Modified dependency injection for infrastructure plugins
@@ -11,6 +12,9 @@ AGENT NOTE - 2025-07-13: Removed duplicate plugin definitions and centralized ba
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pr-1527
+=======
+AGENT NOTE - 2025-07-13: Removed merge conflict markers in core modules
+>>>>>>> pr-1528
 AGENT NOTE - 2025-08-21: Added user_id propagation in pipeline and multi-user tests
 AGENT NOTE - 2025-07-13: Added websocket broadcast logging, file rotation, and structured pipeline logs.
 AGENT NOTE - 2025-07-13: Updated black exclude paths to include CLI and plugin templates

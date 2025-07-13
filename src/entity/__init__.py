@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-import os
 
 
 def _handle_import_error(exc: ModuleNotFoundError) -> None:
@@ -25,52 +24,10 @@ try:
     from .resources import LLM, Memory, Storage
     from .resources.logging import LoggingResource
     from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
-<<<<<<< HEAD
-<<<<<<< HEAD
-    from plugins.builtin.resources.ollama_llm import OllamaLLMResource
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    from plugins.builtin.basic_error_handler import BasicErrorHandler
-<<<<<<< HEAD
-    from plugins.examples import InputLogger, MessageParser, ResponseReviewer
-=======
-    from plugins.examples import InputLogger
-    from user_plugins.prompts import ComplexPrompt
-    from user_plugins.responders import ComplexPromptResponder
->>>>>>> pr-1521
-=======
-=======
->>>>>>> pr-1515
-    from .plugins.prompts.basic_error_handler import BasicErrorHandler
-    from plugins.examples import InputLogger
-    from user_plugins.prompts import ComplexPrompt
-    from user_plugins.responders import ComplexPromptResponder
-<<<<<<< HEAD
->>>>>>> pr-1520
-=======
->>>>>>> pr-1519
-=======
-    from plugins.builtin.basic_error_handler import BasicErrorHandler
-    from plugins.examples import InputLogger
-    from user_plugins.prompts import ComplexPrompt
-    from user_plugins.responders import ComplexPromptResponder
->>>>>>> pr-1517
-=======
->>>>>>> pr-1515
-=======
->>>>>>> pr-1513
-=======
-    from plugins.builtin.basic_error_handler import BasicErrorHandler
-    from plugins.examples import InputLogger, MessageParser, ResponseReviewer
-    from user_plugins.prompts import ComplexPrompt
-    from user_plugins.responders import ComplexPromptResponder
->>>>>>> pr-1511
     from .core.stages import PipelineStage
     from .core.plugins import PromptPlugin, ToolPlugin
     from .utils.setup_manager import Layer0SetupManager
-    from entity.workflows.default import DefaultWorkflow
+    from entity.workflows.minimal import minimal_workflow
     from entity.core.registries import SystemRegistries
     from entity.core.runtime import AgentRuntime
     from entity.core.resources.container import ResourceContainer
@@ -88,10 +45,6 @@ def _create_default_agent() -> Agent:
         pass
     agent = Agent()
     builder = agent.builder
-
-    from plugins.builtin.resources.ollama_llm import OllamaLLMResource
-    from plugins.builtin.basic_error_handler import BasicErrorHandler
-    from plugins.examples import InputLogger, MessageParser, ResponseReviewer
 
     db = DuckDBInfrastructure({"path": str(setup.db_path)})
     try:
@@ -138,18 +91,6 @@ def _create_default_agent() -> Agent:
         tools=builder.tool_registry,
         plugins=builder.plugin_registry,
     )
-<<<<<<< HEAD
-    asyncio.run(builder.add_plugin(BasicErrorHandler({})))
-    asyncio.run(builder.add_plugin(InputLogger({})))
-<<<<<<< HEAD
-    try:
-        from user_plugins.prompts import ComplexPrompt
-        from user_plugins.responders import ComplexPromptResponder
-
-        asyncio.run(builder.add_plugin(ComplexPrompt({})))
-        asyncio.run(builder.add_plugin(ComplexPromptResponder({})))
-    except Exception:  # noqa: BLE001 - optional plugins
-=======
     # Default plugins are optional and may not be available in all environments
     try:
         from plugins.builtin.basic_error_handler import BasicErrorHandler
@@ -162,179 +103,97 @@ def _create_default_agent() -> Agent:
         asyncio.run(builder.add_plugin(ComplexPrompt({})))
         asyncio.run(builder.add_plugin(ComplexPromptResponder({})))
     except Exception:  # noqa: BLE001 - plugins optional
->>>>>>> pr-1519
         pass
     workflow = getattr(setup, "workflow", minimal_workflow)
-=======
-    asyncio.run(builder.add_plugin(MessageParser({})))
-    asyncio.run(builder.add_plugin(ResponseReviewer({})))
-    workflow = getattr(setup, "workflow", DefaultWorkflow())
->>>>>>> pr-1513
     agent._runtime = AgentRuntime(caps, workflow=workflow)
     return agent
 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-agent: Agent | None = None
-
-
-def _ensure_agent() -> Agent:
-    global agent
-    if agent is None:
-        agent = _create_default_agent()
-    return agent
-
-=======
 try:
     agent = _create_default_agent()
 except Exception:  # noqa: BLE001 - optional defaults
     agent = Agent()
->>>>>>> pr-1519
 
 # Expose decorator helpers bound to the default agent
+plugin = agent.plugin
 
 
-def plugin(func=None, **hints):
-    ag = _ensure_agent()
-    return ag.plugin(func, **hints)
-=======
-if os.environ.get("ENTITY_AUTO_INIT") == "1":
-    agent = _create_default_agent()
-
-    # Expose decorator helpers bound to the default agent
-    plugin = agent.plugin
->>>>>>> pr-1513
-
-    def input(func=None, **hints):
-        return agent.plugin(func, stage=PipelineStage.INPUT, **hints)
-
-<<<<<<< HEAD
 def input(func=None, **hints):
-    ag = _ensure_agent()
-    return ag.plugin(func, stage=PipelineStage.INPUT, **hints)
-=======
-    agent.input = input
+    return agent.plugin(func, stage=PipelineStage.INPUT, **hints)
 
-    def parse(func=None, **hints):
-        return agent.plugin(func, stage=PipelineStage.PARSE, **hints)
 
-    agent.parse = parse
->>>>>>> pr-1513
+agent.input = input
 
-    def prompt(func=None, **hints):
-        return agent.plugin(func, stage=PipelineStage.THINK, **hints)
 
-<<<<<<< HEAD
 def parse(func=None, **hints):
-    ag = _ensure_agent()
-    return ag.plugin(func, stage=PipelineStage.PARSE, **hints)
-=======
-    agent.prompt = prompt
+    return agent.plugin(func, stage=PipelineStage.PARSE, **hints)
 
-    def tool(func=None, **hints):
-        """Register ``func`` as a tool plugin or simple tool."""
 
-        def decorator(f):
-            params = list(inspect.signature(f).parameters)
-            if params and params[0] in {"ctx", "context"}:
-                return agent.plugin(f, stage=PipelineStage.DO, **hints)
->>>>>>> pr-1513
+agent.parse = parse
 
-            class _WrappedTool(ToolPlugin):
-                async def execute_function(self, params_dict):
-                    return await f(**params_dict)
 
-<<<<<<< HEAD
 def prompt(func=None, **hints):
-    ag = _ensure_agent()
-    return ag.plugin(func, stage=PipelineStage.THINK, **hints)
-=======
-            asyncio.run(agent.builder.tool_registry.add(f.__name__, _WrappedTool({})))
-            return f
+    return agent.plugin(func, stage=PipelineStage.THINK, **hints)
 
-        return decorator(func) if func else decorator
 
-    agent.tool = tool
->>>>>>> pr-1513
+agent.prompt = prompt
 
-    def review(func=None, **hints):
-        return agent.plugin(func, stage=PipelineStage.REVIEW, **hints)
 
-    agent.review = review
+def tool(func=None, **hints):
+    """Register ``func`` as a tool plugin or simple tool."""
 
-<<<<<<< HEAD
     def decorator(f):
-        ag = _ensure_agent()
         params = list(inspect.signature(f).parameters)
         if params and params[0] in {"ctx", "context"}:
-            return ag.plugin(f, stage=PipelineStage.DO, **hints)
-=======
-    def output(func=None, **hints):
-        return agent.plugin(func, stage=PipelineStage.OUTPUT, **hints)
->>>>>>> pr-1513
+            return agent.plugin(f, stage=PipelineStage.DO, **hints)
 
-    agent.output = output
+        class _WrappedTool(ToolPlugin):
+            async def execute_function(self, params_dict):
+                return await f(**params_dict)
 
-<<<<<<< HEAD
-        ag = _ensure_agent()
-        asyncio.run(ag.builder.tool_registry.add(f.__name__, _WrappedTool({})))
+        asyncio.run(agent.builder.tool_registry.add(f.__name__, _WrappedTool({})))
         return f
-=======
-    def prompt_plugin(func=None, **hints):
-        hints["plugin_class"] = PromptPlugin
-        return agent.plugin(func, **hints)
->>>>>>> pr-1513
 
-    agent.prompt_plugin = prompt_plugin
+    return decorator(func) if func else decorator
 
-    def tool_plugin(func=None, **hints):
-        hints["plugin_class"] = ToolPlugin
-        return agent.plugin(func, **hints)
 
-<<<<<<< HEAD
+agent.tool = tool
+
+
 def review(func=None, **hints):
-    ag = _ensure_agent()
-    return ag.plugin(func, stage=PipelineStage.REVIEW, **hints)
+    return agent.plugin(func, stage=PipelineStage.REVIEW, **hints)
+
+
+agent.review = review
 
 
 def output(func=None, **hints):
-    ag = _ensure_agent()
-    return ag.plugin(func, stage=PipelineStage.OUTPUT, **hints)
+    return agent.plugin(func, stage=PipelineStage.OUTPUT, **hints)
+
+
+agent.output = output
 
 
 def prompt_plugin(func=None, **hints):
     hints["plugin_class"] = PromptPlugin
-    ag = _ensure_agent()
-    return ag.plugin(func, **hints)
+    return agent.plugin(func, **hints)
+
+
+agent.prompt_plugin = prompt_plugin
 
 
 def tool_plugin(func=None, **hints):
     hints["plugin_class"] = ToolPlugin
-    ag = _ensure_agent()
-    return ag.plugin(func, **hints)
-=======
-    agent.tool_plugin = tool_plugin
->>>>>>> pr-1513
+    return agent.plugin(func, **hints)
+
+
+agent.tool_plugin = tool_plugin
 
 
 __all__ = [
     "core",
     "Agent",
     "agent",
-    "_create_default_agent",
-<<<<<<< HEAD
-    "plugin",
-    "input",
-    "parse",
-    "prompt",
-    "tool",
-    "review",
-    "output",
-    "prompt_plugin",
-    "tool_plugin",
-=======
->>>>>>> pr-1521
 ]
 
 
