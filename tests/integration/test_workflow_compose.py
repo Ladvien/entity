@@ -1,6 +1,6 @@
 import pytest
 
-from entity.core.agent import _AgentBuilder
+from entity.core.agent import Agent
 from entity.core.plugins import Plugin
 from entity.pipeline.stages import PipelineStage
 from entity.workflows.base import Workflow
@@ -32,7 +32,7 @@ class WF2(Workflow):
 
 @pytest.mark.asyncio
 async def test_compose_workflows_execute():
-    builder = _AgentBuilder()
+    builder = Agent().builder
     await builder.add_plugin(MarkerPlugin({}))
     await builder.add_plugin(EchoPlugin({}))
 
@@ -46,7 +46,7 @@ async def test_compose_workflows_execute():
 
 @pytest.mark.asyncio
 async def test_compose_validates_plugins():
-    builder = _AgentBuilder()
+    builder = Agent().builder
     await builder.add_plugin(EchoPlugin({}))
 
     wf = compose_workflows(WF1(), WF2())

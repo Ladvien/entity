@@ -1,6 +1,6 @@
 import pytest
 
-from entity.core.agent import _AgentBuilder
+from entity.core.agent import Agent
 from entity.core.plugins import Plugin
 from entity.pipeline.stages import PipelineStage
 from entity.pipeline.workflow import Pipeline
@@ -32,7 +32,7 @@ class ChildWF(BaseWF):
 
 @pytest.mark.asyncio
 async def test_conditional_stage_skip():
-    builder = _AgentBuilder()
+    builder = Agent().builder
     await builder.add_plugin(MarkerPlugin({}))
     await builder.add_plugin(EchoPlugin({}))
 

@@ -1,7 +1,7 @@
 import pytest
 
 from entity.core.plugins import Plugin
-from entity.core.agent import _AgentBuilder
+from entity.core.agent import Agent
 from entity.pipeline.stages import PipelineStage
 from entity.pipeline.workflow import Pipeline
 
@@ -15,7 +15,7 @@ class EchoPlugin(Plugin):
 
 @pytest.mark.asyncio
 async def test_pipeline_raises_on_unknown_plugin():
-    builder = _AgentBuilder()
+    builder = Agent().builder
     await builder.add_plugin(EchoPlugin({}))
 
     mapping = {PipelineStage.OUTPUT: ["EchoPlugin", "MissingPlugin"]}

@@ -1,5 +1,5 @@
 import pytest
-from entity.core.agent import _AgentBuilder
+from entity.core.agent import Agent
 from entity.core.plugins import PromptPlugin
 from entity.resources.logging import LoggingResource
 from entity.resources.metrics import MetricsCollectorResource
@@ -18,7 +18,7 @@ DummyPrompt.dependencies = []
 
 @pytest.mark.asyncio
 async def test_builder_assigns_logging():
-    builder = _AgentBuilder()
+    builder = Agent().builder
     container = builder.resource_registry
     LoggingResource.dependencies = []
     MetricsCollectorResource.dependencies = []
