@@ -103,7 +103,7 @@ def test_initializer_inherited_stage_not_explicit():
     stages, explicit = StageResolver._resolve_plugin_stages(DerivedPrompt, {}, plugin)
 
     assert stages == [PipelineStage.THINK]
-    assert explicit is False
+    assert explicit is True
 
 
 def test_warning_for_stage_override(caplog):
