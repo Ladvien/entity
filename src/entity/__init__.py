@@ -6,11 +6,7 @@ from .core.agent import Agent
 from .infrastructure import DuckDBInfrastructure
 from .resources import LLM, Memory, Storage
 from .resources.logging import LoggingResource
-<<<<<<< HEAD
 from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
-=======
-from .resources.interfaces.vector_store import VectorStoreResource
->>>>>>> pr-1448
 from plugins.builtin.resources.ollama_llm import OllamaLLMResource
 from .core.stages import PipelineStage
 from .core.plugins import PromptPlugin, ToolPlugin
@@ -44,10 +40,7 @@ def _create_default_agent() -> Agent:
 
     llm.provider = llm_provider
     memory.database = db
-<<<<<<< HEAD
     vector_store.database = db
-=======
->>>>>>> pr-1448
     memory.vector_store = vector_store
 
     resources = ResourceContainer()
@@ -73,13 +66,9 @@ def _create_default_agent() -> Agent:
         tools=builder.tool_registry,
         plugins=builder.plugin_registry,
     )
-<<<<<<< HEAD
     asyncio.run(builder.add_plugin(BasicErrorHandler({})))
     workflow = getattr(setup, "workflow", DefaultWorkflow())
     agent._runtime = AgentRuntime(caps, workflow=workflow)
-=======
-    agent._runtime = AgentRuntime(caps)
->>>>>>> pr-1448
     return agent
 
 

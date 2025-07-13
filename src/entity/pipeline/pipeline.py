@@ -292,9 +292,9 @@ async def execute_pipeline(
                 pipeline_id=f"{user_id}_{generate_pipeline_id()}",
             )
 
-    # Clear stage results at the start of each message so that
-    # thoughts from previous executions do not leak into the next one.
-    state.stage_results.clear()
+    # Thoughts persist for the duration of a single message run
+    # so they can be referenced across iterations. They are cleared
+    # only once the message has been fully processed.
     _start = time.time()
     resource_manager = (
         capabilities.resources
@@ -407,10 +407,6 @@ async def execute_pipeline(
             result = create_default_response("No response generated", state.pipeline_id)
         else:
             result = state.response
-<<<<<<< HEAD
-
-=======
->>>>>>> pr-1448
         elapsed_ms = (time.time() - _start) * 1000
         if metrics is not None:
             await metrics.record_custom_metric(
@@ -418,10 +414,6 @@ async def execute_pipeline(
                 metric_name="pipeline_duration_ms",
                 value=elapsed_ms,
             )
-<<<<<<< HEAD
-=======
-
->>>>>>> pr-1448
         state.stage_results.clear()
         return result
 

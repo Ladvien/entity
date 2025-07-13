@@ -25,6 +25,14 @@ class TerminateOnThree(Plugin):
             context.say(str(count))
 
 
+class EchoFoo(Plugin):
+    stages = [PipelineStage.OUTPUT]
+
+    async def _execute_impl(self, context) -> None:
+        val = await context.reflect("foo", "missing")
+        context.say(val)
+
+
 @pytest.mark.asyncio
 async def test_thoughts_accumulate_across_iterations() -> None:
     plugins = PluginRegistry()
@@ -66,3 +74,20 @@ async def test_thoughts_reset_after_run() -> None:
     )
     assert result == "3"
     assert state.iteration == 3
+
+
+@pytest.mark.asyncio
+async def test_preexisting_thoughts_available_at_start() -> None:
+    plugins = PluginRegistry()
+    await plugins.register_plugin_for_stage(EchoFoo({}), PipelineStage.OUTPUT)
+    regs = SystemRegistries(resources={}, tools=ToolRegistry(), plugins=plugins)
+    state = PipelineState(
+        conversation=[ConversationEntry("hi", "user", datetime.now())],
+        pipeline_id="pid",
+        stage_results={"foo": "bar"},
+    )
+    result = await execute_pipeline(
+        "hi", regs, state=state, workflow=None, max_iterations=1
+    )
+    assert result == "bar"
+    assert state.stage_results == {}
