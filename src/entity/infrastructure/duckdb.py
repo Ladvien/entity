@@ -31,7 +31,7 @@ class DuckDBInfrastructure(InfrastructurePlugin):
         super().__init__(config or {})
         self.path: str = self.config.get("path", ":memory:")
         pool_cfg = PoolConfig(**self.config.get("pool", {}))
-        self._pool = ResourcePool(self._create_conn, pool_cfg)
+        self._pool = ResourcePool(self._create_conn, pool_cfg, "duckdb")
         self._conn: duckdb.DuckDBPyConnection | None = None
         self._breaker = CircuitBreaker(
             failure_threshold=self.config.get("failure_threshold", 3),
@@ -48,6 +48,9 @@ class DuckDBInfrastructure(InfrastructurePlugin):
                 "DuckDB not installed. Run 'poetry install --with dev' to enable local storage."
             )
             return
+        metrics = getattr(self, "metrics_collector", None)
+        if metrics is not None:
+            self._pool.set_metrics_collector(metrics)
         await self._pool.initialize()
 
     async def _create_conn(self) -> duckdb.DuckDBPyConnection:

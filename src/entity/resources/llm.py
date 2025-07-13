@@ -28,7 +28,10 @@ class LLM(AgentResource):
         if self.provider is None:
             return
         pool_cfg = PoolConfig(**self.config.get("pool", {}))
-        self._pool = ResourcePool(self._create_provider, pool_cfg)
+        self._pool = ResourcePool(self._create_provider, pool_cfg, "llm_provider")
+        metrics = getattr(self, "metrics_collector", None)
+        if metrics is not None:
+            self._pool.set_metrics_collector(metrics)
         await self._pool.initialize()
 
     async def _create_provider(self) -> LLMResource:

@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 AGENT NOTE - 2025-07-13: Verified merge conflict cleanup and preserved all notes
 >>>>>>> pr-1430
@@ -15,6 +16,9 @@ AGENT NOTE - 2025-07-13: Added branching and checkpoint support in Pipeline
 AGENT NOTE - 2025-07-25: Added debugging tracer module and CLI step command
 AGENT NOTE - 2025-07-13: Added config inheritance, linting, and diff tools
 AGENT NOTE - 2025-07-13: Adjust stage result clearing to persist across iterations but reset between messages
+=======
+AGENT NOTE - 2025-07-25: Extended ResourcePool with scaling and health checks
+>>>>>>> pr-1432
 AGENT NOTE - 2025-07-24: Updated DuckDBResource to subclass AgentResource and use database_backend
 AGENT NOTE - 2025-07-23: Allow layer 3 for custom resources without dependencies
 AGENT NOTE - 2025-07-23: Fixed DatabaseResource import and updated async usage in plugin context memory test
