@@ -22,6 +22,7 @@ from entity.utils.logging import get_logger
 from entity.config.environment import load_config
 from importlib import import_module
 import sys
+from entity.infrastructure import DockerInfrastructure, AWSStandardInfrastructure
 
 try:  # Resolve plugin helpers from installed "cli" package
     generate_plugin = import_module("cli.plugin_tool.generate").generate_plugin
@@ -57,6 +58,9 @@ class CLIArgs:
     workflow_name: Optional[str] = None
     fmt: Optional[str] = None
     env: Optional[str] = None
+    infra_cmd: Optional[str] = None
+    infra_type: Optional[str] = None
+    infra_path: Optional[str] = None
 
 
 class EntityCLI:
@@ -155,6 +159,15 @@ class EntityCLI:
         )
         ana.add_argument("path")
 
+        infra = sub.add_parser("infra", help="Infrastructure operations")
+        infra_sub = infra.add_subparsers(dest="infra_cmd", required=True)
+        deploy = infra_sub.add_parser("deploy", help="Deploy infrastructure")
+        deploy.add_argument("--type", required=True, dest="infra_type")
+        deploy.add_argument("--path", dest="infra_path", default="infra")
+        destroy = infra_sub.add_parser("destroy", help="Destroy infrastructure")
+        destroy.add_argument("--type", required=True, dest="infra_type")
+        destroy.add_argument("--path", dest="infra_path", default="infra")
+
         parsed = parser.parse_args()
         return CLIArgs(
             config=getattr(parsed, "config", None),
@@ -172,6 +185,9 @@ class EntityCLI:
             workflow_name=getattr(parsed, "workflow_name", None),
             fmt=getattr(parsed, "fmt", None),
             env=getattr(parsed, "env", None),
+            infra_cmd=getattr(parsed, "infra_cmd", None),
+            infra_type=getattr(parsed, "infra_type", None),
+            infra_path=getattr(parsed, "infra_path", None),
         )
 
     # -----------------------------------------------------
@@ -199,6 +215,8 @@ class EntityCLI:
             return self._search_plugin(self.args.name)
         if cmd == "workflow":
             return self._handle_workflow()
+        if cmd == "infra":
+            return self._handle_infra()
         if cmd == "replay-log":
             assert self.args.file is not None
             from entity.core.state_logger import LogReplayer
@@ -421,6 +439,41 @@ class EntityCLI:
     def _search_plugin(self, name: str) -> int:
         """Placeholder for future plugin marketplace search."""
         logger.info("search-plugin '%s' is not implemented yet", name)
+        return 0
+
+    # -----------------------------------------------------
+    # infrastructure helpers
+    # -----------------------------------------------------
+    def _handle_infra(self) -> int:
+        cmd = self.args.infra_cmd
+        typ = self.args.infra_type or ""
+        path = self.args.infra_path or "infra"
+        if cmd == "deploy":
+            return asyncio.run(self._infra_deploy(typ, path))
+        if cmd == "destroy":
+            return asyncio.run(self._infra_destroy(typ, path))
+        return 0
+
+    async def _infra_deploy(self, typ: str, path: str) -> int:
+        if typ == "docker":
+            infra = DockerInfrastructure({"path": path})
+        elif typ == "aws-standard":
+            infra = AWSStandardInfrastructure(region="us-east-1", config={"path": path})
+        else:
+            logger.error("Unknown infrastructure type %s", typ)
+            return 1
+        await infra.deploy()
+        return 0
+
+    async def _infra_destroy(self, typ: str, path: str) -> int:
+        if typ == "docker":
+            infra = DockerInfrastructure({"path": path})
+        elif typ == "aws-standard":
+            infra = AWSStandardInfrastructure(region="us-east-1", config={"path": path})
+        else:
+            logger.error("Unknown infrastructure type %s", typ)
+            return 1
+        await infra.destroy()
         return 0
 
     @staticmethod
