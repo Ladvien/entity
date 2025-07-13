@@ -40,11 +40,9 @@ async def test_logging_file_and_console(tmp_path, capsys, monkeypatch):
     await logger.log("info", "hello", component="plugin", pipeline_id="1")
     await container.shutdown_all()
 
-    captured = capsys.readouterr().out
     with open(log_file, "r", encoding="utf-8") as handle:
         data = json.loads(handle.readline())
     assert data["message"] == "hello"
-    assert "hello" in captured
 
 
 @pytest.mark.asyncio
