@@ -7,6 +7,7 @@ import pytest
 from entity.resources import Memory
 from entity.resources.interfaces.database import DatabaseResource
 from entity.pipeline.worker import PipelineWorker
+from entity.core.registries import PluginRegistry
 
 
 class DummyConnection:
@@ -53,6 +54,7 @@ class DummyRegistries:
         mem.database = db
         self.resources = {"memory": mem}
         self.tools = types.SimpleNamespace()
+        self.plugins = PluginRegistry()
 
 
 @pytest.mark.asyncio

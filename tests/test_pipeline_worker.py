@@ -167,7 +167,9 @@ async def test_conversation_id_generation():
 @pytest.mark.asyncio
 async def test_pipeline_persists_conversation(memory_db):
     regs = types.SimpleNamespace(
-        resources={"memory": memory_db}, tools=types.SimpleNamespace()
+        resources={"memory": memory_db},
+        tools=types.SimpleNamespace(),
+        plugins=PluginRegistry(),
     )
     worker = PipelineWorker(regs)
 
