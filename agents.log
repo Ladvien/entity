@@ -1,5 +1,5 @@
+AGENT NOTE - 2025-08-02: Resolved remaining merge conflict markers
 AGENT NOTE - 2025-08-01: Document example plugins with literalinclude
-<<<<<<< HEAD
 AGENT NOTE - 2025-07-13: Cleaned merge markers and updated default agent setup
 AGENT NOTE - 2025-07-13: Integrated pipeline duration metric and cleared stage results after execution
 AGENT NOTE - 2025-07-13: Verified merge conflict cleanup and preserved all notes
@@ -18,10 +18,6 @@ AGENT NOTE - 2025-07-13: Added infrastructure_type to AWSStandardInfrastructure
 AGENT NOTE - 2025-07-13: Added vector store and logging to default setup
 AGENT NOTE - 2025-07-13: No resource interface modules found to move, canonical resources already depend on interfaces.
 AGENT NOTE - 2025-07-13: Added DefaultWorkflow and zero-config setup
-<<<<<<< HEAD
-=======
-
->>>>>>> pr-1448
 AGENT NOTE - 2025-07-25: Added DuckDBVectorStore and zero-config registration
 AGENT NOTE - 2025-07-24: PluginRegistry now preserves registration order with OrderedDict
 AGENT NOTE - 2025-07-13: Enforced adapter stage registration and added tests
