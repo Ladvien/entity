@@ -39,8 +39,7 @@ class MetricsCollectorResource(ResourcePlugin):
     """Simple in-memory metrics collector."""
 
     name = "metrics_collector"
-    dependencies = ["database"]
-    infrastructure_dependencies: list[str] = []
+    infrastructure_dependencies = ["database"]
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
         super().__init__(config or {})
