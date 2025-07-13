@@ -198,3 +198,36 @@ async def test_thoughts_do_not_leak_between_executions(patched_stage_resolver):
 
     assert first == "one"
     assert second == "two"
+
+
+class EchoStorePlugin(Plugin):
+    stages = [PipelineStage.OUTPUT]
+
+    async def _execute_impl(self, context):
+        await context.remember("last", context.conversation()[-1].content)
+        context.say(context.conversation()[-1].content)
+
+
+@pytest.mark.asyncio
+async def test_multi_user_isolation_worker(patched_stage_resolver, memory_db):
+    regs = types.SimpleNamespace(
+        resources={"memory": memory_db},
+        tools=types.SimpleNamespace(),
+        plugins=PluginRegistry(),
+    )
+    await regs.plugins.register_plugin_for_stage(
+        EchoStorePlugin({}), PipelineStage.OUTPUT
+    )
+    worker = PipelineWorker(regs)
+
+    await asyncio.gather(
+        worker.execute_pipeline("chat", "hello", user_id="alice"),
+        worker.execute_pipeline("chat", "world", user_id="bob"),
+    )
+
+    hist_a = await memory_db.load_conversation("chat", user_id="alice")
+    hist_b = await memory_db.load_conversation("chat", user_id="bob")
+    assert [e.content for e in hist_a] == ["hello"]
+    assert [e.content for e in hist_b] == ["world"]
+    assert await memory_db.get("last", user_id="alice") == "hello"
+    assert await memory_db.get("last", user_id="bob") == "world"
