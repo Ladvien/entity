@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-12: Added env interpolation and migration utilities
 AGENT NOTE - 2025-07-12: Clarified plugin verification log message
 AGENT NOTE - 2025-07-12: Added Pydantic models for tool, adapter, and workflow settings
 AGENT NOTE - 2025-07-12: Verified metrics_collector removal; file already absent

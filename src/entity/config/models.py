@@ -4,16 +4,34 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
+from entity.pipeline.stages import PipelineStage
 
 
 class PluginConfig(BaseModel):
     """Configuration for a single plugin."""
 
     type: str
+    dependencies: list[str] = Field(default_factory=list)
+    stage: PipelineStage | None = None
+    stages: list[PipelineStage] = Field(default_factory=list)
 
     class Config:
         extra = "allow"
+
+    @validator("stage", pre=True)
+    def _validate_stage(cls, value: str | PipelineStage | None) -> PipelineStage | None:
+        if value is None:
+            return None
+        return PipelineStage.ensure(value)
+
+    @validator("stages", pre=True)
+    def _validate_stages(
+        cls, value: list[str | PipelineStage] | None
+    ) -> list[PipelineStage]:
+        if value is None:
+            return []
+        return [PipelineStage.ensure(v) for v in value]
 
 
 class EmbeddingModelConfig(BaseModel):

@@ -7,6 +7,23 @@ from typing import Any, Iterable
 from pydantic import BaseModel, fields
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+
+stages_spec = importlib.util.spec_from_file_location(
+    "entity.pipeline.stages", ROOT / "src/entity/pipeline/stages.py"
+)
+stages_mod = importlib.util.module_from_spec(stages_spec)
+assert stages_spec.loader
+stages_spec.loader.exec_module(stages_mod)
+sys.modules["entity"] = importlib.util.module_from_spec(
+    importlib.util.spec_from_loader("entity", loader=None)
+)
+pipeline_pkg = importlib.util.module_from_spec(
+    importlib.util.spec_from_loader("entity.pipeline", loader=None)
+)
+sys.modules["entity.pipeline"] = pipeline_pkg
+sys.modules["entity.pipeline.stages"] = stages_mod
+
 spec = importlib.util.spec_from_file_location(
     "entity_config_models", ROOT / "src/entity/config/models.py"
 )
@@ -31,11 +48,11 @@ def field_type_str(field: Any) -> str:
 
 
 def default_str(field: Any) -> str:
-    if hasattr(field, "is_required"):
-        if field.is_required():
-            return "Required"
+    if hasattr(field, "required") and field.required:
+        return "Required"
     default = field.default
-    if default is fields.PydanticUndefined:
+    undefined = getattr(fields, "PydanticUndefined", getattr(fields, "Undefined", None))
+    if default is undefined:
         return "Required"
     return repr(default)
 
@@ -51,7 +68,10 @@ def model_section(model_cls: type[BaseModel]) -> str:
             "| --- | --- | --- | --- |",
         ]
     )
-    for name, field in model_cls.model_fields.items():
+    fields_map = getattr(model_cls, "model_fields", None)
+    if fields_map is None:
+        fields_map = model_cls.__fields__  # type: ignore[attr-defined]
+    for name, field in fields_map.items():
         desc = getattr(field, "description", "") or ""
         lines.append(
             f"| {name} | {field_type_str(field)} | {default_str(field)} | {desc} |"
