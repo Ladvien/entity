@@ -13,22 +13,34 @@ from entity.core.registries import PluginRegistry
 class DummyConnection:
     def __init__(self, store: dict) -> None:
         self.store = store
+        self._last_result: list | None = None
 
-    async def execute(self, query: str, params: tuple | None = None) -> None:
+    def execute(self, query: str, params: tuple | None = None) -> None:
         if query.startswith("DELETE FROM conversation_history"):
-            cid = params
+            cid = params[0]
             self.store["history"].pop(cid, None)
         elif query.startswith("INSERT INTO conversation_history"):
             cid, role, content, metadata, ts = params
             self.store.setdefault("history", {}).setdefault(cid, []).append(
                 (role, content, json.loads(metadata), ts)
             )
+        elif query.startswith(
+            "SELECT role, content, metadata, timestamp FROM conversation_history"
+        ):
+            cid = params[0]
+            self._last_result = [
+                (role, content, json.dumps(metadata), ts)
+                for role, content, metadata, ts in self.store.get("history", {}).get(
+                    cid, []
+                )
+            ]
+        return self
 
-    async def fetch(self, query: str, params: tuple) -> list:
+    def fetch(self, query: str, params: tuple) -> list:
         if query.startswith(
             "SELECT role, content, metadata, timestamp FROM conversation_history"
         ):
-            cid = params
+            cid = params[0]
             return [
                 (role, content, metadata, ts)
                 for role, content, metadata, ts in self.store.get("history", {}).get(
@@ -36,6 +48,9 @@ class DummyConnection:
                 )
             ]
         return []
+
+    def fetchall(self) -> list:
+        return self._last_result or []
 
 
 class DummyDatabase(DatabaseResource):
@@ -47,11 +62,15 @@ class DummyDatabase(DatabaseResource):
     async def connection(self):
         yield DummyConnection(self.data)
 
+    def get_connection_pool(self):
+        return DummyConnection(self.data)
+
 
 class DummyRegistries:
     def __init__(self, db: DummyDatabase) -> None:
         mem = Memory(config={})
         mem.database = db
+        mem.vector_store = None
         self.resources = {"memory": mem}
         self.tools = types.SimpleNamespace()
         self.plugins = PluginRegistry()
@@ -62,10 +81,12 @@ async def test_workers_share_state_across_instances() -> None:
     db = DummyDatabase()
 
     regs1 = DummyRegistries(db)
+    await regs1.resources["memory"].initialize()
     worker1 = PipelineWorker(regs1)
     await worker1.execute_pipeline("pipe", "hello", user_id="u1")
 
     regs2 = DummyRegistries(db)
+    await regs2.resources["memory"].initialize()
     worker2 = PipelineWorker(regs2)
     await worker2.execute_pipeline("pipe", "there", user_id="u1")
 
@@ -77,6 +98,7 @@ async def test_workers_share_state_across_instances() -> None:
 async def test_worker_does_not_cache_state() -> None:
     db = DummyDatabase()
     regs = DummyRegistries(db)
+    await regs.resources["memory"].initialize()
     worker = PipelineWorker(regs)
 
     await worker.execute_pipeline("pipe", "first", user_id="u1")
