@@ -52,7 +52,17 @@ def test_config_overrides_class_stage(caplog: pytest.LogCaptureFixture) -> None:
             logger=logger,
         )
     assert stages == [PipelineStage.REVIEW]
-    assert "override" in caplog.text
+    assert "configuration stages" in caplog.text
+
+
+def test_fallback_stage_not_explicit() -> None:
+    class NoStagePlugin(Plugin):
+        async def _execute_impl(self, context: PluginContext) -> None:
+            pass
+
+    stages, explicit = StageResolver._resolve_plugin_stages(NoStagePlugin, {})
+    assert stages == [PipelineStage.THINK]
+    assert explicit is False
 
 
 def test_class_stage_used_without_config() -> None:
