@@ -12,7 +12,7 @@ except ModuleNotFoundError:  # pragma: no cover - environment may omit duckdb
     duckdb = None
 
 from .logging import get_logger
-from entity.workflows.default import DefaultWorkflow
+from entity.workflows.default import default_workflow
 from entity.workflows import Workflow
 
 
@@ -64,7 +64,7 @@ class Layer0SetupManager:
         self.model = model
         self.base_url = base_url.rstrip("/")
         self.logger = logger or get_logger(self.__class__.__name__)
-        self.workflow = workflow or DefaultWorkflow()
+        self.workflow = workflow or default_workflow
 
     async def ensure_ollama(self) -> bool:
         """Return ``True`` when Ollama and the desired model are available."""

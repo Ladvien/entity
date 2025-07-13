@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+# ruff: noqa: E402
+
 """Default minimal workflow."""
 
 from entity.pipeline.stages import PipelineStage
@@ -15,3 +17,7 @@ class DefaultWorkflow(Workflow):
         PipelineStage.THINK: [],
         PipelineStage.OUTPUT: [],
     }
+
+
+# Convenient pre-built instance for quick startup
+default_workflow = DefaultWorkflow()
