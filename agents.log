@@ -4,6 +4,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 AGENT NOTE - 2025-07-13: Verified merge conflict cleanup and preserved all notes
 >>>>>>> pr-1430
@@ -36,6 +37,9 @@ AGENT NOTE - 2025-07-13: Added infrastructure_type to AWSStandardInfrastructure
 =======
 AGENT NOTE - 2025-07-13: Added vector store and logging to default setup
 >>>>>>> pr-1441
+=======
+AGENT NOTE - 2025-07-13: No resource interface modules found to move, canonical resources already depend on interfaces.
+>>>>>>> pr-1440
 AGENT NOTE - 2025-07-24: Updated DuckDBResource to subclass AgentResource and use database_backend
 AGENT NOTE - 2025-07-23: Allow layer 3 for custom resources without dependencies
 AGENT NOTE - 2025-07-23: Fixed DatabaseResource import and updated async usage in plugin context memory test
