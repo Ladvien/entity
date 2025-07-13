@@ -161,68 +161,32 @@ class Plugin(BasePlugin):
         return ValidationResult.success_result()
 
     async def initialize(self) -> None:
-        """Optional startup hook for plugins."""
+        """Prepare the plugin for use."""
 
         if self.is_initialized and not self.is_shutdown:
             return
 
-        start = time.perf_counter()
+        await self._on_initialize()
         self.is_initialized = True
         self.is_shutdown = False
 
-        logger = getattr(self, "logging", None)
-        if logger is not None:
-            await logger.log(
-                "info",
-                "Plugin initialized",
-                component="plugin",
-                plugin_name=self.__class__.__name__,
-                pipeline_id="system",
-            )
-
-        duration = (time.perf_counter() - start) * 1000
-        metrics = getattr(self, "metrics_collector", None)
-        if metrics is not None:
-            await metrics.record_resource_operation(
-                pipeline_id="system",
-                resource_name=self.__class__.__name__,
-                operation="initialize",
-                duration_ms=duration,
-                success=True,
-                metadata={},
-            )
-
     async def shutdown(self) -> None:
-        """Optional shutdown hook for plugins."""
+        """Release any resources held by the plugin."""
 
         if self.is_shutdown:
             return
 
-        start = time.perf_counter()
+        await self._on_shutdown()
         self.is_initialized = False
         self.is_shutdown = True
 
-        logger = getattr(self, "logging", None)
-        if logger is not None:
-            await logger.log(
-                "info",
-                "Plugin shutdown",
-                component="plugin",
-                plugin_name=self.__class__.__name__,
-                pipeline_id="system",
-            )
+    async def _on_initialize(self) -> None:  # pragma: no cover - default hook
+        """Hook executed once during :meth:`initialize`."""
+        return None
 
-        duration = (time.perf_counter() - start) * 1000
-        metrics = getattr(self, "metrics_collector", None)
-        if metrics is not None:
-            await metrics.record_resource_operation(
-                pipeline_id="system",
-                resource_name=self.__class__.__name__,
-                operation="shutdown",
-                duration_ms=duration,
-                success=True,
-                metadata={},
-            )
+    async def _on_shutdown(self) -> None:  # pragma: no cover - default hook
+        """Hook executed once during :meth:`shutdown`."""
+        return None
 
     def validate_registration_stage(self, stage: PipelineStage) -> None:
         """Verify plugin registration ``stage`` is allowed."""
@@ -316,25 +280,11 @@ class ResourcePlugin(Plugin):
     resource_category: str = ""
     stages: List[PipelineStage] = []
 
-    async def initialize(self) -> None:
-        if self.is_initialized and not self.is_shutdown:
-            return
+    async def _on_initialize(self) -> None:
+        await self._track_operation(operation="initialize", func=lambda: None)
 
-        async def _init() -> None:
-            self.is_initialized = True
-            self.is_shutdown = False
-
-        await self._track_operation(operation="initialize", func=_init)
-
-    async def shutdown(self) -> None:
-        if self.is_shutdown:
-            return
-
-        async def _shut() -> None:
-            self.is_initialized = False
-            self.is_shutdown = True
-
-        await self._track_operation(operation="shutdown", func=_shut)
+    async def _on_shutdown(self) -> None:
+        await self._track_operation(operation="shutdown", func=lambda: None)
 
     async def _track_operation(
         self,

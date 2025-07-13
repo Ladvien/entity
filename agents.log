@@ -7,6 +7,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 AGENT NOTE - 2025-07-13: Implemented DuckDBVectorStore setup and minimal workflow tests
 >>>>>>> pr-1506
@@ -31,6 +32,9 @@ AGENT NOTE - 2025-07-13: Added workflow support and composition helpers
 =======
 AGENT NOTE - 2025-07-13: Detect cycles in resource initialization order and add regression tests
 >>>>>>> pr-1499
+=======
+AGENT NOTE - 2025-07-13: Added lifecycle hooks with state tracking and tests
+>>>>>>> pr-1498
 AGENT NOTE - 2025-08-09: Documented examples package and exported key modules
 =======
 AGENT NOTE - 2025-07-13: Ensured pipeline package sets __path__ for plugin discovery

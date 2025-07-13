@@ -11,6 +11,16 @@ The initializer reads entries sequentially and registers each plugin as it
 appears, so restarting the system with the same YAML file yields identical
 execution order.
 
+## Plugin Lifecycle
+
+Every plugin defines asynchronous `initialize()` and `shutdown()` methods.  The
+base :class:`~entity.core.plugins.Plugin` implementation simply tracks lifecycle
+state and provides `_on_initialize()` and `_on_shutdown()` hooks.  Subclasses
+override these hooks when they need to allocate or release resources.
+
+Repeated calls to `initialize()` or `shutdown()` are ignored, so plugins can be
+safely restarted without duplicating work.
+
 ## LlamaCppInfrastructure
 
 `LlamaCppInfrastructure` manages a local [llama.cpp](https://github.com/ggerganov/llama.cpp)

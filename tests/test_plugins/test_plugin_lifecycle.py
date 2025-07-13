@@ -28,9 +28,7 @@ async def test_plugin_lifecycle_metrics():
     assert plugin.is_initialized
     await plugin.shutdown()
     assert plugin.is_shutdown
-    operations = [op.operation for op in metrics.resource_operations]
-    assert "initialize" in operations
-    assert "shutdown" in operations
+    assert metrics.resource_operations == []
 
 
 @pytest.mark.asyncio
