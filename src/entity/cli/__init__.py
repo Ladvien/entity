@@ -61,6 +61,7 @@ class CLIArgs:
     infra_cmd: Optional[str] = None
     infra_type: Optional[str] = None
     infra_path: Optional[str] = None
+    user_id: Optional[str] = None
 
 
 class EntityCLI:
@@ -93,6 +94,11 @@ class EntityCLI:
             "reload-config", help="Reload plugin configuration from a YAML file"
         )
         reload_p.add_argument("file")
+
+        stats = sub.add_parser(
+            "get-conversation-stats", help="Show conversation metrics"
+        )
+        stats.add_argument("user_id")
 
         new_p = sub.add_parser("new", help="Scaffold a new project")
         new_p.add_argument("path")
@@ -188,6 +194,7 @@ class EntityCLI:
             infra_cmd=getattr(parsed, "infra_cmd", None),
             infra_type=getattr(parsed, "infra_type", None),
             infra_path=getattr(parsed, "infra_path", None),
+            user_id=getattr(parsed, "user_id", None),
         )
 
     # -----------------------------------------------------
@@ -228,6 +235,9 @@ class EntityCLI:
             agent = Agent.from_config(cfg)
         else:
             agent = Agent()
+        if cmd == "get-conversation-stats":
+            assert self.args.user_id is not None
+            return asyncio.run(self._get_conversation_stats(agent, self.args.user_id))
         if cmd == "reload-config":
             assert self.args.file is not None
             return self._reload_config(agent, self.args.file)
@@ -474,6 +484,16 @@ class EntityCLI:
             logger.error("Unknown infrastructure type %s", typ)
             return 1
         await infra.destroy()
+        return 0
+
+    async def _get_conversation_stats(self, agent: Agent, user_id: str) -> int:
+        await agent._ensure_runtime()
+        memory = agent.runtime.capabilities.resources.get("memory")
+        if memory is None:
+            logger.error("Memory resource not configured")
+            return 1
+        stats = await memory.conversation_statistics(user_id)
+        print(yaml.safe_dump(stats))
         return 0
 
     @staticmethod

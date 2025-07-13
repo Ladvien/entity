@@ -65,23 +65,29 @@ async def test_conversation_search_vector(memory_with_vector: Memory) -> None:
 async def test_conversation_statistics(memory_with_vector: Memory) -> None:
     now = datetime.now()
     await memory_with_vector.add_conversation_entry(
-        "user_c1",
+        "c1",
         ConversationEntry(content="hi", role="user", timestamp=now),
+        user_id="user",
     )
     await memory_with_vector.add_conversation_entry(
-        "user_c1",
+        "c1",
         ConversationEntry(
             content="bye", role="assistant", timestamp=now + timedelta(seconds=30)
         ),
+        user_id="user",
     )
     await memory_with_vector.add_conversation_entry(
-        "user_c2",
+        "c2",
         ConversationEntry(
             content="ping", role="user", timestamp=now + timedelta(seconds=60)
         ),
+        user_id="user",
     )
     stats = await memory_with_vector.conversation_statistics("user")
     assert stats["conversations"] == 2
     assert stats["messages"] == 3
+    assert stats["average_length"] == 1.5
     assert stats["durations"]["user_c1"] == 30.0
     assert stats["durations"]["user_c2"] == 0.0
+    assert stats["most_active_periods"] == [now.hour]
+    assert stats["last_activity"] == (now + timedelta(seconds=60)).isoformat()

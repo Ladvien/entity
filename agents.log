@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-13: Added conversation analytics CLI and extended memory stats
 AGENT NOTE - 2025-07-13: Added tests for Memory.batch_store, vector_search and add_embedding
 AGENT NOTE - 2025-07-21: Updated runtime tests to use Pipeline wrapper
 AGENT NOTE - 2025-07-20: Updated load_env precedence and tests

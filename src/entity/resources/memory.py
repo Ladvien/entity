@@ -292,30 +292,50 @@ class Memory(AgentResource):
         ]
 
     async def conversation_statistics(self, user_id: str) -> Dict[str, Any]:
-        """Return message counts and durations for ``user_id`` conversations."""
+        """Return metrics for all conversations belonging to ``user_id``."""
         if self._pool is None:
             return {}
+
         async with self.database.connection() as conn:
             rows = conn.execute(
-                f"SELECT conversation_id, COUNT(*) as count, "
-                f"MIN(timestamp) as start, MAX(timestamp) as end "
-                f"FROM {self._history_table} "
-                "WHERE conversation_id LIKE ? GROUP BY conversation_id",
+                f"SELECT conversation_id, timestamp FROM {self._history_table} "
+                "WHERE conversation_id LIKE ?",
                 (f"{user_id}%",),
             ).fetchall()
 
-        stats: Dict[str, float] = {}
-        total_messages = 0
-        for row in rows:
-            total_messages += row[1]
-            start = datetime.fromisoformat(row[2])
-            end = datetime.fromisoformat(row[3])
-            stats[row[0]] = (end - start).total_seconds()
+        durations: Dict[str, float] = {}
+        counts: Dict[str, int] = {}
+        start_times: Dict[str, datetime] = {}
+        last_activity: datetime | None = None
+        periods: Dict[int, int] = {}
+
+        for conv_id, ts in rows:
+            timestamp = datetime.fromisoformat(ts)
+            last_activity = (
+                max(last_activity, timestamp) if last_activity else timestamp
+            )
+            periods[timestamp.hour] = periods.get(timestamp.hour, 0) + 1
+
+            if conv_id not in counts:
+                counts[conv_id] = 0
+                start_times[conv_id] = timestamp
+            counts[conv_id] += 1
+            durations[conv_id] = (timestamp - start_times[conv_id]).total_seconds()
+        conversations = len(counts)
+        total_messages = sum(counts.values())
+        average_length = (total_messages / conversations) if conversations else 0
+        most_active = []
+        if periods:
+            max_count = max(periods.values())
+            most_active = [h for h, c in periods.items() if c == max_count]
 
         return {
-            "conversations": len(rows),
+            "conversations": conversations,
             "messages": total_messages,
-            "durations": stats,
+            "average_length": average_length,
+            "durations": durations,
+            "most_active_periods": most_active,
+            "last_activity": last_activity.isoformat() if last_activity else None,
         }
 
     # ------------------------------------------------------------------
