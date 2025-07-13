@@ -1,5 +1,4 @@
-import asyncio
-from pathlib import Path
+from unittest.mock import AsyncMock
 
 import httpx
 import pytest
@@ -39,18 +38,12 @@ async def test_ensure_ollama_missing_model(monkeypatch):
 
         return R()
 
-    async def fake_exec(*args, **kwargs):
-        class P:
-            returncode = 0
-
-            async def communicate(self):
-                return b"", b""
-
-        return P()
+    pull_mock = AsyncMock(return_value=True)
 
     monkeypatch.setattr(httpx.AsyncClient, "get", fake_get)
-    monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
+    monkeypatch.setattr("entity.utils.setup_manager.pull_model", pull_mock)
     assert await mgr.ensure_ollama() is True
+    pull_mock.assert_awaited_once_with("foo", logger=mgr.logger)
 
 
 @pytest.mark.asyncio
