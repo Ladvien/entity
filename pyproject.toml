@@ -188,5 +188,7 @@ exclude = '''
   | build
   | dist
   | src/cli/templates
+  | src/entity/cli/templates
+  | templates/plugins
 )/
 '''
