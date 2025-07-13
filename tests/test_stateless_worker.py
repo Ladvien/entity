@@ -67,7 +67,7 @@ async def test_workers_share_state_across_instances() -> None:
     worker2 = PipelineWorker(regs2)
     await worker2.execute_pipeline("pipe", "there", user_id="u1")
 
-    history = await regs2.resources["memory"].load_conversation("u1_pipe")
+    history = await regs2.resources["memory"].load_conversation("pipe", user_id="u1")
     assert [e.content for e in history] == ["hello", "there"]
 
 
@@ -80,5 +80,5 @@ async def test_worker_does_not_cache_state() -> None:
     await worker.execute_pipeline("pipe", "first", user_id="u1")
     await worker.execute_pipeline("pipe", "second", user_id="u1")
 
-    history = await regs.resources["memory"].load_conversation("u1_pipe")
+    history = await regs.resources["memory"].load_conversation("pipe", user_id="u1")
     assert [e.content for e in history] == ["first", "second"]

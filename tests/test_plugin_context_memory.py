@@ -147,16 +147,16 @@ def test_memory_persists_between_instances() -> None:
     mem1.database = db
     mem1.vector_store = None
     asyncio.get_event_loop().run_until_complete(mem1.initialize())
-    loop.run_until_complete(mem1.set("foo", "bar"))
+    loop.run_until_complete(mem1.set("foo", "bar", user_id="default"))
     entry = ConversationEntry("hi", "user", datetime.now())
-    asyncio.run(mem1.save_conversation("cid", [entry]))
+    asyncio.run(mem1.save_conversation("cid", [entry], user_id="default"))
 
     mem2 = Memory(config={})
     mem2.database = db
     mem2.vector_store = None
     asyncio.get_event_loop().run_until_complete(mem2.initialize())
-    assert loop.run_until_complete(mem2.get("foo")) == "bar"
-    history = loop.run_until_complete(mem2.load_conversation("cid"))
+    assert loop.run_until_complete(mem2.get("foo", user_id="default")) == "bar"
+    history = loop.run_until_complete(mem2.load_conversation("cid", user_id="default"))
     assert history == [entry]
 
 
@@ -167,16 +167,16 @@ def test_memory_persists_with_connection_pool() -> None:
     mem1.database = pool
     mem1.vector_store = None
     asyncio.get_event_loop().run_until_complete(mem1.initialize())
-    loop.run_until_complete(mem1.set("foo", "bar"))
+    loop.run_until_complete(mem1.set("foo", "bar", user_id="default"))
     entry = ConversationEntry("hi", "user", datetime.now())
-    asyncio.run(mem1.save_conversation("cid", [entry]))
+    asyncio.run(mem1.save_conversation("cid", [entry], user_id="default"))
 
     mem2 = Memory(config={})
     mem2.database = pool
     mem2.vector_store = None
     asyncio.get_event_loop().run_until_complete(mem2.initialize())
-    assert loop.run_until_complete(mem2.get("foo")) == "bar"
-    history = loop.run_until_complete(mem2.load_conversation("cid"))
+    assert loop.run_until_complete(mem2.get("foo", user_id="default")) == "bar"
+    history = loop.run_until_complete(mem2.load_conversation("cid", user_id="default"))
     assert history == [entry]
 
 

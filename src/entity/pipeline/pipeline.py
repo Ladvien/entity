@@ -98,7 +98,11 @@ def create_default_response(message: str, pipeline_id: str) -> Dict[str, Any]:
 
 
 async def execute_stage(
-    stage: PipelineStage, state: PipelineState, registries: SystemRegistries
+    stage: PipelineStage,
+    state: PipelineState,
+    registries: SystemRegistries,
+    *,
+    user_id: str,
 ) -> None:
     state.current_stage = stage
     log_res = registries.resources.get("logging") if registries.resources else None
@@ -239,7 +243,7 @@ async def execute_stage(
             if state.failure_info:
                 break
         if state.failure_info and stage != PipelineStage.ERROR:
-            await execute_stage(PipelineStage.ERROR, state, registries)
+            await execute_stage(PipelineStage.ERROR, state, registries, user_id=user_id)
             state.last_completed_stage = PipelineStage.ERROR
     _ = time.perf_counter() - start
 
@@ -292,7 +296,7 @@ async def execute_pipeline(
                     ):
                         continue
                     try:
-                        await execute_stage(stage, state, capabilities)
+                        await execute_stage(stage, state, capabilities, user_id=user_id)
                     finally:
                         if state_logger is not None:
                             state_logger.log(state, stage)
@@ -342,10 +346,14 @@ async def execute_pipeline(
         if state.failure_info:
             try:
                 if state.last_completed_stage != PipelineStage.ERROR:
-                    await execute_stage(PipelineStage.ERROR, state, capabilities)
+                    await execute_stage(
+                        PipelineStage.ERROR, state, capabilities, user_id=user_id
+                    )
                     if state_logger is not None:
                         state_logger.log(state, PipelineStage.ERROR)
-                await execute_stage(PipelineStage.OUTPUT, state, capabilities)
+                await execute_stage(
+                    PipelineStage.OUTPUT, state, capabilities, user_id=user_id
+                )
             except Exception:
                 result = create_static_error_response(state.pipeline_id).to_dict()
                 return result

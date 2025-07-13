@@ -32,12 +32,14 @@ class DummyMemory:
         self.saved_id = None
         self.history = []
 
-    async def load_conversation(self, conversation_id: str):
-        self.loaded_id = conversation_id
+    async def load_conversation(self, pipeline_id: str, *, user_id: str = "default"):
+        self.loaded_id = f"{user_id}_{pipeline_id}"
         return list(self.history)
 
-    async def save_conversation(self, conversation_id: str, history):
-        self.saved_id = conversation_id
+    async def save_conversation(
+        self, pipeline_id: str, history, *, user_id: str = "default"
+    ):
+        self.saved_id = f"{user_id}_{pipeline_id}"
         self.history = list(history)
 
 
@@ -172,7 +174,7 @@ async def test_pipeline_persists_conversation(memory_db):
     await worker.execute_pipeline("pipe1", "hello", user_id="u1")
     await worker.execute_pipeline("pipe1", "world", user_id="u1")
 
-    history = await regs.resources["memory"].load_conversation("u1_pipe1")
+    history = await regs.resources["memory"].load_conversation("pipe1", user_id="u1")
     assert [e.content for e in history] == ["first", "second"]
 
 
