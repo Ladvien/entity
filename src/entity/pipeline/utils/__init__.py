@@ -14,6 +14,11 @@ def _normalize_stages(stages: Any) -> List[PipelineStage]:
     return [PipelineStage.ensure(stages)]
 
 
+def _mro_has_class(cls: Type, name: str) -> bool:
+    """Return True if ``cls`` inherits from a class with ``name``."""
+    return any(base.__name__ == name for base in cls.mro()[1:])
+
+
 def resolve_stages(
     plugin_class: Type, config: Mapping[str, Any]
 ) -> List[PipelineStage]:
@@ -87,6 +92,28 @@ class StageResolver:
             stages = _normalize_stages(inherited_value)
         else:
             stages = [PipelineStage.THINK]
+
+        if _mro_has_class(plugin_class, "InputAdapterPlugin") and stages != [
+            PipelineStage.INPUT
+        ]:
+            if logger is not None:
+                logger.warning(
+                    "%s can only run in INPUT stage; ignoring configured %s",
+                    plugin_class.__name__,
+                    stages,
+                )
+            stages = [PipelineStage.INPUT]
+
+        if _mro_has_class(plugin_class, "OutputAdapterPlugin") and stages != [
+            PipelineStage.OUTPUT
+        ]:
+            if logger is not None:
+                logger.warning(
+                    "%s can only run in OUTPUT stage; ignoring configured %s",
+                    plugin_class.__name__,
+                    stages,
+                )
+            stages = [PipelineStage.OUTPUT]
 
         if (
             declared_value is not None
