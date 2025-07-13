@@ -7,11 +7,14 @@ import asyncio
 import importlib.util
 import inspect
 import shutil
+import difflib
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Awaitable, Callable, Optional
 
 import yaml
+from jsonschema import Draft7Validator
 
 from entity.core.agent import Agent
 from entity.core.plugins import Plugin, ValidationResult
@@ -20,9 +23,12 @@ from entity.pipeline.exceptions import CircuitBreakerTripped
 from entity.core.circuit_breaker import CircuitBreaker
 from entity.utils.logging import get_logger
 from entity.config.environment import load_config
-from importlib import import_module
-import sys
-from entity.infrastructure import DockerInfrastructure, AWSStandardInfrastructure
+from docs.generate_config_docs import build_schema
+from importlib import import_module  # noqa: E402
+from entity.infrastructure import (
+    DockerInfrastructure,
+    AWSStandardInfrastructure,
+)  # noqa: E402
 
 try:  # Resolve plugin helpers from installed "cli" package
     generate_plugin = import_module("cli.plugin_tool.generate").generate_plugin
@@ -62,7 +68,11 @@ class CLIArgs:
     infra_type: Optional[str] = None
     infra_path: Optional[str] = None
     user_id: Optional[str] = None
+<<<<<<< HEAD
     message: Optional[str] = None
+=======
+    files: Optional[list[str]] = None
+>>>>>>> pr-1416
 
 
 class EntityCLI:
@@ -96,6 +106,16 @@ class EntityCLI:
             "reload-config", help="Reload plugin configuration from a YAML file"
         )
         reload_p.add_argument("file")
+
+        diff_p = sub.add_parser(
+            "diff-config", help="Show differences with the current configuration"
+        )
+        diff_p.add_argument("file")
+
+        lint_p = sub.add_parser(
+            "lint-config", help="Validate configuration files against schema"
+        )
+        lint_p.add_argument("files", nargs="+")
 
         stats = sub.add_parser(
             "get-conversation-stats", help="Show conversation metrics"
@@ -200,7 +220,11 @@ class EntityCLI:
             infra_type=getattr(parsed, "infra_type", None),
             infra_path=getattr(parsed, "infra_path", None),
             user_id=getattr(parsed, "user_id", None),
+<<<<<<< HEAD
             message=getattr(parsed, "message", None),
+=======
+            files=getattr(parsed, "files", None),
+>>>>>>> pr-1416
         )
 
     # -----------------------------------------------------
@@ -250,6 +274,12 @@ class EntityCLI:
         if cmd == "reload-config":
             assert self.args.file is not None
             return self._reload_config(agent, self.args.file)
+        if cmd == "diff-config":
+            assert self.args.file is not None
+            return self._diff_config(agent, self.args.file)
+        if cmd == "lint-config":
+            assert self.args.files is not None
+            return self._lint_config(self.args.files)
 
         async def _serve() -> None:
             await agent._ensure_runtime()
@@ -775,6 +805,42 @@ class EntityCLI:
             return 0
 
         return asyncio.run(_run())
+
+    def _diff_config(self, agent: Agent, file_path: str) -> int:
+        """Show differences between running config and ``file_path``."""
+
+        if agent.config_path is None:
+            logger.error("Agent was not started from a config file")
+            return 1
+
+        current = self._load_config_files(agent.config_path)
+        with open(file_path, "r", encoding="utf-8") as handle:
+            new_cfg = yaml.safe_load(handle) or {}
+
+        diff = difflib.unified_diff(
+            yaml.safe_dump(current, sort_keys=True).splitlines(),
+            yaml.safe_dump(new_cfg, sort_keys=True).splitlines(),
+            fromfile="current",
+            tofile=file_path,
+        )
+        print("\n".join(diff))
+        return 0
+
+    def _lint_config(self, files: list[str]) -> int:
+        """Validate YAML files against the generated configuration schema."""
+
+        schema = build_schema()["EntityConfig"]
+        validator = Draft7Validator(schema)
+        ok = True
+        for path in files:
+            data = yaml.safe_load(Path(path).read_text()) or {}
+            errors = list(validator.iter_errors(data))
+            if errors:
+                ok = False
+                logger.error("%s is invalid", path)
+                for err in errors:
+                    logger.error("  %s", err.message)
+        return 0 if ok else 1
 
     def _create_project(self, path: str) -> int:
         target = Path(path)

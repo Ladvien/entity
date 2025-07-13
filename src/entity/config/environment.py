@@ -72,14 +72,33 @@ def _interpolate(value: Any) -> Any:
     return value
 
 
-def load_config(base: str | Path, overlay: str | Path | None = None) -> dict[str, Any]:
-    """Return configuration from ``base`` merged with optional ``overlay``."""
+def _load_with_extends(path: Path) -> dict[str, Any]:
+    """Load YAML from ``path`` resolving optional ``extends`` chain."""
 
-    base_data = yaml.safe_load(Path(base).read_text()) or {}
+    data = yaml.safe_load(path.read_text()) or {}
+    parent = data.pop("extends", None)
+    if parent:
+        parent_path = Path(parent)
+        if not parent_path.exists():
+            parent_path = path.parent / f"{parent}.yaml"
+        if parent_path.exists():
+            base = _load_with_extends(parent_path)
+            data = _merge(base, data)
+    return data
+
+
+def load_config(base: str | Path, overlay: str | Path | None = None) -> dict[str, Any]:
+    """Return configuration from ``base`` merged with optional ``overlay``.
+
+    Both files may specify ``extends`` to inherit settings from another
+    configuration file located in the same directory or referenced by path.
+    """
+
+    base_data = _load_with_extends(Path(base))
     if overlay:
         overlay_path = Path(overlay)
         if overlay_path.exists():
-            overlay_data = yaml.safe_load(overlay_path.read_text()) or {}
+            overlay_data = _load_with_extends(overlay_path)
             base_data = _merge(base_data, overlay_data)
     return _interpolate(base_data)  # type: ignore[no-any-return]
 
