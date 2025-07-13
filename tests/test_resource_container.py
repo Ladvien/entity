@@ -128,3 +128,57 @@ def test_missing_infrastructure_type():
 
     with pytest.raises(InitializationError, match="infrastructure_type"):
         asyncio.run(container.build_all())
+
+
+@pytest.mark.asyncio
+async def test_health_check_failure_on_build():
+    class UnhealthyResource(AgentResource):
+        dependencies: list[str] = []
+        stages: list = []
+
+        async def health_check(self) -> bool:
+            return False
+
+    UnhealthyResource.dependencies = []
+
+    container = ResourceContainer()
+    container.register("bad", UnhealthyResource, {}, layer=3)
+
+    with pytest.raises(InitializationError, match="health check"):
+        await container.build_all()
+
+
+events: list[str] = []
+
+
+class RestartableResource(AgentResource):
+    dependencies: list[str] = []
+    stages: list = []
+
+    async def initialize(self) -> None:
+        events.append("init")
+
+    async def shutdown(self) -> None:
+        events.append("shutdown")
+
+    async def restart(self) -> None:
+        events.append("restart")
+        await super().restart()
+
+
+RestartableResource.dependencies = []
+
+
+@pytest.mark.asyncio
+async def test_restart_resource():
+    container = ResourceContainer()
+    container.register("res", RestartableResource, {}, layer=3)
+
+    await container.build_all()
+    first = container.get("res")
+
+    await container.restart_resource("res")
+
+    second = container.get("res")
+    assert first is second
+    assert events == ["init", "restart", "shutdown", "init"]

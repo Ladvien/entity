@@ -335,9 +335,19 @@ class ResourceContainer:
                     deps.append(res)
         return deps
 
+    async def restart_resource(self, name: str) -> bool:
+        """Restart ``name`` and reinject dependents in dependency order."""
+
+        return await self._restart_resource(name)
+
     async def _restart_resource(self, name: str) -> bool:
         old = self.get(name)
         if old is not None:
+            restart_method = getattr(old, "restart", None)
+            if callable(restart_method):
+                await restart_method()
+                check = getattr(old, "health_check", None)
+                return await check() if callable(check) else True
             shutdown = getattr(old, "shutdown", None)
             if callable(shutdown):
                 try:
@@ -424,7 +434,7 @@ class ResourceContainer:
             is_canonical = issubclass(cls, (CanonicalResource, PluginAgentResource))
 
             expected = (
-                1 if is_infra else 2 if is_interface else 3 if is_canonical else 4
+                1 if is_infra else 3 if is_canonical else 2 if is_interface else 4
             )
 
             if layer != expected:
