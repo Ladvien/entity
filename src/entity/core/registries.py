@@ -5,6 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Dict, List
 
+from entity.core.validation import verify_dependencies, verify_stage_assignment
+from entity.pipeline.stages import PipelineStage
+
 
 class PluginRegistry:
     """Register plugins for each pipeline stage."""
@@ -14,10 +17,16 @@ class PluginRegistry:
         self._names: Dict[Any, str] = {}
 
     async def register_plugin_for_stage(
-        self, plugin: Any, stage: str, name: str | None = None
+        self, plugin: Any, stage: str | PipelineStage, name: str | None = None
     ) -> None:
+        stage_enum = PipelineStage.ensure(stage)
         plugin_name = name or getattr(plugin, "name", plugin.__class__.__name__)
-        self._stage_plugins.setdefault(stage, []).append(plugin)
+
+        verify_stage_assignment(plugin, stage_enum)
+        verify_dependencies(plugin, self._names.values())
+
+        key = str(stage_enum)
+        self._stage_plugins.setdefault(key, []).append(plugin)
         self._names[plugin] = plugin_name
 
     def get_plugins_for_stage(self, stage: str) -> List[Any]:
