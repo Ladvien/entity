@@ -1,0 +1,961 @@
+{
+  "AdapterSettings": {
+    "$defs": {
+      "RateLimitConfig": {
+        "description": "Request throttling settings for an adapter.",
+        "properties": {
+          "interval": {
+            "default": 60,
+            "minimum": 1,
+            "title": "Interval",
+            "type": "integer"
+          },
+          "requests": {
+            "default": 1,
+            "minimum": 1,
+            "title": "Requests",
+            "type": "integer"
+          }
+        },
+        "title": "RateLimitConfig",
+        "type": "object"
+      }
+    },
+    "description": "Configuration for adapter plugins.",
+    "properties": {
+      "audit_log_path": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Audit Log Path"
+      },
+      "auth_tokens": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Auth Tokens",
+        "type": "array"
+      },
+      "dashboard": {
+        "default": false,
+        "title": "Dashboard",
+        "type": "boolean"
+      },
+      "rate_limit": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/RateLimitConfig"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "stages": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Stages",
+        "type": "array"
+      }
+    },
+    "title": "AdapterSettings",
+    "type": "object"
+  },
+  "BreakerSettings": {
+    "$defs": {
+      "CircuitBreakerConfig": {
+        "additionalProperties": true,
+        "description": "Circuit breaker configuration.",
+        "properties": {
+          "api": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 5,
+            "title": "Api"
+          },
+          "database": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 3,
+            "title": "Database"
+          },
+          "failure_threshold": {
+            "default": 3,
+            "title": "Failure Threshold",
+            "type": "integer"
+          },
+          "filesystem": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 2,
+            "title": "Filesystem"
+          },
+          "recovery_timeout": {
+            "default": 60.0,
+            "title": "Recovery Timeout",
+            "type": "number"
+          }
+        },
+        "title": "CircuitBreakerConfig",
+        "type": "object"
+      }
+    },
+    "description": "Circuit breaker settings for different resource types.",
+    "properties": {
+      "database": {
+        "$ref": "#/$defs/CircuitBreakerConfig"
+      },
+      "external_api": {
+        "$ref": "#/$defs/CircuitBreakerConfig"
+      },
+      "file_system": {
+        "$ref": "#/$defs/CircuitBreakerConfig"
+      }
+    },
+    "title": "BreakerSettings",
+    "type": "object"
+  },
+  "CircuitBreakerConfig": {
+    "additionalProperties": true,
+    "description": "Circuit breaker configuration.",
+    "properties": {
+      "api": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": 5,
+        "title": "Api"
+      },
+      "database": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": 3,
+        "title": "Database"
+      },
+      "failure_threshold": {
+        "default": 3,
+        "title": "Failure Threshold",
+        "type": "integer"
+      },
+      "filesystem": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": 2,
+        "title": "Filesystem"
+      },
+      "recovery_timeout": {
+        "default": 60.0,
+        "title": "Recovery Timeout",
+        "type": "number"
+      }
+    },
+    "title": "CircuitBreakerConfig",
+    "type": "object"
+  },
+  "EmbeddingModelConfig": {
+    "additionalProperties": true,
+    "properties": {
+      "dimensions": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Dimensions"
+      },
+      "name": {
+        "title": "Name",
+        "type": "string"
+      }
+    },
+    "required": [
+      "name"
+    ],
+    "title": "EmbeddingModelConfig",
+    "type": "object"
+  },
+  "EntityConfig": {
+    "$defs": {
+      "BreakerSettings": {
+        "description": "Circuit breaker settings for different resource types.",
+        "properties": {
+          "database": {
+            "$ref": "#/$defs/CircuitBreakerConfig"
+          },
+          "external_api": {
+            "$ref": "#/$defs/CircuitBreakerConfig"
+          },
+          "file_system": {
+            "$ref": "#/$defs/CircuitBreakerConfig"
+          }
+        },
+        "title": "BreakerSettings",
+        "type": "object"
+      },
+      "CircuitBreakerConfig": {
+        "additionalProperties": true,
+        "description": "Circuit breaker configuration.",
+        "properties": {
+          "api": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 5,
+            "title": "Api"
+          },
+          "database": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 3,
+            "title": "Database"
+          },
+          "failure_threshold": {
+            "default": 3,
+            "title": "Failure Threshold",
+            "type": "integer"
+          },
+          "filesystem": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 2,
+            "title": "Filesystem"
+          },
+          "recovery_timeout": {
+            "default": 60.0,
+            "title": "Recovery Timeout",
+            "type": "number"
+          }
+        },
+        "title": "CircuitBreakerConfig",
+        "type": "object"
+      },
+      "PipelineStage": {
+        "description": "Ordered pipeline stages.",
+        "enum": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "title": "PipelineStage",
+        "type": "integer"
+      },
+      "PluginConfig": {
+        "additionalProperties": true,
+        "description": "Configuration for a single plugin.",
+        "properties": {
+          "dependencies": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Dependencies",
+            "type": "array"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PipelineStage"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "stages": {
+            "items": {
+              "$ref": "#/$defs/PipelineStage"
+            },
+            "title": "Stages",
+            "type": "array"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "title": "PluginConfig",
+        "type": "object"
+      },
+      "PluginsSection": {
+        "description": "Collection of user-defined plugins grouped by category.",
+        "properties": {
+          "adapters": {
+            "additionalProperties": {
+              "$ref": "#/$defs/PluginConfig"
+            },
+            "title": "Adapters",
+            "type": "object"
+          },
+          "agent_resources": {
+            "additionalProperties": {
+              "$ref": "#/$defs/PluginConfig"
+            },
+            "title": "Agent Resources",
+            "type": "object"
+          },
+          "custom_resources": {
+            "additionalProperties": {
+              "$ref": "#/$defs/PluginConfig"
+            },
+            "title": "Custom Resources",
+            "type": "object"
+          },
+          "infrastructure": {
+            "additionalProperties": {
+              "$ref": "#/$defs/PluginConfig"
+            },
+            "title": "Infrastructure",
+            "type": "object"
+          },
+          "prompts": {
+            "additionalProperties": {
+              "$ref": "#/$defs/PluginConfig"
+            },
+            "title": "Prompts",
+            "type": "object"
+          },
+          "resources": {
+            "additionalProperties": {
+              "$ref": "#/$defs/PluginConfig"
+            },
+            "title": "Resources",
+            "type": "object"
+          },
+          "tools": {
+            "additionalProperties": {
+              "$ref": "#/$defs/PluginConfig"
+            },
+            "title": "Tools",
+            "type": "object"
+          }
+        },
+        "title": "PluginsSection",
+        "type": "object"
+      },
+      "ServerConfig": {
+        "properties": {
+          "host": {
+            "title": "Host",
+            "type": "string"
+          },
+          "log_level": {
+            "default": "info",
+            "title": "Log Level",
+            "type": "string"
+          },
+          "port": {
+            "title": "Port",
+            "type": "integer"
+          },
+          "reload": {
+            "default": false,
+            "title": "Reload",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "host",
+          "port"
+        ],
+        "title": "ServerConfig",
+        "type": "object"
+      },
+      "ToolRegistryConfig": {
+        "description": "Options controlling tool execution.",
+        "properties": {
+          "concurrency_limit": {
+            "default": 5,
+            "title": "Concurrency Limit",
+            "type": "integer"
+          }
+        },
+        "title": "ToolRegistryConfig",
+        "type": "object"
+      },
+      "WorkflowSettings": {
+        "description": "Mapping of pipeline stages to plugin names.",
+        "properties": {
+          "stages": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Stages",
+            "type": "object"
+          }
+        },
+        "title": "WorkflowSettings",
+        "type": "object"
+      }
+    },
+    "properties": {
+      "breaker_settings": {
+        "$ref": "#/$defs/BreakerSettings"
+      },
+      "plugins": {
+        "$ref": "#/$defs/PluginsSection"
+      },
+      "runtime_validation_breaker": {
+        "$ref": "#/$defs/CircuitBreakerConfig"
+      },
+      "server": {
+        "$ref": "#/$defs/ServerConfig"
+      },
+      "tool_registry": {
+        "$ref": "#/$defs/ToolRegistryConfig"
+      },
+      "workflow": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/WorkflowSettings"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "title": "EntityConfig",
+    "type": "object"
+  },
+  "LLMConfig": {
+    "additionalProperties": false,
+    "description": "Configuration model for the :class:`~entity.resources.llm.LLM`.",
+    "properties": {
+      "provider": {
+        "default": "default",
+        "title": "Provider",
+        "type": "string"
+      }
+    },
+    "title": "LLMConfig",
+    "type": "object"
+  },
+  "LogOutputConfig": {
+    "description": "Configuration for a single logging output.",
+    "properties": {
+      "backup_count": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Backup Count"
+      },
+      "host": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Host"
+      },
+      "level": {
+        "default": "info",
+        "title": "Level",
+        "type": "string"
+      },
+      "max_size": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Max Size"
+      },
+      "path": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Path"
+      },
+      "port": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Port"
+      },
+      "type": {
+        "default": "console",
+        "title": "Type",
+        "type": "string"
+      }
+    },
+    "title": "LogOutputConfig",
+    "type": "object"
+  },
+  "LoggingConfig": {
+    "$defs": {
+      "LogOutputConfig": {
+        "description": "Configuration for a single logging output.",
+        "properties": {
+          "backup_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Backup Count"
+          },
+          "host": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Host"
+          },
+          "level": {
+            "default": "info",
+            "title": "Level",
+            "type": "string"
+          },
+          "max_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max Size"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Path"
+          },
+          "port": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Port"
+          },
+          "type": {
+            "default": "console",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "title": "LogOutputConfig",
+        "type": "object"
+      }
+    },
+    "description": "Settings controlling the :class:`LoggingResource`.",
+    "properties": {
+      "host_name": {
+        "title": "Host Name",
+        "type": "string"
+      },
+      "outputs": {
+        "items": {
+          "$ref": "#/$defs/LogOutputConfig"
+        },
+        "title": "Outputs",
+        "type": "array"
+      },
+      "process_id": {
+        "title": "Process Id",
+        "type": "integer"
+      }
+    },
+    "title": "LoggingConfig",
+    "type": "object"
+  },
+  "MemoryConfig": {
+    "additionalProperties": false,
+    "description": "Configuration model for the :class:`~entity.resources.memory.Memory`.",
+    "properties": {
+      "history_table": {
+        "default": "conversation_history",
+        "title": "History Table",
+        "type": "string"
+      },
+      "kv_table": {
+        "default": "memory_kv",
+        "title": "Kv Table",
+        "type": "string"
+      }
+    },
+    "title": "MemoryConfig",
+    "type": "object"
+  },
+  "PluginConfig": {
+    "$defs": {
+      "PipelineStage": {
+        "description": "Ordered pipeline stages.",
+        "enum": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "title": "PipelineStage",
+        "type": "integer"
+      }
+    },
+    "additionalProperties": true,
+    "description": "Configuration for a single plugin.",
+    "properties": {
+      "dependencies": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Dependencies",
+        "type": "array"
+      },
+      "stage": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/PipelineStage"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "stages": {
+        "items": {
+          "$ref": "#/$defs/PipelineStage"
+        },
+        "title": "Stages",
+        "type": "array"
+      },
+      "type": {
+        "title": "Type",
+        "type": "string"
+      }
+    },
+    "required": [
+      "type"
+    ],
+    "title": "PluginConfig",
+    "type": "object"
+  },
+  "PluginsSection": {
+    "$defs": {
+      "PipelineStage": {
+        "description": "Ordered pipeline stages.",
+        "enum": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "title": "PipelineStage",
+        "type": "integer"
+      },
+      "PluginConfig": {
+        "additionalProperties": true,
+        "description": "Configuration for a single plugin.",
+        "properties": {
+          "dependencies": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Dependencies",
+            "type": "array"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PipelineStage"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "stages": {
+            "items": {
+              "$ref": "#/$defs/PipelineStage"
+            },
+            "title": "Stages",
+            "type": "array"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "title": "PluginConfig",
+        "type": "object"
+      }
+    },
+    "description": "Collection of user-defined plugins grouped by category.",
+    "properties": {
+      "adapters": {
+        "additionalProperties": {
+          "$ref": "#/$defs/PluginConfig"
+        },
+        "title": "Adapters",
+        "type": "object"
+      },
+      "agent_resources": {
+        "additionalProperties": {
+          "$ref": "#/$defs/PluginConfig"
+        },
+        "title": "Agent Resources",
+        "type": "object"
+      },
+      "custom_resources": {
+        "additionalProperties": {
+          "$ref": "#/$defs/PluginConfig"
+        },
+        "title": "Custom Resources",
+        "type": "object"
+      },
+      "infrastructure": {
+        "additionalProperties": {
+          "$ref": "#/$defs/PluginConfig"
+        },
+        "title": "Infrastructure",
+        "type": "object"
+      },
+      "prompts": {
+        "additionalProperties": {
+          "$ref": "#/$defs/PluginConfig"
+        },
+        "title": "Prompts",
+        "type": "object"
+      },
+      "resources": {
+        "additionalProperties": {
+          "$ref": "#/$defs/PluginConfig"
+        },
+        "title": "Resources",
+        "type": "object"
+      },
+      "tools": {
+        "additionalProperties": {
+          "$ref": "#/$defs/PluginConfig"
+        },
+        "title": "Tools",
+        "type": "object"
+      }
+    },
+    "title": "PluginsSection",
+    "type": "object"
+  },
+  "RateLimitConfig": {
+    "description": "Request throttling settings for an adapter.",
+    "properties": {
+      "interval": {
+        "default": 60,
+        "minimum": 1,
+        "title": "Interval",
+        "type": "integer"
+      },
+      "requests": {
+        "default": 1,
+        "minimum": 1,
+        "title": "Requests",
+        "type": "integer"
+      }
+    },
+    "title": "RateLimitConfig",
+    "type": "object"
+  },
+  "ServerConfig": {
+    "properties": {
+      "host": {
+        "title": "Host",
+        "type": "string"
+      },
+      "log_level": {
+        "default": "info",
+        "title": "Log Level",
+        "type": "string"
+      },
+      "port": {
+        "title": "Port",
+        "type": "integer"
+      },
+      "reload": {
+        "default": false,
+        "title": "Reload",
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "host",
+      "port"
+    ],
+    "title": "ServerConfig",
+    "type": "object"
+  },
+  "StorageConfig": {
+    "additionalProperties": false,
+    "description": "Configuration model for the :class:`~entity.resources.storage.Storage`.",
+    "properties": {
+      "namespace": {
+        "default": "default",
+        "title": "Namespace",
+        "type": "string"
+      }
+    },
+    "title": "StorageConfig",
+    "type": "object"
+  },
+  "ToolRegistryConfig": {
+    "description": "Options controlling tool execution.",
+    "properties": {
+      "concurrency_limit": {
+        "default": 5,
+        "title": "Concurrency Limit",
+        "type": "integer"
+      }
+    },
+    "title": "ToolRegistryConfig",
+    "type": "object"
+  },
+  "WorkflowSettings": {
+    "description": "Mapping of pipeline stages to plugin names.",
+    "properties": {
+      "stages": {
+        "additionalProperties": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "title": "Stages",
+        "type": "object"
+      }
+    },
+    "title": "WorkflowSettings",
+    "type": "object"
+  }
+}
