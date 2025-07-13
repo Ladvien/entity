@@ -16,7 +16,8 @@ release = "0.0.29"
 extensions = [
     "myst_parser",
     "sphinx.ext.autosectionlabel",
-    "autodoc2",
+    # autodoc2 temporarily disabled due to parse errors
+    # "autodoc2",
     "sphinxcontrib.mermaid",
 ]
 
