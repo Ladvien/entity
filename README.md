@@ -38,3 +38,13 @@ asyncio.run(Layer0SetupManager().setup())
 print(asyncio.run(agent.handle("Hello")))
 ```
 
+
+## Running Tests
+
+Use Poetry:
+```bash
+poetry install --with dev
+poetry run pytest
+```
+Running tests outside Poetry often hit import errors.
+
