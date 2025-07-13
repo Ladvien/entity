@@ -1,5 +1,11 @@
 import pathlib
 import sys
+from typing import Iterable
+
+import pytest
+
+from entity.workflows.base import Workflow
+from entity.pipeline.stages import PipelineStage
 
 sys.path.insert(0, str(pathlib.Path("src").resolve()))
 
@@ -64,3 +70,33 @@ def test_cli_visualize_command(tmp_path, capsys):
     cli.run()
     captured = capsys.readouterr().out.strip()
     assert "INPUT" in captured and "-> one" in captured
+
+
+class _Registry:
+    def __init__(self, names: Iterable[str]):
+        self._names = set(names)
+
+    def has_plugin(self, name: str) -> bool:
+        return name in self._names
+
+    def list_plugins(self) -> list[str]:
+        return sorted(self._names)
+
+
+def test_workflow_validation():
+    registry = _Registry(["Known"])
+    with pytest.raises(KeyError):
+        Workflow({PipelineStage.INPUT: ["Known", "Missing"]}, registry=registry)
+
+
+def test_parent_inheritance():
+    class BaseWF(Workflow):
+        stage_map = {PipelineStage.INPUT: ["one"]}
+
+    class ChildWF(Workflow):
+        parent = BaseWF
+        stage_map = {PipelineStage.OUTPUT: ["two"]}
+
+    wf = ChildWF()
+    assert PipelineStage.INPUT in wf.stages
+    assert PipelineStage.OUTPUT in wf.stages

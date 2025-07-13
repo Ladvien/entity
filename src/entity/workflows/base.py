@@ -2,7 +2,14 @@ from __future__ import annotations
 
 """Workflow definitions for pipeline execution."""
 
-from typing import Callable, ClassVar, Dict, Iterable, List, Mapping
+from typing import Any, Callable, ClassVar, Dict, Iterable, List, Mapping, Protocol
+
+
+class _HasPlugin(Protocol):
+    def has_plugin(self, name: str) -> bool: ...
+
+    def list_plugins(self) -> List[str]: ...
+
 
 from pydantic import BaseModel, Field
 
@@ -16,6 +23,7 @@ class Workflow(BaseModel):
     """Reusable mapping from :class:`PipelineStage` to plugin names."""
 
     stage_map: ClassVar[Dict[PipelineStage | str, Iterable[str]]] = {}
+    parent: ClassVar[type["Workflow"] | None] = None
     stage_conditions: ClassVar[
         Dict[PipelineStage | str, Callable[[PipelineState], bool]]
     ] = {}
@@ -31,8 +39,10 @@ class Workflow(BaseModel):
         self,
         mapping: Mapping[PipelineStage | str, Iterable[str]] | None = None,
         conditions: (
-            Mapping[PipelineStage | str, Callable[[PipelineState], bool]] | None
+            Mapping[PipelineStage | str, Callable[[PipelineState], bool] | str | bool]
+            | None
         ) = None,
+        registry: _HasPlugin | None = None,
         **params: str,
     ) -> None:
         values = {}
@@ -44,10 +54,18 @@ class Workflow(BaseModel):
             self._assign_to(processed, stage, formatted)
         cond_map: Dict[PipelineStage, Callable[[PipelineState], bool]] = {}
         for stage, cond in conditions.items():
-            cond_map[PipelineStage.ensure(stage)] = cond
+            stage_obj = PipelineStage.ensure(stage)
+            if isinstance(cond, str):
+                cond_map[stage_obj] = lambda s, key=cond: bool(s.metadata.get(key))
+            elif isinstance(cond, bool):
+                cond_map[stage_obj] = lambda _s, val=cond: val
+            else:
+                cond_map[stage_obj] = cond
         values["stages"] = processed
         values["conditions"] = cond_map
         super().__init__(**values)
+        if registry is not None:
+            self.validate_plugins(registry)
 
     # ------------------------------------------------------------------
     # Composition helpers
@@ -56,6 +74,8 @@ class Workflow(BaseModel):
     @classmethod
     def combined_stage_map(cls) -> Dict[PipelineStage | str, Iterable[str]]:
         mapping: Dict[PipelineStage | str, Iterable[str]] = {}
+        if cls.parent is not None:
+            mapping.update(cls.parent.combined_stage_map())
         for base in reversed(cls.__mro__):
             if issubclass(base, Workflow) and hasattr(base, "stage_map"):
                 mapping.update(getattr(base, "stage_map", {}))
@@ -66,6 +86,8 @@ class Workflow(BaseModel):
         cls,
     ) -> Dict[PipelineStage | str, Callable[[PipelineState], bool]]:
         combined: Dict[PipelineStage | str, Callable[[PipelineState], bool]] = {}
+        if cls.parent is not None:
+            combined.update(cls.parent.combined_conditions())
         for base in reversed(cls.__mro__):
             if issubclass(base, Workflow) and hasattr(base, "stage_conditions"):
                 combined.update(getattr(base, "stage_conditions", {}))
@@ -107,3 +129,18 @@ class Workflow(BaseModel):
     def from_dict(cls, data: Dict[str, Iterable[str]]) -> "Workflow":
         mapping = {PipelineStage.ensure(k): list(v) for k, v in data.items()}
         return cls(mapping)
+
+    # ------------------------------------------------------------------
+    # Validation helpers
+    # ------------------------------------------------------------------
+
+    def validate_plugins(self, registry: _HasPlugin) -> None:
+        for stage_plugins in self.stages.values():
+            for name in stage_plugins:
+                if not registry.has_plugin(name):
+                    available = []
+                    if hasattr(registry, "list_plugins"):
+                        available = registry.list_plugins()
+                    raise KeyError(
+                        f"Plugin '{name}' not found. Available plugins: {available}"
+                    )
