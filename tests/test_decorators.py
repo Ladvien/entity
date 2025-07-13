@@ -3,33 +3,46 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path("src").resolve()))
 
-from entity import agent
+from entity import Agent, agent
 from entity.core.stages import PipelineStage
-from entity import Agent
-import pytest
 
 
-_DEFINITIONS = [
-    (agent.input, PipelineStage.INPUT),
-    (agent.parse, PipelineStage.PARSE),
-    (agent.prompt, PipelineStage.THINK),
-    (agent.tool, PipelineStage.DO),
-    (agent.review, PipelineStage.REVIEW),
-    (agent.output, PipelineStage.OUTPUT),
-]
-
-
-@pytest.mark.parametrize("decorator, stage", _DEFINITIONS)
-def test_agent_decorator_adds_stage(decorator, stage):
-    ag = Agent()
-    bound = getattr(ag, decorator.__name__)
-
-    @bound
+def _plugin_for(decorator):
+    @decorator
     async def dummy(context):
         pass
 
-    plugin = ag.builder._added_plugins[-1]
-    assert plugin.stages == [stage]
+    return agent.builder._added_plugins.pop()
+
+
+def test_input_decorator():
+    plugin = _plugin_for(agent.input)
+    assert plugin.stages == [PipelineStage.INPUT]
+
+
+def test_parse_decorator():
+    plugin = _plugin_for(agent.parse)
+    assert plugin.stages == [PipelineStage.PARSE]
+
+
+def test_prompt_decorator():
+    plugin = _plugin_for(agent.prompt)
+    assert plugin.stages == [PipelineStage.THINK]
+
+
+def test_tool_decorator():
+    plugin = _plugin_for(agent.tool)
+    assert plugin.stages == [PipelineStage.DO]
+
+
+def test_review_decorator():
+    plugin = _plugin_for(agent.review)
+    assert plugin.stages == [PipelineStage.REVIEW]
+
+
+def test_output_decorator():
+    plugin = _plugin_for(agent.output)
+    assert plugin.stages == [PipelineStage.OUTPUT]
 
 
 def test_agent_tool_method_default_stage():
