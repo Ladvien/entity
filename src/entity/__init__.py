@@ -25,6 +25,7 @@ try:
     from .resources.logging import LoggingResource
     from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
     from plugins.builtin.resources.ollama_llm import OllamaLLMResource
+<<<<<<< HEAD
     from plugins.builtin.basic_error_handler import BasicErrorHandler
 <<<<<<< HEAD
     from plugins.examples import InputLogger, MessageParser, ResponseReviewer
@@ -33,6 +34,12 @@ try:
     from user_plugins.prompts import ComplexPrompt
     from user_plugins.responders import ComplexPromptResponder
 >>>>>>> pr-1521
+=======
+    from .plugins.prompts.basic_error_handler import BasicErrorHandler
+    from plugins.examples import InputLogger
+    from user_plugins.prompts import ComplexPrompt
+    from user_plugins.responders import ComplexPromptResponder
+>>>>>>> pr-1520
     from .core.stages import PipelineStage
     from .core.plugins import PromptPlugin, ToolPlugin
     from .utils.setup_manager import Layer0SetupManager

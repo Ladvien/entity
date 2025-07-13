@@ -795,7 +795,6 @@ class SystemInitializer:
                 if not registry.has_plugin(dep_name):
                     if optional:
                         continue
-                    available = registry.list_plugins()
                     raise InitializationError(
                         plugin_name,
                         "dependency graph validation",

@@ -73,6 +73,7 @@ types-protobuf = "^5.26.0.20240422"
 types-psutil = "^5.9.5.20240516"
 pytest-postgresql = "^7.0.2"
 sphinxcontrib-mermaid = "^1.0.0"
+vulture = "^2.14"
 
 
 [build-system]
@@ -188,5 +189,10 @@ exclude = '''
   | build
   | dist
   | src/cli/templates
+  | src/entity/cli/templates
+  | templates/plugins
 )/
 '''
+
+[tool.vulture]
+exclude = ["*templates*"]

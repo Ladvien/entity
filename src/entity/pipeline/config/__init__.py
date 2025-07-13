@@ -9,7 +9,7 @@ from typing import Any, Dict
 import yaml
 
 from entity.config.environment import load_env
-from entity.config.models import WorkflowSettings, validate_config
+from entity.config.models import validate_config
 from ..workflow import Workflow
 
 from .utils import interpolate_env_vars

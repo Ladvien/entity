@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-13: Implemented validation phases and circuit breaker integration
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -20,6 +21,10 @@ AGENT NOTE - 2025-07-13: Implemented validation phases and circuit breaker integ
 =======
 AGENT NOTE - 2025-07-13: Cleaned merge markers and fixed default agent imports
 >>>>>>> pr-1521
+=======
+AGENT NOTE - 2025-07-13: Cleaned merge markers and executed quality checks
+AGENT NOTE - 2025-07-13: Implemented DuckDBVectorStore setup and minimal workflow tests
+>>>>>>> pr-1520
 AGENT NOTE - 2025-07-13: Implemented DuckDBVectorStore setup and minimal workflow tests
 AGENT NOTE - 2025-07-13: pytest now works with the unified entity.cli.plugin_tool structure
 AGENT NOTE - 2025-07-13: Added pythonpath configuration for pytest

@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 from entity import Agent
 from entity.core import decorators
+from entity.core.plugins import Plugin
 from entity.core.stages import PipelineStage
 
 
-def _plugin_from(decorator) -> "Plugin":
+def _plugin_from(decorator) -> Plugin:
     ag = Agent()
 
     @decorator

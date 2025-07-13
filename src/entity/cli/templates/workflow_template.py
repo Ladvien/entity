@@ -2,7 +2,7 @@
 
 from entity.pipeline import PipelineStage
 
-{workflow_name} = {
+WORKFLOW_NAME = {
     PipelineStage.INPUT: [],
     PipelineStage.PARSE: [],
     PipelineStage.THINK: [],
@@ -10,3 +10,5 @@ from entity.pipeline import PipelineStage
     PipelineStage.REVIEW: [],
     PipelineStage.OUTPUT: [],
 }
+
+# Replace ``WORKFLOW_NAME`` with your workflow variable name.

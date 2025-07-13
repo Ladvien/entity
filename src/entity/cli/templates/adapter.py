@@ -12,8 +12,11 @@ from entity.core.plugins import AdapterPlugin
 from entity.core.stages import PipelineStage
 
 
-class {class_name}(AdapterPlugin):
-    """Example adapter plugin."""
+class CLASS_NAME(AdapterPlugin):
+    """Example adapter plugin.
+
+    Replace ``CLASS_NAME`` with your adapter class name.
+    """
 
     stages = [PipelineStage.OUTPUT]
     # List position controls execution order and SystemInitializer preserves it.

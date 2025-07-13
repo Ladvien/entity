@@ -12,8 +12,11 @@ from entity.core.plugins import FailurePlugin
 from entity.core.stages import PipelineStage
 
 
-class {class_name}(FailurePlugin):
-    """Example failure plugin."""
+class CLASS_NAME(FailurePlugin):
+    """Example failure plugin.
+
+    Replace ``CLASS_NAME`` with your failure handler name.
+    """
 
     stages = [PipelineStage.ERROR]
     # List position controls execution order and SystemInitializer preserves it.
