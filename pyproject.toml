@@ -25,7 +25,7 @@ documentation = "https://entity.readthedocs.io/en/latest/"
 python = "^3.11"
 pyyaml = "^6.0.2"
 fastapi = "^0.110.0"
-uvicorn = {extras = ["standard"], version = "^0.30.0"}
+uvicorn = { extras = ["standard"], version = "^0.30.0" }
 asyncpg = "^0.30.0"
 python-dotenv = "^1.1.1"
 aiosqlite = "^0.20.0"
@@ -51,11 +51,7 @@ grpcio-tools = "^1.62.2"
 jsonschema = "^4.24.0"
 
 [tool.poetry.extras]
-examples = [
-    "websockets",
-    "grpcio",
-    "grpcio-tools",
-]
+examples = ["websockets", "grpcio", "grpcio-tools"]
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
