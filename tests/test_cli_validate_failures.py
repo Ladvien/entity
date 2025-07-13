@@ -66,6 +66,9 @@ def _base_resources(resource_cls):
         "memory": {"type": f"tests.test_cli_validate_failures:{resource_cls.__name__}"},
         "llm": {"type": "tests.test_cli_validate_failures:DummyResource"},
         "storage": {"type": "tests.test_cli_validate_failures:DummyResource"},
+        "metrics_collector": {
+            "type": "entity.resources.metrics:MetricsCollectorResource"
+        },
     }
 
 

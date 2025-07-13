@@ -174,7 +174,10 @@ def test_complex_prompt_requires_vector_store(tmp_path):
             "complex_prompt": {"type": "tests.test_registry_validator:ComplexPrompt"}
         },
         "agent_resources": {
-            "database": {"type": "tests.test_registry_validator:DBInterface"}
+            "database": {"type": "tests.test_registry_validator:DBInterface"},
+            "metrics_collector": {
+                "type": "entity.resources.metrics:MetricsCollectorResource"
+            },
         },
     }
     path = _write_config(tmp_path, plugins)
@@ -190,6 +193,9 @@ def test_complex_prompt_with_vector_store(tmp_path):
                 "type": "tests.test_registry_validator:VectorStoreResource"
             },
             "database": {"type": "tests.test_registry_validator:DBInterface"},
+            "metrics_collector": {
+                "type": "entity.resources.metrics:MetricsCollectorResource"
+            },
         },
         "prompts": {
             "complex_prompt": {"type": "tests.test_registry_validator:ComplexPrompt"}
@@ -207,6 +213,9 @@ def test_memory_requires_postgres(tmp_path):
                 "type": "plugins.builtin.resources.pg_vector_store:PgVectorStore"
             },
             "database": {"type": "tests.test_registry_validator:A"},
+            "metrics_collector": {
+                "type": "entity.resources.metrics:MetricsCollectorResource"
+            },
         }
     }
     path = _write_config(tmp_path, plugins)
@@ -222,6 +231,9 @@ def test_memory_with_postgres(tmp_path):
                 "type": "plugins.builtin.resources.pg_vector_store:PgVectorStore"
             },
             "database": {"type": "tests.test_registry_validator:PostgresResource"},
+            "metrics_collector": {
+                "type": "entity.resources.metrics:MetricsCollectorResource"
+            },
         },
     }
     path = _write_config(tmp_path, plugins)

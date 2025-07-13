@@ -57,7 +57,10 @@ def _write_cfg(tmp_path, plugins):
 def test_resource_base_validation(tmp_path):
     cfg = {
         "agent_resources": {
-            "bad": {"type": "tests.architecture.test_plugin_taxonomy:WrongResource"}
+            "bad": {"type": "tests.architecture.test_plugin_taxonomy:WrongResource"},
+            "metrics_collector": {
+                "type": "entity.resources.metrics:MetricsCollectorResource"
+            },
         }
     }
     path = _write_cfg(tmp_path, cfg)

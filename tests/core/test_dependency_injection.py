@@ -21,6 +21,9 @@ def test_register_plugins_appends_dependencies():
                 "llm": {"type": "entity.resources.llm:LLM"},
                 "storage": {"type": "entity.resources.storage:Storage"},
                 "logging": {"type": "entity.resources.logging:LoggingResource"},
+                "metrics_collector": {
+                    "type": "entity.resources.metrics:MetricsCollectorResource"
+                },
             },
             "tools": {"dummy": {"type": f"{__name__}:DummyTool"}},
         },
