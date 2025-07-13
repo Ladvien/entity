@@ -41,7 +41,17 @@ class Pipeline:
             if isinstance(self.workflow, Workflow)
             else Workflow.from_dict(self.workflow)
         )
-        wf_obj.validate_plugins(self.builder.plugin_registry)
+
+        for stage, plugins in wf_obj.stages.items():
+            for name in plugins:
+                if not self.builder.plugin_registry.has_plugin(name):
+                    available = []
+                    if hasattr(self.builder.plugin_registry, "list_plugins"):
+                        available = self.builder.plugin_registry.list_plugins()
+                    raise KeyError(
+                        f"Plugin '{name}' referenced in stage '{stage}' is not registered. Available plugins: {available}"
+                    )
+
         self.workflow = wf_obj
 
     async def build_runtime(self) -> AgentRuntime:
