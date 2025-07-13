@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-13: Plugin registry now preserves registration order using OrderedDict
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-13: Verified infrastructure_type attributes across infrastructure modules
@@ -5,6 +6,9 @@ AGENT NOTE - 2025-07-13: Verified infrastructure_type attributes across infrastr
 AGENT NOTE - 2025-08-01: Updated ToolRegistry discover filtering and added tests
 >>>>>>> pr-1460
 <<<<<<< HEAD
+=======
+AGENT NOTE - 2025-07-13: Adjusted stage result clearing to persist across iterations but reset between messages
+>>>>>>> pr-1464
 AGENT NOTE - 2025-07-13: Cleaned merge markers and updated default agent setup
 AGENT NOTE - 2025-07-13: Integrated pipeline duration metric and cleared stage results after execution
 AGENT NOTE - 2025-07-13: Verified merge conflict cleanup and preserved all notes
@@ -17,16 +21,15 @@ AGENT NOTE - 2025-07-13: Added config inheritance, linting, and diff tools
 AGENT NOTE - 2025-07-13: Adjust stage result clearing to persist across iterations but reset between messages
 AGENT NOTE - 2025-07-25: Extended ResourcePool with scaling and health checks
 AGENT NOTE - 2025-07-24: Added plugin capabilities and compatibility matrix with pipeline benchmarks
+<<<<<<< HEAD
 
+=======
+>>>>>>> pr-1464
 AGENT NOTE - 2025-07-25: Changed DuckDBResource to subclass ResourcePlugin and adjusted default layer
 AGENT NOTE - 2025-07-13: Added infrastructure_type to AWSStandardInfrastructure
 AGENT NOTE - 2025-07-13: Added vector store and logging to default setup
 AGENT NOTE - 2025-07-13: No resource interface modules found to move, canonical resources already depend on interfaces.
 AGENT NOTE - 2025-07-13: Added DefaultWorkflow and zero-config setup
-<<<<<<< HEAD
-=======
-
->>>>>>> pr-1448
 AGENT NOTE - 2025-07-25: Added DuckDBVectorStore and zero-config registration
 AGENT NOTE - 2025-07-24: PluginRegistry now preserves registration order with OrderedDict
 AGENT NOTE - 2025-07-13: Enforced adapter stage registration and added tests

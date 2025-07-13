@@ -292,9 +292,9 @@ async def execute_pipeline(
                 pipeline_id=f"{user_id}_{generate_pipeline_id()}",
             )
 
-    # Clear stage results at the start of each message so that
-    # thoughts from previous executions do not leak into the next one.
-    state.stage_results.clear()
+    # Stage results should persist across iterations within a single
+    # message. They are cleared after the pipeline completes so they
+    # do not leak into subsequent messages.
     _start = time.time()
     resource_manager = (
         capabilities.resources
