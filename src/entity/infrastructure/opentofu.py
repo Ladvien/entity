@@ -34,10 +34,16 @@ class OpenTofuInfrastructure(InfrastructurePlugin):
     def _provider_block(self) -> str:
         return f'provider "{self.provider}" {{\n  region = "{self.region}"\n}}\n'
 
+    def _variables_block(self) -> str:
+        return 'variable "region" {\n' f'  default = "{self.region}"\n' "}\n"
+
     def generate_templates(self) -> dict[str, str]:
         """Return Terraform/OpenTofu configuration files."""
 
-        return {"main.tf": self._provider_block()}
+        return {
+            "main.tf": self._provider_block(),
+            "variables.tf": self._variables_block(),
+        }
 
     async def _execute_impl(self, context: Any) -> None:  # pragma: no cover - stub
         return None
