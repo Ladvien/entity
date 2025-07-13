@@ -58,7 +58,7 @@ def test_initializer_fails_without_storage():
         asyncio.run(init.initialize())
 
 
-def test_initializer_fails_without_logging():
+def test_initializer_succeeds_without_logging_config():
     cfg = {
         "plugins": {
             "agent_resources": {
