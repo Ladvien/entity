@@ -131,10 +131,11 @@ def make_context(tmp_path) -> PluginContext:
     return PluginContext(state, regs)
 
 
-def test_memory_roundtrip(tmp_path) -> None:
+@pytest.mark.asyncio
+async def test_memory_roundtrip(tmp_path) -> None:
     ctx = make_context(tmp_path)
-    asyncio.run(ctx.remember("foo", "bar"))
-    assert asyncio.run(ctx.recall("foo")) == "bar"
+    await ctx.remember("foo", "bar")
+    assert await ctx.recall("foo") == "bar"
 
 
 @pytest.mark.asyncio
@@ -181,7 +182,8 @@ async def test_memory_persists_with_connection_pool() -> None:
     assert history == [entry]
 
 
-def test_initialize_without_database_raises_error() -> None:
+@pytest.mark.asyncio
+async def test_initialize_without_database_raises_error() -> None:
     mem = Memory(config={})
     with pytest.raises(ResourceInitializationError):
-        asyncio.run(mem.initialize())
+        await mem.initialize()
