@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-13: Ensure load_env imports load_dotenv and passes tests
+AGENT NOTE - 2025-07-13: Updated tests to wrap workflow with Pipeline
 AGENT NOTE - 2025-07-20: Updated load_env precedence and tests
 AGENT NOTE - 2025-07-18: Added integration pipeline tests covering workflows, multi-user isolation, error handling, and metrics
 AGENT NOTE - 2025-07-12: Verified sandbox references removed and executed quality checks
