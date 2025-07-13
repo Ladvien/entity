@@ -4,6 +4,7 @@ from pathlib import Path
 import duckdb
 import httpx
 from logging import Logger
+import asyncio
 
 from .logging import get_logger
 
@@ -29,12 +30,25 @@ class Layer0SetupManager:
         self.base_url = base_url.rstrip("/")
         self.logger = logger or get_logger(self.__class__.__name__)
 
+    async def _pull_model(self) -> None:
+        """Download the configured model via ``ollama pull``."""
+        proc = await asyncio.create_subprocess_exec(
+            "ollama",
+            "pull",
+            self.model,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        out, err = await proc.communicate()
+        if proc.returncode != 0:
+            raise RuntimeError(err.decode() or out.decode())
+
     async def ensure_ollama(self) -> bool:
         """Return ``True`` when Ollama and the desired model are available."""
         url = f"{self.base_url}/api/tags"
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.get(url, timeout=2)
+                resp = await client.get(url)
         except Exception:  # noqa: BLE001
             self.logger.warning(
                 "Ollama not reachable at %s. Install from https://ollama.com and start the service.",
@@ -44,15 +58,20 @@ class Layer0SetupManager:
         tags = resp.json().get("models", [])
         if not tags:
             self.logger.warning(
-                "No Ollama models installed. Run 'ollama pull %s'.", self.model
+                "No Ollama models installed. Running 'ollama pull %s'.",
+                self.model,
             )
-            return False
+            await self._pull_model()
+            return True
         names = [m.get("name") for m in tags]
         if self.model not in names:
             self.logger.warning(
-                "Model '%s' missing. Run 'ollama pull %s'.", self.model, self.model
+                "Model '%s' missing. Running 'ollama pull %s'.",
+                self.model,
+                self.model,
             )
-            return False
+            await self._pull_model()
+            return True
         return True
 
     def setup_resources(self) -> None:

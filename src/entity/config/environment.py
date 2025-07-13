@@ -9,29 +9,32 @@ from typing import Any, MutableMapping, Mapping
 
 import yaml
 
-from dotenv import dotenv_values, load_dotenv
+from dotenv import dotenv_values
 
 
 def load_env(env_file: str | Path = ".env", env: str | None = None) -> None:
-    """Load variables from ``env_file`` and ``secrets/<env>.env``.
+    """Load variables from ``env_file`` and optional ``secrets/<env>.env``.
 
-    Existing process variables are never overwritten. Values from
-    ``secrets/<env>.env`` override entries from ``env_file`` when both
-    are present.
+    Existing environment variables are never overwritten. When both files
+    define the same key, the secrets file takes precedence over ``env_file``.
     """
 
     env_path = Path(env_file)
-    env_values = dotenv_values(env_path) if env_path.exists() else {}
+    original_keys = set(os.environ)
+
+    if env_path.exists():
+        values = dotenv_values(env_path)
+        for key, value in values.items():
+            if key not in original_keys:
+                os.environ[key] = value
 
     if env:
         secret_path = Path("secrets") / f"{env}.env"
         if secret_path.exists():
-            env_values.update(dotenv_values(secret_path))
-
-    for key, value in env_values.items():
-        os.environ.setdefault(key, value)
-
-    load_dotenv(env_path, override=False)
+            values = dotenv_values(secret_path)
+            for key, value in values.items():
+                if key not in original_keys:
+                    os.environ[key] = value
 
 
 def _merge(
