@@ -33,7 +33,9 @@ plugins:
 
 ## MetricsCollectorResource
 
-`MetricsCollectorResource` collects performance and custom metrics from every plugin. The resource is automatically added if not specified.
+`MetricsCollectorResource` collects performance and custom metrics from every plugin.
+When configured it is injected into all plugins automatically. If omitted the
+initializer logs a warning and metrics are disabled.
 
 ```yaml
 plugins:
@@ -44,8 +46,8 @@ plugins:
       buffer_size: 1000
 ```
 
-All plugins declare a dependency on ``metrics_collector`` by default, ensuring
-metrics are recorded without additional configuration.
+When present, the collector is passed to each plugin automatically so they can
+record execution metrics without extra configuration.
 
 ## DatabaseResource
 

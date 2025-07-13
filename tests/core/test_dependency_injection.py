@@ -80,6 +80,12 @@ def _base_cfg() -> dict:
     }
 
 
+def _base_cfg_no_metrics() -> dict:
+    cfg = _base_cfg()
+    cfg["plugins"]["agent_resources"].pop("metrics_collector")
+    return cfg
+
+
 def test_adapter_dependencies_added():
     cfg = _base_cfg()
     cfg["plugins"]["adapters"] = {"dummy_adapter": {"type": f"{__name__}:DummyAdapter"}}
@@ -104,3 +110,19 @@ def test_prompt_dependencies_added():
 
     assert "metrics_collector" in DummyPrompt.dependencies
     assert "logging" in DummyPrompt.dependencies
+
+
+def test_dependencies_without_metrics():
+    cfg = _base_cfg_no_metrics()
+    cfg["plugins"]["tools"] = {"dummy": {"type": f"{__name__}:DummyTool"}}
+    cfg["plugins"]["adapters"] = {"dummy_adapter": {"type": f"{__name__}:DummyAdapter"}}
+    cfg["plugins"]["prompts"] = {"dummy_prompt": {"type": f"{__name__}:DummyPrompt"}}
+
+    init = SystemInitializer(cfg)
+    registry = ClassRegistry()
+    dep_graph: dict[str, list[str]] = {}
+    init._register_plugins(registry, dep_graph)
+
+    assert "metrics_collector" not in DummyTool.dependencies
+    assert "metrics_collector" not in DummyAdapter.dependencies
+    assert "metrics_collector" not in DummyPrompt.dependencies

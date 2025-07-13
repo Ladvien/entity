@@ -1,8 +1,12 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-13: Stage results cleared after pipeline completion and tests added for thought accumulation
 =======
 AGENT NOTE - 2025-07-13: Improved layer validation cycle checks
 >>>>>>> pr-1425
+=======
+AGENT NOTE - 2025-07-13: Added automatic metrics injection and startup warning when metrics resource missing
+>>>>>>> pr-1424
 AGENT NOTE - 2025-07-24: Updated DuckDBResource to subclass AgentResource and use database_backend
 AGENT NOTE - 2025-07-23: Allow layer 3 for custom resources without dependencies
 AGENT NOTE - 2025-07-23: Fixed DatabaseResource import and updated async usage in plugin context memory test
