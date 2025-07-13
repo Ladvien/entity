@@ -52,3 +52,38 @@ async def test_basic_error_handler(monkeypatch):
     assert result["error"] == "boom"
     assert result["stage"] == "think"
     assert logs
+
+
+@pytest.mark.asyncio
+async def test_basic_error_handler_without_info(monkeypatch):
+    logs = []
+
+    async def fake_log(self, level, message, **kwargs):
+        logs.append((level, message, kwargs))
+
+    monkeypatch.setattr(LoggingResource, "log", fake_log)
+
+    plugins = PluginRegistry()
+    await plugins.register_plugin_for_stage(
+        BasicErrorHandler({}), PipelineStage.ERROR, "handler"
+    )
+
+    logging_res = LoggingResource({})
+    await logging_res.initialize()
+
+    regs = SystemRegistries(
+        resources={"logging": logging_res}, tools=ToolRegistry(), plugins=plugins
+    )
+    state = PipelineState(
+        conversation=[ConversationEntry("hi", "user", datetime.now())],
+        pipeline_id="pid",
+    )
+
+    plugin = BasicErrorHandler({})
+    ctx = PluginContext(state, regs)
+    ctx.set_current_stage(PipelineStage.ERROR)
+    ctx.set_current_plugin("handler")
+    await plugin.execute(ctx)
+
+    assert state.response["type"] == "static_fallback"
+    assert logs

@@ -14,4 +14,5 @@ class DefaultWorkflow(Workflow):
         PipelineStage.INPUT: [],
         PipelineStage.THINK: [],
         PipelineStage.OUTPUT: [],
+        PipelineStage.ERROR: ["basic_error_handler"],
     }
