@@ -36,11 +36,8 @@ class PluginExecutionError(PipelineError):
 
 
 class ResourceError(PipelineError):
-<<<<<<< HEAD
-    """Base class for resource errors."""
+    """Raised when a resource encounters an operational failure."""
 
-=======
->>>>>>> pr-1520
     pass
 
 
@@ -58,8 +55,8 @@ class InitializationError(PipelineError):
         self.kind = kind
 
 
-class ResourceInitializationError(InitializationError):
-    """Raised when a resource dependency is missing."""
+class ResourceInitializationError(ResourceError, InitializationError):
+    """Raised when a required resource dependency is missing."""
 
     def __init__(self, remediation: str, name: str) -> None:
         super().__init__(name, "initialization", remediation, kind="Resource")
