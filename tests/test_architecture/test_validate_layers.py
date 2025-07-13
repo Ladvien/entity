@@ -1,6 +1,6 @@
 import pytest
 
-from entity.core.plugins import InfrastructurePlugin, ResourcePlugin
+from entity.core.plugins import InfrastructurePlugin
 from entity.core.resources.container import ResourceContainer
 from entity.resources.base import AgentResource as CanonicalBase
 from entity.pipeline.errors import InitializationError
@@ -37,9 +37,14 @@ async def test_invalid_layer_number():
 
 
 @pytest.mark.asyncio
-async def test_mismatched_class_layer():
+async def test_canonical_layer_validation():
     container = ResourceContainer()
     container.register("canon", CanonicalRes, {}, layer=3)
+    # should pass without error
+    container._validate_layers()
+
+    container = ResourceContainer()
+    container.register("canon", CanonicalRes, {}, layer=2)
     with pytest.raises(InitializationError, match="Incorrect layer"):
         container._validate_layers()
 

@@ -434,7 +434,7 @@ class ResourceContainer:
             is_canonical = issubclass(cls, (CanonicalResource, PluginAgentResource))
 
             expected = (
-                1 if is_infra else 3 if is_canonical else 2 if is_interface else 4
+                3 if is_canonical else 1 if is_infra else 2 if is_interface else 4
             )
 
             if layer != expected:
