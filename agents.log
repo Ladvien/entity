@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-13: Removed init_subclass stage validation in adapter plugins
+AGENT NOTE - 2025-07-13: Ensure DuckDBResource subclasses ResourcePlugin
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-13: Cleaned merge markers and updated default agent setup
 AGENT NOTE - 2025-07-13: Integrated pipeline duration metric and cleared stage results after execution
