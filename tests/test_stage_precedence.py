@@ -14,6 +14,12 @@ StageResolver = importlib.reload(pipeline_utils).StageResolver
 pipeline_utils = importlib.reload(pipeline_utils)
 StageResolver = pipeline_utils.StageResolver
 
+# Reload pipeline utilities to restore the original StageResolver in case other
+# tests have replaced it.  This ensures explicit stage detection works as
+# expected in these tests.
+pipeline_utils = importlib.reload(pipeline_utils)
+StageResolver = pipeline_utils.StageResolver
+
 
 class AttrPrompt(Plugin):
     stages = [PipelineStage.DO]
