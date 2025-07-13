@@ -118,6 +118,14 @@ async def execute_stage(
     log_res = registries.resources.get("logging") if registries.resources else None
     stage_plugins = registries.plugins.get_plugins_for_stage(stage)
     _start = time.perf_counter()
+    if log_res is not None:
+        await log_res.log(
+            "info",
+            "stage started",
+            component="pipeline",
+            stage=stage,
+            pipeline_id=state.pipeline_id,
+        )
     async with start_span(f"stage.{stage.name.lower()}"):
         for plugin in stage_plugins:
             context = PluginContext(state, registries, user_id=user_id)

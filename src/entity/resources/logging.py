@@ -245,6 +245,7 @@ class LoggingResource(AgentResource):
             "resource_name": resource_name,
             "host": self.host_name,
             "pid": self.process_id,
+            "correlation": correlation_headers or {},
         }
         if extra:
             entry.update(extra)
