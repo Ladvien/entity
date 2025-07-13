@@ -72,7 +72,7 @@ class Pipeline:
             resources=capabilities.resources,
             tools=capabilities.tools,
             plugins=plugin_reg,
-            validators=capabilities.validators,
+            validators=getattr(capabilities, "validators", None),
         )
         return await execute_pipeline(
             message,
@@ -115,8 +115,9 @@ async def execute_stage(
             context.set_current_stage(stage)
             name = registries.plugins.get_plugin_name(plugin)
             context.set_current_plugin(name)
-            if registries.validators is not None:
-                await registries.validators.validate(stage, context)
+            validators = getattr(registries, "validators", None)
+            if validators is not None:
+                await validators.validate(stage, context)
             try:
                 await plugin.execute(context)
                 if stage == PipelineStage.OUTPUT and state.response is not None:
