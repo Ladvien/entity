@@ -306,7 +306,7 @@ class _AgentBuilder:
             container.register("database_backend", DuckDBInfrastructure, {}, layer=1)
 
         if not container.has_plugin("database"):
-            from plugins.builtin.resources.duckdb_resource import DuckDBResource
+            from entity.resources.interfaces.duckdb_resource import DuckDBResource
 
             container.register("database", DuckDBResource, {}, layer=2)
 
@@ -323,7 +323,7 @@ class _AgentBuilder:
             container.register("memory", Memory, {}, layer=3)
 
         if not container.has_plugin("llm_provider"):
-            from plugins.builtin.resources.echo_llm import EchoLLMResource
+            from entity.resources.interfaces.echo_llm import EchoLLMResource
 
             container.register("llm_provider", EchoLLMResource, {}, layer=4)
 

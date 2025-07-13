@@ -19,10 +19,10 @@ plugins:
   infrastructure: {}
   resources:
     database:
-      type: plugins.builtin.resources.duckdb_resource:DuckDBResource
+      type: entity.resources.interfaces.duckdb_resource:DuckDBResource
       path: ./agent.duckdb
     # vector_store:
-    #   type: plugins.builtin.resources.duckdb_vector_store:DuckDBVectorStore
+    #   type: entity.resources.interfaces.duckdb_vector_store:DuckDBVectorStore
     #   table: vector_mem
     #   embedding_model:
     #     name: dummy
@@ -30,7 +30,7 @@ plugins:
     metrics_collector:
       type: entity.resources.metrics:MetricsCollectorResource
   # llm:
-  #   type: plugins.builtin.resources.llm.unified:UnifiedLLMResource
+  #   type: entity.resources.interfaces.unified_llm:UnifiedLLMResource
   #   provider: ollama
   #   base_url: "${OLLAMA_BASE_URL}"
   #   model: "${OLLAMA_MODEL}"
@@ -56,7 +56,7 @@ plugins:
 #       username: user
 #       password: pass
 #     vector_store:
-#       type: plugins.builtin.resources.pg_vector_store:PgVectorStore
+#       type: entity.resources.interfaces.pg_vector_store:PgVectorStore
 #       dimensions: 768
 #       table: embeddings
 #     filesystem:

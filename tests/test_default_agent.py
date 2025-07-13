@@ -3,7 +3,7 @@ import asyncio
 from entity import agent
 from entity.pipeline.pipeline import Pipeline
 from entity.pipeline.stages import PipelineStage
-from plugins.builtin.resources.ollama_llm import OllamaLLMResource
+from entity.resources.interfaces.ollama_llm import OllamaLLMResource
 from entity.resources.logging import LoggingResource
 
 

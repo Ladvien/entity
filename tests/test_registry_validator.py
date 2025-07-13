@@ -252,7 +252,7 @@ def test_memory_requires_postgres(tmp_path):
         "agent_resources": {
             "memory": {"type": "entity.resources.memory:Memory"},
             "vector_store": {
-                "type": "plugins.builtin.resources.pg_vector_store:PgVectorStore"
+                "type": "entity.resources.interfaces.pg_vector_store:PgVectorStore"
             },
             "database": {"type": "tests.test_registry_validator:A"},
             "metrics_collector": {
@@ -271,7 +271,7 @@ def test_memory_with_postgres(tmp_path):
         "agent_resources": {
             "memory": {"type": "entity.resources.memory:Memory"},
             "vector_store": {
-                "type": "plugins.builtin.resources.pg_vector_store:PgVectorStore"
+                "type": "entity.resources.interfaces.pg_vector_store:PgVectorStore"
             },
             "database": {"type": "tests.test_registry_validator:PostgresResource"},
             "metrics_collector": {

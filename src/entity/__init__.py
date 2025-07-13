@@ -11,7 +11,7 @@ from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
 =======
 from .resources.interfaces.vector_store import VectorStoreResource
 >>>>>>> pr-1448
-from plugins.builtin.resources.ollama_llm import OllamaLLMResource
+from entity.resources.interfaces.ollama_llm import OllamaLLMResource
 from .core.stages import PipelineStage
 from .core.plugins import PromptPlugin, ToolPlugin
 from .utils.setup_manager import Layer0SetupManager

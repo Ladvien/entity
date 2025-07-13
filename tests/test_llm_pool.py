@@ -6,7 +6,7 @@ import types
 import pytest
 
 sys.modules.setdefault(
-    "plugins.builtin.resources.duckdb_resource", types.ModuleType("duckdb_resource")
+    "entity.resources.interfaces.duckdb_resource", types.ModuleType("duckdb_resource")
 )
 
 from entity.core.resources.container import ResourceContainer
