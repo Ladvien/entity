@@ -9,7 +9,8 @@ deterministic execution whenever multiple plugins share a stage.
 Plugins declared in a YAML configuration file maintain this ordering as well.
 The initializer reads entries sequentially and registers each plugin as it
 appears, so restarting the system with the same YAML file yields identical
-execution order.
+execution order. The registry preserves the original sequence for each stage,
+ensuring stage-level execution order matches the YAML definition exactly.
 
 ## Plugin Lifecycle
 
