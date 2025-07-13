@@ -349,6 +349,12 @@ async def execute_pipeline(
 
                 state.last_completed_stage = None
 
+        metrics = (
+            capabilities.resources.get("metrics_collector")
+            if capabilities.resources
+            else None
+        )
+
         if state.failure_info:
             try:
                 if state.last_completed_stage != PipelineStage.ERROR:
@@ -371,6 +377,13 @@ async def execute_pipeline(
             result = create_default_response("No response generated", state.pipeline_id)
         else:
             result = state.response
+        elapsed_ms = (time.time() - _start) * 1000
+        if metrics is not None:
+            await metrics.record_custom_metric(
+                pipeline_id=state.pipeline_id,
+                metric_name="pipeline_duration_ms",
+                value=elapsed_ms,
+            )
         return result
 
 

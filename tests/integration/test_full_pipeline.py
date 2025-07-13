@@ -142,3 +142,4 @@ async def test_performance_metrics(registries: SystemRegistries) -> None:
     metrics = registries.metrics
     assert len(metrics.plugin_executions) == 3
     assert elapsed > 0
+    assert any(m.metric_name == "pipeline_duration_ms" for m in metrics.custom_metrics)
