@@ -73,13 +73,15 @@ class DummyDatabase(DatabaseResource):
 
 
 class DummyRegistries:
-    def __init__(self, db: DummyDatabase) -> None:
+    def __init__(
+        self, db: DummyDatabase, *, plugins: PluginRegistry | None = None
+    ) -> None:
         mem = Memory(config={})
         mem.database = db
         mem.vector_store = None
         self.resources = {"memory": mem}
         self.tools = types.SimpleNamespace()
-        self.plugins: PluginRegistry = PluginRegistry()
+        self.plugins = plugins or PluginRegistry()
 
 
 @pytest.mark.asyncio

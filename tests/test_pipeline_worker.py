@@ -98,7 +98,7 @@ class DummyDatabase(DatabaseResource):
 
 
 class DummyRegistries:
-    def __init__(self) -> None:
+    def __init__(self, *, plugins: PluginRegistry | None = None) -> None:
         class _Resources(dict):
             async def __aenter__(self):
                 return self
@@ -110,6 +110,7 @@ class DummyRegistries:
         self.tools = types.SimpleNamespace()
         self.plugins: PluginRegistry = PluginRegistry()
         self.validators = None
+        self.plugins = plugins or PluginRegistry()
 
 
 class DBRegistries:
