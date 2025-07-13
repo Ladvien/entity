@@ -50,3 +50,15 @@ async def test_agent_handle_runs_workflow():
     agent.pipeline = Pipeline(workflow=wf)
     result = await agent.handle("bye")
     assert result == "bye!"
+
+
+@pytest.mark.asyncio
+async def test_builder_registers_default_resources() -> None:
+    builder = _AgentBuilder()
+    runtime = await builder.build_runtime()
+    assert runtime is not None
+    assert builder.resource_registry.get("memory") is not None
+    assert builder.resource_registry.get("llm") is not None
+    assert builder.resource_registry.get("storage") is not None
+    mem = builder.resource_registry.get("memory")
+    assert getattr(mem, "database", None) is not None
