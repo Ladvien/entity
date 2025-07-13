@@ -832,7 +832,7 @@ class SystemInitializer:
         if "database" not in registered:
             from plugins.builtin.resources.duckdb_resource import DuckDBResource
 
-            container.register("database", DuckDBResource, {}, layer=3)
+            container.register("database", DuckDBResource, {}, layer=2)
             registered.add("database")
 
         required = {"memory", "llm", "storage"}
