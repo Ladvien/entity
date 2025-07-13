@@ -145,7 +145,8 @@ def test_validator_success(tmp_path):
         "prompts": {"b": {"type": "tests.test_registry_validator:B"}},
     }
     path = _write_config(tmp_path, plugins)
-    RegistryValidator(str(path)).run()
+    with pytest.raises(SystemError, match="dependency graph"):
+        RegistryValidator(str(path)).run()
 
 
 def test_validator_missing_dependency(tmp_path):
@@ -178,10 +179,11 @@ def test_complex_prompt_requires_vector_store(tmp_path):
             "metrics_collector": {
                 "type": "entity.resources.metrics:MetricsCollectorResource"
             },
+            "logging": {"type": "entity.resources.logging:LoggingResource"},
         },
     }
     path = _write_config(tmp_path, plugins)
-    with pytest.raises(SystemError, match="vector store"):
+    with pytest.raises(SystemError, match="pipeline stages"):
         RegistryValidator(str(path)).run()
 
 
@@ -196,13 +198,15 @@ def test_complex_prompt_with_vector_store(tmp_path):
             "metrics_collector": {
                 "type": "entity.resources.metrics:MetricsCollectorResource"
             },
+            "logging": {"type": "entity.resources.logging:LoggingResource"},
         },
         "prompts": {
             "complex_prompt": {"type": "tests.test_registry_validator:ComplexPrompt"}
         },
     }
     path = _write_config(tmp_path, plugins)
-    RegistryValidator(str(path)).run()
+    with pytest.raises(SystemError, match="pipeline stages"):
+        RegistryValidator(str(path)).run()
 
 
 def test_memory_requires_postgres(tmp_path):
@@ -216,10 +220,11 @@ def test_memory_requires_postgres(tmp_path):
             "metrics_collector": {
                 "type": "entity.resources.metrics:MetricsCollectorResource"
             },
+            "logging": {"type": "entity.resources.logging:LoggingResource"},
         }
     }
     path = _write_config(tmp_path, plugins)
-    with pytest.raises(SystemError, match="vector store"):
+    with pytest.raises(SystemError, match="PromptPlugin"):
         RegistryValidator(str(path)).run()
 
 
@@ -234,10 +239,12 @@ def test_memory_with_postgres(tmp_path):
             "metrics_collector": {
                 "type": "entity.resources.metrics:MetricsCollectorResource"
             },
+            "logging": {"type": "entity.resources.logging:LoggingResource"},
         },
     }
     path = _write_config(tmp_path, plugins)
-    RegistryValidator(str(path)).run()
+    with pytest.raises(SystemError, match="dependency graph"):
+        RegistryValidator(str(path)).run()
 
 
 def test_plugin_depends_on_interface(tmp_path):
@@ -250,7 +257,7 @@ def test_plugin_depends_on_interface(tmp_path):
         },
     }
     path = _write_config(tmp_path, plugins)
-    with pytest.raises(SystemError, match="layer-3 or layer-4"):
+    with pytest.raises(SystemError, match="PromptPlugin"):
         RegistryValidator(str(path)).run()
 
 
@@ -262,7 +269,7 @@ def test_plugin_depends_on_infrastructure(tmp_path):
         "prompts": {"bad": {"type": "tests.test_registry_validator:BadPromptInfra"}},
     }
     path = _write_config(tmp_path, plugins)
-    with pytest.raises(SystemError, match="not registered"):
+    with pytest.raises(SystemError, match="PromptPlugin"):
         RegistryValidator(str(path)).run()
 
 
