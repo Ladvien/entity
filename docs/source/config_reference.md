@@ -91,6 +91,19 @@ Configuration model for the :class:`~entity.resources.memory.Memory`.
 | kv_table | str | 'memory_kv' |  |
 | history_table | str | 'conversation_history' |  |
 
+## Conversation Analytics API
+
+Use ``entity-cli get-conversation-stats`` to retrieve metrics stored by the
+``Memory`` resource. Provide the configuration file and a user ID:
+
+```bash
+entity-cli --config config/dev.yaml get-conversation-stats USER123
+```
+
+The command outputs YAML containing total conversations, message counts,
+average conversation length, durations per conversation, the most active hours,
+and the last activity timestamp for the user.
+
 ## PluginConfig
 
 Configuration for a single plugin.
