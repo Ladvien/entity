@@ -42,9 +42,9 @@ class ToolExecutionError(Exception):
 class BasePlugin:
     """Lightweight plugin foundation.
 
-    All subclasses depend on ``metrics_collector`` and ``logging`` resources
-    by default so they can record metrics and emit logs without extra
-    configuration.
+    Non-infrastructure subclasses automatically depend on ``metrics_collector``
+    and ``logging`` so they can record metrics and emit logs without
+    additional configuration.
     """
 
     stages: List[PipelineStage]
@@ -52,8 +52,10 @@ class BasePlugin:
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
-        _ensure_metrics_dependency(cls)
-        _ensure_logging_dependency(cls)
+        is_infra = any(base.__name__ == "InfrastructurePlugin" for base in cls.mro())
+        if not is_infra:
+            _ensure_metrics_dependency(cls)
+            _ensure_logging_dependency(cls)
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
         self.config = config or {}
