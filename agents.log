@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-20: Improved Layer0 setup manager with Ollama checks and auto resource creation
+AGENT NOTE - 2025-07-12: Added plugin taxonomy validation and tests
 AGENT NOTE - 2025-07-12: Verified sandbox references removed and executed quality checks
 AGENT NOTE - 2025-07-12: Verified metrics_collector removal; file already absent
 AGENT NOTE - 2025-07-12: Removed sandbox infrastructure and unused plugins

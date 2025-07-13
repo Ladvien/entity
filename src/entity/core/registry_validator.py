@@ -75,6 +75,46 @@ class RegistryValidator:
         self.has_postgres = False
         self.uses_pg_vector_store = False
 
+    @staticmethod
+    def _validate_plugin_type(name: str, cls: type, section: str) -> None:
+        """Ensure plugin belongs to the expected base class."""
+        from entity.core.plugins import (
+            AdapterPlugin,
+            InfrastructurePlugin,
+            InputAdapterPlugin,
+            OutputAdapterPlugin,
+            PromptPlugin,
+            ResourcePlugin,
+            ToolPlugin,
+        )
+
+        if section == "infrastructure" and not issubclass(cls, InfrastructurePlugin):
+            raise SystemError(
+                f"Plugin '{name}' in '{section}' must inherit from InfrastructurePlugin"
+            )
+        if section in {
+            "resources",
+            "agent_resources",
+            "custom_resources",
+        } and not issubclass(cls, ResourcePlugin):
+            raise SystemError(
+                f"Plugin '{name}' in '{section}' must inherit from ResourcePlugin"
+            )
+        if section == "tools" and not issubclass(cls, ToolPlugin):
+            raise SystemError(
+                f"Plugin '{name}' in '{section}' must inherit from ToolPlugin"
+            )
+        if section == "adapters" and not issubclass(
+            cls, (AdapterPlugin, InputAdapterPlugin, OutputAdapterPlugin)
+        ):
+            raise SystemError(
+                f"Plugin '{name}' in '{section}' must inherit from AdapterPlugin"
+            )
+        if section == "prompts" and not issubclass(cls, PromptPlugin):
+            raise SystemError(
+                f"Plugin '{name}' in '{section}' must inherit from PromptPlugin"
+            )
+
     def _register_classes(self) -> None:
         plugins_cfg = self.initializer.config.get("plugins", {})
         for section in [
@@ -87,8 +127,11 @@ class RegistryValidator:
         ]:
             for name, cfg in plugins_cfg.get(section, {}).items():
                 cls = import_plugin_class(cfg.get("type", name))
+                self._validate_plugin_type(name, cls, section)
                 self.registry.register_class(cls, cfg, name)
-                self.dep_graph[name] = list(getattr(cls, "dependencies", []))
+                cfg_deps = list(cfg.get("dependencies", []))
+                class_deps = list(getattr(cls, "dependencies", []))
+                self.dep_graph[name] = cfg_deps or class_deps
                 self._validate_stage_assignment(name, cls, cfg)
 
                 if name == "vector_store" or cls.__name__ == "PgVectorStore":
@@ -103,12 +146,19 @@ class RegistryValidator:
     @staticmethod
     def _validate_stage_assignment(name: str, cls: type, cfg: Dict) -> None:
         from entity.core.plugins import (
+            AdapterPlugin,
+            InputAdapterPlugin,
+            OutputAdapterPlugin,
             ResourcePlugin,
             ToolPlugin,
             InfrastructurePlugin,
         )
 
-        if issubclass(cls, (ResourcePlugin, ToolPlugin, InfrastructurePlugin)):
+        if issubclass(cls, (ResourcePlugin, InfrastructurePlugin)):
+            if cfg.get("stage") or cfg.get("stages") or getattr(cls, "stages", None):
+                raise SystemError(
+                    f"Resource plugin '{name}' should not define pipeline stages"
+                )
             return
 
         cfg_value = cfg.get("stages") or cfg.get("stage")
@@ -126,6 +176,23 @@ class RegistryValidator:
         invalid = [s for s in stages if not isinstance(s, PipelineStage)]
         if invalid:
             raise SystemError(f"Plugin '{name}' has invalid stage values: {invalid}")
+
+        if issubclass(cls, ToolPlugin) and any(s != PipelineStage.DO for s in stages):
+            raise SystemError("ToolPlugin must execute only in the DO stage")
+        if issubclass(cls, InputAdapterPlugin) and any(
+            s != PipelineStage.INPUT for s in stages
+        ):
+            raise SystemError("InputAdapterPlugin must execute only in the INPUT stage")
+        if issubclass(cls, OutputAdapterPlugin) and any(
+            s != PipelineStage.OUTPUT for s in stages
+        ):
+            raise SystemError(
+                "OutputAdapterPlugin must execute only in the OUTPUT stage"
+            )
+        if issubclass(cls, AdapterPlugin) and any(
+            s not in {PipelineStage.INPUT, PipelineStage.OUTPUT} for s in stages
+        ):
+            raise SystemError("AdapterPlugin stages must be INPUT and/or OUTPUT")
 
     def _validate_dependencies(self) -> None:
         for cls, _ in self.registry.all_plugin_classes():
