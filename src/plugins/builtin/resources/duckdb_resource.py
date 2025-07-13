@@ -9,7 +9,7 @@ from entity.core.plugins import ResourcePlugin
 
 
 class DuckDBResource(ResourcePlugin):  # type: ignore[misc]
-    """Database resource backed by :class:`DuckDBInfrastructure`."""
+    """Lightweight database wrapper over :class:`DuckDBInfrastructure`."""
 
     infrastructure_dependencies = ["database_backend"]
 
