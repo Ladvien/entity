@@ -19,5 +19,8 @@ async def test_pipeline_raises_on_unknown_plugin():
     await builder.add_plugin(EchoPlugin({}))
 
     mapping = {PipelineStage.OUTPUT: ["EchoPlugin", "MissingPlugin"]}
-    with pytest.raises(KeyError, match="MissingPlugin"):
+    with pytest.raises(
+        KeyError,
+        match="Plugin 'MissingPlugin' referenced in stage 'output' is not registered",
+    ):
         Pipeline(builder=builder, workflow=mapping)
