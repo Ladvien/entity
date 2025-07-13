@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-13: Ensured pipeline package sets __path__ for plugin discovery
 AGENT NOTE - 2025-08-08: Cleaned merge conflict markers in agents.log
 AGENT NOTE - 2025-08-07: Added example plugins and registered them in default workflow
 AGENT NOTE - 2025-07-13: Resolved merge conflicts for LlamaCppInfrastructure documentation and tests

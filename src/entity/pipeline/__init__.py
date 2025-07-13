@@ -1,7 +1,13 @@
 """Pipeline component:   init  ."""
 
+from __future__ import annotations
+
+import pkgutil
+
 from importlib import import_module
 from typing import TYPE_CHECKING, Any
+
+__path__ = pkgutil.extend_path(globals().get("__path__", []), __name__)
 
 from .exceptions import CircuitBreakerTripped
 from entity.core.circuit_breaker import CircuitBreaker, RetryPolicy
