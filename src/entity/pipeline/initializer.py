@@ -635,19 +635,7 @@ class SystemInitializer:
                     )
 
         # Phase 1: syntax validation
-        for plugin_class, config in registry.all_plugin_classes():
-            user_cfg = {
-                k: v
-                for k, v in config.items()
-                if k not in {"type", "dependencies", "stage", "stages"}
-            }
-            result = await plugin_class.validate_config(user_cfg)
-            if not result.success:
-                raise InitializationError(
-                    plugin_class.__name__,
-                    "syntax validation",
-                    f"{result.message}. Update the plugin configuration.",
-                )
+        await self._syntax_validation(registry)
 
         # Register resources early so we can verify canonical ones exist
         resource_container = self.resource_container_cls()
@@ -659,81 +647,18 @@ class SystemInitializer:
         self._ensure_canonical_resources(resource_container)
 
         # Phase 2: dependency validation
-        self._validate_dependency_graph(registry, dep_graph)
-        for plugin_class, _ in registry.all_plugin_classes():
-            result = await plugin_class.validate_dependencies(registry)
-            if not result.success:
-                raise InitializationError(
-                    plugin_class.__name__,
-                    "dependency validation",
-                    f"{result.message}. Fix plugin dependencies.",
-                )
+        await self._dependency_validation(registry, dep_graph)
 
         # Fail fast if any canonical resources are missing before initialization
         self._ensure_canonical_resources(resource_container)
 
-        # Phase 3: initialize resources via container
-
+        # Phase 3: runtime validation
         async with (
             initialization_cleanup_context(resource_container),
             plugin_cleanup_context(self._plugins),
         ):
             await resource_container.build_all()
-
-            model = self._config_model
-            cfg = model.runtime_validation_breaker
-            settings = model.breaker_settings
-
-            breaker_mgr = BreakerManager.from_config(cfg, settings)
-
-            tasks: list[asyncio.Task] = []
-            resources: list[tuple[str, CircuitBreaker]] = []
-
-            for name, resource in resource_container._resources.items():
-                validate = getattr(resource, "validate_runtime", None)
-                if not callable(validate):
-                    continue
-
-                category = getattr(resource, "resource_category", None)
-                if not category:
-                    category = getattr(resource, "infrastructure_type", "").lower()
-
-                breaker = breaker_mgr.get(category)
-
-                async def _call_validation(
-                    validate=validate,
-                    breaker=breaker,
-                ) -> None:
-                    async def _run() -> None:
-                        if len(inspect.signature(validate).parameters) == 1:
-                            result = await validate(breaker)
-                        else:
-                            result = await validate()
-                        if not result.success:
-                            raise RuntimeError(result.message)
-
-                    await breaker.call(_run)
-
-                tasks.append(asyncio.create_task(_call_validation()))
-                resources.append((name, breaker))
-
-            results = await asyncio.gather(*tasks, return_exceptions=True)
-
-            for (name, breaker), result in zip(resources, results):
-                if isinstance(result, Exception):
-                    logger.error("Runtime validation failed for %s: %s", name, result)
-                    if (
-                        isinstance(result, CircuitBreakerTripped)
-                        or breaker._failure_count >= breaker.failure_threshold
-                    ):
-                        raise InitializationError(
-                            name,
-                            "runtime validation",
-                            "Failure threshold exceeded. Inspect resource configuration.",
-                            kind="Resource",
-                        ) from result
-                else:
-                    logger.info("Runtime validation succeeded for %s", name)
+            await self._runtime_validation(resource_container)
 
             # Phase 3.5: register tools
             tr_cfg = self.config.get("tool_registry", {})
@@ -777,6 +702,87 @@ class SystemInitializer:
             shutdown = getattr(plugin, "shutdown", None)
             if callable(shutdown):
                 await shutdown()
+
+    async def _syntax_validation(self, registry: ClassRegistry) -> None:
+        for plugin_class, config in registry.all_plugin_classes():
+            user_cfg = {
+                k: v
+                for k, v in config.items()
+                if k not in {"type", "dependencies", "stage", "stages"}
+            }
+            result = await plugin_class.validate_config(user_cfg)
+            if not result.success:
+                raise InitializationError(
+                    plugin_class.__name__,
+                    "syntax validation",
+                    f"{result.message}. Update the plugin configuration.",
+                )
+
+    async def _dependency_validation(
+        self, registry: ClassRegistry, dep_graph: Dict[str, List[str]]
+    ) -> None:
+        self._validate_dependency_graph(registry, dep_graph)
+        for plugin_class, _ in registry.all_plugin_classes():
+            result = await plugin_class.validate_dependencies(registry)
+            if not result.success:
+                raise InitializationError(
+                    plugin_class.__name__,
+                    "dependency validation",
+                    f"{result.message}. Fix plugin dependencies.",
+                )
+
+    async def _runtime_validation(self, container: ResourceContainer) -> None:
+        model = self._config_model
+        cfg = model.runtime_validation_breaker
+        settings = model.breaker_settings
+
+        breaker_mgr = BreakerManager.from_config(cfg, settings)
+
+        tasks: list[asyncio.Task] = []
+        resources: list[tuple[str, CircuitBreaker]] = []
+
+        for name, resource in container._resources.items():
+            validate = getattr(resource, "validate_runtime", None)
+            if not callable(validate):
+                continue
+
+            category = getattr(resource, "resource_category", None)
+            if not category:
+                category = getattr(resource, "infrastructure_type", "").lower()
+
+            breaker = breaker_mgr.get(category)
+
+            async def _call_validation(
+                validate=validate,
+                breaker=breaker,
+            ) -> None:
+                async def _run() -> None:
+                    if len(inspect.signature(validate).parameters) == 1:
+                        result = await validate(breaker)
+                    else:
+                        result = await validate()
+                    if not result.success:
+                        raise RuntimeError(result.message)
+
+                await breaker.call(_run)
+
+            tasks.append(asyncio.create_task(_call_validation()))
+            resources.append((name, breaker))
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        for (name, breaker), result in zip(resources, results):
+            if isinstance(result, Exception):
+                logger.error("Runtime validation failed for %s: %s", name, result)
+                if isinstance(result, CircuitBreakerTripped) or breaker.is_open:
+                    raise InitializationError(
+                        name,
+                        "runtime validation",
+                        "Failure threshold exceeded. Inspect resource configuration.",
+                        kind="Resource",
+                    ) from result
+            else:
+                logger.info("Runtime validation succeeded for %s", name)
 
     def _validate_dependency_graph(
         self, registry: ClassRegistry, dep_graph: Dict[str, List[str]]

@@ -25,6 +25,7 @@ class DuckDBVectorStore(VectorStoreResource):
 
     name = "duckdb_vector_store"
     infrastructure_dependencies = ["database_backend"]
+    resource_category = "database"
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
@@ -45,7 +46,9 @@ class DuckDBVectorStore(VectorStoreResource):
         if duckdb is None:
             raise RuntimeError("duckdb package not installed")
         if self.database is None:
-            raise ResourceInitializationError("Database backend not injected")
+            raise ResourceInitializationError(
+                "Database backend not injected", self.name
+            )
         self._pool = self.database.get_connection_pool()
         async with self.database.connection() as conn:
             conn.execute(

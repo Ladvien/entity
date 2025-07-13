@@ -30,6 +30,17 @@ class CaptureErrorPlugin(Plugin):
         context._state.response = "error handled"
 
 
+class SkippedPlugin(Plugin):
+    stages = [PipelineStage.THINK]
+
+    def __init__(self, config=None) -> None:
+        super().__init__(config or {})
+        self.executed = False
+
+    async def _execute_impl(self, context: PluginContext) -> None:
+        self.executed = True
+
+
 @pytest.mark.asyncio
 async def test_plugin_failure_triggers_error_stage():
     plugins = PluginRegistry()
@@ -47,3 +58,25 @@ async def test_plugin_failure_triggers_error_stage():
     result = await execute_pipeline("hi", regs, state=state)
     assert result == "error handled"
     assert error_plugin.called is True
+
+
+@pytest.mark.asyncio
+async def test_stage_stops_after_failure():
+    plugins = PluginRegistry()
+    error_plugin = CaptureErrorPlugin()
+    skipped = SkippedPlugin()
+    await plugins.register_plugin_for_stage(
+        FailingPlugin({}), PipelineStage.THINK, "fail"
+    )
+    await plugins.register_plugin_for_stage(skipped, PipelineStage.THINK, "skip")
+    await plugins.register_plugin_for_stage(error_plugin, PipelineStage.ERROR, "err")
+
+    regs = SystemRegistries(resources={}, tools=ToolRegistry(), plugins=plugins)
+    state = PipelineState(
+        conversation=[ConversationEntry("hi", "user", datetime.now())],
+        pipeline_id="pid",
+    )
+    result = await execute_pipeline("hi", regs, state=state)
+    assert result == "error handled"
+    assert error_plugin.called is True
+    assert skipped.executed is False

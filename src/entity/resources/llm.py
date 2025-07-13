@@ -18,6 +18,7 @@ class LLM(AgentResource):
 
     name = "llm"
     dependencies = ["llm_provider?"]
+    resource_category = "api"
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})

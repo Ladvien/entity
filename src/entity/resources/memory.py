@@ -24,6 +24,7 @@ class Memory(AgentResource):
 
     name = "memory"
     dependencies = ["database", "vector_store?"]
+    resource_category = "database"
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
         super().__init__(config or {})
@@ -41,7 +42,9 @@ class Memory(AgentResource):
 
     async def initialize(self) -> None:
         if self.database is None:
-            raise ResourceInitializationError("Database dependency not injected")
+            raise ResourceInitializationError(
+                "Database dependency not injected", self.name
+            )
         self._pool = self.database.get_connection_pool()
         async with self.database.connection() as conn:
             conn.execute(

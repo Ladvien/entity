@@ -172,6 +172,7 @@ class LoggingResource(AgentResource):
     name = "logging"
     dependencies: List[str] = []
     infrastructure_dependencies: List[str] = []
+    resource_category = "filesystem"
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
         super().__init__(config or {})

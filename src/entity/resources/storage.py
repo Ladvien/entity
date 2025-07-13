@@ -16,6 +16,7 @@ class Storage(AgentResource):
     """Simple key/value storage."""
 
     name = "storage"
+    resource_category = "filesystem"
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})

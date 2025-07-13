@@ -36,11 +36,7 @@ class PluginExecutionError(PipelineError):
 
 
 class ResourceError(PipelineError):
-    pass
-
-
-class ResourceInitializationError(ResourceError):
-    """Raised when a resource fails to initialize."""
+    """Base class for resource errors."""
 
     pass
 
@@ -62,7 +58,7 @@ class InitializationError(PipelineError):
 class ResourceInitializationError(InitializationError):
     """Raised when a resource dependency is missing."""
 
-    def __init__(self, remediation: str, name: str = "resource") -> None:
+    def __init__(self, remediation: str, name: str) -> None:
         super().__init__(name, "initialization", remediation, kind="Resource")
 
 
@@ -137,7 +133,6 @@ __all__ = [
     "ResourceError",
     "ResourceInitializationError",
     "InitializationError",
-    "ResourceInitializationError",
     "StageExecutionError",
     "ToolExecutionError",
     "ErrorResponse",

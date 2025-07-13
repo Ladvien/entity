@@ -10,6 +10,7 @@ from entity.core.plugins import ResourcePlugin, ValidationResult
 class StorageResource(ResourcePlugin):
 
     infrastructure_dependencies = ["storage_backend"]
+    resource_category = "filesystem"
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})

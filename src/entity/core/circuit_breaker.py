@@ -70,6 +70,18 @@ class CircuitBreaker:
         self._failure_count = 0
         self._tripped_at = None
 
+    @property
+    def failure_count(self) -> int:
+        """Return the current consecutive failure count."""
+
+        return self._failure_count
+
+    @property
+    def is_open(self) -> bool:
+        """Return ``True`` if the breaker is tripped."""
+
+        return self._failure_count >= self.failure_threshold
+
 
 @dataclass
 class BreakerManager:
@@ -81,7 +93,12 @@ class BreakerManager:
     def get(self, category: str | None) -> CircuitBreaker:
         if not category:
             return self.default
-        return self.category_breakers.get(category, self.default)
+        if category not in self.category_breakers:
+            self.category_breakers[category] = CircuitBreaker(
+                failure_threshold=self.default.failure_threshold,
+                recovery_timeout=self.default.recovery_timeout,
+            )
+        return self.category_breakers[category]
 
     @classmethod
     def from_config(

@@ -25,15 +25,8 @@ try:
     from .resources.logging import LoggingResource
     from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
     from plugins.builtin.resources.ollama_llm import OllamaLLMResource
-<<<<<<< HEAD
-    from .plugins.prompts.basic_error_handler import BasicErrorHandler
-    from plugins.examples import InputLogger
-    from user_plugins.prompts import ComplexPrompt
-    from user_plugins.responders import ComplexPromptResponder
-=======
     from plugins.builtin.basic_error_handler import BasicErrorHandler
     from plugins.examples import InputLogger, MessageParser, ResponseReviewer
->>>>>>> pr-1508
     from .core.stages import PipelineStage
     from .core.plugins import PromptPlugin, ToolPlugin
     from .utils.setup_manager import Layer0SetupManager
@@ -94,95 +87,108 @@ def _create_default_agent() -> Agent:
     )
     asyncio.run(builder.add_plugin(BasicErrorHandler({})))
     asyncio.run(builder.add_plugin(InputLogger({})))
-    asyncio.run(builder.add_plugin(ComplexPrompt({})))
-    asyncio.run(builder.add_plugin(ComplexPromptResponder({})))
+    try:
+        from user_plugins.prompts import ComplexPrompt
+        from user_plugins.responders import ComplexPromptResponder
+
+        asyncio.run(builder.add_plugin(ComplexPrompt({})))
+        asyncio.run(builder.add_plugin(ComplexPromptResponder({})))
+    except Exception:  # noqa: BLE001 - optional plugins
+        pass
     workflow = getattr(setup, "workflow", minimal_workflow)
     agent._runtime = AgentRuntime(caps, workflow=workflow)
     return agent
 
 
-agent = _create_default_agent()
+agent: Agent | None = None
+
+
+def _ensure_agent() -> Agent:
+    global agent
+    if agent is None:
+        agent = _create_default_agent()
+    return agent
+
 
 # Expose decorator helpers bound to the default agent
-plugin = agent.plugin
+
+
+def plugin(func=None, **hints):
+    ag = _ensure_agent()
+    return ag.plugin(func, **hints)
 
 
 def input(func=None, **hints):
-    return agent.plugin(func, stage=PipelineStage.INPUT, **hints)
-
-
-agent.input = input
+    ag = _ensure_agent()
+    return ag.plugin(func, stage=PipelineStage.INPUT, **hints)
 
 
 def parse(func=None, **hints):
-    return agent.plugin(func, stage=PipelineStage.PARSE, **hints)
-
-
-agent.parse = parse
+    ag = _ensure_agent()
+    return ag.plugin(func, stage=PipelineStage.PARSE, **hints)
 
 
 def prompt(func=None, **hints):
-    return agent.plugin(func, stage=PipelineStage.THINK, **hints)
-
-
-agent.prompt = prompt
+    ag = _ensure_agent()
+    return ag.plugin(func, stage=PipelineStage.THINK, **hints)
 
 
 def tool(func=None, **hints):
     """Register ``func`` as a tool plugin or simple tool."""
 
     def decorator(f):
+        ag = _ensure_agent()
         params = list(inspect.signature(f).parameters)
         if params and params[0] in {"ctx", "context"}:
-            return agent.plugin(f, stage=PipelineStage.DO, **hints)
+            return ag.plugin(f, stage=PipelineStage.DO, **hints)
 
         class _WrappedTool(ToolPlugin):
             async def execute_function(self, params_dict):
                 return await f(**params_dict)
 
-        asyncio.run(agent.builder.tool_registry.add(f.__name__, _WrappedTool({})))
+        ag = _ensure_agent()
+        asyncio.run(ag.builder.tool_registry.add(f.__name__, _WrappedTool({})))
         return f
 
     return decorator(func) if func else decorator
 
 
-agent.tool = tool
-
-
 def review(func=None, **hints):
-    return agent.plugin(func, stage=PipelineStage.REVIEW, **hints)
-
-
-agent.review = review
+    ag = _ensure_agent()
+    return ag.plugin(func, stage=PipelineStage.REVIEW, **hints)
 
 
 def output(func=None, **hints):
-    return agent.plugin(func, stage=PipelineStage.OUTPUT, **hints)
-
-
-agent.output = output
+    ag = _ensure_agent()
+    return ag.plugin(func, stage=PipelineStage.OUTPUT, **hints)
 
 
 def prompt_plugin(func=None, **hints):
     hints["plugin_class"] = PromptPlugin
-    return agent.plugin(func, **hints)
-
-
-agent.prompt_plugin = prompt_plugin
+    ag = _ensure_agent()
+    return ag.plugin(func, **hints)
 
 
 def tool_plugin(func=None, **hints):
     hints["plugin_class"] = ToolPlugin
-    return agent.plugin(func, **hints)
-
-
-agent.tool_plugin = tool_plugin
+    ag = _ensure_agent()
+    return ag.plugin(func, **hints)
 
 
 __all__ = [
     "core",
     "Agent",
     "agent",
+    "_create_default_agent",
+    "plugin",
+    "input",
+    "parse",
+    "prompt",
+    "tool",
+    "review",
+    "output",
+    "prompt_plugin",
+    "tool_plugin",
 ]
 
 
