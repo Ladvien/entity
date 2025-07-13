@@ -26,11 +26,13 @@ try:
     from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
     from plugins.builtin.resources.ollama_llm import OllamaLLMResource
     from .plugins.prompts.basic_error_handler import BasicErrorHandler
-    from plugins.examples import InputLogger, MessageParser, ResponseReviewer
+    from plugins.examples import InputLogger
+    from user_plugins.prompts import ComplexPrompt
+    from user_plugins.responders import ComplexPromptResponder
     from .core.stages import PipelineStage
     from .core.plugins import PromptPlugin, ToolPlugin
     from .utils.setup_manager import Layer0SetupManager
-    from entity.workflows.default import DefaultWorkflow
+    from entity.workflows.minimal import minimal_workflow
     from entity.core.registries import SystemRegistries
     from entity.core.runtime import AgentRuntime
     from entity.core.resources.container import ResourceContainer
@@ -87,9 +89,9 @@ def _create_default_agent() -> Agent:
     )
     asyncio.run(builder.add_plugin(BasicErrorHandler({})))
     asyncio.run(builder.add_plugin(InputLogger({})))
-    asyncio.run(builder.add_plugin(MessageParser({})))
-    asyncio.run(builder.add_plugin(ResponseReviewer({})))
-    workflow = getattr(setup, "workflow", DefaultWorkflow())
+    asyncio.run(builder.add_plugin(ComplexPrompt({})))
+    asyncio.run(builder.add_plugin(ComplexPromptResponder({})))
+    workflow = getattr(setup, "workflow", minimal_workflow)
     agent._runtime = AgentRuntime(caps, workflow=workflow)
     return agent
 
