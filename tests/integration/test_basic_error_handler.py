@@ -10,7 +10,7 @@ from entity.pipeline.state import PipelineState
 from entity.pipeline.pipeline import execute_pipeline
 from entity.pipeline.stages import PipelineStage
 from entity.resources.logging import LoggingResource
-from entity.plugins.prompts.basic_error_handler import BasicErrorHandler
+from plugins.builtin.basic_error_handler import BasicErrorHandler
 
 
 class FailPlugin(Plugin):

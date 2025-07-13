@@ -25,7 +25,7 @@ try:
     from .resources.logging import LoggingResource
     from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
     from plugins.builtin.resources.ollama_llm import OllamaLLMResource
-    from .plugins.prompts.basic_error_handler import BasicErrorHandler
+    from plugins.builtin.basic_error_handler import BasicErrorHandler
     from plugins.examples import InputLogger, MessageParser, ResponseReviewer
     from .core.stages import PipelineStage
     from .core.plugins import PromptPlugin, ToolPlugin

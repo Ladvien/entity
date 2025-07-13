@@ -68,8 +68,9 @@ class PluginRegistry:
                 if dep not in caps.required_resources:
                     caps.required_resources.append(dep)
 
-    def get_plugins_for_stage(self, stage: str) -> List[Any]:
-        plugins = self._stage_plugins.get(stage)
+    def get_plugins_for_stage(self, stage: str | PipelineStage) -> List[Any]:
+        stage_key = stage if isinstance(stage, str) else str(stage)
+        plugins = self._stage_plugins.get(stage_key)
         if plugins is None:
             return []
         return list(plugins.keys())
