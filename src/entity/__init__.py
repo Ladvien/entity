@@ -8,6 +8,7 @@ from .resources import LLM, Memory, Storage
 from plugins.builtin.resources.ollama_llm import OllamaLLMResource
 from .core.stages import PipelineStage
 from .core.plugins import PromptPlugin, ToolPlugin
+from .plugins.prompts.basic_error_handler import BasicErrorHandler
 from .utils.setup_manager import Layer0SetupManager
 from entity.core.registries import SystemRegistries
 from entity.core.runtime import AgentRuntime
@@ -52,6 +53,7 @@ def _create_default_agent() -> Agent:
         tools=builder.tool_registry,
         plugins=builder.plugin_registry,
     )
+    asyncio.run(builder.add_plugin(BasicErrorHandler({})))
     agent._runtime = AgentRuntime(caps)
     return agent
 
