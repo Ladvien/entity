@@ -28,29 +28,32 @@ class OpenTofuInfrastructure(InfrastructurePlugin):
         self.path = Path(self.config.get("path", ".")).resolve()
         self.deployed = False
 
+    # ---------------------------------------------------------
+    # helpers
+    # ---------------------------------------------------------
+    def _provider_block(self) -> str:
+        return f'provider "{self.provider}" {{\n  region = "{self.region}"\n}}\n'
+
+    def generate_templates(self) -> dict[str, str]:
+        """Return Terraform/OpenTofu configuration files."""
+
+        return {"main.tf": self._provider_block()}
+
     async def _execute_impl(self, context: Any) -> None:  # pragma: no cover - stub
         return None
 
     async def deploy(self) -> None:
-        """Write minimal OpenTofu configuration."""
+        """Write Terraform/OpenTofu configuration files."""
         self.path.mkdir(parents=True, exist_ok=True)
-        (self.path / "main.tf").write_text(f"# {self.provider} {self.template}\n")
+        for name, content in self.generate_templates().items():
+            (self.path / name).write_text(content)
         self.deployed = True
 
     async def destroy(self) -> None:
         """Remove generated OpenTofu configuration."""
-        try:
-            (self.path / "main.tf").unlink()
-        except FileNotFoundError:  # pragma: no cover - best effort cleanup
-            pass
+        for name in self.generate_templates().keys():
+            try:
+                (self.path / name).unlink()
+            except FileNotFoundError:  # pragma: no cover - best effort cleanup
+                pass
         self.deployed = False
-
-
-class AWSStandardInfrastructure(OpenTofuInfrastructure):
-    """Example AWS deployment using the standard template."""
-
-    name = "aws-standard"
-    provider = "aws"
-
-    def __init__(self, region: str = "us-east-1", config: Dict | None = None) -> None:
-        super().__init__("aws", "standard", region, config)

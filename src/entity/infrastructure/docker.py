@@ -20,6 +20,23 @@ class DockerInfrastructure(InfrastructurePlugin):
         self.path = Path(self.config.get("path", ".")).resolve()
         self.deployed = False
 
+    # ---------------------------------------------------------
+    # helpers
+    # ---------------------------------------------------------
+    def generate_compose(self) -> str:
+        """Return minimal docker-compose configuration."""
+
+        lines = [
+            "version: '3.8'",
+            "services:",
+            "  agent:",
+            "    build: .",
+            "    container_name: agent",
+            "    ports:",
+            "      - '8000:8000'",
+        ]
+        return "\n".join(lines) + "\n"
+
     async def _execute_impl(self, context: Any) -> None:  # pragma: no cover - stub
         return None
 
@@ -27,9 +44,7 @@ class DockerInfrastructure(InfrastructurePlugin):
         """Write Docker configuration files."""
         self.path.mkdir(parents=True, exist_ok=True)
         (self.path / "Dockerfile").write_text("FROM python:3.11-slim\n")
-        (self.path / "docker-compose.yml").write_text(
-            "version: '3'\nservices:\n  agent:\n    build: .\n"
-        )
+        (self.path / "docker-compose.yml").write_text(self.generate_compose())
         self.deployed = True
 
     async def destroy(self) -> None:
