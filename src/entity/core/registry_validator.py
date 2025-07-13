@@ -230,6 +230,30 @@ class RegistryValidator:
 
         DependencyGraph(graph_map).topological_sort()
 
+    def _validate_optional_resource_cycles(self) -> None:
+        """Detect cycles formed solely by optional resource dependencies."""
+
+        from entity.core.plugins import AgentResource
+
+        graph: Dict[str, List[str]] = {}
+        for name, deps in self.dep_graph.items():
+            cls = self.registry.get_class(name)
+            if cls is None or not issubclass(cls, AgentResource):
+                continue
+            graph.setdefault(name, [])
+            for dep in deps:
+                if not dep.endswith("?"):
+                    continue
+                dep_name = dep[:-1]
+                dep_cls = self.registry.get_class(dep_name)
+                if dep_cls is None or not issubclass(dep_cls, AgentResource):
+                    continue
+                graph.setdefault(dep_name, [])
+                graph[dep_name].append(name)
+
+        if graph:
+            DependencyGraph(graph).topological_sort()
+
     def _validate_resource_levels(self) -> None:
         from entity.core.plugins import AgentResource, ResourcePlugin
         from entity.resources.base import AgentResource as CanonicalAgentResource
@@ -272,6 +296,7 @@ class RegistryValidator:
     def run(self) -> None:
         self._register_classes()
         self._validate_dependencies()
+        self._validate_optional_resource_cycles()
         self._validate_resource_levels()
         self._validate_configs()
         if self.has_complex_prompt and not self.has_vector_memory:
