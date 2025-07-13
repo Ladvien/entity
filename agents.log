@@ -1,4 +1,21 @@
-AGENT NOTE - 2025-07-13: Resolved agents.log conflicts by merging note sections chronologically
+AGENT NOTE - 2025-08-30: Merged plugin registry features for capabilities and order preservation
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+AGENT NOTE - 2025-07-13: Verified merge conflict cleanup and preserved all notes
+>>>>>>> pr-1430
 AGENT NOTE - 2025-07-31: Resolved merge conflicts in pipeline and CLI after PRs 1416-1427
 AGENT NOTE - 2025-07-25: ToolRegistry discovery now filters by intents
 AGENT NOTE - 2025-07-25: Extended ResourcePool with scaling and health checks
