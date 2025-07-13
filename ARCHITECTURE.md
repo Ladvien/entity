@@ -3205,3 +3205,4 @@ Future Features List
 
 ## Local
 - https://docs.vllm.ai/en/latest/index.html
+- https://moonshotai.github.io/Kimi-K2/
