@@ -5,6 +5,7 @@ from entity.core.plugins import (
     Plugin,
     FailurePlugin,
     InfrastructurePlugin,
+    AgentResource,
     PromptPlugin,
     ResourcePlugin,
     ToolPlugin,

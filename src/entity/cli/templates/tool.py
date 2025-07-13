@@ -14,8 +14,11 @@ from entity.core.plugins import ToolPlugin
 from entity.core.stages import PipelineStage
 
 
-class {class_name}(ToolPlugin):
-    """Example tool plugin."""
+class CLASS_NAME(ToolPlugin):
+    """Example tool plugin.
+
+    Replace ``CLASS_NAME`` with your tool plugin name.
+    """
 
     stages = [PipelineStage.DO]
     intents: list[str] = []

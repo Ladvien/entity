@@ -1,0 +1,10 @@
+line-length = 88
+exclude = [
+    "src/cli/templates/*",
+    "src/entity/cli/templates/*",
+    "templates/plugins/*",
+]
+target-version = "py311"
+
+[lint]
+ignore = ["E402", "E741", "F821"]

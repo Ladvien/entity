@@ -12,8 +12,11 @@ from entity.core.plugins import ResourcePlugin, ValidationResult
 from entity.core.stages import PipelineStage
 
 
-class {class_name}(ResourcePlugin):
-    """Example resource plugin."""
+class CLASS_NAME(ResourcePlugin):
+    """Example resource plugin.
+
+    Replace ``CLASS_NAME`` with your resource plugin name.
+    """
 
     stages = [PipelineStage.PARSE]
     # List position controls execution order and SystemInitializer preserves it.

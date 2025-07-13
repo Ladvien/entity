@@ -1,23 +1,6 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
+AGENT NOTE - 2025-07-13: Cleaned merge markers and executed quality checks
 AGENT NOTE - 2025-07-13: Implemented DuckDBVectorStore setup and minimal workflow tests
->>>>>>> pr-1506
-=======
+AGENT NOTE - 2025-07-13: Implemented DuckDBVectorStore setup and minimal workflow tests
 AGENT NOTE - 2025-07-13: pytest now works with the unified entity.cli.plugin_tool structure
 >>>>>>> pr-1505
 =======

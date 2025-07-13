@@ -12,8 +12,11 @@ from entity.core.plugins import PromptPlugin
 from entity.core.stages import PipelineStage
 
 
-class {class_name}(PromptPlugin):
-    """Example prompt plugin."""
+class CLASS_NAME(PromptPlugin):
+    """Example prompt plugin.
+
+    Replace ``CLASS_NAME`` with your prompt plugin name.
+    """
 
     stages = [PipelineStage.THINK]
     # List position controls execution order and SystemInitializer preserves it.
