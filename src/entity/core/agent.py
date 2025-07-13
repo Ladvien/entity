@@ -526,8 +526,14 @@ class Agent:
     # ------------------------------------------------------------------
     async def _ensure_runtime(self) -> None:
         if self._runtime is None:
-            workflow = self.pipeline.workflow if self.pipeline else None
-            self._runtime = await self.builder.build_runtime(workflow=workflow)
+            wf = None
+            if self.pipeline:
+                wf = (
+                    self.pipeline.workflow
+                    if hasattr(self.pipeline, "workflow")
+                    else self.pipeline
+                )
+            self._runtime = await self.builder.build_runtime(workflow=wf)
 
     @property
     def runtime(self) -> AgentRuntime:
