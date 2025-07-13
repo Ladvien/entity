@@ -283,10 +283,46 @@ class _AgentBuilder:
                 instance = plugin_cls(plugin_cfg)
                 asyncio.run(self.add_plugin(instance))
 
+    def _register_default_resources(self) -> None:
+        """Ensure canonical resources exist with simple implementations."""
+
+        container = self.resource_registry
+
+        if not container.has_plugin("database_backend"):
+            from entity.infrastructure.duckdb import DuckDBInfrastructure
+
+            container.register("database_backend", DuckDBInfrastructure, {}, layer=1)
+
+        if not container.has_plugin("database"):
+            from plugins.builtin.resources.duckdb_resource import DuckDBResource
+
+            container.register("database", DuckDBResource, {}, layer=3)
+
+        if not container.has_plugin("memory"):
+            from entity.resources.memory import Memory
+
+            container.register("memory", Memory, {}, layer=3)
+
+        if not container.has_plugin("llm_provider"):
+            from plugins.builtin.resources.echo_llm import EchoLLMResource
+
+            container.register("llm_provider", EchoLLMResource, {}, layer=4)
+
+        if not container.has_plugin("llm"):
+            from entity.resources.llm import LLM
+
+            container.register("llm", LLM, {}, layer=3)
+
+        if not container.has_plugin("storage"):
+            from entity.resources.storage import Storage
+
+            container.register("storage", Storage, {}, layer=3)
+
     # ------------------------------ runtime build -----------------------------
     async def build_runtime(
         self, workflow: Mapping[PipelineStage | str, Iterable[str]] | None = None
     ) -> "_AgentRuntime":
+        self._register_default_resources()
         await self.resource_registry.build_all()
         for plugin in self._added_plugins:
             init = getattr(plugin, "initialize", None)
