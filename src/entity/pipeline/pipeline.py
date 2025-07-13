@@ -256,7 +256,7 @@ async def execute_stage(
         if state.failure_info and stage != PipelineStage.ERROR:
             await execute_stage(PipelineStage.ERROR, state, registries, user_id=user_id)
             state.last_completed_stage = PipelineStage.ERROR
-    elapsed = time.perf_counter() - _start
+    _elapsed = time.perf_counter() - _start
     # elapsed time could be logged here if needed
 
 
@@ -287,6 +287,7 @@ async def execute_pipeline(
             ],
             pipeline_id=f"{user_id}_{generate_pipeline_id()}",
         )
+<<<<<<< HEAD
 =======
         if checkpoint_key and memory:
             saved = await memory.fetch_persistent(checkpoint_key, None, user_id=user_id)
@@ -305,6 +306,11 @@ async def execute_pipeline(
             )
             state.stage_results.clear()
 >>>>>>> pr-1418
+=======
+    # Clear stage results at the start of each message so that
+    # thoughts from previous executions do not leak into the next one.
+    state.stage_results.clear()
+>>>>>>> pr-1427
     _start = time.time()
     resource_manager = (
         capabilities.resources
