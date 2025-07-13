@@ -13,8 +13,10 @@ class DefaultWorkflow(Workflow):
     """Simple INPUT -> THINK -> OUTPUT workflow."""
 
     stage_map = {
-        PipelineStage.INPUT: [],
+        PipelineStage.INPUT: ["input_logger"],
+        PipelineStage.PARSE: ["message_parser"],
         PipelineStage.THINK: [],
+        PipelineStage.REVIEW: ["response_reviewer"],
         PipelineStage.OUTPUT: [],
         PipelineStage.ERROR: ["basic_error_handler"],
     }

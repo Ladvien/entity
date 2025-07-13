@@ -26,6 +26,7 @@ try:
     from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
     from plugins.builtin.resources.ollama_llm import OllamaLLMResource
     from .plugins.prompts.basic_error_handler import BasicErrorHandler
+    from plugins.examples import InputLogger, MessageParser, ResponseReviewer
     from .core.stages import PipelineStage
     from .core.plugins import PromptPlugin, ToolPlugin
     from .utils.setup_manager import Layer0SetupManager
@@ -85,6 +86,9 @@ def _create_default_agent() -> Agent:
         plugins=builder.plugin_registry,
     )
     asyncio.run(builder.add_plugin(BasicErrorHandler({})))
+    asyncio.run(builder.add_plugin(InputLogger({})))
+    asyncio.run(builder.add_plugin(MessageParser({})))
+    asyncio.run(builder.add_plugin(ResponseReviewer({})))
     workflow = getattr(setup, "workflow", DefaultWorkflow())
     agent._runtime = AgentRuntime(caps, workflow=workflow)
     return agent

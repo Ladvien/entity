@@ -1,0 +1,17 @@
+from __future__ import annotations
+
+from entity.core.context import PluginContext
+from entity.core.plugins import InputAdapterPlugin
+from entity.pipeline.stages import PipelineStage
+
+
+class InputLogger(InputAdapterPlugin):
+    """Record the raw user message."""
+
+    name = "input_logger"
+
+    stages = [PipelineStage.INPUT]
+
+    async def _execute_impl(self, context: PluginContext) -> None:
+        message = context.conversation()[-1].content if context.conversation() else ""
+        await context.think("raw_input", message)

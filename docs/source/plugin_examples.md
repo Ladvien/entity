@@ -1,6 +1,6 @@
 # Plugin Examples
 
-The `examples/plugins/` directory contains minimal plugins for each pipeline stage.
+The `src/plugins/examples/` directory contains minimal plugins for each pipeline stage.
 These demonstrate how to interact with the `PluginContext` and which methods
 are appropriate for different stages.
 
@@ -9,7 +9,7 @@ are appropriate for different stages.
 `InputLogger` runs during the **INPUT** stage and saves the raw user message for
 later steps.
 
-```{literalinclude} ../../examples/plugins/input_logger.py
+```{literalinclude} ../../src/plugins/examples/input_logger.py
 :language: python
 :caption: InputLogger
 ```
@@ -19,7 +19,7 @@ later steps.
 `MessageParser` executes in the **PARSE** stage and normalizes the user's
 message.
 
-```{literalinclude} ../../examples/plugins/message_parser.py
+```{literalinclude} ../../src/plugins/examples/message_parser.py
 :language: python
 :caption: MessageParser
 ```
@@ -29,7 +29,7 @@ message.
 `ResponseReviewer` runs in the **REVIEW** stage to modify the final response if
 needed.
 
-```{literalinclude} ../../examples/plugins/response_reviewer.py
+```{literalinclude} ../../src/plugins/examples/response_reviewer.py
 :language: python
 :caption: ResponseReviewer
 ```
