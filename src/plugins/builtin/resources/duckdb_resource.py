@@ -1,19 +1,19 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from typing import Any, Dict, Iterator
+from typing import Any, AsyncIterator, Dict
 
-from entity.resources.interfaces.database import DatabaseResource
 from entity.infrastructure.duckdb import DuckDBInfrastructure
 from entity.core.resources.container import PoolConfig, ResourcePool
+from entity.core.plugins import AgentResource
 
 
-class DuckDBResource(DatabaseResource):
+class DuckDBResource(AgentResource):  # type: ignore[misc]
     """Database resource backed by :class:`DuckDBInfrastructure`."""
 
-    infrastructure_dependencies = ["database"]
+    infrastructure_dependencies = ["database_backend"]
 
-    def __init__(self, config: Dict | None = None) -> None:
+    def __init__(self, config: Dict[str, Any] | None = None) -> None:
         super().__init__(config or {})
         self.database: DuckDBInfrastructure | None = None
 
@@ -23,7 +23,7 @@ class DuckDBResource(DatabaseResource):
         return ResourcePool(lambda: None, PoolConfig())
 
     @asynccontextmanager
-    async def connection(self) -> Iterator[Any]:
+    async def connection(self) -> AsyncIterator[Any]:
         if self.database is None:
             yield None
         else:
