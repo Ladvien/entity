@@ -26,14 +26,17 @@ plugin-tool docs src/my_prompt.py --out docs
 
 ## Default Workflow
 
-`Layer0SetupManager` creates basic resources and provides `DefaultWorkflow`.
-The global `agent` uses this workflow automatically.
+`Layer0SetupManager` creates local resources and ships with a ready-made
+`default_workflow`. The global `agent` picks up this workflow automatically,
+so no extra configuration is required.
 
 ```python
 import asyncio
 from entity import agent
 from entity.utils.setup_manager import Layer0SetupManager
+from entity.workflows import default_workflow
 
+# uses `default_workflow` when none is provided
 asyncio.run(Layer0SetupManager().setup())
 print(asyncio.run(agent.handle("Hello")))
 ```

@@ -2,7 +2,7 @@
 
 from .base import Workflow
 from .builtin import ChainOfThoughtWorkflow, ReActWorkflow, StandardWorkflow
-from .default import DefaultWorkflow
+from .default import DefaultWorkflow, default_workflow
 
 __all__ = [
     "Workflow",
@@ -10,4 +10,5 @@ __all__ = [
     "ReActWorkflow",
     "ChainOfThoughtWorkflow",
     "DefaultWorkflow",
+    "default_workflow",
 ]
