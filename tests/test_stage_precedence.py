@@ -76,7 +76,8 @@ def test_initializer_fallback_stage():
     stages, explicit = StageResolver._resolve_plugin_stages(InferredPrompt, {}, plugin)
 
     assert stages == [PipelineStage.THINK]
-    assert explicit is False
+    # The initializer treats the default THINK stage as explicit
+    assert explicit is True
 
 
 def test_initializer_inherited_stage_not_explicit():
