@@ -32,8 +32,10 @@ async def test_advanced_temp_helpers():
     ctx = make_context()
     await ctx.advanced.think_temp("y", 2)
     assert await ctx.advanced.reflect_temp("y") == 2
+    assert ctx._state.temporary_thoughts["y"] == 2
     await ctx.advanced.clear_temp()
     assert await ctx.advanced.reflect_temp("y") is None
+    assert ctx._state.temporary_thoughts == {}
 
 
 def test_get_resource_helpers():

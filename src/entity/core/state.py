@@ -31,6 +31,7 @@ class PipelineState:
     response: Any = None
     prompt: str = ""
     stage_results: Dict[str, Any] = field(default_factory=dict)
+    temporary_thoughts: Dict[str, Any] = field(default_factory=dict)
     max_stage_results: int | None = 100
     pending_tool_calls: List[ToolCall] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
@@ -55,6 +56,7 @@ class PipelineState:
             "response": self.response,
             "prompt": self.prompt,
             "stage_results": self.stage_results,
+            "temporary_thoughts": self.temporary_thoughts,
             "pending_tool_calls": [
                 {
                     "name": c.name,
@@ -92,6 +94,7 @@ class PipelineState:
         state.response = data.get("response")
         state.prompt = data.get("prompt", "")
         state.stage_results = data.get("stage_results", {})
+        state.temporary_thoughts = data.get("temporary_thoughts", {})
         state.pending_tool_calls = [
             ToolCall(
                 name=c["name"],
