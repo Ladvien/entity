@@ -20,7 +20,7 @@ async def _connect(uri: str, attempts: int = 10, delay: float = 0.05):
 
 
 @pytest.mark.asyncio
-async def test_logging_file_and_console(tmp_path, capsys, monkeypatch):
+async def test_logging_file_and_console(tmp_path, monkeypatch):
     log_file = tmp_path / "log.jsonl"
     container = ResourceContainer()
     monkeypatch.setattr(LoggingResource, "dependencies", [])
@@ -58,6 +58,7 @@ async def test_logging_stream_output(tmp_path, monkeypatch):
     await container.build_all()
     logger: LoggingResource = container.get("logging")  # type: ignore[assignment]
     stream = next(o for o in logger._stream_outputs)
+    assert stream.server is not None
     uri = f"ws://{stream.host}:{stream.port}"
     ws = await _connect(uri)
     await logger.log("info", "hi", component="resource")
