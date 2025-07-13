@@ -33,6 +33,12 @@ class Memory(AgentResource):
         self._kv_table = self.config.get("kv_table", "memory_kv")
         self._history_table = self.config.get("history_table", "conversation_history")
 
+    def _maybe_commit(self, conn: Any) -> None:
+        """Commit writes when supported by the connection."""
+        commit = getattr(conn, "commit", None)
+        if callable(commit):
+            commit()
+
     async def initialize(self) -> None:
         if self.database is None:
             raise ResourceInitializationError("Database dependency not injected")
@@ -45,6 +51,7 @@ class Memory(AgentResource):
                 f"CREATE TABLE IF NOT EXISTS {self._history_table} ("
                 "conversation_id TEXT, role TEXT, content TEXT, metadata TEXT, timestamp TEXT)"
             )
+            self._maybe_commit(conn)
 
     async def _execute_impl(self, context: Any) -> None:  # pragma: no cover - stub
         return None
@@ -67,6 +74,7 @@ class Memory(AgentResource):
             return
         async with self.database.connection() as conn:
             conn.execute(f"DELETE FROM {self._kv_table}")
+            self._maybe_commit(conn)
 
     # ------------------------------------------------------------------
     # Conversation helpers
@@ -97,6 +105,7 @@ class Memory(AgentResource):
                         entry.timestamp.isoformat(),
                     ),
                 )
+            self._maybe_commit(conn)
 
     async def load_conversation(
         self, pipeline_id: str, *, user_id: str = "default"
@@ -177,6 +186,7 @@ class Memory(AgentResource):
             conn.executemany(
                 f"INSERT OR REPLACE INTO {self._kv_table} VALUES (?, ?)", rows
             )
+            self._maybe_commit(conn)
 
     async def store_persistent(
         self, key: str, value: Any, *, user_id: str = "default"
@@ -190,6 +200,7 @@ class Memory(AgentResource):
                 f"INSERT OR REPLACE INTO {self._kv_table} VALUES (?, ?)",
                 (namespaced_key, json.dumps(value)),
             )
+            self._maybe_commit(conn)
 
     async def fetch_persistent(
         self, key: str, default: Any = None, *, user_id: str = "default"
@@ -215,6 +226,7 @@ class Memory(AgentResource):
                 f"DELETE FROM {self._kv_table} WHERE key = ?",
                 (namespaced_key,),
             )
+            self._maybe_commit(conn)
 
     async def add_conversation_entry(
         self, pipeline_id: str, entry: ConversationEntry, *, user_id: str = "default"
@@ -234,6 +246,7 @@ class Memory(AgentResource):
                     entry.timestamp.isoformat(),
                 ),
             )
+            self._maybe_commit(conn)
         if self.vector_store is not None:
             await self.vector_store.add_embedding(entry.content)
 

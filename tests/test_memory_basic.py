@@ -102,3 +102,16 @@ async def test_vector_search(vector_memory: Memory) -> None:
 async def test_add_embedding(vector_memory: Memory) -> None:
     await vector_memory.add_embedding("foo")
     assert "foo" in vector_memory.vector_store.added
+
+
+@pytest.mark.asyncio
+async def test_conversation_search_text(simple_memory: Memory) -> None:
+    entry = ConversationEntry(
+        content="new message",
+        role="user",
+        timestamp=datetime.now(),
+    )
+    await simple_memory.add_conversation_entry("conv1", entry, user_id="default")
+    results = await simple_memory.conversation_search("new message", user_id="default")
+    assert len(results) == 1
+    assert results[0]["content"] == "new message"
