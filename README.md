@@ -43,9 +43,10 @@ print(asyncio.run(agent.handle("Hello")))
 
 ## Example Plugins
 
-Check the `examples/plugins` directory for minimal plugins demonstrating the
+Check the `src/plugins/examples` directory for minimal plugins demonstrating the
 INPUT, PARSE, and REVIEW stages. Each shows how to interact with the
-`PluginContext` during execution. The rendered source is available in the
+`PluginContext` during execution. These plugins are registered in the
+`DefaultWorkflow` for quick experimentation. The rendered source is available in the
 [Plugin Examples](https://entity.readthedocs.io/en/latest/plugin_examples.html)
 documentation.
 
