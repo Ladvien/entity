@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from entity.core.context import PluginContext  # noqa: E402
 from entity.core.state import PipelineState, ConversationEntry  # noqa: E402
 from entity.resources import Memory  # noqa: E402
+from entity.resources.interfaces.database import DatabaseResource
 from plugins.builtin.resources.duckdb_resource import DuckDBResource
 from entity.infrastructure.duckdb import DuckDBInfrastructure
 from entity.pipeline.errors import ResourceInitializationError  # noqa: E402
@@ -142,7 +143,7 @@ async def test_memory_roundtrip(tmp_path) -> None:
     await ctx.remember("foo", "bar")
     assert await ctx.recall("foo") == "bar"
 
-    asyncio.run(run_test())
+    await run_test()
 
 
 def test_memory_persists_between_instances() -> None:
