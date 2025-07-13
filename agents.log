@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-13: Added websocket broadcast logging, file rotation, and structured pipeline logs.
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-13: Updated black exclude paths to include CLI and plugin templates
@@ -11,6 +12,9 @@ AGENT NOTE - 2025-07-13: Implemented validation phases and circuit breaker integ
 =======
 AGENT NOTE - 2025-10-05: Added default dependency injection and tests
 >>>>>>> pr-1518
+=======
+AGENT NOTE - 2025-07-13: Verified memory vector search and analytics
+>>>>>>> pr-1512
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
