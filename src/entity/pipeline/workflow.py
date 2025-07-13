@@ -31,9 +31,21 @@ class Pipeline:
     builder: "_AgentBuilder" = field(default_factory=_builder_factory)
     workflow: Optional[Union[Workflow, WorkflowMapping]] = None
 
+    def __post_init__(self) -> None:
+        """Validate workflow plugins using the builder's registry."""
+        if self.workflow is None:
+            return
+
+        wf_obj = (
+            self.workflow
+            if isinstance(self.workflow, Workflow)
+            else Workflow.from_dict(self.workflow)
+        )
+        wf_obj.validate_plugins(self.builder.plugin_registry)
+        self.workflow = wf_obj
+
     async def build_runtime(self) -> AgentRuntime:
         """Build an AgentRuntime using the stored builder and workflow."""
-
         wf_obj = (
             self.workflow
             if isinstance(self.workflow, Workflow)
@@ -41,10 +53,4 @@ class Pipeline:
                 Workflow.from_dict(self.workflow) if self.workflow is not None else None
             )
         )
-        if wf_obj is not None:
-            for stage, names in wf_obj.stage_map.items():
-                for name in names:
-                    if not self.builder.has_plugin(name):
-                        raise KeyError(f"Plugin '{name}' not found")
-
         return await self.builder.build_runtime(workflow=wf_obj)
