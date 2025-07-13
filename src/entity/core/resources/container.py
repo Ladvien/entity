@@ -192,7 +192,12 @@ class ResourceContainer:
                 layer = 4
 
         self._classes[name] = cls
-        self._configs[name] = config
+        clean_cfg = {
+            k: v
+            for k, v in config.items()
+            if k not in {"type", "dependencies", "stage", "stages"}
+        }
+        self._configs[name] = clean_cfg
         deps = list(getattr(cls, "dependencies", []))
         if issubclass(cls, ResourcePlugin):
             deps.extend(getattr(cls, "infrastructure_dependencies", []))
@@ -205,14 +210,6 @@ class ResourceContainer:
             from entity.resources.logging import LoggingResource
 
             self.register("logging", LoggingResource, {}, layer=3)
-
-        if (
-            "metrics_collector" not in self._classes
-            and "metrics_collector" not in self._resources
-        ):
-            from entity.resources.metrics import MetricsCollectorResource
-
-            self.register("metrics_collector", MetricsCollectorResource, {}, layer=3)
 
         self._validate_layers()
         self._order = self._resolve_order()
@@ -456,7 +453,11 @@ class ResourceContainer:
                         kind="Resource",
                     )
 
-            if is_interface and not getattr(cls, "infrastructure_dependencies", None):
+            if (
+                is_interface
+                and not is_canonical
+                and not getattr(cls, "infrastructure_dependencies", None)
+            ):
                 raise InitializationError(
                     name,
                     "layer validation",

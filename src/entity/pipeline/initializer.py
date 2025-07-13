@@ -118,6 +118,7 @@ class ClassRegistry(StageResolver):
             AdapterPlugin,
             InputAdapterPlugin,
             OutputAdapterPlugin,
+            InfrastructurePlugin,
         )
 
         if issubclass(cls, ResourcePlugin):
@@ -131,6 +132,8 @@ class ClassRegistry(StageResolver):
                     "stage validation",
                     "Resource plugins cannot define pipeline stages.",
                 )
+            return
+        if issubclass(cls, InfrastructurePlugin):
             return
 
         stages, explicit = StageResolver._resolve_plugin_stages(
@@ -223,14 +226,23 @@ class SystemInitializer:
             self._config_model = EntityConfig.from_dict(cfg)
             self.config = asdict(self._config_model)
 
-        resources = self._config_model.plugins.resources
-        if "metrics_collector" not in resources:
-            resources["metrics_collector"] = PluginConfig(
-                type="entity.resources.metrics:MetricsCollectorResource"
+        infrastructure = self._config_model.plugins.infrastructure
+        if "database" not in infrastructure:
+            infrastructure["database"] = PluginConfig(
+                type="entity.infrastructure.duckdb:DuckDBInfrastructure"
             )
-            self.config["plugins"]["resources"]["metrics_collector"] = {
-                "type": "entity.resources.metrics:MetricsCollectorResource"
-            }
+            self.config.setdefault("plugins", {}).setdefault("infrastructure", {})[
+                "database"
+            ] = {"type": "entity.infrastructure.duckdb:DuckDBInfrastructure"}
+        resources = self._config_model.plugins.resources
+        if "logging" not in resources:
+            resources["logging"] = PluginConfig(
+                type="entity.resources.logging:LoggingResource"
+            )
+            self.config.setdefault("plugins", {}).setdefault("resources", {})[
+                "logging"
+            ] = {"type": "entity.resources.logging:LoggingResource"}
+
         self.plugin_registry_cls = plugin_registry_cls
         self.tool_registry_cls = tool_registry_cls
         self.resource_container_cls = resource_container_cls
@@ -241,12 +253,8 @@ class SystemInitializer:
         self.tool_registry: ToolRegistry | None = None
 
     def _ensure_metrics_collector_config(self) -> None:
-        plugins_cfg = self.config.setdefault("plugins", {})
-        resources_cfg = plugins_cfg.setdefault("resources", {})
-        resources_cfg.setdefault(
-            "metrics_collector",
-            {"type": "entity.resources.metrics:MetricsCollectorResource"},
-        )
+        """Metrics collector is optional; do nothing by default."""
+        return
 
     @classmethod
     def from_yaml(cls, yaml_path: str, env_file: str = ".env") -> "SystemInitializer":
@@ -414,8 +422,11 @@ class SystemInitializer:
             "custom_resources": 4,
         }
 
+        plugins_cfg = self.config.get("plugins", {})
+        add_metrics = "metrics_collector" in plugins_cfg.get("resources", {})
+
         for section in resource_sections:
-            entries = self.config.get("plugins", {}).get(section, {})
+            entries = plugins_cfg.get(section, {})
             layer = layer_map[section]
             for name, config in entries.items():
                 cls_path = config.get("type")
@@ -425,13 +436,21 @@ class SystemInitializer:
                     )
                 cls = import_plugin_class(cls_path)
                 deps = list(getattr(cls, "dependencies", []))
-                if (
+                if not add_metrics and "metrics_collector" in deps:
+                    deps.remove("metrics_collector")
+                if "logging" in deps and cls.__name__ != "LoggingResource":
+                    deps.remove("logging")
+                from entity.core.plugins import InfrastructurePlugin
+
+                if issubclass(cls, InfrastructurePlugin):
+                    deps = [
+                        d for d in deps if d not in {"logging", "metrics_collector"}
+                    ]
+                if add_metrics and (
                     cls.__name__ != "MetricsCollectorResource"
                     and "metrics_collector" not in deps
                 ):
                     deps.append("metrics_collector")
-                if cls.__name__ != "LoggingResource" and "logging" not in deps:
-                    deps.append("logging")
                 cls.dependencies = deps
                 registry.register_class(cls, config, name, layer, section)
                 dep_graph[name] = deps
@@ -445,13 +464,13 @@ class SystemInitializer:
                     )
                 cls = import_plugin_class(cls_path)
                 deps = list(getattr(cls, "dependencies", []))
+                if "logging" in deps and cls.__name__ != "LoggingResource":
+                    deps.remove("logging")
                 if (
                     cls.__name__ != "MetricsCollectorResource"
                     and "metrics_collector" not in deps
                 ):
                     deps.append("metrics_collector")
-                if cls.__name__ != "LoggingResource" and "logging" not in deps:
-                    deps.append("logging")
                 cls.dependencies = deps
                 registry.register_class(cls, config, name, 4, section)
                 dep_graph[name] = deps
@@ -463,7 +482,10 @@ class SystemInitializer:
 
         registry = ClassRegistry()
         dep_graph: Dict[str, List[str]] = {}
-        workflow = Workflow.from_dict(self.config.get("workflow"))
+        wf_cfg = {}
+        if self._config_model.workflow is not None:
+            wf_cfg = self._config_model.workflow.stages
+        workflow = Workflow.from_dict(wf_cfg)
 
         # Phase 1: register all plugin classes
         self._register_plugins(registry, dep_graph)
@@ -481,7 +503,12 @@ class SystemInitializer:
 
         # Phase 1: syntax validation
         for plugin_class, config in registry.all_plugin_classes():
-            result = await plugin_class.validate_config(config)
+            user_cfg = {
+                k: v
+                for k, v in config.items()
+                if k not in {"type", "dependencies", "stage", "stages"}
+            }
+            result = await plugin_class.validate_config(user_cfg)
             if not result.success:
                 raise InitializationError(
                     plugin_class.__name__,
@@ -658,7 +685,7 @@ class SystemInitializer:
     def _ensure_canonical_resources(self, container: ResourceContainer) -> None:
         """Verify required canonical resources are registered."""
 
-        required = {"memory", "llm", "storage", "logging", "metrics_collector"}
+        required = {"memory", "llm", "storage"}
         registered = set(container._classes)
         missing = required - registered
         if missing:
@@ -669,11 +696,14 @@ class SystemInitializer:
                 f"Missing canonical resources: {missing_list}. Add them to your configuration.",
                 kind="Resource",
             )
-
         if "logging" not in registered:
             from entity.resources.logging import LoggingResource
 
             container.register("logging", LoggingResource, {}, layer=3)
+        if "database" not in registered:
+            from entity.infrastructure.duckdb import DuckDBInfrastructure
+
+            container.register("database", DuckDBInfrastructure, {}, layer=1)
 
 
 def validate_reconfiguration_params(
