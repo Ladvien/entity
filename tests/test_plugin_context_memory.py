@@ -115,26 +115,27 @@ class DummyPool(DummyDatabase):
 
 
 class DummyRegistries:
-    def __init__(self, path: str) -> None:
-        db = DuckDBResource(path)
-        mem = Memory(config={})
-        mem.database = db
-        mem.vector_store = None
-        asyncio.run(mem.initialize())
+    def __init__(self, mem: Memory) -> None:
         self.resources = {"memory": mem}
         self.tools = types.SimpleNamespace()
 
 
-def make_context(tmp_path) -> PluginContext:
+async def make_context(tmp_path) -> PluginContext:
     state = PipelineState(conversation=[])
-    regs = DummyRegistries(str(tmp_path / "mem.duckdb"))
+    db = DuckDBResource(str(tmp_path / "mem.duckdb"))
+    mem = Memory(config={})
+    mem.database = db
+    mem.vector_store = None
+    await mem.initialize()
+    regs = DummyRegistries(mem)
     return PluginContext(state, regs)
 
 
-def test_memory_roundtrip(tmp_path) -> None:
-    ctx = make_context(tmp_path)
-    asyncio.run(ctx.remember("foo", "bar"))
-    assert asyncio.run(ctx.recall("foo")) == "bar"
+@pytest.mark.asyncio
+async def test_memory_roundtrip(tmp_path) -> None:
+    ctx = await make_context(tmp_path)
+    await ctx.remember("foo", "bar")
+    assert await ctx.recall("foo") == "bar"
 
 
 @pytest.mark.asyncio
@@ -181,7 +182,8 @@ async def test_memory_persists_with_connection_pool() -> None:
     assert history == [entry]
 
 
-def test_initialize_without_database_raises_error() -> None:
+@pytest.mark.asyncio
+async def test_initialize_without_database_raises_error() -> None:
     mem = Memory(config={})
     with pytest.raises(ResourceInitializationError):
-        asyncio.run(mem.initialize())
+        await mem.initialize()
