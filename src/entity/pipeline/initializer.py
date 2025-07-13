@@ -286,8 +286,13 @@ class SystemInitializer:
         self.tool_registry: ToolRegistry | None = None
 
     def _ensure_metrics_collector_config(self) -> None:
-        """Metrics collector is optional; do nothing by default."""
-        return
+        """Warn when metrics collection is disabled."""
+
+        resources_cfg = self.config.get("plugins", {}).get("resources", {})
+        if "metrics_collector" not in resources_cfg:
+            logger.warning(
+                "MetricsCollectorResource not configured; metrics will not be recorded"
+            )
 
     def _validate_plugin_attributes(
         self, name: str, cls: type[Plugin], section: str, cfg: Dict
@@ -566,7 +571,8 @@ class SystemInitializer:
                 dep_graph[name] = deps
 
         for section in ["tools", "adapters", "prompts"]:
-            for name, config in self.config.get("plugins", {}).get(section, {}).items():
+            entries = self.config.get("plugins", {}).get(section, {})
+            for name, config in entries.items():
                 cls_path = config.get("type")
                 if not cls_path:
                     raise ValueError(
@@ -574,9 +580,11 @@ class SystemInitializer:
                     )
                 cls = import_plugin_class(cls_path)
                 deps = list(getattr(cls, "dependencies", []))
+                if not add_metrics and "metrics_collector" in deps:
+                    deps.remove("metrics_collector")
                 if "logging" not in deps and cls.__name__ != "LoggingResource":
                     deps.append("logging")
-                if (
+                if add_metrics and (
                     cls.__name__ != "MetricsCollectorResource"
                     and "metrics_collector" not in deps
                 ):
