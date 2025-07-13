@@ -1,4 +1,5 @@
-AGENT NOTE - 2025-07-13: Fixed merge conflicts and ensured zero-config default resources
+AGENT NOTE - 2025-08-30: Implemented DuckDBVectorStore and fixed merge markers
+AGENT NOTE - 2025-07-13: Cleaned merge markers and updated default agent setup
 AGENT NOTE - 2025-07-13: Integrated pipeline duration metric and cleared stage results after execution
 AGENT NOTE - 2025-07-13: Verified merge conflict cleanup and preserved all notes
 AGENT NOTE - 2025-07-31: Resolved merge conflicts in pipeline and CLI after PRs 1416-1427

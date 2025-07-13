@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 from typing import Any, Dict, Iterator, List
+import math
 
 from entity.pipeline.errors import ResourceInitializationError
 
@@ -14,7 +15,13 @@ from .vector_store import VectorStoreResource
 
 
 class DuckDBVectorStore(VectorStoreResource):
-    """Simple vector store using a DuckDB table."""
+    """Simple vector store using a DuckDB table.
+
+    This implementation stores text alongside a naive numeric embedding and
+    performs similarity search using cosine distance. The embedding is derived
+    from the UTF-8 code points of the text and is only intended as a minimal
+    placeholder for real embeddings.
+    """
 
     name = "duckdb_vector_store"
     infrastructure_dependencies = ["database_backend"]
@@ -24,6 +31,10 @@ class DuckDBVectorStore(VectorStoreResource):
         self.database: Any = None
         self._table = self.config.get("table", "vector_mem")
         self._pool = None
+
+    def _embed(self, text: str) -> List[float]:
+        """Return a simple numeric embedding for ``text``."""
+        return [float(ord(c)) for c in text][:256]
 
     def _maybe_commit(self, conn: Any) -> None:
         commit = getattr(conn, "commit", None)
@@ -37,7 +48,9 @@ class DuckDBVectorStore(VectorStoreResource):
             raise ResourceInitializationError("Database backend not injected")
         self._pool = self.database.get_connection_pool()
         async with self.database.connection() as conn:
-            conn.execute(f"CREATE TABLE IF NOT EXISTS {self._table} (text TEXT)")
+            conn.execute(
+                f"CREATE TABLE IF NOT EXISTS {self._table} (text TEXT, embedding DOUBLE[])"
+            )
             self._maybe_commit(conn)
 
     @asynccontextmanager
@@ -52,18 +65,36 @@ class DuckDBVectorStore(VectorStoreResource):
         if self.database is None:
             return
         async with self.database.connection() as conn:
-            conn.execute(f"INSERT INTO {self._table} VALUES (?)", (text,))
+            emb = self._embed(text)
+            conn.execute(
+                f"INSERT INTO {self._table} VALUES (?, ?)",
+                (text, emb),
+            )
             self._maybe_commit(conn)
 
     async def query_similar(self, query: str, k: int = 5) -> List[str]:
         if self.database is None:
             return []
         async with self.database.connection() as conn:
-            rows = conn.execute(
-                f"SELECT text FROM {self._table} WHERE text LIKE ? LIMIT ?",
-                (f"%{query}%", k),
-            ).fetchall()
-        return [row[0] for row in rows]
+            rows = conn.execute(f"SELECT text, embedding FROM {self._table}").fetchall()
+        if not rows:
+            return []
+        qvec = self._embed(query)
+
+        def _distance(a: List[float], b: List[float]) -> float:
+            size = min(len(a), len(b))
+            if size == 0:
+                return float("inf")
+            dot = sum(a[i] * b[i] for i in range(size))
+            na = math.sqrt(sum(a[i] * a[i] for i in range(size)))
+            nb = math.sqrt(sum(b[i] * b[i] for i in range(size)))
+            return 1 - dot / (na * nb) if na and nb else float("inf")
+
+        scored = sorted(
+            ((text, _distance(qvec, emb)) for text, emb in rows),
+            key=lambda x: x[1],
+        )
+        return [text for text, _ in scored[:k]]
 
 
 __all__ = ["DuckDBVectorStore"]

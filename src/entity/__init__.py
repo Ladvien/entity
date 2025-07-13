@@ -11,7 +11,7 @@ from plugins.builtin.resources.ollama_llm import OllamaLLMResource
 from entity.plugins.prompts import BasicErrorHandler
 from .core.stages import PipelineStage
 from .core.plugins import PromptPlugin, ToolPlugin
-from .plugins.prompts.basic_error_handler import BasicErrorHandler
+from .plugins.prompts import BasicErrorHandler
 from .utils.setup_manager import Layer0SetupManager
 from entity.workflows.default import DefaultWorkflow
 from entity.core.registries import SystemRegistries
