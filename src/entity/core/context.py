@@ -91,6 +91,18 @@ class AdvancedContext:
         """Remove all temporary thoughts stored via ``think_temp``."""
         self._parent._temporary_thoughts.clear()
 
+    # ------------------------------------------------------------------
+    # Stage control helpers
+    # ------------------------------------------------------------------
+
+    def skip_stage(self, stage: PipelineStage) -> None:
+        """Skip ``stage`` when the pipeline runs."""
+        self._parent._state.skip_stages.add(stage)
+
+    def jump_to_stage(self, stage: PipelineStage) -> None:
+        """Resume pipeline execution from ``stage``."""
+        self._parent._state.next_stage = stage
+
 
 class PluginContext:
     """Runtime context passed to plugins."""

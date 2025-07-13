@@ -36,6 +36,15 @@ from .workflow import Workflow
 
 logger = get_logger(__name__)
 
+STAGE_ORDER = [
+    PipelineStage.INPUT,
+    PipelineStage.PARSE,
+    PipelineStage.THINK,
+    PipelineStage.DO,
+    PipelineStage.REVIEW,
+    PipelineStage.OUTPUT,
+]
+
 
 @asynccontextmanager
 async def _noop_async_cm():
@@ -260,11 +269,14 @@ async def execute_pipeline(
     state: PipelineState | None = None,
     workflow: Workflow | None = None,
     max_iterations: int = 5,
+    checkpoint_key: str | None = None,
 ) -> Dict[str, Any]:
     if capabilities is None:
         raise TypeError("capabilities is required")
     user_id = user_id or "default"
+    memory = capabilities.resources.get("memory") if capabilities.resources else None
     if state is None:
+<<<<<<< HEAD
         state = PipelineState(
             conversation=[
                 ConversationEntry(
@@ -275,6 +287,24 @@ async def execute_pipeline(
             ],
             pipeline_id=f"{user_id}_{generate_pipeline_id()}",
         )
+=======
+        if checkpoint_key and memory:
+            saved = await memory.fetch_persistent(checkpoint_key, None, user_id=user_id)
+            if saved:
+                state = PipelineState.from_dict(saved)
+        if state is None:
+            state = PipelineState(
+                conversation=[
+                    ConversationEntry(
+                        content=user_message,
+                        role="user",
+                        timestamp=datetime.now(),
+                    )
+                ],
+                pipeline_id=f"{user_id}_{generate_pipeline_id()}",
+            )
+            state.stage_results.clear()
+>>>>>>> pr-1418
     _start = time.time()
     resource_manager = (
         capabilities.resources
@@ -285,14 +315,14 @@ async def execute_pipeline(
         async with start_span("pipeline.execute"):
             while True:
                 state.iteration += 1
-                for stage in [
-                    PipelineStage.INPUT,
-                    PipelineStage.PARSE,
-                    PipelineStage.THINK,
-                    PipelineStage.DO,
-                    PipelineStage.REVIEW,
-                    PipelineStage.OUTPUT,
-                ]:
+                start_stage = state.next_stage or STAGE_ORDER[0]
+                if state.next_stage is not None:
+                    state.next_stage = None
+                start_index = STAGE_ORDER.index(start_stage)
+                for stage in STAGE_ORDER[start_index:]:
+                    if stage in state.skip_stages:
+                        state.skip_stages.discard(stage)
+                        continue
                     if workflow and not workflow.should_execute(stage, state):
                         continue
                     if (
@@ -319,12 +349,23 @@ async def execute_pipeline(
                                 pipeline_id=state.pipeline_id,
                                 iteration=state.iteration,
                             )
+                        if checkpoint_key and memory:
+                            await memory.store_persistent(
+                                checkpoint_key, state.to_dict(), user_id=user_id
+                            )
+                    if state.next_stage is not None:
+                        state.last_completed_stage = stage
+                        break
                     if state.failure_info or state.response is not None:
                         break
                     state.last_completed_stage = stage
 
                 if state.response is not None:
                     break
+
+                if state.next_stage is not None:
+                    state.last_completed_stage = None
+                    continue
 
                 if state.failure_info is not None or state.iteration >= max_iterations:
                     if (
@@ -375,6 +416,24 @@ async def execute_pipeline(
         return result
 
 
+def visualize_execution_plan(workflow: Workflow, state: PipelineState) -> str:
+    """Return a GraphViz dot diagram of the planned execution."""
+    lines = ["digraph pipeline {"]
+    lines.append("    rankdir=LR")
+    prev = "START"
+    for stage in STAGE_ORDER:
+        if stage in state.skip_stages:
+            continue
+        if workflow and not workflow.should_execute(stage, state):
+            continue
+        lines.append(f'    "{prev}" -> "{stage.name}"')
+        prev = stage.name
+        for plugin in workflow.stage_map.get(stage, []):
+            lines.append(f'    "{stage.name}" -> "{plugin}" [style=dotted]')
+    lines.append("}")
+    return "\n".join(lines)
+
+
 __all__ = [
     "Workflow",
     "Pipeline",
@@ -382,4 +441,5 @@ __all__ = [
     "create_default_response",
     "execute_stage",
     "execute_pipeline",
+    "visualize_execution_plan",
 ]
