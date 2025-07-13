@@ -24,16 +24,6 @@ try:
     from .resources import LLM, Memory, Storage
     from .resources.logging import LoggingResource
     from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
-    from plugins.builtin.resources.ollama_llm import OllamaLLMResource
-<<<<<<< HEAD
-    from .plugins.prompts.basic_error_handler import BasicErrorHandler
-    from plugins.examples import InputLogger
-    from user_plugins.prompts import ComplexPrompt
-    from user_plugins.responders import ComplexPromptResponder
-=======
-    from plugins.builtin.basic_error_handler import BasicErrorHandler
-    from plugins.examples import InputLogger, MessageParser, ResponseReviewer
->>>>>>> pr-1508
     from .core.stages import PipelineStage
     from .core.plugins import PromptPlugin, ToolPlugin
     from .utils.setup_manager import Layer0SetupManager
@@ -57,14 +47,22 @@ def _create_default_agent() -> Agent:
     builder = agent.builder
 
     db = DuckDBInfrastructure({"path": str(setup.db_path)})
-    llm_provider = OllamaLLMResource({"model": setup.model, "base_url": setup.base_url})
+    try:
+        from plugins.builtin.resources.ollama_llm import OllamaLLMResource
+
+        llm_provider = OllamaLLMResource(
+            {"model": setup.model, "base_url": setup.base_url}
+        )
+    except Exception:  # noqa: BLE001 - optional
+        llm_provider = None
     llm = LLM({})
     vector_store = DuckDBVectorStore({})
     memory = Memory({})
     storage = Storage({})
     logging_res = LoggingResource({})
 
-    llm.provider = llm_provider
+    if llm_provider is not None:
+        llm.provider = llm_provider
     memory.database = db
     vector_store.database = db
     memory.vector_store = vector_store
@@ -79,7 +77,8 @@ def _create_default_agent() -> Agent:
 
         await resources.add("database", db)
         await resources.add("vector_store", vector_store)
-        await resources.add("llm_provider", llm_provider)
+        if llm_provider is not None:
+            await resources.add("llm_provider", llm_provider)
         await resources.add("llm", llm)
         await resources.add("memory", memory)
         await resources.add("storage", storage)
@@ -92,16 +91,28 @@ def _create_default_agent() -> Agent:
         tools=builder.tool_registry,
         plugins=builder.plugin_registry,
     )
-    asyncio.run(builder.add_plugin(BasicErrorHandler({})))
-    asyncio.run(builder.add_plugin(InputLogger({})))
-    asyncio.run(builder.add_plugin(ComplexPrompt({})))
-    asyncio.run(builder.add_plugin(ComplexPromptResponder({})))
+    # Default plugins are optional and may not be available in all environments
+    try:
+        from plugins.builtin.basic_error_handler import BasicErrorHandler
+        from plugins.examples import InputLogger
+        from user_plugins.prompts import ComplexPrompt
+        from user_plugins.responders import ComplexPromptResponder
+
+        asyncio.run(builder.add_plugin(BasicErrorHandler({})))
+        asyncio.run(builder.add_plugin(InputLogger({})))
+        asyncio.run(builder.add_plugin(ComplexPrompt({})))
+        asyncio.run(builder.add_plugin(ComplexPromptResponder({})))
+    except Exception:  # noqa: BLE001 - plugins optional
+        pass
     workflow = getattr(setup, "workflow", minimal_workflow)
     agent._runtime = AgentRuntime(caps, workflow=workflow)
     return agent
 
 
-agent = _create_default_agent()
+try:
+    agent = _create_default_agent()
+except Exception:  # noqa: BLE001 - optional defaults
+    agent = Agent()
 
 # Expose decorator helpers bound to the default agent
 plugin = agent.plugin

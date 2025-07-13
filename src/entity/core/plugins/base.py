@@ -199,21 +199,6 @@ class Plugin(BasePlugin):
                 f"{self.__class__.__name__} can only register for {names}"
             )
 
-    async def _handle_reconfiguration(
-        self, old_config: Dict[str, Any], new_config: Dict[str, Any]
-    ) -> None:
-        """Handle runtime configuration changes.
-
-        Subclasses may override this method to update internal state when a
-        configuration update is applied at runtime. The default implementation
-        logs a warning so plugin authors are reminded to provide their own
-        implementation if needed.
-        """
-
-        self.logger.warning(
-            "_handle_reconfiguration not implemented for %s", self.__class__.__name__
-        )
-
     async def execute(self, context: Any) -> Any:
         start = time.perf_counter()
         logger = getattr(self, "logging", None)
