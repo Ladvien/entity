@@ -181,6 +181,7 @@ def test_memory_persists_with_connection_pool() -> None:
         mem2.vector_store = None
         await mem2.initialize()
 
+
 @pytest.mark.asyncio
 async def test_initialize_without_database_raises_error() -> None:
     mem = Memory(config={})
