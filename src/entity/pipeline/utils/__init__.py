@@ -46,9 +46,14 @@ class StageResolver:
         logger: Any | None = None,
     ) -> tuple[list[PipelineStage], bool]:
         cfg_value = config.get("stages") or config.get("stage")
-        class_value = getattr(plugin_class, "stages", None) or getattr(
-            plugin_class, "stage", None
+        class_value = plugin_class.__dict__.get("stages") or plugin_class.__dict__.get(
+            "stage"
         )
+        inherited_value = None
+        if class_value is None:
+            inherited_value = getattr(plugin_class, "stages", None) or getattr(
+                plugin_class, "stage", None
+            )
 
         if cfg_value is not None:
             stages = _normalize_stages(cfg_value)
@@ -65,6 +70,8 @@ class StageResolver:
                 )
         elif class_value is not None:
             stages = _normalize_stages(class_value)
+        elif inherited_value is not None:
+            stages = _normalize_stages(inherited_value)
         else:
             stages = [PipelineStage.THINK]
 

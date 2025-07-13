@@ -1,4 +1,4 @@
-from entity.core.plugins import Plugin
+from entity.core.plugins import Plugin, PromptPlugin
 from entity.pipeline.utils import StageResolver
 from entity.core.stages import PipelineStage
 
@@ -11,6 +11,11 @@ class AttrPrompt(Plugin):
 
 
 class InferredPrompt(Plugin):
+    async def _execute_impl(self, context):
+        pass
+
+
+class DerivedPrompt(PromptPlugin):
     async def _execute_impl(self, context):
         pass
 
@@ -69,6 +74,15 @@ def test_initializer_fallback_stage():
     plugin = InferredPrompt({})
 
     stages, explicit = StageResolver._resolve_plugin_stages(InferredPrompt, {}, plugin)
+
+    assert stages == [PipelineStage.THINK]
+    assert explicit is False
+
+
+def test_initializer_inherited_stage_not_explicit():
+    plugin = DerivedPrompt({})
+
+    stages, explicit = StageResolver._resolve_plugin_stages(DerivedPrompt, {}, plugin)
 
     assert stages == [PipelineStage.THINK]
     assert explicit is False

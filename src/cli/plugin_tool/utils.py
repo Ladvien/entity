@@ -17,7 +17,12 @@ def load_plugin(path: str) -> Type[Plugin]:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     for obj in module.__dict__.values():
-        if inspect.isclass(obj) and issubclass(obj, Plugin) and obj is not Plugin:
+        if (
+            inspect.isclass(obj)
+            and issubclass(obj, Plugin)
+            and obj is not Plugin
+            and obj.__module__ == module.__name__
+        ):
             return obj
     raise RuntimeError("No plugin class found")
 
