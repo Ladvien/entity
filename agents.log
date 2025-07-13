@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+AGENT NOTE - 2025-07-13: Verified merge conflict cleanup and preserved all notes
+>>>>>>> pr-1430
 AGENT NOTE - 2025-07-31: Resolved merge conflicts in pipeline and CLI after PRs 1416-1427
 AGENT NOTE - 2025-07-13: Stage results cleared after pipeline completion and tests added for thought accumulation
 AGENT NOTE - 2025-07-13: Improved layer validation cycle checks

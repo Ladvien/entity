@@ -3206,3 +3206,4 @@ Future Features List
 ## Local
 - https://docs.vllm.ai/en/latest/index.html
 - https://moonshotai.github.io/Kimi-K2/
+- https://github.com/abetlen/llama-cpp-python
