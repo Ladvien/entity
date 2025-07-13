@@ -246,7 +246,7 @@ async def execute_stage(
         if state.failure_info and stage != PipelineStage.ERROR:
             await execute_stage(PipelineStage.ERROR, state, registries, user_id=user_id)
             state.last_completed_stage = PipelineStage.ERROR
-    _ = time.perf_counter() - _start
+    # elapsed time could be logged here if needed
 
 
 async def execute_pipeline(
