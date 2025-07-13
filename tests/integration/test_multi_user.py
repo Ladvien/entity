@@ -40,3 +40,29 @@ async def test_user_isolation(memory_db):
     assert [e.content for e in hist_b if e.role == "user"] == ["world"]
     assert await memory_db.get("last", user_id="alice") == "hello"
     assert await memory_db.get("last", user_id="bob") == "world"
+
+
+@pytest.mark.asyncio
+async def test_history_persists_per_user(memory_db):
+    logging_res = LoggingResource({})
+    await logging_res.initialize()
+    regs = SystemRegistries(
+        resources={"memory": memory_db, "logging": logging_res},
+        tools=ToolRegistry(),
+        plugins=PluginRegistry(),
+        validators=None,
+    )
+    await regs.plugins.register_plugin_for_stage(
+        EchoStorePlugin({}), PipelineStage.OUTPUT
+    )
+    worker = PipelineWorker(regs)
+
+    await worker.execute_pipeline("chat", "one", user_id="alice")
+    await worker.execute_pipeline("chat", "two", user_id="bob")
+    await worker.execute_pipeline("chat", "three", user_id="alice")
+
+    hist_a = await memory_db.load_conversation("chat", user_id="alice")
+    hist_b = await memory_db.load_conversation("chat", user_id="bob")
+
+    assert [e.content for e in hist_a if e.role == "user"] == ["one", "three"]
+    assert [e.content for e in hist_b if e.role == "user"] == ["two"]
