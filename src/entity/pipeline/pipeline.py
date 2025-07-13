@@ -247,7 +247,7 @@ async def execute_stage(
         if state.failure_info and stage != PipelineStage.ERROR:
             await execute_stage(PipelineStage.ERROR, state, registries, user_id=user_id)
             state.last_completed_stage = PipelineStage.ERROR
-    elapsed = time.perf_counter() - _start
+    _elapsed = time.perf_counter() - _start
     # elapsed time could be logged here if needed
 
 
@@ -275,7 +275,9 @@ async def execute_pipeline(
             ],
             pipeline_id=f"{user_id}_{generate_pipeline_id()}",
         )
-        state.stage_results.clear()
+    # Clear stage results at the start of each message so that
+    # thoughts from previous executions do not leak into the next one.
+    state.stage_results.clear()
     _start = time.time()
     resource_manager = (
         capabilities.resources
