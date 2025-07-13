@@ -2,7 +2,12 @@ import logging
 import pytest
 
 from entity.core.context import PluginContext
-from entity.core.plugins import Plugin, PromptPlugin
+from entity.core.plugins import (
+    InputAdapterPlugin,
+    OutputAdapterPlugin,
+    Plugin,
+    PromptPlugin,
+)
 from entity.core.registries import ToolRegistry
 from entity.core.state import PipelineState
 from entity.pipeline.errors import PluginContextError
@@ -61,3 +66,35 @@ async def test_say_only_allowed_for_output() -> None:
     plugin = SayDuringParse({})
     with pytest.raises(PluginContextError):
         await plugin.execute(ctx)
+
+
+class DummyInput(InputAdapterPlugin):
+    async def _execute_impl(self, context: PluginContext) -> None:
+        pass
+
+
+class DummyOutput(OutputAdapterPlugin):
+    async def _execute_impl(self, context: PluginContext) -> None:
+        pass
+
+
+def test_stage_resolution_for_input_adapter(caplog: pytest.LogCaptureFixture) -> None:
+    with caplog.at_level(logging.WARNING):
+        stages, _ = StageResolver._resolve_plugin_stages(
+            DummyInput,
+            {"stage": PipelineStage.OUTPUT},
+            logger=logging.getLogger("stage-test"),
+        )
+    assert stages == [PipelineStage.INPUT]
+    assert "INPUT stage" in caplog.text
+
+
+def test_stage_resolution_for_output_adapter(caplog: pytest.LogCaptureFixture) -> None:
+    with caplog.at_level(logging.WARNING):
+        stages, _ = StageResolver._resolve_plugin_stages(
+            DummyOutput,
+            {"stage": PipelineStage.INPUT},
+            logger=logging.getLogger("stage-test"),
+        )
+    assert stages == [PipelineStage.OUTPUT]
+    assert "OUTPUT stage" in caplog.text
