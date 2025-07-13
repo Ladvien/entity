@@ -81,14 +81,14 @@ async def test_ensure_ollama_pulls_when_missing(monkeypatch):
     monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
 
     mgr = Layer0SetupManager()
-    await mgr.ensure_ollama()
+    result = await mgr.ensure_ollama()
+    assert result is False
 
 
 @pytest.mark.asyncio
 async def test_ensure_ollama_download_failure(monkeypatch):
     from entity.utils.setup_manager import Layer0SetupManager
     from httpx import AsyncClient
-    import pytest
 
     async def fake_get(self, url):
         class R:
@@ -110,5 +110,5 @@ async def test_ensure_ollama_download_failure(monkeypatch):
     monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
 
     mgr = Layer0SetupManager()
-    with pytest.raises(RuntimeError):
-        await mgr.ensure_ollama()
+    result = await mgr.ensure_ollama()
+    assert result is False
