@@ -38,3 +38,11 @@ asyncio.run(Layer0SetupManager().setup())
 print(asyncio.run(agent.handle("Hello")))
 ```
 
+## Example Plugins
+
+Check the `examples/plugins` directory for minimal plugins demonstrating the
+INPUT, PARSE, and REVIEW stages. Each shows how to interact with the
+`PluginContext` during execution. The rendered source is available in the
+[Plugin Examples](https://entity.readthedocs.io/en/latest/plugin_examples.html)
+documentation.
+
