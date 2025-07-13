@@ -92,6 +92,18 @@ class _AgentBuilder:
             return True
         return False
 
+    def list_plugins(self) -> list[str]:
+        """Return sorted list of all registered plugin names."""
+
+        names = set()
+        for plugin in self.plugin_registry.list_plugins():
+            names.add(self.plugin_registry.get_plugin_name(plugin))
+        if hasattr(self.resource_registry, "list_plugins"):
+            names.update(self.resource_registry.list_plugins())
+        if hasattr(self.tool_registry, "list_plugins"):
+            names.update(self.tool_registry.list_plugins())
+        return sorted(names)
+
     def __post_init__(self) -> None:
         """Configure plugin registry on first use."""
 
@@ -340,6 +352,7 @@ class _AgentBuilder:
                 if isinstance(workflow, Workflow)
                 else Workflow.from_dict(workflow)
             )
+            wf_obj.validate_plugins(self)
         return _AgentRuntime(capabilities, workflow=wf_obj)
 
     def shutdown(self) -> None:
@@ -396,6 +409,7 @@ class Agent:
 
     config_path: str | None = None
     pipeline: Pipeline | None = None
+    workflow: Workflow | None = None
     _builder: _AgentBuilder | None = field(default=None, init=False)
     _runtime: AgentRuntime | None = field(default=None, init=False)
     _workflows: dict[str, type] = field(default_factory=dict, init=False)
@@ -531,8 +545,7 @@ class Agent:
     def from_directory(
         cls, directory: str, *, workflow: Workflow | None = None
     ) -> "Agent":
-        agent = cls()
-        agent.pipeline = workflow
+        agent = cls(workflow=workflow)
         agent.load_plugins_from_directory(directory)
         return agent
 
@@ -540,8 +553,7 @@ class Agent:
     def from_package(
         cls, package_name: str, *, workflow: Workflow | None = None
     ) -> "Agent":
-        agent = cls()
-        agent.pipeline = workflow
+        agent = cls(workflow=workflow)
         agent.load_plugins_from_package(package_name)
         return agent
 
@@ -595,8 +607,8 @@ class Agent:
     # ------------------------------------------------------------------
     async def _ensure_runtime(self) -> None:
         if self._runtime is None:
-            wf = None
-            if self.pipeline:
+            wf = self.workflow
+            if wf is None and self.pipeline:
                 wf = (
                     self.pipeline.workflow
                     if hasattr(self.pipeline, "workflow")
