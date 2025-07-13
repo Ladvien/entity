@@ -13,6 +13,7 @@ from entity.config.environment import load_env
 from entity.config.models import EntityConfig, PluginConfig, asdict
 from entity.core.plugin_utils import import_plugin_class
 from entity.core.plugins import Plugin, ResourcePlugin, ToolPlugin
+from entity.core.registry_validator import RegistryValidator
 from entity.core.registries import PluginRegistry, ToolRegistry
 from entity.core.resources.container import ResourceContainer
 from entity.utils.logging import configure_logging, get_logger
@@ -38,13 +39,25 @@ class ClassRegistry(StageResolver):
         self._layers: Dict[str, int] = {}
         self._order: List[str] = []
 
+    @staticmethod
+    def _validate_plugin_type(name: str, cls: type[Plugin], section: str) -> None:
+        from entity.core.registry_validator import RegistryValidator
+
+        RegistryValidator._validate_plugin_type(name, cls, section)
+
     def register_class(
-        self, plugin_class: type[Plugin], config: Dict, name: str, layer: int
+        self,
+        plugin_class: type[Plugin],
+        config: Dict,
+        name: str,
+        layer: int,
+        section: str,
     ) -> None:
         self._classes[name] = plugin_class
         self._configs[name] = config
         self._layers[name] = layer
         self._order.append(name)
+        self._validate_plugin_type(name, plugin_class, section)
         self._validate_stage_assignment(name, plugin_class, config)
 
     def has_plugin(self, name: str) -> bool:
@@ -101,7 +114,23 @@ class ClassRegistry(StageResolver):
     def _validate_stage_assignment(
         self, name: str, cls: type[Plugin], config: Dict
     ) -> None:
-        if issubclass(cls, (ResourcePlugin, ToolPlugin)):
+        from entity.core.plugins import (
+            AdapterPlugin,
+            InputAdapterPlugin,
+            OutputAdapterPlugin,
+        )
+
+        if issubclass(cls, ResourcePlugin):
+            if (
+                config.get("stage")
+                or config.get("stages")
+                or getattr(cls, "stages", None)
+            ):
+                raise InitializationError(
+                    name,
+                    "stage validation",
+                    "Resource plugins cannot define pipeline stages.",
+                )
             return
 
         stages, explicit = StageResolver._resolve_plugin_stages(
@@ -119,6 +148,31 @@ class ClassRegistry(StageResolver):
                 name,
                 "stage validation",
                 f"Invalid stage values: {invalid}. Use PipelineStage members.",
+            )
+
+        if issubclass(cls, ToolPlugin) and any(s != PipelineStage.DO for s in stages):
+            raise InitializationError(
+                name, "stage validation", "ToolPlugin must use DO stage"
+            )
+        if issubclass(cls, InputAdapterPlugin) and any(
+            s != PipelineStage.INPUT for s in stages
+        ):
+            raise InitializationError(
+                name, "stage validation", "InputAdapterPlugin must use INPUT stage"
+            )
+        if issubclass(cls, OutputAdapterPlugin) and any(
+            s != PipelineStage.OUTPUT for s in stages
+        ):
+            raise InitializationError(
+                name, "stage validation", "OutputAdapterPlugin must use OUTPUT stage"
+            )
+        if issubclass(cls, AdapterPlugin) and any(
+            s not in {PipelineStage.INPUT, PipelineStage.OUTPUT} for s in stages
+        ):
+            raise InitializationError(
+                name,
+                "stage validation",
+                "AdapterPlugin stages must be INPUT and/or OUTPUT",
             )
 
 
@@ -256,6 +310,16 @@ class SystemInitializer:
                         cls_path = meta.get("class") or meta.get("type")
                         if not cls_path:
                             continue
+                        cls = import_plugin_class(cls_path)
+                        try:
+                            RegistryValidator._validate_plugin_type(name, cls, section)
+                            RegistryValidator._validate_stage_assignment(
+                                name, cls, meta
+                            )
+                        except SystemError as exc:
+                            raise InitializationError(
+                                name, "plugin discovery", str(exc)
+                            ) from exc
                         cfg = {"type": cls_path}
                         deps = meta.get("dependencies")
                         if deps:
@@ -370,7 +434,7 @@ class SystemInitializer:
                 if "logging" not in deps:
                     deps.append("logging")
                 cls.dependencies = deps
-                registry.register_class(cls, config, name, layer)
+                registry.register_class(cls, config, name, layer, section)
                 dep_graph[name] = deps
 
         for section in ["tools", "adapters", "prompts"]:
@@ -387,7 +451,7 @@ class SystemInitializer:
                 if "logging" not in deps:
                     deps.append("logging")
                 cls.dependencies = deps
-                registry.register_class(cls, config, name, 4)
+                registry.register_class(cls, config, name, 4, section)
                 dep_graph[name] = deps
 
         # Validate workflow references
