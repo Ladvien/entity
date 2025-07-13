@@ -49,3 +49,14 @@ INPUT, PARSE, and REVIEW stages. Each shows how to interact with the
 [Plugin Examples](https://entity.readthedocs.io/en/latest/plugin_examples.html)
 documentation.
 
+## Running Tests
+
+Before running the test suite, install the development extras. Without these
+dependencies the `entity` package fails to import and tests will crash.
+
+```bash
+poetry install --with dev
+# or
+pip install -e ".[dev]"
+```
+
