@@ -1,5 +1,9 @@
 from entity.pipeline.initializer import SystemInitializer, ClassRegistry
-from entity.core.plugins import ToolPlugin
+from entity.core.plugins import (
+    ToolPlugin,
+    OutputAdapterPlugin,
+    PromptPlugin,
+)
 from entity.core.stages import PipelineStage
 
 
@@ -13,7 +17,27 @@ class DummyTool(ToolPlugin):
 DummyTool.dependencies = []
 
 
-def test_register_plugins_appends_dependencies():
+class DummyAdapter(OutputAdapterPlugin):
+    stages = [PipelineStage.OUTPUT]
+
+    async def _execute_impl(self, context):
+        pass
+
+
+DummyAdapter.dependencies = []
+
+
+class DummyPrompt(PromptPlugin):
+    stages = [PipelineStage.THINK]
+
+    async def _execute_impl(self, context):
+        pass
+
+
+DummyPrompt.dependencies = []
+
+
+def test_tool_dependencies_added():
     cfg = {
         "plugins": {
             "agent_resources": {
@@ -37,3 +61,46 @@ def test_register_plugins_appends_dependencies():
 
     assert "metrics_collector" in DummyTool.dependencies
     assert "logging" in DummyTool.dependencies
+
+
+def _base_cfg() -> dict:
+    return {
+        "plugins": {
+            "agent_resources": {
+                "memory": {"type": "entity.resources.memory:Memory"},
+                "llm": {"type": "entity.resources.llm:LLM"},
+                "storage": {"type": "entity.resources.storage:Storage"},
+                "logging": {"type": "entity.resources.logging:LoggingResource"},
+                "metrics_collector": {
+                    "type": "entity.resources.metrics:MetricsCollectorResource"
+                },
+            }
+        },
+        "workflow": {},
+    }
+
+
+def test_adapter_dependencies_added():
+    cfg = _base_cfg()
+    cfg["plugins"]["adapters"] = {"dummy_adapter": {"type": f"{__name__}:DummyAdapter"}}
+
+    init = SystemInitializer(cfg)
+    registry = ClassRegistry()
+    dep_graph: dict[str, list[str]] = {}
+    init._register_plugins(registry, dep_graph)
+
+    assert "metrics_collector" in DummyAdapter.dependencies
+    assert "logging" in DummyAdapter.dependencies
+
+
+def test_prompt_dependencies_added():
+    cfg = _base_cfg()
+    cfg["plugins"]["prompts"] = {"dummy_prompt": {"type": f"{__name__}:DummyPrompt"}}
+
+    init = SystemInitializer(cfg)
+    registry = ClassRegistry()
+    dep_graph: dict[str, list[str]] = {}
+    init._register_plugins(registry, dep_graph)
+
+    assert "metrics_collector" in DummyPrompt.dependencies
+    assert "logging" in DummyPrompt.dependencies
