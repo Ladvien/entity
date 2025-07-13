@@ -63,6 +63,19 @@ async def test_conversation_search_vector(memory_with_vector: Memory) -> None:
 
 
 @pytest.mark.asyncio
+async def test_conversation_search_text(memory_with_vector: Memory) -> None:
+    entry = ConversationEntry(
+        content="testing 123",
+        role="assistant",
+        timestamp=datetime.now(),
+    )
+    await memory_with_vector.add_conversation_entry("conv", entry, user_id="user")
+    results = await memory_with_vector.conversation_search("testing", user_id="user")
+    assert len(results) == 1
+    assert results[0]["content"] == "testing 123"
+
+
+@pytest.mark.asyncio
 async def test_conversation_statistics(memory_with_vector: Memory) -> None:
     now = datetime.now()
     await memory_with_vector.add_conversation_entry(
