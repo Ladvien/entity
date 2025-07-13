@@ -132,53 +132,60 @@ def make_context(tmp_path) -> PluginContext:
 
 
 def test_memory_roundtrip(tmp_path) -> None:
-    ctx = make_context(tmp_path)
-    asyncio.run(ctx.remember("foo", "bar"))
-    assert asyncio.run(ctx.recall("foo")) == "bar"
+    async def run_test() -> None:
+        ctx = make_context(tmp_path)
+        await ctx.remember("foo", "bar")
+        assert await ctx.recall("foo") == "bar"
+
+    asyncio.run(run_test())
 
 
-@pytest.mark.asyncio
-async def test_memory_persists_between_instances() -> None:
-    db = DummyDatabase()
+def test_memory_persists_between_instances() -> None:
+    async def run_test() -> None:
+        db = DummyDatabase()
 
-    mem1 = Memory(config={})
-    mem1.database = db
-    mem1.vector_store = None
-    await mem1.initialize()
-    await mem1.set("foo", "bar", user_id="default")
-    entry = ConversationEntry("hi", "user", datetime.now())
-    await mem1.save_conversation("cid", [entry], user_id="default")
+        mem1 = Memory(config={})
+        mem1.database = db
+        mem1.vector_store = None
+        await mem1.initialize()
+        await mem1.set("foo", "bar", user_id="default")
+        entry = ConversationEntry("hi", "user", datetime.now())
+        await mem1.save_conversation("cid", [entry], user_id="default")
 
-    mem2 = Memory(config={})
-    mem2.database = db
-    mem2.vector_store = None
-    await mem2.initialize()
+        mem2 = Memory(config={})
+        mem2.database = db
+        mem2.vector_store = None
+        await mem2.initialize()
 
-    assert await mem2.get("foo", user_id="default") == "bar"
-    history = await mem2.load_conversation("cid", user_id="default")
-    assert history == [entry]
+        assert await mem2.get("foo", user_id="default") == "bar"
+        history = await mem2.load_conversation("cid", user_id="default")
+        assert history == [entry]
+
+    asyncio.run(run_test())
 
 
-@pytest.mark.asyncio
-async def test_memory_persists_with_connection_pool() -> None:
-    pool = DummyPool()
+def test_memory_persists_with_connection_pool() -> None:
+    async def run_test() -> None:
+        pool = DummyPool()
 
-    mem1 = Memory(config={})
-    mem1.database = pool
-    mem1.vector_store = None
-    await mem1.initialize()
-    await mem1.set("foo", "bar", user_id="default")
-    entry = ConversationEntry("hi", "user", datetime.now())
-    await mem1.save_conversation("cid", [entry], user_id="default")
+        mem1 = Memory(config={})
+        mem1.database = pool
+        mem1.vector_store = None
+        await mem1.initialize()
+        await mem1.set("foo", "bar", user_id="default")
+        entry = ConversationEntry("hi", "user", datetime.now())
+        await mem1.save_conversation("cid", [entry], user_id="default")
 
-    mem2 = Memory(config={})
-    mem2.database = pool
-    mem2.vector_store = None
-    await mem2.initialize()
+        mem2 = Memory(config={})
+        mem2.database = pool
+        mem2.vector_store = None
+        await mem2.initialize()
 
-    assert await mem2.get("foo", user_id="default") == "bar"
-    history = await mem2.load_conversation("cid", user_id="default")
-    assert history == [entry]
+        assert await mem2.get("foo", user_id="default") == "bar"
+        history = await mem2.load_conversation("cid", user_id="default")
+        assert history == [entry]
+
+    asyncio.run(run_test())
 
 
 def test_initialize_without_database_raises_error() -> None:
