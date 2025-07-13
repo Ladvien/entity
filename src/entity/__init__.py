@@ -12,6 +12,8 @@ from .utils.setup_manager import Layer0SetupManager
 from entity.core.registries import SystemRegistries
 from entity.core.runtime import AgentRuntime
 from entity.core.resources.container import ResourceContainer
+import inspect
+import asyncio
 
 
 def _create_default_agent() -> Agent:
@@ -82,7 +84,21 @@ agent.prompt = prompt
 
 
 def tool(func=None, **hints):
-    return agent.plugin(func, stage=PipelineStage.DO, **hints)
+    """Register ``func`` as a tool plugin or simple tool."""
+
+    def decorator(f):
+        params = list(inspect.signature(f).parameters)
+        if params and params[0] in {"ctx", "context"}:
+            return agent.plugin(f, stage=PipelineStage.DO, **hints)
+
+        class _WrappedTool(ToolPlugin):
+            async def execute_function(self, params_dict):
+                return await f(**params_dict)
+
+        asyncio.run(agent.builder.tool_registry.add(f.__name__, _WrappedTool({})))
+        return f
+
+    return decorator(func) if func else decorator
 
 
 agent.tool = tool
