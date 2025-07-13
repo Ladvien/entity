@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from collections import OrderedDict
 from typing import Any, Awaitable, Callable, Dict, List
 
 from entity.core.validation import verify_dependencies, verify_stage_assignment
@@ -18,18 +19,27 @@ class PluginCapabilities:
 
 
 class PluginRegistry:
+<<<<<<< HEAD
     """Register plugins for each pipeline stage and track capabilities."""
 
     def __init__(self) -> None:
         self._stage_plugins: Dict[str, List[Any]] = {}
         self._names: Dict[Any, str] = {}
         self._capabilities: Dict[Any, PluginCapabilities] = {}
+=======
+    """Register plugins for each pipeline stage preserving insertion order."""
+
+    def __init__(self) -> None:
+        self._stage_plugins: Dict[str, OrderedDict[Any, str]] = {}
+        self._names: "OrderedDict[Any, str]" = OrderedDict()
+>>>>>>> pr-1437
 
     async def register_plugin_for_stage(
         self, plugin: Any, stage: str | PipelineStage, name: str | None = None
     ) -> None:
         stage_enum = PipelineStage.ensure(stage)
         plugin_name = name or getattr(plugin, "name", plugin.__class__.__name__)
+<<<<<<< HEAD
 
         verify_stage_assignment(plugin, stage_enum)
         verify_dependencies(plugin, self._names.values())
@@ -64,9 +74,19 @@ class PluginRegistry:
             for dep in required_resources:
                 if dep not in caps.required_resources:
                     caps.required_resources.append(dep)
+=======
+        if stage not in self._stage_plugins:
+            self._stage_plugins[stage] = OrderedDict()
+        self._stage_plugins[stage][plugin] = plugin_name
+        if plugin not in self._names:
+            self._names[plugin] = plugin_name
+>>>>>>> pr-1437
 
     def get_plugins_for_stage(self, stage: str) -> List[Any]:
-        return list(self._stage_plugins.get(stage, []))
+        plugins = self._stage_plugins.get(stage)
+        if plugins is None:
+            return []
+        return list(plugins.keys())
 
     def get_plugin(self, name: str) -> Any | None:
         """Return the plugin registered with ``name``."""
@@ -80,10 +100,7 @@ class PluginRegistry:
         return self.get_plugin(name)
 
     def list_plugins(self) -> List[Any]:
-        plugins: List[Any] = []
-        for plist in self._stage_plugins.values():
-            plugins.extend(plist)
-        return plugins
+        return list(self._names.keys())
 
     def get_capabilities(self, plugin: Any) -> PluginCapabilities | None:
         return self._capabilities.get(plugin)

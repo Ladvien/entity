@@ -10,7 +10,11 @@ The pipeline implementation now lives under the ``entity.pipeline`` package. Imp
 error_handling
 logging
 configuration
+<<<<<<< HEAD
 plugin_examples
+=======
+plugins
+>>>>>>> pr-1437
 ```
 
 The following pages cover core concepts and usage patterns.
