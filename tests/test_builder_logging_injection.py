@@ -23,7 +23,12 @@ async def test_builder_assigns_logging():
     LoggingResource.dependencies = []
     MetricsCollectorResource.dependencies = []
     container.register("logging", LoggingResource, {}, layer=3)
-    container.register("metrics_collector", MetricsCollectorResource, {}, layer=3)
+    container.register(
+        "metrics_collector",
+        MetricsCollectorResource,
+        {},
+        layer=4,
+    )
     await builder.add_plugin(DummyPrompt({}))
     await builder.build_runtime()
     plugin = builder._added_plugins[0]
