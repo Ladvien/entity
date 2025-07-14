@@ -59,7 +59,7 @@ def test_tool_dependencies_added():
     dep_graph: dict[str, list[str]] = {}
     init._register_plugins(registry, dep_graph)
 
-    assert "metrics_collector" in DummyTool.dependencies
+    assert "metrics_collector?" in DummyTool.dependencies
     assert "logging" in DummyTool.dependencies
 
 
@@ -101,7 +101,7 @@ def test_adapter_dependencies_added():
     dep_graph: dict[str, list[str]] = {}
     init._register_plugins(registry, dep_graph)
 
-    assert "metrics_collector" in DummyAdapter.dependencies
+    assert "metrics_collector?" in DummyAdapter.dependencies
     assert "logging" in DummyAdapter.dependencies
 
 
@@ -114,7 +114,7 @@ def test_prompt_dependencies_added():
     dep_graph: dict[str, list[str]] = {}
     init._register_plugins(registry, dep_graph)
 
-    assert "metrics_collector" in DummyPrompt.dependencies
+    assert "metrics_collector?" in DummyPrompt.dependencies
     assert "logging" in DummyPrompt.dependencies
 
 
@@ -129,9 +129,9 @@ def test_dependencies_without_metrics():
     dep_graph: dict[str, list[str]] = {}
     init._register_plugins(registry, dep_graph)
 
-    assert "metrics_collector" in DummyTool.dependencies
-    assert "metrics_collector" in DummyAdapter.dependencies
-    assert "metrics_collector" in DummyPrompt.dependencies
+    assert "metrics_collector?" in DummyTool.dependencies
+    assert "metrics_collector?" in DummyAdapter.dependencies
+    assert "metrics_collector?" in DummyPrompt.dependencies
 
 
 def test_dependencies_without_logging():
