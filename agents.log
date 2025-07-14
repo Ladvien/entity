@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-10-30: Fixed async stage results in end-to-end pipeline test ensuring ReverseThink runs and final output is olleh
 AGENT NOTE - 2025-10-06: Updated layer validation to allow MetricsCollectorResource at layer 4
 <<<<<<< HEAD
 <<<<<<< HEAD
