@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-14: Added metrics_collector dependencies for LLM and VectorStoreResource
 AGENT NOTE - 2025-07-14: Updated layer validation message checks in tests
 AGENT NOTE - 2025-07-14: typed dependencies for infrastructure plugins
 AGENT NOTE - 2025-07-14: Ensured PostgreSQL tests create and drop temporary database
