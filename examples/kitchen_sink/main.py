@@ -1,17 +1,16 @@
-import asyncio
 import sys
 from pathlib import Path
 
 # Ensure this example can find the entity package when run directly
 sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
 
-from entity import agent
+from entity import agent, prompt
 from entity.core.stages import PipelineStage
 from user_plugins.tools.calculator_tool import CalculatorTool
 from user_plugins.responders import ReactResponder
 
 
-@agent.prompt(stage=PipelineStage.THINK)
+@prompt
 async def react_prompt(ctx):
     question = next((e.content for e in ctx.conversation() if e.role == "user"), "")
     tool_result = await ctx.tool_use("calc", expression="2+2")
@@ -28,4 +27,6 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
+    import asyncio
+
     asyncio.run(main())
