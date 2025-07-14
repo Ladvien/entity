@@ -8,6 +8,7 @@ import socket
 
 from pydantic import BaseModel, Field, validator
 from entity.pipeline.stages import PipelineStage
+from entity.workflows.base import Workflow
 
 
 class PluginConfig(BaseModel):
@@ -173,6 +174,22 @@ class EntityConfig(BaseModel):
     )
     plugins: PluginsSection = Field(default_factory=PluginsSection)
     workflow: WorkflowSettings | None = Field(default=None)
+
+    @validator("workflow", pre=True)
+    def _validate_workflow(
+        cls, value: WorkflowSettings | Workflow | Dict[str, Any] | None
+    ) -> WorkflowSettings | None:
+        if value is None:
+            return None
+        if isinstance(value, Workflow):
+            value = value.to_dict()
+        if isinstance(value, dict):
+            mapping = value.get("stages", value)
+            return WorkflowSettings(
+                stages={str(k): list(v) for k, v in mapping.items()}
+            )
+        return value
+
     tool_registry: ToolRegistryConfig = Field(default_factory=ToolRegistryConfig)
     runtime_validation_breaker: CircuitBreakerConfig = Field(
         default_factory=CircuitBreakerConfig
@@ -181,19 +198,19 @@ class EntityConfig(BaseModel):
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "EntityConfig":
-        return cls.model_validate(data)
+        return cls.parse_obj(data)
 
 
 def asdict(model: BaseModel) -> Dict[str, Any]:
     """Return a dictionary representation of ``model``."""
 
-    return model.model_dump()
+    return model.dict()
 
 
 def validate_config(data: Dict[str, Any]) -> None:
     """Validate ``data`` by instantiating :class:`EntityConfig`."""
 
-    EntityConfig.model_validate(data)
+    EntityConfig.parse_obj(data)
 
 
 __all__ = [
