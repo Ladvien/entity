@@ -1,4 +1,5 @@
 import shutil
+import asyncio
 import pytest
 
 if shutil.which("pg_ctl") is None:  # pragma: no cover - environment check
@@ -28,7 +29,21 @@ def prepared_postgres(postgresql_proc, request):
         version=postgresql_proc.version,
         password=postgresql_proc.password,
     )
+
     janitor.init()
+
+    async def create_extension() -> None:
+        conn = await asyncpg.connect(
+            user=postgresql_proc.user,
+            password=postgresql_proc.password,
+            database=postgresql_proc.dbname,
+            host=postgresql_proc.host,
+            port=postgresql_proc.port,
+        )
+        await conn.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+        await conn.close()
+
+    asyncio.run(create_extension())
 
     def drop_db():
         janitor.drop()
