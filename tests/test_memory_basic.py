@@ -121,5 +121,5 @@ async def test_load_conversation_with_user_id(simple_memory: Memory) -> None:
 async def test_load_conversation_preformatted_id(simple_memory: Memory) -> None:
     entry = ConversationEntry("hello", "user", datetime.now())
     await simple_memory.save_conversation("pipe", [entry], user_id="bob")
-    history = await simple_memory.load_conversation("bob_pipe")
+    history = await simple_memory.load_conversation("pipe", user_id="bob")
     assert history == [entry]

@@ -133,7 +133,7 @@ async def run_test() -> None:
     await mem2.initialize()
 
     assert await mem2.get("foo", user_id="default") == "bar"
-    history = await mem2.load_conversation("cid", user_id="default")
+    history = await mem2.load_conversation("cid")
     assert history == [entry]
 
 
@@ -167,7 +167,7 @@ def test_memory_persists_with_connection_pool() -> None:
         mem2.vector_store = None
         await mem2.initialize()
         assert await mem2.get("foo", user_id="default") == "bar"
-        history = await mem2.load_conversation("cid", user_id="default")
+        history = await mem2.load_conversation("cid")
         assert history == [entry]
 
     asyncio.run(run_test())
