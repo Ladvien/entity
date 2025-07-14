@@ -6,6 +6,7 @@ import websockets
 
 from entity.core.resources.container import ResourceContainer
 from entity.resources.logging import LoggingResource
+from entity.infrastructure import DuckDBInfrastructure
 
 
 async def _connect(uri: str, attempts: int = 10, delay: float = 0.05):
@@ -20,6 +21,7 @@ async def _connect(uri: str, attempts: int = 10, delay: float = 0.05):
 @pytest.mark.asyncio
 async def test_websocket_broadcast(tmp_path, monkeypatch):
     container = ResourceContainer()
+    container.register("database_backend", DuckDBInfrastructure, {}, layer=1)
     monkeypatch.setattr(LoggingResource, "dependencies", [])
     container.register(
         "logging",
@@ -50,6 +52,7 @@ async def test_websocket_broadcast(tmp_path, monkeypatch):
 async def test_file_rotation(tmp_path, monkeypatch):
     log_file = tmp_path / "rot.log"
     container = ResourceContainer()
+    container.register("database_backend", DuckDBInfrastructure, {}, layer=1)
     monkeypatch.setattr(LoggingResource, "dependencies", [])
     container.register(
         "logging",
@@ -79,6 +82,7 @@ async def test_file_rotation(tmp_path, monkeypatch):
 async def test_file_rotation_no_data_loss(tmp_path, monkeypatch):
     log_file = tmp_path / "rot.log"
     container = ResourceContainer()
+    container.register("database_backend", DuckDBInfrastructure, {}, layer=1)
     monkeypatch.setattr(LoggingResource, "dependencies", [])
     container.register(
         "logging",

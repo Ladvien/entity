@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-14: Updated layer validation message checks in tests
 AGENT NOTE - 2025-07-14: typed dependencies for infrastructure plugins
 AGENT NOTE - 2025-07-14: Ensured PostgreSQL tests create and drop temporary database
@@ -10,6 +11,16 @@ AGENT NOTE - 2025-07-14: Revised layer validation order and cycle detection
 AGENT NOTE - 2025-07-14: Fixed conversation history user_id namespacing and updated tests
 AGENT NOTE - 2025-07-14: Fixed stage mismatch warning logging and updated tests
 AGENT NOTE - 2025-07-14: Documented pyyaml/python-dotenv requirements for CLI validation
+=======
+AGENT NOTE - 2025-10-09: Added DuckDB infrastructure fixture for resource-only tests
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pr-1590
 AGENT NOTE - 2025-10-08: _ensure_agent initializes default agent with warning when auto init disabled
 AGENT NOTE - 2025-07-14: Simplified layer validation by removing duplicate dependency check
 AGENT NOTE - 2025-07-14: Updated load_conversation ID logic and added tests

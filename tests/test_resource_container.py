@@ -5,6 +5,7 @@ from entity.core.resources.container import ResourceContainer
 from entity.pipeline.errors import InitializationError
 from entity.core.plugins import InfrastructurePlugin, ResourcePlugin, AgentResource
 from entity.resources.logging import LoggingResource
+from entity.infrastructure import DuckDBInfrastructure
 
 
 class InfraPlugin(InfrastructurePlugin):
@@ -66,6 +67,7 @@ LoggingResource.dependencies = []
 @pytest.mark.asyncio
 async def test_container_lifecycle_and_order():
     container = ResourceContainer()
+    container.register("database_backend", DuckDBInfrastructure, {}, layer=1)
     container.register("infra", InfraPlugin, {}, layer=1)
     container.register("iface", InterfacePlugin, {}, layer=2)
     container.register("canon", CustomResource, {}, layer=3)
@@ -95,6 +97,7 @@ def test_layer_violation():
     BadResource.dependencies = ["infra"]
 
     container = ResourceContainer()
+    container.register("database_backend", DuckDBInfrastructure, {}, layer=1)
     container.register("infra", InfraPlugin, {}, layer=1)
     container.register("bad", BadResource, {}, layer=3)
 
@@ -110,6 +113,7 @@ def test_missing_interface_dependencies():
     BadInterface.dependencies = []
 
     container = ResourceContainer()
+    container.register("database_backend", DuckDBInfrastructure, {}, layer=1)
     container.register("infra", InfraPlugin, {}, layer=1)
     container.register("iface", BadInterface, {}, layer=2)
 
@@ -125,6 +129,7 @@ def test_missing_infrastructure_type():
     BadInfra.dependencies = []
 
     container = ResourceContainer()
+    container.register("database_backend", DuckDBInfrastructure, {}, layer=1)
     container.register("bad", BadInfra, {}, layer=1)
 
     with pytest.raises(InitializationError, match="infrastructure_type"):
@@ -144,6 +149,7 @@ async def test_health_check_failure_on_build():
     UnhealthyResource.dependencies = []
 
     container = ResourceContainer()
+    container.register("database_backend", DuckDBInfrastructure, {}, layer=1)
     container.register("bad", UnhealthyResource, {}, layer=3)
 
     with pytest.raises(InitializationError, match="not registered"):
@@ -175,6 +181,7 @@ RestartableResource.dependencies = []
 @pytest.mark.asyncio
 async def test_restart_resource():
     container = ResourceContainer()
+    container.register("database_backend", DuckDBInfrastructure, {}, layer=1)
     container.register("res", RestartableResource, {}, layer=3)
 
     await container.build_all()

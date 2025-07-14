@@ -2,6 +2,7 @@ import pytest
 
 from entity.core.resources.container import ResourceContainer
 from entity.core.plugins import InfrastructurePlugin, ResourcePlugin
+from entity.infrastructure import DuckDBInfrastructure
 from entity.resources.base import AgentResource
 
 
@@ -70,6 +71,7 @@ FailingResource.dependencies = ["iface"]
 @pytest.mark.asyncio
 async def test_lifecycle_order_and_restart():
     container = ResourceContainer()
+    container.register("database_backend", DuckDBInfrastructure, {}, layer=1)
     container.register("infra", Infra, {}, layer=1)
     container.register("iface", Interface, {}, layer=2)
     container.register("fail", FailingResource, {}, layer=3)
