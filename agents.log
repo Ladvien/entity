@@ -1,5 +1,6 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-14: typed dependencies for infrastructure plugins
 AGENT NOTE - 2025-07-14: Ensured PostgreSQL tests create and drop temporary database
 AGENT NOTE - 2025-07-14: Updated plugin config tests to use dictionaries
@@ -24,6 +25,9 @@ AGENT NOTE - 2025-07-14: Removed merge conflict markers from agents.log
 =======
 AGENT NOTE - 2025-07-14: Verified errors.py contains no merge markers and ensured ResourceError uses pass
 >>>>>>> pr-1586
+=======
+AGENT NOTE - 2025-07-14: Added test-verbose command to README testing section
+>>>>>>> pr-1585
 AGENT NOTE - 2025-07-14: Documented PYTHONPATH usage for pytest in README
 AGENT NOTE - 2025-07-14: Fixed workflow fallback in _create_default_agent
 AGENT NOTE - 2025-07-14: Removed merge markers from errors.py
