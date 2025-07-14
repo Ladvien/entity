@@ -38,6 +38,12 @@ def _ensure_logging_dependency(cls: type) -> None:
 def _inject_observability_dependencies(cls: type) -> None:
     """Ensure metrics and logging dependencies are present."""
 
+    if any(
+        base.__name__ in {"ResourcePlugin", "InfrastructurePlugin"}
+        for base in cls.mro()
+    ):
+        return
+
     _ensure_metrics_dependency(cls)
     _ensure_logging_dependency(cls)
 
