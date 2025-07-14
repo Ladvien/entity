@@ -38,10 +38,6 @@ class PluginExecutionError(PipelineError):
 class ResourceError(PipelineError):
     """Base class for resource errors."""
 
-<<<<<<< HEAD
-=======
-    pass
-
 
 class InitializationError(PipelineError):
     """Raised when a plugin or resource fails to initialize."""
