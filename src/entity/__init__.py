@@ -1,9 +1,14 @@
+<<<<<<< HEAD
 """Convenient access to the Entity agent and utilities."""
+=======
+"""Convenient access to the default Entity agent and helpers."""
+>>>>>>> pr-1547
 
 from __future__ import annotations
 
 import asyncio
 import inspect
+<<<<<<< HEAD
 
 
 def _handle_import_error(exc: ModuleNotFoundError) -> None:
@@ -42,10 +47,41 @@ def _create_default_agent() -> Agent:
     try:
         asyncio.run(setup.setup())
     except Exception:  # noqa: BLE001 - best effort setup
+=======
+import os
+from types import SimpleNamespace
+
+from .core.agent import Agent
+from .core.plugins import PromptPlugin, ToolPlugin
+from .core.registries import SystemRegistries
+from .core.resources.container import ResourceContainer
+from .core.runtime import AgentRuntime
+from .core.stages import PipelineStage
+from .infrastructure import DuckDBInfrastructure
+from .resources import LLM, Memory, Storage
+from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
+from .resources.logging import LoggingResource
+from .utils.setup_manager import Layer0SetupManager
+from entity.workflows.minimal import minimal_workflow
+
+
+# ---------------------------------------------------------------------------
+# default agent creation
+# ---------------------------------------------------------------------------
+
+
+def _create_default_agent() -> Agent:
+    """Return a fully configured default :class:`Agent`."""
+
+    setup = Layer0SetupManager()
+    try:  # best effort environment preparation
+        asyncio.run(setup.setup())
+    except Exception:  # noqa: BLE001
+>>>>>>> pr-1547
         pass
     agent = Agent()
+    builder = agent.builder
 
-<<<<<<< HEAD
     db = DuckDBInfrastructure({"path": str(setup.db_path)})
     llm_provider = None
     try:
@@ -56,87 +92,52 @@ def _create_default_agent() -> Agent:
         )
     except Exception:  # noqa: BLE001 - optional dependency
         pass
-    llm = LLM({})
-=======
->>>>>>> pr-1536
-=======
-    db_backend = DuckDBInfrastructure({"path": str(setup.db_path)})
-    db_resource = DuckDBResource({})
-    db_resource.database = db_backend
-
->>>>>>> pr-1538
-    vector_store = DuckDBVectorStore({})
-    vector_store.database = db_backend
-
-    memory = Memory({})
 <<<<<<< HEAD
 =======
-    memory.database = db_resource
-    memory.vector_store = vector_store
 
->>>>>>> pr-1538
+>>>>>>> pr-1547
     llm = LLM({})
+    vector_store = DuckDBVectorStore({})
+    memory = Memory({})
     storage = Storage({})
     logging_res = LoggingResource({})
-<<<<<<< HEAD
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
     if llm_provider is not None:
         llm.provider = llm_provider
-=======
-    llm.provider = None
->>>>>>> pr-1536
-=======
-    if llm_provider is not None:
-        llm.provider = llm_provider
->>>>>>> pr-1539
-=======
-    llm.provider = None
->>>>>>> pr-1540
     memory.database = db
-    memory.vector_store = vector_store
     vector_store.database = db
+    memory.vector_store = vector_store
 
-=======
->>>>>>> pr-1538
     resources = ResourceContainer()
-    asyncio.run(resources.add("database", db))
-    asyncio.run(resources.add("vector_store", vector_store))
-    asyncio.run(resources.add("llm", llm))
-    asyncio.run(resources.add("memory", memory))
-    asyncio.run(resources.add("storage", storage))
-    asyncio.run(resources.add("logging", logging_res))
 
-<<<<<<< HEAD
-    async def init() -> None:
-        await db_backend.initialize()
+    async def init_resources() -> None:
+        await db.initialize()
         await vector_store.initialize()
         await memory.initialize()
         await logging_res.initialize()
 
-        await resources.add("database", db_resource)
+        await resources.add("database", db)
         await resources.add("vector_store", vector_store)
         if llm_provider is not None:
             await resources.add("llm_provider", llm_provider)
         await resources.add("llm", llm)
-=======
->>>>>>> pr-1538
         await resources.add("memory", memory)
-        await resources.add("llm", llm)
         await resources.add("storage", storage)
         await resources.add("logging", logging_res)
 
-    asyncio.run(init())
+    asyncio.run(init_resources())
 
-    regs = SystemRegistries(
+    caps = SystemRegistries(
         resources=resources,
-        tools=ToolRegistry(),
-        plugins=PluginRegistry(),
-        validators=None,
+        tools=builder.tool_registry,
+        plugins=builder.plugin_registry,
     )
+<<<<<<< HEAD
     try:
+=======
+
+    try:  # optional default plugins
+>>>>>>> pr-1547
         from plugins.builtin.basic_error_handler import BasicErrorHandler
         from plugins.examples import InputLogger
 
@@ -161,15 +162,8 @@ def _create_default_agent() -> Agent:
 agent: Agent | None = None
 
 
-=======
-    agent._runtime = AgentRuntime(
-        SystemRegistries(resources=resources), workflow=minimal_workflow
-    )
-    return agent
-
-
->>>>>>> pr-1540
 def _ensure_agent() -> Agent:
+<<<<<<< HEAD
     global agent
     if agent is None:
         agent = _create_default_agent()
@@ -177,11 +171,34 @@ def _ensure_agent() -> Agent:
 
 
 # Expose decorator helpers bound to the default agent
+=======
+    global _default_agent
+    if _default_agent is None:
+        if os.environ.get("ENTITY_AUTO_INIT", "1") != "1":
+            raise RuntimeError(
+                "ENTITY_AUTO_INIT is disabled; call _create_default_agent() manually"
+            )
+        _default_agent = _create_default_agent()
+    return _default_agent
 
 
-def plugin(func=None, **hints):
-    ag = _ensure_agent()
-    return ag.plugin(func, **hints)
+class _LazyAgent(SimpleNamespace):
+    def __getattr__(self, item: str):  # type: ignore[override]
+        return getattr(_ensure_agent(), item)
+
+    def __repr__(self) -> str:  # pragma: no cover - convenience
+        return repr(_ensure_agent())
+
+
+agent: Agent | _LazyAgent = _LazyAgent()
+
+
+# ---------------------------------------------------------------------------
+# decorator helpers
+# ---------------------------------------------------------------------------
+>>>>>>> pr-1547
+
+plugin = agent.plugin
 
 
 def input(func=None, **hints):
@@ -203,7 +220,7 @@ def tool(func=None, **hints):
     """Register ``func`` as a tool plugin or simple tool."""
 
     def decorator(f):
-        ag = _ensure_agent()
+        ag = agent
         params = list(inspect.signature(f).parameters)
         if params and params[0] in {"ctx", "context"}:
             return ag.plugin(f, stage=PipelineStage.DO, **hints)
@@ -268,15 +285,3 @@ def __getattr__(name: str):
 
         return _AgentBuilder
     raise AttributeError(name)
-=======
-    agent._runtime = AgentRuntime(caps, workflow=minimal_workflow)
-    return agent
->>>>>>> pr-1536
-=======
-    agent._runtime = AgentRuntime(regs, workflow=minimal_workflow)
-    return agent
->>>>>>> pr-1538
-=======
-agent = _ensure_agent()
-plugin = agent.plugin
->>>>>>> pr-1540
