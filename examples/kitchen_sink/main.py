@@ -1,4 +1,10 @@
 import asyncio
+import sys
+from pathlib import Path
+
+# Ensure this example can find the entity package when run directly
+sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
+
 from entity import agent
 from entity.core.stages import PipelineStage
 from user_plugins.tools.calculator_tool import CalculatorTool
