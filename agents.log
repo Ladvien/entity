@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 AGENT NOTE - 2025-10-07: Implemented lazy agent initialization respecting ENV
 <<<<<<< HEAD
 AGENT NOTE - 2025-10-07: Cleaned conflict markers in __init__ and agents.log
@@ -20,6 +21,9 @@ AGENT NOTE - 2025-07-13: Added BasicErrorHandler plugin for error handling in ze
 AGENT NOTE - 2025-07-13: Added DefaultWorkflow and zero-config setup
 =======
 AGENT NOTE - 2025-07-14: Verified persistence functions prepend user_id for isolation
+=======
+AGENT NOTE - 2025-07-14: Verified stage context assignment and added tests for say guard
+>>>>>>> pr-1533
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-13: Removed deprecated AgentBuilder from public interface
 <<<<<<< HEAD
