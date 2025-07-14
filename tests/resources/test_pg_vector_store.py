@@ -14,6 +14,18 @@ from entity.resources.interfaces.database import DatabaseResource
 from plugins.builtin.resources.pg_vector_store import PgVectorStore
 
 
+@pytest.fixture()
+def prepared_postgres(postgresql_proc, request):
+    """Ensure the test database exists and clean it up afterwards."""
+    postgresql_proc.createdb(postgresql_proc.dbname)
+
+    def drop_db():
+        postgresql_proc.dropdb(postgresql_proc.dbname)
+
+    request.addfinalizer(drop_db)
+    return postgresql_proc
+
+
 class AsyncPGDatabase(DatabaseResource):
     def __init__(self, dsn: str) -> None:
         super().__init__({})
@@ -33,12 +45,12 @@ class AsyncPGDatabase(DatabaseResource):
 
 
 @pytest.mark.asyncio
-async def test_embedding_roundtrip(postgresql_proc) -> None:
+async def test_embedding_roundtrip(prepared_postgres) -> None:
     if shutil.which("pg_ctl") is None:
         pytest.skip("pg_ctl not installed")
     dsn = (
-        f"postgresql://{postgresql_proc.user}:{postgresql_proc.password}@"
-        f"{postgresql_proc.host}:{postgresql_proc.port}/{postgresql_proc.dbname}"
+        f"postgresql://{prepared_postgres.user}:{prepared_postgres.password}@"
+        f"{prepared_postgres.host}:{prepared_postgres.port}/{prepared_postgres.dbname}"
     )
     db = AsyncPGDatabase(dsn)
     store = PgVectorStore({"table": "embeddings"})
@@ -57,12 +69,12 @@ async def test_embedding_roundtrip(postgresql_proc) -> None:
 
 
 @pytest.mark.asyncio
-async def test_conversation_integration(postgresql_proc) -> None:
+async def test_conversation_integration(prepared_postgres) -> None:
     if shutil.which("pg_ctl") is None:
         pytest.skip("pg_ctl not installed")
     dsn = (
-        f"postgresql://{postgresql_proc.user}:{postgresql_proc.password}@"
-        f"{postgresql_proc.host}:{postgresql_proc.port}/{postgresql_proc.dbname}"
+        f"postgresql://{prepared_postgres.user}:{prepared_postgres.password}@"
+        f"{prepared_postgres.host}:{prepared_postgres.port}/{prepared_postgres.dbname}"
     )
     db = AsyncPGDatabase(dsn)
     store = PgVectorStore({"table": "embeddings"})
