@@ -28,6 +28,7 @@ class PostgresInfrastructure(InfrastructurePlugin):
     infrastructure_type = "database"
     resource_category = "database"
     stages: list = []
+    dependencies: list = []
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
