@@ -181,6 +181,10 @@ class LoggingResource(AgentResource):
         self.host_name = self.config.get("host_name", socket.gethostname())
         self.process_id = self.config.get("process_id", os.getpid())
 
+    def stream_endpoints(self) -> List[str]:
+        """Return active WebSocket URIs for log streaming."""
+        return [f"ws://{s.host}:{s.port}" for s in self._stream_outputs]
+
     @classmethod
     async def validate_config(cls, config: Dict[str, Any]) -> ValidationResult:
         try:
