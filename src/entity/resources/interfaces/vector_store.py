@@ -11,6 +11,7 @@ class VectorStoreResource(ResourcePlugin):
     """Abstract vector store interface."""
 
     infrastructure_dependencies = ["vector_store"]
+    dependencies = ["metrics_collector?"]
     resource_category = "database"
 
     def __init__(self, config: Dict | None = None) -> None:
