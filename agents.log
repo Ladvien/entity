@@ -4,6 +4,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 AGENT NOTE - 2025-10-08: _ensure_agent initializes default agent with warning when auto init disabled
 =======
 AGENT NOTE - 2025-07-14: Simplified layer validation by removing duplicate dependency check
@@ -23,6 +24,9 @@ AGENT NOTE - 2025-07-14: Added dependencies attribute to infrastructure classes
 =======
 AGENT NOTE - 2025-07-14: Disabled observability injection for ResourcePlugin subclasses to avoid unexpected dependencies
 >>>>>>> pr-1568
+=======
+AGENT NOTE - 2025-07-14: Allowed plugin canonical resources to be registered at layer 4
+>>>>>>> pr-1569
 AGENT NOTE - 2025-07-14: Documented PYTHONPATH usage for pytest in README
 AGENT NOTE - 2025-07-14: Fixed workflow fallback in _create_default_agent
 AGENT NOTE - 2025-07-14: Removed merge markers from errors.py
