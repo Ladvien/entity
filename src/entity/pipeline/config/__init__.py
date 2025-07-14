@@ -52,8 +52,6 @@ class ConfigLoader:
                 data["workflow"], path_obj.parent
             )
         validate_config(data)
-        if "workflow" in data:
-            data["workflow"] = Workflow.from_dict(data["workflow"])  # type: ignore[arg-type]
         return data
 
     @staticmethod
@@ -67,8 +65,6 @@ class ConfigLoader:
                 data["workflow"], path_obj.parent
             )
         validate_config(data)
-        if "workflow" in data:
-            data["workflow"] = Workflow.from_dict(data["workflow"])  # type: ignore[arg-type]
         return data
 
     @staticmethod
@@ -80,6 +76,4 @@ class ConfigLoader:
                 data["workflow"], Path(".")
             )
         validate_config(data)
-        if "workflow" in data:
-            data["workflow"] = Workflow.from_dict(data["workflow"])  # type: ignore[arg-type]
         return data

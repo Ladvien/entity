@@ -2,19 +2,19 @@ import yaml
 import pytest
 
 from entity.pipeline.initializer import SystemInitializer
-from entity.core.plugins import Plugin
+from entity.core.plugins import PromptPlugin
 from entity.core.resources.container import ResourceContainer
 from entity.pipeline.stages import PipelineStage
 
 
-class FirstPlugin(Plugin):
+class FirstPlugin(PromptPlugin):
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context):
         return "first"
 
 
-class SecondPlugin(Plugin):
+class SecondPlugin(PromptPlugin):
     stages = [PipelineStage.THINK]
 
     async def _execute_impl(self, context):
@@ -42,8 +42,18 @@ async def test_plugin_order_preserved(tmp_path, monkeypatch):
     monkeypatch.setattr(
         SystemInitializer, "_ensure_canonical_resources", lambda self, container: None
     )
+    monkeypatch.setattr(SystemInitializer, "_discover_plugins", lambda self: None)
+
+    async def _no_dep_validation(self, registry, dep_graph):
+        return None
+
+    monkeypatch.setattr(SystemInitializer, "_dependency_validation", _no_dep_validation)
 
     init = SystemInitializer.from_yaml(str(cfg_file))
+    init._config_model.plugins.infrastructure.clear()
+    init._config_model.plugins.resources.clear()
+    init.config["plugins"]["infrastructure"] = {}
+    init.config["plugins"]["resources"] = {}
     registry, container, tool_registry, workflow = await init.initialize()
 
     assert [p.__class__ for p in registry.list_plugins()] == [FirstPlugin, SecondPlugin]
