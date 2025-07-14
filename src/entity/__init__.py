@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from __future__ import annotations
 
 import asyncio
@@ -25,6 +26,22 @@ from .core.resources.container import ResourceContainer
 from .core.runtime import AgentRuntime
 from .infrastructure import DuckDBInfrastructure
 from .pipeline.worker import PipelineWorker
+=======
+"""Simplified package initializer for tests."""
+
+from __future__ import annotations
+
+import asyncio
+from typing import Optional
+
+from .core.agent import Agent
+from .core.plugins import PromptPlugin, ToolPlugin
+from .core.registries import SystemRegistries
+from .core.resources.container import ResourceContainer
+from .core.runtime import AgentRuntime
+from .core.stages import PipelineStage
+from .infrastructure.duckdb import DuckDBInfrastructure
+>>>>>>> pr-1540
 from .resources import LLM, Memory, Storage
 from .resources.interfaces.duckdb_resource import DuckDBResource
 from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
@@ -32,6 +49,7 @@ from .resources.logging import LoggingResource
 from .utils.setup_manager import Layer0SetupManager
 from .workflows.minimal import minimal_workflow
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 
@@ -99,6 +117,37 @@ def _create_default_agent() -> Agent:
     except Exception:  # noqa: BLE001 - optional dependency
         pass
 
+=======
+__all__ = [
+    "Agent",
+    "PromptPlugin",
+    "ToolPlugin",
+    "ResourceContainer",
+    "SystemRegistries",
+    "AgentRuntime",
+    "PipelineStage",
+    "DuckDBInfrastructure",
+    "LLM",
+    "Memory",
+    "Storage",
+    "LoggingResource",
+    "DuckDBVectorStore",
+    "Layer0SetupManager",
+    "minimal_workflow",
+    "_create_default_agent",
+    "plugin",
+]
+
+_default_agent: Optional[Agent] = None
+
+
+def _create_default_agent() -> Agent:
+    """Return a basic Agent with default resources."""
+    setup = Layer0SetupManager()
+    asyncio.run(setup.setup())
+    agent = Agent()
+    db = DuckDBInfrastructure({"path": str(setup.db_path)})
+>>>>>>> pr-1540
     llm = LLM({})
 =======
 >>>>>>> pr-1536
@@ -121,6 +170,7 @@ def _create_default_agent() -> Agent:
     llm = LLM({})
     storage = Storage({})
     logging_res = LoggingResource({})
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -134,6 +184,9 @@ def _create_default_agent() -> Agent:
     if llm_provider is not None:
         llm.provider = llm_provider
 >>>>>>> pr-1539
+=======
+    llm.provider = None
+>>>>>>> pr-1540
     memory.database = db
     memory.vector_store = vector_store
     vector_store.database = db
@@ -141,7 +194,14 @@ def _create_default_agent() -> Agent:
 =======
 >>>>>>> pr-1538
     resources = ResourceContainer()
+    asyncio.run(resources.add("database", db))
+    asyncio.run(resources.add("vector_store", vector_store))
+    asyncio.run(resources.add("llm", llm))
+    asyncio.run(resources.add("memory", memory))
+    asyncio.run(resources.add("storage", storage))
+    asyncio.run(resources.add("logging", logging_res))
 
+<<<<<<< HEAD
     async def init() -> None:
         await db_backend.initialize()
         await vector_store.initialize()
@@ -211,6 +271,14 @@ def _create_default_agent() -> Agent:
 _default_agent: Agent | None = None
 
 
+=======
+    agent._runtime = AgentRuntime(
+        SystemRegistries(resources=resources), workflow=minimal_workflow
+    )
+    return agent
+
+
+>>>>>>> pr-1540
 def _ensure_agent() -> Agent:
     """Return the default agent, creating it if needed."""
 
@@ -224,6 +292,7 @@ def _ensure_agent() -> Agent:
     return _default_agent
 
 
+<<<<<<< HEAD
 class _LazyAgent(SimpleNamespace):
     def __getattr__(self, item):  # type: ignore[override]
         return getattr(_ensure_agent(), item)
@@ -329,3 +398,7 @@ def __getattr__(name: str):  # pragma: no cover - lazily loaded modules
     agent._runtime = AgentRuntime(regs, workflow=minimal_workflow)
     return agent
 >>>>>>> pr-1538
+=======
+agent = _ensure_agent()
+plugin = agent.plugin
+>>>>>>> pr-1540

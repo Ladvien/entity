@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any
 
 from entity.core.state import FailureInfo
+from entity.core.plugins import ToolExecutionError
 from .stages import PipelineStage
 
 
@@ -41,6 +42,7 @@ class ResourceError(PipelineError):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pr-1538
 =======
@@ -49,6 +51,8 @@ class ResourceError(PipelineError):
 
 =======
 >>>>>>> pr-1536
+=======
+>>>>>>> pr-1540
 
 class InitializationError(PipelineError):
     """Raised when a plugin or resource fails to initialize."""
