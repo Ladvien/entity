@@ -5,7 +5,6 @@ from datetime import datetime
 from typing import Any
 
 from entity.core.state import FailureInfo
-from entity.core.plugins import ToolExecutionError
 from .stages import PipelineStage
 
 
@@ -18,7 +17,7 @@ class PluginContextError(PipelineError):
 
     def __init__(
         self,
-        stage: PipelineStage,
+        stage: "PipelineStage",
         plugin_name: str,
         message: str,
         context: dict[str, Any] | None = None,
@@ -39,6 +38,11 @@ class PluginExecutionError(PipelineError):
 class ResourceError(PipelineError):
     """Base class for resource errors."""
 
+<<<<<<< HEAD
+=======
+    pass
+
+>>>>>>> pr-1553
 
 class InitializationError(PipelineError):
     """Raised when a plugin or resource fails to initialize."""
@@ -61,17 +65,22 @@ class ResourceInitializationError(ResourceError, InitializationError):
         super().__init__(name, "initialization", remediation, kind="Resource")
 
 
+class ToolExecutionError(PipelineError):
+    pass
+
+
 class StageExecutionError(PipelineError):
+    """Raised when an error occurs while executing a pipeline stage."""
+
     def __init__(
-        self, stage: PipelineStage, message: str, context: dict[str, Any] | None = None
+        self,
+        stage: "PipelineStage",
+        message: str,
+        context: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(message)
         self.stage = stage
         self.context = context or {}
-
-
-class ToolExecutionError(PipelineError):
-    pass
 
 
 @dataclass
