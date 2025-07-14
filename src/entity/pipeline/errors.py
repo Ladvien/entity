@@ -40,8 +40,11 @@ class ResourceError(PipelineError):
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pr-1538
+=======
+>>>>>>> pr-1539
     pass
 
 =======

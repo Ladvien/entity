@@ -10,12 +10,17 @@ from types import SimpleNamespace
 >>>>>>> pr-1536
 
 from .core.agent import Agent
+<<<<<<< HEAD
 from .core.registries import SystemRegistries
 =======
 
 from .core.agent import Agent
 from .core.registries import PluginRegistry, SystemRegistries, ToolRegistry
 >>>>>>> pr-1538
+=======
+from .core.plugins import PromptPlugin, ToolPlugin
+from .core.registries import SystemRegistries
+>>>>>>> pr-1539
 from .core.resources.container import ResourceContainer
 from .core.runtime import AgentRuntime
 from .infrastructure import DuckDBInfrastructure
@@ -33,6 +38,7 @@ from .workflows.minimal import minimal_workflow
 # ---------------------------------------------------------------------------
 # default agent creation
 # ---------------------------------------------------------------------------
+<<<<<<< HEAD
 =======
 __all__ = [
     "Agent",
@@ -51,6 +57,8 @@ __all__ = [
     "_create_default_agent",
 ]
 >>>>>>> pr-1536
+=======
+>>>>>>> pr-1539
 
 
 def _create_default_agent() -> Agent:
@@ -78,6 +86,9 @@ def _create_default_agent() -> Agent:
 <<<<<<< HEAD
     db = DuckDBInfrastructure({"path": str(setup.db_path)})
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pr-1539
     llm_provider = None
     try:
         from plugins.builtin.resources.ollama_llm import OllamaLLMResource
@@ -113,11 +124,16 @@ def _create_default_agent() -> Agent:
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     if llm_provider is not None:
         llm.provider = llm_provider
 =======
     llm.provider = None
 >>>>>>> pr-1536
+=======
+    if llm_provider is not None:
+        llm.provider = llm_provider
+>>>>>>> pr-1539
     memory.database = db
     memory.vector_store = vector_store
     vector_store.database = db
@@ -136,10 +152,15 @@ def _create_default_agent() -> Agent:
         await resources.add("vector_store", vector_store)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         if llm_provider is not None:
             await resources.add("llm_provider", llm_provider)
 =======
 >>>>>>> pr-1536
+=======
+        if llm_provider is not None:
+            await resources.add("llm_provider", llm_provider)
+>>>>>>> pr-1539
         await resources.add("llm", llm)
 =======
 >>>>>>> pr-1538
@@ -158,6 +179,9 @@ def _create_default_agent() -> Agent:
     )
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pr-1539
 
     try:  # optional default plugins
         from plugins.builtin.basic_error_handler import BasicErrorHandler
