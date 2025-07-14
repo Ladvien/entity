@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-14: Switched tests to core plugin imports
 <<<<<<< HEAD
 AGENT NOTE - 2025-10-07: Implemented lazy agent initialization respecting ENV
@@ -25,6 +26,9 @@ AGENT NOTE - 2025-07-14: Verified persistence functions prepend user_id for isol
 =======
 AGENT NOTE - 2025-07-14: Verified stage context assignment and added tests for say guard
 >>>>>>> pr-1533
+=======
+AGENT NOTE - 2025-07-14: Updated plugin dependency handling
+>>>>>>> pr-1537
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-13: Removed deprecated AgentBuilder from public interface
 <<<<<<< HEAD
