@@ -193,3 +193,4 @@ talking.log
 audio_output/*
 .claude/*
 *.duckdb
+poetry.lock
