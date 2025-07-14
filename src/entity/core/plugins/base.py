@@ -18,7 +18,8 @@ from ..stages import PipelineStage
 
 
 def _ensure_metrics_dependency(cls: type) -> None:
-    if cls.__name__ == "MetricsCollectorResource":
+    excluded = {"MetricsCollectorResource", "LoggingResource"}
+    if cls.__name__ in excluded:
         return
     deps = list(getattr(cls, "dependencies", []))
     if "metrics_collector" not in deps:
@@ -27,7 +28,8 @@ def _ensure_metrics_dependency(cls: type) -> None:
 
 
 def _ensure_logging_dependency(cls: type) -> None:
-    if cls.__name__ == "LoggingResource":
+    excluded = {"LoggingResource", "MetricsCollectorResource"}
+    if cls.__name__ in excluded:
         return
     deps = list(getattr(cls, "dependencies", []))
     if "logging" not in deps:
