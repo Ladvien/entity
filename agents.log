@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-14: Removed merge conflict markers from agents.log
 AGENT NOTE - 2025-07-14: Cleaned merge markers in source and updated lazy init helpers
 AGENT NOTE - 2025-10-07: Resolved multi_user test conflicts and preserved all test cases
 AGENT NOTE - 2025-07-14: Refactored AgentServer to accept capability container
@@ -87,7 +88,6 @@ AGENT NOTE - 2025-07-13: Updated tests for Memory initialization
 AGENT NOTE - 2025-07-13: Verified memory vector search and analytics
 AGENT NOTE - 2025-07-13: Verified merge conflict cleanup and preserved all notes
 AGENT NOTE - 2025-07-13: pytest now works with the unified entity.cli.plugin_tool structure
-AGENT NOTE - 2025-07-14: Unified builder and runtime inside Agent
 AGENT NOTE - 2025-07-16: Revised built-in resource config validation and tests
 AGENT NOTE - 2025-07-18: Added integration pipeline tests covering workflows, multi-user isolation, error handling, and metrics
 AGENT NOTE - 2025-07-20: Updated load_env precedence and tests
@@ -121,5 +121,3 @@ AGENT NOTE - 2025-08-10: Moved plugin_tool under entity.cli and updated imports
 AGENT NOTE - 2025-08-10: Stage results persist across runs and temporary thoughts moved to PipelineState
 AGENT NOTE - 2025-08-21: Added user_id propagation in pipeline and multi-user tests
 AGENT NOTE - 2025-10-05: Added default dependency injection and tests
-AGENT NOTE - 2025-10-06: Clear stage results and temporary thoughts after each pipeline run
-AGENT NOTE - 2025-10-06: Removed merge markers from agents.log
