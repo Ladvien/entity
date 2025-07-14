@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
+from contextlib import asynccontextmanager
+import time
 
 from entity.core.stages import PipelineStage
 
@@ -131,6 +133,64 @@ class MetricsCollectorResource(AgentResource):
                 pipeline_id=pipeline_id,
                 metric_name=f"counter:{counter_name}",
                 value=self.counters[key],
+                metadata=metadata,
+            )
+
+    # ------------------------------------------------------------------
+    # Context managers
+    # ------------------------------------------------------------------
+    @asynccontextmanager
+    async def track_plugin_execution(
+        self,
+        *,
+        pipeline_id: str,
+        stage: PipelineStage | None,
+        plugin_name: str,
+    ) -> Any:
+        start = time.perf_counter()
+        success = True
+        error_type: str | None = None
+        try:
+            yield
+        except Exception as exc:
+            success = False
+            error_type = exc.__class__.__name__
+            raise
+        finally:
+            duration = (time.perf_counter() - start) * 1000
+            await self.record_plugin_execution(
+                pipeline_id=pipeline_id,
+                stage=stage,
+                plugin_name=plugin_name,
+                duration_ms=duration,
+                success=success,
+                error_type=error_type,
+            )
+
+    @asynccontextmanager
+    async def track_resource_operation(
+        self,
+        *,
+        pipeline_id: str,
+        resource_name: str,
+        operation: str,
+        metadata: Dict[str, Any] | None = None,
+    ) -> Any:
+        start = time.perf_counter()
+        success = True
+        try:
+            yield
+        except Exception:
+            success = False
+            raise
+        finally:
+            duration = (time.perf_counter() - start) * 1000
+            await self.record_resource_operation(
+                pipeline_id=pipeline_id,
+                resource_name=resource_name,
+                operation=operation,
+                duration_ms=duration,
+                success=success,
                 metadata=metadata,
             )
 
