@@ -40,7 +40,7 @@ async def test_one_layer_step_rule(monkeypatch):
     container.register("infra", Infra, {}, layer=1)
     container.register("higher", Higher, {}, layer=3)
     container.register("iface", Interface, {}, layer=2)
-    with pytest.raises(InitializationError, match="not registered"):
+    with pytest.raises(InitializationError, match="one-layer step"):
         container._validate_layers()
 
 
@@ -53,6 +53,8 @@ async def test_cycle_detection_error(monkeypatch):
     container = ResourceContainer()
     container.register("cycle_a", CycleA, {}, layer=4)
     container.register("cycle_b", CycleB, {}, layer=4)
-    with pytest.raises(InitializationError, match="Circular dependency") as exc:
+    with pytest.raises(
+        InitializationError, match="Circular dependency detected"
+    ) as exc:
         container._validate_layers()
     assert "cycle_a -> cycle_b -> cycle_a" in str(exc.value)
