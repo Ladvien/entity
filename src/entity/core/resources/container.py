@@ -551,13 +551,16 @@ class ResourceContainer:
                 )
             )
 
-            allowed_layers = {expected}
-            if (
-                expected == 4
-                and not issubclass(cls, CanonicalResource)
-                and not self._deps.get(name)
-            ):
-                allowed_layers.add(3)
+            if is_plugin_canonical:
+                allowed_layers = {3, 4}
+            else:
+                allowed_layers = {expected}
+                if (
+                    expected == 4
+                    and not issubclass(cls, CanonicalResource)
+                    and not self._deps.get(name)
+                ):
+                    allowed_layers.add(3)
 
             if layer == 1:
                 if self._deps.get(name):
