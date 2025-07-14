@@ -13,7 +13,7 @@ class InputCapture(Plugin):
     stages = [PipelineStage.INPUT]
 
     async def _execute_impl(self, context):
-        context.think("input", context.conversation()[-1].content)
+        await context.think("input", context.conversation()[-1].content)
 
 
 class ParseLower(Plugin):
@@ -21,7 +21,7 @@ class ParseLower(Plugin):
 
     async def _execute_impl(self, context):
         raw = await context.reflect("input")
-        context.think("parsed", raw.lower())
+        await context.think("parsed", raw.lower())
 
 
 class ReverseThink(Plugin):
@@ -29,14 +29,14 @@ class ReverseThink(Plugin):
 
     async def _execute_impl(self, context):
         parsed = await context.reflect("parsed")
-        context.think("thought", parsed[::-1])
+        await context.think("thought", parsed[::-1])
 
 
 class ReviewPass(Plugin):
     stages = [PipelineStage.REVIEW]
 
     async def _execute_impl(self, context):
-        context.think("reviewed", await context.reflect("thought"))
+        await context.think("reviewed", await context.reflect("thought"))
 
 
 class OutputFinal(Plugin):
