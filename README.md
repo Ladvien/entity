@@ -67,6 +67,12 @@ With dependencies installed you can run the included poe tasks:
 poe test
 ```
 
+For more detailed output use the verbose task:
+
+```bash
+poe test-verbose
+```
+
 ## Multi-User Support
 
 Pass a unique `user_id` when calling `agent.chat()` or `agent.handle()` to keep
