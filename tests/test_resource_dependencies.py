@@ -30,5 +30,5 @@ def test_dependency_on_higher_layer_raises(monkeypatch) -> None:
     container.register("higher", HigherResource, {}, layer=3)
     container.register("lower", LowerInterface, {}, layer=2)
 
-    with pytest.raises(InitializationError, match="layer rules"):
+    with pytest.raises(InitializationError, match="not registered"):
         asyncio.run(container.build_all())

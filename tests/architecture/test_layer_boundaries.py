@@ -59,5 +59,5 @@ async def test_layer_three_dependency_on_same_layer() -> None:
     container.register("canon_a", CanonA, {}, layer=3)
     container.register("canon_b", CanonB, {}, layer=3)
 
-    with pytest.raises(InitializationError, match="layer rules"):
+    with pytest.raises(InitializationError, match="not registered"):
         await container.build_all()

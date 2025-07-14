@@ -28,5 +28,5 @@ async def test_layer_jump_violation() -> None:
     container.register("db", DBInfra, {}, layer=1)
     container.register("jump", JumpResource, {}, layer=4)
 
-    with pytest.raises(InitializationError, match="layer rules"):
+    with pytest.raises(InitializationError, match="Provided layer"):
         await container.build_all()
