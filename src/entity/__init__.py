@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import asyncio
+<<<<<<< HEAD
 import inspect
 import os
 from types import SimpleNamespace
+=======
+>>>>>>> pr-1536
 
 from .core.agent import Agent
-from .core.plugins import PromptPlugin, ToolPlugin
-from .core.resources.container import ResourceContainer
 from .core.registries import SystemRegistries
+from .core.resources.container import ResourceContainer
 from .core.runtime import AgentRuntime
 from .core.stages import PipelineStage
 from .infrastructure import DuckDBInfrastructure
@@ -18,27 +20,47 @@ from .resources import LLM, Memory, Storage
 from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
 from .resources.logging import LoggingResource
 from .utils.setup_manager import Layer0SetupManager
-from entity.workflows.minimal import minimal_workflow
+from .workflows.minimal import minimal_workflow
 
+<<<<<<< HEAD
 
 # ---------------------------------------------------------------------------
 # default agent creation
 # ---------------------------------------------------------------------------
+=======
+__all__ = [
+    "Agent",
+    "PipelineStage",
+    "SystemRegistries",
+    "AgentRuntime",
+    "ResourceContainer",
+    "DuckDBInfrastructure",
+    "LLM",
+    "Memory",
+    "Storage",
+    "DuckDBVectorStore",
+    "LoggingResource",
+    "Layer0SetupManager",
+    "minimal_workflow",
+    "_create_default_agent",
+]
+>>>>>>> pr-1536
 
 
 def _create_default_agent() -> Agent:
-    """Return a fully configured default :class:`Agent`."""
+    """Return a minimally configured default agent."""
 
     setup = Layer0SetupManager()
-    try:  # best effort environment preparation
+    try:
         asyncio.run(setup.setup())
-    except Exception:  # noqa: BLE001
+    except Exception:
         pass
 
     agent = Agent()
     builder = agent.builder
 
     db = DuckDBInfrastructure({"path": str(setup.db_path)})
+<<<<<<< HEAD
     llm_provider = None
     try:
         from plugins.builtin.resources.ollama_llm import OllamaLLMResource
@@ -50,16 +72,23 @@ def _create_default_agent() -> Agent:
         pass
 
     llm = LLM({})
+=======
+>>>>>>> pr-1536
     vector_store = DuckDBVectorStore({})
     memory = Memory({})
+    llm = LLM({})
     storage = Storage({})
     logging_res = LoggingResource({})
 
+<<<<<<< HEAD
     if llm_provider is not None:
         llm.provider = llm_provider
+=======
+    llm.provider = None
+>>>>>>> pr-1536
     memory.database = db
-    vector_store.database = db
     memory.vector_store = vector_store
+    vector_store.database = db
 
     resources = ResourceContainer()
 
@@ -71,8 +100,11 @@ def _create_default_agent() -> Agent:
 
         await resources.add("database", db)
         await resources.add("vector_store", vector_store)
+<<<<<<< HEAD
         if llm_provider is not None:
             await resources.add("llm_provider", llm_provider)
+=======
+>>>>>>> pr-1536
         await resources.add("llm", llm)
         await resources.add("memory", memory)
         await resources.add("storage", storage)
@@ -85,6 +117,7 @@ def _create_default_agent() -> Agent:
         tools=builder.tool_registry,
         plugins=builder.plugin_registry,
     )
+<<<<<<< HEAD
 
     try:  # optional default plugins
         from plugins.builtin.basic_error_handler import BasicErrorHandler
@@ -224,3 +257,7 @@ def __getattr__(name: str):  # pragma: no cover - lazily loaded modules
 
         return _AgentBuilder
     raise AttributeError(name)
+=======
+    agent._runtime = AgentRuntime(caps, workflow=minimal_workflow)
+    return agent
+>>>>>>> pr-1536

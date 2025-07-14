@@ -623,6 +623,31 @@ class ResourceContainer:
                     kind="Resource",
                 )
 
+            for dep in self._deps.get(name, []):
+                optional = dep.endswith("?")
+                dep_name = dep[:-1] if optional else dep
+                if dep_name not in self._layers:
+                    if optional:
+                        continue
+                    raise InitializationError(
+                        f"{name}, {dep_name}",
+                        "layer validation",
+                        f"Resource depends on '{dep_name}' but it is not registered.",
+                        kind="Resource",
+                    )
+                dep_layer = self._layers[dep_name]
+                if layer - dep_layer != 1:
+                    raise InitializationError(
+                        f"{name}, {dep_name}",
+                        "layer validation",
+                        (
+                            f"Resource '{name}' (layer {layer}) depends on "
+                            f"'{dep_name}' (layer {dep_layer}) and violates layer rules "
+                            "(one-layer step)."
+                        ),
+                        kind="Resource",
+                    )
+
         visited: set[str] = set()
         stack: list[str] = []
 
