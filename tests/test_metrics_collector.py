@@ -17,7 +17,7 @@ class DummyPlugin(Plugin):
 
 @pytest.mark.asyncio
 async def test_plugin_dependencies_include_metrics():
-    assert "metrics_collector" in DummyPlugin.dependencies
+    assert "metrics_collector?" in DummyPlugin.dependencies
 
 
 @pytest.mark.asyncio
