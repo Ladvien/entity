@@ -61,7 +61,11 @@ async def test_missing_dependency_name(monkeypatch):
         SystemInitializer, "_ensure_canonical_resources", lambda self, container: None
     )
     init = SystemInitializer(cfg)
+<<<<<<< HEAD
     with pytest.raises(InitializationError, match="Missing"):
+=======
+    with pytest.raises(InitializationError, match="Missing dependency"):
+>>>>>>> pr-1597
         await init.initialize()
 
 
