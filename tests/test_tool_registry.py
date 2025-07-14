@@ -37,15 +37,20 @@ async def test_discover_tools_by_intent() -> None:
     await registry.add("multi", MultiTool())
 
     found = registry.discover(intent="calc")
-    assert len(found) == 1
-    assert found[0][0] == "alpha"
+    assert [name for name, _ in found] == ["alpha"]
     assert isinstance(found[0][1], AlphaTool)
 
     found_ci = registry.discover(intent="CALC")
-    assert len(found_ci) == 1
-    assert found_ci[0][0] == "alpha"
+    assert [name for name, _ in found_ci] == ["alpha"]
 
     found_text = registry.discover(intent="text")
-    assert len(found_text) == 2
-    names = {name for name, _ in found_text}
-    assert names == {"beta", "multi"}
+    assert {name for name, _ in found_text} == {"beta", "multi"}
+
+
+@pytest.mark.asyncio
+async def test_discover_when_only_multi_intent_tool_registered() -> None:
+    registry = ToolRegistry()
+    await registry.add("multi", MultiTool())
+
+    found = registry.discover(intent="calc")
+    assert [name for name, _ in found] == ["multi"]
