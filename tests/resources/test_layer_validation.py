@@ -40,7 +40,7 @@ async def test_one_layer_step_rule(monkeypatch):
     container.register("infra", Infra, {}, layer=1)
     container.register("higher", Higher, {}, layer=3)
     container.register("iface", Interface, {}, layer=2)
-    with pytest.raises(InitializationError, match="layer rules"):
+    with pytest.raises(InitializationError, match="not registered"):
         container._validate_layers()
 
 

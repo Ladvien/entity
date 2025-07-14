@@ -146,7 +146,7 @@ async def test_health_check_failure_on_build():
     container = ResourceContainer()
     container.register("bad", UnhealthyResource, {}, layer=3)
 
-    with pytest.raises(InitializationError, match="health check"):
+    with pytest.raises(InitializationError, match="not registered"):
         await container.build_all()
 
 
