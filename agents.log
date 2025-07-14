@@ -24,7 +24,11 @@ AGENT NOTE - 2025-10-09: Added DuckDB infrastructure fixture for resource-only t
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pr-1590
+=======
+AGENT NOTE - 2025-10-09: Corrected default LLM provider layer
+>>>>>>> pr-1593
 AGENT NOTE - 2025-10-08: _ensure_agent initializes default agent with warning when auto init disabled
 AGENT NOTE - 2025-07-14: Simplified layer validation by removing duplicate dependency check
 AGENT NOTE - 2025-07-14: Updated load_conversation ID logic and added tests

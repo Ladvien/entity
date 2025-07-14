@@ -327,7 +327,9 @@ class _AgentBuilder:
         if not container.has_plugin("llm_provider"):
             from plugins.builtin.resources.echo_llm import EchoLLMResource
 
-            container.register("llm_provider", EchoLLMResource, {}, layer=4)
+            # Echo LLM acts as the default interface resource.
+            # Register at layer 2 so canonical LLM can depend on it.
+            container.register("llm_provider", EchoLLMResource, {}, layer=2)
 
         if not container.has_plugin("llm"):
             from entity.resources.llm import LLM
