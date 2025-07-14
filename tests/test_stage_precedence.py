@@ -1,18 +1,10 @@
 import logging
-<<<<<<< HEAD
-
-from entity.pipeline.utils import StageResolver
-from entity.core.stages import PipelineStage
-from entity.core.plugins import Plugin, PromptPlugin
-
-=======
 from entity.pipeline import utils as pipeline_utils
 from entity.core.stages import PipelineStage
 from entity.core.plugins import Plugin, PromptPlugin
 
 StageResolver = pipeline_utils.StageResolver
 
->>>>>>> pr-1582
 
 class AttrPrompt(Plugin):
     stages = [PipelineStage.DO]

@@ -1,11 +1,7 @@
 from contextlib import asynccontextmanager
 import pytest
 from entity.infrastructure import DuckDBInfrastructure, PostgresInfrastructure
-<<<<<<< HEAD
-from entity.core.circuit_breaker import CircuitBreaker  # Fixed import
-=======
 from entity.core.circuit_breaker import CircuitBreaker
->>>>>>> pr-1582
 
 
 @pytest.mark.asyncio
