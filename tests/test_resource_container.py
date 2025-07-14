@@ -99,7 +99,7 @@ def test_layer_violation():
     container = ResourceContainer()
     container.register("database_backend", DuckDBInfrastructure, {}, layer=1)
     container.register("infra", InfraPlugin, {}, layer=1)
-    container.register("bad", BadResource, {}, layer=3)
+    container.register("bad", BadResource, {}, layer=4)
 
     with pytest.raises(InitializationError, match="one-layer step"):
         asyncio.run(container.build_all())
