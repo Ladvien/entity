@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 AGENT NOTE - 2025-10-06: Updated layer validation to allow MetricsCollectorResource at layer 4
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -14,6 +15,9 @@ AGENT NOTE - 2025-07-14: Updated memory-postgres registry validator test
 =======
 AGENT NOTE - 2025-07-14: Added stage overrides for hot reload plugins
 >>>>>>> pr-1608
+=======
+AGENT NOTE - 2025-07-14: ConfigLoader now leaves workflow mappings as plain dicts
+>>>>>>> pr-1612
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
