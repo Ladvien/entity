@@ -5,6 +5,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+AGENT NOTE - 2025-10-09: Corrected default LLM provider layer
 AGENT NOTE - 2025-10-08: _ensure_agent initializes default agent with warning when auto init disabled
 =======
 AGENT NOTE - 2025-07-14: Simplified layer validation by removing duplicate dependency check
