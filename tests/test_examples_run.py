@@ -1,5 +1,9 @@
 from importlib import import_module
 from pathlib import Path
+import sys
+
+# Add src path so example modules can import entity when run in isolation
+sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
 
 import pytest
 

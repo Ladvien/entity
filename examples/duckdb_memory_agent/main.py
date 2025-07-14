@@ -3,7 +3,14 @@ import json
 from datetime import datetime
 from typing import Any, List
 
+import sys
+from pathlib import Path
+
 import duckdb
+
+# Ensure this example can find the entity package when run directly
+sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
+
 from entity import agent
 from entity.core.plugins import PromptPlugin, ResourcePlugin
 from entity.core.context import PluginContext
