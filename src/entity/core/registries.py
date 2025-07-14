@@ -128,21 +128,43 @@ class ToolRegistry:
     def discover(
         self, *, name: str | None = None, intent: str | None = None
     ) -> list[tuple[str, Any]]:
-        """Return tools filtered by ``name`` or ``intent``."""
+        """Return tools filtered by ``name`` or ``intent``.
+
+        When multiple tools share an intent and at least one lists that intent as
+        its only capability, tools that also list it first but not exclusively
+        are dropped. Tools where the intent appears later are always kept.
+        """
+
         items = list(self._tools.items())
         if name is not None:
             n = name.lower()
             items = [(k, v) for k, v in items if n in k.lower()]
-        if intent is not None:
-            i = intent.lower()
 
-            def _match(tool: Any) -> bool:
+        if intent is not None:
+            normalized = intent.lower()
+            enriched: list[tuple[str, Any, list[str]]] = []
+            for key, tool in items:
                 declared = getattr(
                     tool, "intents", getattr(tool.__class__, "intents", [])
                 )
-                return any(i == str(t).lower() for t in declared)
+                intents = [str(t).lower() for t in declared]
+                if normalized in intents:
+                    enriched.append((key, tool, intents))
 
-            items = [(k, v) for k, v in items if _match(v)]
+            has_primary = any(
+                intents and len(intents) == 1 and intents[0] == normalized
+                for _, _, intents in enriched
+            )
+
+            if has_primary:
+                enriched = [
+                    (k, v, ints)
+                    for k, v, ints in enriched
+                    if not (ints and ints[0] == normalized and len(ints) > 1)
+                ]
+
+            items = [(k, v) for k, v, _ in enriched]
+
         return items
 
 
