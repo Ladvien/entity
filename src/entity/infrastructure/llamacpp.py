@@ -15,6 +15,7 @@ class LlamaCppInfrastructure(InfrastructurePlugin):
     infrastructure_type = "llm_provider"
     resource_category = "infrastructure"
     stages: list = []
+    dependencies: list = []
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})

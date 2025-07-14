@@ -12,6 +12,7 @@ class OpenTofuInfrastructure(InfrastructurePlugin):
     infrastructure_type = "cloud"
     resource_category = "infrastructure"
     stages: list = []
+    dependencies: list = []
 
     def __init__(
         self,
