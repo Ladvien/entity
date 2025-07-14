@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-08-12: Fixed default workflow fallback and decorator plugin initialization
 AGENT NOTE - 2025-07-14: Removed merge markers from errors.py
 AGENT NOTE - 2025-07-14: Cleaned merge markers in source and updated lazy init helpers
 AGENT NOTE - 2025-10-07: Resolved multi_user test conflicts and preserved all test cases

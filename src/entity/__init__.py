@@ -118,7 +118,7 @@ def _create_default_agent() -> Agent:
     except Exception:  # noqa: BLE001
         pass
 
-    workflow = getattr(setup, "workflow", minimal_workflow)
+    workflow = getattr(setup, "workflow", None) or minimal_workflow
     agent._runtime = AgentRuntime(caps, workflow=workflow)
     return agent
 
