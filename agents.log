@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-14: Fixed __init__ merge conflicts and ensured lazy initialization
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-14: Refactored AgentServer to accept capability container
 <<<<<<< HEAD
