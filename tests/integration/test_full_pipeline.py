@@ -109,8 +109,12 @@ async def test_multi_user_isolation(registries: SystemRegistries) -> None:
         worker.execute_pipeline("pipe", "one", user_id="u1"),
         worker.execute_pipeline("pipe", "two", user_id="u2"),
     )
-    hist1 = await registries.resources.get("memory").load_conversation("u1_pipe")
-    hist2 = await registries.resources.get("memory").load_conversation("u2_pipe")
+    hist1 = await registries.resources.get("memory").load_conversation(
+        "pipe", user_id="u1"
+    )
+    hist2 = await registries.resources.get("memory").load_conversation(
+        "pipe", user_id="u2"
+    )
     assert [e.content for e in hist1 if e.role == "user"] == ["one"]
     assert [e.content for e in hist2 if e.role == "user"] == ["two"]
 
