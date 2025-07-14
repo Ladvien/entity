@@ -32,11 +32,11 @@ class OtherThinkPlugin(Plugin):
 async def test_stage_order_from_yaml(tmp_path, monkeypatch):
     cfg = {
         "plugins": {
-            "prompts": [
-                {"type": f"{__name__}:ParsePlugin"},
-                {"type": f"{__name__}:ThinkPlugin"},
-                {"type": f"{__name__}:OtherThinkPlugin"},
-            ]
+            "prompts": {
+                "parse": {"type": f"{__name__}:ParsePlugin"},
+                "think": {"type": f"{__name__}:ThinkPlugin"},
+                "other": {"type": f"{__name__}:OtherThinkPlugin"},
+            }
         },
         "workflow": {},
     }
