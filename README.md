@@ -67,6 +67,12 @@ With dependencies installed you can run the included poe tasks:
 poe test
 ```
 
+For detailed output, use the verbose task:
+
+```bash
+poe test-verbose
+```
+
 If you prefer calling `pytest` directly, prepend `PYTHONPATH=src` so Python can
 locate the editable package:
 
