@@ -7,9 +7,7 @@ license = "MIT"
 readme = "README.md"
 package-mode = true
 
-packages = [
-    { include = "entity", from = "src" },
-]
+packages = [{ include = "entity", from = "src" }]
 
 [tool.poetry.scripts]
 entity-cli = "entity.cli.__main__:main"
@@ -23,6 +21,7 @@ documentation = "https://entity.readthedocs.io/en/latest/"
 [tool.poetry.dependencies]
 python = "^3.11"
 pyyaml = "^6.0.2"
+pydantic = "^2.0.0"
 fastapi = "^0.110.0"
 uvicorn = { extras = ["standard"], version = "^0.30.0" }
 asyncpg = "^0.30.0"
@@ -75,27 +74,32 @@ pytest-postgresql = "^7.0.2"
 sphinxcontrib-mermaid = "^1.0.0"
 vulture = "^2.14"
 
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.poe.env]
-PYTHONPATH = "src"
+[tool.poe]
+envfile = ".env"
 
+# Remove the envfile line and use explicit env vars on each task
 [tool.poe.tasks]
 docs = { cmd = "sphinx-build -c docs/source docs/source docs/build/html" }
 docs_view = { cmd = "sphinx-autobuild -c docs/source docs/source docs/build/html" }
 patch = { cmd = "poetry version patch" }
 _publish = { cmd = "poetry publish --build" }
 release = ["docs", "patch", "_publish"]
-test = { cmd = "pytest" }
-test-verbose = { cmd = "pytest -v" }
-test-coverage = { cmd = "pytest --cov=src --cov-report=html --cov-report=term-missing" }
-test-architecture = { cmd = "pytest tests/test_architecture/ -v" }
-test-plugins = { cmd = "pytest tests/test_plugins/ -v" }
-test-resources = { cmd = "pytest tests/test_resources/ -v" }
+
+# ALL test tasks need the env variable
+test = { cmd = "pytest", env = { PYTHONPATH = "src" } }
+test-verbose = { cmd = "pytest -v", env = { PYTHONPATH = "src" } }
+test-coverage = { cmd = "pytest --cov=src --cov-report=html --cov-report=term-missing", env = { PYTHONPATH = "src" } }
+test-architecture = { cmd = "pytest tests/test_architecture/ -v", env = { PYTHONPATH = "src" } }
+test-plugins = { cmd = "pytest tests/test_plugins/ -v", env = { PYTHONPATH = "src" } }
+test-resources = { cmd = "pytest tests/test_resources/ -v", env = { PYTHONPATH = "src" } }
+test-decorators = { cmd = "pytest tests/test_decorators.py -v", env = { PYTHONPATH = "src" } }
+
 setup-dev = { cmd = "poetry install --with dev" }
+
 [tool.poe.tasks.lint]
 sequence = [
     { cmd = "poetry run black src tests" },
@@ -108,6 +112,8 @@ sequence = [
     { cmd = "poetry run entity-cli --config config/prod.yaml verify" },
     { cmd = "python -m src.entity.core.registry_validator" },
 ]
+
+
 [tool.poe.tasks.check]
 sequence = [
     { ref = "lint" },
@@ -123,7 +129,10 @@ testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+
+# Make sure src is in the Python path for pytest
 pythonpath = ["src"]
+
 addopts = [
     "-v",
     "--tb=short",
@@ -133,6 +142,8 @@ addopts = [
     "--durations=10",
 ]
 asyncio_mode = "auto"
+
+# Rest of your existing pytest config...
 markers = [
     "unit: Unit tests (fast, isolated)",
     "integration: Integration tests (slower, use real components)",
@@ -154,6 +165,7 @@ log_cli = true
 log_cli_level = "DEBUG"
 log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
 log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+
 
 # Coverage configuration
 [tool.coverage.run]

@@ -1,9 +1,7 @@
 from contextlib import asynccontextmanager
 import pytest
-
-
 from entity.infrastructure import DuckDBInfrastructure, PostgresInfrastructure
-from entity.pipeline.reliability import CircuitBreaker
+from entity.core.circuit_breaker import CircuitBreaker  # Fixed import
 
 
 @pytest.mark.asyncio
@@ -42,7 +40,7 @@ async def test_postgres_runtime_breaker_opens(monkeypatch):
     breaker = CircuitBreaker(failure_threshold=2)
 
     class BadConn:
-        async def execute(self, *_args, **_kwargs):
+        async def execute(self, *args, **kwargs):
             raise RuntimeError("bad")
 
     async def acquire():
