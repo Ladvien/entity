@@ -546,8 +546,8 @@ class ResourceContainer:
                 if is_infra
                 else (
                     3
-                    if is_builtin_canonical or is_plugin_canonical
-                    else 2 if is_interface else 4
+                    if is_builtin_canonical
+                    else 4 if is_plugin_canonical else 2 if is_interface else 4
                 )
             )
 
@@ -561,6 +561,14 @@ class ResourceContainer:
                     and not self._deps.get(name)
                 ):
                     allowed_layers.add(3)
+
+            if layer not in allowed_layers:
+                raise InitializationError(
+                    name,
+                    "layer validation",
+                    f"Incorrect layer {layer} for {cls.__name__}. Expected {expected}.",
+                    kind="Resource",
+                )
 
             if layer == 1:
                 if self._deps.get(name):
@@ -582,19 +590,6 @@ class ResourceContainer:
                     name,
                     "layer validation",
                     "Layer-2 plugins must declare infrastructure_dependencies.",
-                    kind="Resource",
-                )
-
-            if layer not in allowed_layers:
-                message = (
-                    f"Provided layer {layer} for {cls.__name__} is invalid."
-                    if expected == 3
-                    else f"Incorrect layer {layer} for {cls.__name__}. Expected {expected}."
-                )
-                raise InitializationError(
-                    name,
-                    "layer validation",
-                    message,
                     kind="Resource",
                 )
 
@@ -626,18 +621,8 @@ class ResourceContainer:
                     kind="Resource",
                 )
 
-            for dep in self._deps.get(name, []):
-                optional = dep.endswith("?")
-                dep_name = dep[:-1] if optional else dep
-                if dep_name not in self._layers:
-                    if optional:
-                        continue
-                    raise InitializationError(
-                        f"{name}, {dep_name}",
-                        "layer validation",
-                        f"Resource depends on '{dep_name}' but it is not registered.",
-                        kind="Resource",
-                    )
+        # Detect circular dependencies before validating layer steps
+        self._resolve_order()
 
         visited: set[str] = set()
         stack: list[str] = []
@@ -671,7 +656,6 @@ class ResourceContainer:
                         kind="Resource",
                     )
 
-                traverse(dep_name)
                 dep_layer = self._layers[dep_name]
                 if self._layers[node] - dep_layer != 1:
                     raise InitializationError(
@@ -684,6 +668,8 @@ class ResourceContainer:
                         ),
                         kind="Resource",
                     )
+
+                traverse(dep_name)
 
             stack.pop()
             visited.add(node)
