@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Workflow definitions for pipeline execution."""
 
-from typing import Callable, ClassVar, Dict, Iterable, List, Mapping, Protocol
+from typing import Any, ClassVar, Dict, Iterable, List, Mapping, Protocol
 
 
 class _HasPlugin(Protocol):
@@ -24,46 +24,23 @@ class Workflow(BaseModel):
 
     stage_map: ClassVar[Dict[PipelineStage | str, Iterable[str]]] = {}
     parent: ClassVar[type["Workflow"] | None] = None
-    stage_conditions: ClassVar[
-        Dict[PipelineStage | str, Callable[[PipelineState], bool]]
-    ] = {}
 
     stages: Dict[PipelineStage, List[str]] = Field(default_factory=dict)
-    conditions: Dict[PipelineStage, Callable[[PipelineState], bool]] = Field(
-        default_factory=dict
-    )
 
     model_config = {"arbitrary_types_allowed": True}
 
     def __init__(
         self,
         mapping: Mapping[PipelineStage | str, Iterable[str]] | None = None,
-        conditions: (
-            Mapping[PipelineStage | str, Callable[[PipelineState], bool] | str | bool]
-            | None
-        ) = None,
         registry: _HasPlugin | None = None,
         **params: str,
     ) -> None:
-        values = {}
         mapping = mapping or self.combined_stage_map()
-        conditions = conditions or self.combined_conditions()
         processed: Dict[PipelineStage, List[str]] = {}
         for stage, plugins in mapping.items():
             formatted = [str(p).format(**params) for p in plugins]
             self._assign_to(processed, stage, formatted)
-        cond_map: Dict[PipelineStage, Callable[[PipelineState], bool]] = {}
-        for stage, cond in conditions.items():
-            stage_obj = PipelineStage.ensure(stage)
-            if isinstance(cond, str):
-                cond_map[stage_obj] = lambda s, key=cond: bool(s.metadata.get(key))
-            elif isinstance(cond, bool):
-                cond_map[stage_obj] = lambda _s, val=cond: val
-            else:
-                cond_map[stage_obj] = cond
-        values["stages"] = processed
-        values["conditions"] = cond_map
-        super().__init__(**values)
+        super().__init__(stages=processed)
         if registry is not None:
             self.validate_plugins(registry)
 
@@ -81,26 +58,11 @@ class Workflow(BaseModel):
                 mapping.update(getattr(base, "stage_map", {}))
         return mapping
 
-    @classmethod
-    def combined_conditions(
-        cls,
-    ) -> Dict[PipelineStage | str, Callable[[PipelineState], bool]]:
-        combined: Dict[PipelineStage | str, Callable[[PipelineState], bool]] = {}
-        if cls.parent is not None:
-            combined.update(cls.parent.combined_conditions())
-        for base in reversed(cls.__mro__):
-            if issubclass(base, Workflow) and hasattr(base, "stage_conditions"):
-                combined.update(getattr(base, "stage_conditions", {}))
-        return combined
-
     # ------------------------------------------------------------------
     # Execution helpers
     # ------------------------------------------------------------------
 
     def should_execute(self, stage: PipelineStage, state: PipelineState) -> bool:
-        condition = self.conditions.get(stage)
-        if condition is not None:
-            return bool(condition(state))
         return True
 
     @staticmethod
@@ -126,8 +88,13 @@ class Workflow(BaseModel):
         return self.__class__(mapping=self.stages, **params)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Iterable[str]]) -> "Workflow":
-        mapping = {PipelineStage.ensure(k): list(v) for k, v in data.items()}
+    def from_dict(
+        cls, data: Mapping[str, Iterable[str]] | Mapping[str, Any]
+    ) -> "Workflow":
+        mapping = data
+        if "stages" in data:
+            mapping = data["stages"]  # type: ignore[assignment]
+        mapping = {PipelineStage.ensure(k): list(v) for k, v in mapping.items()}
         return cls(mapping)
 
     # ------------------------------------------------------------------

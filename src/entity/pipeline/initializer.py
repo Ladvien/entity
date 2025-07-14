@@ -17,6 +17,7 @@ from entity.core.plugins import (
     ResourcePlugin,
     ToolPlugin,
     ValidationResult,
+    InfrastructurePlugin,
 )
 from entity.core.registry_validator import RegistryValidator
 from entity.core.registries import PluginRegistry, ToolRegistry
@@ -100,7 +101,7 @@ class ClassRegistry(StageResolver):
     def non_resource_non_tool_classes(self) -> Iterable[Tuple[type[Plugin], Dict]]:
         for name in self._order:
             cls = self._classes[name]
-            if not issubclass(cls, (ResourcePlugin, ToolPlugin)):
+            if not issubclass(cls, (ResourcePlugin, ToolPlugin, InfrastructurePlugin)):
                 yield cls, self._configs[name]
 
     def _resolve_plugin_stages(
@@ -583,7 +584,7 @@ class SystemInitializer:
                         cls.__name__ != "MetricsCollectorResource"
                         and "metrics_collector" not in deps
                     ):
-                        deps.append("metrics_collector")
+                        deps.append("metrics_collector?")
                 cls.dependencies = deps
                 registry.register_class(cls, config, name, layer, section)
                 dep_graph[name] = deps
@@ -604,7 +605,7 @@ class SystemInitializer:
                     cls.__name__ != "MetricsCollectorResource"
                     and "metrics_collector" not in deps
                 ):
-                    deps.append("metrics_collector")
+                    deps.append("metrics_collector?")
                 cls.dependencies = deps
                 registry.register_class(cls, config, name, 4, section)
                 dep_graph[name] = deps

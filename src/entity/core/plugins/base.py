@@ -22,8 +22,8 @@ def _ensure_metrics_dependency(cls: type) -> None:
     if cls.__name__ in excluded:
         return
     deps = list(getattr(cls, "dependencies", []))
-    if "metrics_collector" not in deps:
-        deps.append("metrics_collector")
+    if "metrics_collector" not in deps and "metrics_collector?" not in deps:
+        deps.append("metrics_collector?")
     cls.dependencies = deps
 
 
