@@ -184,8 +184,12 @@ def test_validator_success(tmp_path):
 def test_validator_missing_dependency(tmp_path):
     plugins = {"prompts": {"c": {"type": "tests.test_registry_validator:C"}}}
     path = _write_config(tmp_path, plugins)
-    with pytest.raises(SystemError, match="must inherit from PromptPlugin"):
+    with pytest.raises(SystemError) as exc:
         RegistryValidator(str(path)).run()
+    assert (
+        str(exc.value)
+        == "Plugin 'c' requires 'missing' but it's not registered. Available: ['c']"
+    )
 
 
 def test_validator_cycle_detection(tmp_path):
@@ -215,8 +219,12 @@ def test_complex_prompt_requires_vector_store(tmp_path):
         },
     }
     path = _write_config(tmp_path, plugins)
-    with pytest.raises(SystemError, match="must inherit from PromptPlugin"):
+    with pytest.raises(SystemError) as exc:
         RegistryValidator(str(path)).run()
+    assert (
+        str(exc.value)
+        == "ComplexPrompt requires the memory resource with a vector store"
+    )
 
 
 def test_complex_prompt_with_vector_store(tmp_path):
@@ -288,8 +296,12 @@ def test_plugin_depends_on_interface(tmp_path):
         },
     }
     path = _write_config(tmp_path, plugins)
-    with pytest.raises(SystemError, match="PromptPlugin"):
+    with pytest.raises(SystemError) as exc:
         RegistryValidator(str(path)).run()
+    assert (
+        str(exc.value)
+        == "Plugin 'bad' depends on 'db_interface' which is not a layer-3 or layer-4 resource"
+    )
 
 
 def test_plugin_depends_on_infrastructure(tmp_path):
@@ -300,8 +312,12 @@ def test_plugin_depends_on_infrastructure(tmp_path):
         "prompts": {"bad": {"type": "tests.test_registry_validator:BadPromptInfra"}},
     }
     path = _write_config(tmp_path, plugins)
-    with pytest.raises(SystemError, match="PromptPlugin"):
+    with pytest.raises(SystemError) as exc:
         RegistryValidator(str(path)).run()
+    assert (
+        str(exc.value)
+        == "Plugin 'bad' depends on 'infra_db' which is not a layer-3 or layer-4 resource"
+    )
 
 
 def test_stage_override_warning():

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-14: Awaited context.think in tests and audited for missing awaits
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -13,6 +14,9 @@ AGENT NOTE - 2025-10-30: Fixed async stage results in end-to-end pipeline test e
 =======
 AGENT NOTE - 2025-07-14: Updated plugin order expectation in test_stage_order_from_yaml
 >>>>>>> pr-1616
+=======
+AGENT NOTE - 2025-10-07: Updated registry validator tests for new error messages
+>>>>>>> pr-1619
 AGENT NOTE - 2025-10-06: Updated layer validation to allow MetricsCollectorResource at layer 4
 AGENT NOTE - 2025-10-06: Tests require 'CREATE EXTENSION IF NOT EXISTS vector' when preparing Postgres
 <<<<<<< HEAD
