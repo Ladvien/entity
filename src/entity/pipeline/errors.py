@@ -39,6 +39,9 @@ class ResourceError(PipelineError):
     """Base class for resource errors."""
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pr-1538
     pass
 
 =======

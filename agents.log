@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-14: Extended layer validation and tests for layer boundaries
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-14: Switched tests to core plugin imports
@@ -30,6 +31,9 @@ AGENT NOTE - 2025-07-14: Verified stage context assignment and added tests for s
 =======
 AGENT NOTE - 2025-07-14: Updated plugin dependency handling
 >>>>>>> pr-1537
+=======
+AGENT NOTE - 2025-07-14: Added multi-worker regression test and cleaned core modules
+>>>>>>> pr-1538
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-13: Removed deprecated AgentBuilder from public interface
 <<<<<<< HEAD

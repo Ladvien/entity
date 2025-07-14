@@ -1,8 +1,7 @@
-"""Convenient access to the Entity agent and helpers."""
-
 from __future__ import annotations
 
 import asyncio
+<<<<<<< HEAD
 <<<<<<< HEAD
 import inspect
 import os
@@ -12,16 +11,23 @@ from types import SimpleNamespace
 
 from .core.agent import Agent
 from .core.registries import SystemRegistries
+=======
+
+from .core.agent import Agent
+from .core.registries import PluginRegistry, SystemRegistries, ToolRegistry
+>>>>>>> pr-1538
 from .core.resources.container import ResourceContainer
 from .core.runtime import AgentRuntime
-from .core.stages import PipelineStage
 from .infrastructure import DuckDBInfrastructure
+from .pipeline.worker import PipelineWorker
 from .resources import LLM, Memory, Storage
+from .resources.interfaces.duckdb_resource import DuckDBResource
 from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
 from .resources.logging import LoggingResource
 from .utils.setup_manager import Layer0SetupManager
 from .workflows.minimal import minimal_workflow
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 
 # ---------------------------------------------------------------------------
@@ -54,11 +60,22 @@ def _create_default_agent() -> Agent:
     try:
         asyncio.run(setup.setup())
     except Exception:
+=======
+__all__ = ["Agent", "PipelineWorker", "_create_default_agent"]
+
+
+def _create_default_agent() -> Agent:
+    """Return a minimally configured :class:`Agent`."""
+    setup = Layer0SetupManager()
+    try:
+        asyncio.run(setup.setup())
+    except Exception:  # noqa: BLE001 - optional setup
+>>>>>>> pr-1538
         pass
 
     agent = Agent()
-    builder = agent.builder
 
+<<<<<<< HEAD
     db = DuckDBInfrastructure({"path": str(setup.db_path)})
 <<<<<<< HEAD
     llm_provider = None
@@ -74,12 +91,27 @@ def _create_default_agent() -> Agent:
     llm = LLM({})
 =======
 >>>>>>> pr-1536
+=======
+    db_backend = DuckDBInfrastructure({"path": str(setup.db_path)})
+    db_resource = DuckDBResource({})
+    db_resource.database = db_backend
+
+>>>>>>> pr-1538
     vector_store = DuckDBVectorStore({})
+    vector_store.database = db_backend
+
     memory = Memory({})
+<<<<<<< HEAD
+=======
+    memory.database = db_resource
+    memory.vector_store = vector_store
+
+>>>>>>> pr-1538
     llm = LLM({})
     storage = Storage({})
     logging_res = LoggingResource({})
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     if llm_provider is not None:
         llm.provider = llm_provider
@@ -90,33 +122,41 @@ def _create_default_agent() -> Agent:
     memory.vector_store = vector_store
     vector_store.database = db
 
+=======
+>>>>>>> pr-1538
     resources = ResourceContainer()
 
-    async def init_resources() -> None:
-        await db.initialize()
+    async def init() -> None:
+        await db_backend.initialize()
         await vector_store.initialize()
         await memory.initialize()
         await logging_res.initialize()
 
-        await resources.add("database", db)
+        await resources.add("database", db_resource)
         await resources.add("vector_store", vector_store)
+<<<<<<< HEAD
 <<<<<<< HEAD
         if llm_provider is not None:
             await resources.add("llm_provider", llm_provider)
 =======
 >>>>>>> pr-1536
         await resources.add("llm", llm)
+=======
+>>>>>>> pr-1538
         await resources.add("memory", memory)
+        await resources.add("llm", llm)
         await resources.add("storage", storage)
         await resources.add("logging", logging_res)
 
-    asyncio.run(init_resources())
+    asyncio.run(init())
 
-    caps = SystemRegistries(
+    regs = SystemRegistries(
         resources=resources,
-        tools=builder.tool_registry,
-        plugins=builder.plugin_registry,
+        tools=ToolRegistry(),
+        plugins=PluginRegistry(),
+        validators=None,
     )
+<<<<<<< HEAD
 <<<<<<< HEAD
 
     try:  # optional default plugins
@@ -261,3 +301,7 @@ def __getattr__(name: str):  # pragma: no cover - lazily loaded modules
     agent._runtime = AgentRuntime(caps, workflow=minimal_workflow)
     return agent
 >>>>>>> pr-1536
+=======
+    agent._runtime = AgentRuntime(regs, workflow=minimal_workflow)
+    return agent
+>>>>>>> pr-1538
