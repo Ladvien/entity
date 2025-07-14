@@ -91,7 +91,6 @@ async def test_cross_user_access_denied(memory_db):
 
 
 @pytest.mark.asyncio
-<<<<<<< HEAD
 async def test_persistent_storage_is_isolated(memory_db):
     await memory_db.store_persistent("token", "A", user_id="alice")
     await memory_db.store_persistent("token", "B", user_id="bob")
@@ -111,7 +110,8 @@ async def test_batch_store_and_delete_scoped_by_user(memory_db):
     assert await memory_db.fetch_persistent("b", user_id="alice") == 2
     assert await memory_db.fetch_persistent("a", user_id="bob") is None
     assert await memory_db.fetch_persistent("b", user_id="bob") is None
-=======
+
+
 async def test_multiple_workers_same_user(memory_db):
     """Two workers should handle requests for one user interchangeably."""
     logging_res = LoggingResource({})
@@ -145,4 +145,3 @@ async def test_multiple_workers_same_user(memory_db):
     hist = await memory_db.load_conversation("chat", user_id="alice")
     assert [e.content for e in hist if e.role == "user"] == ["hello", "again"]
     assert await memory_db.get("last", user_id="alice") == "again"
->>>>>>> pr-1538

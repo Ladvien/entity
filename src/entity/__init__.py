@@ -1,53 +1,9 @@
-<<<<<<< HEAD
-"""Convenient access to the Entity agent and utilities."""
-=======
 """Convenient access to the default Entity agent and helpers."""
->>>>>>> pr-1547
 
 from __future__ import annotations
 
 import asyncio
 import inspect
-<<<<<<< HEAD
-
-
-def _handle_import_error(exc: ModuleNotFoundError) -> None:
-    """Re-raise missing optional dependency errors with guidance."""
-
-    missing = exc.name
-    mapping = {"yaml": "pyyaml", "dotenv": "python-dotenv", "httpx": "httpx"}
-    requirement = mapping.get(missing, missing)
-    raise ImportError(
-        f"Optional dependency '{requirement}' is required. "
-        f"Install it with `pip install {requirement}`."
-    ) from exc
-
-
-try:
-    from .core.agent import Agent
-    from .infrastructure import DuckDBInfrastructure
-    from .resources import LLM, Memory, Storage
-    from .resources.logging import LoggingResource
-    from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
-    from .core.stages import PipelineStage
-    from .core.plugins import PromptPlugin, ToolPlugin
-    from .utils.setup_manager import Layer0SetupManager
-    from entity.workflows.minimal import minimal_workflow
-    from entity.core.registries import SystemRegistries
-    from entity.core.runtime import AgentRuntime
-    from entity.core.resources.container import ResourceContainer
-except ModuleNotFoundError as exc:  # pragma: no cover - missing optional deps
-    _handle_import_error(exc)
-
-
-def _create_default_agent() -> Agent:
-    setup = Layer0SetupManager()
-    import asyncio
-
-    try:
-        asyncio.run(setup.setup())
-    except Exception:  # noqa: BLE001 - best effort setup
-=======
 import os
 from types import SimpleNamespace
 
@@ -77,8 +33,8 @@ def _create_default_agent() -> Agent:
     try:  # best effort environment preparation
         asyncio.run(setup.setup())
     except Exception:  # noqa: BLE001
->>>>>>> pr-1547
         pass
+
     agent = Agent()
     builder = agent.builder
 
@@ -92,10 +48,7 @@ def _create_default_agent() -> Agent:
         )
     except Exception:  # noqa: BLE001 - optional dependency
         pass
-<<<<<<< HEAD
-=======
 
->>>>>>> pr-1547
     llm = LLM({})
     vector_store = DuckDBVectorStore({})
     memory = Memory({})
@@ -132,46 +85,36 @@ def _create_default_agent() -> Agent:
         tools=builder.tool_registry,
         plugins=builder.plugin_registry,
     )
-<<<<<<< HEAD
-    try:
-=======
 
     try:  # optional default plugins
->>>>>>> pr-1547
         from plugins.builtin.basic_error_handler import BasicErrorHandler
-        from plugins.examples import InputLogger
-
-        asyncio.run(builder.add_plugin(BasicErrorHandler({})))
-        asyncio.run(builder.add_plugin(InputLogger({})))
-    except Exception:  # noqa: BLE001 - optional plugins
-        pass
-
-    try:
+        from plugins.examples import InputLogger, MessageParser, ResponseReviewer
         from user_plugins.prompts import ComplexPrompt
         from user_plugins.responders import ComplexPromptResponder
 
+        asyncio.run(builder.add_plugin(BasicErrorHandler({})))
+        asyncio.run(builder.add_plugin(InputLogger({})))
+        asyncio.run(builder.add_plugin(MessageParser({})))
+        asyncio.run(builder.add_plugin(ResponseReviewer({})))
         asyncio.run(builder.add_plugin(ComplexPrompt({})))
         asyncio.run(builder.add_plugin(ComplexPromptResponder({})))
-    except Exception:  # noqa: BLE001 - optional plugins
+    except Exception:  # noqa: BLE001
         pass
-    workflow = getattr(setup, "workflow", minimal_workflow)
+
+    wf = getattr(setup, "workflow", None)
+    workflow = wf if wf is not None else minimal_workflow
     agent._runtime = AgentRuntime(caps, workflow=workflow)
     return agent
 
 
-agent: Agent | None = None
+# ---------------------------------------------------------------------------
+# lazy global agent setup
+# ---------------------------------------------------------------------------
+
+_default_agent: Agent | None = None
 
 
 def _ensure_agent() -> Agent:
-<<<<<<< HEAD
-    global agent
-    if agent is None:
-        agent = _create_default_agent()
-    return agent
-
-
-# Expose decorator helpers bound to the default agent
-=======
     global _default_agent
     if _default_agent is None:
         if os.environ.get("ENTITY_AUTO_INIT", "1") != "1":
@@ -196,24 +139,20 @@ agent: Agent | _LazyAgent = _LazyAgent()
 # ---------------------------------------------------------------------------
 # decorator helpers
 # ---------------------------------------------------------------------------
->>>>>>> pr-1547
 
 plugin = agent.plugin
 
 
 def input(func=None, **hints):
-    ag = _ensure_agent()
-    return ag.plugin(func, stage=PipelineStage.INPUT, **hints)
+    return plugin(func, stage=PipelineStage.INPUT, **hints)
 
 
 def parse(func=None, **hints):
-    ag = _ensure_agent()
-    return ag.plugin(func, stage=PipelineStage.PARSE, **hints)
+    return plugin(func, stage=PipelineStage.PARSE, **hints)
 
 
 def prompt(func=None, **hints):
-    ag = _ensure_agent()
-    return ag.plugin(func, stage=PipelineStage.THINK, **hints)
+    return plugin(func, stage=PipelineStage.THINK, **hints)
 
 
 def tool(func=None, **hints):
@@ -229,7 +168,6 @@ def tool(func=None, **hints):
             async def execute_function(self, params_dict):
                 return await f(**params_dict)
 
-        ag = _ensure_agent()
         asyncio.run(ag.builder.tool_registry.add(f.__name__, _WrappedTool({})))
         return f
 
@@ -237,25 +175,21 @@ def tool(func=None, **hints):
 
 
 def review(func=None, **hints):
-    ag = _ensure_agent()
-    return ag.plugin(func, stage=PipelineStage.REVIEW, **hints)
+    return plugin(func, stage=PipelineStage.REVIEW, **hints)
 
 
 def output(func=None, **hints):
-    ag = _ensure_agent()
-    return ag.plugin(func, stage=PipelineStage.OUTPUT, **hints)
+    return plugin(func, stage=PipelineStage.OUTPUT, **hints)
 
 
 def prompt_plugin(func=None, **hints):
     hints["plugin_class"] = PromptPlugin
-    ag = _ensure_agent()
-    return ag.plugin(func, **hints)
+    return plugin(func, **hints)
 
 
 def tool_plugin(func=None, **hints):
     hints["plugin_class"] = ToolPlugin
-    ag = _ensure_agent()
-    return ag.plugin(func, **hints)
+    return plugin(func, **hints)
 
 
 __all__ = [
@@ -275,7 +209,7 @@ __all__ = [
 ]
 
 
-def __getattr__(name: str):
+def __getattr__(name: str):  # pragma: no cover - lazily loaded modules
     if name == "core":
         from . import core as _core
 
