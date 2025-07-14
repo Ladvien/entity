@@ -67,6 +67,13 @@ With dependencies installed you can run the included poe tasks:
 poe test
 ```
 
+If you prefer calling `pytest` directly, prepend `PYTHONPATH=src` so Python can
+locate the editable package:
+
+```bash
+PYTHONPATH=src pytest
+```
+
 ## Multi-User Support
 
 Pass a unique `user_id` when calling `agent.chat()` or `agent.handle()` to keep
