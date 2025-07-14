@@ -60,6 +60,8 @@ poetry install --with dev
 # or
 pip install -e ".[dev]"
 ```
+Make sure the optional dependencies `pyyaml` and `python-dotenv` are available
+to avoid runtime import errors when the CLI loads YAML configurations.
 
 With dependencies installed you can run the included poe tasks:
 
