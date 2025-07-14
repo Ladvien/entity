@@ -10,6 +10,7 @@ os.environ.setdefault("ENTITY_AUTO_INIT", "0")
 from entity.infrastructure import DuckDBInfrastructure
 from entity.resources import Memory
 from entity.resources.interfaces.duckdb_resource import DuckDBResource
+from entity.core.resources.container import ResourceContainer
 
 
 @pytest.fixture()
@@ -31,3 +32,25 @@ async def memory_db(tmp_path: Path) -> Memory:
         yield mem
     finally:
         await db_backend.shutdown()
+
+
+@pytest.fixture()
+def resource_container() -> ResourceContainer:
+    container = ResourceContainer()
+    container.register("database_backend", DuckDBInfrastructure, {}, layer=1)
+    return container
+
+
+@pytest.fixture(autouse=True)
+def _clear_metrics_deps():
+    from entity.resources.metrics import MetricsCollectorResource
+
+    original = MetricsCollectorResource.dependencies.copy()
+    original_infra = MetricsCollectorResource.infrastructure_dependencies.copy()
+    MetricsCollectorResource.dependencies = []
+    MetricsCollectorResource.infrastructure_dependencies = []
+    try:
+        yield
+    finally:
+        MetricsCollectorResource.dependencies = original
+        MetricsCollectorResource.infrastructure_dependencies = original_infra
