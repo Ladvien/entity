@@ -47,7 +47,7 @@ async def test_agent_handle_runs_workflow():
     wf = Workflow(
         {PipelineStage.THINK: ["ThoughtPlugin"], PipelineStage.OUTPUT: ["EchoPlugin"]}
     )
-    agent.pipeline = Pipeline(workflow=wf)
+    agent.pipeline = Pipeline(builder=agent.builder, workflow=wf)
     result = await agent.handle("bye")
     assert result == "bye!"
 
