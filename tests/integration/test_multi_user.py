@@ -112,10 +112,7 @@ async def test_batch_store_and_delete_scoped_by_user(memory_db):
     assert await memory_db.fetch_persistent("b", user_id="bob") is None
 
 
-<<<<<<< HEAD
 @pytest.mark.asyncio
-=======
->>>>>>> pr-1553
 async def test_multiple_workers_same_user(memory_db):
     """Two workers should handle requests for one user interchangeably."""
     logging_res = LoggingResource({})

@@ -42,7 +42,6 @@ class ResourceError(PipelineError):
 =======
     pass
 
->>>>>>> pr-1553
 
 class InitializationError(PipelineError):
     """Raised when a plugin or resource fails to initialize."""

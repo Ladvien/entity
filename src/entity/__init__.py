@@ -21,6 +21,24 @@ from .utils.setup_manager import Layer0SetupManager
 from entity.workflows.minimal import minimal_workflow
 
 
+def _handle_import_error(exc: ModuleNotFoundError) -> None:
+    """Provide installation help for optional dependencies."""
+
+    missing = exc.name
+    mapping = {"yaml": "pyyaml", "dotenv": "python-dotenv", "httpx": "httpx"}
+    requirement = mapping.get(missing, missing)
+    raise ImportError(
+        f"Optional dependency '{requirement}' is required. "
+        f"Install it with `pip install {requirement}`."
+    ) from exc
+
+
+try:
+    from plugins.builtin.resources.ollama_llm import OllamaLLMResource
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    OllamaLLMResource = None
+
+
 # ---------------------------------------------------------------------------
 # default agent creation
 # ---------------------------------------------------------------------------
@@ -40,14 +58,13 @@ def _create_default_agent() -> Agent:
 
     db = DuckDBInfrastructure({"path": str(setup.db_path)})
     llm_provider = None
-    try:
-        from plugins.builtin.resources.ollama_llm import OllamaLLMResource
-
-        llm_provider = OllamaLLMResource(
-            {"model": setup.model, "base_url": setup.base_url}
-        )
-    except Exception:  # noqa: BLE001 - optional dependency
-        pass
+    if OllamaLLMResource is not None:
+        try:
+            llm_provider = OllamaLLMResource(
+                {"model": setup.model, "base_url": setup.base_url}
+            )
+        except Exception:  # noqa: BLE001 - optional dependency
+            pass
 
     llm = LLM({})
     vector_store = DuckDBVectorStore({})
@@ -101,15 +118,10 @@ def _create_default_agent() -> Agent:
     except Exception:  # noqa: BLE001
         pass
 
-    wf = getattr(setup, "workflow", None)
-    workflow = wf if wf is not None else minimal_workflow
+    workflow = getattr(setup, "workflow", minimal_workflow)
     agent._runtime = AgentRuntime(caps, workflow=workflow)
     return agent
 
-
-# ---------------------------------------------------------------------------
-# lazy global agent setup
-# ---------------------------------------------------------------------------
 
 _default_agent: Agent | None = None
 
@@ -140,7 +152,10 @@ agent: Agent | _LazyAgent = _LazyAgent()
 # decorator helpers
 # ---------------------------------------------------------------------------
 
-plugin = agent.plugin
+
+def plugin(func=None, **hints):
+    ag = _ensure_agent()
+    return ag.plugin(func, **hints)
 
 
 def input(func=None, **hints):
@@ -159,7 +174,7 @@ def tool(func=None, **hints):
     """Register ``func`` as a tool plugin or simple tool."""
 
     def decorator(f):
-        ag = agent
+        ag = _ensure_agent()
         params = list(inspect.signature(f).parameters)
         if params and params[0] in {"ctx", "context"}:
             return ag.plugin(f, stage=PipelineStage.DO, **hints)
