@@ -1,6 +1,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-14: Updated layer validation message checks in tests
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -41,6 +42,9 @@ AGENT NOTE - 2025-07-14: Updated test imports for reliability modules and StageR
 =======
 AGENT NOTE - 2025-07-14: Verified errors.py contains no merge markers and ensured ResourceError uses pass
 >>>>>>> pr-1589
+=======
+AGENT NOTE - 2025-07-14: Removed merge conflict markers from agents.log
+>>>>>>> pr-1588
 AGENT NOTE - 2025-07-14: Documented PYTHONPATH usage for pytest in README
 AGENT NOTE - 2025-07-14: Fixed workflow fallback in _create_default_agent
 AGENT NOTE - 2025-07-14: Removed merge markers from errors.py
