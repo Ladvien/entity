@@ -285,7 +285,10 @@ class EntityCLI:
                 agent.runtime.manager.state_logger = state_logger
             from plugins.builtin.adapters.server import AgentServer
 
-            server = AgentServer(agent.runtime)
+            server = AgentServer(
+                capabilities=agent.runtime.capabilities,
+                manager=agent.runtime.manager,
+            )
             try:
                 if cmd == "serve-websocket":
                     await server.serve_websocket()
