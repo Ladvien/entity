@@ -1,8 +1,10 @@
 import pytest
 
 from entity.core.resources.container import ResourceContainer
-from entity.resources.base import AgentResource
+from entity.core.plugins import AgentResource
 from entity.core.plugins import InfrastructurePlugin
+from entity.resources.logging import LoggingResource
+from entity.resources.metrics import MetricsCollectorResource
 
 
 class DummyDatabase(InfrastructurePlugin):
@@ -26,13 +28,15 @@ class DummyResource(AgentResource):
 
 DummyDatabase.dependencies = []
 DummyResource.dependencies = []
+LoggingResource.dependencies = []
+MetricsCollectorResource.dependencies = []
 
 
 @pytest.mark.asyncio
 async def test_build_all_adds_defaults():
     container = ResourceContainer()
     container.register("database_backend", DummyDatabase, {}, layer=1)
-    container.register("dummy", DummyResource, {}, layer=3)
+    container.register("dummy", DummyResource, {}, layer=4)
 
     await container.build_all()
 
