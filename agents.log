@@ -1,4 +1,4 @@
-AGENT NOTE - 2025-07-14: Fixed __init__ merge conflicts and ensured lazy initialization
+AGENT NOTE - 2025-10-07: Resolved multi_user test conflicts and preserved all test cases
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-14: Refactored AgentServer to accept capability container
 AGENT NOTE - 2025-10-07: Cleaned merge markers and restored lazy initialization
