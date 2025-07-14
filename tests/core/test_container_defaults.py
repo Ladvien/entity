@@ -42,5 +42,6 @@ async def test_build_all_adds_defaults():
 
     assert container.get("logging") is not None
     assert container.get("metrics_collector") is not None
+    assert container._layers["metrics_collector"] == 4
 
     await container.shutdown_all()

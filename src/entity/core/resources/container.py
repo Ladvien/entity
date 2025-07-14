@@ -206,6 +206,8 @@ def _is_builtin_canonical(cls: type) -> bool:
         return False
 
     mod = cls.__module__
+    if cls.__name__ == "MetricsCollectorResource":
+        return False
     return mod.startswith("entity.resources.") and "interfaces" not in mod
 
 
