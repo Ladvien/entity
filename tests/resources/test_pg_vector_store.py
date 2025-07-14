@@ -69,8 +69,8 @@ async def test_embedding_roundtrip(prepared_postgres) -> None:
     mem = Memory({})
     mem.database = db
     mem.vector_store = store
-    await mem.initialize()
     await store.initialize()
+    await mem.initialize()
 
     await mem.add_embedding("hello world")
     await mem.add_embedding("goodbye world")
@@ -93,8 +93,8 @@ async def test_conversation_integration(prepared_postgres) -> None:
     mem = Memory({})
     mem.database = db
     mem.vector_store = store
-    await mem.initialize()
     await store.initialize()
+    await mem.initialize()
 
     await mem.add_conversation_entry(
         "conv",

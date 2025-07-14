@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-14: Ensure vector store initializes before memory for PG tests
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-14: Updated multi-user tests to use user_id parameter for load_conversation
 <<<<<<< HEAD
