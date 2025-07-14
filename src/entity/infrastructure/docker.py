@@ -13,7 +13,7 @@ class DockerInfrastructure(InfrastructurePlugin):
     infrastructure_type = "container"
     resource_category = "infrastructure"
     stages: list = []
-    dependencies: list = []
+    dependencies: list[str] = []
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})

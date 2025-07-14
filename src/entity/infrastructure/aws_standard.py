@@ -11,7 +11,7 @@ class AWSStandardInfrastructure(OpenTofuInfrastructure):
     name = "aws-standard"
     infrastructure_type = "cloud"
     provider = "aws"
-    dependencies: list = []
+    dependencies: list[str] = []
 
     def __init__(self, region: str = "us-east-1", config: Dict | None = None) -> None:
         super().__init__("aws", "standard", region, config)
