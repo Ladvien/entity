@@ -23,6 +23,18 @@ class BadResource(AgentResource):
     stages: list = []
 
 
+class CanonA(AgentResource):
+    __module__ = "entity.resources.tests"
+    dependencies = ["iface"]
+    stages: list = []
+
+
+class CanonB(AgentResource):
+    __module__ = "entity.resources.tests"
+    dependencies = ["canon_a"]
+    stages: list = []
+
+
 Infra.dependencies = []
 Interface.dependencies = []
 BadResource.dependencies = ["db"]
@@ -36,4 +48,16 @@ async def test_layer_boundary_violation() -> None:
     container.register("bad", BadResource, {}, layer=3)
 
     with pytest.raises(InitializationError, match="Incorrect layer"):
+        await container.build_all()
+
+
+@pytest.mark.asyncio
+async def test_layer_three_dependency_on_same_layer() -> None:
+    container = ResourceContainer()
+    container.register("db", Infra, {}, layer=1)
+    container.register("iface", Interface, {}, layer=2)
+    container.register("canon_a", CanonA, {}, layer=3)
+    container.register("canon_b", CanonB, {}, layer=3)
+
+    with pytest.raises(InitializationError, match="layer rules"):
         await container.build_all()

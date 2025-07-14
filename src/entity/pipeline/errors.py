@@ -17,7 +17,7 @@ class PluginContextError(PipelineError):
 
     def __init__(
         self,
-        stage: "PipelineStage",
+        stage: PipelineStage,
         plugin_name: str,
         message: str,
         context: dict[str, Any] | None = None,
@@ -36,22 +36,7 @@ class PluginExecutionError(PipelineError):
 
 
 class ResourceError(PipelineError):
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    """Raised when a resource encounters an operational failure."""
-
-=======
->>>>>>> pr-1528
-=======
     """Base class for resource errors."""
-
->>>>>>> pr-1529
-=======
-    """Base class for resource errors."""
-
->>>>>>> pr-1530
-    pass
 
 
 class InitializationError(PipelineError):
@@ -75,22 +60,17 @@ class ResourceInitializationError(ResourceError, InitializationError):
         super().__init__(name, "initialization", remediation, kind="Resource")
 
 
-class ToolExecutionError(PipelineError):
-    pass
-
-
 class StageExecutionError(PipelineError):
-    """Raised when an error occurs while executing a pipeline stage."""
-
     def __init__(
-        self,
-        stage: "PipelineStage",
-        message: str,
-        context: dict[str, Any] | None = None,
+        self, stage: PipelineStage, message: str, context: dict[str, Any] | None = None
     ) -> None:
         super().__init__(message)
         self.stage = stage
         self.context = context or {}
+
+
+class ToolExecutionError(PipelineError):
+    pass
 
 
 @dataclass
@@ -146,7 +126,6 @@ __all__ = [
     "ResourceError",
     "ResourceInitializationError",
     "InitializationError",
-    "ResourceInitializationError",
     "StageExecutionError",
     "ToolExecutionError",
     "ErrorResponse",
