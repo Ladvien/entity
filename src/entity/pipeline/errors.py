@@ -39,14 +39,6 @@ class PluginExecutionError(PipelineError):
 class ResourceError(PipelineError):
     """Base class for resource errors."""
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> pr-1538
-=======
->>>>>>> pr-1539
     pass
 
 =======

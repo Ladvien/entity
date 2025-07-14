@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-10-07: Added dependency validation and optional imports for tests
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-14: Added tests for infrastructure deps, layer jumps, and say() stage enforcement
 <<<<<<< HEAD
