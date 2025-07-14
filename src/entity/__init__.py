@@ -19,6 +19,9 @@ from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
 from .resources.logging import LoggingResource
 from .utils.setup_manager import Layer0SetupManager
 from entity.workflows.minimal import minimal_workflow
+from entity.utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 def _handle_import_error(exc: ModuleNotFoundError) -> None:
@@ -130,8 +133,8 @@ def _ensure_agent() -> Agent:
     global _default_agent
     if _default_agent is None:
         if os.environ.get("ENTITY_AUTO_INIT", "1") != "1":
-            raise RuntimeError(
-                "ENTITY_AUTO_INIT is disabled; call _create_default_agent() manually"
+            logger.warning(
+                "ENTITY_AUTO_INIT is disabled; initializing default agent anyway"
             )
         _default_agent = _create_default_agent()
     return _default_agent
