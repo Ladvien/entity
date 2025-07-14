@@ -45,7 +45,7 @@ async def test_layer_boundary_violation() -> None:
     container = ResourceContainer()
     container.register("db", Infra, {}, layer=1)
     container.register("iface", Interface, {}, layer=2)
-    container.register("bad", BadResource, {}, layer=3)
+    container.register("bad", BadResource, {}, layer=4)
 
     with pytest.raises(InitializationError, match="one-layer step"):
         await container.build_all()
