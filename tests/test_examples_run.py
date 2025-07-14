@@ -35,11 +35,12 @@ def test_zero_config_example_runs(monkeypatch):
         pytest.skip("example runtime failed")
 
 
-@pytest.mark.asyncio
-async def test_kitchen_sink_example(monkeypatch):
+def test_kitchen_sink_example(monkeypatch):
     path = Path("examples/kitchen_sink/main.py")
     if not path.exists():
         pytest.skip("kitchen_sink example not present")
     mod = import_module("examples.kitchen_sink.main")
     assert hasattr(mod, "main")
-    await mod.main()
+    import asyncio
+
+    asyncio.run(mod.main())
