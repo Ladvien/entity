@@ -309,6 +309,8 @@ class ResourceContainer:
             "metrics_collector" not in self._classes
             and "metrics_collector" not in self._resources
         ):
+            # The collector is a built-in canonical resource but is injected
+            # like a custom one, so we register it at layer 4 by default.
             from entity.resources.metrics import MetricsCollectorResource
 
             self.register(
@@ -520,7 +522,12 @@ class ResourceContainer:
         return True
 
     def _validate_layers(self) -> None:
-        """Ensure layer dependencies follow the 4-layer architecture."""
+        """Ensure layer dependencies follow the 4-layer architecture.
+
+        Built-in canonical resources normally run at layer 3. The
+        ``MetricsCollectorResource`` is an exception and may operate in
+        layer 4 so it can be injected automatically like custom resources.
+        """
 
         from entity.core.plugins import (
             InfrastructurePlugin,
@@ -568,6 +575,8 @@ class ResourceContainer:
                     and not self._deps.get(name)
                 ):
                     allowed_layers.add(3)
+            if cls.__name__ == "MetricsCollectorResource":
+                allowed_layers.add(4)
 
             if layer not in allowed_layers:
                 raise InitializationError(
