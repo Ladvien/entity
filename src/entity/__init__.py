@@ -1,53 +1,9 @@
-<<<<<<< HEAD
-"""Convenient access to the Entity agent and utilities."""
-=======
 """Convenient access to the default Entity agent and helpers."""
->>>>>>> pr-1547
 
 from __future__ import annotations
 
 import asyncio
 import inspect
-<<<<<<< HEAD
-
-
-def _handle_import_error(exc: ModuleNotFoundError) -> None:
-    """Re-raise missing optional dependency errors with guidance."""
-
-    missing = exc.name
-    mapping = {"yaml": "pyyaml", "dotenv": "python-dotenv", "httpx": "httpx"}
-    requirement = mapping.get(missing, missing)
-    raise ImportError(
-        f"Optional dependency '{requirement}' is required. "
-        f"Install it with `pip install {requirement}`."
-    ) from exc
-
-
-try:
-    from .core.agent import Agent
-    from .infrastructure import DuckDBInfrastructure
-    from .resources import LLM, Memory, Storage
-    from .resources.logging import LoggingResource
-    from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
-    from .core.stages import PipelineStage
-    from .core.plugins import PromptPlugin, ToolPlugin
-    from .utils.setup_manager import Layer0SetupManager
-    from entity.workflows.minimal import minimal_workflow
-    from entity.core.registries import SystemRegistries
-    from entity.core.runtime import AgentRuntime
-    from entity.core.resources.container import ResourceContainer
-except ModuleNotFoundError as exc:  # pragma: no cover - missing optional deps
-    _handle_import_error(exc)
-
-
-def _create_default_agent() -> Agent:
-    setup = Layer0SetupManager()
-    import asyncio
-
-    try:
-        asyncio.run(setup.setup())
-    except Exception:  # noqa: BLE001 - best effort setup
-=======
 import os
 from types import SimpleNamespace
 
@@ -65,6 +21,24 @@ from .utils.setup_manager import Layer0SetupManager
 from entity.workflows.minimal import minimal_workflow
 
 
+def _handle_import_error(exc: ModuleNotFoundError) -> None:
+    """Provide installation help for optional dependencies."""
+
+    missing = exc.name
+    mapping = {"yaml": "pyyaml", "dotenv": "python-dotenv", "httpx": "httpx"}
+    requirement = mapping.get(missing, missing)
+    raise ImportError(
+        f"Optional dependency '{requirement}' is required. "
+        f"Install it with `pip install {requirement}`."
+    ) from exc
+
+
+try:
+    from plugins.builtin.resources.ollama_llm import OllamaLLMResource
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    OllamaLLMResource = None
+
+
 # ---------------------------------------------------------------------------
 # default agent creation
 # ---------------------------------------------------------------------------
@@ -77,25 +51,21 @@ def _create_default_agent() -> Agent:
     try:  # best effort environment preparation
         asyncio.run(setup.setup())
     except Exception:  # noqa: BLE001
->>>>>>> pr-1547
         pass
+
     agent = Agent()
     builder = agent.builder
 
     db = DuckDBInfrastructure({"path": str(setup.db_path)})
     llm_provider = None
-    try:
-        from plugins.builtin.resources.ollama_llm import OllamaLLMResource
+    if OllamaLLMResource is not None:
+        try:
+            llm_provider = OllamaLLMResource(
+                {"model": setup.model, "base_url": setup.base_url}
+            )
+        except Exception:  # noqa: BLE001 - optional dependency
+            pass
 
-        llm_provider = OllamaLLMResource(
-            {"model": setup.model, "base_url": setup.base_url}
-        )
-    except Exception:  # noqa: BLE001 - optional dependency
-        pass
-<<<<<<< HEAD
-=======
-
->>>>>>> pr-1547
     llm = LLM({})
     vector_store = DuckDBVectorStore({})
     memory = Memory({})
@@ -132,12 +102,8 @@ def _create_default_agent() -> Agent:
         tools=builder.tool_registry,
         plugins=builder.plugin_registry,
     )
-<<<<<<< HEAD
-    try:
-=======
 
     try:  # optional default plugins
->>>>>>> pr-1547
         from plugins.builtin.basic_error_handler import BasicErrorHandler
         from plugins.examples import InputLogger
 
@@ -154,24 +120,16 @@ def _create_default_agent() -> Agent:
         asyncio.run(builder.add_plugin(ComplexPromptResponder({})))
     except Exception:  # noqa: BLE001 - optional plugins
         pass
+
     workflow = getattr(setup, "workflow", minimal_workflow)
     agent._runtime = AgentRuntime(caps, workflow=workflow)
     return agent
 
 
-agent: Agent | None = None
+_default_agent: Agent | None = None
 
 
 def _ensure_agent() -> Agent:
-<<<<<<< HEAD
-    global agent
-    if agent is None:
-        agent = _create_default_agent()
-    return agent
-
-
-# Expose decorator helpers bound to the default agent
-=======
     global _default_agent
     if _default_agent is None:
         if os.environ.get("ENTITY_AUTO_INIT", "1") != "1":
@@ -196,9 +154,11 @@ agent: Agent | _LazyAgent = _LazyAgent()
 # ---------------------------------------------------------------------------
 # decorator helpers
 # ---------------------------------------------------------------------------
->>>>>>> pr-1547
 
-plugin = agent.plugin
+
+def plugin(func=None, **hints):
+    ag = _ensure_agent()
+    return ag.plugin(func, **hints)
 
 
 def input(func=None, **hints):
@@ -220,7 +180,7 @@ def tool(func=None, **hints):
     """Register ``func`` as a tool plugin or simple tool."""
 
     def decorator(f):
-        ag = agent
+        ag = _ensure_agent()
         params = list(inspect.signature(f).parameters)
         if params and params[0] in {"ctx", "context"}:
             return ag.plugin(f, stage=PipelineStage.DO, **hints)
