@@ -54,7 +54,3 @@ unit = "pytest tests/unit"
 integration = "pytest tests/integration"
 e2e = "pytest tests/e2e"
 ```
-
----
-
-Want me to generate a starter test layout (`tests/unit`, `tests/integration`, `tests/e2e`) and Docker-based fixture to match this philosophy?
