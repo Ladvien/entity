@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-14: Updated layer validation tests for new error messages
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-14: Ensure vector store initializes before memory for PG tests
@@ -6,6 +7,9 @@ AGENT NOTE - 2025-07-14: Updated multi-user tests to use user_id parameter for l
 =======
 AGENT NOTE - 2025-07-14: Updated memory-postgres registry validator test
 >>>>>>> pr-1602
+=======
+AGENT NOTE - 2025-07-14: Added stage overrides for hot reload plugins
+>>>>>>> pr-1608
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD

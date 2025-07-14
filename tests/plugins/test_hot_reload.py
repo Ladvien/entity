@@ -38,6 +38,8 @@ class DepPlugin(Plugin):
 
 
 class RejectPlugin(DepPlugin):
+    stages = [PipelineStage.THINK]
+
     async def on_dependency_reconfigured(self, name, old, new):
         return False
 
@@ -85,8 +87,18 @@ async def test_update_rejects_type_change():
     assert not result.success and result.requires_restart
 
 
-class FailingRollbackPlugin(ConfigPlugin):
+class FailingRollbackPlugin(DepPlugin):
     stages = [PipelineStage.THINK]
+
+    def __init__(self, config=None):
+        super().__init__(config or {})
+        self.value = self.config.get("value", 0)
+
+    async def _execute_impl(self, context):
+        return self.value
+
+    async def _handle_reconfiguration(self, old, new):
+        self.value = new.get("value", 0)
 
     async def rollback_config(self, version: int) -> None:
         raise RuntimeError("boom")
