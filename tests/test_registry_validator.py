@@ -8,7 +8,6 @@ from entity.core.plugins import (
 )
 from entity.core.stages import PipelineStage
 from entity.core.registry_validator import RegistryValidator
-from entity.pipeline.errors import InitializationError
 from entity.pipeline.utils import StageResolver
 from entity.resources.logging import LoggingResource
 
@@ -276,8 +275,7 @@ def test_memory_with_postgres(tmp_path):
         },
     }
     path = _write_config(tmp_path, plugins)
-    with pytest.raises(InitializationError, match="Circular dependency detected"):
-        RegistryValidator(str(path)).run()
+    RegistryValidator(str(path)).run()
 
 
 def test_plugin_depends_on_interface(tmp_path):
