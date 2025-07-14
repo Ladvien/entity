@@ -64,6 +64,9 @@ __all__ = [
     "Workflow",
     "PipelineWorker",
     "execute_with_observability",
+    "pipeline",
+    "initializer",
+    "utils",
 ]
 
 
@@ -115,6 +118,9 @@ def __getattr__(name: str) -> Any:
         "update_plugin_configuration": "entity.pipeline.config.config_update",
         "StateLogger": "entity.core.state_logger",
         "LogReplayer": "entity.core.state_logger",
+        "pipeline": "entity.pipeline.pipeline",
+        "initializer": "entity.pipeline.initializer",
+        "utils": "entity.pipeline.utils",
         "ClassRegistry": "entity.pipeline.initializer",
         "SystemInitializer": "entity.pipeline.initializer",
         "initialization_cleanup_context": "entity.pipeline.initializer",
