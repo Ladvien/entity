@@ -47,7 +47,7 @@ async def test_layer_boundary_violation() -> None:
     container.register("iface", Interface, {}, layer=2)
     container.register("bad", BadResource, {}, layer=3)
 
-    with pytest.raises(InitializationError, match="Incorrect layer"):
+    with pytest.raises(InitializationError, match="one-layer step"):
         await container.build_all()
 
 
@@ -59,5 +59,5 @@ async def test_layer_three_dependency_on_same_layer() -> None:
     container.register("canon_a", CanonA, {}, layer=3)
     container.register("canon_b", CanonB, {}, layer=3)
 
-    with pytest.raises(InitializationError, match="not registered"):
+    with pytest.raises(InitializationError, match="one-layer step"):
         await container.build_all()

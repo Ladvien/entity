@@ -101,7 +101,7 @@ def test_layer_violation():
     container.register("infra", InfraPlugin, {}, layer=1)
     container.register("bad", BadResource, {}, layer=3)
 
-    with pytest.raises(InitializationError, match="dependency graph"):
+    with pytest.raises(InitializationError, match="one-layer step"):
         asyncio.run(container.build_all())
 
 
@@ -152,7 +152,7 @@ async def test_health_check_failure_on_build():
     container.register("database_backend", DuckDBInfrastructure, {}, layer=1)
     container.register("bad", UnhealthyResource, {}, layer=3)
 
-    with pytest.raises(InitializationError, match="dependency graph"):
+    with pytest.raises(InitializationError, match="health check"):
         await container.build_all()
 
 
