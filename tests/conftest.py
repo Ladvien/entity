@@ -1,9 +1,11 @@
 from pathlib import Path
+import os
 import sys
 
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+os.environ.setdefault("ENTITY_AUTO_INIT", "0")
 
 from entity.infrastructure import DuckDBInfrastructure
 from entity.resources import Memory
