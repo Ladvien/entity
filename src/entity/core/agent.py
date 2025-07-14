@@ -696,7 +696,9 @@ class Agent:
         await self._ensure_runtime()
         from plugins.builtin.adapters.server import AgentServer
 
-        server = AgentServer(self.runtime)
+        server = AgentServer(
+            capabilities=self.runtime.capabilities, manager=self.runtime.manager
+        )
         await server.serve_http(**config)
 
     async def serve_websocket(self, **config: Any) -> None:
@@ -705,7 +707,9 @@ class Agent:
         await self._ensure_runtime()
         from plugins.builtin.adapters.server import AgentServer
 
-        server = AgentServer(self.runtime)
+        server = AgentServer(
+            capabilities=self.runtime.capabilities, manager=self.runtime.manager
+        )
         await server.serve_websocket(**config)
 
     async def serve_cli(self, **config: Any) -> None:
@@ -714,7 +718,9 @@ class Agent:
         await self._ensure_runtime()
         from plugins.builtin.adapters.server import AgentServer
 
-        server = AgentServer(self.runtime)
+        server = AgentServer(
+            capabilities=self.runtime.capabilities, manager=self.runtime.manager
+        )
         await server.serve_cli(**config)
 
 

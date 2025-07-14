@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from entity.core.agent import AgentRuntime
 
 from .cli import CLIAdapter
 from .http_adapter import HTTPAdapter
@@ -14,17 +13,18 @@ from .websocket import WebSocketAdapter
 class AgentServer:
     """Expose adapter-based serving helpers."""
 
-    def __init__(self, runtime: AgentRuntime) -> None:
-        self.runtime = runtime
+    def __init__(self, *, capabilities: Any, manager: Any | None = None) -> None:
+        self.capabilities = capabilities
+        self.manager = manager
 
     async def serve_http(self, **config: Any) -> None:
-        adapter = HTTPAdapter(self.runtime.manager, config)
-        await adapter.serve(self.runtime.capabilities)
+        adapter = HTTPAdapter(self.manager, config)
+        await adapter.serve(self.capabilities)
 
     async def serve_websocket(self, **config: Any) -> None:
-        adapter = WebSocketAdapter(self.runtime.manager, config)
-        await adapter.serve(self.runtime.capabilities)
+        adapter = WebSocketAdapter(self.manager, config)
+        await adapter.serve(self.capabilities)
 
     async def serve_cli(self, **config: Any) -> None:
-        adapter = CLIAdapter(self.runtime.manager, config)
-        await adapter.serve(self.runtime.capabilities)
+        adapter = CLIAdapter(self.manager, config)
+        await adapter.serve(self.capabilities)
