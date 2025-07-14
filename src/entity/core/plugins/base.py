@@ -35,6 +35,13 @@ def _ensure_logging_dependency(cls: type) -> None:
     cls.dependencies = deps
 
 
+def _inject_observability_dependencies(cls: type) -> None:
+    """Ensure metrics and logging dependencies are present."""
+
+    _ensure_metrics_dependency(cls)
+    _ensure_logging_dependency(cls)
+
+
 class ToolExecutionError(Exception):
     """Raised when a tool fails during execution."""
 
@@ -48,14 +55,13 @@ class BasePlugin:
     """
 
     stages: List[PipelineStage]
-    dependencies: List[str] = ["metrics_collector", "logging"]
+    dependencies: List[str] = []
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
         is_infra = any(base.__name__ == "InfrastructurePlugin" for base in cls.mro())
         if not is_infra:
-            _ensure_metrics_dependency(cls)
-            _ensure_logging_dependency(cls)
+            _inject_observability_dependencies(cls)
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
         self.config = config or {}
