@@ -23,7 +23,6 @@ from entity.pipeline.exceptions import CircuitBreakerTripped
 from entity.core.circuit_breaker import CircuitBreaker
 from entity.utils.logging import get_logger
 from entity.config.environment import load_config
-from docs.generate_config_docs import build_schema
 from importlib import import_module  # noqa: E402
 from entity.infrastructure import (
     DockerInfrastructure,
@@ -825,6 +824,7 @@ class EntityCLI:
 
     def _lint_config(self, files: list[str]) -> int:
         """Validate YAML files against the generated configuration schema."""
+        from docs.generate_config_docs import build_schema
 
         schema = build_schema()["EntityConfig"]
         validator = Draft7Validator(schema)
