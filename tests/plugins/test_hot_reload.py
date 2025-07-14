@@ -86,6 +86,8 @@ async def test_update_rejects_type_change():
 
 
 class FailingRollbackPlugin(ConfigPlugin):
+    stages = [PipelineStage.THINK]
+
     async def rollback_config(self, version: int) -> None:
         raise RuntimeError("boom")
 
