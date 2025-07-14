@@ -43,7 +43,7 @@ class MetricsCollectorResource(AgentResource):
     """Simple in-memory metrics collector."""
 
     name = "metrics_collector"
-    infrastructure_dependencies = ["database_backend"]
+    infrastructure_dependencies: list[str] = []
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
         super().__init__(config or {})
