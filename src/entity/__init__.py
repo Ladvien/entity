@@ -115,8 +115,14 @@ _default_agent: Agent | None = None
 
 
 def _ensure_agent() -> Agent:
+    """Return the default agent, creating it if needed."""
+
     global _default_agent
     if _default_agent is None:
+        if os.environ.get("ENTITY_AUTO_INIT", "1") != "1":
+            raise RuntimeError(
+                "ENTITY_AUTO_INIT is disabled; call _create_default_agent() manually"
+            )
         _default_agent = _create_default_agent()
     return _default_agent
 
@@ -128,9 +134,6 @@ class _LazyAgent(SimpleNamespace):
     def __repr__(self) -> str:  # pragma: no cover - convenience
         return repr(_ensure_agent())
 
-
-if os.environ.get("ENTITY_AUTO_INIT", "1") == "1":
-    _default_agent = _create_default_agent()
 
 agent: Agent | _LazyAgent = _LazyAgent()
 
