@@ -16,7 +16,9 @@ breaker_settings:
     failure_threshold: 2
 
 plugins:
+  # Layer 1 - infrastructure primitives
   infrastructure: {}
+  # Layer 2 - resource interfaces built on infrastructure
   resources:
     database:
       type: entity.resources.interfaces.duckdb_resource:DuckDBResource
@@ -29,21 +31,19 @@ plugins:
     #     dimensions: 3
     metrics_collector:
       type: entity.resources.metrics:MetricsCollectorResource
-    # llm:
-    #   type: plugins.builtin.resources.llm.unified:UnifiedLLMResource
-    #   provider: ollama
-    #   base_url: "${OLLAMA_BASE_URL}"
-    #   model: "${OLLAMA_MODEL}"
-    #   temperature: 0.7
-    #   retries: 5
-    #   backoff: 2.0
+  # Layer 3 - canonical agent resources
   agent_resources:
     memory:
       type: entity.resources.memory:Memory
       dependencies: [database, vector_store]
-    # filesystem:
-    #   type: plugins.builtin.resources.s3_filesystem:S3FileSystem
-    #   bucket: agent-files
+    llm:
+      type: entity.resources.llm:LLM
+      provider: echo
+    storage:
+      type: entity.resources.storage:Storage
+  # filesystem:
+  #   type: plugins.builtin.resources.s3_filesystem:S3FileSystem
+  #   bucket: agent-files
     #   region: us-east-1
     # storage:
     #   type: plugins.builtin.resources.storage_resource:StorageResource
@@ -64,6 +64,7 @@ plugins:
 #       type: plugins.builtin.resources.s3_filesystem:S3FileSystem
 #       bucket: agent-files
 #       region: us-east-1
+  # Layer 4 - user defined compositions
   custom_resources: {}
   tools:
     calculator:

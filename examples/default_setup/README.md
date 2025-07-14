@@ -1,9 +1,8 @@
 # Default Setup Agent
 
-This example uses the high level `Agent` API and the
-`@agent.tool` and `@agent.prompt` decorators to register plugins. The
-prompt is assigned to the `OUTPUT` stage so responses are emitted from
-the correct point in the pipeline.
+This example uses the global `agent` with the
+`@agent.tool` and `@agent.output` decorators. No configuration is
+required; the default resources are set up automatically.
 
 Run it with:
 

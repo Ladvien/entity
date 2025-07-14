@@ -7,5 +7,5 @@ emits the final response at the correct stage.
 Run it with:
 
 ```bash
-poetry run python examples/default_setup/main.py
+poetry run python examples/default/main.py
 ```

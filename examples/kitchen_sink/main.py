@@ -1,84 +1,23 @@
-from __future__ import annotations
-
 import asyncio
-from typing import Any
-from pathlib import Path
-import sys
-
-base = Path(__file__).resolve().parents[2]
-sys.path.append(str(base / "src"))
-sys.path.append(str(base))
-# ruff: noqa: E402
-
+from entity import agent
+from entity.core.stages import PipelineStage
 from user_plugins.tools.calculator_tool import CalculatorTool
 from user_plugins.responders import ReactResponder
-from entity.core.plugins import PromptPlugin, ResourcePlugin
-from entity.core.context import PluginContext
-from entity.core.stages import PipelineStage
-from datetime import datetime
-
-from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
-from entity.core.resources.container import ResourceContainer
-from entity.infrastructure.duckdb import DuckDBInfrastructure
-from entity.resources.memory import Memory
-from entity.pipeline.pipeline import execute_pipeline, generate_pipeline_id
-from entity.pipeline.state import ConversationEntry, PipelineState
 
 
-class EchoLLMResource(ResourcePlugin):
-    """LLM resource that echoes the prompt."""
-
-    async def generate(self, prompt: str) -> Any:
-        return {"content": prompt}
-
-
-class ReActPrompt(PromptPlugin):
-    """Very small ReAct style prompt."""
-
-    stages = [PipelineStage.THINK]
-
-    async def _execute_impl(self, context: PluginContext) -> None:
-        question = next(
-            (e.content for e in context.conversation() if e.role == "user"), ""
-        )
-        tool_result = await context.tool_use("calc", expression="2+2")
-        thoughts = await context.reflect("react_thoughts", [])
-        thoughts.append(f"Thinking about {question} using tool result {tool_result}")
-        await context.think("react_thoughts", thoughts)
+@agent.prompt(stage=PipelineStage.THINK)
+async def react_prompt(ctx):
+    question = next((e.content for e in ctx.conversation() if e.role == "user"), "")
+    tool_result = await ctx.tool_use("calc", expression="2+2")
+    thoughts = await ctx.reflect("react_thoughts", [])
+    thoughts.append(f"Thinking about {question} using tool result {tool_result}")
+    await ctx.think("react_thoughts", thoughts)
 
 
 async def main() -> None:
-    resources = ResourceContainer()
-    db = DuckDBInfrastructure({"path": "./agent.duckdb"})
-    memory = Memory(config={})
-    memory.database = db
-    await db.initialize()
-    await resources.add("database", db)
-    await resources.add("memory", memory)
-    await resources.add("llm", EchoLLMResource({}))
-
-    tools = ToolRegistry()
-    await tools.add("calc", CalculatorTool())
-
-    plugins = PluginRegistry()
-    await plugins.register_plugin_for_stage(
-        ReActPrompt({"max_steps": 2}), PipelineStage.THINK, "react"
-    )
-    await plugins.register_plugin_for_stage(
-        ReactResponder({}), PipelineStage.OUTPUT, "final"
-    )
-
-    caps = SystemRegistries(resources=resources, tools=tools, plugins=plugins)
-
-    state = PipelineState(
-        conversation=[
-            ConversationEntry(
-                content="What is 2 + 2?", role="user", timestamp=datetime.now()
-            )
-        ],
-        pipeline_id=generate_pipeline_id(),
-    )
-    result: dict[str, Any] = await execute_pipeline("What is 2 + 2?", caps, state=state)
+    await agent.builder.tool_registry.add("calc", CalculatorTool())
+    await agent.add_plugin(ReactResponder({}))
+    result = await agent.handle("What is 2 + 2?")
     print(result)
 
 
