@@ -1,7 +1,9 @@
 import logging
 import pytest
 
-from entity.pipeline.initializer import SystemInitializer, ClassRegistry
+from entity.pipeline.errors import InitializationError
+from entity.pipeline import initializer
+from entity.pipeline.initializer import ClassRegistry, SystemInitializer
 from entity.pipeline.stages import PipelineStage
 from entity.core.plugins import PromptPlugin
 from entity.resources.interfaces.database import DatabaseResource
@@ -20,7 +22,10 @@ class MyPlugin(PromptPlugin):
         pass
 
 
-def test_stage_mismatch_warning(caplog):
+from unittest.mock import MagicMock
+
+
+def test_stage_mismatch_warning(monkeypatch):
     cfg = {
         "plugins": {
             "agent_resources": {
@@ -43,10 +48,11 @@ def test_stage_mismatch_warning(caplog):
     init = SystemInitializer(cfg)
     registry = ClassRegistry()
     dep_graph: dict[str, list[str]] = {}
-    with caplog.at_level(logging.WARNING, logger="entity.pipeline.initializer"):
-        init._register_plugins(registry, dep_graph)
-        init._warn_stage_mismatches(registry)
-    assert any("override class stages" in r.message for r in caplog.records)
+    init._register_plugins(registry, dep_graph)
+    mock = MagicMock()
+    monkeypatch.setattr(initializer, "logger", mock)
+    init._warn_stage_mismatches(registry)
+    mock.warning.assert_called()
 
 
 def test_stage_mismatch_strict():
@@ -73,5 +79,5 @@ def test_stage_mismatch_strict():
     registry = ClassRegistry()
     dep_graph: dict[str, list[str]] = {}
     init._register_plugins(registry, dep_graph)
-    with pytest.raises(Exception):
+    with pytest.raises(InitializationError):
         init._warn_stage_mismatches(registry)

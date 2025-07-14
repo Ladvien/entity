@@ -517,7 +517,7 @@ class SystemInitializer:
 
         for cls, config in registry.all_plugin_classes():
             cfg_value = config.get("stages") or config.get("stage")
-            class_value = getattr(cls, "stages", None) or getattr(cls, "stage", None)
+            class_value = cls.__dict__.get("stage") or cls.__dict__.get("stages")
             if cfg_value is None or class_value is None:
                 continue
 
@@ -531,9 +531,13 @@ class SystemInitializer:
                     f"{cls.__name__} configured stages {cfg_stages} "
                     f"override class stages {class_stages}"
                 )
-                if self.strict_stages:
-                    raise InitializationError(cls.__name__, "stage validation", msg)
                 logger.warning(msg)
+                if self.strict_stages:
+                    raise InitializationError(
+                        cls.__name__,
+                        "stage validation",
+                        msg,
+                    )
 
     def _register_plugins(
         self, registry: ClassRegistry, dep_graph: Dict[str, List[str]]
