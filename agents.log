@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-14: Simplified layer validation by removing duplicate dependency check
 AGENT NOTE - 2025-07-14: Documented PYTHONPATH usage for pytest in README
 AGENT NOTE - 2025-07-14: Fixed workflow fallback in _create_default_agent
 AGENT NOTE - 2025-07-14: Removed merge markers from errors.py
