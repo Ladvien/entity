@@ -42,7 +42,7 @@ initializer logs a warning and metrics are disabled.
 
 ```yaml
 plugins:
-  resources:
+  custom_resources:
     metrics_collector:
       type: entity.resources.metrics:MetricsCollectorResource
       retention_days: 90

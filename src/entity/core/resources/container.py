@@ -309,7 +309,12 @@ class ResourceContainer:
         ):
             from entity.resources.metrics import MetricsCollectorResource
 
-            self.register("metrics_collector", MetricsCollectorResource, {}, layer=3)
+            self.register(
+                "metrics_collector",
+                MetricsCollectorResource,
+                {},
+                layer=4,
+            )
 
         self._validate_layers()
         self._order = self._resolve_order()
