@@ -1,20 +1,7 @@
 AGENT NOTE - 2025-07-14: Updated plugin config tests to use dictionaries
-<<<<<<< HEAD
-<<<<<<< HEAD
 AGENT NOTE - 2025-10-14: Updated observability dependency injection for LoggingResource and MetricsCollectorResource
 AGENT NOTE - 2025-07-14: Removed infrastructure_dependencies from MetricsCollectorResource
-=======
 AGENT NOTE - 2025-07-14: Added sys.path setup in tests and examples for direct execution
-=======
->>>>>>> pr-1572
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> pr-1574
 AGENT NOTE - 2025-10-08: _ensure_agent initializes default agent with warning when auto init disabled
 AGENT NOTE - 2025-07-14: Simplified layer validation by removing duplicate dependency check
 AGENT NOTE - 2025-07-14: Updated load_conversation ID logic and added tests
