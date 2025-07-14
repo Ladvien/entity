@@ -113,7 +113,10 @@ class Memory(AgentResource):
     async def load_conversation(
         self, pipeline_id: str, *, user_id: str = "default"
     ) -> List[ConversationEntry]:
-        conversation_id = f"{user_id}_{pipeline_id}"
+        if user_id == "default":
+            conversation_id = pipeline_id
+        else:
+            conversation_id = f"{user_id}_{pipeline_id}"
         if self.database is None:
             return []
         async with self.database.connection() as conn:

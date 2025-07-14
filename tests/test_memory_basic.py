@@ -107,3 +107,19 @@ async def test_conversation_search_text(simple_memory: Memory) -> None:
     results = await simple_memory.conversation_search("new message", user_id="default")
     assert len(results) == 1
     assert results[0]["content"] == "new message"
+
+
+@pytest.mark.asyncio
+async def test_load_conversation_with_user_id(simple_memory: Memory) -> None:
+    entry = ConversationEntry("hi", "user", datetime.now())
+    await simple_memory.save_conversation("pipe", [entry], user_id="alice")
+    history = await simple_memory.load_conversation("pipe", user_id="alice")
+    assert history == [entry]
+
+
+@pytest.mark.asyncio
+async def test_load_conversation_preformatted_id(simple_memory: Memory) -> None:
+    entry = ConversationEntry("hello", "user", datetime.now())
+    await simple_memory.save_conversation("pipe", [entry], user_id="bob")
+    history = await simple_memory.load_conversation("bob_pipe")
+    assert history == [entry]
