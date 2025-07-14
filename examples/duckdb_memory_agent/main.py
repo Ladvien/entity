@@ -1,27 +1,14 @@
-from __future__ import annotations
-
 import asyncio
 import json
 from datetime import datetime
 from typing import Any, List
-from pathlib import Path
-import sys
-
-base = Path(__file__).resolve().parents[2]
-sys.path.append(str(base / "src"))
-sys.path.append(str(base))
-# ruff: noqa: E402
 
 import duckdb
-
+from entity import agent
 from entity.core.plugins import PromptPlugin, ResourcePlugin
 from entity.core.context import PluginContext
 from entity.core.state import ConversationEntry
 from entity.core.stages import PipelineStage
-from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
-from entity.core.resources.container import ResourceContainer
-from entity.pipeline.pipeline import execute_pipeline, generate_pipeline_id
-from entity.pipeline.state import PipelineState
 
 
 class DuckDBMemory(ResourcePlugin):
@@ -38,8 +25,7 @@ class DuckDBMemory(ResourcePlugin):
             "CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT)"
         )
         self._conn.execute(
-            "CREATE TABLE IF NOT EXISTS history ("
-            "conversation_id TEXT, role TEXT, content TEXT, timestamp TEXT)"
+            "CREATE TABLE IF NOT EXISTS history (conversation_id TEXT, role TEXT, content TEXT, timestamp TEXT)"
         )
 
     async def _execute_impl(self, context: Any) -> None:  # pragma: no cover - resource
@@ -81,15 +67,12 @@ class DuckDBMemory(ResourcePlugin):
 
     async def load_conversation(self, conversation_id: str) -> List[ConversationEntry]:
         rows = self._conn.execute(
-            "SELECT role, content, timestamp FROM history WHERE conversation_id = ? "
-            "ORDER BY timestamp",
+            "SELECT role, content, timestamp FROM history WHERE conversation_id = ? ORDER BY timestamp",
             (conversation_id,),
         ).fetchall()
         return [
             ConversationEntry(
-                role=row[0],
-                content=row[1],
-                timestamp=datetime.fromisoformat(row[2]),
+                role=row[0], content=row[1], timestamp=datetime.fromisoformat(row[2])
             )
             for row in rows
         ]
@@ -108,32 +91,13 @@ class IncrementPrompt(PromptPlugin):
 
 
 async def main() -> None:
-    resources = ResourceContainer()
-    resources.register("memory", DuckDBMemory, {"path": "agent.duckdb"})
-    await resources.build_all()
-
-    plugins = PluginRegistry()
-    await plugins.register_plugin_for_stage(
-        IncrementPrompt({}), PipelineStage.OUTPUT, "increment"
+    agent.builder.resource_registry.register(
+        "memory", DuckDBMemory, {"path": "agent.duckdb"}, layer=3
     )
+    await agent.add_plugin(IncrementPrompt({}))
 
-    caps = SystemRegistries(resources=resources, tools=ToolRegistry(), plugins=plugins)
-
-    state = PipelineState(
-        conversation=[
-            ConversationEntry(content="hi", role="user", timestamp=datetime.now())
-        ],
-        pipeline_id=generate_pipeline_id(),
-    )
-    first = await execute_pipeline("hi", caps, state=state)
-
-    state2 = PipelineState(
-        conversation=[
-            ConversationEntry(content="again", role="user", timestamp=datetime.now())
-        ],
-        pipeline_id=generate_pipeline_id(),
-    )
-    second = await execute_pipeline("again", caps, state=state2)
+    first = await agent.handle("hi")
+    second = await agent.handle("again")
 
     print(first)
     print(second)

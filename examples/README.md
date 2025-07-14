@@ -3,7 +3,7 @@
 Each subdirectory contains a small agent showcasing different features.
 
 - **kitchen_sink** – demonstrates a ReAct loop with tool usage.
-- **zero_config_agent** – uses `@agent.tool` and `@agent.output` decorators.
+- **default** – minimal zero-config agent using decorators.
 - **plugins** – minimal plugins for INPUT, PARSE, and REVIEW stages.
 
 Run any example with:

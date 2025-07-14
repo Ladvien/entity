@@ -1,9 +1,6 @@
 import asyncio
 
-from entity import Agent
-from entity.core.stages import PipelineStage
-
-agent = Agent()
+from entity import agent
 
 
 @agent.tool
@@ -11,7 +8,7 @@ async def add(a: int, b: int) -> int:
     return a + b
 
 
-@agent.prompt(stage=PipelineStage.OUTPUT)
+@agent.output
 async def responder(ctx):
     user = next((e.content for e in ctx.conversation() if e.role == "user"), "")
     result = await ctx.tool_use("add", a=2, b=2)

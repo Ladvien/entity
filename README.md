@@ -67,3 +67,14 @@ With dependencies installed you can run the included poe tasks:
 poe test
 ```
 
+## Multi-User Support
+
+Pass a unique `user_id` when calling `agent.chat()` or `agent.handle()` to keep
+conversation history and memory isolated per user.
+
+```python
+response = await agent.chat("Hi", user_id="alice")
+```
+
+See [multi_user](docs/source/multi_user.md) for additional patterns.
+

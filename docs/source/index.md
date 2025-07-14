@@ -12,6 +12,7 @@ logging
 configuration
 plugin_examples
 plugins
+multi_user
 ```
 
 The following pages cover core concepts and usage patterns.
