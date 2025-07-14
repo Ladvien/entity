@@ -140,6 +140,10 @@ async def test_error_handling_and_recovery(registries: SystemRegistries) -> None
     worker = PipelineWorker(registries)
     success = await worker.execute_pipeline("pipe", "ok", user_id="u1")
     assert success == "ok"
+    history = await registries.resources.get("memory").load_conversation(
+        "pipe", user_id="u1"
+    )
+    assert [e.content for e in history if e.role == "user"] == ["hi", "ok"]
 
 
 @pytest.mark.asyncio
