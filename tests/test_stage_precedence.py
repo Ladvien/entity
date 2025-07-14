@@ -1,14 +1,9 @@
-import importlib
 import logging
-import pathlib
-import sys
-
-sys.path.insert(0, str(pathlib.Path("src").resolve()))
-import entity.pipeline.utils as pipeline_utils
+from entity.pipeline import utils as pipeline_utils
 from entity.core.stages import PipelineStage
 from entity.core.plugins import Plugin, PromptPlugin
 
-StageResolver = importlib.reload(pipeline_utils).StageResolver
+StageResolver = pipeline_utils.StageResolver
 
 
 class AttrPrompt(Plugin):

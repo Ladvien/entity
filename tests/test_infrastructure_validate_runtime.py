@@ -3,7 +3,7 @@ import pytest
 
 
 from entity.infrastructure import DuckDBInfrastructure, PostgresInfrastructure
-from entity.pipeline.reliability import CircuitBreaker
+from entity.core.circuit_breaker import CircuitBreaker
 
 
 @pytest.mark.asyncio

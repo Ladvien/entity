@@ -1,6 +1,5 @@
 from unittest.mock import AsyncMock
 
-from entity import _create_default_agent
 from entity.utils.setup_manager import Layer0SetupManager
 from entity.pipeline.stages import PipelineStage
 
@@ -28,6 +27,8 @@ def test_create_default_agent_brand_new_env(monkeypatch, tmp_path):
     monkeypatch.setattr(Layer0SetupManager, "__init__", fake_init, raising=False)
     monkeypatch.setattr(Layer0SetupManager, "ensure_ollama", fake_ensure, raising=False)
     monkeypatch.setattr(Layer0SetupManager, "setup", AsyncMock())
+
+    from entity import _create_default_agent
 
     agent = _create_default_agent()
     resources = agent._runtime.capabilities.resources

@@ -1,6 +1,5 @@
 from unittest.mock import AsyncMock
 
-from entity import _create_default_agent
 from entity.utils.setup_manager import Layer0SetupManager
 
 
@@ -22,6 +21,8 @@ def test_zero_config_initialization(monkeypatch, tmp_path):
 
     monkeypatch.setattr(Layer0SetupManager, "__init__", fake_init, raising=False)
     monkeypatch.setattr(Layer0SetupManager, "setup", AsyncMock())
+
+    from entity import _create_default_agent
 
     agent = _create_default_agent()
     res = agent._runtime.capabilities.resources

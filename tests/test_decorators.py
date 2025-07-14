@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from entity import Agent
+from entity.core.agent import Agent
 from entity.core import decorators
 from entity.core.plugins import Plugin
 from entity.core.stages import PipelineStage
