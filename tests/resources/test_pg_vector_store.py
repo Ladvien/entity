@@ -17,10 +17,21 @@ from plugins.builtin.resources.pg_vector_store import PgVectorStore
 @pytest.fixture()
 def prepared_postgres(postgresql_proc, request):
     """Ensure the test database exists and clean it up afterwards."""
-    postgresql_proc.createdb(postgresql_proc.dbname)
+    from pytest_postgresql.janitor import DatabaseJanitor
+
+    janitor = DatabaseJanitor(
+        user=postgresql_proc.user,
+        host=postgresql_proc.host,
+        port=postgresql_proc.port,
+        dbname=postgresql_proc.dbname,
+        template_dbname=postgresql_proc.template_dbname,
+        version=postgresql_proc.version,
+        password=postgresql_proc.password,
+    )
+    janitor.init()
 
     def drop_db():
-        postgresql_proc.dropdb(postgresql_proc.dbname)
+        janitor.drop()
 
     request.addfinalizer(drop_db)
     return postgresql_proc
