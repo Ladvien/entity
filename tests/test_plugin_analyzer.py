@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from entity.pipeline import Plugin  # noqa: F401 - triggers plugin configuration
+from entity.core.plugins import Plugin  # noqa: F401 - triggers plugin configuration
 from entity.pipeline.initializer import SystemInitializer
 from entity.pipeline.errors import InitializationError
 
