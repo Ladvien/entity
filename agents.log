@@ -1,45 +1,15 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
+AGENT NOTE - 2025-07-14: Adjusted metrics_collector layer 4 tests and removed log conflict markers
 AGENT NOTE - 2025-07-14: Verified conversation user scoping uses {user_id}_{pipeline_id} and all multi-user tests pass
->>>>>>> pr-1591
-=======
 AGENT NOTE - 2025-07-14: Added explicit stages to test plugins and fixed missing dependency regex
->>>>>>> pr-1592
-=======
 AGENT NOTE - 2025-07-14: Moved MetricsCollectorResource to layer 4 and updated container defaults
->>>>>>> pr-1595
-=======
 AGENT NOTE - 2025-07-14: Verified pipeline recovery returns final output
->>>>>>> pr-1594
-=======
 AGENT NOTE - 2025-07-14: Adjusted regex patterns for dependency graph error messages
->>>>>>> pr-1597
-=======
 AGENT NOTE - 2025-07-14: Added metrics_collector dependencies for LLM and VectorStoreResource
->>>>>>> pr-1596
-=======
 AGENT NOTE - 2025-10-14: Moved EchoLLMResource to interfaces package for clarity
->>>>>>> pr-1598
-=======
 AGENT NOTE - 2025-07-14: Updated PostgreSQL test fixture to use DatabaseJanitor
 
->>>>>>> pr-1599
-=======
 AGENT NOTE - 2025-07-14: Fixed pipeline exports for SystemInitializer and CLI lazy schema import
->>>>>>> pr-1600
-=======
 AGENT NOTE - 2025-07-14: Updated DummyResource tests to register at layer 4 and clear metrics dependencies
->>>>>>> pr-1601
 AGENT NOTE - 2025-07-14: Updated layer validation message checks in tests
 AGENT NOTE - 2025-07-14: typed dependencies for infrastructure plugins
 AGENT NOTE - 2025-07-14: Ensured PostgreSQL tests create and drop temporary database
@@ -52,20 +22,8 @@ AGENT NOTE - 2025-07-14: Revised layer validation order and cycle detection
 AGENT NOTE - 2025-07-14: Fixed conversation history user_id namespacing and updated tests
 AGENT NOTE - 2025-07-14: Fixed stage mismatch warning logging and updated tests
 AGENT NOTE - 2025-07-14: Documented pyyaml/python-dotenv requirements for CLI validation
-=======
 AGENT NOTE - 2025-10-09: Added DuckDB infrastructure fixture for resource-only tests
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> pr-1590
-=======
 AGENT NOTE - 2025-10-09: Corrected default LLM provider layer
->>>>>>> pr-1593
 AGENT NOTE - 2025-10-08: _ensure_agent initializes default agent with warning when auto init disabled
 AGENT NOTE - 2025-07-14: Simplified layer validation by removing duplicate dependency check
 AGENT NOTE - 2025-07-14: Updated load_conversation ID logic and added tests
