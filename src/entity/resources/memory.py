@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
+import inspect
 import json
 
 from .base import AgentResource
@@ -40,6 +41,20 @@ class Memory(AgentResource):
         if callable(commit):
             commit()
 
+
+async def _execute(conn: Any, sql: str, params: Any | None = None) -> Any:
+    """Run a query and await the result when necessary."""
+    result = conn.execute(sql, params or [])
+    if inspect.isawaitable(result):
+        result = await result
+    return result
+
+
+async def _maybe_await(value: Any) -> Any:
+    if inspect.isawaitable(value):
+        return await value
+    return value
+
     async def initialize(self) -> None:
         if self.database is None:
             raise ResourceInitializationError(
@@ -47,12 +62,14 @@ class Memory(AgentResource):
             )
         self._pool = self.database.get_connection_pool()
         async with self.database.connection() as conn:
-            conn.execute(
-                f"CREATE TABLE IF NOT EXISTS {self._kv_table} (key TEXT PRIMARY KEY, value TEXT)"
+            await _execute(
+                conn,
+                f"CREATE TABLE IF NOT EXISTS {self._kv_table} (key TEXT PRIMARY KEY, value TEXT)",
             )
-            conn.execute(
+            await _execute(
+                conn,
                 f"CREATE TABLE IF NOT EXISTS {self._history_table} ("
-                "conversation_id TEXT, role TEXT, content TEXT, metadata TEXT, timestamp TEXT)"
+                "conversation_id TEXT, role TEXT, content TEXT, metadata TEXT, timestamp TEXT)",
             )
             self._maybe_commit(conn)
 
@@ -76,7 +93,7 @@ class Memory(AgentResource):
         if self.database is None:
             return
         async with self.database.connection() as conn:
-            conn.execute(f"DELETE FROM {self._kv_table}")
+            await _execute(conn, f"DELETE FROM {self._kv_table}")
             self._maybe_commit(conn)
 
     # ------------------------------------------------------------------
@@ -93,12 +110,14 @@ class Memory(AgentResource):
         if self._pool is None:
             return
         async with self.database.connection() as conn:
-            conn.execute(
+            await _execute(
+                conn,
                 f"DELETE FROM {self._history_table} WHERE conversation_id = ?",
                 (conversation_id,),
             )
             for entry in history:
-                conn.execute(
+                await _execute(
+                    conn,
                     f"INSERT INTO {self._history_table} VALUES (?, ?, ?, ?, ?)",
                     (
                         conversation_id,
@@ -117,11 +136,13 @@ class Memory(AgentResource):
         if self.database is None:
             return []
         async with self.database.connection() as conn:
-            rows = conn.execute(
+            cursor = await _execute(
+                conn,
                 f"SELECT role, content, metadata, timestamp FROM {self._history_table} "
                 "WHERE conversation_id = ? ORDER BY timestamp",
                 (conversation_id,),
-            ).fetchall()
+            )
+            rows = await _maybe_await(cursor.fetchall())
         result: List[ConversationEntry] = []
         for row in rows:
             metadata = json.loads(row[2]) if row[2] else {}
@@ -165,9 +186,10 @@ class Memory(AgentResource):
             raise InitializationError("Database dependency not injected")
 
         async with self.database.connection() as conn:
-            cursor = conn.execute(sql, params or [])
+            cursor = await _execute(conn, sql, params)
             columns = [d[0] for d in cursor.description]
-            return [dict(zip(columns, row)) for row in cursor.fetchall()]
+            rows = await _maybe_await(cursor.fetchall())
+            return [dict(zip(columns, row)) for row in rows]
 
     async def vector_search(self, query: str, k: int = 5) -> List[str]:
         """Delegate semantic search to the vector store."""
@@ -199,7 +221,8 @@ class Memory(AgentResource):
             return
         namespaced_key = f"{user_id}:{key}"
         async with self.database.connection() as conn:
-            conn.execute(
+            await _execute(
+                conn,
                 f"INSERT OR REPLACE INTO {self._kv_table} VALUES (?, ?)",
                 (namespaced_key, json.dumps(value)),
             )
@@ -213,10 +236,12 @@ class Memory(AgentResource):
             return default
         namespaced_key = f"{user_id}:{key}"
         async with self.database.connection() as conn:
-            row = conn.execute(
+            cursor = await _execute(
+                conn,
                 f"SELECT value FROM {self._kv_table} WHERE key = ?",
                 (namespaced_key,),
-            ).fetchone()
+            )
+            row = await _maybe_await(cursor.fetchone())
         return json.loads(row[0]) if row else default
 
     async def delete_persistent(self, key: str, *, user_id: str = "default") -> None:
@@ -225,7 +250,8 @@ class Memory(AgentResource):
             return
         namespaced_key = f"{user_id}:{key}"
         async with self.database.connection() as conn:
-            conn.execute(
+            await _execute(
+                conn,
                 f"DELETE FROM {self._kv_table} WHERE key = ?",
                 (namespaced_key,),
             )
@@ -239,7 +265,8 @@ class Memory(AgentResource):
         if self._pool is None:
             return
         async with self.database.connection() as conn:
-            conn.execute(
+            await _execute(
+                conn,
                 f"INSERT INTO {self._history_table} VALUES (?, ?, ?, ?, ?)",
                 (
                     conversation_id,
@@ -295,7 +322,8 @@ class Memory(AgentResource):
         sql += " ORDER BY timestamp DESC"
 
         async with self.database.connection() as conn:
-            rows = conn.execute(sql, params).fetchall()
+            cursor = await _execute(conn, sql, params)
+            rows = await _maybe_await(cursor.fetchall())
         return [
             {
                 "conversation_id": row[0],
@@ -313,11 +341,13 @@ class Memory(AgentResource):
             return {}
 
         async with self.database.connection() as conn:
-            rows = conn.execute(
+            cursor = await _execute(
+                conn,
                 f"SELECT conversation_id, content, timestamp FROM {self._history_table} "
                 "WHERE conversation_id LIKE ? ORDER BY timestamp",
                 (f"{user_id}%",),
-            ).fetchall()
+            )
+            rows = await _maybe_await(cursor.fetchall())
 
         conv_ids: set[str] = set()
         total_length = 0
