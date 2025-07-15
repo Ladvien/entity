@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Clarified pytest-docker and Docker requirements in README
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Added optional llm_backend dependency to LLMResource
@@ -6,6 +7,9 @@ AGENT NOTE - 2025-07-15: Added echo_llm_backend infrastructure and updated defau
 =======
 AGENT NOTE - 2025-07-15: Implemented failing infrastructure plugin for tests
 >>>>>>> pr-1654
+=======
+AGENT NOTE - 2025-07-15: Added py.typed to package for typing support
+>>>>>>> pr-1652
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Updated memory._execute to handle paramstyle fallback
 <<<<<<< HEAD

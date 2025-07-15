@@ -8,6 +8,7 @@ readme = "README.md"
 package-mode = true
 
 packages = [{ include = "entity", from = "src" }]
+include = ["src/entity/py.typed"]
 
 [tool.poetry.scripts]
 entity-cli = "entity.cli.__main__:main"
