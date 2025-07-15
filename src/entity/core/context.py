@@ -25,8 +25,22 @@ class AdvancedContext:
     def parent(self) -> "PluginContext":
         return self._parent
 
-    def replace_conversation_history(self, history: list[ConversationEntry]) -> None:
-        self._parent._state.conversation = list(history)
+    async def replace_conversation_history(
+        self, history: list[ConversationEntry]
+    ) -> None:
+        """Persist ``history`` as the new conversation."""
+        if self._parent._memory is not None:
+            await self._parent._memory.save_conversation(
+                self._parent.pipeline_id,
+                history,
+                user_id=self._parent.user_id,
+            )
+            self._parent._state.conversation = (
+                await self._parent._memory.load_conversation(
+                    self._parent.pipeline_id,
+                    user_id=self._parent.user_id,
+                )
+            )
 
     async def queue_tool_use(
         self,
@@ -81,14 +95,43 @@ class AdvancedContext:
 
     async def think_temp(self, key: str, value: Any) -> None:
         """Store a temporary thought only accessible via ``advanced``."""
-        self._parent._state.temporary_thoughts[key] = value
+        if self._parent._memory is not None:
+            mem_key = f"{self._parent.pipeline_id}_temp"
+            thoughts = await self._parent._memory.fetch_persistent(
+                mem_key,
+                {},
+                user_id=self._parent.user_id,
+            )
+            thoughts[key] = value
+            await self._parent._memory.store_persistent(
+                mem_key,
+                thoughts,
+                user_id=self._parent.user_id,
+            )
+            self._parent._state.temporary_thoughts = thoughts
 
     async def reflect_temp(self, key: str, default: Any | None = None) -> Any:
         """Retrieve a temporary thought stored via ``think_temp``."""
+        if self._parent._memory is not None:
+            mem_key = f"{self._parent.pipeline_id}_temp"
+            thoughts = await self._parent._memory.fetch_persistent(
+                mem_key,
+                {},
+                user_id=self._parent.user_id,
+            )
+            self._parent._state.temporary_thoughts = thoughts
+            return thoughts.get(key, default)
         return self._parent._state.temporary_thoughts.get(key, default)
 
     async def clear_temp(self) -> None:
         """Remove all temporary thoughts stored via ``think_temp``."""
+        if self._parent._memory is not None:
+            mem_key = f"{self._parent.pipeline_id}_temp"
+            await self._parent._memory.store_persistent(
+                mem_key,
+                {},
+                user_id=self._parent.user_id,
+            )
         self._parent._state.temporary_thoughts.clear()
 
     # ------------------------------------------------------------------
