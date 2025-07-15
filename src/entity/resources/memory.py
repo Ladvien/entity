@@ -12,7 +12,6 @@ from .interfaces.database import DatabaseResource as DatabaseInterface
 from .interfaces.vector_store import (
     VectorStoreResource as VectorStoreInterface,
 )
-from ..core.resources.container import ResourcePool
 from ..core.plugins import ValidationResult
 from entity.config.models import MemoryConfig
 from pydantic import ValidationError
@@ -31,7 +30,6 @@ class Memory(AgentResource):
         super().__init__(config or {})
         self.database: DatabaseInterface | None = None
         self.vector_store: VectorStoreInterface | None = None
-        self._pool: ResourcePool | None = None
         self._kv_table = self.config.get("kv_table", "memory_kv")
         self._history_table = self.config.get("history_table", "conversation_history")
 
@@ -46,7 +44,6 @@ class Memory(AgentResource):
             raise ResourceInitializationError(
                 "Database dependency not injected", self.name
             )
-        self._pool = self.database.get_connection_pool()
         async with self.database.connection() as conn:
             await _execute(
                 conn,
@@ -92,7 +89,7 @@ class Memory(AgentResource):
         user_id: str = "default",
     ) -> None:
         conversation_id = f"{user_id}_{pipeline_id}"
-        if self._pool is None:
+        if self.database is None:
             return
         async with self.database.connection() as conn:
             await _execute(
@@ -167,7 +164,7 @@ class Memory(AgentResource):
 
     async def query(self, sql: str, params: List | None = None) -> List[Dict[str, Any]]:
         """Execute ``sql`` using the injected database."""
-        if self._pool is None:
+        if self.database is None:
             raise InitializationError("Database dependency not injected")
 
         async with self.database.connection() as conn:
@@ -186,7 +183,7 @@ class Memory(AgentResource):
         self, key_value_pairs: Dict[str, Any], *, user_id: str = "default"
     ) -> None:
         """Store multiple key/value pairs efficiently."""
-        if self._pool is None:
+        if self.database is None:
             return
         rows = [
             (f"{user_id}:{key}", json.dumps(value))
@@ -202,7 +199,7 @@ class Memory(AgentResource):
         self, key: str, value: Any, *, user_id: str = "default"
     ) -> None:
         """Persist ``value`` under ``key``."""
-        if self._pool is None:
+        if self.database is None:
             return
         namespaced_key = f"{user_id}:{key}"
         async with self.database.connection() as conn:
@@ -217,7 +214,7 @@ class Memory(AgentResource):
         self, key: str, default: Any = None, *, user_id: str = "default"
     ) -> Any:
         """Retrieve a persisted value."""
-        if self._pool is None:
+        if self.database is None:
             return default
         namespaced_key = f"{user_id}:{key}"
         async with self.database.connection() as conn:
@@ -231,7 +228,7 @@ class Memory(AgentResource):
 
     async def delete_persistent(self, key: str, *, user_id: str = "default") -> None:
         """Remove ``key`` from persistent storage."""
-        if self._pool is None:
+        if self.database is None:
             return
         namespaced_key = f"{user_id}:{key}"
         async with self.database.connection() as conn:
@@ -247,7 +244,7 @@ class Memory(AgentResource):
     ) -> None:
         conversation_id = f"{user_id}_{pipeline_id}"
         """Append a single entry to ``conversation_id``."""
-        if self._pool is None:
+        if self.database is None:
             return
         async with self.database.connection() as conn:
             await _execute(
@@ -273,7 +270,7 @@ class Memory(AgentResource):
         k: int = 5,
     ) -> List[Dict[str, Any]]:
         """Search conversation history using vector similarity when possible."""
-        if self._pool is None:
+        if self.database is None:
             return []
         sql = (
             f"SELECT conversation_id, role, content, metadata, timestamp "
@@ -322,7 +319,7 @@ class Memory(AgentResource):
 
     async def conversation_statistics(self, user_id: str) -> Dict[str, Any]:
         """Return metrics for all conversations belonging to ``user_id``."""
-        if self._pool is None:
+        if self.database is None:
             return {}
 
         async with self.database.connection() as conn:

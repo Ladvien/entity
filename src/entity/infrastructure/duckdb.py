@@ -81,6 +81,10 @@ class DuckDBInfrastructure(InfrastructurePlugin):
     def get_connection_pool(self) -> ResourcePool:
         return self._pool
 
+    def get_pool(self) -> ResourcePool:
+        """Return the existing connection pool."""
+        return self._pool
+
     async def validate_runtime(
         self, breaker: CircuitBreaker | None = None
     ) -> ValidationResult:
