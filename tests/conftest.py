@@ -14,6 +14,16 @@ import asyncpg
 import psycopg
 import pytest
 
+REQUIRE_PYTEST_DOCKER = (
+    "pytest-docker is required for Docker-based fixtures. "
+    "Run 'poetry install --with dev' to install it."
+)
+
+
+def _require_docker():
+    pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
+
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 os.environ.setdefault("ENTITY_AUTO_INIT", "0")
 
@@ -70,6 +80,7 @@ def _clear_metrics_deps():
 @pytest.fixture(scope="session")
 def docker_compose_file(pytestconfig: pytest.Config) -> str:
     """Return path to the docker compose file."""
+    _require_docker()
     return str(Path(pytestconfig.rootpath) / "tests" / "docker-compose.yml")
 
 
@@ -89,6 +100,7 @@ def _postgres_ready(dsn: str) -> bool:
 @pytest.fixture(scope="session")
 def postgres_dsn(docker_ip: str, docker_services) -> str:
     """Start the Postgres container and return a DSN."""
+    _require_docker()
     docker_services.start("postgres")
     port = docker_services.port_for("postgres", 5432)
     dsn = f"postgresql://test:test@{docker_ip}:{port}/test_db"
@@ -121,6 +133,7 @@ class AsyncPGDatabase(DatabaseResource):
 @pytest.fixture(scope="session")
 async def pg_memory(postgres_dsn: str) -> Memory:
     """Memory resource backed by Postgres."""
+    _require_docker()
     db = AsyncPGDatabase(postgres_dsn)
     mem = Memory({})
     mem.database = db
@@ -137,6 +150,7 @@ async def pg_memory(postgres_dsn: str) -> Memory:
 @pytest.fixture(scope="session")
 def ollama_url(docker_ip: str, docker_services) -> str:
     """Start the Ollama container and return its base URL."""
+    _require_docker()
     docker_services.start("ollama")
     port = docker_services.port_for("ollama", 11434)
     url = f"http://{docker_ip}:{port}"

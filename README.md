@@ -52,7 +52,8 @@ documentation.
 
 ## Running Tests
 
-Running the tests requires the development dependencies. Install them with:
+Before running any tests, install the development dependencies. `pytest-docker`
+is included in this group and required for Docker-based fixtures. Install with:
 
 ```bash
 poetry install --with dev

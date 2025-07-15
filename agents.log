@@ -1,9 +1,13 @@
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Updated memory._execute to handle paramstyle fallback
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Updated cycle detection test for new error message
 =======
 AGENT NOTE - 2025-07-15: Removed self-dependency from LLMResource interface
 >>>>>>> pr-1649
+=======
+AGENT NOTE - 2025-07-15: Documented pytest-docker dev dependency and added fixture skip logic
+>>>>>>> pr-1651
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Adjusted logging configuration order in strict stage tests
 <<<<<<< HEAD
