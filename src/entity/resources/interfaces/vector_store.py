@@ -11,7 +11,6 @@ class VectorStoreResource(ResourcePlugin):
     """Abstract vector store interface."""
 
     infrastructure_dependencies = ["vector_store"]
-    dependencies = ["metrics_collector?"]
     resource_category = "database"
 
     def __init__(self, config: Dict | None = None) -> None:
@@ -22,6 +21,10 @@ class VectorStoreResource(ResourcePlugin):
         pool_cfg = PoolConfig(**self.config.get("pool", {}))
         self._pool = ResourcePool(self._create_client, pool_cfg, "vector_store")
         metrics = getattr(self, "metrics_collector", None)
+        if metrics is None:
+            container = getattr(self, "resource_container", None)
+            if container is not None:
+                metrics = container.get("metrics_collector")
         if metrics is not None:
             self._pool.set_metrics_collector(metrics)
         await self._pool.initialize()

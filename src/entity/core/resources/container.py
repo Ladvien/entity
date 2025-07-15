@@ -233,6 +233,7 @@ class ResourceContainer:
     async def add(self, name: str, resource: Any) -> None:
         async with self._lock:
             self._resources[name] = resource
+            setattr(resource, "resource_container", self)
 
     async def add_from_config(self, name: str, cls: type, config: Dict) -> None:
         instance = self._create_instance(cls, config)
