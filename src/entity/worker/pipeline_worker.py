@@ -46,7 +46,6 @@ class PipelineWorker:
             if hasattr(self.registries.resources, "clone")
             else self.registries.resources
         )
-<<<<<<< HEAD
         regs = SystemRegistries(
             resources=container,
             tools=self.registries.tools,
@@ -62,16 +61,20 @@ class PipelineWorker:
                     content=message, role="user", timestamp=datetime.now()
                 )
             )
-            state = PipelineState(conversation=conversation, pipeline_id=pipeline_id)
-            result = await execute_pipeline(
-                "",
-                regs,
-                state=state,
-                workflow=None,
-                user_id=user_id,
+            await memory.save_conversation(pipeline_id, conversation, user_id=user_id)
+            temp_key = f"{pipeline_id}_temp"
+            temp_thoughts = await memory.fetch_persistent(temp_key, {}, user_id=user_id)
+            state = PipelineState(
+                conversation=conversation,
+                temporary_thoughts=temp_thoughts,
+                pipeline_id=pipeline_id,
             )
+            result = await self.run_stages(state, user_id)
             await memory.save_conversation(
                 pipeline_id, state.conversation, user_id=user_id
+            )
+            await memory.store_persistent(
+                temp_key, state.temporary_thoughts, user_id=user_id
             )
             return result
 
@@ -79,33 +82,6 @@ class PipelineWorker:
             async with container:
                 return await _run(container)
         return await _run(container)
-=======
-        await memory.save_conversation(pipeline_id, conversation, user_id=user_id)
-        temp_key = f"{pipeline_id}_temp"
-        temp_thoughts = await memory.fetch_persistent(temp_key, {}, user_id=user_id)
-        state = PipelineState(
-            conversation=conversation,
-            temporary_thoughts=temp_thoughts,
-            pipeline_id=pipeline_id,
-        )
-<<<<<<< HEAD
-=======
-        await memory.save_conversation(pipeline_id, conversation, user_id=user_id)
-        temp_key = f"{pipeline_id}_temp"
-        temp_thoughts = await memory.fetch_persistent(temp_key, {}, user_id=user_id)
-        state = PipelineState(
-            conversation=conversation,
-            temporary_thoughts=temp_thoughts,
-            pipeline_id=pipeline_id,
-        )
->>>>>>> pr-1689
-        result = await self.run_stages(state, user_id)
-        await memory.save_conversation(pipeline_id, state.conversation, user_id=user_id)
-        await memory.store_persistent(
-            temp_key, state.temporary_thoughts, user_id=user_id
-        )
-        return result
->>>>>>> pr-1690
 
 
 __all__ = ["PipelineWorker"]
