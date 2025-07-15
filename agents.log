@@ -1,56 +1,29 @@
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Removed unused PipelineStage import from kitchen sink example
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+AGENT NOTE - 2025-07-15: Cleaned agents.log merge markers and ran quality checks
+>>>>>>> pr-1659
 AGENT NOTE - 2025-07-15: Clarified pytest-docker and Docker requirements in README
-<<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Added optional llm_backend dependency to LLMResource
-<<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Added echo_llm_backend infrastructure and updated defaults
-=======
 AGENT NOTE - 2025-07-15: Implemented failing infrastructure plugin for tests
->>>>>>> pr-1654
-=======
 AGENT NOTE - 2025-07-15: Added py.typed to package for typing support
->>>>>>> pr-1652
-<<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Updated memory._execute to handle paramstyle fallback
-<<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Updated cycle detection test for new error message
-=======
 AGENT NOTE - 2025-07-15: Removed self-dependency from LLMResource interface
->>>>>>> pr-1649
-=======
 AGENT NOTE - 2025-07-15: Documented pytest-docker dev dependency and added fixture skip logic
->>>>>>> pr-1651
-<<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Adjusted logging configuration order in strict stage tests
-<<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Adjusted _execute to unpack parameters using *args
-<<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Adjusted _execute to unpack parameters using *args
-<<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Updated validator tests for PromptPlugin requirement
-=======
 AGENT NOTE - 2025-07-15: Documented dev dependency installation and pytest-docker fixtures in README and CONTRIBUTING
->>>>>>> pr-1640
-=======
 AGENT NOTE - 2025-07-15: set LLMResource infrastructure deps to llm_provider
->>>>>>> pr-1646
-<<<<<<< HEAD
-=======
-=======
 AGENT NOTE - 2025-07-15: Cleaned conflict markers and sorted log chronologically
->>>>>>> pr-1644
-=======
 AGENT NOTE - 2025-07-15: Cleaned conflict markers in agents.log and restored chronological order
->>>>>>> pr-1656
 AGENT NOTE - 2025-11-28: Moved Memory methods inside class and kept helper functions module-level
-AGENT NOTE - 2025-11-28: Moved Memory methods inside class and kept helper functions module-level
-AGENT NOTE - 2025-11-28: Moved Memory methods inside class and kept helper functions module-level
-AGENT NOTE - 2025-11-28: Moved Memory methods inside class and kept helper functions module-level
-=======
 AGENT NOTE - 2025-07-15: Updated memory._execute to handle empty params and cleaned log
->>>>>>> pr-1658
 AGENT NOTE - 2025-11-27: Patched DuckDB runtime test using monkeypatch to auto-restore connection method
 AGENT NOTE - 2025-10-31: Integration tests now use Dockerized Postgres and Ollama
 AGENT NOTE - 2025-10-30: Fixed async stage results in end-to-end pipeline test ensuring ReverseThink runs and final output is olleh
