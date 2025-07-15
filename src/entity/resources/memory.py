@@ -369,7 +369,7 @@ class Memory(AgentResource):
 
 async def _execute(conn: Any, sql: str, params: Any | None = None) -> Any:
     """Run a query and await the result when necessary."""
-    result = conn.execute(sql, params or [])
+    result = conn.execute(sql, *(params or []))
     if inspect.isawaitable(result):
         result = await result
     return result
