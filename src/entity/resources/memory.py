@@ -367,9 +367,37 @@ class Memory(AgentResource):
     forget = delete_persistent
 
 
+def _detect_paramstyle(conn: Any) -> str:
+    """Return the DB-API paramstyle for ``conn`` or a safe default."""
+    style = getattr(conn, "paramstyle", None)
+    if style:
+        return style
+    module = inspect.getmodule(conn)
+    return getattr(module, "paramstyle", "qmark")
+
+
+def _convert_placeholders(sql: str, style: str) -> str:
+    """Convert ``?`` placeholders in ``sql`` to match ``style``."""
+    if style in {"format", "pyformat"}:
+        return sql.replace("?", "%s")
+    if style == "numeric":
+        parts = sql.split("?")
+        if len(parts) == 1:
+            return sql
+        new = []
+        for index, part in enumerate(parts[:-1], start=1):
+            new.append(part)
+            new.append(f"${index}")
+        new.append(parts[-1])
+        return "".join(new)
+    return sql
+
+
 async def _execute(conn: Any, sql: str, params: Any | None = None) -> Any:
-    """Run a query and await the result when necessary."""
-    result = conn.execute(sql, *(params or []))
+    """Run a query against ``conn`` and await the result when necessary."""
+    style = _detect_paramstyle(conn)
+    sql = _convert_placeholders(sql, style)
+    result = conn.execute(sql, params or [])
     if inspect.isawaitable(result):
         result = await result
     return result
