@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-11-28: Moved Memory methods inside class and kept helper functions module-level
 AGENT NOTE - 2025-07-15: Set llm interface infra deps empty
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Resolved merge conflict markers and restored missing notes

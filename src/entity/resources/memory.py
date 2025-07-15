@@ -41,20 +41,6 @@ class Memory(AgentResource):
         if callable(commit):
             commit()
 
-
-async def _execute(conn: Any, sql: str, params: Any | None = None) -> Any:
-    """Run a query and await the result when necessary."""
-    result = conn.execute(sql, params or [])
-    if inspect.isawaitable(result):
-        result = await result
-    return result
-
-
-async def _maybe_await(value: Any) -> Any:
-    if inspect.isawaitable(value):
-        return await value
-    return value
-
     async def initialize(self) -> None:
         if self.database is None:
             raise ResourceInitializationError(
@@ -379,3 +365,17 @@ async def _maybe_await(value: Any) -> Any:
     remember = store_persistent
     recall = fetch_persistent
     forget = delete_persistent
+
+
+async def _execute(conn: Any, sql: str, params: Any | None = None) -> Any:
+    """Run a query and await the result when necessary."""
+    result = conn.execute(sql, params or [])
+    if inspect.isawaitable(result):
+        result = await result
+    return result
+
+
+async def _maybe_await(value: Any) -> Any:
+    if inspect.isawaitable(value):
+        return await value
+    return value
