@@ -1,5 +1,6 @@
 AGENT NOTE - 2025-07-15: Wrapped DB operations with awaitable helper for memory resource
 <<<<<<< HEAD
+AGENT NOTE - 2025-07-15: Excluded LoggingResource from metrics dependency
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Updated dependency assertion for layer validation message
 <<<<<<< HEAD
