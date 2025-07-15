@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-10-31: Integration tests now use Dockerized Postgres and Ollama
 AGENT NOTE - 2025-07-14: Updated test resource layers to comply with 4-layer architecture
 AGENT NOTE - 2025-07-14: Awaited context.think in tests and audited for missing awaits
 AGENT NOTE - 2025-07-14: Updated dependency injection tests to expect "metrics_collector?"

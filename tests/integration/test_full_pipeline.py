@@ -4,7 +4,6 @@ import time
 import pytest
 
 from entity.resources import Memory, MetricsCollectorResource, LLM
-from entity.resources.interfaces.llm import LLMResource
 from entity.resources.logging import LoggingResource
 from entity.pipeline.worker import PipelineWorker
 from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
@@ -48,11 +47,6 @@ class ErrorPlugin(Plugin):
         await context.think("fail_msg", "failed")
 
 
-class DummyLLMProvider(LLMResource):
-    async def generate(self, prompt: str):
-        return prompt
-
-
 class LLMPlugin(Plugin):
     stages = [PipelineStage.THINK]
 
@@ -61,7 +55,7 @@ class LLMPlugin(Plugin):
 
 
 @pytest.fixture()
-async def registries(memory_db: Memory) -> SystemRegistries:
+async def registries(pg_memory: Memory, ollama_llm: LLM) -> SystemRegistries:
     metrics = MetricsCollectorResource({})
     await metrics.initialize()
     logging_res = LoggingResource({})
@@ -75,7 +69,10 @@ async def registries(memory_db: Memory) -> SystemRegistries:
             return False
 
     resources = _Resources(
-        memory=memory_db, metrics_collector=metrics, logging=logging_res
+        memory=pg_memory,
+        metrics_collector=metrics,
+        logging=logging_res,
+        llm=ollama_llm,
     )
     resources.get = lambda name: resources[name]
 
@@ -168,11 +165,8 @@ async def test_performance_metrics(registries: SystemRegistries) -> None:
 
 @pytest.mark.asyncio
 async def test_llm_resource_metrics(registries: SystemRegistries) -> None:
-    llm = LLM({"pool": {"min_size": 1, "max_size": 1}})
-    llm.provider = DummyLLMProvider()
+    llm = registries.resources["llm"]
     llm.metrics_collector = registries.metrics
-    await llm.initialize()
-    registries.resources["llm"] = llm
 
     plugin = LLMPlugin({})
     plugin.metrics_collector = registries.metrics
