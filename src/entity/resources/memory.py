@@ -399,6 +399,39 @@ async def _execute(conn: Any, sql: str, params: Any | None = None) -> Any:
     """Run a query against ``conn`` and await the result when necessary."""
     style = _detect_paramstyle(conn)
     sql = _convert_placeholders(sql, style)
+    is_select = sql.lstrip().lower().startswith(("select", "with"))
+
+    if hasattr(conn, "fetch") and is_select:
+        if params:
+            rows = conn.fetch(sql, *params)
+        else:
+            rows = conn.fetch(sql)
+        if inspect.isawaitable(rows):
+            rows = await rows
+        description = []
+        if rows:
+            description = [(name,) for name in rows[0].keys()]
+
+        class _Cursor:
+            def __init__(self, rows: list[Any]):
+                self._rows = list(rows)
+                self.description = description
+                self._index = 0
+
+            def fetchall(self) -> list[Any]:
+                remaining = self._rows[self._index :]
+                self._index = len(self._rows)
+                return remaining
+
+            def fetchone(self) -> Any:
+                if self._index < len(self._rows):
+                    row = self._rows[self._index]
+                    self._index += 1
+                    return row
+                return None
+
+        return _Cursor(rows)
+
     if not params:
         result = conn.execute(sql)
     else:
