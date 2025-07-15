@@ -8,10 +8,12 @@ from entity.pipeline.errors import InitializationError
 
 class DummyInfra(InfrastructurePlugin):
     infrastructure_type = "infra"
+    dependencies: list[str] = []
     stages: list = []
 
 
 class HigherResource(AgentResource):
+    dependencies: list[str] = []
     stages: list = []
 
 
@@ -21,10 +23,7 @@ class LowerInterface(ResourcePlugin):
     stages: list = []
 
 
-def test_dependency_on_higher_layer_raises(monkeypatch) -> None:
-    monkeypatch.setattr(DummyInfra, "dependencies", [])
-    monkeypatch.setattr(HigherResource, "dependencies", [])
-    monkeypatch.setattr(LowerInterface, "dependencies", ["higher"])
+def test_dependency_on_higher_layer_raises() -> None:
     container = ResourceContainer()
     container.register("infra", DummyInfra, {}, layer=1)
     container.register("higher", HigherResource, {}, layer=3)
