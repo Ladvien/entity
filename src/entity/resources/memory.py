@@ -397,7 +397,13 @@ async def _execute(conn: Any, sql: str, params: Any | None = None) -> Any:
     """Run a query against ``conn`` and await the result when necessary."""
     style = _detect_paramstyle(conn)
     sql = _convert_placeholders(sql, style)
-    result = conn.execute(sql, params or [])
+    if not params:
+        result = conn.execute(sql)
+    else:
+        try:
+            result = conn.execute(sql, *params)
+        except Exception:
+            result = conn.execute(sql, params)
     if inspect.isawaitable(result):
         result = await result
     return result
