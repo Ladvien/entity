@@ -21,10 +21,11 @@ class MyPlugin(PromptPlugin):
         pass
 
 
-from unittest.mock import MagicMock
+import logging
+from entity.utils.logging import configure_logging
 
 
-def test_stage_mismatch_warning(monkeypatch):
+def test_stage_mismatch_warning(caplog):
     cfg = {
         "plugins": {
             "agent_resources": {
@@ -48,10 +49,10 @@ def test_stage_mismatch_warning(monkeypatch):
     registry = ClassRegistry()
     dep_graph: dict[str, list[str]] = {}
     init._register_plugins(registry, dep_graph)
-    mock = MagicMock()
-    monkeypatch.setattr(initializer, "logger", mock)
-    init._warn_stage_mismatches(registry)
-    mock.warning.assert_called()
+    configure_logging("WARNING")
+    with caplog.at_level(logging.WARNING, logger="entity.pipeline.initializer"):
+        init._warn_stage_mismatches(registry)
+    assert any("override class stages" in r.message for r in caplog.records)
 
 
 def test_stage_mismatch_strict():
