@@ -112,8 +112,6 @@ class RegistryValidator:
                 f"Plugin '{name}' in '{section}' must inherit from AdapterPlugin"
             )
         if section == "prompts" and not issubclass(cls, PromptPlugin):
-            if issubclass(cls, Plugin):
-                return
             raise SystemError(
                 f"Plugin '{name}' in '{section}' must inherit from PromptPlugin"
             )
