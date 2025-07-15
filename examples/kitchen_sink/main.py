@@ -5,7 +5,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
 
 from entity import agent, prompt
-from entity.core.stages import PipelineStage
 from user_plugins.tools.calculator_tool import CalculatorTool
 from user_plugins.responders import ReactResponder
 
