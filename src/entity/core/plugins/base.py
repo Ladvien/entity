@@ -280,6 +280,7 @@ class ResourcePlugin(Plugin):
     infrastructure_dependencies: List[str] = []
     resource_category: str = ""
     stages: List[PipelineStage] = []
+    dependencies: List[str] = []
 
     async def _on_initialize(self) -> None:
         async def _noop() -> None:
@@ -370,6 +371,8 @@ class ResourcePlugin(Plugin):
 
 class AgentResource(ResourcePlugin):
     """Layer 3 canonical or custom agent resource."""
+
+    dependencies: List[str] = []
 
 
 class ToolPlugin(Plugin):

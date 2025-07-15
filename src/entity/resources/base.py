@@ -10,6 +10,8 @@ from ..core.plugins import ResourcePlugin
 class AgentResource(ResourcePlugin):
     """Layer 3 building block depending only on infrastructure resources."""
 
+    dependencies: list[str] = []
+
 
 from .llm import LLM
 from .memory import Memory
