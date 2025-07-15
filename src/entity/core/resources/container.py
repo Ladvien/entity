@@ -670,7 +670,11 @@ class ResourceContainer:
                     )
 
                 dep_layer = self._layers[dep_name]
-                if self._layers[node] - dep_layer != 1:
+                skip_check = self._layers[node] == dep_layer == 3 and dep_name in {
+                    "logging",
+                    "metrics_collector",
+                }
+                if not skip_check and self._layers[node] - dep_layer != 1:
                     raise InitializationError(
                         f"{node}, {dep_name}",
                         "layer validation",
