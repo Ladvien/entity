@@ -107,7 +107,7 @@ def _postgres_ready(dsn: str) -> bool:
 def postgres_dsn(docker_ip: str, docker_services) -> str:
     """Start the Postgres container and return a DSN."""
     _require_docker()
-    docker_services.start("postgres")
+    docker_services.wait_for_service("postgres", 5432)
     port = docker_services.port_for("postgres", 5432)
     dsn = f"postgresql://test:test@{docker_ip}:{port}/test_db"
     docker_services.wait_until_responsive(
@@ -157,7 +157,7 @@ async def pg_memory(postgres_dsn: str) -> Memory:
 def ollama_url(docker_ip: str, docker_services) -> str:
     """Start the Ollama container and return its base URL."""
     _require_docker()
-    docker_services.start("ollama")
+    docker_services.wait_for_service("ollama", 11434)
     port = docker_services.port_for("ollama", 11434)
     url = f"http://{docker_ip}:{port}"
 
