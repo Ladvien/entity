@@ -29,9 +29,22 @@ class DuckDBVectorStore(VectorStoreResource):
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
-        self.database: Any = None
+        self.database_backend: Any = None
         self._table = self.config.get("table", "vector_mem")
         self._pool = None
+
+    # ------------------------------------------------------------------
+    # Compatibility layer
+    # ------------------------------------------------------------------
+    @property
+    def database(self) -> Any:
+        """Backward compatible accessor for the database backend."""
+
+        return self.database_backend
+
+    @database.setter
+    def database(self, value: Any) -> None:
+        self.database_backend = value
 
     def _embed(self, text: str) -> List[float]:
         """Return a simple numeric embedding for ``text``."""
@@ -45,12 +58,12 @@ class DuckDBVectorStore(VectorStoreResource):
     async def initialize(self) -> None:
         if duckdb is None:
             raise RuntimeError("duckdb package not installed")
-        if self.database is None:
+        if self.database_backend is None:
             raise ResourceInitializationError(
                 "Database backend not injected", self.name
             )
-        self._pool = self.database.get_connection_pool()
-        async with self.database.connection() as conn:
+        self._pool = self.database_backend.get_connection_pool()
+        async with self.database_backend.connection() as conn:
             conn.execute(
                 f"CREATE TABLE IF NOT EXISTS {self._table} (text TEXT, embedding DOUBLE[])"
             )
@@ -58,16 +71,16 @@ class DuckDBVectorStore(VectorStoreResource):
 
     @asynccontextmanager
     async def connection(self) -> Iterator[Any]:
-        if self.database is None:
+        if self.database_backend is None:
             yield None
         else:
-            async with self.database.connection() as conn:
+            async with self.database_backend.connection() as conn:
                 yield conn
 
     async def add_embedding(self, text: str) -> None:
-        if self.database is None:
+        if self.database_backend is None:
             return
-        async with self.database.connection() as conn:
+        async with self.database_backend.connection() as conn:
             emb = self._embed(text)
             conn.execute(
                 f"INSERT INTO {self._table} VALUES (?, ?)",
@@ -76,9 +89,9 @@ class DuckDBVectorStore(VectorStoreResource):
             self._maybe_commit(conn)
 
     async def query_similar(self, query: str, k: int = 5) -> List[str]:
-        if self.database is None:
+        if self.database_backend is None:
             return []
-        async with self.database.connection() as conn:
+        async with self.database_backend.connection() as conn:
             rows = conn.execute(f"SELECT text, embedding FROM {self._table}").fetchall()
         if not rows:
             return []
