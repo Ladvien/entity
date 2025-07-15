@@ -27,13 +27,14 @@ def make_context(state=None):
     return PluginContext(state, DummyRegistries())
 
 
-def test_replace_conversation_history():
+@pytest.mark.asyncio
+async def test_replace_conversation_history():
     ctx = make_context()
     new_history = [
         ConversationEntry("hi", "user", datetime.now()),
         ConversationEntry("hello", "assistant", datetime.now()),
     ]
-    ctx.advanced.replace_conversation_history(new_history)
+    await ctx.advanced.replace_conversation_history(new_history)
 
     assert ctx.get_conversation_history() == new_history
 

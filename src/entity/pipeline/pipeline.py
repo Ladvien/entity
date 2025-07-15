@@ -115,6 +115,16 @@ async def execute_stage(
     *,
     user_id: str,
 ) -> None:
+    memory = registries.resources.get("memory") if registries.resources else None
+    if memory is not None:
+        state.conversation = await memory.load_conversation(
+            state.pipeline_id, user_id=user_id
+        )
+        state.temporary_thoughts = await memory.fetch_persistent(
+            f"{state.pipeline_id}_temp",
+            {},
+            user_id=user_id,
+        )
     state.current_stage = stage
     log_res = registries.resources.get("logging") if registries.resources else None
     stage_plugins = registries.plugins.get_plugins_for_stage(stage)
@@ -267,6 +277,17 @@ async def execute_stage(
         if state.failure_info and stage != PipelineStage.ERROR:
             await execute_stage(PipelineStage.ERROR, state, registries, user_id=user_id)
             state.last_completed_stage = PipelineStage.ERROR
+    if memory is not None:
+        await memory.save_conversation(
+            state.pipeline_id,
+            state.conversation,
+            user_id=user_id,
+        )
+        await memory.store_persistent(
+            f"{state.pipeline_id}_temp",
+            state.temporary_thoughts,
+            user_id=user_id,
+        )
     _elapsed = time.perf_counter() - _start
     # elapsed time could be logged here if needed
 

@@ -23,7 +23,7 @@ class PIIScrubberPrompt(PromptPlugin):
 
     async def _execute_impl(self, context: PluginContext) -> None:
         new_history = [self._scrub_entry(entry) for entry in context.conversation()]
-        context.advanced.replace_conversation_history(new_history)
+        await context.advanced.replace_conversation_history(new_history)
         if context.has_response():
             context.update_response(self._scrub_value)
 
