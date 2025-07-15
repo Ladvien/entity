@@ -108,6 +108,7 @@ class AsyncPGDatabase(DatabaseResource):
     @asynccontextmanager
     async def connection(self):
         conn = psycopg.connect(self._dsn)
+        conn.paramstyle = psycopg.paramstyle
         try:
             yield conn
         finally:
