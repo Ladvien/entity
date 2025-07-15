@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-15: registry validation ensures prompt plugins must subclass PromptPlugin
+=======
+AGENT NOTE - 2025-07-15: Adjusted logging configuration order in strict stage tests
+>>>>>>> pr-1628
 <<<<<<< HEAD
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Verified removal of conflict markers and ran formatting/tests
