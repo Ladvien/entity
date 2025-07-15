@@ -97,6 +97,9 @@ test-architecture = { cmd = "pytest tests/test_architecture/ -v", env = { PYTHON
 test-plugins = { cmd = "pytest tests/test_plugins/ -v", env = { PYTHONPATH = "src" } }
 test-resources = { cmd = "pytest tests/test_resources/ -v", env = { PYTHONPATH = "src" } }
 test-decorators = { cmd = "pytest tests/test_decorators.py -v", env = { PYTHONPATH = "src" } }
+unit = { cmd = "pytest tests/unit", env = { PYTHONPATH = "src" } }
+integration = { cmd = "pytest tests/integration", env = { PYTHONPATH = "src" } }
+e2e = { cmd = "pytest tests/e2e", env = { PYTHONPATH = "src" } }
 
 setup-dev = { cmd = "poetry install --with dev" }
 
