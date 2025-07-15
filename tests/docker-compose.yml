@@ -2,10 +2,12 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
+    env_file:
+      - ../.env
     environment:
-      POSTGRES_USER: test
-      POSTGRES_PASSWORD: test
-      POSTGRES_DB: test_db
+      POSTGRES_USER: ${DB_USERNAME:-test}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-test}
+      POSTGRES_DB: ${DB_NAME:-test_db}
     ports:
       - "5432"
   ollama:

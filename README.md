@@ -67,6 +67,9 @@ If you installed dependencies individually, install the plugin directly:
 pip install pytest-docker
 ```
 
+Before starting Docker, copy `.env.example` to `.env` and adjust the values for
+your local setup. The compose files read this file automatically.
+
 Start Docker and then run the poe task:
 
 ```bash

@@ -2,10 +2,12 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: dev
-      POSTGRES_PASSWORD: dev
-      POSTGRES_DB: entity_dev
+      POSTGRES_USER: ${DB_USERNAME:-dev}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-dev}
+      POSTGRES_DB: ${DB_NAME:-entity_dev}
     ports:
       - "5432:5432"
     volumes:
