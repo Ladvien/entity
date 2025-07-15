@@ -52,8 +52,8 @@ documentation.
 
 ## Running Tests
 
-Before running any tests, install the development dependencies. `pytest-docker`
-is included in this group and required for Docker-based fixtures. Install with:
+`pytest-docker` is required for the integration fixtures and Docker must be
+running. The plugin comes with the development dependencies:
 
 ```bash
 poetry install --with dev
@@ -61,16 +61,23 @@ poetry install --with dev
 pip install -e ".[dev]"
 ```
 
-`pytest-docker` is included and supplies the `docker_ip` and `docker_services`
-fixtures used by the integration tests. Make sure the optional dependencies
-`pyyaml` and `python-dotenv` are available to avoid runtime import errors when
-the CLI loads YAML configurations.
-
-With dependencies installed you can run the included poe tasks:
+If you installed dependencies individually, install the plugin directly:
 
 ```bash
-poe test
+pip install pytest-docker
 ```
+
+Start Docker and then run the poe task:
+
+```bash
+docker compose up -d  # ensure services are running
+poetry run poe test
+```
+
+`pytest-docker` exposes the `docker_ip` and `docker_services` fixtures used by
+the integration tests. Make sure the optional dependencies `pyyaml` and
+`python-dotenv` are available to avoid runtime import errors when the CLI loads
+YAML configurations.
 
 For detailed output, use the verbose task:
 
