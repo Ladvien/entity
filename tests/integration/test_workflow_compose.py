@@ -2,7 +2,10 @@ import pytest
 
 from entity.core.agent import Agent
 from entity.core.plugins import Plugin
+from entity.infrastructure import DuckDBInfrastructure
 from entity.pipeline.stages import PipelineStage
+from entity.resources.interfaces.duckdb_resource import DuckDBResource
+from entity.resources.interfaces.duckdb_vector_store import DuckDBVectorStore
 from entity.workflows.base import Workflow
 from entity.workflows.compose import compose_workflows
 
@@ -32,11 +35,15 @@ class WF2(Workflow):
 
 @pytest.mark.asyncio
 async def test_compose_workflows_execute():
-    builder = Agent().builder
+    agent = Agent()
+    builder = agent.builder
     await builder.add_plugin(MarkerPlugin({}))
     await builder.add_plugin(EchoPlugin({}))
 
     wf = compose_workflows(WF1(), WF2())
+    agent.register_resource("database_backend", DuckDBInfrastructure, {}, layer=1)
+    agent.register_resource("database", DuckDBResource, {}, layer=2)
+    agent.register_resource("vector_store", DuckDBVectorStore, {}, layer=2)
     runtime = await builder.build_runtime(wf)
     result = await runtime.handle("hi")
 
@@ -46,9 +53,13 @@ async def test_compose_workflows_execute():
 
 @pytest.mark.asyncio
 async def test_compose_validates_plugins():
-    builder = Agent().builder
+    agent = Agent()
+    builder = agent.builder
     await builder.add_plugin(EchoPlugin({}))
 
     wf = compose_workflows(WF1(), WF2())
+    agent.register_resource("database_backend", DuckDBInfrastructure, {}, layer=1)
+    agent.register_resource("database", DuckDBResource, {}, layer=2)
+    agent.register_resource("vector_store", DuckDBVectorStore, {}, layer=2)
     with pytest.raises(KeyError):
         await builder.build_runtime(wf)

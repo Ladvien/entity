@@ -8,7 +8,10 @@ from entity.core.plugins import Plugin, ValidationResult
 from entity.core.stages import PipelineStage
 from entity.cli import EntityCLI
 from entity.core.registries import PluginRegistry
+from entity.infrastructure import DuckDBInfrastructure
 from entity.pipeline.config.config_update import update_plugin_configuration
+from entity.resources.interfaces.duckdb_resource import DuckDBResource
+from entity.resources.interfaces.duckdb_vector_store import DuckDBVectorStore
 
 
 class RuntimeCheckPlugin(Plugin):
@@ -61,6 +64,9 @@ async def test_reload_aborts_on_failed_runtime_validation(tmp_path):
     agent = Agent()
     plugin = RuntimeCheckPlugin({"valid": True})
     await agent.add_plugin(plugin)
+    agent.register_resource("database_backend", DuckDBInfrastructure, {}, layer=1)
+    agent.register_resource("database", DuckDBResource, {}, layer=2)
+    agent.register_resource("vector_store", DuckDBVectorStore, {}, layer=2)
     await agent.build_runtime()
 
     # Ensure config updates do not call async validator
@@ -85,6 +91,9 @@ async def test_reload_successful_reconfiguration(tmp_path):
     agent = Agent()
     plugin = ReconfigPlugin({"value": 1})
     await agent.add_plugin(plugin)
+    agent.register_resource("database_backend", DuckDBInfrastructure, {}, layer=1)
+    agent.register_resource("database", DuckDBResource, {}, layer=2)
+    agent.register_resource("vector_store", DuckDBVectorStore, {}, layer=2)
     await agent.build_runtime()
 
     ReconfigPlugin.validate_config = classmethod(
@@ -108,6 +117,9 @@ async def test_reload_failed_reconfiguration(tmp_path):
     agent = Agent()
     plugin = FailingReconfigPlugin({"value": 1})
     await agent.add_plugin(plugin)
+    agent.register_resource("database_backend", DuckDBInfrastructure, {}, layer=1)
+    agent.register_resource("database", DuckDBResource, {}, layer=2)
+    agent.register_resource("vector_store", DuckDBVectorStore, {}, layer=2)
     await agent.build_runtime()
 
     FailingReconfigPlugin.validate_config = classmethod(
