@@ -144,11 +144,7 @@ async def test_asyncpg_paramstyle_insert(prepared_postgres) -> None:
 
 
 @pytest.mark.asyncio
-<<<<<<< HEAD
 async def test_asyncpg_search_and_load(prepared_postgres) -> None:
-=======
-async def test_asyncpg_conversation_statistics(prepared_postgres) -> None:
->>>>>>> pr-1672
     if shutil.which("pg_ctl") is None:
         pytest.skip("pg_ctl not installed")
     dsn = (
@@ -160,7 +156,6 @@ async def test_asyncpg_conversation_statistics(prepared_postgres) -> None:
     mem.database = db
     await mem.initialize()
 
-<<<<<<< HEAD
     await mem.add_conversation_entry(
         "conv",
         ConversationEntry(content="search me", role="user", timestamp=datetime.now()),
@@ -173,7 +168,21 @@ async def test_asyncpg_conversation_statistics(prepared_postgres) -> None:
     results = await mem.conversation_search("search", user_id="u")
     assert len(results) == 1
     assert results[0]["content"] == "search me"
-=======
+
+
+@pytest.mark.asyncio
+async def test_asyncpg_conversation_statistics(prepared_postgres) -> None:
+    if shutil.which("pg_ctl") is None:
+        pytest.skip("pg_ctl not installed")
+    dsn = (
+        f"postgresql://{prepared_postgres.user}:{prepared_postgres.password}@"
+        f"{prepared_postgres.host}:{prepared_postgres.port}/{prepared_postgres.dbname}"
+    )
+    db = AsyncPGDatabase(dsn)
+    mem = Memory({})
+    mem.database = db
+    await mem.initialize()
+
     now = datetime.now()
     await mem.add_conversation_entry(
         "c1", ConversationEntry("hi", "user", now), user_id="u"
@@ -207,4 +216,3 @@ async def test_asyncpg_save_and_load(prepared_postgres) -> None:
     await mem.save_conversation("conv", [entry], user_id="u")
     loaded = await mem.load_conversation("conv", user_id="u")
     assert loaded == [entry]
->>>>>>> pr-1672

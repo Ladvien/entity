@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Removed unused PipelineStage import from kitchen sink example
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
 AGENT NOTE - 2025-07-15: Cleaned agents.log merge markers and ran quality checks
->>>>>>> pr-1659
 AGENT NOTE - 2025-07-15: Clarified pytest-docker and Docker requirements in README
 AGENT NOTE - 2025-07-15: Added optional llm_backend dependency to LLMResource
 AGENT NOTE - 2025-07-15: Added echo_llm_backend infrastructure and updated defaults
