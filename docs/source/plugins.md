@@ -42,3 +42,17 @@ plugins:
 
 Register the plugin in your workflow or resource container like any other
 infrastructure plugin.
+
+## EchoLLMBackend
+
+`EchoLLMBackend` provides a dummy LLM server used by the default provider. It simply echoes input
+back to the caller and exposes the `"llm_backend"` infrastructure type.
+
+```yaml
+plugins:
+  infrastructure:
+    echo_llm_backend:
+      type: plugins.builtin.infrastructure.echo_llm_backend:EchoLLMBackend
+```
+
+No configuration options are required.

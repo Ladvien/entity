@@ -324,6 +324,11 @@ class _AgentBuilder:
 
             container.register("memory", Memory, {}, layer=3)
 
+        if not container.has_plugin("echo_llm_backend"):
+            from plugins.builtin.infrastructure.echo_llm_backend import EchoLLMBackend
+
+            container.register("echo_llm_backend", EchoLLMBackend, {}, layer=1)
+
         if not container.has_plugin("llm_provider"):
             from entity.resources.interfaces.echo_llm import EchoLLMResource
 

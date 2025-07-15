@@ -59,6 +59,8 @@ async def test_builder_registers_default_resources() -> None:
     assert runtime is not None
     assert builder.resource_registry.get("memory") is not None
     assert builder.resource_registry.get("llm") is not None
+    assert builder.resource_registry.get("llm_provider") is not None
+    assert builder.resource_registry.get("echo_llm_backend") is not None
     assert builder.resource_registry.get("storage") is not None
     mem = builder.resource_registry.get("memory")
     assert getattr(mem, "database", None) is not None

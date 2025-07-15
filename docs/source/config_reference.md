@@ -58,7 +58,7 @@ Configuration model for the :class:`~entity.resources.llm.LLM`.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| provider | str | 'default' |  |
+| provider | str | 'default' | defaults to an echo backend |
 
 ## LogOutputConfig
 

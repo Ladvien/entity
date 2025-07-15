@@ -10,7 +10,7 @@ from entity.resources.interfaces.llm import LLMResource
 class EchoLLMResource(LLMResource):
     """LLM that simply echoes the prompt."""
 
-    dependencies: list[str] = []
+    infrastructure_dependencies = ["echo_llm_backend"]
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
