@@ -4,11 +4,6 @@ This repository contains a plugin-based framework for building AI agents.
 Use this document when preparing changes or reviewing pull requests.
 
 ## Important Notes
-- After completing work create a note at the top of the `agents.log` file with the following format:
-  ```
-  AGENT NOTE - <DATE>: <Your note here>
-  ```
-- Before starting a task, review the `agents.log` file to understand the current state of the project and any ongoing discussions.  If you are asked to implement a feature, check the `agents.log` file to see if it has already been implemented and stop if it is.
 - **You must adhere to architectural guidelines when making changes.** See `ARCHITECTURE.md` for details on the architectural design and principles.
 - **DO NOT change the `ARCHITECTURE.md` file!** It contains 31 architectural decisions that define the framework.
 - Refer to `CONTRIBUTING.md` for general contribution guidelines.
@@ -18,9 +13,6 @@ Use this document when preparing changes or reviewing pull requests.
 - Always use the Poetry environment for development.
 - Run `poetry install --with dev` before executing any quality checks or tests.
 - Run tests using `poetry run poe test` or related tasks to ensure `PYTHONPATH` is set.
-- Use the `agents.log` file to track changes and decisions made during development.
-- **DO NOT use the `agents.log` file for architectural decisions!** Architectural decisions must be documented in `ARCHITECTURE.md`.
-- 
 
 ## Code Review Checklist
 
