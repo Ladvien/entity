@@ -17,7 +17,7 @@ class LLM(AgentResource):
     """Simple LLM wrapper."""
 
     name = "llm"
-    dependencies = ["llm_provider?", "metrics_collector?"]
+    dependencies = ["llm_provider?"]
     resource_category = "api"
 
     def __init__(self, config: Dict | None = None) -> None:
