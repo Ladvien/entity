@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 from contextlib import asynccontextmanager
+import inspect
+import json
 import time
 
 from entity.core.stages import PipelineStage
@@ -37,28 +39,78 @@ class CustomMetricRecord:
 
 
 from .base import AgentResource
+from .interfaces.database import DatabaseResource
+import aiosqlite
 
 
 class MetricsCollectorResource(AgentResource):
-    """Simple in-memory metrics collector.
-
-    This is a canonical layer 3 resource automatically injected into plugins
-    when configured.
-    """
+    """Persist plugin and resource metrics to a database."""
 
     name = "metrics_collector"
     resource_category = "observability"
+    dependencies = ["database?"]
     infrastructure_dependencies: list[str] = []
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
         super().__init__(config or {})
-        self.plugin_executions: List[PluginExecutionRecord] = []
-        self.resource_operations: List[ResourceOperationRecord] = []
-        self.custom_metrics: List[CustomMetricRecord] = []
+        self.database: DatabaseResource | None = None
+        self._conn: Any | None = None
         self.counters: Dict[str, int] = {}
+
+    async def initialize(self) -> None:
+        if self.database is None:
+            self._conn = await aiosqlite.connect(":memory:")
+            await self._create_tables(self._conn)
+        else:
+            async with self.database.connection() as conn:
+                await self._create_tables(conn)
+
+    async def shutdown(self) -> None:
+        if self._conn is not None:
+            await self._conn.close()
+            self._conn = None
 
     async def _execute_impl(self, context: Any) -> None:  # pragma: no cover - stub
         return None
+
+    async def _create_tables(self, conn: Any) -> None:
+        await _execute(
+            conn,
+            """
+            CREATE TABLE IF NOT EXISTS plugin_metrics (
+                pipeline_id TEXT,
+                stage TEXT,
+                plugin_name TEXT,
+                duration_ms REAL,
+                success INTEGER,
+                error_type TEXT
+            )
+            """,
+        )
+        await _execute(
+            conn,
+            """
+            CREATE TABLE IF NOT EXISTS resource_metrics (
+                pipeline_id TEXT,
+                resource_name TEXT,
+                operation TEXT,
+                duration_ms REAL,
+                success INTEGER,
+                metadata TEXT
+            )
+            """,
+        )
+        await _execute(
+            conn,
+            """
+            CREATE TABLE IF NOT EXISTS custom_metrics (
+                pipeline_id TEXT,
+                metric_name TEXT,
+                value REAL,
+                metadata TEXT
+            )
+            """,
+        )
 
     # ------------------------------------------------------------------
     # Recording methods
@@ -73,15 +125,16 @@ class MetricsCollectorResource(AgentResource):
         success: bool,
         error_type: str | None = None,
     ) -> None:
-        self.plugin_executions.append(
-            PluginExecutionRecord(
-                pipeline_id=pipeline_id,
-                stage=stage,
-                plugin_name=plugin_name,
-                duration_ms=duration_ms,
-                success=success,
-                error_type=error_type,
-            )
+        await self._execute(
+            "INSERT INTO plugin_metrics VALUES (?, ?, ?, ?, ?, ?)",
+            (
+                pipeline_id,
+                stage.name if stage else None,
+                plugin_name,
+                duration_ms,
+                int(success),
+                error_type,
+            ),
         )
 
     async def record_resource_operation(
@@ -94,15 +147,16 @@ class MetricsCollectorResource(AgentResource):
         success: bool,
         metadata: Dict[str, Any] | None = None,
     ) -> None:
-        self.resource_operations.append(
-            ResourceOperationRecord(
-                pipeline_id=pipeline_id,
-                resource_name=resource_name,
-                operation=operation,
-                duration_ms=duration_ms,
-                success=success,
-                metadata=metadata or {},
-            )
+        await self._execute(
+            "INSERT INTO resource_metrics VALUES (?, ?, ?, ?, ?, ?)",
+            (
+                pipeline_id,
+                resource_name,
+                operation,
+                duration_ms,
+                int(success),
+                json.dumps(metadata or {}),
+            ),
         )
 
     async def record_custom_metric(
@@ -113,13 +167,14 @@ class MetricsCollectorResource(AgentResource):
         value: float,
         metadata: Dict[str, Any] | None = None,
     ) -> None:
-        self.custom_metrics.append(
-            CustomMetricRecord(
-                pipeline_id=pipeline_id,
-                metric_name=metric_name,
-                value=value,
-                metadata=metadata or {},
-            )
+        await self._execute(
+            "INSERT INTO custom_metrics VALUES (?, ?, ?, ?)",
+            (
+                pipeline_id,
+                metric_name,
+                value,
+                json.dumps(metadata or {}),
+            ),
         )
 
     async def increment_counter(
@@ -140,6 +195,78 @@ class MetricsCollectorResource(AgentResource):
                 value=self.counters[key],
                 metadata=metadata,
             )
+
+    # ------------------------------------------------------------------
+    # Retrieval methods
+    # ------------------------------------------------------------------
+    async def get_plugin_executions(
+        self, pipeline_id: str | None = None
+    ) -> List[PluginExecutionRecord]:
+        sql = "SELECT pipeline_id, stage, plugin_name, duration_ms, success, error_type FROM plugin_metrics"
+        params: List[Any] = []
+        if pipeline_id:
+            sql += " WHERE pipeline_id = ?"
+            params.append(pipeline_id)
+        rows = await self._query(sql, params)
+        return [
+            PluginExecutionRecord(
+                pipeline_id=row[0],
+                stage=PipelineStage[row[1]] if row[1] else None,
+                plugin_name=row[2],
+                duration_ms=row[3],
+                success=bool(row[4]),
+                error_type=row[5],
+            )
+            for row in rows
+        ]
+
+    async def get_resource_operations(
+        self, pipeline_id: str | None = None
+    ) -> List[ResourceOperationRecord]:
+        sql = "SELECT pipeline_id, resource_name, operation, duration_ms, success, metadata FROM resource_metrics"
+        params: List[Any] = []
+        if pipeline_id:
+            sql += " WHERE pipeline_id = ?"
+            params.append(pipeline_id)
+        rows = await self._query(sql, params)
+        return [
+            ResourceOperationRecord(
+                pipeline_id=row[0],
+                resource_name=row[1],
+                operation=row[2],
+                duration_ms=row[3],
+                success=bool(row[4]),
+                metadata=json.loads(row[5]) if row[5] else {},
+            )
+            for row in rows
+        ]
+
+    async def get_custom_metrics(
+        self,
+        pipeline_id: str | None = None,
+        metric_name: str | None = None,
+    ) -> List[CustomMetricRecord]:
+        sql = "SELECT pipeline_id, metric_name, value, metadata FROM custom_metrics"
+        params: List[Any] = []
+        clauses: List[str] = []
+        if pipeline_id:
+            clauses.append("pipeline_id = ?")
+            params.append(pipeline_id)
+        if metric_name:
+            clauses.append("metric_name = ?")
+            params.append(metric_name)
+        if clauses:
+            sql += " WHERE " + " AND ".join(clauses)
+        rows = await self._query(sql, params)
+        return [
+            CustomMetricRecord(
+                pipeline_id=row[0],
+                metric_name=row[1],
+                value=row[2],
+                metadata=json.loads(row[3]) if row[3] else {},
+            )
+            for row in rows
+        ]
 
     # ------------------------------------------------------------------
     # Context managers
@@ -198,6 +325,105 @@ class MetricsCollectorResource(AgentResource):
                 success=success,
                 metadata=metadata,
             )
+
+    async def _execute(
+        self, sql: str, params: List[Any] | tuple[Any, ...] | None = None
+    ) -> None:
+        conn = self._conn
+        if conn is not None:
+            await _execute(conn, sql, params)
+            return
+        if self.database is None:
+            raise RuntimeError("Metrics collector not initialized")
+        async with self.database.connection() as db_conn:
+            await _execute(db_conn, sql, params)
+
+    async def _query(self, sql: str, params: List[Any] | None = None) -> List[Any]:
+        conn = self._conn
+        if conn is not None:
+            cursor = await _execute(conn, sql, params)
+            return await _maybe_await(cursor.fetchall())
+        if self.database is None:
+            raise RuntimeError("Metrics collector not initialized")
+        async with self.database.connection() as db_conn:
+            cursor = await _execute(db_conn, sql, params)
+            return await _maybe_await(cursor.fetchall())
+
+
+def _detect_paramstyle(conn: Any) -> str:
+    style = getattr(conn, "paramstyle", None)
+    if style:
+        return style
+    module = inspect.getmodule(conn)
+    name = getattr(module, "__name__", "") if module else ""
+    if name.startswith("asyncpg") or hasattr(conn, "fetchval"):
+        return "numeric"
+    return getattr(module, "paramstyle", "qmark")
+
+
+def _convert_placeholders(sql: str, style: str) -> str:
+    if style in {"format", "pyformat"}:
+        return sql.replace("?", "%s")
+    if style == "numeric":
+        parts = sql.split("?")
+        if len(parts) == 1:
+            return sql
+        new = []
+        for index, part in enumerate(parts[:-1], start=1):
+            new.append(part)
+            new.append(f"${index}")
+        new.append(parts[-1])
+        return "".join(new)
+    return sql
+
+
+async def _execute(conn: Any, sql: str, params: Any | None = None) -> Any:
+    style = _detect_paramstyle(conn)
+    sql = _convert_placeholders(sql, style)
+
+    asyncpg_like = hasattr(conn, "fetch")
+    is_select = sql.lstrip().lower().startswith(("select", "with"))
+
+    if asyncpg_like and is_select:
+        rows = conn.fetch(sql, *params) if params else conn.fetch(sql)
+        if inspect.isawaitable(rows):
+            rows = await rows
+        return _RowCursor(list(rows))
+
+    if not params:
+        result = conn.execute(sql)
+    else:
+        try:
+            result = conn.execute(sql, *params)
+        except Exception:
+            result = conn.execute(sql, params)
+    if inspect.isawaitable(result):
+        result = await result
+    return result
+
+
+async def _maybe_await(value: Any) -> Any:
+    if inspect.isawaitable(value):
+        return await value
+    return value
+
+
+class _RowCursor:
+    def __init__(self, rows: list[Any]) -> None:
+        self._rows = [tuple(r) for r in rows]
+        self._index = 0
+        keys = list(rows[0].keys()) if rows and hasattr(rows[0], "keys") else []
+        self.description = [(k, None, None, None, None, None, None) for k in keys]
+
+    def fetchall(self) -> list[Any]:
+        return self._rows
+
+    def fetchone(self) -> Any:
+        if self._index >= len(self._rows):
+            return None
+        row = self._rows[self._index]
+        self._index += 1
+        return row
 
 
 __all__ = ["MetricsCollectorResource"]

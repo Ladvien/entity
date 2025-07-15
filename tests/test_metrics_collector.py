@@ -23,6 +23,7 @@ async def test_plugin_dependencies_include_metrics():
 @pytest.mark.asyncio
 async def test_plugin_metrics_success():
     metrics = MetricsCollectorResource({})
+    await metrics.initialize()
     plugin = DummyPlugin({})
     plugin.metrics_collector = metrics
     registries = types.SimpleNamespace(
@@ -37,8 +38,9 @@ async def test_plugin_metrics_success():
 
     await plugin.execute(context)
 
-    assert len(metrics.plugin_executions) == 1
-    record = metrics.plugin_executions[0]
+    records = await metrics.get_plugin_executions()
+    assert len(records) == 1
+    record = records[0]
     assert record.success is True
     assert record.plugin_name == "DummyPlugin"
 
@@ -50,6 +52,7 @@ async def test_plugin_metrics_failure():
             raise RuntimeError("boom")
 
     metrics = MetricsCollectorResource({})
+    await metrics.initialize()
     plugin = FailPlugin({})
     plugin.metrics_collector = metrics
     registries = types.SimpleNamespace(
@@ -65,7 +68,8 @@ async def test_plugin_metrics_failure():
     with pytest.raises(RuntimeError):
         await plugin.execute(context)
 
-    assert len(metrics.plugin_executions) == 1
-    record = metrics.plugin_executions[0]
+    records = await metrics.get_plugin_executions()
+    assert len(records) == 1
+    record = records[0]
     assert record.success is False
     assert record.error_type == "RuntimeError"

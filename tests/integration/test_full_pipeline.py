@@ -57,6 +57,7 @@ class LLMPlugin(Plugin):
 @pytest.fixture()
 async def registries(pg_memory: Memory, ollama_llm: LLM) -> SystemRegistries:
     metrics = MetricsCollectorResource({})
+    metrics.database = pg_memory.database
     await metrics.initialize()
     logging_res = LoggingResource({})
     await logging_res.initialize()
@@ -158,9 +159,11 @@ async def test_performance_metrics(registries: SystemRegistries) -> None:
         await worker.execute_pipeline("pipe", "hello", user_id="u1")
     elapsed = time.perf_counter() - start
     metrics = registries.metrics
-    assert len(metrics.plugin_executions) == 3
+    executions = await metrics.get_plugin_executions()
+    custom = await metrics.get_custom_metrics()
+    assert len(executions) == 3
     assert elapsed > 0
-    assert any(m.metric_name == "pipeline_duration_ms" for m in metrics.custom_metrics)
+    assert any(m.metric_name == "pipeline_duration_ms" for m in custom)
 
 
 @pytest.mark.asyncio
@@ -177,4 +180,5 @@ async def test_llm_resource_metrics(registries: SystemRegistries) -> None:
     worker = PipelineWorker(registries)
     await worker.execute_pipeline("pipe", "hi", user_id="u1")
     metrics = registries.metrics
-    assert any(r.resource_name == "llm" for r in metrics.resource_operations)
+    operations = await metrics.get_resource_operations()
+    assert any(r.resource_name == "llm" for r in operations)
