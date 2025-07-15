@@ -68,9 +68,6 @@ async def test_stage_order_from_yaml(tmp_path, monkeypatch):
     think_plugins = registry.get_plugins_for_stage(str(PipelineStage.THINK))
 
     assert [p.__class__ for p in parse_plugins] == [ParsePlugin, ThinkPlugin]
-<<<<<<< HEAD
-=======
     # AGENT NOTE: actual initializer order is [OtherThinkPlugin, ThinkPlugin]
     # ThinkPlugin is registered second for THINK because it also declares PARSE.
->>>>>>> pr-1616
     assert [p.__class__ for p in think_plugins] == [OtherThinkPlugin, ThinkPlugin]
