@@ -1,0 +1,259 @@
+AGENT NOTE - 2025-07-15: Removed unused PipelineStage import from kitchen sink example
+<<<<<<< HEAD
+<<<<<<< HEAD
+AGENT NOTE - 2025-07-15: Clarified pytest-docker and Docker requirements in README
+<<<<<<< HEAD
+AGENT NOTE - 2025-07-15: Added optional llm_backend dependency to LLMResource
+<<<<<<< HEAD
+AGENT NOTE - 2025-07-15: Added echo_llm_backend infrastructure and updated defaults
+=======
+AGENT NOTE - 2025-07-15: Implemented failing infrastructure plugin for tests
+>>>>>>> pr-1654
+=======
+AGENT NOTE - 2025-07-15: Added py.typed to package for typing support
+>>>>>>> pr-1652
+<<<<<<< HEAD
+AGENT NOTE - 2025-07-15: Updated memory._execute to handle paramstyle fallback
+<<<<<<< HEAD
+AGENT NOTE - 2025-07-15: Updated cycle detection test for new error message
+=======
+AGENT NOTE - 2025-07-15: Removed self-dependency from LLMResource interface
+>>>>>>> pr-1649
+=======
+AGENT NOTE - 2025-07-15: Documented pytest-docker dev dependency and added fixture skip logic
+>>>>>>> pr-1651
+<<<<<<< HEAD
+AGENT NOTE - 2025-07-15: Adjusted logging configuration order in strict stage tests
+<<<<<<< HEAD
+AGENT NOTE - 2025-07-15: Adjusted _execute to unpack parameters using *args
+<<<<<<< HEAD
+AGENT NOTE - 2025-07-15: Adjusted _execute to unpack parameters using *args
+<<<<<<< HEAD
+AGENT NOTE - 2025-07-15: Updated validator tests for PromptPlugin requirement
+=======
+AGENT NOTE - 2025-07-15: Documented dev dependency installation and pytest-docker fixtures in README and CONTRIBUTING
+>>>>>>> pr-1640
+=======
+AGENT NOTE - 2025-07-15: set LLMResource infrastructure deps to llm_provider
+>>>>>>> pr-1646
+<<<<<<< HEAD
+=======
+=======
+AGENT NOTE - 2025-07-15: Cleaned conflict markers and sorted log chronologically
+>>>>>>> pr-1644
+=======
+AGENT NOTE - 2025-07-15: Cleaned conflict markers in agents.log and restored chronological order
+>>>>>>> pr-1656
+AGENT NOTE - 2025-11-28: Moved Memory methods inside class and kept helper functions module-level
+AGENT NOTE - 2025-11-28: Moved Memory methods inside class and kept helper functions module-level
+AGENT NOTE - 2025-11-28: Moved Memory methods inside class and kept helper functions module-level
+AGENT NOTE - 2025-11-28: Moved Memory methods inside class and kept helper functions module-level
+=======
+AGENT NOTE - 2025-07-15: Updated memory._execute to handle empty params and cleaned log
+>>>>>>> pr-1658
+AGENT NOTE - 2025-11-27: Patched DuckDB runtime test using monkeypatch to auto-restore connection method
+AGENT NOTE - 2025-10-31: Integration tests now use Dockerized Postgres and Ollama
+AGENT NOTE - 2025-10-30: Fixed async stage results in end-to-end pipeline test ensuring ReverseThink runs and final output is olleh
+AGENT NOTE - 2025-10-25: Updated Workflow schema and validation to match WorkflowSettings
+AGENT NOTE - 2025-10-14: Moved EchoLLMResource to interfaces package for clarity
+AGENT NOTE - 2025-10-14: Updated observability dependency injection for LoggingResource and MetricsCollectorResource
+AGENT NOTE - 2025-10-09: Added DuckDB infrastructure fixture for resource-only tests
+AGENT NOTE - 2025-10-09: Corrected default LLM provider layer
+AGENT NOTE - 2025-10-08: _ensure_agent initializes default agent with warning when auto init disabled
+AGENT NOTE - 2025-10-07: Updated registry validator tests for new error messages
+AGENT NOTE - 2025-10-07: Resolved multi_user test conflicts and preserved all test cases
+AGENT NOTE - 2025-10-07: Cleaned merge markers and restored lazy initialization
+AGENT NOTE - 2025-10-07: Implemented lazy agent initialization respecting ENV
+AGENT NOTE - 2025-10-07: Cleaned conflict markers in __init__ and agents.log
+AGENT NOTE - 2025-10-06: Updated layer validation to allow MetricsCollectorResource at layer 4
+AGENT NOTE - 2025-10-06: Tests require 'CREATE EXTENSION IF NOT EXISTS vector' when preparing Postgres
+AGENT NOTE - 2025-10-06: Clear stage results and temporary thoughts after each pipeline run
+AGENT NOTE - 2025-10-06: Removed merge markers from agents.log
+AGENT NOTE - 2025-10-05: Added default dependency injection and tests
+AGENT NOTE - 2025-08-21: Added user_id propagation in pipeline and multi-user tests
+AGENT NOTE - 2025-08-10: Added infrastructure_type attribute test
+AGENT NOTE - 2025-08-10: Added plugin reconfiguration updates and tests
+AGENT NOTE - 2025-08-10: Inject default DuckDBVectorStore and keep interfaces under entity.resources.interfaces
+AGENT NOTE - 2025-08-10: Moved plugin_tool under entity.cli and updated imports
+AGENT NOTE - 2025-08-10: Stage results persist across runs and temporary thoughts moved to PipelineState
+AGENT NOTE - 2025-08-09: Documented examples package and exported key modules
+AGENT NOTE - 2025-08-08: Cleaned merge conflict markers in agents.log
+AGENT NOTE - 2025-08-07: Added example plugins and registered them in default workflow
+AGENT NOTE - 2025-08-06: Revised LlamaCppInfrastructure runtime validation with timeout and status checks
+AGENT NOTE - 2025-08-05: Added LlamaCppInfrastructure plugin for launching local llama.cpp servers
+AGENT NOTE - 2025-08-04: Resolved lingering merge markers and restored notes
+AGENT NOTE - 2025-08-02: Resolved remaining merge conflict markers
+AGENT NOTE - 2025-08-01: Document example plugins with literalinclude
+AGENT NOTE - 2025-07-31: Resolved merge conflicts in pipeline and CLI after PRs 1416-1427
+AGENT NOTE - 2025-07-25: Added DuckDBVectorStore and zero-config registration
+AGENT NOTE - 2025-07-25: Added debugging tracer module and CLI step command
+AGENT NOTE - 2025-07-25: Changed DuckDBResource to subclass ResourcePlugin and adjusted default layer
+AGENT NOTE - 2025-07-25: Extended ResourcePool with scaling and health checks
+AGENT NOTE - 2025-07-25: ToolRegistry discovery now filters by intents
+AGENT NOTE - 2025-07-24: Added plugin capabilities and compatibility matrix with pipeline benchmarks
+AGENT NOTE - 2025-07-24: Pipeline now validates workflow plugins during initialization
+AGENT NOTE - 2025-07-24: PluginRegistry now preserves registration order with OrderedDict
+AGENT NOTE - 2025-07-24: Updated DuckDBResource to subclass AgentResource and use database_backend
+AGENT NOTE - 2025-07-23: Allow layer 3 for custom resources without dependencies
+AGENT NOTE - 2025-07-23: Fixed DatabaseResource import and updated async usage in plugin context memory test
+AGENT NOTE - 2025-07-22: RegistryValidator config stripping and canonical resource tests added
+AGENT NOTE - 2025-07-21: Added strict stage checks and CLI flag
+AGENT NOTE - 2025-07-21: Updated runtime tests to use Pipeline wrapper
+AGENT NOTE - 2025-07-20: Updated load_env precedence and tests
+AGENT NOTE - 2025-07-18: Added integration pipeline tests covering workflows, multi-user isolation, error handling, and metrics
+AGENT NOTE - 2025-07-16: Revised built-in resource config validation and tests
+AGENT NOTE - 2025-07-15: Updated memory._execute to handle paramstyle fallback
+AGENT NOTE - 2025-07-15: Updated cycle detection test for new error message
+AGENT NOTE - 2025-07-15: Removed self-dependency from LLMResource interface
+AGENT NOTE - 2025-07-15: Documented pytest-docker dev dependency and added fixture skip logic
+AGENT NOTE - 2025-07-15: Adjusted logging configuration order in strict stage tests
+AGENT NOTE - 2025-07-15: Adjusted _execute to unpack parameters using *args
+AGENT NOTE - 2025-07-15: Adjusted _execute to unpack parameters using *args
+AGENT NOTE - 2025-07-15: Updated validator tests for PromptPlugin requirement
+AGENT NOTE - 2025-07-15: Documented dev dependency installation and pytest-docker fixtures in README and CONTRIBUTING
+AGENT NOTE - 2025-07-15: set LLMResource infrastructure deps to llm_provider
+AGENT NOTE - 2025-07-15: Cleaned conflict markers and sorted log chronologically
+AGENT NOTE - 2025-07-15: Cleaned conflict markers and sorted log chronologically
+AGENT NOTE - 2025-07-15: Set llm interface infra deps empty
+AGENT NOTE - 2025-07-15: Cleaned merge markers from agents.log
+AGENT NOTE - 2025-07-15: Updated CI to install dev dependencies via poetry
+AGENT NOTE - 2025-07-15: Resolved merge conflict markers and restored missing notes
+AGENT NOTE - 2025-07-15: Resolved merge conflicts in agents.log and removed duplicate entries
+AGENT NOTE - 2025-07-15: Wrapped DB operations with awaitable helper for memory resource
+AGENT NOTE - 2025-07-15: Excluded LoggingResource from metrics dependency
+AGENT NOTE - 2025-07-15: Updated dependency assertion for layer validation message
+AGENT NOTE - 2025-07-15: registry validation ensures prompt plugins must subclass PromptPlugin
+AGENT NOTE - 2025-07-15: Adjusted logging configuration order in strict stage tests
+AGENT NOTE - 2025-07-15: Verified removal of conflict markers and ran formatting/tests
+AGENT NOTE - 2025-07-15: Partial cleanup of mock usage in strict stage test
+AGENT NOTE - 2025-07-15: Added poe tasks for unit, integration, and e2e tests
+AGENT NOTE - 2025-07-15: Removed monkeypatch-based tests and added poe tasks for unit/integration/e2e
+AGENT NOTE - 2025-07-15: Verified stage order test markers removed and logged update
+AGENT NOTE - 2025-07-14: Updated test resource layers to comply with 4-layer architecture
+AGENT NOTE - 2025-07-14: Awaited context.think in tests and audited for missing awaits
+AGENT NOTE - 2025-07-14: Updated dependency injection tests to expect "metrics_collector?"
+AGENT NOTE - 2025-07-14: Updated plugin order expectation in test_stage_order_from_yaml
+AGENT NOTE - 2025-07-14: Updated decorator usage in examples and tests
+AGENT NOTE - 2025-07-14: Updated layer validation tests for new error messages
+AGENT NOTE - 2025-07-14: Ensure vector store initializes before memory for PG tests
+AGENT NOTE - 2025-07-14: Updated multi-user tests to use user_id parameter for load_conversation
+AGENT NOTE - 2025-07-14: Updated memory-postgres registry validator test
+AGENT NOTE - 2025-07-14: Added stage overrides for hot reload plugins
+AGENT NOTE - 2025-07-14: ConfigLoader now leaves workflow mappings as plain dicts
+AGENT NOTE - 2025-07-14: Updated agent runtime test pipeline instantiation
+AGENT NOTE - 2025-07-14: Adjusted metrics_collector layer 4 tests and removed log conflict markers
+AGENT NOTE - 2025-07-14: Verified conversation user scoping uses {user_id}_{pipeline_id} and all multi-user tests pass
+AGENT NOTE - 2025-07-14: Added explicit stages to test plugins and fixed missing dependency regex
+AGENT NOTE - 2025-07-14: Moved MetricsCollectorResource to layer 4 and updated container defaults
+AGENT NOTE - 2025-07-14: Verified pipeline recovery returns final output
+AGENT NOTE - 2025-07-14: Adjusted regex patterns for dependency graph error messages
+AGENT NOTE - 2025-07-14: Added metrics_collector dependencies for LLM and VectorStoreResource
+AGENT NOTE - 2025-07-14: Updated PostgreSQL test fixture to use DatabaseJanitor
+AGENT NOTE - 2025-07-14: Fixed pipeline exports for SystemInitializer and CLI lazy schema import
+AGENT NOTE - 2025-07-14: Updated DummyResource tests to register at layer 4 and clear metrics dependencies
+AGENT NOTE - 2025-07-14: Updated layer validation message checks in tests
+AGENT NOTE - 2025-07-14: typed dependencies for infrastructure plugins
+AGENT NOTE - 2025-07-14: Ensured PostgreSQL tests create and drop temporary database
+AGENT NOTE - 2025-07-14: Updated plugin config tests to use dictionaries
+AGENT NOTE - 2025-07-14: Removed infrastructure_dependencies from MetricsCollectorResource
+AGENT NOTE - 2025-07-14: Added sys.path setup in tests and examples for direct execution
+AGENT NOTE - 2025-07-14: Revised layer validation order and cycle detection
+AGENT NOTE - 2025-07-14: Fixed conversation history user_id namespacing and updated tests
+AGENT NOTE - 2025-07-14: Fixed stage mismatch warning logging and updated tests
+AGENT NOTE - 2025-07-14: Documented pyyaml/python-dotenv requirements for CLI validation
+AGENT NOTE - 2025-07-14: Simplified layer validation by removing duplicate dependency check
+AGENT NOTE - 2025-07-14: Updated load_conversation ID logic and added tests
+AGENT NOTE - 2025-07-14: Improved ToolRegistry intent discovery logic
+AGENT NOTE - 2025-07-14: Added dependencies attribute to infrastructure classes
+AGENT NOTE - 2025-07-14: Disabled observability injection for ResourcePlugin subclasses to avoid unexpected dependencies
+AGENT NOTE - 2025-07-14: Allowed plugin canonical resources to be registered at layer 4
+AGENT NOTE - 2025-07-14: Removed merge conflict markers from agents.log
+AGENT NOTE - 2025-07-14: Verified errors.py contains no merge markers and ensured ResourceError uses pass
+AGENT NOTE - 2025-07-14: Added test-verbose command to README testing section
+AGENT NOTE - 2025-07-14: Updated test imports for reliability modules and StageResolver
+AGENT NOTE - 2025-07-14: Documented PYTHONPATH usage for pytest in README
+AGENT NOTE - 2025-07-14: Fixed workflow fallback in _create_default_agent
+AGENT NOTE - 2025-07-14: Removed merge markers from errors.py
+AGENT NOTE - 2025-07-14: Cleaned merge markers in source and updated lazy init helpers
+AGENT NOTE - 2025-07-14: Refactored AgentServer to accept capability container
+AGENT NOTE - 2025-07-14: Removed conflict markers in tests and __init__
+AGENT NOTE - 2025-07-14: Added tests for infrastructure deps, layer jumps, and say() stage enforcement
+AGENT NOTE - 2025-07-14: Implemented plugin decorators and multi-stage support
+AGENT NOTE - 2025-07-14: Extended layer validation and tests for layer boundaries
+AGENT NOTE - 2025-07-14: Switched tests to core plugin imports
+AGENT NOTE - 2025-07-14: Verified persistence functions prepend user_id for isolation
+AGENT NOTE - 2025-07-14: Verified stage context assignment and added tests for say guard
+AGENT NOTE - 2025-07-14: Updated plugin dependency handling
+AGENT NOTE - 2025-07-14: Added multi-worker regression test and cleaned core modules
+AGENT NOTE - 2025-07-14: Revised examples for zero-config, updated configs, and documented multi-user patterns
+AGENT NOTE - 2025-07-14: Implemented WebSocket log streaming and metrics tracking hooks
+AGENT NOTE - 2025-07-14: Unified builder and runtime inside Agent
+AGENT NOTE - 2025-07-13: Added BasicErrorHandler plugin for error handling in zero config
+AGENT NOTE - 2025-07-13: Added DefaultWorkflow and zero-config setup
+AGENT NOTE - 2025-07-13: Removed deprecated AgentBuilder from public interface
+AGENT NOTE - 2025-07-13: Modified dependency injection for infrastructure plugins
+AGENT NOTE - 2025-07-13: Added ResourceError class cleanup and docs
+AGENT NOTE - 2025-07-13: Added automatic logging resource injection and tests
+AGENT NOTE - 2025-07-13: Added automatic metrics injection and startup warning when metrics resource missing
+AGENT NOTE - 2025-07-13: Added branching and checkpoint support in Pipeline
+AGENT NOTE - 2025-07-13: Added config inheritance, linting, and diff tools
+AGENT NOTE - 2025-07-13: Added has_plugin method to PluginRegistry to fix workflow validation
+AGENT NOTE - 2025-07-13: Added infrastructure_type to AWSStandardInfrastructure
+AGENT NOTE - 2025-07-13: Added lifecycle hooks with state tracking and tests
+AGENT NOTE - 2025-07-13: Added logging resource to integration registries for PipelineWorker tests
+AGENT NOTE - 2025-07-13: Added pythonpath configuration for pytest
+AGENT NOTE - 2025-07-13: Added runtime plugin validation for stage assignments and dependencies
+AGENT NOTE - 2025-07-13: Added stage override warnings and output restrictions tests
+AGENT NOTE - 2025-07-13: Added tool intent discovery tests
+AGENT NOTE - 2025-07-13: Added vector store and logging to default setup
+AGENT NOTE - 2025-07-13: Added websocket broadcast logging, file rotation, and structured pipeline logs.
+AGENT NOTE - 2025-07-13: Added workflow support and composition helpers
+AGENT NOTE - 2025-07-13: Adjust stage result clearing to persist across iterations but reset between messages
+AGENT NOTE - 2025-07-13: Agent constructor now accepts optional workflow parameter and workflow validation added
+AGENT NOTE - 2025-07-13: Cleaned merge conflicts and implemented lazy default agent
+AGENT NOTE - 2025-07-13: Cleaned merge markers and deduplicated entries
+AGENT NOTE - 2025-07-13: Cleaned merge markers and executed quality checks
+AGENT NOTE - 2025-07-13: Cleaned merge markers and fixed default agent imports
+AGENT NOTE - 2025-07-13: Cleaned merge markers and updated default agent setup
+AGENT NOTE - 2025-07-13: Consolidated pipeline under entity.pipeline
+AGENT NOTE - 2025-07-13: Detect cycles in resource initialization order and add regression tests
+AGENT NOTE - 2025-07-13: Enforced adapter stage registration and added tests
+AGENT NOTE - 2025-07-13: Enforced adapter stage resolution in StageResolver
+AGENT NOTE - 2025-07-13: Ensured pipeline package sets __path__ for plugin discovery
+AGENT NOTE - 2025-07-13: Fixed merge markers in __init__
+AGENT NOTE - 2025-07-13: Implemented DuckDBVectorStore setup and minimal workflow tests
+AGENT NOTE - 2025-07-13: Implemented plugin lifecycle state tracking and metrics logging
+AGENT NOTE - 2025-07-13: Implemented validation phases and circuit breaker integration
+AGENT NOTE - 2025-07-13: Improved layer validation cycle checks
+AGENT NOTE - 2025-07-13: Improved layer validation with cycle detection and dependency graph tooling
+AGENT NOTE - 2025-07-13: Install and pytest run; tests failing due to missing package paths
+AGENT NOTE - 2025-07-13: Integrated pipeline duration metric and cleared stage results after execution
+AGENT NOTE - 2025-07-13: Memory now persists to DuckDB and vector store
+AGENT NOTE - 2025-07-13: Moved BasicErrorHandler to builtin and added example plugin tests
+AGENT NOTE - 2025-07-13: No resource interface modules found to move, canonical resources already depend on interfaces.
+AGENT NOTE - 2025-07-13: Preserved YAML stage sequence in PluginRegistry
+AGENT NOTE - 2025-07-13: Removed duplicate plugin definitions and centralized base classes
+AGENT NOTE - 2025-07-13: Removed merge conflict markers in core modules
+AGENT NOTE - 2025-07-13: Resolved merge conflicts for LlamaCppInfrastructure documentation and tests
+AGENT NOTE - 2025-07-13: Resolved merge conflicts in agents.log
+AGENT NOTE - 2025-07-13: Stage results cleared after pipeline completion and tests added for thought accumulation
+AGENT NOTE - 2025-07-13: Updated black exclude paths to include CLI and plugin templates
+AGENT NOTE - 2025-07-13: Updated tests for Memory initialization
+AGENT NOTE - 2025-07-13: Verified memory vector search and analytics
+AGENT NOTE - 2025-07-13: Verified merge conflict cleanup and preserved all notes
+AGENT NOTE - 2025-07-13: pytest now works with the unified entity.cli.plugin_tool structure
+AGENT NOTE - 2025-07-12: Added canonical resource classes and StandardResources dataclass
+AGENT NOTE - 2025-07-12: Added config and dependency hooks for plugins
+AGENT NOTE - 2025-07-12: Added decorator shortcuts and tests
+AGENT NOTE - 2025-07-12: Added get_memory/get_storage helpers and updated docs
+AGENT NOTE - 2025-07-12: Added infrastructure deps injection in ResourceContainer
+AGENT NOTE - 2025-07-12: Added plugin lifecycle hooks and updated CLI
+AGENT NOTE - 2025-07-12: Added restart check for unknown plugins in CLI reload
+AGENT NOTE - 2025-07-12: Enforced explicit plugin stages and simplified precedence
+AGENT NOTE - 2025-07-12: Removed ConversationHistory helper class
+AGENT NOTE - 2025-07-12: Removed sandbox infrastructure and unused plugins
+AGENT NOTE - 2025-07-12: Rewrote stage precedence tests for new rules
+AGENT NOTE - 2025-07-12: Simplified plugin analysis output
+AGENT NOTE - 2025-07-12: Updated ResourceContainer build sequence and tests
+AGENT NOTE - 2025-07-12: Verified metrics_collector removal; file already absent
+AGENT NOTE - 2025-07-12: Verified sandbox references removed and executed quality checks
