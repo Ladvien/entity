@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Updated cycle detection test for new error message
+=======
+AGENT NOTE - 2025-07-15: Removed self-dependency from LLMResource interface
+>>>>>>> pr-1649
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Adjusted logging configuration order in strict stage tests
 <<<<<<< HEAD
