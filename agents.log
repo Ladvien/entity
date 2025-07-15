@@ -2,6 +2,11 @@
 =======
 AGENT NOTE - 2025-11-28: Moved Memory methods inside class and kept helper functions module-level
 AGENT NOTE - 2025-07-15: Set llm interface infra deps empty
+>>>>>>> pr-1639
+<<<<<<< HEAD
+=======
+AGENT NOTE - 2025-11-28: Moved Memory methods inside class and kept helper functions module-level
+AGENT NOTE - 2025-07-15: Set llm interface infra deps empty
 >>>>>>> pr-1638
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Cleaned merge markers from agents.log
