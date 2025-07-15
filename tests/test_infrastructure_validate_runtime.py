@@ -5,7 +5,7 @@ from entity.core.circuit_breaker import CircuitBreaker
 
 
 @pytest.mark.asyncio
-async def test_duckdb_runtime_breaker_opens():
+async def test_duckdb_runtime_breaker_opens(monkeypatch):
     db = DuckDBInfrastructure({"failure_threshold": 2})
     breaker = CircuitBreaker(failure_threshold=2)
 
@@ -20,7 +20,7 @@ async def test_duckdb_runtime_breaker_opens():
     async def bad_connection(self):
         yield BadConn()
 
-    DuckDBInfrastructure.connection = bad_connection
+    monkeypatch.setattr(DuckDBInfrastructure, "connection", bad_connection)
 
     res1 = await db.validate_runtime(breaker)
     assert not res1.success

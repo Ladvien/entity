@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-11-27: Patched DuckDB runtime test using monkeypatch to auto-restore connection method
 <<<<<<< HEAD
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Verified removal of conflict markers and ran formatting/tests
