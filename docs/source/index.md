@@ -37,12 +37,13 @@ plugins:
 ## MetricsCollectorResource
 
 `MetricsCollectorResource` collects performance and custom metrics from every plugin.
-When configured it is injected into all plugins automatically. If omitted the
-initializer logs a warning and metrics are disabled.
+It is a canonical resource at layer 3. When configured it is injected into all
+plugins automatically. If omitted the initializer logs a warning and metrics are
+disabled.
 
 ```yaml
 plugins:
-  custom_resources:
+  resources:
     metrics_collector:
       type: entity.resources.metrics:MetricsCollectorResource
       retention_days: 90

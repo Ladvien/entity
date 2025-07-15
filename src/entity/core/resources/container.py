@@ -206,8 +206,6 @@ def _is_builtin_canonical(cls: type) -> bool:
         return False
 
     mod = cls.__module__
-    if cls.__name__ == "MetricsCollectorResource":
-        return False
     return mod.startswith("entity.resources.") and "interfaces" not in mod
 
 
@@ -309,15 +307,16 @@ class ResourceContainer:
             "metrics_collector" not in self._classes
             and "metrics_collector" not in self._resources
         ):
-            # The collector is a built-in canonical resource but is injected
-            # like a custom one, so we register it at layer 4 by default.
+            # Metrics collection is a canonical capability. Register the
+            # built-in collector at layer 3 so it is available to all
+            # plugins without manual configuration.
             from entity.resources.metrics import MetricsCollectorResource
 
             self.register(
                 "metrics_collector",
                 MetricsCollectorResource,
                 {},
-                layer=4,
+                layer=3,
             )
 
         self._validate_layers()
@@ -524,9 +523,8 @@ class ResourceContainer:
     def _validate_layers(self) -> None:
         """Ensure layer dependencies follow the 4-layer architecture.
 
-        Built-in canonical resources normally run at layer 3. The
-        ``MetricsCollectorResource`` is an exception and may operate in
-        layer 4 so it can be injected automatically like custom resources.
+        Built-in canonical resources run at layer 3. Custom resources are
+        placed at layer 4 unless explicitly configured otherwise.
         """
 
         from entity.core.plugins import (
@@ -575,8 +573,6 @@ class ResourceContainer:
                     and not self._deps.get(name)
                 ):
                     allowed_layers.add(3)
-            if cls.__name__ == "MetricsCollectorResource":
-                allowed_layers.add(4)
 
             if layer not in allowed_layers:
                 raise InitializationError(
