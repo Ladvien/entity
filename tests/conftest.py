@@ -13,6 +13,7 @@ from contextlib import asynccontextmanager
 import asyncpg
 import psycopg
 import pytest
+import pytest_docker
 
 REQUIRE_PYTEST_DOCKER = (
     "pytest-docker is required for Docker-based fixtures. "
