@@ -83,7 +83,6 @@ class RegistryValidator:
             InfrastructurePlugin,
             InputAdapterPlugin,
             OutputAdapterPlugin,
-            Plugin,
             PromptPlugin,
             ResourcePlugin,
             ToolPlugin,
