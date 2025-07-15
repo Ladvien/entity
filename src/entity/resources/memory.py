@@ -54,8 +54,7 @@ class Memory(AgentResource):
             )
             await _execute(
                 conn,
-                f"CREATE TABLE IF NOT EXISTS {self._history_table} ("
-                "conversation_id TEXT, role TEXT, content TEXT, metadata TEXT, timestamp TEXT)",
+                f"CREATE TABLE IF NOT EXISTS {self._history_table} (conversation_id TEXT, role TEXT, content TEXT, metadata TEXT, timestamp TEXT)",
             )
             self._maybe_commit(conn)
 
