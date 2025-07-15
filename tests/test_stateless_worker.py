@@ -16,16 +16,20 @@ class DummyConnection:
         self._last_result: list | None = None
 
     def execute(self, query: str, params: tuple | None = None) -> None:
-        if query.startswith("DELETE FROM conversation_history"):
+        params = params if isinstance(params, tuple) else (params,) if params else ()
+        if query.startswith("DELETE FROM conversation_history") and params:
             cid = params[0]
             self.store["history"].pop(cid, None)
-        elif query.startswith("INSERT INTO conversation_history"):
+        elif query.startswith("INSERT INTO conversation_history") and len(params) == 5:
             cid, role, content, metadata, ts = params
             self.store.setdefault("history", {}).setdefault(cid, []).append(
                 (role, content, json.loads(metadata), ts)
             )
-        elif query.startswith(
-            "SELECT role, content, metadata, timestamp FROM conversation_history"
+        elif (
+            query.startswith(
+                "SELECT role, content, metadata, timestamp FROM conversation_history"
+            )
+            and params
         ):
             cid = params[0]
             self._last_result = [
@@ -36,9 +40,13 @@ class DummyConnection:
             ]
         return self
 
-    def fetch(self, query: str, params: tuple) -> list:
-        if query.startswith(
-            "SELECT role, content, metadata, timestamp FROM conversation_history"
+    def fetch(self, query: str, params: tuple | None = None) -> list:
+        params = params if isinstance(params, tuple) else (params,) if params else ()
+        if (
+            query.startswith(
+                "SELECT role, content, metadata, timestamp FROM conversation_history"
+            )
+            and params
         ):
             cid = params[0]
             return [
