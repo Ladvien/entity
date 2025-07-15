@@ -372,6 +372,9 @@ def _detect_paramstyle(conn: Any) -> str:
     if style:
         return style
     module = inspect.getmodule(conn)
+    module_name = getattr(module, "__name__", "") if module else ""
+    if module_name.startswith("asyncpg") or hasattr(conn, "fetchval"):
+        return "numeric"
     return getattr(module, "paramstyle", "qmark")
 
 

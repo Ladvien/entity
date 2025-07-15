@@ -119,3 +119,25 @@ async def test_conversation_integration(prepared_postgres) -> None:
     matches = await mem.conversation_search("hello", user_id="u")
     assert len(matches) == 1
     assert matches[0]["content"] == "hello there"
+
+
+@pytest.mark.asyncio
+async def test_asyncpg_paramstyle_insert(prepared_postgres) -> None:
+    if shutil.which("pg_ctl") is None:
+        pytest.skip("pg_ctl not installed")
+    dsn = (
+        f"postgresql://{prepared_postgres.user}:{prepared_postgres.password}@"
+        f"{prepared_postgres.host}:{prepared_postgres.port}/{prepared_postgres.dbname}"
+    )
+    db = AsyncPGDatabase(dsn)
+    mem = Memory({})
+    mem.database = db
+    await mem.initialize()
+
+    entry = ConversationEntry(
+        content="asyncpg works", role="user", timestamp=datetime.now()
+    )
+    await mem.add_conversation_entry("conv", entry, user_id="u")
+    history = await mem.load_conversation("conv", user_id="u")
+    assert len(history) == 1
+    assert history[0].content == "asyncpg works"
