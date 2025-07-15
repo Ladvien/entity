@@ -32,7 +32,9 @@ This project uses **Poetry + Pytest** with a focus on **realistic, integration-d
   * Ollama (for LLM reasoning)
   * FastAPI app (for API-based e2e)
 * Use [`docker-compose`](https://docs.docker.com/compose/) or [`pytest-docker`](https://pypi.org/project/pytest-docker/) for managed spinup
-* Install **`pytest-docker`** before running integration tests; without it pytest will fail with `fixture 'docker_ip' not found` errors.
+* Install **`pytest-docker`** before running integration tests.
+  If it's missing, `tests/conftest.py` skips all Docker-based tests at import time
+  with a clear message: "pytest-docker is required for Docker-based fixtures. Run 'poetry install --with dev' to install it."
 
 ---
 

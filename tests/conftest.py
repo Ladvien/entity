@@ -19,8 +19,14 @@ REQUIRE_PYTEST_DOCKER = (
     "Run 'poetry install --with dev' to install it."
 )
 
+try:  # Skip entire module if pytest-docker isn't available
+    import pytest_docker as _  # noqa: F401
+except Exception:  # pragma: no cover - environment dependent
+    pytest.skip(REQUIRE_PYTEST_DOCKER, allow_module_level=True)
 
-def _require_docker():
+
+def _require_docker() -> None:
+    """Ensure pytest-docker is installed before using docker fixtures."""
     pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
 
 
