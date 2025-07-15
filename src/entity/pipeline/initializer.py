@@ -582,6 +582,7 @@ class SystemInitializer:
                 deps = list(getattr(cls, "dependencies", []))
                 from entity.core.plugins import InfrastructurePlugin
 
+                is_interface = layer == 2
                 if issubclass(cls, InfrastructurePlugin):
                     deps = [
                         d for d in deps if d not in {"logging", "metrics_collector"}
@@ -590,7 +591,8 @@ class SystemInitializer:
                     if cls.__name__ != "LoggingResource" and "logging" not in deps:
                         deps.append("logging")
                     if (
-                        cls.__name__
+                        not is_interface
+                        and cls.__name__
                         not in {"MetricsCollectorResource", "LoggingResource"}
                         and "metrics_collector" not in deps
                     ):

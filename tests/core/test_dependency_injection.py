@@ -148,3 +148,49 @@ def test_dependencies_without_logging():
     assert "logging" in DummyTool.dependencies
     assert "logging" in DummyAdapter.dependencies
     assert "logging" in DummyPrompt.dependencies
+
+
+def test_interface_resource_no_metrics_dependency() -> None:
+    from entity.resources.interfaces.database import DatabaseResource
+    from entity.resources.memory import Memory
+
+    base_deps = DatabaseResource.dependencies.copy()
+    mem_deps = Memory.dependencies.copy()
+    DatabaseResource.dependencies = []
+    Memory.dependencies = ["database", "vector_store?"]
+
+    cfg = {
+        "plugins": {
+            "infrastructure": {
+                "database_backend": {
+                    "type": "entity.infrastructure.duckdb:DuckDBInfrastructure"
+                }
+            },
+            "resources": {
+                "database": {
+                    "type": "entity.resources.interfaces.database:DatabaseResource"
+                }
+            },
+            "agent_resources": {
+                "memory": {"type": "entity.resources.memory:Memory"},
+                "logging": {"type": "entity.resources.logging:LoggingResource"},
+                "metrics_collector": {
+                    "type": "entity.resources.metrics:MetricsCollectorResource"
+                },
+                "llm": {"type": "entity.resources.llm:LLM"},
+                "storage": {"type": "entity.resources.storage:Storage"},
+            },
+        },
+        "workflow": {},
+    }
+
+    init = SystemInitializer(cfg)
+    registry = ClassRegistry()
+    dep_graph: dict[str, list[str]] = {}
+    init._register_plugins(registry, dep_graph)
+
+    assert "metrics_collector?" not in DatabaseResource.dependencies
+    assert "metrics_collector?" in Memory.dependencies
+
+    DatabaseResource.dependencies = base_deps
+    Memory.dependencies = mem_deps
