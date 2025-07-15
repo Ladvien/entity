@@ -1,3 +1,4 @@
+AGENT NOTE - 2025-07-15: Updated dependency assertion for layer validation message
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-15: registry validation ensures prompt plugins must subclass PromptPlugin
 =======

@@ -1,7 +1,6 @@
 import pytest
 
 from entity.pipeline.errors import InitializationError
-from entity.pipeline import initializer
 from entity.pipeline.initializer import ClassRegistry, SystemInitializer
 from entity.pipeline.stages import PipelineStage
 from entity.core.plugins import PromptPlugin

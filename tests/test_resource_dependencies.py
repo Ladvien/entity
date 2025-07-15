@@ -29,5 +29,6 @@ def test_dependency_on_higher_layer_raises() -> None:
     container.register("higher", HigherResource, {}, layer=3)
     container.register("lower", LowerInterface, {}, layer=2)
 
-    with pytest.raises(InitializationError, match="dependency graph"):
+    # The container validates layer rules before checking dependency order.
+    with pytest.raises(InitializationError, match="layer validation"):
         asyncio.run(container.build_all())
