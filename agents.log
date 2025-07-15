@@ -1,6 +1,10 @@
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Added optional llm_backend dependency to LLMResource
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Added echo_llm_backend infrastructure and updated defaults
+=======
+AGENT NOTE - 2025-07-15: Implemented failing infrastructure plugin for tests
+>>>>>>> pr-1654
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Updated memory._execute to handle paramstyle fallback
 <<<<<<< HEAD
