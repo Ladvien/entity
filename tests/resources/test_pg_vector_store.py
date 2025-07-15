@@ -141,3 +141,51 @@ async def test_asyncpg_paramstyle_insert(prepared_postgres) -> None:
     history = await mem.load_conversation("conv", user_id="u")
     assert len(history) == 1
     assert history[0].content == "asyncpg works"
+
+
+@pytest.mark.asyncio
+async def test_asyncpg_conversation_statistics(prepared_postgres) -> None:
+    if shutil.which("pg_ctl") is None:
+        pytest.skip("pg_ctl not installed")
+    dsn = (
+        f"postgresql://{prepared_postgres.user}:{prepared_postgres.password}@"
+        f"{prepared_postgres.host}:{prepared_postgres.port}/{prepared_postgres.dbname}"
+    )
+    db = AsyncPGDatabase(dsn)
+    mem = Memory({})
+    mem.database = db
+    await mem.initialize()
+
+    now = datetime.now()
+    await mem.add_conversation_entry(
+        "c1", ConversationEntry("hi", "user", now), user_id="u"
+    )
+    await mem.add_conversation_entry(
+        "c1", ConversationEntry("bye", "assistant", now), user_id="u"
+    )
+    await mem.add_conversation_entry(
+        "c2", ConversationEntry("ping", "user", now), user_id="u"
+    )
+
+    stats = await mem.conversation_statistics("u")
+    assert stats["conversations"] == 2
+    assert stats["messages"] == 3
+
+
+@pytest.mark.asyncio
+async def test_asyncpg_save_and_load(prepared_postgres) -> None:
+    if shutil.which("pg_ctl") is None:
+        pytest.skip("pg_ctl not installed")
+    dsn = (
+        f"postgresql://{prepared_postgres.user}:{prepared_postgres.password}@"
+        f"{prepared_postgres.host}:{prepared_postgres.port}/{prepared_postgres.dbname}"
+    )
+    db = AsyncPGDatabase(dsn)
+    mem = Memory({})
+    mem.database = db
+    await mem.initialize()
+
+    entry = ConversationEntry("store me", "user", datetime.now())
+    await mem.save_conversation("conv", [entry], user_id="u")
+    loaded = await mem.load_conversation("conv", user_id="u")
+    assert loaded == [entry]

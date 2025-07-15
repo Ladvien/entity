@@ -395,10 +395,47 @@ def _convert_placeholders(sql: str, style: str) -> str:
     return sql
 
 
+class _RowCursor:
+    """Lightweight wrapper mimicking a DB-API cursor."""
+
+    def __init__(self, rows: list[Any]) -> None:
+        self._rows = [tuple(r) for r in rows]
+        self._index = 0
+        if rows and hasattr(rows[0], "keys"):
+            keys = list(rows[0].keys())
+        else:
+            keys = [str(i) for i in range(len(self._rows[0]))] if rows else []
+        self.description = [(k, None, None, None, None, None, None) for k in keys]
+
+    def fetchall(self) -> list[Any]:
+        return self._rows
+
+    def fetchone(self) -> Any:
+        if self._index >= len(self._rows):
+            return None
+        row = self._rows[self._index]
+        self._index += 1
+        return row
+
+
 async def _execute(conn: Any, sql: str, params: Any | None = None) -> Any:
     """Run a query against ``conn`` and await the result when necessary."""
     style = _detect_paramstyle(conn)
     sql = _convert_placeholders(sql, style)
+
+    asyncpg_like = hasattr(conn, "fetch")
+    is_select = sql.lstrip().lower().startswith("select")
+
+    if asyncpg_like and is_select:
+        if not params:
+            rows = await conn.fetch(sql)
+        else:
+            try:
+                rows = await conn.fetch(sql, *params)
+            except Exception:
+                rows = await conn.fetch(sql, params)
+        return _RowCursor(list(rows))
+
     if not params:
         result = conn.execute(sql)
     else:
