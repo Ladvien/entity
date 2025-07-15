@@ -23,6 +23,10 @@ class DatabaseResource(ResourcePlugin):
             return infrastructure.get_connection_pool()
         return ResourcePool(lambda: None, PoolConfig())
 
+    def get_pool(self) -> ResourcePool:
+        """Return a connection pool for one-time use."""
+        return self.get_connection_pool()
+
     @asynccontextmanager
     async def connection(self) -> Iterator[Any]:  # pragma: no cover - stub
         yield None
