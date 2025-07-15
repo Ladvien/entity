@@ -88,6 +88,17 @@ class PipelineWorker:
             temporary_thoughts=temp_thoughts,
             pipeline_id=pipeline_id,
         )
+<<<<<<< HEAD
+=======
+        await memory.save_conversation(pipeline_id, conversation, user_id=user_id)
+        temp_key = f"{pipeline_id}_temp"
+        temp_thoughts = await memory.fetch_persistent(temp_key, {}, user_id=user_id)
+        state = PipelineState(
+            conversation=conversation,
+            temporary_thoughts=temp_thoughts,
+            pipeline_id=pipeline_id,
+        )
+>>>>>>> pr-1689
         result = await self.run_stages(state, user_id)
         await memory.save_conversation(pipeline_id, state.conversation, user_id=user_id)
         await memory.store_persistent(
