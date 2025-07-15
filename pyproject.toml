@@ -91,6 +91,12 @@ patch = { cmd = "poetry version patch" }
 _publish = { cmd = "poetry publish --build" }
 release = ["docs", "patch", "_publish"]
 
+# Development helpers
+build-react = { cmd = "npm ci --prefix webapp && npm run build --prefix webapp" }
+start-db = { cmd = "docker compose up -d postgres" }
+open-app = { cmd = "python -m entity.utils.browser" }
+dev = ["build-react", "start-db", "open-app"]
+
 # ALL test tasks need the env variable
 test = { cmd = "pytest", env = { PYTHONPATH = "src" } }
 test-verbose = { cmd = "pytest -v", env = { PYTHONPATH = "src" } }
