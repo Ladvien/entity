@@ -23,6 +23,11 @@ class MyPlugin(PromptPlugin):
 import logging
 from entity.utils.logging import configure_logging
 
+# Configure logging once at import time so pytest's caplog fixture captures
+# warnings emitted during tests. Re-configuring inside tests would remove the
+# fixture's handler.
+configure_logging("WARNING")
+
 
 def test_stage_mismatch_warning(caplog):
     cfg = {
@@ -45,7 +50,9 @@ def test_stage_mismatch_warning(caplog):
     }
 
     init = SystemInitializer(cfg)
-    configure_logging("WARNING")
+    # Reattach pytest's capture handler after logging is reconfigured in
+    # ``SystemInitializer``.
+    logging.getLogger().addHandler(caplog.handler)
     registry = ClassRegistry()
     dep_graph: dict[str, list[str]] = {}
     init._register_plugins(registry, dep_graph)
