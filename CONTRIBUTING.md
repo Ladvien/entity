@@ -58,7 +58,8 @@ poetry run python -m src.entity.core.registry_validator
 
 ### Running Tests
 
-Running tests requires the development dependencies. Install them and execute the full suite:
+Before running any tests, install the development dependencies. `pytest-docker`
+is provided through the dev group and required for Docker-based fixtures. Run:
 
 ```bash
 poetry install --with dev  # includes pytest-asyncio
