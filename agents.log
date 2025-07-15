@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Added echo_llm_backend infrastructure and updated defaults
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Updated memory._execute to handle paramstyle fallback
@@ -28,13 +29,13 @@ AGENT NOTE - 2025-07-15: set LLMResource infrastructure deps to llm_provider
 =======
 AGENT NOTE - 2025-07-15: Cleaned conflict markers and sorted log chronologically
 >>>>>>> pr-1644
-AGENT NOTE - 2025-11-28: Moved Memory methods inside class and kept helper functions module-level
-AGENT NOTE - 2025-11-28: Moved Memory methods inside class and kept helper functions module-level
 =======
-AGENT NOTE - 2025-07-15: Cleaned conflict markers and sorted log chronologically
+AGENT NOTE - 2025-07-15: Cleaned conflict markers in agents.log and restored chronological order
+>>>>>>> pr-1656
 AGENT NOTE - 2025-11-28: Moved Memory methods inside class and kept helper functions module-level
 AGENT NOTE - 2025-11-28: Moved Memory methods inside class and kept helper functions module-level
->>>>>>> pr-1642
+AGENT NOTE - 2025-11-28: Moved Memory methods inside class and kept helper functions module-level
+AGENT NOTE - 2025-11-28: Moved Memory methods inside class and kept helper functions module-level
 AGENT NOTE - 2025-11-27: Patched DuckDB runtime test using monkeypatch to auto-restore connection method
 AGENT NOTE - 2025-11-27: Patched DuckDB runtime test using monkeypatch to auto-restore connection method
 AGENT NOTE - 2025-10-31: Integration tests now use Dockerized Postgres and Ollama
@@ -88,6 +89,18 @@ AGENT NOTE - 2025-07-21: Updated runtime tests to use Pipeline wrapper
 AGENT NOTE - 2025-07-20: Updated load_env precedence and tests
 AGENT NOTE - 2025-07-18: Added integration pipeline tests covering workflows, multi-user isolation, error handling, and metrics
 AGENT NOTE - 2025-07-16: Revised built-in resource config validation and tests
+AGENT NOTE - 2025-07-15: Updated memory._execute to handle paramstyle fallback
+AGENT NOTE - 2025-07-15: Updated cycle detection test for new error message
+AGENT NOTE - 2025-07-15: Removed self-dependency from LLMResource interface
+AGENT NOTE - 2025-07-15: Documented pytest-docker dev dependency and added fixture skip logic
+AGENT NOTE - 2025-07-15: Adjusted logging configuration order in strict stage tests
+AGENT NOTE - 2025-07-15: Adjusted _execute to unpack parameters using *args
+AGENT NOTE - 2025-07-15: Adjusted _execute to unpack parameters using *args
+AGENT NOTE - 2025-07-15: Updated validator tests for PromptPlugin requirement
+AGENT NOTE - 2025-07-15: Documented dev dependency installation and pytest-docker fixtures in README and CONTRIBUTING
+AGENT NOTE - 2025-07-15: set LLMResource infrastructure deps to llm_provider
+AGENT NOTE - 2025-07-15: Cleaned conflict markers and sorted log chronologically
+AGENT NOTE - 2025-07-15: Cleaned conflict markers and sorted log chronologically
 AGENT NOTE - 2025-07-15: Set llm interface infra deps empty
 AGENT NOTE - 2025-07-15: Set llm interface infra deps empty
 AGENT NOTE - 2025-07-15: Cleaned merge markers from agents.log
