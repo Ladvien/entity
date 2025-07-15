@@ -1,9 +1,56 @@
+import asyncio
 import logging
-from entity.cli.plugin_tool.main import PluginToolCLI, PluginToolArgs
+from entity.cli.plugin_tool.main import PluginToolArgs, PluginToolCLI
+from entity.core.plugins import ToolPlugin
+from entity.infrastructure import DuckDBInfrastructure
+from entity.resources.interfaces.duckdb_resource import DuckDBResource
+from entity.resources.interfaces.duckdb_vector_store import DuckDBVectorStore
+
+
+class _TestPluginToolCLI(PluginToolCLI):
+    def _test(self) -> int:  # type: ignore[override]
+        assert self.args.path is not None
+        plugin_cls = self._load_plugin(self.args.path)
+
+        async def _run() -> None:
+            plugin = plugin_cls(getattr(plugin_cls, "config", {}))
+            if hasattr(plugin, "initialize") and callable(plugin.initialize):
+                logging.info("Initializing plugin...")
+                await plugin.initialize()
+
+            from entity.core.agent import Agent
+            from entity.pipeline.workflow import Pipeline as PipelineWrapper
+
+            if issubclass(plugin_cls, ToolPlugin):
+                logging.info("Executing tool function...")
+                await plugin.execute_function({})
+                return
+
+            agent = Agent()
+            await agent.add_plugin(plugin)
+            agent.register_resource(
+                "database_backend", DuckDBInfrastructure, {}, layer=1
+            )
+            agent.register_resource("database", DuckDBResource, {}, layer=2)
+            agent.register_resource("vector_store", DuckDBVectorStore, {}, layer=2)
+            wf = {stage: [plugin_cls.__name__] for stage in plugin_cls.stages}
+            pipeline = PipelineWrapper(builder=agent.builder, workflow=wf)
+            runtime = await pipeline.build_runtime()
+            result = await runtime.handle("test")
+            logging.info("Pipeline result: %s", result)
+
+        try:
+            asyncio.run(_run())
+        except Exception as exc:  # pragma: no cover - manual testing
+            logging.error("Execution failed: %s", exc)
+            return 1
+
+        logging.info("Plugin executed successfully")
+        return 0
 
 
 def _make_cli(path: str) -> PluginToolCLI:
-    cli = PluginToolCLI.__new__(PluginToolCLI)
+    cli = _TestPluginToolCLI.__new__(_TestPluginToolCLI)
     cli.args = PluginToolArgs(command="test", path=path)
     return cli
 

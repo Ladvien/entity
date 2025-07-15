@@ -6,6 +6,9 @@ from entity.core.agent import Agent
 from entity.core.plugins import Plugin, ValidationResult
 from entity.core.stages import PipelineStage
 from entity.cli import EntityCLI
+from entity.infrastructure import DuckDBInfrastructure
+from entity.resources.interfaces.duckdb_resource import DuckDBResource
+from entity.resources.interfaces.duckdb_vector_store import DuckDBVectorStore
 
 from .test_reload_runtime_validation import run_reload
 
@@ -27,6 +30,9 @@ async def test_reload_requires_restart_when_plugin_missing(tmp_path: Path) -> No
     agent = Agent()
     plugin = SimplePlugin({})
     await agent.add_plugin(plugin)
+    agent.register_resource("database_backend", DuckDBInfrastructure, {}, layer=1)
+    agent.register_resource("database", DuckDBResource, {}, layer=2)
+    agent.register_resource("vector_store", DuckDBVectorStore, {}, layer=2)
     await agent.build_runtime()
 
     cli = EntityCLI.__new__(EntityCLI)
