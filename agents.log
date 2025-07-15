@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Cleaned merge markers from agents.log
+=======
+AGENT NOTE - 2025-07-15: Updated CI to install dev dependencies via poetry
+>>>>>>> pr-1636
 AGENT NOTE - 2025-07-15: Set llm interface infra deps empty
 AGENT NOTE - 2025-07-15: Resolved merge conflict markers and restored missing notes
 AGENT NOTE - 2025-10-31: Integration tests now use Dockerized Postgres and Ollama
