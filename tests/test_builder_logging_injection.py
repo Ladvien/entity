@@ -27,7 +27,7 @@ async def test_builder_assigns_logging():
         "metrics_collector",
         MetricsCollectorResource,
         {},
-        layer=4,
+        layer=3,
     )
     await builder.add_plugin(DummyPrompt({}))
     await builder.build_runtime()
