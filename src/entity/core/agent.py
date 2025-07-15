@@ -59,13 +59,23 @@ class _AgentRuntime:
     async def run_pipeline(self, message: str, *, user_id: str | None = None) -> Any:
         from entity.pipeline.pipeline import Pipeline as ExecPipeline, execute_pipeline
 
+        container = (
+            self.capabilities.resources.clone()
+            if hasattr(self.capabilities.resources, "clone")
+            else self.capabilities.resources
+        )
+        regs = SystemRegistries(
+            resources=container,
+            tools=self.capabilities.tools,
+            plugins=self.capabilities.plugins,
+            validators=self.capabilities.validators,
+        )
+
         if self.workflow is None:
-            return await execute_pipeline(
-                message, self.capabilities, user_id=user_id, workflow=None
-            )
+            return await execute_pipeline(message, regs, user_id=user_id, workflow=None)
 
         pipeline = ExecPipeline(self.workflow)
-        return await pipeline.run_message(message, self.capabilities, user_id=user_id)
+        return await pipeline.run_message(message, regs, user_id=user_id)
 
     async def handle(
         self, message: str, *, user_id: str | None = None

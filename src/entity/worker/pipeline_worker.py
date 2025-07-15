@@ -18,9 +18,20 @@ class PipelineWorker:
     async def run_stages(self, state: PipelineState, user_id: str) -> Any:
         """Delegate pipeline execution to the existing driver."""
         # user_message is ignored when ``state`` is provided
+        container = (
+            self.registries.resources.clone()
+            if hasattr(self.registries.resources, "clone")
+            else self.registries.resources
+        )
+        regs = SystemRegistries(
+            resources=container,
+            tools=self.registries.tools,
+            plugins=self.registries.plugins,
+            validators=self.registries.validators,
+        )
         return await execute_pipeline(
             "",
-            self.registries,
+            regs,
             state=state,
             workflow=None,
             user_id=user_id,
@@ -30,15 +41,43 @@ class PipelineWorker:
         self, pipeline_id: str, message: str, *, user_id: str
     ) -> Any:
         """Process ``message`` using the pipeline identified by ``pipeline_id`` and ``user_id``."""
-        memory = self.registries.resources.get("memory")
-        conversation = await memory.load_conversation(pipeline_id, user_id=user_id)
-        conversation.append(
-            ConversationEntry(content=message, role="user", timestamp=datetime.now())
+        container = (
+            self.registries.resources.clone()
+            if hasattr(self.registries.resources, "clone")
+            else self.registries.resources
         )
-        state = PipelineState(conversation=conversation, pipeline_id=pipeline_id)
-        result = await self.run_stages(state, user_id)
-        await memory.save_conversation(pipeline_id, state.conversation, user_id=user_id)
-        return result
+        regs = SystemRegistries(
+            resources=container,
+            tools=self.registries.tools,
+            plugins=self.registries.plugins,
+            validators=self.registries.validators,
+        )
+
+        async def _run(cont: Any) -> Any:
+            memory = cont.get("memory") if hasattr(cont, "get") else cont["memory"]
+            conversation = await memory.load_conversation(pipeline_id, user_id=user_id)
+            conversation.append(
+                ConversationEntry(
+                    content=message, role="user", timestamp=datetime.now()
+                )
+            )
+            state = PipelineState(conversation=conversation, pipeline_id=pipeline_id)
+            result = await execute_pipeline(
+                "",
+                regs,
+                state=state,
+                workflow=None,
+                user_id=user_id,
+            )
+            await memory.save_conversation(
+                pipeline_id, state.conversation, user_id=user_id
+            )
+            return result
+
+        if hasattr(container, "__aenter__"):
+            async with container:
+                return await _run(container)
+        return await _run(container)
 
 
 __all__ = ["PipelineWorker"]

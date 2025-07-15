@@ -227,6 +227,24 @@ class ResourceContainer:
         self._order: List[str] = []
         self._init_order: List[str] = []
         self._pools: Dict[str, ResourcePool] = {}
+        self._active = False
+
+    @property
+    def is_active(self) -> bool:
+        """Return ``True`` when resources are initialized."""
+
+        return self._active
+
+    def clone(self) -> "ResourceContainer":
+        """Return a new container with the same registered resources."""
+
+        new = ResourceContainer()
+        new._classes = dict(self._classes)
+        new._configs = {k: dict(v) for k, v in self._configs.items()}
+        new._deps = {k: list(v) for k, v in self._deps.items()}
+        new._layers = dict(self._layers)
+        new._order = list(self._order)
+        return new
 
     async def add(self, name: str, resource: Any) -> None:
         async with self._lock:
@@ -250,17 +268,15 @@ class ResourceContainer:
             self._resources.pop(name, None)
 
     async def __aenter__(self) -> "ResourceContainer":
-        for resource in self._resources.values():
-            init = getattr(resource, "initialize", None)
-            if callable(init):
-                await init()
+        if not self._active:
+            await self.build_all()
         return self
 
     async def __aexit__(self, exc_type, exc, tb) -> None:
-        for resource in self._resources.values():
-            shutdown = getattr(resource, "shutdown", None)
-            if callable(shutdown):
-                await shutdown()
+        await self.shutdown_all()
+        self._resources.clear()
+        self._init_order = []
+        self._active = False
 
     def register(
         self, name: str, cls: type, config: Dict, layer: int | None = None
@@ -299,6 +315,7 @@ class ResourceContainer:
 
     async def build_all(self) -> None:
         """Instantiate and initialize resources in layer order."""
+        self._resources = {}
         if "logging" not in self._classes and "logging" not in self._resources:
             from entity.resources.logging import LoggingResource
 
@@ -368,6 +385,7 @@ class ResourceContainer:
                     "Resource failed health check during initialization.",
                     kind="Resource",
                 )
+        self._active = True
 
     async def shutdown_all(self) -> None:
         order = self._init_order or self._order
@@ -382,6 +400,7 @@ class ResourceContainer:
             shutdown = getattr(res, "shutdown", None)
             if callable(shutdown):
                 await shutdown()
+        self._active = False
 
     async def health_report(self) -> Dict[str, bool]:
         report: Dict[str, bool] = {}

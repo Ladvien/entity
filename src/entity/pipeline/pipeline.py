@@ -14,6 +14,7 @@ from typing import Any, Dict
 
 from entity.core.context import PluginContext
 from entity.core.registries import PluginRegistry, SystemRegistries
+from entity.core.resources.container import ResourceContainer
 from entity.core.state import ConversationEntry, FailureInfo
 from entity.core.state_logger import StateLogger
 from contextlib import asynccontextmanager
@@ -284,7 +285,17 @@ async def execute_pipeline(
     if capabilities is None:
         raise TypeError("capabilities is required")
     user_id = user_id or "default"
-    memory = capabilities.resources.get("memory") if capabilities.resources else None
+    resources = capabilities.resources
+    manage_container = False
+    if isinstance(resources, ResourceContainer):
+        if resources.is_active:
+            container = resources
+        else:
+            container = resources.clone()
+            manage_container = True
+    else:
+        container = resources
+    memory = container.get("memory") if container else None
     if state is None:
         if checkpoint_key and memory:
             saved = await memory.fetch_persistent(checkpoint_key, None, user_id=user_id)
@@ -306,12 +317,8 @@ async def execute_pipeline(
     # so they can be referenced across iterations. They are cleared
     # only once the message has been fully processed.
     _start = time.time()
-    resource_manager = (
-        capabilities.resources
-        if hasattr(capabilities.resources, "__aenter__")
-        else _noop_async_cm()
-    )
-    async with resource_manager:
+
+    async def _run_pipeline() -> Dict[str, Any]:
         async with start_span("pipeline.execute"):
             while True:
                 state.iteration += 1
@@ -335,11 +342,7 @@ async def execute_pipeline(
                     finally:
                         if state_logger is not None:
                             state_logger.log(state, stage)
-                        log_res = (
-                            capabilities.resources.get("logging")
-                            if capabilities.resources
-                            else None
-                        )
+                        log_res = container.get("logging") if container else None
                         if log_res is not None:
                             await log_res.log(
                                 "info",
@@ -389,11 +392,7 @@ async def execute_pipeline(
 
                 state.last_completed_stage = None
 
-        metrics = (
-            capabilities.resources.get("metrics_collector")
-            if capabilities.resources
-            else None
-        )
+        metrics = container.get("metrics_collector") if container else None
 
         if state.failure_info:
             try:
@@ -407,12 +406,10 @@ async def execute_pipeline(
                     PipelineStage.OUTPUT, state, capabilities, user_id=user_id
                 )
             except Exception:
-                result = create_static_error_response(state.pipeline_id).to_dict()
-                return result
+                return create_static_error_response(state.pipeline_id).to_dict()
             if state.response is None:
-                result = create_static_error_response(state.pipeline_id).to_dict()
-            else:
-                result = state.response
+                return create_static_error_response(state.pipeline_id).to_dict()
+            result = state.response
         elif state.response is None:
             result = create_default_response("No response generated", state.pipeline_id)
         else:
@@ -427,6 +424,12 @@ async def execute_pipeline(
         state.stage_results.clear()
         state.temporary_thoughts.clear()
         return result
+
+    if manage_container and hasattr(container, "__aenter__"):
+        async with container:
+            return await _run_pipeline()
+    else:
+        return await _run_pipeline()
 
 
 def visualize_execution_plan(workflow: Workflow, state: PipelineState) -> str:
