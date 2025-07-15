@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Updated dependency assertion for layer validation message
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-15: registry validation ensures prompt plugins must subclass PromptPlugin
@@ -9,6 +10,9 @@ AGENT NOTE - 2025-07-15: Adjusted logging configuration order in strict stage te
 AGENT NOTE - 2025-11-27: Patched DuckDB runtime test using monkeypatch to auto-restore connection method
 >>>>>>> pr-1626
 <<<<<<< HEAD
+=======
+AGENT NOTE - 2025-07-15: Excluded LoggingResource from metrics dependency
+>>>>>>> pr-1631
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Verified removal of conflict markers and ran formatting/tests
 AGENT NOTE - 2025-07-15: Partial cleanup of mock usage in strict stage test

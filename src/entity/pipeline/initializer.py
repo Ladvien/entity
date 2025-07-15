@@ -292,13 +292,22 @@ class SystemInitializer:
         self.tool_registry: ToolRegistry | None = None
 
     def _ensure_metrics_collector_config(self) -> None:
-        """Warn when metrics collection is disabled."""
+        """Warn when metrics collection is disabled and adjust logging config."""
 
         resources_cfg = self.config.get("plugins", {}).get("resources", {})
         if "metrics_collector" not in resources_cfg:
             logger.warning(
                 "MetricsCollectorResource not configured; metrics will not be recorded"
             )
+            logging_cfg = resources_cfg.get("logging")
+            if logging_cfg is not None:
+                deps = logging_cfg.get("dependencies", [])
+                if "metrics_collector?" in deps:
+                    deps.remove("metrics_collector?")
+                    if deps:
+                        logging_cfg["dependencies"] = deps
+                    else:
+                        logging_cfg.pop("dependencies", None)
 
     def _assign_shared_resources(
         self, instance: Any, resource_container: "ResourceContainer"
@@ -581,7 +590,8 @@ class SystemInitializer:
                     if cls.__name__ != "LoggingResource" and "logging" not in deps:
                         deps.append("logging")
                     if (
-                        cls.__name__ != "MetricsCollectorResource"
+                        cls.__name__
+                        not in {"MetricsCollectorResource", "LoggingResource"}
                         and "metrics_collector" not in deps
                     ):
                         deps.append("metrics_collector?")
@@ -602,7 +612,7 @@ class SystemInitializer:
                 if cls.__name__ != "LoggingResource" and "logging" not in deps:
                     deps.append("logging")
                 if (
-                    cls.__name__ != "MetricsCollectorResource"
+                    cls.__name__ not in {"MetricsCollectorResource", "LoggingResource"}
                     and "metrics_collector" not in deps
                 ):
                     deps.append("metrics_collector?")
