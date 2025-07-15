@@ -141,3 +141,30 @@ async def test_asyncpg_paramstyle_insert(prepared_postgres) -> None:
     history = await mem.load_conversation("conv", user_id="u")
     assert len(history) == 1
     assert history[0].content == "asyncpg works"
+
+
+@pytest.mark.asyncio
+async def test_asyncpg_search_and_load(prepared_postgres) -> None:
+    if shutil.which("pg_ctl") is None:
+        pytest.skip("pg_ctl not installed")
+    dsn = (
+        f"postgresql://{prepared_postgres.user}:{prepared_postgres.password}@"
+        f"{prepared_postgres.host}:{prepared_postgres.port}/{prepared_postgres.dbname}"
+    )
+    db = AsyncPGDatabase(dsn)
+    mem = Memory({})
+    mem.database = db
+    await mem.initialize()
+
+    await mem.add_conversation_entry(
+        "conv",
+        ConversationEntry(content="search me", role="user", timestamp=datetime.now()),
+        user_id="u",
+    )
+
+    history = await mem.load_conversation("conv", user_id="u")
+    assert [h.content for h in history] == ["search me"]
+
+    results = await mem.conversation_search("search", user_id="u")
+    assert len(results) == 1
+    assert results[0]["content"] == "search me"
