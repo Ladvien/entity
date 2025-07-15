@@ -46,10 +46,10 @@ def test_stage_mismatch_warning(caplog):
     }
 
     init = SystemInitializer(cfg)
+    configure_logging("WARNING")
     registry = ClassRegistry()
     dep_graph: dict[str, list[str]] = {}
     init._register_plugins(registry, dep_graph)
-    configure_logging("WARNING")
     with caplog.at_level(logging.WARNING, logger="entity.pipeline.initializer"):
         init._warn_stage_mismatches(registry)
     assert any("override class stages" in r.message for r in caplog.records)
@@ -76,6 +76,7 @@ def test_stage_mismatch_strict():
     }
 
     init = SystemInitializer(cfg, strict_stages=True)
+    configure_logging("WARNING")
     registry = ClassRegistry()
     dep_graph: dict[str, list[str]] = {}
     init._register_plugins(registry, dep_graph)
