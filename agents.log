@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Updated validator tests for PromptPlugin requirement
+=======
+AGENT NOTE - 2025-07-15: Documented dev dependency installation and pytest-docker fixtures in README and CONTRIBUTING
+>>>>>>> pr-1640
 <<<<<<< HEAD
 =======
 AGENT NOTE - 2025-11-28: Moved Memory methods inside class and kept helper functions module-level

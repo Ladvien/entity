@@ -58,7 +58,7 @@ poetry run python -m src.entity.core.registry_validator
 
 ### Running Tests
 
-Execute the full test suite:
+Running tests requires the development dependencies. Install them and execute the full suite:
 
 ```bash
 poetry install --with dev  # includes pytest-asyncio
@@ -67,6 +67,8 @@ pytest tests/integration/ -v
 pytest tests/infrastructure/ -v
 pytest tests/performance/ -m benchmark
 ```
+
+`pytest-docker` ships with the dev dependencies and exposes the `docker_ip` and `docker_services` fixtures used in integration tests.
 
 `pytest-asyncio` must be installed; without it pytest reports
 `Unknown config option: asyncio_mode`.

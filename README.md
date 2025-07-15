@@ -52,16 +52,18 @@ documentation.
 
 ## Running Tests
 
-Before running the test suite, install the development extras. Without these
-dependencies the `entity` package fails to import and tests will crash.
+Running the tests requires the development dependencies. Install them with:
 
 ```bash
 poetry install --with dev
 # or
 pip install -e ".[dev]"
 ```
-Make sure the optional dependencies `pyyaml` and `python-dotenv` are available
-to avoid runtime import errors when the CLI loads YAML configurations.
+
+`pytest-docker` is included and supplies the `docker_ip` and `docker_services`
+fixtures used by the integration tests. Make sure the optional dependencies
+`pyyaml` and `python-dotenv` are available to avoid runtime import errors when
+the CLI loads YAML configurations.
 
 With dependencies installed you can run the included poe tasks:
 
