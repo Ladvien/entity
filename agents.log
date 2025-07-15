@@ -1,30 +1,5 @@
-AGENT NOTE - 2025-07-15: Wrapped DB operations with awaitable helper for memory resource
-<<<<<<< HEAD
-AGENT NOTE - 2025-07-15: Excluded LoggingResource from metrics dependency
-<<<<<<< HEAD
-AGENT NOTE - 2025-07-15: Updated dependency assertion for layer validation message
-<<<<<<< HEAD
-AGENT NOTE - 2025-07-15: registry validation ensures prompt plugins must subclass PromptPlugin
-=======
-AGENT NOTE - 2025-07-15: Adjusted logging configuration order in strict stage tests
->>>>>>> pr-1628
-=======
-AGENT NOTE - 2025-11-27: Patched DuckDB runtime test using monkeypatch to auto-restore connection method
->>>>>>> pr-1626
-<<<<<<< HEAD
-=======
-AGENT NOTE - 2025-07-15: Excluded LoggingResource from metrics dependency
->>>>>>> pr-1631
-<<<<<<< HEAD
-AGENT NOTE - 2025-07-15: Verified removal of conflict markers and ran formatting/tests
-AGENT NOTE - 2025-07-15: Partial cleanup of mock usage in strict stage test
-AGENT NOTE - 2025-07-15: Added poe tasks for unit, integration, and e2e tests
-=======
+AGENT NOTE - 2025-07-15: Resolved merge conflict markers and restored missing notes
 AGENT NOTE - 2025-10-31: Integration tests now use Dockerized Postgres and Ollama
->>>>>>> pr-1624
-=======
-AGENT NOTE - 2025-07-15: Removed monkeypatch-based tests and added poe tasks for unit/integration/e2e
->>>>>>> pr-1625
 AGENT NOTE - 2025-07-14: Updated test resource layers to comply with 4-layer architecture
 AGENT NOTE - 2025-07-14: Awaited context.think in tests and audited for missing awaits
 AGENT NOTE - 2025-07-14: Updated dependency injection tests to expect "metrics_collector?"
@@ -206,3 +181,14 @@ AGENT NOTE - 2025-08-10: Moved plugin_tool under entity.cli and updated imports
 AGENT NOTE - 2025-08-10: Stage results persist across runs and temporary thoughts moved to PipelineState
 AGENT NOTE - 2025-08-21: Added user_id propagation in pipeline and multi-user tests
 AGENT NOTE - 2025-10-05: Added default dependency injection and tests
+AGENT NOTE - 2025-07-15: Verified removal of conflict markers and ran formatting/tests
+AGENT NOTE - 2025-07-15: Verified stage order test markers removed and logged update
+AGENT NOTE - 2025-07-15: Added poe tasks for unit, integration, and e2e tests
+AGENT NOTE - 2025-07-15: Partial cleanup of mock usage in strict stage test
+AGENT NOTE - 2025-07-15: Removed monkeypatch-based tests and added poe tasks for unit/integration/e2e
+AGENT NOTE - 2025-11-27: Patched DuckDB runtime test using monkeypatch to auto-restore connection method
+AGENT NOTE - 2025-07-15: Updated dependency assertion for layer validation message
+AGENT NOTE - 2025-07-15: Adjusted logging configuration order in strict stage tests
+AGENT NOTE - 2025-07-15: registry validation ensures prompt plugins must subclass PromptPlugin
+AGENT NOTE - 2025-07-15: Wrapped DB operations with awaitable helper for memory resource
+AGENT NOTE - 2025-07-15: Excluded LoggingResource from metrics dependency
