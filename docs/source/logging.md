@@ -41,4 +41,5 @@ derived from :class:`~entity.core.plugins.ResourcePlugin` log each operation
 tracked via ``_track_operation``. No additional code is required other than
 having a ``LoggingResource`` registered in the system.
 Plugins also depend on ``metrics_collector`` by default, enabling automatic
-recording of execution metrics.
+recording of execution metrics. ``metrics_collector`` is a canonical layer 3
+resource provided by the framework.

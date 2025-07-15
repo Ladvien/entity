@@ -40,7 +40,11 @@ from .base import AgentResource
 
 
 class MetricsCollectorResource(AgentResource):
-    """Simple in-memory metrics collector."""
+    """Simple in-memory metrics collector.
+
+    This is a canonical layer 3 resource automatically injected into plugins
+    when configured.
+    """
 
     name = "metrics_collector"
     resource_category = "observability"
