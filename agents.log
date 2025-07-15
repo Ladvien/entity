@@ -1,8 +1,7 @@
+AGENT NOTE - 2025-07-15: Cleaned merge markers from agents.log
 AGENT NOTE - 2025-07-15: Set llm interface infra deps empty
-<<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Resolved merge conflict markers and restored missing notes
 AGENT NOTE - 2025-10-31: Integration tests now use Dockerized Postgres and Ollama
-=======
 AGENT NOTE - 2025-07-15: Resolved merge conflicts in agents.log and removed duplicate entries
 AGENT NOTE - 2025-07-15: Wrapped DB operations with awaitable helper for memory resource
 AGENT NOTE - 2025-07-15: Excluded LoggingResource from metrics dependency
@@ -15,7 +14,6 @@ AGENT NOTE - 2025-07-15: Partial cleanup of mock usage in strict stage test
 AGENT NOTE - 2025-07-15: Added poe tasks for unit, integration, and e2e tests
 AGENT NOTE - 2025-10-31: Integration tests now use Dockerized Postgres and Ollama
 AGENT NOTE - 2025-07-15: Removed monkeypatch-based tests and added poe tasks for unit/integration/e2e
->>>>>>> pr-1633
 AGENT NOTE - 2025-07-14: Updated test resource layers to comply with 4-layer architecture
 AGENT NOTE - 2025-07-14: Awaited context.think in tests and audited for missing awaits
 AGENT NOTE - 2025-07-14: Updated dependency injection tests to expect "metrics_collector?"
