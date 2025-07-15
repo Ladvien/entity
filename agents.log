@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+AGENT NOTE - 2025-07-15: Excluded LoggingResource from metrics dependency
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Verified removal of conflict markers and ran formatting/tests
 AGENT NOTE - 2025-07-15: Partial cleanup of mock usage in strict stage test
