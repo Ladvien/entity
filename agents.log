@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Clarified pytest-docker and Docker requirements in README
 <<<<<<< HEAD
 AGENT NOTE - 2025-07-15: Added optional llm_backend dependency to LLMResource
@@ -46,9 +47,10 @@ AGENT NOTE - 2025-11-28: Moved Memory methods inside class and kept helper funct
 AGENT NOTE - 2025-11-28: Moved Memory methods inside class and kept helper functions module-level
 AGENT NOTE - 2025-11-28: Moved Memory methods inside class and kept helper functions module-level
 AGENT NOTE - 2025-11-28: Moved Memory methods inside class and kept helper functions module-level
+=======
+AGENT NOTE - 2025-07-15: Updated memory._execute to handle empty params and cleaned log
+>>>>>>> pr-1658
 AGENT NOTE - 2025-11-27: Patched DuckDB runtime test using monkeypatch to auto-restore connection method
-AGENT NOTE - 2025-11-27: Patched DuckDB runtime test using monkeypatch to auto-restore connection method
-AGENT NOTE - 2025-10-31: Integration tests now use Dockerized Postgres and Ollama
 AGENT NOTE - 2025-10-31: Integration tests now use Dockerized Postgres and Ollama
 AGENT NOTE - 2025-10-30: Fixed async stage results in end-to-end pipeline test ensuring ReverseThink runs and final output is olleh
 AGENT NOTE - 2025-10-25: Updated Workflow schema and validation to match WorkflowSettings
@@ -112,10 +114,8 @@ AGENT NOTE - 2025-07-15: set LLMResource infrastructure deps to llm_provider
 AGENT NOTE - 2025-07-15: Cleaned conflict markers and sorted log chronologically
 AGENT NOTE - 2025-07-15: Cleaned conflict markers and sorted log chronologically
 AGENT NOTE - 2025-07-15: Set llm interface infra deps empty
-AGENT NOTE - 2025-07-15: Set llm interface infra deps empty
 AGENT NOTE - 2025-07-15: Cleaned merge markers from agents.log
 AGENT NOTE - 2025-07-15: Updated CI to install dev dependencies via poetry
-AGENT NOTE - 2025-07-15: Set llm interface infra deps empty
 AGENT NOTE - 2025-07-15: Resolved merge conflict markers and restored missing notes
 AGENT NOTE - 2025-07-15: Resolved merge conflicts in agents.log and removed duplicate entries
 AGENT NOTE - 2025-07-15: Wrapped DB operations with awaitable helper for memory resource
@@ -127,16 +127,7 @@ AGENT NOTE - 2025-07-15: Verified removal of conflict markers and ran formatting
 AGENT NOTE - 2025-07-15: Partial cleanup of mock usage in strict stage test
 AGENT NOTE - 2025-07-15: Added poe tasks for unit, integration, and e2e tests
 AGENT NOTE - 2025-07-15: Removed monkeypatch-based tests and added poe tasks for unit/integration/e2e
-AGENT NOTE - 2025-07-15: Verified removal of conflict markers and ran formatting/tests
 AGENT NOTE - 2025-07-15: Verified stage order test markers removed and logged update
-AGENT NOTE - 2025-07-15: Added poe tasks for unit, integration, and e2e tests
-AGENT NOTE - 2025-07-15: Partial cleanup of mock usage in strict stage test
-AGENT NOTE - 2025-07-15: Removed monkeypatch-based tests and added poe tasks for unit/integration/e2e
-AGENT NOTE - 2025-07-15: Updated dependency assertion for layer validation message
-AGENT NOTE - 2025-07-15: Adjusted logging configuration order in strict stage tests
-AGENT NOTE - 2025-07-15: registry validation ensures prompt plugins must subclass PromptPlugin
-AGENT NOTE - 2025-07-15: Wrapped DB operations with awaitable helper for memory resource
-AGENT NOTE - 2025-07-15: Excluded LoggingResource from metrics dependency
 AGENT NOTE - 2025-07-14: Updated test resource layers to comply with 4-layer architecture
 AGENT NOTE - 2025-07-14: Awaited context.think in tests and audited for missing awaits
 AGENT NOTE - 2025-07-14: Updated dependency injection tests to expect "metrics_collector?"
@@ -165,7 +156,6 @@ AGENT NOTE - 2025-07-14: Ensured PostgreSQL tests create and drop temporary data
 AGENT NOTE - 2025-07-14: Updated plugin config tests to use dictionaries
 AGENT NOTE - 2025-07-14: Removed infrastructure_dependencies from MetricsCollectorResource
 AGENT NOTE - 2025-07-14: Added sys.path setup in tests and examples for direct execution
-AGENT NOTE - 2025-07-14: Ensured PostgreSQL tests create and drop temporary database
 AGENT NOTE - 2025-07-14: Revised layer validation order and cycle detection
 AGENT NOTE - 2025-07-14: Fixed conversation history user_id namespacing and updated tests
 AGENT NOTE - 2025-07-14: Fixed stage mismatch warning logging and updated tests
@@ -179,10 +169,7 @@ AGENT NOTE - 2025-07-14: Allowed plugin canonical resources to be registered at 
 AGENT NOTE - 2025-07-14: Removed merge conflict markers from agents.log
 AGENT NOTE - 2025-07-14: Verified errors.py contains no merge markers and ensured ResourceError uses pass
 AGENT NOTE - 2025-07-14: Added test-verbose command to README testing section
-AGENT NOTE - 2025-07-14: Added test-verbose command to README testing section
 AGENT NOTE - 2025-07-14: Updated test imports for reliability modules and StageResolver
-AGENT NOTE - 2025-07-14: Verified errors.py contains no merge markers and ensured ResourceError uses pass
-AGENT NOTE - 2025-07-14: Removed merge conflict markers from agents.log
 AGENT NOTE - 2025-07-14: Documented PYTHONPATH usage for pytest in README
 AGENT NOTE - 2025-07-14: Fixed workflow fallback in _create_default_agent
 AGENT NOTE - 2025-07-14: Removed merge markers from errors.py
