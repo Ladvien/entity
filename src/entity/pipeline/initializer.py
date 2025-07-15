@@ -588,7 +588,11 @@ class SystemInitializer:
                         d for d in deps if d not in {"logging", "metrics_collector"}
                     ]
                 else:
-                    if cls.__name__ != "LoggingResource" and "logging" not in deps:
+                    if (
+                        not is_interface
+                        and cls.__name__ != "LoggingResource"
+                        and "logging" not in deps
+                    ):
                         deps.append("logging")
                     if (
                         not is_interface
