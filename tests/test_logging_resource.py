@@ -20,10 +20,9 @@ async def _connect(uri: str, attempts: int = 10, delay: float = 0.05):
 
 
 @pytest.mark.asyncio
-async def test_logging_file_and_console(tmp_path, monkeypatch):
+async def test_logging_file_and_console(tmp_path):
     log_file = tmp_path / "log.jsonl"
     container = ResourceContainer()
-    monkeypatch.setattr(LoggingResource, "dependencies", [])
     container.register(
         "logging",
         LoggingResource,
@@ -46,9 +45,8 @@ async def test_logging_file_and_console(tmp_path, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_logging_stream_output(tmp_path, monkeypatch):
+async def test_logging_stream_output(tmp_path):
     container = ResourceContainer()
-    monkeypatch.setattr(LoggingResource, "dependencies", [])
     container.register(
         "logging",
         LoggingResource,
@@ -73,9 +71,8 @@ async def test_logging_stream_output(tmp_path, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_logging_auto_registration(monkeypatch):
+async def test_logging_auto_registration():
     container = ResourceContainer()
-    monkeypatch.setattr(LoggingResource, "dependencies", [])
     await container.build_all()
     logger = container.get("logging")
     assert isinstance(logger, LoggingResource)
@@ -83,10 +80,9 @@ async def test_logging_auto_registration(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_log_rotation(tmp_path, monkeypatch):
+async def test_log_rotation(tmp_path):
     log_file = tmp_path / "log.jsonl"
     container = ResourceContainer()
-    monkeypatch.setattr(LoggingResource, "dependencies", [])
     container.register(
         "logging",
         LoggingResource,
@@ -125,10 +121,9 @@ async def test_log_rotation(tmp_path, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_host_pid_included(tmp_path, monkeypatch):
+async def test_host_pid_included(tmp_path):
     log_file = tmp_path / "log.jsonl"
     container = ResourceContainer()
-    monkeypatch.setattr(LoggingResource, "dependencies", [])
     container.register(
         "logging",
         LoggingResource,

@@ -8,18 +8,6 @@ import pytest
 
 from entity.resources import Memory
 from entity.resources.interfaces.database import DatabaseResource
-import entity.pipeline.utils as pipeline_utils
-
-
-@pytest.fixture()
-def patched_stage_resolver(monkeypatch):
-    class StageResolver:
-        @staticmethod
-        def _resolve_plugin_stages(cls, config, logger=None):
-            return pipeline_utils.resolve_stages(cls, config), True
-
-    monkeypatch.setattr(pipeline_utils, "StageResolver", StageResolver)
-    yield
 
 
 from entity.pipeline import pipeline as pipeline_module  # noqa: E402
@@ -165,7 +153,7 @@ class EchoStorePlugin(Plugin):
 
 
 @pytest.mark.asyncio
-async def test_conversation_id_generation(patched_stage_resolver):
+async def test_conversation_id_generation():
     regs = DummyRegistries()
     await regs.plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.OUTPUT)
     worker = PipelineWorker(regs)
@@ -178,7 +166,7 @@ async def test_conversation_id_generation(patched_stage_resolver):
 
 
 @pytest.mark.asyncio
-async def test_pipeline_persists_conversation(patched_stage_resolver, memory_db):
+async def test_pipeline_persists_conversation(memory_db):
     regs = types.SimpleNamespace(
         resources={"memory": memory_db},
         tools=types.SimpleNamespace(),
@@ -195,7 +183,7 @@ async def test_pipeline_persists_conversation(patched_stage_resolver, memory_db)
 
 
 @pytest.mark.asyncio
-async def test_thoughts_do_not_leak_between_executions(patched_stage_resolver):
+async def test_thoughts_do_not_leak_between_executions():
     regs = DummyRegistries()
     await regs.plugins.register_plugin_for_stage(ThoughtPlugin({}), PipelineStage.THINK)
     await regs.plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.OUTPUT)
@@ -212,7 +200,7 @@ async def test_thoughts_do_not_leak_between_executions(patched_stage_resolver):
 
 
 @pytest.mark.asyncio
-async def test_conversation_and_memory_namespaces(patched_stage_resolver, memory_db):
+async def test_conversation_and_memory_namespaces(memory_db):
     regs = types.SimpleNamespace(
         resources={"memory": memory_db},
         tools=types.SimpleNamespace(),
@@ -242,7 +230,7 @@ async def test_conversation_and_memory_namespaces(patched_stage_resolver, memory
 
 
 @pytest.mark.asyncio
-async def test_user_data_isolated(patched_stage_resolver, memory_db):
+async def test_user_data_isolated(memory_db):
     regs = types.SimpleNamespace(
         resources={"memory": memory_db},
         tools=types.SimpleNamespace(),

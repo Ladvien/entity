@@ -7,13 +7,13 @@ from entity.pipeline.errors import InitializationError
 class Infra(InfrastructurePlugin):
     infrastructure_type = "db"
     stages: list = []
-    dependencies: list = []
+    dependencies: list[str] = []
 
 
 class Higher(AgentResource):
     __module__ = "tests.resources"
     stages: list = []
-    dependencies: list = []
+    dependencies: list[str] = []
 
 
 class Interface(ResourcePlugin):
@@ -33,9 +33,7 @@ class CycleB:
 
 
 @pytest.mark.asyncio
-async def test_one_layer_step_rule(monkeypatch):
-    monkeypatch.setattr(Infra, "dependencies", [])
-    monkeypatch.setattr(Higher, "dependencies", [])
+async def test_one_layer_step_rule():
     container = ResourceContainer()
     container.register("infra", Infra, {}, layer=1)
     container.register("higher", Higher, {}, layer=3)
@@ -45,11 +43,9 @@ async def test_one_layer_step_rule(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_cycle_detection_error(monkeypatch):
-    monkeypatch.setattr(CycleA, "dependencies", ["cycle_b"])
-    monkeypatch.setattr(CycleB, "dependencies", ["cycle_a"])
-    monkeypatch.setattr(CycleA, "__module__", "tests.resources")
-    monkeypatch.setattr(CycleB, "__module__", "tests.resources")
+async def test_cycle_detection_error():
+    CycleA.__module__ = "tests.resources"
+    CycleB.__module__ = "tests.resources"
     container = ResourceContainer()
     container.register("cycle_a", CycleA, {}, layer=4)
     container.register("cycle_b", CycleB, {}, layer=4)

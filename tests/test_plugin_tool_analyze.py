@@ -1,4 +1,5 @@
 import logging
+import builtins
 from entity.cli.plugin_tool.main import PluginToolCLI, PluginToolArgs
 
 
@@ -8,32 +9,36 @@ def _make_cli(path: str) -> PluginToolCLI:
     return cli
 
 
-def test_analyze_plugin_accept_defaults(tmp_path, monkeypatch, caplog):
+def test_analyze_plugin_accept_defaults(tmp_path, caplog):
     plugin_file = tmp_path / "plug.py"
     plugin_file.write_text("""async def func(ctx):\n    pass\n""")
 
     cli = _make_cli(str(plugin_file))
-    monkeypatch.setattr("builtins.input", lambda *_: "")
+    orig_input = builtins.input
+    builtins.input = lambda *_: ""
 
     with caplog.at_level(logging.INFO):
         cli._analyze_plugin()
 
     log = "\n".join(r.message for r in caplog.records)
+    builtins.input = orig_input
     assert "plugins:" in log
     assert "prompts" in log
     assert "think" in log
 
 
-def test_analyze_plugin_override(tmp_path, monkeypatch, caplog):
+def test_analyze_plugin_override(tmp_path, caplog):
     plugin_file = tmp_path / "plug.py"
     plugin_file.write_text("""async def func(ctx):\n    pass\n""")
 
     cli = _make_cli(str(plugin_file))
-    monkeypatch.setattr("builtins.input", lambda *_: "parse,deliver")
+    orig_input = builtins.input
+    builtins.input = lambda *_: "parse,deliver"
 
     with caplog.at_level(logging.INFO):
         result = cli._analyze_plugin()
 
     log = "\n".join(r.message for r in caplog.records)
+    builtins.input = orig_input
     assert result == 1
     assert "Invalid stage" in log

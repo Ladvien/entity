@@ -333,7 +333,7 @@ def test_stage_override_warning():
     assert explicit is True
 
 
-def test_canonical_resources_validate(tmp_path, monkeypatch):
+def test_canonical_resources_validate(tmp_path):
     plugins = {
         "agent_resources": {
             "memory": {"type": "entity.resources.memory:Memory"},
