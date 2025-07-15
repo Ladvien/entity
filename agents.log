@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-AGENT NOTE - 2025-07-15: Verified stage order test markers removed and logged update
-=======
 AGENT NOTE - 2025-07-15: Verified removal of conflict markers and ran formatting/tests
->>>>>>> pr-1620
 AGENT NOTE - 2025-07-14: Updated test resource layers to comply with 4-layer architecture
 AGENT NOTE - 2025-07-14: Awaited context.think in tests and audited for missing awaits
 AGENT NOTE - 2025-07-14: Updated dependency injection tests to expect "metrics_collector?"
