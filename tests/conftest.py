@@ -25,6 +25,29 @@ except Exception:  # pragma: no cover - environment dependent
     pytest.skip(REQUIRE_PYTEST_DOCKER, allow_module_level=True)
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _ensure_wait_for_service(docker_services):
+    """Add a fallback wait_for_service helper if pytest-docker lacks one."""
+
+    if not hasattr(docker_services, "wait_for_service"):
+
+        def wait_for_service(name: str, port: int) -> None:
+            """Poll the target port until responsive."""
+
+            def _check() -> bool:
+                try:
+                    docker_services.port_for(name, port)
+                except Exception:
+                    return False
+                return True
+
+            docker_services.wait_until_responsive(timeout=30.0, pause=0.5, check=_check)
+
+        docker_services.wait_for_service = wait_for_service
+
+    yield docker_services
+
+
 def _require_docker() -> None:
     """Ensure pytest-docker is installed before using docker fixtures."""
     pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
