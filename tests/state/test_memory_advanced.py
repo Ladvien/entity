@@ -1,50 +1,11 @@
-import sqlite3
-from contextlib import asynccontextmanager
 import pytest
 
 from entity.resources import Memory
-from entity.resources.interfaces.database import DatabaseResource
-from entity.resources.interfaces.vector_store import VectorStoreResource
-
-
-class InMemoryDB(DatabaseResource):
-    def __init__(self) -> None:
-        super().__init__({})
-        self.conn = sqlite3.connect(":memory:")
-        self.conn.execute(
-            "CREATE TABLE IF NOT EXISTS memory_kv (key TEXT PRIMARY KEY, value TEXT)"
-        )
-        self.conn.execute(
-            "CREATE TABLE IF NOT EXISTS conversation_history (conversation_id TEXT, role TEXT, content TEXT, metadata TEXT, timestamp TEXT)"
-        )
-
-    @asynccontextmanager
-    async def connection(self):
-        yield self.conn
-
-    def get_connection_pool(self):
-        return self.conn
-
-
-class DummyVector(VectorStoreResource):
-    def __init__(self) -> None:
-        super().__init__({})
-        self.entries: list[str] = []
-
-    async def add_embedding(self, text: str) -> None:
-        self.entries.append(text)
-
-    async def query_similar(self, query: str, k: int = 5):
-        return [t for t in self.entries if query in t][:k]
 
 
 @pytest.fixture()
-async def memory() -> Memory:
-    mem = Memory(config={})
-    mem.database = InMemoryDB()
-    mem.vector_store = DummyVector()
-    await mem.initialize()
-    yield mem
+async def memory(pg_vector_memory: Memory) -> Memory:
+    yield pg_vector_memory
 
 
 @pytest.mark.asyncio

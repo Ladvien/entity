@@ -5,7 +5,7 @@ from datetime import datetime
 import pytest
 from entity.resources import Memory
 from entity.resources.interfaces.database import DatabaseResource
-from entity.resources.interfaces.vector_store import VectorStoreResource
+
 from entity.core.state import ConversationEntry
 
 
@@ -28,22 +28,6 @@ class SqliteDB(DatabaseResource):
         return self.conn
 
 
-class DummyVector(VectorStoreResource):
-    def __init__(self, results: list[str] | None = None) -> None:
-        super().__init__({})
-        self.results = results or []
-        self.queries: list[str] = []
-        self.added: list[str] = []
-
-    async def add_embedding(self, text: str) -> None:
-        self.added.append(text)
-
-    async def query_similar(self, query: str, k: int = 5):
-        self.queries.append(query)
-        candidates = self.results + self.added
-        return [t for t in candidates if query in t][:k]
-
-
 @pytest.fixture()
 async def simple_memory() -> Memory:
     mem = Memory(config={})
@@ -54,12 +38,8 @@ async def simple_memory() -> Memory:
 
 
 @pytest.fixture()
-async def vector_memory() -> Memory:
-    mem = Memory(config={})
-    mem.database = SqliteDB()
-    mem.vector_store = DummyVector(["hello world"])
-    await mem.initialize()
-    yield mem
+async def vector_memory(pg_vector_memory: Memory) -> Memory:
+    yield pg_vector_memory
 
 
 @pytest.mark.asyncio
@@ -85,15 +65,16 @@ async def test_batch_store(simple_memory: Memory) -> None:
 
 @pytest.mark.asyncio
 async def test_vector_search(vector_memory: Memory) -> None:
+    await vector_memory.add_embedding("hello world")
     results = await vector_memory.vector_search("hello", k=1)
     assert results == ["hello world"]
-    assert vector_memory.vector_store.queries == ["hello"]
 
 
 @pytest.mark.asyncio
 async def test_add_embedding(vector_memory: Memory) -> None:
     await vector_memory.add_embedding("foo")
-    assert "foo" in vector_memory.vector_store.added
+    results = await vector_memory.vector_search("foo")
+    assert results == ["foo"]
 
 
 @pytest.mark.asyncio

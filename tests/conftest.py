@@ -41,6 +41,7 @@ OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", f"http://localhost:{OLLAMA_PORT}"
 # -- Core imports (must follow sys.path change)
 from entity.infrastructure import DuckDBInfrastructure
 from entity.resources import Memory, LLM
+from plugins.builtin.resources.pg_vector_store import PgVectorStore
 from entity.resources.interfaces.duckdb_resource import DuckDBResource
 from entity.resources.interfaces.database import DatabaseResource
 from entity.core.resources.container import ResourceContainer
@@ -147,6 +148,27 @@ async def pg_memory(postgres_dsn: str) -> Memory:
         async with db.connection() as conn:
             await conn.execute(f"DROP TABLE IF EXISTS {mem._kv_table}")
             await conn.execute(f"DROP TABLE IF EXISTS {mem._history_table}")
+
+
+@pytest.fixture(scope="session")
+async def pg_vector_memory(postgres_dsn: str) -> Memory:
+    """Memory backed by Postgres with a PgVectorStore."""
+    _require_docker()
+    db = AsyncPGDatabase(postgres_dsn)
+    store = PgVectorStore({"table": "test_embeddings"})
+    store.database = db
+    mem = Memory({})
+    mem.database = db
+    mem.vector_store = store
+    await store.initialize()
+    await mem.initialize()
+    try:
+        yield mem
+    finally:
+        async with db.connection() as conn:
+            await conn.execute(f"DROP TABLE IF EXISTS {mem._kv_table}")
+            await conn.execute(f"DROP TABLE IF EXISTS {mem._history_table}")
+            await conn.execute(f"DROP TABLE IF EXISTS {store._table}")
 
 
 @pytest.fixture(scope="session")

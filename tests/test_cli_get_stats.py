@@ -7,15 +7,11 @@ from entity.core.state import ConversationEntry
 from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
 from entity.core.resources.container import ResourceContainer
 from entity.resources import Memory
-from tests.resources.test_memory import SqliteDB, DummyVector
 
 
 @pytest.mark.asyncio
-async def test_cli_get_conversation_stats(capsys) -> None:
-    mem = Memory(config={})
-    mem.database = SqliteDB()
-    mem.vector_store = DummyVector()
-    await mem.initialize()
+async def test_cli_get_conversation_stats(capsys, pg_memory: Memory) -> None:
+    mem = pg_memory
     await mem.add_conversation_entry(
         "c1",
         ConversationEntry(content="hi", role="user", timestamp=datetime.now()),
