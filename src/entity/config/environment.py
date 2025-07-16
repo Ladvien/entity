@@ -78,9 +78,14 @@ def _load_with_extends(path: Path) -> dict[str, Any]:
     data = yaml.safe_load(path.read_text()) or {}
     parent = data.pop("extends", None)
     if parent:
+        parent = _interpolate(parent)
         parent_path = Path(parent)
+        if not parent_path.is_absolute():
+            candidate = path.parent / parent_path
+            parent_path = candidate if candidate.exists() else parent_path
         if not parent_path.exists():
-            parent_path = path.parent / f"{parent}.yaml"
+            alt = path.parent / f"{parent}.yaml"
+            parent_path = alt if alt.exists() else parent_path
         if parent_path.exists():
             base = _load_with_extends(parent_path)
             data = _merge(base, data)
