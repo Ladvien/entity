@@ -41,6 +41,7 @@ class Workflow(BaseModel):
             formatted = [str(p).format(**params) for p in plugins]
             self._assign_to(processed, stage, formatted)
         super().__init__(stages=processed)
+        object.__setattr__(self, "stage_map", processed)
         if registry is not None:
             self.validate_plugins(registry)
 
