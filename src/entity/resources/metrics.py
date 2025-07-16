@@ -61,9 +61,11 @@ class MetricsCollectorResource(AgentResource):
         if self.database is None:
             self._conn = await aiosqlite.connect(":memory:")
             await self._create_tables(self._conn)
+            await self._clear_tables(self._conn)
         else:
             async with self.database.connection() as conn:
                 await self._create_tables(conn)
+                await self._clear_tables(conn)
 
     async def shutdown(self) -> None:
         if self._conn is not None:
@@ -111,6 +113,11 @@ class MetricsCollectorResource(AgentResource):
             )
             """,
         )
+
+    async def _clear_tables(self, conn: Any) -> None:
+        await _execute(conn, "DELETE FROM plugin_metrics")
+        await _execute(conn, "DELETE FROM resource_metrics")
+        await _execute(conn, "DELETE FROM custom_metrics")
 
     # ------------------------------------------------------------------
     # Recording methods
