@@ -21,7 +21,7 @@ services:
     image: ollama/ollama
     privileged: true
     ports:
-      - "11434:11434"
+      - "11434"
     volumes:
       - ollama_data:/root/.ollama
     environment:
