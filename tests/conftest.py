@@ -6,6 +6,10 @@ import asyncio
 import socket
 from pathlib import Path
 from contextlib import asynccontextmanager
+<<<<<<< HEAD
+=======
+import subprocess
+>>>>>>> pr-1723
 
 import time
 import shutil
@@ -28,6 +32,13 @@ try:
 except Exception:
     pytest.skip(REQUIRE_PYTEST_DOCKER, allow_module_level=True)
 
+<<<<<<< HEAD
+=======
+
+if shutil.which("docker") is None:
+    pytest.skip("Docker is required for integration tests", allow_module_level=True)
+
+>>>>>>> pr-1723
 
 # -- Setup import path for src/
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -54,14 +65,22 @@ def _docker_available() -> bool:
 
 
 def _require_docker() -> bool:
+<<<<<<< HEAD
     """Return True when Docker and pytest-docker are available."""
+=======
+    """Return True if Docker is installed and running."""
+>>>>>>> pr-1723
     try:
         pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
     except pytest.SkipTest:
         return False
 
+<<<<<<< HEAD
     if not _docker_available():
         pytest.skip("Docker executable not found", allow_module_level=True)
+=======
+    if shutil.which("docker") is None:
+>>>>>>> pr-1723
         return False
 
     try:
@@ -72,6 +91,7 @@ def _require_docker() -> bool:
             stderr=subprocess.DEVNULL,
         )
     except Exception:
+<<<<<<< HEAD
         pytest.skip("Docker daemon not running", allow_module_level=True)
         return False
 
@@ -87,6 +107,11 @@ def _require_docker():
             "Docker is required for Docker-based tests.", allow_module_level=True
         )
 >>>>>>> pr-1722
+=======
+        return False
+
+    return True
+>>>>>>> pr-1723
 
 
 def _socket_open(host: str, port: int) -> bool:
@@ -120,17 +145,26 @@ def wait_for_port(host: str, port: int, timeout: float = 30.0):
 
 @pytest.fixture(autouse=True)
 <<<<<<< HEAD
+<<<<<<< HEAD
 async def _clear_pg_memory(request: pytest.FixtureRequest):
     if not _require_docker():
         yield
         return
 
+=======
+async def _clear_pg_memory(request: pytest.FixtureRequest):
+    """Clear Postgres-backed memory when tests use the pg_memory fixture."""
+    if not _require_docker():
+        yield
+        return
+>>>>>>> pr-1723
     if (
         "pg_memory" not in request.fixturenames
         and "pg_vector_memory" not in request.fixturenames
     ):
         yield
         return
+<<<<<<< HEAD
 
     pg_memory: Memory = await request.getfixturevalue("pg_memory")
 =======
@@ -139,6 +173,9 @@ async def _clear_pg_memory(request):
         return
     pg_memory: Memory = request.getfixturevalue("pg_memory")
 >>>>>>> pr-1722
+=======
+    pg_memory = await request.getfixturevalue("pg_memory")
+>>>>>>> pr-1723
     async with pg_memory.database.connection() as conn:
         await conn.execute(f"DELETE FROM {pg_memory._kv_table}")
         await conn.execute(f"DELETE FROM {pg_memory._history_table}")
