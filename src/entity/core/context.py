@@ -245,6 +245,7 @@ class PluginContext:
                 self.current_stage,
                 self.current_plugin or "unknown",
                 f"say may only be called in OUTPUT stage, not {self.current_stage}",
+                context=self._state.to_dict(),
             )
         self._state.response = content
         self.add_conversation_entry(
