@@ -69,6 +69,7 @@ class CLIArgs:
     user_id: Optional[str] = None
     message: Optional[str] = None
     files: Optional[list[str]] = None
+    strict_stages: bool = False
 
 
 class EntityCLI:
@@ -657,7 +658,7 @@ class EntityCLI:
             overlay = Path("config") / f"{env}.yaml"
         return load_config(config_path, overlay)
 
-    async def _verify_plugins(self, config_path: str) -> int:
+    def _verify_plugins(self, config_path: str) -> int:
         async def _run() -> int:
             from entity.pipeline import SystemInitializer
             import yaml
