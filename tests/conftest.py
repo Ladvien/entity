@@ -7,13 +7,11 @@ import socket
 import shutil
 from pathlib import Path
 from contextlib import asynccontextmanager
-import shutil
 import subprocess
 
 import time
 from urllib.parse import urlparse
 import asyncpg
-import shutil
 import pytest
 from dotenv import load_dotenv
 
@@ -30,7 +28,6 @@ try:
 except Exception:
     pytest.skip(REQUIRE_PYTEST_DOCKER, allow_module_level=True)
 
-import shutil
 
 if shutil.which("docker") is None:
     pytest.skip("Docker is required for integration tests", allow_module_level=True)
@@ -60,28 +57,15 @@ def _docker_available() -> bool:
     return shutil.which("docker") is not None
 
 
-<<<<<<< HEAD
 def _require_docker() -> bool:
-    """Return True if Docker and pytest-docker are available."""
+    """Return True if Docker is installed and running."""
     try:
         pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
     except pytest.SkipTest:
         return False
-    return shutil.which("docker") is not None
-=======
-def _require_docker():
-    """Skip tests when Docker or pytest-docker isn't available."""
-    pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
-<<<<<<< HEAD
-<<<<<<< HEAD
-    if not _docker_available():
-        pytest.skip(
-            "Docker is required for Docker-based fixtures", allow_module_level=True
-        )
->>>>>>> pr-1705
 
     if shutil.which("docker") is None:
-        pytest.skip("docker executable not found", allow_module_level=True)
+        return False
 
     try:
         subprocess.run(
@@ -91,15 +75,9 @@ def _require_docker():
             stderr=subprocess.DEVNULL,
         )
     except Exception:
-        pytest.skip("docker daemon not running", allow_module_level=True)
-=======
-    if shutil.which("docker") is None:
-        pytest.skip("Docker binary not available", allow_module_level=True)
->>>>>>> pr-1708
-=======
-    if shutil.which("docker") is None:
-        pytest.skip("Docker is required for integration tests", allow_module_level=True)
->>>>>>> pr-1711
+        return False
+
+    return True
 
 
 def _socket_open(host: str, port: int) -> bool:
@@ -132,27 +110,18 @@ def wait_for_port(host: str, port: int, timeout: float = 30.0):
 
 
 @pytest.fixture(autouse=True)
-<<<<<<< HEAD
-async def _clear_pg_memory(request):
-<<<<<<< HEAD
+async def _clear_pg_memory(request: pytest.FixtureRequest):
+    """Clear Postgres-backed memory when tests use the pg_memory fixture."""
     if not _require_docker():
-=======
-    if not _docker_available():
->>>>>>> pr-1705
         yield
         return
-    pg_memory = await request.getfixturevalue("pg_memory")
-=======
-async def _clear_pg_memory(request: pytest.FixtureRequest, pg_memory: Memory):
-    """Clear Postgres-backed memory only for tests that request it."""
-
     if (
         "pg_memory" not in request.fixturenames
         and "pg_vector_memory" not in request.fixturenames
     ):
+        yield
         return
-
->>>>>>> pr-1712
+    pg_memory = await request.getfixturevalue("pg_memory")
     async with pg_memory.database.connection() as conn:
         await conn.execute(f"DELETE FROM {pg_memory._kv_table}")
         await conn.execute(f"DELETE FROM {pg_memory._history_table}")
