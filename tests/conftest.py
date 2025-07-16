@@ -1,61 +1,44 @@
-"""Shared pytest fixtures for integration tests.
+"""Shared pytest fixtures for integration tests using Docker."""
 
-This module configures Docker-based services for tests. The Postgres and
-Ollama containers start once per session and shut down automatically.
-"""
-
-from pathlib import Path
 import os
 import sys
 import asyncio
+import socket
+from pathlib import Path
 from contextlib import asynccontextmanager
 
+import time
+from urllib.parse import urlparse
 import asyncpg
 import psycopg
 import pytest
+from dotenv import load_dotenv
 
+# Load environment variables from .env at project root
+load_dotenv(dotenv_path=Path(__file__).resolve().parents[1] / ".env")
+
+# -- Pytest-docker sanity check
 REQUIRE_PYTEST_DOCKER = (
-    "pytest-docker is required for Docker-based fixtures. "
-    "Run 'poetry install --with dev' to install it."
+    "pytest-docker is required. Run 'poetry install --with dev' to install it."
 )
 
-try:  # Skip entire module if pytest-docker isn't available
-    import pytest_docker as _  # noqa: F401
-except Exception:  # pragma: no cover - environment dependent
+try:
+    import pytest_docker as _  # noqa
+except Exception:
     pytest.skip(REQUIRE_PYTEST_DOCKER, allow_module_level=True)
 
 
-@pytest.fixture(scope="session", autouse=True)
-def _ensure_wait_for_service(docker_services):
-    """Add a fallback wait_for_service helper if pytest-docker lacks one."""
-
-    if not hasattr(docker_services, "wait_for_service"):
-
-        def wait_for_service(name: str, port: int) -> None:
-            """Poll the target port until responsive."""
-
-            def _check() -> bool:
-                try:
-                    docker_services.port_for(name, port)
-                except Exception:
-                    return False
-                return True
-
-            docker_services.wait_until_responsive(timeout=30.0, pause=0.5, check=_check)
-
-        docker_services.wait_for_service = wait_for_service
-
-    yield docker_services
-
-
-def _require_docker() -> None:
-    """Ensure pytest-docker is installed before using docker fixtures."""
-    pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
-
-
+# -- Setup import path for src/
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 os.environ.setdefault("ENTITY_AUTO_INIT", "0")
 
+# -- Local constants from .env
+OLLAMA_PORT = int(os.getenv("OLLAMA_PORT", "11434"))
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3:8b-instruct-q6_K")
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", f"http://localhost:{OLLAMA_PORT}")
+
+
+# -- Core imports (must follow sys.path change)
 from entity.infrastructure import DuckDBInfrastructure
 from entity.resources import Memory, LLM
 from entity.resources.interfaces.duckdb_resource import DuckDBResource
@@ -63,21 +46,158 @@ from entity.resources.interfaces.database import DatabaseResource
 from entity.core.resources.container import ResourceContainer
 
 
+def _require_docker():
+    pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
+
+
+def _socket_open(host: str, port: int) -> bool:
+    """Check if a TCP port is open."""
+    try:
+        with socket.create_connection((host, port), timeout=1):
+            return True
+    except OSError:
+        return False
+
+
+async def _can_connect(dsn: str) -> bool:
+    try:
+        conn = await asyncpg.connect(dsn)
+        await conn.close()
+        return True
+    except Exception:
+        return False
+
+
+def wait_for_port(host: str, port: int, timeout: float = 30.0):
+    start = time.time()
+    while time.time() - start < timeout:
+        try:
+            with socket.create_connection((host, port), timeout=1):
+                return True
+        except OSError:
+            time.sleep(0.5)
+    raise RuntimeError(f"Timeout waiting for {host}:{port}")
+
+
+@pytest.fixture(scope="session")
+def docker_compose_file(pytestconfig: pytest.Config) -> str:
+    _require_docker()
+    return str(Path(pytestconfig.rootpath) / "tests" / "docker-compose.yml")
+
+
+@pytest.fixture(scope="session")
+def postgres_dsn(docker_ip: str, docker_services) -> str:
+    _require_docker()
+    port = docker_services.port_for("postgres", 5432)
+    user = os.getenv("DB_USERNAME", "dev")
+    password = os.getenv("DB_PASSWORD", "dev")
+    db = os.getenv("DB_NAME", "entity_dev")
+    dsn = f"postgresql://{user}:{password}@{docker_ip}:{port}/{db}"
+    print(f"✅ Returning test Postgres DSN: {dsn}")
+
+    async def check():
+        return await _can_connect(dsn)
+
+    docker_services.wait_until_responsive(
+        timeout=30, pause=0.5, check=lambda: asyncio.run(check())
+    )
+    return dsn
+
+
+class AsyncPGDatabase(DatabaseResource):
+    def __init__(self, dsn: str):
+        super().__init__({})
+        self._dsn = dsn
+
+    @asynccontextmanager
+    async def connection(self):
+        parsed = urlparse(self._dsn)
+        host = parsed.hostname
+        port = parsed.port
+
+        wait_for_port(host, port)
+        conn = await asyncpg.connect(self._dsn)
+        try:
+            yield conn
+        finally:
+            await conn.close()
+
+    def get_connection_pool(self):
+        return self._dsn
+
+
+@pytest.fixture(scope="session")
+async def pg_memory(postgres_dsn: str) -> Memory:
+    _require_docker()
+    db = AsyncPGDatabase(postgres_dsn)
+    mem = Memory({})
+    mem.database = db
+    mem.vector_store = None
+    await mem.initialize()
+    try:
+        yield mem
+    finally:
+        async with db.connection() as conn:
+            await conn.execute(f"DROP TABLE IF EXISTS {mem._kv_table}")
+            await conn.execute(f"DROP TABLE IF EXISTS {mem._history_table}")
+
+
+@pytest.fixture(scope="session")
+def ollama_url(docker_ip: str, docker_services) -> str:
+    """Ensure Ollama container is healthy and return its base URL."""
+    _require_docker()
+    port = docker_services.port_for("ollama", OLLAMA_PORT)
+    base_url = f"http://{docker_ip}:{port}"
+
+    def is_responsive() -> bool:
+        import httpx
+
+        try:
+            # Ping Ollama with a fake model — 404 is okay, means service is up
+            response = httpx.post(
+                f"{base_url}/api/generate",
+                json={"model": OLLAMA_MODEL, "prompt": "ping"},
+                timeout=2.0,
+            )
+            return response.status_code in {200, 400, 404}
+        except Exception:
+            return False
+
+    docker_services.wait_until_responsive(timeout=60, pause=1.0, check=is_responsive)
+    return base_url
+
+
+@pytest.fixture(scope="session")
+async def ollama_llm(ollama_url: str) -> LLM:
+    """LLM using Ollama container."""
+    from plugins.builtin.resources.ollama_llm import OllamaLLMResource
+
+    llm_provider = OllamaLLMResource({"base_url": ollama_url, "model": OLLAMA_MODEL})
+    llm = LLM({"pool": {"min_size": 1, "max_size": 1}})
+    llm.provider = llm_provider
+    await llm.initialize()
+    yield llm
+
+
 @pytest.fixture()
 async def memory_db(tmp_path: Path) -> Memory:
+    """Isolated DuckDB-backed memory."""
     db_path = tmp_path / "memory.duckdb"
     db_backend = DuckDBInfrastructure({"path": str(db_path)})
     await db_backend.initialize()
+
     async with db_backend.connection() as conn:
         conn.execute(
             "CREATE TABLE IF NOT EXISTS conversation_history (conversation_id TEXT, role TEXT, content TEXT, metadata TEXT, timestamp TEXT)"
         )
+
     db = DuckDBResource({})
     db.database = db_backend
     mem = Memory(config={})
     mem.database = db
     mem.vector_store = None
     await mem.initialize()
+
     try:
         yield mem
     finally:
@@ -97,113 +217,12 @@ def _clear_metrics_deps():
 
     original = MetricsCollectorResource.dependencies.copy()
     original_infra = MetricsCollectorResource.infrastructure_dependencies.copy()
+
     MetricsCollectorResource.dependencies = []
     MetricsCollectorResource.infrastructure_dependencies = []
+
     try:
         yield
     finally:
         MetricsCollectorResource.dependencies = original
         MetricsCollectorResource.infrastructure_dependencies = original_infra
-
-
-@pytest.fixture(scope="session")
-def docker_compose_file(pytestconfig: pytest.Config) -> str:
-    """Return path to the docker compose file."""
-    _require_docker()
-    return str(Path(pytestconfig.rootpath) / "tests" / "docker-compose.yml")
-
-
-def _postgres_ready(dsn: str) -> bool:
-    async def _check() -> bool:
-        try:
-            conn = await asyncpg.connect(dsn)
-            await conn.execute("SELECT 1")
-            await conn.close()
-            return True
-        except Exception:
-            return False
-
-    return asyncio.get_event_loop().run_until_complete(_check())
-
-
-@pytest.fixture(scope="session")
-def postgres_dsn(docker_ip: str, docker_services) -> str:
-    """Start the Postgres container and return a DSN."""
-    _require_docker()
-    docker_services.wait_for_service("postgres", 5432)
-    port = docker_services.port_for("postgres", 5432)
-    dsn = f"postgresql://test:test@{docker_ip}:{port}/test_db"
-    docker_services.wait_until_responsive(
-        timeout=30.0, pause=0.5, check=lambda: _postgres_ready(dsn)
-    )
-    return dsn
-
-
-class AsyncPGDatabase(DatabaseResource):
-    """Database adapter using ``psycopg`` against Postgres."""
-
-    def __init__(self, dsn: str) -> None:
-        super().__init__({})
-        self._dsn = dsn
-
-    @asynccontextmanager
-    async def connection(self):
-        conn = psycopg.connect(self._dsn)
-        conn.paramstyle = psycopg.paramstyle
-        try:
-            yield conn
-        finally:
-            conn.close()
-
-    def get_connection_pool(self):  # pragma: no cover - simplify
-        return self._dsn
-
-
-@pytest.fixture(scope="session")
-async def pg_memory(postgres_dsn: str) -> Memory:
-    """Memory resource backed by Postgres."""
-    _require_docker()
-    db = AsyncPGDatabase(postgres_dsn)
-    mem = Memory({})
-    mem.database = db
-    mem.vector_store = None
-    await mem.initialize()
-    try:
-        yield mem
-    finally:
-        async with db.connection() as conn:
-            conn.execute(f"DROP TABLE IF EXISTS {mem._kv_table}")
-            conn.execute(f"DROP TABLE IF EXISTS {mem._history_table}")
-
-
-@pytest.fixture(scope="session")
-def ollama_url(docker_ip: str, docker_services) -> str:
-    """Start the Ollama container and return its base URL."""
-    _require_docker()
-    docker_services.wait_for_service("ollama", 11434)
-    port = docker_services.port_for("ollama", 11434)
-    url = f"http://{docker_ip}:{port}"
-
-    def _ready() -> bool:
-        try:
-            import httpx
-
-            resp = httpx.post(f"{url}/api/generate", json={"prompt": "ping"})
-            return resp.status_code == 200
-        except Exception:
-            return False
-
-    docker_services.wait_until_responsive(timeout=30.0, pause=0.5, check=_ready)
-    return url
-
-
-@pytest.fixture(scope="session")
-async def ollama_llm(ollama_url: str) -> LLM:
-    """LLM resource using the Ollama container."""
-    from plugins.builtin.resources.ollama_llm import OllamaLLMResource
-
-    llm_provider = OllamaLLMResource({"base_url": ollama_url, "model": "test"})
-    llm = LLM({"pool": {"min_size": 1, "max_size": 1}})
-    llm.provider = llm_provider
-    await llm.initialize()
-    yield llm

@@ -1,16 +1,41 @@
 version: '3.8'
+
 services:
   postgres:
     image: postgres:16-alpine
-    env_file:
-      - ../.env
     environment:
-      POSTGRES_USER: ${DB_USERNAME:-test}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-test}
-      POSTGRES_DB: ${DB_NAME:-test_db}
+      POSTGRES_USER: ${DB_USERNAME:-dev}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-dev}
+      POSTGRES_DB: ${DB_NAME:-entity_dev}
     ports:
-      - "5432"
+      - "55432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+
   ollama:
-    build: ./fake_ollama
+    image: ollama/ollama
+    privileged: true
     ports:
-      - "11434:8000"
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    entrypoint: >
+      bash -c '
+        set -e
+        ollama serve &
+        sleep 3
+        ollama pull llama3:8b-instruct-q6_K || true
+        wait
+      '
+
+
+volumes:
+  postgres_data:
+  ollama_data:

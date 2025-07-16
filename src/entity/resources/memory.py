@@ -201,13 +201,23 @@ class Memory(AgentResource):
         """Persist ``value`` under ``key``."""
         if self.database is None:
             return
+
         namespaced_key = f"{user_id}:{key}"
+
         async with self.database.connection() as conn:
-            await _execute(
-                conn,
-                f"INSERT OR REPLACE INTO {self._kv_table} VALUES (?, ?)",
-                (namespaced_key, json.dumps(value)),
-            )
+            # Explicitly detect PostgreSQL vs DuckDB
+            dialect = conn.__class__.__module__.split(".")[0]
+
+            if dialect == "asyncpg":
+                sql = f"""
+                    INSERT INTO {self._kv_table} (key, value)
+                    VALUES (?, ?)
+                    ON CONFLICT(key) DO UPDATE SET value = EXCLUDED.value
+                """
+            else:
+                sql = f"INSERT OR REPLACE INTO {self._kv_table} VALUES (?, ?)"
+
+            await _execute(conn, sql, (namespaced_key, json.dumps(value)))
             self._maybe_commit(conn)
 
     async def fetch_persistent(
@@ -419,6 +429,9 @@ async def _execute(conn: Any, sql: str, params: Any | None = None) -> Any:
     """Run a query against ``conn`` and await the result when necessary."""
     style = _detect_paramstyle(conn)
     sql = _convert_placeholders(sql, style)
+
+    print(f"🧪 SQL: {sql}")
+    print(f"🧪 Params: {params}")
 
     asyncpg_like = hasattr(conn, "fetch")
     is_select = sql.lstrip().lower().startswith(("select", "with"))
