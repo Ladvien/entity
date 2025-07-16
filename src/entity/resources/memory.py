@@ -5,11 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
 import json
-<<<<<<< HEAD
-=======
-import logging
 import inspect
->>>>>>> pr-1739
 
 from .base import AgentResource
 from .interfaces.database import DatabaseResource as DatabaseInterface
