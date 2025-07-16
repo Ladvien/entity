@@ -77,6 +77,7 @@ def _require_docker():
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     if not _docker_available():
         pytest.skip(
             "Docker is required for Docker-based fixtures", allow_module_level=True
@@ -111,6 +112,10 @@ def _require_docker():
     except Exception:
         pytest.skip("Docker command not available or daemon not running")
 >>>>>>> pr-1717
+=======
+    if shutil.which("docker") is None:
+        pytest.skip("Docker executable not found", allow_module_level=True)
+>>>>>>> pr-1716
 
 
 def _socket_open(host: str, port: int) -> bool:
