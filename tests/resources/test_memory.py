@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 
-from tests.conftest import AsyncPGDatabase
 import pytest
 
 from entity.resources import Memory

@@ -66,6 +66,7 @@ def _require_docker() -> bool:
 def _require_docker():
     """Skip tests when Docker or pytest-docker isn't available."""
     pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
+<<<<<<< HEAD
     if not _docker_available():
         pytest.skip(
             "Docker is required for Docker-based fixtures", allow_module_level=True
@@ -84,6 +85,10 @@ def _require_docker():
         )
     except Exception:
         pytest.skip("docker daemon not running", allow_module_level=True)
+=======
+    if shutil.which("docker") is None:
+        pytest.skip("Docker binary not available", allow_module_level=True)
+>>>>>>> pr-1708
 
 
 def _socket_open(host: str, port: int) -> bool:
