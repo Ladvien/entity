@@ -540,12 +540,8 @@ class ResourceContainer:
                 return False
         return True
 
-    def _validate_layers(self) -> None:
-        """Ensure layer dependencies follow the 4-layer architecture.
-
-        Built-in canonical resources run at layer 3. Custom resources are
-        placed at layer 4 unless explicitly configured otherwise.
-        """
+    def _validate_layer_config(self, name: str, layer: int, cls: type) -> None:
+        """Validate the configured layer for a single resource."""
 
         from entity.core.plugins import (
             InfrastructurePlugin,
@@ -554,106 +550,107 @@ class ResourceContainer:
         )
         from entity.resources.base import AgentResource as CanonicalResource
 
-        for name, layer in self._layers.items():
-            if layer not in {1, 2, 3, 4}:
-                raise InitializationError(
-                    name,
-                    "layer validation",
-                    f"Invalid layer {layer} specified.",
-                    kind="Resource",
-                )
-            cls = self._classes[name]
-
-            is_infra = issubclass(cls, InfrastructurePlugin)
-            is_builtin_canonical = _is_builtin_canonical(cls)
-            is_plugin_canonical = issubclass(cls, PluginAgentResource)
-            is_interface = (
-                issubclass(cls, ResourcePlugin)
-                and not issubclass(cls, CanonicalResource)
-                and not is_plugin_canonical
+        if layer not in {1, 2, 3, 4}:
+            raise InitializationError(
+                name,
+                "layer validation",
+                f"Invalid layer {layer} specified.",
+                kind="Resource",
             )
 
-            expected = (
-                1
-                if is_infra
-                else (
-                    3
-                    if is_builtin_canonical
-                    else 4 if is_plugin_canonical else 2 if is_interface else 4
-                )
+        is_infra = issubclass(cls, InfrastructurePlugin)
+        is_builtin_canonical = _is_builtin_canonical(cls)
+        is_plugin_canonical = issubclass(cls, PluginAgentResource)
+        is_interface = (
+            issubclass(cls, ResourcePlugin)
+            and not issubclass(cls, CanonicalResource)
+            and not is_plugin_canonical
+        )
+
+        expected = (
+            1
+            if is_infra
+            else (
+                3
+                if is_builtin_canonical
+                else 4 if is_plugin_canonical else 2 if is_interface else 4
             )
+        )
 
-            if is_plugin_canonical:
-                allowed_layers = {3, 4}
-            else:
-                allowed_layers = {expected}
-                if (
-                    expected == 4
-                    and not issubclass(cls, CanonicalResource)
-                    and not self._deps.get(name)
-                ):
-                    allowed_layers.add(3)
-
-            if layer not in allowed_layers:
-                raise InitializationError(
-                    name,
-                    "layer validation",
-                    f"Incorrect layer {layer} for {cls.__name__}. Expected {expected}.",
-                    kind="Resource",
-                )
-
-            if layer == 1:
-                if self._deps.get(name):
-                    raise InitializationError(
-                        name,
-                        "layer validation",
-                        "Layer-1 plugins cannot have dependencies.",
-                        kind="Resource",
-                    )
-                if not getattr(cls, "infrastructure_type", ""):
-                    raise InitializationError(
-                        name,
-                        "layer validation",
-                        "Layer-1 plugins must define infrastructure_type.",
-                        kind="Resource",
-                    )
-            if layer == 2 and not getattr(cls, "infrastructure_dependencies", None):
-                raise InitializationError(
-                    name,
-                    "layer validation",
-                    "Layer-2 plugins must declare infrastructure_dependencies.",
-                    kind="Resource",
-                )
-
-            if is_infra:
-                if self._deps.get(name):
-                    raise InitializationError(
-                        name,
-                        "layer validation",
-                        "Infrastructure resources cannot have dependencies.",
-                        kind="Resource",
-                    )
-                if not getattr(cls, "infrastructure_type", ""):
-                    raise InitializationError(
-                        name,
-                        "layer validation",
-                        "Infrastructure resource missing infrastructure_type.",
-                        kind="Resource",
-                    )
-
+        if is_plugin_canonical:
+            allowed_layers = {3, 4}
+        else:
+            allowed_layers = {expected}
             if (
-                is_interface
-                and not is_builtin_canonical
-                and not getattr(cls, "infrastructure_dependencies", None)
+                expected == 4
+                and not issubclass(cls, CanonicalResource)
+                and not self._deps.get(name)
             ):
+                allowed_layers.add(3)
+
+        if layer not in allowed_layers:
+            raise InitializationError(
+                name,
+                "layer validation",
+                f"Incorrect layer {layer} for {cls.__name__}. Expected {expected}.",
+                kind="Resource",
+            )
+
+        if layer == 1:
+            if self._deps.get(name):
                 raise InitializationError(
                     name,
                     "layer validation",
-                    "Resource interface must declare infrastructure_dependencies.",
+                    "Layer-1 plugins cannot have dependencies.",
+                    kind="Resource",
+                )
+            if not getattr(cls, "infrastructure_type", ""):
+                raise InitializationError(
+                    name,
+                    "layer validation",
+                    "Layer-1 plugins must define infrastructure_type.",
+                    kind="Resource",
+                )
+        if layer == 2 and not getattr(cls, "infrastructure_dependencies", None):
+            raise InitializationError(
+                name,
+                "layer validation",
+                "Layer-2 plugins must declare infrastructure_dependencies.",
+                kind="Resource",
+            )
+
+        if is_infra:
+            if self._deps.get(name):
+                raise InitializationError(
+                    name,
+                    "layer validation",
+                    "Infrastructure resources cannot have dependencies.",
+                    kind="Resource",
+                )
+            if not getattr(cls, "infrastructure_type", ""):
+                raise InitializationError(
+                    name,
+                    "layer validation",
+                    "Infrastructure resource missing infrastructure_type.",
                     kind="Resource",
                 )
 
-        # Detect circular dependencies before validating layer steps
+        if (
+            is_interface
+            and not is_builtin_canonical
+            and not getattr(cls, "infrastructure_dependencies", None)
+        ):
+            raise InitializationError(
+                name,
+                "layer validation",
+                "Resource interface must declare infrastructure_dependencies.",
+                kind="Resource",
+            )
+
+    def _check_dependency_rules(self) -> None:
+        """Validate dependency ordering and detect cycles."""
+
+        # Detect circular dependencies early
         self._resolve_order()
 
         visited: set[str] = set()
@@ -712,6 +709,14 @@ class ResourceContainer:
 
         for resource in self._deps.keys():
             traverse(resource)
+
+    def _validate_layers(self) -> None:
+        """Ensure registered resources comply with the 4-layer architecture."""
+
+        for name, layer in self._layers.items():
+            self._validate_layer_config(name, layer, self._classes[name])
+
+        self._check_dependency_rules()
 
     def _resolve_order(self) -> List[str]:
         """Return initialization order or raise if a cycle exists."""
