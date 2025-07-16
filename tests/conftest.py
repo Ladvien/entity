@@ -121,7 +121,7 @@ async def _clear_pg_memory(request: pytest.FixtureRequest):
     ):
         yield
         return
-    pg_memory = await request.getfixturevalue("pg_memory")
+    pg_memory = request.getfixturevalue("pg_memory")
     async with pg_memory.database.connection() as conn:
         await conn.execute(f"DELETE FROM {pg_memory._kv_table}")
         await conn.execute(f"DELETE FROM {pg_memory._history_table}")
