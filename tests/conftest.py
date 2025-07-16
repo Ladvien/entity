@@ -4,16 +4,12 @@ import os
 import sys
 import asyncio
 import socket
+import shutil
 from pathlib import Path
 from contextlib import asynccontextmanager
-<<<<<<< HEAD
-=======
 import subprocess
->>>>>>> pr-1723
 
 import time
-import shutil
-import subprocess
 from urllib.parse import urlparse
 import asyncpg
 import pytest
@@ -32,13 +28,10 @@ try:
 except Exception:
     pytest.skip(REQUIRE_PYTEST_DOCKER, allow_module_level=True)
 
-<<<<<<< HEAD
-=======
 
 if shutil.which("docker") is None:
     pytest.skip("Docker is required for integration tests", allow_module_level=True)
 
->>>>>>> pr-1723
 
 # -- Setup import path for src/
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -52,66 +45,39 @@ OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", f"http://localhost:{OLLAMA_PORT}"
 
 # -- Core imports (must follow sys.path change)
 from entity.infrastructure import DuckDBInfrastructure
-from entity.resources import LLM, Memory
+from entity.resources import Memory, LLM
 from plugins.builtin.resources.pg_vector_store import PgVectorStore
 from entity.resources.interfaces.duckdb_resource import DuckDBResource
 from entity.resources.interfaces.database import DatabaseResource
 from entity.core.resources.container import ResourceContainer
+import shutil
 
 
-<<<<<<< HEAD
 def _docker_available() -> bool:
     return shutil.which("docker") is not None
 
 
 def _require_docker() -> bool:
-<<<<<<< HEAD
-    """Return True when Docker and pytest-docker are available."""
-=======
     """Return True if Docker is installed and running."""
->>>>>>> pr-1723
     try:
         pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
     except pytest.SkipTest:
         return False
 
-<<<<<<< HEAD
-    if not _docker_available():
-        pytest.skip("Docker executable not found", allow_module_level=True)
-=======
     if shutil.which("docker") is None:
->>>>>>> pr-1723
         return False
 
     try:
         subprocess.run(
-            ["docker", "version"],
+            ["docker", "info"],
             check=True,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
     except Exception:
-<<<<<<< HEAD
-        pytest.skip("Docker daemon not running", allow_module_level=True)
         return False
 
     return True
-=======
-import shutil
-
-
-def _require_docker():
-    pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
-    if shutil.which("docker") is None:
-        pytest.skip(
-            "Docker is required for Docker-based tests.", allow_module_level=True
-        )
->>>>>>> pr-1722
-=======
-        return False
-
-    return True
->>>>>>> pr-1723
 
 
 def _socket_open(host: str, port: int) -> bool:
@@ -144,38 +110,18 @@ def wait_for_port(host: str, port: int, timeout: float = 30.0):
 
 
 @pytest.fixture(autouse=True)
-<<<<<<< HEAD
-<<<<<<< HEAD
-async def _clear_pg_memory(request: pytest.FixtureRequest):
-    if not _require_docker():
-        yield
-        return
-
-=======
 async def _clear_pg_memory(request: pytest.FixtureRequest):
     """Clear Postgres-backed memory when tests use the pg_memory fixture."""
     if not _require_docker():
         yield
         return
->>>>>>> pr-1723
     if (
         "pg_memory" not in request.fixturenames
         and "pg_vector_memory" not in request.fixturenames
     ):
         yield
         return
-<<<<<<< HEAD
-
-    pg_memory: Memory = await request.getfixturevalue("pg_memory")
-=======
-async def _clear_pg_memory(request):
-    if shutil.which("docker") is None:
-        return
-    pg_memory: Memory = request.getfixturevalue("pg_memory")
->>>>>>> pr-1722
-=======
     pg_memory = await request.getfixturevalue("pg_memory")
->>>>>>> pr-1723
     async with pg_memory.database.connection() as conn:
         await conn.execute(f"DELETE FROM {pg_memory._kv_table}")
         await conn.execute(f"DELETE FROM {pg_memory._history_table}")
@@ -184,13 +130,15 @@ async def _clear_pg_memory(request):
 
 @pytest.fixture(scope="session")
 def docker_compose_file(pytestconfig: pytest.Config) -> str:
-    _require_docker()
+    if not _require_docker():
+        pytest.skip("Docker is required for docker-compose fixtures.")
     return str(Path(pytestconfig.rootpath) / "tests" / "docker-compose.yml")
 
 
 @pytest.fixture(scope="session")
 def postgres_dsn(docker_ip: str, docker_services) -> str:
-    _require_docker()
+    if not _require_docker():
+        pytest.skip("Docker is required for Postgres fixtures.")
     port = docker_services.port_for("postgres", 5432)
     user = os.getenv("DB_USERNAME", "dev")
     password = os.getenv("DB_PASSWORD", "dev")
@@ -231,7 +179,8 @@ class AsyncPGDatabase(DatabaseResource):
 
 @pytest.fixture(scope="session")
 async def pg_memory(postgres_dsn: str) -> Memory:
-    _require_docker()
+    if not _require_docker():
+        pytest.skip("Docker is required for PostgreSQL-backed memory.")
     db = AsyncPGDatabase(postgres_dsn)
     mem = Memory({})
     mem.database = db
@@ -248,7 +197,8 @@ async def pg_memory(postgres_dsn: str) -> Memory:
 @pytest.fixture(scope="session")
 async def pg_vector_memory(postgres_dsn: str) -> Memory:
     """Memory backed by Postgres with a PgVectorStore."""
-    _require_docker()
+    if not _require_docker():
+        pytest.skip("Docker is required for PostgreSQL-backed memory.")
     db = AsyncPGDatabase(postgres_dsn)
     store = PgVectorStore({"table": "test_embeddings"})
     store.database = db
@@ -269,7 +219,8 @@ async def pg_vector_memory(postgres_dsn: str) -> Memory:
 @pytest.fixture(scope="session")
 def ollama_url(docker_ip: str, docker_services) -> str:
     """Ensure Ollama container is healthy and return its base URL."""
-    _require_docker()
+    if not _require_docker():
+        pytest.skip("Docker is required for Ollama LLM tests.")
     port = docker_services.port_for("ollama", OLLAMA_PORT)
     base_url = f"http://{docker_ip}:{port}"
 
@@ -338,6 +289,8 @@ def resource_container() -> ResourceContainer:
 @pytest.fixture()
 async def pg_container(postgres_dsn: str) -> ResourceContainer:
     """Container with PostgreSQL-backed memory."""
+    if not _require_docker():
+        pytest.skip("Docker is required for Postgres-backed containers.")
     container = ResourceContainer()
     container.register("database", AsyncPGDatabase, {"dsn": postgres_dsn}, layer=2)
     container.register("memory", Memory, {}, layer=3)
