@@ -18,20 +18,9 @@ class PipelineWorker:
     async def run_stages(self, state: PipelineState, user_id: str) -> Any:
         """Delegate pipeline execution to the existing driver."""
         # user_message is ignored when ``state`` is provided
-        container = (
-            self.registries.resources.clone()
-            if hasattr(self.registries.resources, "clone")
-            else self.registries.resources
-        )
-        regs = SystemRegistries(
-            resources=container,
-            tools=self.registries.tools,
-            plugins=self.registries.plugins,
-            validators=self.registries.validators,
-        )
         return await execute_pipeline(
             "",
-            regs,
+            self.registries,
             state=state,
             workflow=None,
             user_id=user_id,
@@ -45,12 +34,6 @@ class PipelineWorker:
             self.registries.resources.clone()
             if hasattr(self.registries.resources, "clone")
             else self.registries.resources
-        )
-        regs = SystemRegistries(
-            resources=container,
-            tools=self.registries.tools,
-            plugins=self.registries.plugins,
-            validators=self.registries.validators,
         )
 
         async def _run(cont: Any) -> Any:
