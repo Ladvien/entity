@@ -45,8 +45,14 @@ from plugins.builtin.resources.pg_vector_store import PgVectorStore
 from entity.resources.interfaces.duckdb_resource import DuckDBResource
 from entity.resources.interfaces.database import DatabaseResource
 from entity.core.resources.container import ResourceContainer
+import shutil
 
 
+def _docker_available() -> bool:
+    return shutil.which("docker") is not None
+
+
+<<<<<<< HEAD
 def _require_docker() -> bool:
     """Return True if Docker and pytest-docker are available."""
     try:
@@ -54,6 +60,14 @@ def _require_docker() -> bool:
     except pytest.SkipTest:
         return False
     return shutil.which("docker") is not None
+=======
+def _require_docker():
+    pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
+    if not _docker_available():
+        pytest.skip(
+            "Docker is required for Docker-based fixtures", allow_module_level=True
+        )
+>>>>>>> pr-1705
 
 
 def _socket_open(host: str, port: int) -> bool:
@@ -87,13 +101,18 @@ def wait_for_port(host: str, port: int, timeout: float = 30.0):
 
 @pytest.fixture(autouse=True)
 async def _clear_pg_memory(request):
+<<<<<<< HEAD
     if not _require_docker():
+=======
+    if not _docker_available():
+>>>>>>> pr-1705
         yield
         return
     pg_memory = await request.getfixturevalue("pg_memory")
     async with pg_memory.database.connection() as conn:
         await conn.execute(f"DELETE FROM {pg_memory._kv_table}")
         await conn.execute(f"DELETE FROM {pg_memory._history_table}")
+    yield
 
 
 @pytest.fixture(scope="session")
