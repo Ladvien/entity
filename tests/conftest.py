@@ -13,6 +13,7 @@ import subprocess
 import time
 from urllib.parse import urlparse
 import asyncpg
+import shutil
 import pytest
 from dotenv import load_dotenv
 
@@ -67,6 +68,7 @@ def _require_docker():
     """Skip tests when Docker or pytest-docker isn't available."""
     pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
 <<<<<<< HEAD
+<<<<<<< HEAD
     if not _docker_available():
         pytest.skip(
             "Docker is required for Docker-based fixtures", allow_module_level=True
@@ -89,6 +91,10 @@ def _require_docker():
     if shutil.which("docker") is None:
         pytest.skip("Docker binary not available", allow_module_level=True)
 >>>>>>> pr-1708
+=======
+    if shutil.which("docker") is None:
+        pytest.skip("Docker is required for integration tests", allow_module_level=True)
+>>>>>>> pr-1711
 
 
 def _socket_open(host: str, port: int) -> bool:
