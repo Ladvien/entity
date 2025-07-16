@@ -79,6 +79,13 @@ def wait_for_port(host: str, port: int, timeout: float = 30.0):
     raise RuntimeError(f"Timeout waiting for {host}:{port}")
 
 
+@pytest.fixture(autouse=True)
+async def _clear_pg_memory(pg_memory: Memory):
+    async with pg_memory.database.connection() as conn:
+        await conn.execute(f"DELETE FROM {pg_memory._kv_table}")
+        await conn.execute(f"DELETE FROM {pg_memory._history_table}")
+
+
 @pytest.fixture(scope="session")
 def docker_compose_file(pytestconfig: pytest.Config) -> str:
     _require_docker()
