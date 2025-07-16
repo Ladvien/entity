@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-dev}
       POSTGRES_DB: ${DB_NAME:-entity_dev}
     ports:
-      - "55432:5432"
+      - "0:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
