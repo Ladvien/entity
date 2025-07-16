@@ -48,6 +48,7 @@ from entity.resources.interfaces.database import DatabaseResource
 from entity.core.resources.container import ResourceContainer
 
 
+<<<<<<< HEAD
 def _docker_available() -> bool:
     return shutil.which("docker") is not None
 
@@ -75,6 +76,17 @@ def _require_docker() -> bool:
         return False
 
     return True
+=======
+import shutil
+
+
+def _require_docker():
+    pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
+    if shutil.which("docker") is None:
+        pytest.skip(
+            "Docker is required for Docker-based tests.", allow_module_level=True
+        )
+>>>>>>> pr-1722
 
 
 def _socket_open(host: str, port: int) -> bool:
@@ -107,6 +119,7 @@ def wait_for_port(host: str, port: int, timeout: float = 30.0):
 
 
 @pytest.fixture(autouse=True)
+<<<<<<< HEAD
 async def _clear_pg_memory(request: pytest.FixtureRequest):
     if not _require_docker():
         yield
@@ -120,6 +133,12 @@ async def _clear_pg_memory(request: pytest.FixtureRequest):
         return
 
     pg_memory: Memory = await request.getfixturevalue("pg_memory")
+=======
+async def _clear_pg_memory(request):
+    if shutil.which("docker") is None:
+        return
+    pg_memory: Memory = request.getfixturevalue("pg_memory")
+>>>>>>> pr-1722
     async with pg_memory.database.connection() as conn:
         await conn.execute(f"DELETE FROM {pg_memory._kv_table}")
         await conn.execute(f"DELETE FROM {pg_memory._history_table}")
