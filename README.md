@@ -78,6 +78,12 @@ pip install pytest-docker
 Before starting Docker, copy `.env.example` to `.env` and adjust the values for
 your local setup. The compose files read this file automatically.
 
+### Integration Tests & Docker
+
+Integration tests spin up containers defined in `tests/docker-compose.yml`. If
+Docker isn’t available, `pytest-docker` automatically skips these tests so the
+rest of the suite can still run.
+
 `pytest-docker` exposes the `docker_ip` and `docker_services` fixtures used by
 the integration tests. Make sure the optional dependencies `pyyaml` and
 `python-dotenv` are available to avoid runtime import errors when the CLI loads
