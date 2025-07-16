@@ -239,7 +239,11 @@ class EntityCLI:
             return self._verify_plugins(self.args.config)
         if cmd == "validate":
             assert self.args.config is not None
-            return self._validate_config(self.args.config)
+            return self._validate_config(
+                self.args.config,
+                env=self.args.env,
+                strict_stages=self.args.strict_stages,
+            )
         if cmd == "search-plugin":
             assert self.args.name is not None
             return self._search_plugin(self.args.name)
@@ -642,10 +646,15 @@ class EntityCLI:
     # -----------------------------------------------------
     # configuration helpers
     # -----------------------------------------------------
-    def _load_config_files(self, config_path: str) -> dict[str, Any]:
+    def _load_config_files(
+        self, config_path: str, env: str | None = None
+    ) -> dict[str, Any]:
+        """Load the main configuration and optional environment overlay."""
         overlay = None
-        if self.args.env:
-            overlay = Path("config") / f"{self.args.env}.yaml"
+        if env is None:
+            env = getattr(getattr(self, "args", None), "env", None)
+        if env:
+            overlay = Path("config") / f"{env}.yaml"
         return load_config(config_path, overlay)
 
     async def _verify_plugins(self, config_path: str) -> int:
@@ -668,15 +677,22 @@ class EntityCLI:
 
         return asyncio.run(_run())
 
-    def _validate_config(self, config_path: str) -> int:
+    def _validate_config(
+        self,
+        config_path: str,
+        *,
+        env: str | None = None,
+        strict_stages: bool | None = None,
+    ) -> int:
         async def _run() -> int:
             from entity.pipeline import SystemInitializer
 
             try:
-                data = self._load_config_files(config_path)
-                initializer = SystemInitializer(
-                    data, strict_stages=self.args.strict_stages
-                )
+                data = self._load_config_files(config_path, env)
+                st = strict_stages
+                if st is None:
+                    st = getattr(getattr(self, "args", None), "strict_stages", False)
+                initializer = SystemInitializer(data, strict_stages=st)
                 await initializer.initialize()
             except Exception as exc:  # noqa: BLE001
                 logger.error("Validation failed: %s", exc)
