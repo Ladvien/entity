@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 import time
 from urllib.parse import urlparse
 import asyncpg
+import shutil
 import pytest
 from dotenv import load_dotenv
 
@@ -48,6 +49,8 @@ from entity.core.resources.container import ResourceContainer
 
 def _require_docker():
     pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
+    if shutil.which("docker") is None:
+        pytest.skip("Docker is required for integration tests", allow_module_level=True)
 
 
 def _socket_open(host: str, port: int) -> bool:
