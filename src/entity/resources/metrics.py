@@ -350,22 +350,4 @@ class MetricsCollectorResource(AgentResource):
             return await _maybe_await(cursor.fetchall())
 
 
-class _RowCursor:
-    def __init__(self, rows: list[Any]) -> None:
-        self._rows = [tuple(r) for r in rows]
-        self._index = 0
-        keys = list(rows[0].keys()) if rows and hasattr(rows[0], "keys") else []
-        self.description = [(k, None, None, None, None, None, None) for k in keys]
-
-    def fetchall(self) -> list[Any]:
-        return self._rows
-
-    def fetchone(self) -> Any:
-        if self._index >= len(self._rows):
-            return None
-        row = self._rows[self._index]
-        self._index += 1
-        return row
-
-
 __all__ = ["MetricsCollectorResource"]
