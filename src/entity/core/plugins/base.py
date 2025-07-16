@@ -189,7 +189,7 @@ class Plugin(BasePlugin):
     async def shutdown(self) -> None:
         """Release any resources held by the plugin."""
 
-        if self.is_shutdown:
+        if not self.is_initialized or self.is_shutdown:
             return
 
         await self._on_shutdown()
