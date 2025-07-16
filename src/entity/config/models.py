@@ -7,6 +7,22 @@ import os
 import socket
 
 from pydantic import BaseModel, Field, validator
+
+
+def _parse_size_value(value: str | int | None) -> int | None:
+    """Parse size strings like '1KB' into integers."""
+    if value is None:
+        return None
+    if isinstance(value, int):
+        return value
+    multipliers = {"kb": 1024, "mb": 1024**2, "gb": 1024**3}
+    value = value.strip().lower()
+    for suffix, mult in multipliers.items():
+        if value.endswith(suffix):
+            return int(float(value[:-2]) * mult)
+    return int(value)
+
+
 from entity.pipeline.stages import PipelineStage
 from entity.workflows.base import Workflow
 
@@ -157,10 +173,15 @@ class LogOutputConfig(BaseModel):
     host: str | None = None
     port: int | None = None
     max_size: int | None = None
+    max_bytes: int | None = Field(default=None, alias="max_bytes")
     backup_count: int | None = None
 
     class Config:
         extra = "forbid"
+
+    @validator("max_size", "max_bytes", pre=True)
+    def _validate_size(cls, value: int | str | None) -> int | None:
+        return _parse_size_value(value)
 
 
 class LoggingConfig(BaseModel):
