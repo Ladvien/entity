@@ -44,10 +44,13 @@ from plugins.builtin.resources.pg_vector_store import PgVectorStore
 from entity.resources.interfaces.duckdb_resource import DuckDBResource
 from entity.resources.interfaces.database import DatabaseResource
 from entity.core.resources.container import ResourceContainer
+import shutil
 
 
 def _require_docker():
     pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
+    if shutil.which("docker") is None:
+        pytest.skip("Docker binary not available", allow_module_level=True)
 
 
 def _socket_open(host: str, port: int) -> bool:

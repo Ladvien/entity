@@ -1,7 +1,6 @@
 import pytest
 from datetime import datetime
 
-from tests.conftest import AsyncPGDatabase
 from entity.cli import EntityCLI
 from entity.core.agent import Agent, _AgentRuntime
 from entity.core.state import ConversationEntry

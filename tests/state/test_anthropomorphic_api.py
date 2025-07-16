@@ -1,5 +1,3 @@
-import types
-
 import pytest
 
 from entity.core.context import PluginContext
