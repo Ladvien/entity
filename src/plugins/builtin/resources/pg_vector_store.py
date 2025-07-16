@@ -35,8 +35,8 @@ class PgVectorStore(VectorStoreResource):
             return
         self._db = self.database
         async with self.database.connection() as conn:
-            await register_vector(conn)
             await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
+            await register_vector(conn)
             await conn.execute(
                 f"CREATE TABLE IF NOT EXISTS {self._table} (text TEXT, embedding vector({self._dim}))"
             )
