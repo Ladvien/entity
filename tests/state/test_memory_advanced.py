@@ -1,11 +1,43 @@
 import pytest
 
+from tests.conftest import AsyncPGDatabase
 from entity.resources import Memory
+<<<<<<< HEAD
 
 
 @pytest.fixture()
 async def memory(pg_vector_memory: Memory) -> Memory:
     yield pg_vector_memory
+=======
+from entity.resources.interfaces.vector_store import VectorStoreResource
+
+
+class DummyVector(VectorStoreResource):
+    def __init__(self) -> None:
+        super().__init__({})
+        self.entries: list[str] = []
+
+    async def add_embedding(self, text: str) -> None:
+        self.entries.append(text)
+
+    async def query_similar(self, query: str, k: int = 5):
+        return [t for t in self.entries if query in t][:k]
+
+
+@pytest.fixture()
+async def memory(postgres_dsn: str) -> Memory:
+    db = AsyncPGDatabase(postgres_dsn)
+    mem = Memory(config={})
+    mem.database = db
+    mem.vector_store = DummyVector()
+    await mem.initialize()
+    try:
+        yield mem
+    finally:
+        async with db.connection() as conn:
+            await conn.execute(f"DROP TABLE IF EXISTS {mem._kv_table}")
+            await conn.execute(f"DROP TABLE IF EXISTS {mem._history_table}")
+>>>>>>> pr-1693
 
 
 @pytest.mark.asyncio
