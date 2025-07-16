@@ -6,6 +6,8 @@ import asyncio
 import socket
 from pathlib import Path
 from contextlib import asynccontextmanager
+import shutil
+import subprocess
 
 import time
 from urllib.parse import urlparse
@@ -47,7 +49,21 @@ from entity.core.resources.container import ResourceContainer
 
 
 def _require_docker():
+    """Skip tests when Docker or pytest-docker isn't available."""
     pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
+
+    if shutil.which("docker") is None:
+        pytest.skip("docker executable not found", allow_module_level=True)
+
+    try:
+        subprocess.run(
+            ["docker", "info"],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except Exception:
+        pytest.skip("docker daemon not running", allow_module_level=True)
 
 
 def _socket_open(host: str, port: int) -> bool:
