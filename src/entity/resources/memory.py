@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
-import inspect
 import json
 import logging
 
@@ -13,6 +12,7 @@ from .interfaces.database import DatabaseResource as DatabaseInterface
 from .interfaces.vector_store import (
     VectorStoreResource as VectorStoreInterface,
 )
+from .sql_utils import _execute, _maybe_await
 from ..core.plugins import ValidationResult
 from entity.config.models import MemoryConfig
 from pydantic import ValidationError
@@ -365,6 +365,7 @@ class Memory(AgentResource):
     remember = store_persistent
     recall = fetch_persistent
     forget = delete_persistent
+<<<<<<< HEAD
 
 
 def _detect_paramstyle(conn: Any) -> str:
@@ -455,3 +456,5 @@ async def _maybe_await(value: Any) -> Any:
     if inspect.isawaitable(value):
         return await value
     return value
+=======
+>>>>>>> pr-1730
