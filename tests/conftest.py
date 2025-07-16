@@ -12,6 +12,7 @@ import subprocess
 import time
 from urllib.parse import urlparse
 import asyncpg
+from pgvector.asyncpg import register_vector
 import pytest
 from dotenv import load_dotenv
 
