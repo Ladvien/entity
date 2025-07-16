@@ -136,6 +136,9 @@ class _AgentBuilder:
     ) -> None:
         """Validate and register ``plugin`` for its resolved stages."""
 
+        # Ensure built-in resources exist for dependency validation
+        self._register_default_resources()
+
         if not hasattr(plugin, "_execute_impl") or not callable(
             getattr(plugin, "_execute_impl")
         ):
