@@ -168,6 +168,7 @@ class AsyncPGDatabase(DatabaseResource):
 
         wait_for_port(host, port)
         conn = await asyncpg.connect(self._dsn)
+        await register_vector(conn)
         try:
             yield conn
         finally:
