@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List
 import inspect
 import json
+import logging
 
 from .base import AgentResource
 from .interfaces.database import DatabaseResource as DatabaseInterface
@@ -17,6 +18,8 @@ from entity.config.models import MemoryConfig
 from pydantic import ValidationError
 from ..core.state import ConversationEntry
 from entity.pipeline.errors import InitializationError, ResourceInitializationError
+
+logger = logging.getLogger(__name__)
 
 
 class Memory(AgentResource):
@@ -421,8 +424,8 @@ async def _execute(conn: Any, sql: str, params: Any | None = None) -> Any:
     style = _detect_paramstyle(conn)
     sql = _convert_placeholders(sql, style)
 
-    print(f"🧪 SQL: {sql}")
-    print(f"🧪 Params: {params}")
+    logger.debug("SQL: %s", sql)
+    logger.debug("Params: %s", params)
 
     asyncpg_like = hasattr(conn, "fetch")
     is_select = sql.lstrip().lower().startswith(("select", "with"))
