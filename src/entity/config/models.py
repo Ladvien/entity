@@ -159,6 +159,9 @@ class LogOutputConfig(BaseModel):
     max_size: int | None = None
     backup_count: int | None = None
 
+    class Config:
+        extra = "forbid"
+
 
 class LoggingConfig(BaseModel):
     """Settings controlling the :class:`LoggingResource`."""
@@ -166,6 +169,9 @@ class LoggingConfig(BaseModel):
     host_name: str = Field(default_factory=socket.gethostname)
     process_id: int = Field(default_factory=os.getpid)
     outputs: list[LogOutputConfig] = Field(default_factory=lambda: [LogOutputConfig()])
+
+    class Config:
+        extra = "forbid"
 
 
 class EntityConfig(BaseModel):
