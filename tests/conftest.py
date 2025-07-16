@@ -4,6 +4,7 @@ import os
 import sys
 import asyncio
 import socket
+import shutil
 from pathlib import Path
 from contextlib import asynccontextmanager
 
@@ -48,6 +49,8 @@ from entity.core.resources.container import ResourceContainer
 
 def _require_docker():
     pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
+    if shutil.which("docker") is None:
+        pytest.skip("Docker executable not found", allow_module_level=True)
 
 
 def _socket_open(host: str, port: int) -> bool:
