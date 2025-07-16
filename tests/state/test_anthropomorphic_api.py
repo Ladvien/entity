@@ -2,34 +2,9 @@ import types
 
 import pytest
 
-from tests.conftest import AsyncPGDatabase
 from entity.core.context import PluginContext
 from entity.core.state import PipelineState
 from entity.resources import Memory
-<<<<<<< HEAD
-
-
-class DummyRegistries:
-    def __init__(self, mem: Memory) -> None:
-        self.resources = {"memory": mem}
-        self.tools = types.SimpleNamespace()
-
-
-@pytest.fixture()
-async def context(postgres_dsn: str) -> PluginContext:
-    db = AsyncPGDatabase(postgres_dsn)
-    mem = Memory(config={})
-    mem.database = db
-    mem.vector_store = None
-    await mem.initialize()
-    regs = DummyRegistries(mem)
-    try:
-        yield PluginContext(PipelineState(conversation=[]), regs)
-    finally:
-        async with db.connection() as conn:
-            await conn.execute(f"DROP TABLE IF EXISTS {mem._kv_table}")
-            await conn.execute(f"DROP TABLE IF EXISTS {mem._history_table}")
-=======
 from entity.core.resources.container import ResourceContainer
 from entity.core.registries import SystemRegistries, ToolRegistry, PluginRegistry
 
@@ -44,7 +19,6 @@ async def context(memory_db: Memory) -> PluginContext:
         plugins=PluginRegistry(),
     )
     return PluginContext(PipelineState(conversation=[]), regs)
->>>>>>> pr-1696
 
 
 @pytest.mark.asyncio

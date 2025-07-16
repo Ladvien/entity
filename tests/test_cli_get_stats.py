@@ -8,24 +8,11 @@ from entity.core.state import ConversationEntry
 from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
 from entity.core.resources.container import ResourceContainer
 from entity.resources import Memory
-<<<<<<< HEAD
 
 
 @pytest.mark.asyncio
 async def test_cli_get_conversation_stats(capsys, pg_memory: Memory) -> None:
     mem = pg_memory
-=======
-from tests.resources.test_memory import DummyVector
-
-
-@pytest.mark.asyncio
-async def test_cli_get_conversation_stats(capsys, postgres_dsn: str) -> None:
-    db = AsyncPGDatabase(postgres_dsn)
-    mem = Memory(config={})
-    mem.database = db
-    mem.vector_store = DummyVector()
-    await mem.initialize()
->>>>>>> pr-1693
     await mem.add_conversation_entry(
         "c1",
         ConversationEntry(content="hi", role="user", timestamp=datetime.now()),
@@ -48,6 +35,6 @@ async def test_cli_get_conversation_stats(capsys, postgres_dsn: str) -> None:
     assert result == 0
     assert "conversations" in captured
 
-    async with db.connection() as conn:
+    async with mem.database.connection() as conn:
         await conn.execute(f"DROP TABLE IF EXISTS {mem._kv_table}")
         await conn.execute(f"DROP TABLE IF EXISTS {mem._history_table}")

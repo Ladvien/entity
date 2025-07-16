@@ -1,10 +1,11 @@
+import sqlite3
+from contextlib import asynccontextmanager
 from datetime import datetime
 
 import pytest
 
 from tests.conftest import AsyncPGDatabase
 from entity.resources import Memory
-<<<<<<< HEAD
 from entity.resources.interfaces.database import DatabaseResource
 
 from entity.core.state import ConversationEntry
@@ -27,26 +28,6 @@ class SqliteDB(DatabaseResource):
 
     def get_connection_pool(self):
         return self.conn
-=======
-from entity.resources.interfaces.vector_store import VectorStoreResource
-from entity.core.state import ConversationEntry
-
-
-class DummyVector(VectorStoreResource):
-    def __init__(self, results: list[str] | None = None) -> None:
-        super().__init__({})
-        self.results = results or []
-        self.queries: list[str] = []
-        self.added: list[str] = []
-
-    async def add_embedding(self, text: str) -> None:
-        self.added.append(text)
-
-    async def query_similar(self, query: str, k: int = 5):
-        self.queries.append(query)
-        candidates = self.results + self.added
-        return [t for t in candidates if query in t][:k]
->>>>>>> pr-1693
 
 
 @pytest.fixture()
@@ -65,23 +46,8 @@ async def simple_memory(postgres_dsn: str) -> Memory:
 
 
 @pytest.fixture()
-<<<<<<< HEAD
 async def vector_memory(pg_vector_memory: Memory) -> Memory:
     yield pg_vector_memory
-=======
-async def vector_memory(postgres_dsn: str) -> Memory:
-    db = AsyncPGDatabase(postgres_dsn)
-    mem = Memory(config={})
-    mem.database = db
-    mem.vector_store = DummyVector(["hello world"])
-    await mem.initialize()
-    try:
-        yield mem
-    finally:
-        async with db.connection() as conn:
-            await conn.execute(f"DROP TABLE IF EXISTS {mem._kv_table}")
-            await conn.execute(f"DROP TABLE IF EXISTS {mem._history_table}")
->>>>>>> pr-1693
 
 
 @pytest.mark.asyncio
