@@ -35,10 +35,12 @@ plugins:
   agent_resources:
     memory:
       type: entity.resources.memory:Memory
-      dependencies: [database, vector_store]
+      dependencies: [database]
     llm:
       type: entity.resources.llm:LLM
       provider: echo
+    logging:
+      type: entity.resources.logging:LoggingResource
     storage:
       type: entity.resources.storage:Storage
   # filesystem:
@@ -70,7 +72,7 @@ plugins:
     calculator:
       type: user_plugins.tools.calculator_tool:CalculatorTool
       precision: 10
-  adapters:
+  adapters: {}
     # http:
     #   type: plugins.builtin.adapters.http:HTTPAdapter
     #   stages: [parse, deliver]
