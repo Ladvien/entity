@@ -4,6 +4,8 @@ import pytest
 
 from entity.core.context import PluginContext
 from entity.core.state import ConversationEntry, PipelineState
+from entity.core.registries import SystemRegistries, PluginRegistry, ToolRegistry
+from entity.core.resources.container import ResourceContainer
 
 
 class DummyTool:
@@ -11,20 +13,21 @@ class DummyTool:
         return params
 
 
-class DummyRegistries:
-    def __init__(self):
-        self.resources = {}
-        tool = DummyTool()
-        self.tools = types.SimpleNamespace(
-            get=lambda name: tool if name == "dummy" else None,
-            discover=lambda **filters: [("dummy", tool)],
-        )
-
-
 def make_context(state=None):
     if state is None:
         state = PipelineState(conversation=[])
-    return PluginContext(state, DummyRegistries())
+    container = ResourceContainer()
+    tool = DummyTool()
+    registry = ToolRegistry()
+    asyncio.run(registry.add("dummy", tool.execute_function))
+    return PluginContext(
+        state,
+        SystemRegistries(
+            resources=container,
+            tools=registry,
+            plugins=PluginRegistry(),
+        ),
+    )
 
 
 @pytest.mark.asyncio

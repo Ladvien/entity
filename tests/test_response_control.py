@@ -3,23 +3,28 @@ import pytest
 
 from entity.core.context import PluginContext
 from entity.core.plugins import PromptPlugin
-from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
+from entity.core.registries import (
+    PluginRegistry,
+    SystemRegistries,
+    ToolRegistry,
+)
 from entity.core.state import ConversationEntry
 from entity.pipeline.state import PipelineState
 from entity.pipeline.stages import PipelineStage
 from entity.pipeline.pipeline import execute_pipeline
 from entity.pipeline.errors import PluginContextError
-
-
-class DummyRegs:
-    def __init__(self) -> None:
-        self.resources = {}
-        self.tools = ToolRegistry()
+from entity.core.resources.container import ResourceContainer
 
 
 def make_context(stage: PipelineStage) -> PluginContext:
     state = PipelineState(conversation=[])
-    ctx = PluginContext(state, DummyRegs())
+    container = ResourceContainer()
+    ctx = PluginContext(
+        state,
+        SystemRegistries(
+            resources=container, tools=ToolRegistry(), plugins=PluginRegistry()
+        ),
+    )
     ctx.set_current_stage(stage)
     ctx.set_current_plugin("test")
     return ctx
@@ -58,7 +63,9 @@ async def test_pipeline_terminates_after_say() -> None:
     plugins = PluginRegistry()
     await plugins.register_plugin_for_stage(Thinker({}), PipelineStage.THINK, "t")
     await plugins.register_plugin_for_stage(Responder({}), PipelineStage.OUTPUT, "r")
-    regs = SystemRegistries(resources={}, tools=ToolRegistry(), plugins=plugins)
+    regs = SystemRegistries(
+        resources=ResourceContainer(), tools=ToolRegistry(), plugins=plugins
+    )
     state = PipelineState(
         conversation=[ConversationEntry("hi", "user", datetime.now())],
         pipeline_id="test",
@@ -72,7 +79,9 @@ async def test_pipeline_max_iteration_error() -> None:
     plugins = PluginRegistry()
     await plugins.register_plugin_for_stage(Thinker({}), PipelineStage.THINK, "t")
     await plugins.register_plugin_for_stage(SilentOutput({}), PipelineStage.OUTPUT, "o")
-    regs = SystemRegistries(resources={}, tools=ToolRegistry(), plugins=plugins)
+    regs = SystemRegistries(
+        resources=ResourceContainer(), tools=ToolRegistry(), plugins=plugins
+    )
     state = PipelineState(
         conversation=[ConversationEntry("hi", "user", datetime.now())],
         pipeline_id="pid",

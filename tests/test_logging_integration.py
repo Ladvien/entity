@@ -8,6 +8,8 @@ from entity.core.state import PipelineState
 from entity.core.plugins import Plugin, ResourcePlugin
 from entity.core.stages import PipelineStage
 from entity.resources.logging import LoggingResource
+from entity.core.resources.container import ResourceContainer
+from entity.core.registries import SystemRegistries, ToolRegistry, PluginRegistry
 
 
 class DummyPlugin(Plugin):
@@ -36,12 +38,13 @@ async def test_plugin_logging(tmp_path):
     )
     await logger.initialize()
     plugin = DummyPlugin({})
+    container = ResourceContainer()
+    await container.add("logging", logger)
     plugin.logging = logger
-    registries = types.SimpleNamespace(
-        resources=types.SimpleNamespace(get=lambda _n: None),
-        tools=types.SimpleNamespace(),
-        plugins=None,
-        validators=None,
+    registries = SystemRegistries(
+        resources=container,
+        tools=ToolRegistry(),
+        plugins=PluginRegistry(),
     )
     state = PipelineState(conversation=[], pipeline_id="123")
     context = PluginContext(state, registries)

@@ -6,6 +6,8 @@ from entity.core.state import PipelineState
 from entity.core.stages import PipelineStage
 from entity.core.plugins import Plugin
 from entity.resources.metrics import MetricsCollectorResource
+from entity.core.resources.container import ResourceContainer
+from entity.core.registries import SystemRegistries, ToolRegistry
 
 
 class DummyPlugin(Plugin):
@@ -25,12 +27,11 @@ async def test_plugin_metrics_success():
     metrics = MetricsCollectorResource({})
     await metrics.initialize()
     plugin = DummyPlugin({})
+    container = ResourceContainer()
+    await container.add("metrics_collector", metrics)
     plugin.metrics_collector = metrics
-    registries = types.SimpleNamespace(
-        resources=types.SimpleNamespace(get=lambda _n: None),
-        tools=types.SimpleNamespace(),
-        plugins=None,
-        validators=None,
+    registries = SystemRegistries(
+        resources=container, tools=ToolRegistry(), plugins=PluginRegistry()
     )
     state = PipelineState(conversation=[], pipeline_id="123")
     context = PluginContext(state, registries)
@@ -54,12 +55,11 @@ async def test_plugin_metrics_failure():
     metrics = MetricsCollectorResource({})
     await metrics.initialize()
     plugin = FailPlugin({})
+    container = ResourceContainer()
+    await container.add("metrics_collector", metrics)
     plugin.metrics_collector = metrics
-    registries = types.SimpleNamespace(
-        resources=types.SimpleNamespace(get=lambda _n: None),
-        tools=types.SimpleNamespace(),
-        plugins=None,
-        validators=None,
+    registries = SystemRegistries(
+        resources=container, tools=ToolRegistry(), plugins=PluginRegistry()
     )
     state = PipelineState(conversation=[], pipeline_id="123")
     context = PluginContext(state, registries)
