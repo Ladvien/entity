@@ -132,6 +132,7 @@ def wait_for_port(host: str, port: int, timeout: float = 30.0):
 
 
 @pytest.fixture(autouse=True)
+<<<<<<< HEAD
 async def _clear_pg_memory(request):
 <<<<<<< HEAD
     if not _require_docker():
@@ -141,6 +142,17 @@ async def _clear_pg_memory(request):
         yield
         return
     pg_memory = await request.getfixturevalue("pg_memory")
+=======
+async def _clear_pg_memory(request: pytest.FixtureRequest, pg_memory: Memory):
+    """Clear Postgres-backed memory only for tests that request it."""
+
+    if (
+        "pg_memory" not in request.fixturenames
+        and "pg_vector_memory" not in request.fixturenames
+    ):
+        return
+
+>>>>>>> pr-1712
     async with pg_memory.database.connection() as conn:
         await conn.execute(f"DELETE FROM {pg_memory._kv_table}")
         await conn.execute(f"DELETE FROM {pg_memory._history_table}")
