@@ -8,6 +8,8 @@ from pathlib import Path
 from contextlib import asynccontextmanager
 
 import time
+import shutil
+import subprocess
 from urllib.parse import urlparse
 import asyncpg
 import pytest
@@ -48,6 +50,12 @@ from entity.core.resources.container import ResourceContainer
 
 def _require_docker():
     pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
+    if shutil.which("docker") is None:
+        pytest.skip("Docker is required for Docker-based tests.")
+    try:
+        subprocess.run(["docker", "version"], check=True, capture_output=True)
+    except Exception:
+        pytest.skip("Docker command not available or daemon not running")
 
 
 def _socket_open(host: str, port: int) -> bool:
@@ -80,7 +88,11 @@ def wait_for_port(host: str, port: int, timeout: float = 30.0):
 
 
 @pytest.fixture(autouse=True)
-async def _clear_pg_memory(pg_memory: Memory):
+async def _clear_pg_memory(request):
+    if shutil.which("docker") is None:
+        yield
+        return
+    pg_memory: Memory = await request.getfixturevalue("pg_memory")
     async with pg_memory.database.connection() as conn:
         await conn.execute(f"DELETE FROM {pg_memory._kv_table}")
         await conn.execute(f"DELETE FROM {pg_memory._history_table}")
