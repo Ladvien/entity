@@ -52,6 +52,14 @@ documentation.
 
 ## Running Tests
 
+The test suite depends on **Docker** and the **`pytest-docker`** plugin. Ensure
+the services are up before running the tests:
+
+```bash
+docker compose up -d
+poetry run poe test
+```
+
 `pytest-docker` is required for the integration fixtures and Docker must be
 running. The plugin comes with the development dependencies:
 
@@ -69,13 +77,6 @@ pip install pytest-docker
 
 Before starting Docker, copy `.env.example` to `.env` and adjust the values for
 your local setup. The compose files read this file automatically.
-
-Start Docker and then run the poe task:
-
-```bash
-docker compose up -d  # ensure services are running
-poetry run poe test
-```
 
 `pytest-docker` exposes the `docker_ip` and `docker_services` fixtures used by
 the integration tests. Make sure the optional dependencies `pyyaml` and

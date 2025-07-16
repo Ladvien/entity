@@ -36,6 +36,13 @@ This project uses **Poetry + Pytest** with a focus on **realistic, integration-d
   If it's missing, `tests/conftest.py` skips all Docker-based tests at import time
   with a clear message: "pytest-docker is required for Docker-based fixtures. Run 'poetry install --with dev' to install it."
 
+Start the services and run the tests:
+
+```bash
+docker compose up -d
+poetry run poe test
+```
+
 ---
 
 ## 🧼 Test Philosophy
