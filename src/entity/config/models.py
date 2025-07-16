@@ -90,7 +90,7 @@ class ServerConfig(BaseModel):
 class ToolRegistryConfig(BaseModel):
     """Options controlling tool execution."""
 
-    concurrency_limit: int = 5
+    concurrency_limit: int = Field(ge=1, default=5)
 
 
 class CircuitBreakerConfig(BaseModel):
