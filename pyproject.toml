@@ -109,6 +109,10 @@ unit = { cmd = "pytest tests/unit", env = { PYTHONPATH = "src" } }
 integration = { cmd = "pytest tests/integration", env = { PYTHONPATH = "src" } }
 e2e = { cmd = "pytest tests/e2e", env = { PYTHONPATH = "src" } }
 
+start-test-services = { cmd = "docker compose -f tests/docker-compose.yml up -d" }
+stop-test-services = { cmd = "docker compose -f tests/docker-compose.yml down -v" }
+test-with-docker = ["start-test-services", "test", "stop-test-services"]
+
 setup-dev = { cmd = "poetry install --with dev" }
 
 [tool.poe.tasks.lint]

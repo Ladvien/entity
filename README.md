@@ -52,12 +52,11 @@ documentation.
 
 ## Running Tests
 
-The test suite depends on **Docker** and the **`pytest-docker`** plugin. Ensure
-the services are up before running the tests:
+The test suite depends on **Docker** and the **`pytest-docker`** plugin. Use the
+provided Poe task to spin up services and run the tests:
 
 ```bash
-docker compose up -d
-poetry run poe test
+poetry run poe test-with-docker
 ```
 
 `pytest-docker` is required for the integration fixtures and Docker must be
