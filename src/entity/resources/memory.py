@@ -183,17 +183,8 @@ class Memory(AgentResource):
         self, key_value_pairs: Dict[str, Any], *, user_id: str = "default"
     ) -> None:
         """Store multiple key/value pairs efficiently."""
-        if self.database is None:
-            return
-        rows = [
-            (f"{user_id}:{key}", json.dumps(value))
-            for key, value in key_value_pairs.items()
-        ]
-        async with self.database.connection() as conn:
-            conn.executemany(
-                f"INSERT OR REPLACE INTO {self._kv_table} VALUES (?, ?)", rows
-            )
-            self._maybe_commit(conn)
+        for key, value in key_value_pairs.items():
+            await self.store_persistent(key, value, user_id=user_id)
 
     async def store_persistent(
         self, key: str, value: Any, *, user_id: str = "default"
