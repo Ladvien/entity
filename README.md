@@ -53,7 +53,8 @@ documentation.
 ## Running Tests
 
 The test suite depends on **Docker** and the **`pytest-docker`** plugin. Use the
-provided Poe task to spin up services and run the tests:
+provided Poe task to spin up services and run the tests. The task now runs a
+shell script that tears down containers even if the tests fail:
 
 ```bash
 poetry run poe test-with-docker
