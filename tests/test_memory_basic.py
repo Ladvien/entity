@@ -1,31 +1,11 @@
-import sqlite3
-from contextlib import asynccontextmanager
 from datetime import datetime
 
 import pytest
+
+from tests.conftest import AsyncPGDatabase
 from entity.resources import Memory
-from entity.resources.interfaces.database import DatabaseResource
 from entity.resources.interfaces.vector_store import VectorStoreResource
 from entity.core.state import ConversationEntry
-
-
-class SqliteDB(DatabaseResource):
-    def __init__(self) -> None:
-        super().__init__({})
-        self.conn = sqlite3.connect(":memory:")
-        self.conn.execute(
-            "CREATE TABLE IF NOT EXISTS memory_kv (key TEXT PRIMARY KEY, value TEXT)"
-        )
-        self.conn.execute(
-            "CREATE TABLE IF NOT EXISTS conversation_history (conversation_id TEXT, role TEXT, content TEXT, metadata TEXT, timestamp TEXT)"
-        )
-
-    @asynccontextmanager
-    async def connection(self):
-        yield self.conn
-
-    def get_connection_pool(self):
-        return self.conn
 
 
 class DummyVector(VectorStoreResource):
@@ -45,21 +25,33 @@ class DummyVector(VectorStoreResource):
 
 
 @pytest.fixture()
-async def simple_memory() -> Memory:
+async def simple_memory(postgres_dsn: str) -> Memory:
+    db = AsyncPGDatabase(postgres_dsn)
     mem = Memory(config={})
-    mem.database = SqliteDB()
+    mem.database = db
     mem.vector_store = None
     await mem.initialize()
-    yield mem
+    try:
+        yield mem
+    finally:
+        async with db.connection() as conn:
+            await conn.execute(f"DROP TABLE IF EXISTS {mem._kv_table}")
+            await conn.execute(f"DROP TABLE IF EXISTS {mem._history_table}")
 
 
 @pytest.fixture()
-async def vector_memory() -> Memory:
+async def vector_memory(postgres_dsn: str) -> Memory:
+    db = AsyncPGDatabase(postgres_dsn)
     mem = Memory(config={})
-    mem.database = SqliteDB()
+    mem.database = db
     mem.vector_store = DummyVector(["hello world"])
     await mem.initialize()
-    yield mem
+    try:
+        yield mem
+    finally:
+        async with db.connection() as conn:
+            await conn.execute(f"DROP TABLE IF EXISTS {mem._kv_table}")
+            await conn.execute(f"DROP TABLE IF EXISTS {mem._history_table}")
 
 
 @pytest.mark.asyncio

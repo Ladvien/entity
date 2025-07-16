@@ -1,19 +1,21 @@
 import pytest
 from datetime import datetime
 
+from tests.conftest import AsyncPGDatabase
 from entity.cli import EntityCLI
 from entity.core.agent import Agent, _AgentRuntime
 from entity.core.state import ConversationEntry
 from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
 from entity.core.resources.container import ResourceContainer
 from entity.resources import Memory
-from tests.resources.test_memory import SqliteDB, DummyVector
+from tests.resources.test_memory import DummyVector
 
 
 @pytest.mark.asyncio
-async def test_cli_get_conversation_stats(capsys) -> None:
+async def test_cli_get_conversation_stats(capsys, postgres_dsn: str) -> None:
+    db = AsyncPGDatabase(postgres_dsn)
     mem = Memory(config={})
-    mem.database = SqliteDB()
+    mem.database = db
     mem.vector_store = DummyVector()
     await mem.initialize()
     await mem.add_conversation_entry(
@@ -37,3 +39,7 @@ async def test_cli_get_conversation_stats(capsys) -> None:
     captured = capsys.readouterr().out
     assert result == 0
     assert "conversations" in captured
+
+    async with db.connection() as conn:
+        await conn.execute(f"DROP TABLE IF EXISTS {mem._kv_table}")
+        await conn.execute(f"DROP TABLE IF EXISTS {mem._history_table}")
