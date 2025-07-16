@@ -84,6 +84,9 @@ skipped so the rest of the suite can continue.
 Before starting Docker, copy `.env.example` to `.env` and adjust the values for
 your local setup. The compose files read this file automatically.
 
+The Postgres service uses the `pgvector/pgvector:pg16` image so the `vector`
+extension is available without additional setup.
+
 ### Integration Tests & Docker
 
 Integration tests spin up containers defined in `tests/docker-compose.yml`.
