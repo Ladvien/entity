@@ -17,7 +17,9 @@ def compose_workflows(*workflows: Workflow) -> Workflow:
     for wf in workflows:
         for stage, plugins in wf.stages.items():
             mapping.setdefault(stage, []).extend(list(plugins))
-    return Workflow(mapping)
+    wf_obj = Workflow(mapping)
+    wf_obj.stage_map = mapping
+    return wf_obj
 
 
 def merge_workflows(*workflows: Workflow) -> Workflow:
@@ -27,4 +29,6 @@ def merge_workflows(*workflows: Workflow) -> Workflow:
     for wf in workflows:
         for stage, plugins in wf.stages.items():
             mapping[stage] = list(plugins)
-    return Workflow(mapping)
+    wf_obj = Workflow(mapping)
+    wf_obj.stage_map = mapping
+    return wf_obj
