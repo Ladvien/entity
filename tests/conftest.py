@@ -46,8 +46,15 @@ from entity.resources.interfaces.database import DatabaseResource
 from entity.core.resources.container import ResourceContainer
 
 
+import shutil
+
+
 def _require_docker():
     pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
+    if shutil.which("docker") is None:
+        pytest.skip(
+            "Docker is required for Docker-based tests.", allow_module_level=True
+        )
 
 
 def _socket_open(host: str, port: int) -> bool:
@@ -80,7 +87,10 @@ def wait_for_port(host: str, port: int, timeout: float = 30.0):
 
 
 @pytest.fixture(autouse=True)
-async def _clear_pg_memory(pg_memory: Memory):
+async def _clear_pg_memory(request):
+    if shutil.which("docker") is None:
+        return
+    pg_memory: Memory = request.getfixturevalue("pg_memory")
     async with pg_memory.database.connection() as conn:
         await conn.execute(f"DELETE FROM {pg_memory._kv_table}")
         await conn.execute(f"DELETE FROM {pg_memory._history_table}")

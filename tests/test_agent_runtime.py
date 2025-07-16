@@ -37,11 +37,11 @@ async def test_builder_runtime_executes_workflow():
             PipelineStage.OUTPUT: ["EchoPlugin"],
         }
     )
-    pipeline = Pipeline(builder=builder, workflow=wf)
+    agent.pipeline = Pipeline(builder=builder, workflow=wf)
     agent.register_resource("database_backend", DuckDBInfrastructure, {}, layer=1)
     agent.register_resource("database", DuckDBResource, {}, layer=2)
     agent.register_resource("vector_store", DuckDBVectorStore, {}, layer=2)
-    runtime = await pipeline.build_runtime()
+    runtime = await agent.build_runtime()
     result = await runtime.handle("hello")
     assert result == "hello!"
 
@@ -58,13 +58,15 @@ async def test_agent_handle_runs_workflow():
     agent.register_resource("database_backend", DuckDBInfrastructure, {}, layer=1)
     agent.register_resource("database", DuckDBResource, {}, layer=2)
     agent.register_resource("vector_store", DuckDBVectorStore, {}, layer=2)
-    result = await agent.handle("bye")
+    runtime = await agent.build_runtime()
+    result = await runtime.handle("bye")
     assert result == "bye!"
 
 
 @pytest.mark.asyncio
 async def test_builder_registers_default_resources() -> None:
     agent = Agent()
+    builder = agent.builder
     agent.register_resource("database_backend", DuckDBInfrastructure, {}, layer=1)
     agent.register_resource("database", DuckDBResource, {}, layer=2)
     agent.register_resource("vector_store", DuckDBVectorStore, {}, layer=2)
