@@ -11,6 +11,8 @@ import shutil
 import subprocess
 
 import time
+import shutil
+import subprocess
 from urllib.parse import urlparse
 import asyncpg
 import shutil
@@ -74,6 +76,7 @@ def _require_docker():
     pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     if not _docker_available():
         pytest.skip(
             "Docker is required for Docker-based fixtures", allow_module_level=True
@@ -100,6 +103,14 @@ def _require_docker():
     if shutil.which("docker") is None:
         pytest.skip("Docker is required for integration tests", allow_module_level=True)
 >>>>>>> pr-1711
+=======
+    if shutil.which("docker") is None:
+        pytest.skip("Docker is required for Docker-based tests.")
+    try:
+        subprocess.run(["docker", "version"], check=True, capture_output=True)
+    except Exception:
+        pytest.skip("Docker command not available or daemon not running")
+>>>>>>> pr-1717
 
 
 def _socket_open(host: str, port: int) -> bool:
@@ -133,6 +144,7 @@ def wait_for_port(host: str, port: int, timeout: float = 30.0):
 
 @pytest.fixture(autouse=True)
 <<<<<<< HEAD
+<<<<<<< HEAD
 async def _clear_pg_memory(request):
 <<<<<<< HEAD
     if not _require_docker():
@@ -153,6 +165,13 @@ async def _clear_pg_memory(request: pytest.FixtureRequest, pg_memory: Memory):
         return
 
 >>>>>>> pr-1712
+=======
+async def _clear_pg_memory(request):
+    if shutil.which("docker") is None:
+        yield
+        return
+    pg_memory: Memory = await request.getfixturevalue("pg_memory")
+>>>>>>> pr-1717
     async with pg_memory.database.connection() as conn:
         await conn.execute(f"DELETE FROM {pg_memory._kv_table}")
         await conn.execute(f"DELETE FROM {pg_memory._history_table}")
