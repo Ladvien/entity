@@ -3,11 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 from contextlib import asynccontextmanager
-import inspect
 import json
 import time
 
 from entity.core.stages import PipelineStage
+from .sql_utils import _execute, _maybe_await
 
 
 @dataclass
@@ -348,64 +348,6 @@ class MetricsCollectorResource(AgentResource):
         async with self.database.connection() as db_conn:
             cursor = await _execute(db_conn, sql, params)
             return await _maybe_await(cursor.fetchall())
-
-
-def _detect_paramstyle(conn: Any) -> str:
-    style = getattr(conn, "paramstyle", None)
-    if style:
-        return style
-    module = inspect.getmodule(conn)
-    name = getattr(module, "__name__", "") if module else ""
-    if name.startswith("asyncpg") or hasattr(conn, "fetchval"):
-        return "numeric"
-    return getattr(module, "paramstyle", "qmark")
-
-
-def _convert_placeholders(sql: str, style: str) -> str:
-    if style in {"format", "pyformat"}:
-        return sql.replace("?", "%s")
-    if style == "numeric":
-        parts = sql.split("?")
-        if len(parts) == 1:
-            return sql
-        new = []
-        for index, part in enumerate(parts[:-1], start=1):
-            new.append(part)
-            new.append(f"${index}")
-        new.append(parts[-1])
-        return "".join(new)
-    return sql
-
-
-async def _execute(conn: Any, sql: str, params: Any | None = None) -> Any:
-    style = _detect_paramstyle(conn)
-    sql = _convert_placeholders(sql, style)
-
-    asyncpg_like = hasattr(conn, "fetch")
-    is_select = sql.lstrip().lower().startswith(("select", "with"))
-
-    if asyncpg_like and is_select:
-        rows = conn.fetch(sql, *params) if params else conn.fetch(sql)
-        if inspect.isawaitable(rows):
-            rows = await rows
-        return _RowCursor(list(rows))
-
-    if not params:
-        result = conn.execute(sql)
-    else:
-        try:
-            result = conn.execute(sql, *params)
-        except Exception:
-            result = conn.execute(sql, params)
-    if inspect.isawaitable(result):
-        result = await result
-    return result
-
-
-async def _maybe_await(value: Any) -> Any:
-    if inspect.isawaitable(value):
-        return await value
-    return value
 
 
 class _RowCursor:
