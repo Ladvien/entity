@@ -1,9 +1,4 @@
-import shutil
-import asyncio
 import pytest
-
-if shutil.which("pg_ctl") is None:  # pragma: no cover - environment check
-    pytest.skip("pg_ctl not installed", allow_module_level=True)
 from datetime import datetime
 from contextlib import asynccontextmanager
 import asyncpg
@@ -16,40 +11,18 @@ from plugins.builtin.resources.pg_vector_store import PgVectorStore
 
 
 @pytest.fixture()
-def prepared_postgres(postgresql_proc, request):
-    """Ensure the test database exists and clean it up afterwards."""
-    from pytest_postgresql.janitor import DatabaseJanitor
-
-    janitor = DatabaseJanitor(
-        user=postgresql_proc.user,
-        host=postgresql_proc.host,
-        port=postgresql_proc.port,
-        dbname=postgresql_proc.dbname,
-        template_dbname=postgresql_proc.template_dbname,
-        version=postgresql_proc.version,
-        password=postgresql_proc.password,
-    )
-
-    janitor.init()
-
-    async def create_extension() -> None:
-        conn = await asyncpg.connect(
-            user=postgresql_proc.user,
-            password=postgresql_proc.password,
-            database=postgresql_proc.dbname,
-            host=postgresql_proc.host,
-            port=postgresql_proc.port,
-        )
-        await conn.execute("CREATE EXTENSION IF NOT EXISTS vector;")
-        await conn.close()
-
-    asyncio.run(create_extension())
-
-    def drop_db():
-        janitor.drop()
-
-    request.addfinalizer(drop_db)
-    return postgresql_proc
+async def prepared_postgres(postgres_dsn: str):
+    """Return DSN for containerized Postgres and ensure a clean state."""
+    async with asyncpg.connect(postgres_dsn) as conn:
+        await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
+        await conn.execute("DROP TABLE IF EXISTS memory_kv")
+        await conn.execute("DROP TABLE IF EXISTS conversation_history")
+        await conn.execute("DROP TABLE IF EXISTS embeddings")
+    yield postgres_dsn
+    async with asyncpg.connect(postgres_dsn) as conn:
+        await conn.execute("DROP TABLE IF EXISTS memory_kv")
+        await conn.execute("DROP TABLE IF EXISTS conversation_history")
+        await conn.execute("DROP TABLE IF EXISTS embeddings")
 
 
 class AsyncPGDatabase(DatabaseResource):
@@ -72,12 +45,7 @@ class AsyncPGDatabase(DatabaseResource):
 
 @pytest.mark.asyncio
 async def test_embedding_roundtrip(prepared_postgres) -> None:
-    if shutil.which("pg_ctl") is None:
-        pytest.skip("pg_ctl not installed")
-    dsn = (
-        f"postgresql://{prepared_postgres.user}:{prepared_postgres.password}@"
-        f"{prepared_postgres.host}:{prepared_postgres.port}/{prepared_postgres.dbname}"
-    )
+    dsn = prepared_postgres
     db = AsyncPGDatabase(dsn)
     store = PgVectorStore({"table": "embeddings"})
     store.database = db
@@ -96,12 +64,7 @@ async def test_embedding_roundtrip(prepared_postgres) -> None:
 
 @pytest.mark.asyncio
 async def test_conversation_integration(prepared_postgres) -> None:
-    if shutil.which("pg_ctl") is None:
-        pytest.skip("pg_ctl not installed")
-    dsn = (
-        f"postgresql://{prepared_postgres.user}:{prepared_postgres.password}@"
-        f"{prepared_postgres.host}:{prepared_postgres.port}/{prepared_postgres.dbname}"
-    )
+    dsn = prepared_postgres
     db = AsyncPGDatabase(dsn)
     store = PgVectorStore({"table": "embeddings"})
     store.database = db
@@ -123,12 +86,7 @@ async def test_conversation_integration(prepared_postgres) -> None:
 
 @pytest.mark.asyncio
 async def test_asyncpg_paramstyle_insert(prepared_postgres) -> None:
-    if shutil.which("pg_ctl") is None:
-        pytest.skip("pg_ctl not installed")
-    dsn = (
-        f"postgresql://{prepared_postgres.user}:{prepared_postgres.password}@"
-        f"{prepared_postgres.host}:{prepared_postgres.port}/{prepared_postgres.dbname}"
-    )
+    dsn = prepared_postgres
     db = AsyncPGDatabase(dsn)
     mem = Memory({})
     mem.database = db
@@ -145,12 +103,7 @@ async def test_asyncpg_paramstyle_insert(prepared_postgres) -> None:
 
 @pytest.mark.asyncio
 async def test_asyncpg_search_and_load(prepared_postgres) -> None:
-    if shutil.which("pg_ctl") is None:
-        pytest.skip("pg_ctl not installed")
-    dsn = (
-        f"postgresql://{prepared_postgres.user}:{prepared_postgres.password}@"
-        f"{prepared_postgres.host}:{prepared_postgres.port}/{prepared_postgres.dbname}"
-    )
+    dsn = prepared_postgres
     db = AsyncPGDatabase(dsn)
     mem = Memory({})
     mem.database = db
@@ -172,12 +125,7 @@ async def test_asyncpg_search_and_load(prepared_postgres) -> None:
 
 @pytest.mark.asyncio
 async def test_asyncpg_conversation_statistics(prepared_postgres) -> None:
-    if shutil.which("pg_ctl") is None:
-        pytest.skip("pg_ctl not installed")
-    dsn = (
-        f"postgresql://{prepared_postgres.user}:{prepared_postgres.password}@"
-        f"{prepared_postgres.host}:{prepared_postgres.port}/{prepared_postgres.dbname}"
-    )
+    dsn = prepared_postgres
     db = AsyncPGDatabase(dsn)
     mem = Memory({})
     mem.database = db
@@ -201,12 +149,7 @@ async def test_asyncpg_conversation_statistics(prepared_postgres) -> None:
 
 @pytest.mark.asyncio
 async def test_asyncpg_save_and_load(prepared_postgres) -> None:
-    if shutil.which("pg_ctl") is None:
-        pytest.skip("pg_ctl not installed")
-    dsn = (
-        f"postgresql://{prepared_postgres.user}:{prepared_postgres.password}@"
-        f"{prepared_postgres.host}:{prepared_postgres.port}/{prepared_postgres.dbname}"
-    )
+    dsn = prepared_postgres
     db = AsyncPGDatabase(dsn)
     mem = Memory({})
     mem.database = db

@@ -10,7 +10,6 @@ from contextlib import asynccontextmanager
 import time
 from urllib.parse import urlparse
 import asyncpg
-import psycopg
 import pytest
 from dotenv import load_dotenv
 
