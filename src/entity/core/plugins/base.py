@@ -282,17 +282,21 @@ class ResourcePlugin(Plugin):
     stages: List[PipelineStage] = []
     dependencies: List[str] = []
 
-    async def _on_initialize(self) -> None:
-        async def _noop() -> None:
-            return None
+    async def initialize(self) -> None:
+        if self.is_initialized and not self.is_shutdown:
+            return
 
-        await self._track_operation(operation="initialize", func=_noop)
+        await self._track_operation(operation="initialize", func=self._on_initialize)
+        self.is_initialized = True
+        self.is_shutdown = False
 
-    async def _on_shutdown(self) -> None:
-        async def _noop() -> None:
-            return None
+    async def shutdown(self) -> None:
+        if self.is_shutdown:
+            return
 
-        await self._track_operation(operation="shutdown", func=_noop)
+        await self._track_operation(operation="shutdown", func=self._on_shutdown)
+        self.is_initialized = False
+        self.is_shutdown = True
 
     async def _track_operation(
         self,
