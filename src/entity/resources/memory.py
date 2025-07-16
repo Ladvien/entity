@@ -5,6 +5,11 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
 import json
+<<<<<<< HEAD
+=======
+import logging
+import inspect
+>>>>>>> pr-1739
 
 from .base import AgentResource
 from .interfaces.database import DatabaseResource as DatabaseInterface
@@ -33,11 +38,14 @@ class Memory(AgentResource):
         self._kv_table = self.config.get("kv_table", "memory_kv")
         self._history_table = self.config.get("history_table", "conversation_history")
 
-    def _maybe_commit(self, conn: Any) -> None:
+    async def _maybe_commit(self, conn: Any) -> None:
         """Commit writes when supported by the connection."""
         commit = getattr(conn, "commit", None)
-        if callable(commit):
-            commit()
+        if not callable(commit):
+            return
+        result = commit()
+        if inspect.isawaitable(result):
+            await result
 
     async def initialize(self) -> None:
         if self.database is None:
@@ -53,7 +61,7 @@ class Memory(AgentResource):
                 conn,
                 f"CREATE TABLE IF NOT EXISTS {self._history_table} (conversation_id TEXT, role TEXT, content TEXT, metadata TEXT, timestamp TEXT)",
             )
-            self._maybe_commit(conn)
+            await self._maybe_commit(conn)
 
     async def _execute_impl(self, context: Any) -> None:  # pragma: no cover - stub
         return None
@@ -76,7 +84,7 @@ class Memory(AgentResource):
             return
         async with self.database.connection() as conn:
             await _execute(conn, f"DELETE FROM {self._kv_table}")
-            self._maybe_commit(conn)
+            await self._maybe_commit(conn)
 
     # ------------------------------------------------------------------
     # Conversation helpers
@@ -109,7 +117,7 @@ class Memory(AgentResource):
                         entry.timestamp.isoformat(),
                     ),
                 )
-            self._maybe_commit(conn)
+            await self._maybe_commit(conn)
 
     async def load_conversation(
         self, pipeline_id: str, *, user_id: str = "default"
@@ -209,7 +217,7 @@ class Memory(AgentResource):
                 sql = f"INSERT OR REPLACE INTO {self._kv_table} VALUES (?, ?)"
 
             await _execute(conn, sql, (namespaced_key, json.dumps(value)))
-            self._maybe_commit(conn)
+            await self._maybe_commit(conn)
 
     async def fetch_persistent(
         self, key: str, default: Any = None, *, user_id: str = "default"
@@ -238,7 +246,7 @@ class Memory(AgentResource):
                 f"DELETE FROM {self._kv_table} WHERE key = ?",
                 (namespaced_key,),
             )
-            self._maybe_commit(conn)
+            await self._maybe_commit(conn)
 
     async def add_conversation_entry(
         self, pipeline_id: str, entry: ConversationEntry, *, user_id: str = "default"
@@ -259,7 +267,7 @@ class Memory(AgentResource):
                     entry.timestamp.isoformat(),
                 ),
             )
-            self._maybe_commit(conn)
+            await self._maybe_commit(conn)
         if self.vector_store is not None:
             await self.vector_store.add_embedding(entry.content)
 
