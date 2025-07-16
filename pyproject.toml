@@ -75,7 +75,7 @@ pytest-postgresql = "^7.0.2"
 pytest-docker = "^3.2.3"
 sphinxcontrib-mermaid = "^1.0.0"
 vulture = "^2.14"
-unimport = "^1.6"
+unimport = {version = "^1.2.1", markers = "python_version < '3.13'"}
 
 [build-system]
 requires = ["poetry-core"]

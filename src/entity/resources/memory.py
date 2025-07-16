@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
 import json
-import logging
 
 from .base import AgentResource
 from .interfaces.database import DatabaseResource as DatabaseInterface
@@ -18,8 +17,6 @@ from entity.config.models import MemoryConfig
 from pydantic import ValidationError
 from ..core.state import ConversationEntry
 from entity.pipeline.errors import InitializationError, ResourceInitializationError
-
-logger = logging.getLogger(__name__)
 
 
 class Memory(AgentResource):
