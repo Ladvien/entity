@@ -26,6 +26,11 @@ try:
 except Exception:
     pytest.skip(REQUIRE_PYTEST_DOCKER, allow_module_level=True)
 
+import shutil
+
+if shutil.which("docker") is None:
+    pytest.skip("Docker is required for integration tests", allow_module_level=True)
+
 
 # -- Setup import path for src/
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
