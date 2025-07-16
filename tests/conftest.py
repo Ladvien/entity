@@ -211,6 +211,24 @@ def resource_container() -> ResourceContainer:
     return container
 
 
+@pytest.fixture()
+async def pg_container(postgres_dsn: str) -> ResourceContainer:
+    """Container with PostgreSQL-backed memory."""
+    container = ResourceContainer()
+    container.register("database", AsyncPGDatabase, {"dsn": postgres_dsn}, layer=2)
+    container.register("memory", Memory, {}, layer=3)
+    await container.build_all()
+    try:
+        yield container
+    finally:
+        memory = container.get("memory")
+        assert memory is not None
+        async with memory.database.connection() as conn:  # type: ignore[union-attr]
+            await conn.execute(f"DROP TABLE IF EXISTS {memory._kv_table}")
+            await conn.execute(f"DROP TABLE IF EXISTS {memory._history_table}")
+        await container.shutdown_all()
+
+
 @pytest.fixture(autouse=True)
 def _clear_metrics_deps():
     from entity.resources.metrics import MetricsCollectorResource

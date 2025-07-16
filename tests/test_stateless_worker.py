@@ -1,118 +1,41 @@
-import json
-import types
-from contextlib import asynccontextmanager
-
 import pytest
-
-from entity.resources import Memory
-from entity.resources.interfaces.database import DatabaseResource
+from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
+from entity.core.resources.container import ResourceContainer
 from entity.pipeline.worker import PipelineWorker
-from entity.core.registries import PluginRegistry
-
-
-class DummyConnection:
-    def __init__(self, store: dict) -> None:
-        self.store = store
-        self._last_result: list | None = None
-
-    def execute(self, query: str, params: tuple | None = None) -> None:
-        params = params if isinstance(params, tuple) else (params,) if params else ()
-        if query.startswith("DELETE FROM conversation_history") and params:
-            cid = params[0]
-            self.store["history"].pop(cid, None)
-        elif query.startswith("INSERT INTO conversation_history") and len(params) == 5:
-            cid, role, content, metadata, ts = params
-            self.store.setdefault("history", {}).setdefault(cid, []).append(
-                (role, content, json.loads(metadata), ts)
-            )
-        elif (
-            query.startswith(
-                "SELECT role, content, metadata, timestamp FROM conversation_history"
-            )
-            and params
-        ):
-            cid = params[0]
-            self._last_result = [
-                (role, content, json.dumps(metadata), ts)
-                for role, content, metadata, ts in self.store.get("history", {}).get(
-                    cid, []
-                )
-            ]
-        return self
-
-    def fetch(self, query: str, params: tuple | None = None) -> list:
-        params = params if isinstance(params, tuple) else (params,) if params else ()
-        if (
-            query.startswith(
-                "SELECT role, content, metadata, timestamp FROM conversation_history"
-            )
-            and params
-        ):
-            cid = params[0]
-            return [
-                (role, content, metadata, ts)
-                for role, content, metadata, ts in self.store.get("history", {}).get(
-                    cid, []
-                )
-            ]
-        return []
-
-    def fetchall(self) -> list:
-        return self._last_result or []
-
-
-class DummyDatabase(DatabaseResource):
-    def __init__(self) -> None:
-        super().__init__({})
-        self.data: dict = {"history": {}}
-
-    @asynccontextmanager
-    async def connection(self):
-        yield DummyConnection(self.data)
-
-    def get_connection_pool(self):
-        return DummyConnection(self.data)
-
-
-class DummyRegistries:
-    def __init__(
-        self, db: DummyDatabase, *, plugins: PluginRegistry | None = None
-    ) -> None:
-        mem = Memory(config={})
-        mem.database = db
-        mem.vector_store = None
-        self.resources = {"memory": mem}
-        self.tools = types.SimpleNamespace()
-        self.plugins = plugins or PluginRegistry()
 
 
 @pytest.mark.asyncio
-async def test_workers_share_state_across_instances() -> None:
-    db = DummyDatabase()
-
-    regs1 = DummyRegistries(db)
-    await regs1.resources["memory"].initialize()
-    worker1 = PipelineWorker(regs1)
+async def test_workers_share_state_across_instances(
+    pg_container: ResourceContainer,
+) -> None:
+    regs = SystemRegistries(
+        resources=pg_container,
+        tools=ToolRegistry(),
+        plugins=PluginRegistry(),
+    )
+    worker1 = PipelineWorker(regs)
     await worker1.execute_pipeline("pipe", "hello", user_id="u1")
 
-    regs2 = DummyRegistries(db)
-    await regs2.resources["memory"].initialize()
-    worker2 = PipelineWorker(regs2)
+    worker2 = PipelineWorker(regs)
     await worker2.execute_pipeline("pipe", "there", user_id="u1")
 
-    history = await regs2.resources["memory"].load_conversation("pipe", user_id="u1")
+    memory = pg_container.get("memory")
+    history = await memory.load_conversation("pipe", user_id="u1")
     assert [e.content for e in history] == ["hello", "there"]
 
 
 @pytest.mark.asyncio
-async def test_worker_does_not_cache_state() -> None:
-    db = DummyDatabase()
-    regs = DummyRegistries(db)
-    await regs.resources["memory"].initialize()
+async def test_worker_does_not_cache_state(pg_container: ResourceContainer) -> None:
+    regs = SystemRegistries(
+        resources=pg_container,
+        tools=ToolRegistry(),
+        plugins=PluginRegistry(),
+    )
     worker = PipelineWorker(regs)
 
     await worker.execute_pipeline("pipe", "first", user_id="u1")
     await worker.execute_pipeline("pipe", "second", user_id="u1")
 
-    history = await regs.resources["memory"].load_conversation("pipe", user_id="u1")
+    memory = pg_container.get("memory")
+    history = await memory.load_conversation("pipe", user_id="u1")
     assert [e.content for e in history] == ["first", "second"]

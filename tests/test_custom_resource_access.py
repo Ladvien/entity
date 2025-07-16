@@ -7,6 +7,7 @@ from entity.resources.logging import LoggingResource
 from entity.resources.metrics import MetricsCollectorResource
 from entity.core.context import PluginContext
 from entity.core.state import PipelineState
+from entity.core.registries import SystemRegistries, ToolRegistry, PluginRegistry
 
 
 class DummyResource(AgentResource):
@@ -27,8 +28,10 @@ async def test_custom_resource_access():
     await container.build_all()
     dummy = container.get("chat_gpt")
 
-    registries = types.SimpleNamespace(
-        resources=container, tools=types.SimpleNamespace()
+    registries = SystemRegistries(
+        resources=container,
+        tools=ToolRegistry(),
+        plugins=PluginRegistry(),
     )
     context = PluginContext(PipelineState(conversation=[]), registries)
 

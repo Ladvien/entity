@@ -1,125 +1,9 @@
-# ruff: noqa
-import json
-import asyncio
-import types
-from contextlib import asynccontextmanager
-
 import pytest
-
-from entity.resources import Memory
-from entity.resources.interfaces.database import DatabaseResource
-
-
-from entity.pipeline import pipeline as pipeline_module  # noqa: E402
-from entity.worker.pipeline_worker import PipelineWorker
+from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
 from entity.core.plugins import Plugin
-from entity.core.registries import PluginRegistry
+from entity.core.resources.container import ResourceContainer
 from entity.pipeline.stages import PipelineStage
-
-
-class DummyMemory:
-    def __init__(self) -> None:
-        self.loaded_id = None
-        self.saved_id = None
-        self.history = []
-
-    async def load_conversation(self, pipeline_id: str, *, user_id: str = "default"):
-        self.loaded_id = f"{user_id}_{pipeline_id}"
-        return list(self.history)
-
-    async def save_conversation(
-        self, pipeline_id: str, history, *, user_id: str = "default"
-    ):
-        self.saved_id = f"{user_id}_{pipeline_id}"
-        self.history = list(history)
-
-
-class DummyConnection:
-    def __init__(self, store: dict) -> None:
-        self.store = store
-
-    def execute(self, query: str, params: tuple | None = None):
-        if query.startswith("DELETE FROM conversation_history"):
-            cid = params
-            self.store["history"].pop(cid, None)
-        elif query.startswith("INSERT INTO conversation_history"):
-            cid, role, content, metadata, ts = params
-            self.store.setdefault("history", {}).setdefault(cid, []).append(
-                (role, content, json.loads(metadata), ts)
-            )
-        elif query.startswith("DELETE FROM kv_store"):
-            key = params
-            self.store.setdefault("kv", {}).pop(key, None)
-        elif query.startswith("INSERT INTO kv_store"):
-            key, value = params
-            self.store.setdefault("kv", {})[key] = json.loads(value)
-
-    def fetch(self, query: str, params: tuple) -> list:
-        if query.startswith(
-            "SELECT role, content, metadata, timestamp FROM conversation_history"
-        ):
-            cid = params
-            return [
-                (role, content, metadata, ts)
-                for role, content, metadata, ts in self.store.get("history", {}).get(
-                    cid, []
-                )
-            ]
-        if query.startswith("SELECT value FROM kv_store"):
-            key = params
-            if key in self.store.get("kv", {}):
-                return [(json.dumps(self.store["kv"][key]),)]
-        return []
-
-
-class DummyDatabase(DatabaseResource):
-    def __init__(self) -> None:
-        super().__init__({})
-        self.data: dict = {"history": {}, "kv": {}}
-
-    @asynccontextmanager
-    async def connection(self):
-        yield DummyConnection(self.data)
-
-    def get_connection_pool(self):
-        return DummyConnection(self.data)
-
-
-class DummyRegistries:
-    def __init__(self, *, plugins: PluginRegistry | None = None) -> None:
-        class _Resources(dict):
-            async def __aenter__(self):
-                return self
-
-            async def __aexit__(self, exc_type, exc, tb):
-                return False
-
-        self.resources = _Resources(memory=DummyMemory())
-        self.tools = types.SimpleNamespace()
-        self.plugins: PluginRegistry = PluginRegistry()
-        self.validators = None
-        self.plugins = plugins or PluginRegistry()
-
-
-class DBRegistries:
-    def __init__(self) -> None:
-        db = DummyDatabase()
-
-        class _Resources(dict):
-            async def __aenter__(self):
-                return self
-
-            async def __aexit__(self, exc_type, exc, tb):
-                return False
-
-        mem = Memory(config={})
-        mem.database = db
-        mem.vector_store = None
-        asyncio.run(mem.initialize())
-        self.resources = _Resources(memory=mem)
-        self.tools = types.SimpleNamespace()
-        self.plugins: PluginRegistry = PluginRegistry()
-        self.validators = None
+from entity.worker.pipeline_worker import PipelineWorker
 
 
 class ThoughtPlugin(Plugin):
@@ -153,46 +37,59 @@ class EchoStorePlugin(Plugin):
 
 
 @pytest.mark.asyncio
-async def test_conversation_id_generation():
-    regs = DummyRegistries()
+async def test_conversation_id_generation(pg_container: ResourceContainer) -> None:
+    regs = SystemRegistries(
+        resources=pg_container,
+        tools=ToolRegistry(),
+        plugins=PluginRegistry(),
+    )
     await regs.plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.OUTPUT)
     worker = PipelineWorker(regs)
     result = await worker.execute_pipeline("pipe1", "hello", user_id="u123")
 
     assert result == "hello"
-    mem = regs.resources["memory"]
-    assert mem.loaded_id == "u123_pipe1"
-    assert mem.saved_id == "u123_pipe1"
+    async with pg_container.get("database").connection() as conn:  # type: ignore[union-attr]
+        convo_ids = {
+            row[0]
+            for row in await conn.fetch(
+                "SELECT conversation_id FROM conversation_history", ()
+            )
+        }
+    assert "u123_pipe1" in convo_ids
 
 
 @pytest.mark.asyncio
-async def test_pipeline_persists_conversation(memory_db):
-    regs = types.SimpleNamespace(
-        resources={"memory": memory_db},
-        tools=types.SimpleNamespace(),
+async def test_pipeline_persists_conversation(pg_container: ResourceContainer) -> None:
+    regs = SystemRegistries(
+        resources=pg_container,
+        tools=ToolRegistry(),
         plugins=PluginRegistry(),
-        validators=None,
     )
     worker = PipelineWorker(regs)
 
     await worker.execute_pipeline("pipe1", "hello", user_id="u1")
     await worker.execute_pipeline("pipe1", "world", user_id="u1")
 
-    history = await regs.resources["memory"].load_conversation("pipe1", user_id="u1")
+    memory = pg_container.get("memory")
+    history = await memory.load_conversation("pipe1", user_id="u1")
     assert [e.content for e in history] == ["hello", "world"]
 
 
 @pytest.mark.asyncio
-async def test_thoughts_do_not_leak_between_executions():
-    regs = DummyRegistries()
+async def test_thoughts_do_not_leak_between_executions(
+    pg_container: ResourceContainer,
+) -> None:
+    regs = SystemRegistries(
+        resources=pg_container,
+        tools=ToolRegistry(),
+        plugins=PluginRegistry(),
+    )
     await regs.plugins.register_plugin_for_stage(ThoughtPlugin({}), PipelineStage.THINK)
     await regs.plugins.register_plugin_for_stage(EchoPlugin({}), PipelineStage.OUTPUT)
 
     worker = PipelineWorker(regs)
 
-    pipeline_module.user_id = "u1"
     first = await worker.execute_pipeline("pipe1", "one", user_id="u1")
-    pipeline_module.user_id = "u1"
     second = await worker.execute_pipeline("pipe1", "two", user_id="u1")
 
     assert first == "one"
@@ -200,12 +97,13 @@ async def test_thoughts_do_not_leak_between_executions():
 
 
 @pytest.mark.asyncio
-async def test_conversation_and_memory_namespaces(memory_db):
-    regs = types.SimpleNamespace(
-        resources={"memory": memory_db},
-        tools=types.SimpleNamespace(),
+async def test_conversation_and_memory_namespaces(
+    pg_container: ResourceContainer,
+) -> None:
+    regs = SystemRegistries(
+        resources=pg_container,
+        tools=ToolRegistry(),
         plugins=PluginRegistry(),
-        validators=None,
     )
     await regs.plugins.register_plugin_for_stage(
         EchoStorePlugin({}), PipelineStage.OUTPUT
@@ -214,28 +112,25 @@ async def test_conversation_and_memory_namespaces(memory_db):
 
     await worker.execute_pipeline("chat", "hi", user_id="alice")
 
-    async with memory_db.database.connection() as conn:
+    async with pg_container.get("database").connection() as conn:  # type: ignore[union-attr]
         convo_ids = {
             row[0]
-            for row in conn.execute(
-                "SELECT conversation_id FROM conversation_history"
-            ).fetchall()
+            for row in await conn.fetch(
+                "SELECT conversation_id FROM conversation_history", ()
+            )
         }
-        kv_keys = {
-            row[0] for row in conn.execute("SELECT key FROM memory_kv").fetchall()
-        }
+        kv_keys = {row[0] for row in await conn.fetch("SELECT key FROM memory_kv", ())}
 
     assert convo_ids == {"alice_chat"}
     assert kv_keys == {"alice:last"}
 
 
 @pytest.mark.asyncio
-async def test_user_data_isolated(memory_db):
-    regs = types.SimpleNamespace(
-        resources={"memory": memory_db},
-        tools=types.SimpleNamespace(),
+async def test_user_data_isolated(pg_container: ResourceContainer) -> None:
+    regs = SystemRegistries(
+        resources=pg_container,
+        tools=ToolRegistry(),
         plugins=PluginRegistry(),
-        validators=None,
     )
     await regs.plugins.register_plugin_for_stage(
         EchoStorePlugin({}), PipelineStage.OUTPUT
@@ -245,10 +140,11 @@ async def test_user_data_isolated(memory_db):
     await worker.execute_pipeline("chat", "hello", user_id="alice")
     await worker.execute_pipeline("chat", "world", user_id="bob")
 
-    hist_a = await memory_db.load_conversation("chat", user_id="alice")
-    hist_b = await memory_db.load_conversation("chat", user_id="bob")
+    memory = pg_container.get("memory")
+    hist_a = await memory.load_conversation("chat", user_id="alice")
+    hist_b = await memory.load_conversation("chat", user_id="bob")
 
     assert hist_a[0].content == "hello"
     assert hist_b[0].content == "world"
-    assert await memory_db.get("last", user_id="alice") == "hello"
-    assert await memory_db.get("last", user_id="bob") == "world"
+    assert await memory.get("last", user_id="alice") == "hello"
+    assert await memory.get("last", user_id="bob") == "world"
