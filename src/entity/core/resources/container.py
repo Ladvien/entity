@@ -190,7 +190,7 @@ class ResourcePool(Generic[T]):
         self._ctx_resource = await self.acquire()
         return self._ctx_resource
 
-    async def __aexit__(self, exc_type, exc, tb) -> None:
+    async def __aexit__(self, _exc_type, exc, _tb) -> None:
         if self._ctx_resource is not None:
             await self.release(self._ctx_resource)
             self._ctx_resource = None
@@ -288,7 +288,7 @@ class ResourceContainer:
             await self.build_all()
         return self
 
-    async def __aexit__(self, exc_type, exc, tb) -> None:
+    async def __aexit__(self, _exc_type, exc, _tb) -> None:
         await self.shutdown_all()
         self._resources.clear()
         self._init_order = []
