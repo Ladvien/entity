@@ -46,10 +46,12 @@ class PluginConfig(BaseModel):
 
     @validator("stages", pre=True)
     def _validate_stages(
-        cls, value: list[str | PipelineStage] | None
+        cls, value: list[str | PipelineStage] | str | PipelineStage | None
     ) -> list[PipelineStage]:
         if value is None:
             return []
+        if isinstance(value, (str, PipelineStage)):
+            value = [value]
         return [PipelineStage.ensure(v) for v in value]
 
 
