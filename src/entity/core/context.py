@@ -41,6 +41,8 @@ class AdvancedContext:
                     user_id=self._parent.user_id,
                 )
             )
+        else:
+            self._parent._state.conversation = list(history)
 
     async def queue_tool_use(
         self,

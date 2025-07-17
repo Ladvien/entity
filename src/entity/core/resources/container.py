@@ -227,6 +227,7 @@ class ResourceContainer:
         self._order: List[str] = []
         self._init_order: List[str] = []
         self._pools: Dict[str, ResourcePool] = {}
+        self._aliases: Dict[str, str] = {}
         self._active = False
 
     @property
@@ -244,6 +245,7 @@ class ResourceContainer:
         new._deps = {k: list(v) for k, v in self._deps.items()}
         new._layers = dict(self._layers)
         new._order = list(self._order)
+        new._aliases = dict(self._aliases)
         return new
 
     async def add(self, name: str, resource: Any) -> None:
@@ -255,17 +257,31 @@ class ResourceContainer:
         instance = self._create_instance(cls, config)
         await self.add(name, instance)
 
+    def alias(self, alias: str, target: str) -> None:
+        """Map ``alias`` to an existing resource ``target``."""
+
+        if alias in self._classes or alias in self._aliases or alias in self._resources:
+            raise ValueError(f"Alias '{alias}' already registered")
+        if target not in self._classes and target not in self._resources:
+            raise ValueError(f"Target resource '{target}' not registered")
+        self._aliases[alias] = target
+
+    def _resolve_name(self, name: str) -> str:
+        while name in self._aliases:
+            name = self._aliases[name]
+        return name
+
     def get(self, name: str) -> Any | None:
-        return self._resources.get(name)
+        return self._resources.get(self._resolve_name(name))
 
     def has_plugin(self, name: str) -> bool:
         """Return ``True`` if a resource with ``name`` is registered."""
 
-        return name in self._classes or name in self._resources
+        return name in self._classes or name in self._resources or name in self._aliases
 
     async def remove(self, name: str) -> None:
         async with self._lock:
-            self._resources.pop(name, None)
+            self._resources.pop(self._resolve_name(name), None)
 
     async def __aenter__(self) -> "ResourceContainer":
         if not self._active:
@@ -467,7 +483,7 @@ class ResourceContainer:
         for res, dep_list in self._deps.items():
             for dep in dep_list:
                 dep_name = dep[:-1] if dep.endswith("?") else dep
-                if dep_name == name:
+                if self._resolve_name(dep_name) == name:
                     deps.append(res)
         return deps
 
@@ -541,6 +557,7 @@ class ResourceContainer:
         for dep in self._deps.get(name, []):
             optional = dep.endswith("?")
             dep_name = dep[:-1] if optional else dep
+            dep_name = self._resolve_name(dep_name)
             if dep_name not in self._resources and not optional:
                 return False
         return True
@@ -679,8 +696,9 @@ class ResourceContainer:
             for dep in self._deps.get(node, []):
                 optional = dep.endswith("?")
                 dep_name = dep[:-1] if optional else dep
+                dep_real = self._resolve_name(dep_name)
 
-                if dep_name not in self._layers:
+                if dep_real not in self._layers:
                     if optional:
                         continue
                     raise InitializationError(
@@ -690,7 +708,7 @@ class ResourceContainer:
                         kind="Resource",
                     )
 
-                dep_layer = self._layers[dep_name]
+                dep_layer = self._layers[dep_real]
                 skip_check = self._layers[node] == dep_layer == 3 and dep_name in {
                     "logging",
                     "metrics_collector",
@@ -707,7 +725,7 @@ class ResourceContainer:
                         kind="Resource",
                     )
 
-                traverse(dep_name)
+                traverse(dep_real)
 
             stack.pop()
             visited.add(node)
@@ -731,8 +749,9 @@ class ResourceContainer:
         for name, deps in self._deps.items():
             for dep in deps:
                 dep_name = dep[:-1] if dep.endswith("?") else dep
-                if dep_name in graph_map:
-                    graph_map[dep_name].append(name)
+                dep_real = self._resolve_name(dep_name)
+                if dep_real in graph_map:
+                    graph_map[dep_real].append(name)
         graph = DependencyGraph(graph_map)
         try:
             return graph.topological_sort()

@@ -1,4 +1,5 @@
 from datetime import datetime
+import asyncio
 import pytest
 
 from entity.core.context import PluginContext
@@ -12,13 +13,13 @@ class DummyTool:
         return params
 
 
-def make_context(state=None):
+async def make_context_async(state=None):
     if state is None:
         state = PipelineState(conversation=[])
     container = ResourceContainer()
     tool = DummyTool()
     registry = ToolRegistry()
-    asyncio.run(registry.add("dummy", tool.execute_function))
+    await registry.add("dummy", tool.execute_function)
     return PluginContext(
         state,
         SystemRegistries(
@@ -29,9 +30,13 @@ def make_context(state=None):
     )
 
 
+def make_context(state=None):
+    return asyncio.run(make_context_async(state))
+
+
 @pytest.mark.asyncio
 async def test_replace_conversation_history():
-    ctx = make_context()
+    ctx = await make_context_async()
     new_history = [
         ConversationEntry("hi", "user", datetime.now()),
         ConversationEntry("hello", "assistant", datetime.now()),
@@ -52,7 +57,7 @@ def test_update_response():
 @pytest.mark.asyncio
 async def test_queue_tool_use_via_property_and_wrapper():
     state = PipelineState(conversation=[])
-    ctx = make_context(state)
+    ctx = await make_context_async(state)
 
     key1 = await ctx.advanced.queue_tool_use("dummy", x=1)
     key2 = await ctx.queue_tool_use("dummy", x=2)
