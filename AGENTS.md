@@ -13,6 +13,7 @@ Use this document when preparing changes or reviewing pull requests.
 - Always use the Poetry environment for development.
 - Run `poetry install --with dev` before executing any quality checks or tests.
 - Run tests using `poetry run poe test` or related tasks to ensure `PYTHONPATH` is set.
+- Run integration tests with Docker using `poetry run poe test-with-docker`.
 
 ## Code Review Checklist
 
