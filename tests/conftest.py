@@ -169,6 +169,7 @@ class AsyncPGDatabase(DatabaseResource):
 
         wait_for_port(host, port)
         conn = await asyncpg.connect(self._dsn)
+        await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
         await register_vector(conn)
         try:
             yield conn
