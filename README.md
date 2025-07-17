@@ -60,6 +60,12 @@ shell script that tears down containers even if the tests fail:
 poetry run poe test-with-docker
 ```
 
+To run only the architecture boundary checks, use:
+
+```bash
+poetry run poe test-layer-boundaries
+```
+
 `pytest-docker` is required for the integration fixtures and Docker must be
 running. The plugin comes with the development dependencies:
 

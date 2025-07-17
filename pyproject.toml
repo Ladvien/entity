@@ -113,6 +113,7 @@ e2e = { cmd = "pytest tests/e2e", env = { PYTHONPATH = "src" } }
 start-test-services = { cmd = "docker compose -f tests/docker-compose.yml up -d" }
 stop-test-services = { cmd = "docker compose -f tests/docker-compose.yml down -v" }
 test-with-docker = { cmd = "bash scripts/test_with_docker.sh" }
+test-layer-boundaries = { cmd = "bash scripts/test_with_docker.sh tests/architecture/test_layer_boundaries.py" }
 
 setup-dev = { cmd = "poetry install --with dev" }
 
