@@ -281,7 +281,12 @@ class ResourceContainer:
     def register(
         self, name: str, cls: type, config: Dict, layer: int | None = None
     ) -> None:
-        """Register a resource class and its configuration."""
+        """Register a resource class and assign it to the proper layer.
+
+        When ``layer`` is ``None`` the container infers it from the class type
+        to preserve the one-layer-at-a-time rule enforced in
+        :meth:`_check_dependency_rules`.
+        """
 
         from entity.core.plugins import InfrastructurePlugin, ResourcePlugin
         from entity.resources.base import AgentResource as CanonicalResource
