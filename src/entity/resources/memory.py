@@ -372,7 +372,7 @@ class Memory(AgentResource):
 
 __all__ = [
     "Memory",
-    "remember",
-    "recall",
-    "forget",
+    "remember",  # noqa: F822
+    "recall",  # noqa: F822
+    "forget",  # noqa: F822
 ]
