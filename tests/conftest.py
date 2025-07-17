@@ -40,11 +40,12 @@ OLLAMA_PORT = int(os.getenv("OLLAMA_PORT", "11434"))
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3:8b-instruct-q6_K")
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", f"http://localhost:{OLLAMA_PORT}")
 
-from entity.infrastructure import DuckDBInfrastructure
+from entity.infrastructure import DuckDBInfrastructure, PostgresInfrastructure
 from entity.resources import Memory, LLM
 from plugins.builtin.resources.pg_vector_store import PgVectorStore
 from entity.resources.interfaces.duckdb_resource import DuckDBResource
 from entity.resources.interfaces.database import DatabaseResource
+from entity.resources.interfaces.postgres_resource import PostgresResource
 from entity.core.resources.container import ResourceContainer
 
 
@@ -265,8 +266,10 @@ async def pg_container(postgres_dsn: str) -> ResourceContainer:
     if not _require_docker():
         pytest.skip("Docker is required for Postgres-backed containers.")
     container = ResourceContainer()
-    container.register("database", AsyncPGDatabase, {"dsn": postgres_dsn}, layer=2)
-    container.alias("database_backend", "database")
+    container.register(
+        "database_backend", PostgresInfrastructure, {"dsn": postgres_dsn}, layer=1
+    )
+    container.register("database", PostgresResource, {}, layer=2)
     container.register("memory", Memory, {}, layer=3)
 
     await container.build_all()
