@@ -25,13 +25,13 @@ REQUIRE_PYTEST_DOCKER = (
 )
 
 try:
-    import pytest_docker as _  # noqa
+    import pytest_docker as _  # noqa: F401
+
+    PYTEST_DOCKER_AVAILABLE = True
 except Exception:
-    pytest.skip(REQUIRE_PYTEST_DOCKER, allow_module_level=True)
+    PYTEST_DOCKER_AVAILABLE = False
 
-
-if shutil.which("docker") is None:
-    pytest.skip("Docker is required for integration tests", allow_module_level=True)
+DOCKER_INSTALLED = shutil.which("docker") is not None
 
 
 # -- Setup import path for src/
@@ -51,21 +51,11 @@ from plugins.builtin.resources.pg_vector_store import PgVectorStore
 from entity.resources.interfaces.duckdb_resource import DuckDBResource
 from entity.resources.interfaces.database import DatabaseResource
 from entity.core.resources.container import ResourceContainer
-import shutil
-
-
-def _docker_available() -> bool:
-    return shutil.which("docker") is not None
 
 
 def _require_docker() -> bool:
-    """Return True if Docker is installed and running."""
-    try:
-        pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
-    except pytest.SkipTest:
-        return False
-
-    if shutil.which("docker") is None:
+    """Return True if Docker tooling is available and running."""
+    if not PYTEST_DOCKER_AVAILABLE or not DOCKER_INSTALLED:
         return False
 
     try:
