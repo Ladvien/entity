@@ -29,12 +29,7 @@ try:
 except Exception:
     PYTEST_DOCKER_AVAILABLE = False
 
-<<<<<<< HEAD
-if shutil.which("docker") is None:
-    pytest.skip("Docker is required for integration tests", allow_module_level=True)
-=======
 DOCKER_INSTALLED = shutil.which("docker") is not None
->>>>>>> pr-1753
 
 # -- Path setup
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -54,16 +49,8 @@ from entity.core.resources.container import ResourceContainer
 
 
 def _require_docker() -> bool:
-<<<<<<< HEAD
-    try:
-        pytest.importorskip("pytest_docker", reason=REQUIRE_PYTEST_DOCKER)
-    except pytest.SkipTest:
-        return False
-    if shutil.which("docker") is None:
-=======
     """Return True if Docker tooling is available and running."""
     if not PYTEST_DOCKER_AVAILABLE or not DOCKER_INSTALLED:
->>>>>>> pr-1753
         return False
     try:
         subprocess.run(
