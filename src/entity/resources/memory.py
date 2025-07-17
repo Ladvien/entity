@@ -79,7 +79,10 @@ class Memory(AgentResource):
         if self.database is None:
             return
         async with self.database.connection() as conn:
-            await _execute(conn, f"DELETE FROM {self._kv_table}")
+            await _execute(
+                conn,
+                f"DELETE FROM {self._kv_table}",  # nosec B608 - table name is trusted
+            )
             await self._maybe_commit(conn)
 
     # ------------------------------------------------------------------
@@ -98,13 +101,13 @@ class Memory(AgentResource):
         async with self.database.connection() as conn:
             await _execute(
                 conn,
-                f"DELETE FROM {self._history_table} WHERE conversation_id = ?",
+                f"DELETE FROM {self._history_table} WHERE conversation_id = ?",  # nosec B608
                 (conversation_id,),
             )
             for entry in history:
                 await _execute(
                     conn,
-                    f"INSERT INTO {self._history_table} VALUES (?, ?, ?, ?, ?)",
+                    f"INSERT INTO {self._history_table} VALUES (?, ?, ?, ?, ?)",  # nosec B608
                     (
                         conversation_id,
                         entry.role,
@@ -124,7 +127,7 @@ class Memory(AgentResource):
         async with self.database.connection() as conn:
             cursor = await _execute(
                 conn,
-                f"SELECT role, content, metadata, timestamp FROM {self._history_table} "
+                f"SELECT role, content, metadata, timestamp FROM {self._history_table} "  # nosec B608
                 "WHERE conversation_id = ? ORDER BY timestamp",
                 (conversation_id,),
             )
@@ -204,13 +207,12 @@ class Memory(AgentResource):
             dialect = conn.__class__.__module__.split(".")[0]
 
             if dialect == "asyncpg":
-                sql = f"""
-                    INSERT INTO {self._kv_table} (key, value)
-                    VALUES (?, ?)
-                    ON CONFLICT(key) DO UPDATE SET value = EXCLUDED.value
-                """
+                sql = (
+                    f"INSERT INTO {self._kv_table} (key, value) "
+                    "VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = EXCLUDED.value"  # nosec B608
+                )
             else:
-                sql = f"INSERT OR REPLACE INTO {self._kv_table} VALUES (?, ?)"
+                sql = f"INSERT OR REPLACE INTO {self._kv_table} VALUES (?, ?)"  # nosec B608
 
             await _execute(conn, sql, (namespaced_key, json.dumps(value)))
             await self._maybe_commit(conn)
@@ -225,7 +227,7 @@ class Memory(AgentResource):
         async with self.database.connection() as conn:
             cursor = await _execute(
                 conn,
-                f"SELECT value FROM {self._kv_table} WHERE key = ?",
+                f"SELECT value FROM {self._kv_table} WHERE key = ?",  # nosec B608
                 (namespaced_key,),
             )
             row = await _maybe_await(cursor.fetchone())
@@ -239,7 +241,7 @@ class Memory(AgentResource):
         async with self.database.connection() as conn:
             await _execute(
                 conn,
-                f"DELETE FROM {self._kv_table} WHERE key = ?",
+                f"DELETE FROM {self._kv_table} WHERE key = ?",  # nosec B608
                 (namespaced_key,),
             )
             await self._maybe_commit(conn)
@@ -254,7 +256,7 @@ class Memory(AgentResource):
         async with self.database.connection() as conn:
             await _execute(
                 conn,
-                f"INSERT INTO {self._history_table} VALUES (?, ?, ?, ?, ?)",
+                f"INSERT INTO {self._history_table} VALUES (?, ?, ?, ?, ?)",  # nosec B608
                 (
                     conversation_id,
                     entry.role,
@@ -279,7 +281,7 @@ class Memory(AgentResource):
             return []
         sql = (
             f"SELECT conversation_id, role, content, metadata, timestamp "
-            f"FROM {self._history_table}"
+            f"FROM {self._history_table}"  # nosec B608
         )
         clauses: List[str] = []
         params: List[Any] = []
@@ -330,7 +332,7 @@ class Memory(AgentResource):
         async with self.database.connection() as conn:
             cursor = await _execute(
                 conn,
-                f"SELECT conversation_id, content, timestamp FROM {self._history_table} "
+                f"SELECT conversation_id, content, timestamp FROM {self._history_table} "  # nosec B608
                 "WHERE conversation_id LIKE ? ORDER BY timestamp",
                 (f"{user_id}%",),
             )
