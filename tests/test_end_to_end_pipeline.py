@@ -64,7 +64,9 @@ async def test_end_to_end_flow(memory_db):
 
 
 @pytest.mark.asyncio
+@pytest.mark.benchmark
 async def test_pipeline_performance_under_load(memory_db):
+    """Benchmark pipeline throughput under concurrent load."""
     regs = types.SimpleNamespace(
         resources={"memory": memory_db},
         tools=types.SimpleNamespace(),

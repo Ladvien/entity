@@ -4307,4 +4307,4 @@ examples = ["grpcio", "grpcio-tools", "websockets"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "2acae945576b080142d10a7412c4467761db429a99870e0ae2ac9bdaf42bcca0"
+content-hash = "b4b305563580037c20a175abb9c9ab0017111936cc99527eeb497486767c55b4"

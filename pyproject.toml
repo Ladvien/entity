@@ -162,6 +162,8 @@ addopts = [
     "--strict-config",
     "--color=yes",
     "--durations=10",
+    "-m",
+    "not benchmark",
 ]
 asyncio_mode = "auto"
 
