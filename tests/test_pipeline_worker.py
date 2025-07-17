@@ -2,6 +2,7 @@ import pytest
 from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
 from entity.core.plugins import Plugin
 from entity.core.resources.container import ResourceContainer
+from entity.resources import Memory
 from entity.pipeline.stages import PipelineStage
 from entity.worker.pipeline_worker import PipelineWorker
 
@@ -76,11 +77,9 @@ async def test_pipeline_persists_conversation(pg_container: ResourceContainer) -
 
 
 @pytest.mark.asyncio
-async def test_thoughts_do_not_leak_between_executions(
-    pg_container: ResourceContainer,
-) -> None:
+async def test_thoughts_do_not_leak_between_executions(memory_db: Memory) -> None:
     regs = SystemRegistries(
-        resources=pg_container,
+        resources={"memory": memory_db},
         tools=ToolRegistry(),
         plugins=PluginRegistry(),
     )
