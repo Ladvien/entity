@@ -1,6 +1,5 @@
 import types
 import pytest
-
 from entity.core.context import PluginContext
 from entity.core.state import PipelineState
 
@@ -11,14 +10,18 @@ class DummyRegistries:
         self.tools = types.SimpleNamespace()
 
 
-def make_context():
-    resources = {"memory": object(), "storage": object(), "llm": object()}
+def make_context(memory=None, storage=None, llm=None):
+    resources = {
+        "memory": memory,
+        "storage": storage or object(),
+        "llm": llm or object(),
+    }
     return PluginContext(PipelineState(conversation=[]), DummyRegistries(resources))
 
 
 @pytest.mark.asyncio
-async def test_think_reflect_and_clear():
-    ctx = make_context()
+async def test_think_reflect_and_clear(pg_memory, clear_pg_memory):
+    ctx = make_context(memory=pg_memory)
     await ctx.think("x", 1)
     assert await ctx.reflect("x") == 1
     assert ctx._state.stage_results["x"] == 1
@@ -28,8 +31,8 @@ async def test_think_reflect_and_clear():
 
 
 @pytest.mark.asyncio
-async def test_advanced_temp_helpers():
-    ctx = make_context()
+async def test_advanced_temp_helpers(pg_memory, clear_pg_memory):
+    ctx = make_context(memory=pg_memory)
     await ctx.advanced.think_temp("y", 2)
     assert await ctx.advanced.reflect_temp("y") == 2
     assert ctx._state.temporary_thoughts["y"] == 2
@@ -38,8 +41,8 @@ async def test_advanced_temp_helpers():
     assert ctx._state.temporary_thoughts == {}
 
 
-def test_get_resource_helpers():
-    ctx = make_context()
+def test_get_resource_helpers(pg_memory):
+    ctx = make_context(memory=pg_memory)
     assert ctx.get_llm() is ctx.get_resource("llm")
     assert ctx.get_memory() is ctx.get_resource("memory")
     assert ctx.get_storage() is ctx.get_resource("storage")

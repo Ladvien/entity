@@ -9,17 +9,28 @@ from entity.core.state import ConversationEntry
 from entity.resources.interfaces.database import DatabaseResource
 from plugins.builtin.resources.pg_vector_store import PgVectorStore
 
+from contextlib import asynccontextmanager
+
+
+@asynccontextmanager
+async def get_pg_connection(dsn):
+    conn = await asyncpg.connect(dsn)
+    try:
+        yield conn
+    finally:
+        await conn.close()
+
 
 @pytest.fixture()
 async def prepared_postgres(postgres_dsn: str):
     """Return DSN for containerized Postgres and ensure a clean state."""
-    async with asyncpg.connect(postgres_dsn) as conn:
+    async with get_pg_connection(postgres_dsn) as conn:
         await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
         await conn.execute("DROP TABLE IF EXISTS memory_kv")
         await conn.execute("DROP TABLE IF EXISTS conversation_history")
         await conn.execute("DROP TABLE IF EXISTS embeddings")
     yield postgres_dsn
-    async with asyncpg.connect(postgres_dsn) as conn:
+    async with get_pg_connection(postgres_dsn) as conn:
         await conn.execute("DROP TABLE IF EXISTS memory_kv")
         await conn.execute("DROP TABLE IF EXISTS conversation_history")
         await conn.execute("DROP TABLE IF EXISTS embeddings")
