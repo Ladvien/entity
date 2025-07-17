@@ -6,7 +6,7 @@ from entity.core.stages import PipelineStage
 from entity.core.plugins import Plugin
 from entity.resources.metrics import MetricsCollectorResource
 from entity.core.resources.container import ResourceContainer
-from entity.core.registries import SystemRegistries, ToolRegistry
+from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
 
 
 class DummyPlugin(Plugin):

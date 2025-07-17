@@ -128,7 +128,7 @@ class AsyncPGDatabase(DatabaseResource):
         return self._dsn
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 async def pg_memory(postgres_dsn: str) -> Memory:
     if not _require_docker():
         pytest.skip("Docker is required for PostgreSQL-backed memory.")
@@ -144,7 +144,7 @@ async def pg_memory(postgres_dsn: str) -> Memory:
             await conn.execute(f"DROP TABLE IF EXISTS {mem._history_table}")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 async def pg_vector_memory(postgres_dsn: str) -> Memory:
     if not _require_docker():
         pytest.skip("Docker is required for PostgreSQL-backed memory.")
@@ -268,7 +268,9 @@ async def pg_container(postgres_dsn: str) -> ResourceContainer:
         pytest.skip("Docker is required for Postgres-backed containers.")
     container = ResourceContainer()
     container.register("database", AsyncPGDatabase, {"dsn": postgres_dsn}, layer=2)
+    container.alias("database_backend", "database")
     container.register("memory", Memory, {}, layer=3)
+
     await container.build_all()
     try:
         yield container
