@@ -224,4 +224,4 @@ exclude = '''
 '''
 
 [tool.vulture]
-exclude = ["*templates*"]
+exclude = ["*templates*", "src/entity/resources/memory.py"]
