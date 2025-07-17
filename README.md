@@ -75,6 +75,16 @@ If you installed dependencies individually, install the plugin directly:
 pip install pytest-docker
 ```
 
+### Install Docker
+
+Follow the [official Docker installation guide](https://docs.docker.com/get-docker/) for your platform. After installing, confirm Docker works:
+
+```bash
+docker --version
+```
+
+If Docker isn't available, the integration tests will be skipped automatically.
+
 ### Docker Requirement for Integration Tests
 
 Integration tests rely on containers defined in `tests/docker-compose.yml`.
