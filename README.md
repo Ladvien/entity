@@ -52,9 +52,18 @@ documentation.
 
 ## Running Tests
 
-The test suite depends on **Docker** and the **`pytest-docker`** plugin. Use the
-provided Poe task to spin up services and run the tests. The task now runs a
-shell script that tears down containers even if the tests fail:
+The test suite depends on **Docker** and the **`pytest-docker`** plugin.
+After cloning the repository, trust the local `mise` configuration and install
+the development dependencies:
+
+```bash
+mise trust
+poetry install --with dev
+```
+
+With Docker running, use the Poe task to spin up services and run the tests.
+The task now runs a shell script that tears down containers even if the tests
+fail:
 
 ```bash
 poetry run poe test-with-docker
@@ -66,16 +75,9 @@ To run only the architecture boundary checks, use:
 poetry run poe test-layer-boundaries
 ```
 
-`pytest-docker` is required for the integration fixtures and Docker must be
-running. The plugin comes with the development dependencies:
-
-```bash
-poetry install --with dev
-# or
-pip install -e ".[dev]"
-```
-
-If you installed dependencies individually, install the plugin directly:
+`pytest-docker` is required for the integration fixtures. It is installed with
+the development dependencies shown above. If you installed packages
+individually, install the plugin directly:
 
 ```bash
 pip install pytest-docker
