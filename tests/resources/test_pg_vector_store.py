@@ -9,8 +9,6 @@ from entity.core.state import ConversationEntry
 from entity.resources.interfaces.database import DatabaseResource
 from plugins.builtin.resources.pg_vector_store import PgVectorStore
 
-from contextlib import asynccontextmanager
-
 
 @asynccontextmanager
 async def get_pg_connection(dsn):
