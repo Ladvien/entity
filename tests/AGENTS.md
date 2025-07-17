@@ -43,6 +43,12 @@ shell script that shuts down containers on exit:
 poetry run poe test-with-docker
 ```
 
+To check only the layer boundaries, run:
+
+```bash
+poetry run poe test-layer-boundaries
+```
+
 ---
 
 ## 🧼 Test Philosophy
