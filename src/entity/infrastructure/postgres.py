@@ -1,28 +1,18 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from typing import Any, Dict
+from typing import AsyncIterator, Dict
+
+import asyncpg
 
 from entity.pipeline.exceptions import CircuitBreakerTripped
 from entity.core.circuit_breaker import CircuitBreaker
-
 from entity.core.plugins import InfrastructurePlugin, ValidationResult
 from entity.core.resources.container import PoolConfig, ResourcePool
 
 
-class _DummyConn:
-    async def execute(
-        self, *args: Any, **kwargs: Any
-    ) -> None:  # pragma: no cover - stub
-        return None
-
-
-async def _create_conn() -> _DummyConn:
-    return _DummyConn()
-
-
 class PostgresInfrastructure(InfrastructurePlugin):
-    """Minimal Postgres infrastructure stub used in tests."""
+    """Asyncpg-backed Postgres implementation."""
 
     name = "postgres"
     infrastructure_type = "database"
@@ -32,30 +22,34 @@ class PostgresInfrastructure(InfrastructurePlugin):
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
+        self.dsn: str = self.config.get("dsn", "")
         pool_cfg = PoolConfig(**self.config.get("pool", {}))
-        self._pool = ResourcePool(_create_conn, pool_cfg)
+        self._pool = ResourcePool(self._create_conn, pool_cfg, "postgres")
         self._breaker = CircuitBreaker(
             failure_threshold=self.config.get("failure_threshold", 3),
             recovery_timeout=self.config.get("recovery_timeout", 60.0),
         )
 
-    async def _execute_impl(self, context: Any) -> None:  # pragma: no cover - stub
-        return None
+    async def _create_conn(self) -> asyncpg.Connection:
+        return await asyncpg.connect(self.dsn)
 
     async def initialize(self) -> None:
         await self._pool.initialize()
 
+    async def shutdown(self) -> None:
+        while not self._pool._pool.empty():
+            conn = await self._pool._pool.get()
+            await conn.close()
+
     @asynccontextmanager
-    async def connection(self) -> Any:
+    async def connection(self) -> AsyncIterator[asyncpg.Connection]:
         async with self._pool as conn:
             yield conn
 
-    def get_connection_pool(self) -> Any:
-        """Return the underlying connection pool."""
+    def get_connection_pool(self) -> ResourcePool:
         return self._pool
 
     def get_pool(self) -> ResourcePool:
-        """Return the connection pool for one-off usage."""
         return self._pool
 
     async def validate_runtime(
