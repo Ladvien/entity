@@ -1,10 +1,15 @@
-[tool.poetry]
+[project]
 name = "entity"
 version = "0.0.1"
 description = "Entity agentic system with PostgreSQL memory"
-authors = ["C. Thomas Brittain <cthomasbrittain@hotmail.com>"]
-license = "MIT"
+authors = [
+  { name = "C. Thomas Brittain", email = "cthomasbrittain@hotmail.com" },
+]
+license = { text = "MIT" }
 readme = "README.md"
+requires-python = ">=3.11"
+
+[tool.poetry]
 package-mode = true
 
 packages = [{ include = "entity", from = "src" }]
