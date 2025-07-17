@@ -4,6 +4,7 @@ from .docker import DockerInfrastructure
 from .opentofu import OpenTofuInfrastructure
 from .aws_standard import AWSStandardInfrastructure
 from .llamacpp import LlamaCppInfrastructure
+from .asyncpg import AsyncPGInfrastructure
 
 __all__ = [
     "PostgresInfrastructure",
@@ -12,4 +13,5 @@ __all__ = [
     "OpenTofuInfrastructure",
     "AWSStandardInfrastructure",
     "LlamaCppInfrastructure",
+    "AsyncPGInfrastructure",
 ]
