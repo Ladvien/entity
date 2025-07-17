@@ -40,7 +40,7 @@ OLLAMA_PORT = int(os.getenv("OLLAMA_PORT", "11434"))
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3:8b-instruct-q6_K")
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", f"http://localhost:{OLLAMA_PORT}")
 
-from entity.infrastructure import DuckDBInfrastructure
+from entity.infrastructure import DuckDBInfrastructure, AsyncPGInfrastructure
 from entity.resources import Memory, LLM
 from plugins.builtin.resources.pg_vector_store import PgVectorStore
 from entity.resources.interfaces.duckdb_resource import DuckDBResource
@@ -106,23 +106,34 @@ def postgres_dsn(docker_ip: str, docker_services) -> str:
 
 
 class AsyncPGDatabase(DatabaseResource):
-    def __init__(self, dsn: str):
+    def __init__(self, dsn: str) -> None:
         super().__init__({})
         self._dsn = dsn
+        self.database_backend = None
 
     @asynccontextmanager
     async def connection(self):
-        parsed = urlparse(self._dsn)
-        wait_for_port(parsed.hostname, parsed.port)
-        conn = await asyncpg.connect(self._dsn)
-        await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
-        await register_vector(conn)
-        try:
-            yield conn
-        finally:
-            await conn.close()
+        backend = getattr(self, "database_backend", None)
+        if backend is None:
+            parsed = urlparse(self._dsn)
+            wait_for_port(parsed.hostname, parsed.port)
+            conn = await asyncpg.connect(self._dsn)
+            await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
+            await register_vector(conn)
+            try:
+                yield conn
+            finally:
+                await conn.close()
+        else:
+            async with backend.connection() as conn:
+                await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
+                await register_vector(conn)
+                yield conn
 
     def get_connection_pool(self):
+        backend = getattr(self, "database_backend", None)
+        if backend is not None:
+            return backend.get_connection_pool()
         return self._dsn
 
 
@@ -265,8 +276,18 @@ async def pg_container(postgres_dsn: str) -> ResourceContainer:
     if not _require_docker():
         pytest.skip("Docker is required for Postgres-backed containers.")
     container = ResourceContainer()
-    container.register("database", AsyncPGDatabase, {"dsn": postgres_dsn}, layer=2)
-    container.alias("database_backend", "database")
+    container.register(
+        "database_backend",
+        AsyncPGInfrastructure,
+        {"dsn": postgres_dsn},
+        layer=1,
+    )
+    container.register(
+        "database",
+        AsyncPGDatabase,
+        {"dsn": postgres_dsn},
+        layer=2,
+    )
     container.register("memory", Memory, {}, layer=3)
 
     await container.build_all()
