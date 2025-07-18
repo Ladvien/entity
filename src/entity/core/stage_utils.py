@@ -23,7 +23,7 @@ class StageResolver:
         logger: Any | None = None,
     ) -> tuple[list[PipelineStage], bool]:
         """Return stages and whether they were explicit."""
-        logger = logger
+        logger = logger or getattr(_instance, "logger", None)
         cfg_value = config.get("stages") or config.get("stage")
         declared_value = getattr(plugin_class, "stages", None) or getattr(
             plugin_class, "stage", None
@@ -56,13 +56,11 @@ class StageResolver:
         else:
             stages = [PipelineStage.THINK]
 
-        if (
-            hasattr(plugin_class, "InputAdapterPlugin")
-            and any(
-                base.__name__ == "InputAdapterPlugin" for base in plugin_class.mro()[1:]
-            )
-            and stages != [PipelineStage.INPUT]
-        ):
+        from .plugins import InputAdapterPlugin, OutputAdapterPlugin
+
+        if issubclass(plugin_class, InputAdapterPlugin) and stages != [
+            PipelineStage.INPUT
+        ]:
             if logger is not None:
                 logger.warning(
                     "%s can only run in INPUT stage; ignoring configured %s",
@@ -71,14 +69,9 @@ class StageResolver:
                 )
             stages = [PipelineStage.INPUT]
 
-        if (
-            hasattr(plugin_class, "OutputAdapterPlugin")
-            and any(
-                base.__name__ == "OutputAdapterPlugin"
-                for base in plugin_class.mro()[1:]
-            )
-            and stages != [PipelineStage.OUTPUT]
-        ):
+        if issubclass(plugin_class, OutputAdapterPlugin) and stages != [
+            PipelineStage.OUTPUT
+        ]:
             if logger is not None:
                 logger.warning(
                     "%s can only run in OUTPUT stage; ignoring configured %s",
