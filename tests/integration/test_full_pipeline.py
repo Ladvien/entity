@@ -5,7 +5,7 @@ import pytest
 
 from entity.resources import Memory, MetricsCollectorResource, LLM
 from entity.resources.logging import LoggingResource
-from entity.pipeline.worker import PipelineWorker
+from entity.worker.pipeline_worker import PipelineWorker
 from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
 from entity.core.plugins import Plugin
 from entity.core.context import PluginContext
