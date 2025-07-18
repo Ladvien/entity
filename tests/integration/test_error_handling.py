@@ -5,8 +5,7 @@ from datetime import datetime
 from entity.core.context import PluginContext
 from entity.core.plugins import Plugin
 from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
-from entity.core.state import ConversationEntry
-from entity.pipeline.state import PipelineState
+from entity.core.state import ConversationEntry, PipelineState
 from entity.pipeline.pipeline import execute_pipeline
 from entity.pipeline.stages import PipelineStage
 

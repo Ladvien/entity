@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Tuple
 
 from entity.pipeline.pipeline import execute_stage, generate_pipeline_id
-from entity.pipeline.state import PipelineState, ConversationEntry
+from entity.core.state import PipelineState, ConversationEntry
 from entity.pipeline.stages import PipelineStage
 from entity.core.registries import SystemRegistries
 from datetime import datetime
