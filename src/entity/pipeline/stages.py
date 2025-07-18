@@ -31,3 +31,6 @@ class PipelineStage(IntEnum):
         if isinstance(value, cls):
             return value
         return cls.from_str(str(value))
+
+
+__all__ = ["PipelineStage"]

@@ -25,7 +25,8 @@ from entity.core.resources.container import ResourceContainer
 from entity.utils.logging import configure_logging, get_logger
 from entity.workflows.discovery import discover_workflows, register_module_workflows
 from .config import ConfigLoader
-from .utils import DependencyGraph, resolve_stages, StageResolver
+from .utils import DependencyGraph, resolve_stages
+from entity.core.stage_utils import StageResolver
 from entity.core.circuit_breaker import CircuitBreaker, BreakerManager
 from .exceptions import CircuitBreakerTripped
 from .errors import InitializationError
@@ -893,3 +894,12 @@ def validate_reconfiguration_params(
             return ValidationResult.error_result("Topology changes require restart")
 
     return ValidationResult.success_result()
+
+
+__all__ = [
+    "ClassRegistry",
+    "SystemInitializer",
+    "initialization_cleanup_context",
+    "plugin_cleanup_context",
+    "validate_reconfiguration_params",
+]

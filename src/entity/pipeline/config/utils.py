@@ -18,3 +18,6 @@ def interpolate_env_vars(value: Any) -> Any:
     if isinstance(value, str):
         return _PATTERN.sub(lambda m: os.getenv(m.group(1), m.group(0)), value)
     return value
+
+
+__all__ = ["interpolate_env_vars"]

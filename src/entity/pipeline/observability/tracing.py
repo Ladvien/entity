@@ -35,3 +35,6 @@ async def traced(
     """Run ``func`` inside a span named ``name``."""
     async with start_span(name):
         return await func(*args, **kwargs)
+
+
+__all__ = ["start_span", "traced", "_Span"]

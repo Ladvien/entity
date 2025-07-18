@@ -11,9 +11,14 @@ from entity.core.plugins import (
 from entity.core.registries import ToolRegistry
 from entity.core.state import PipelineState
 from entity.pipeline.errors import PluginContextError
+<<<<<<< HEAD
 from entity.pipeline.stages import PipelineStage
 from entity.pipeline.utils import StageResolver
 from tests.utils import make_async_context
+=======
+from entity.core.stages import PipelineStage
+from entity.core.stage_utils import StageResolver
+>>>>>>> pr-1781
 
 
 class AttrPlugin(Plugin):
