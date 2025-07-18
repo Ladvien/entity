@@ -1,12 +1,10 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from typing import AsyncIterator, Dict
+from typing import Any, AsyncIterator, Dict
 
 import asyncpg
 
-from entity.pipeline.exceptions import CircuitBreakerTripped
-from entity.core.circuit_breaker import CircuitBreaker
 from entity.core.plugins import InfrastructurePlugin, ValidationResult
 from entity.core.resources.container import PoolConfig, ResourcePool
 
@@ -25,10 +23,6 @@ class PostgresInfrastructure(InfrastructurePlugin):
         self.dsn: str = self.config.get("dsn", "")
         pool_cfg = PoolConfig(**self.config.get("pool", {}))
         self._pool = ResourcePool(self._create_conn, pool_cfg, "postgres")
-        self._breaker = CircuitBreaker(
-            failure_threshold=self.config.get("failure_threshold", 3),
-            recovery_timeout=self.config.get("recovery_timeout", 60.0),
-        )
 
     async def _create_conn(self) -> asyncpg.Connection:
         return await asyncpg.connect(self.dsn)
@@ -52,23 +46,15 @@ class PostgresInfrastructure(InfrastructurePlugin):
     def get_pool(self) -> ResourcePool:
         return self._pool
 
-    async def validate_runtime(
-        self, breaker: CircuitBreaker | None = None
-    ) -> ValidationResult:
+    async def validate_runtime(self, breaker: Any | None = None) -> ValidationResult:
         """Check connectivity using a simple query."""
 
         if not hasattr(self._pool, "acquire"):
             return ValidationResult.error_result("connection pool unavailable")
 
-        async def _query() -> None:
+        try:
             async with self.connection() as conn:
                 await conn.execute("SELECT 1")
-
-        breaker = breaker or self._breaker
-        try:
-            await breaker.call(_query)
-        except CircuitBreakerTripped:
-            return ValidationResult.error_result("circuit breaker open")
         except Exception as exc:  # noqa: BLE001
             return ValidationResult.error_result(str(exc))
         return ValidationResult.success_result()
