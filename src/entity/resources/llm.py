@@ -73,3 +73,12 @@ class LLM(AgentResource):
             if not result.success:
                 return ValidationResult.error_result(f"provider: {result.message}")
         return ValidationResult.success_result()
+
+    async def health_check(self) -> bool:
+        """Return ``True`` when the provider is reachable."""
+        if self.provider is None:
+            return True
+        if hasattr(self.provider, "validate_runtime"):
+            result = await self.provider.validate_runtime()
+            return result.success
+        return True

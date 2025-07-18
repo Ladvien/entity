@@ -42,3 +42,11 @@ class Storage(AgentResource):
     async def validate_runtime(self) -> ValidationResult:
         """Check backend availability."""
         return ValidationResult.success_result()
+
+    async def health_check(self) -> bool:
+        """Simple check that storage dictionary is accessible."""
+        try:
+            _ = len(self._data)
+            return True
+        except Exception:  # noqa: BLE001
+            return False

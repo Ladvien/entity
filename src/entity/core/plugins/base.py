@@ -94,6 +94,7 @@ class BasePlugin:
             raise ValueError("invalid version")
         target = self._config_history[version - 1].copy()
         await self._handle_reconfiguration(self.config, target)
+        await self.on_reconfigure(self.config, target)
         self.config = target
         self.config_version = version
         self._config_history = self._config_history[:version]
@@ -106,6 +107,7 @@ class BasePlugin:
         for key, value in new_config.items():
             if old_config.get(key) != value and hasattr(self, key):
                 setattr(self, key, value)
+        await self.on_reconfigure(old_config, new_config)
 
     async def on_dependency_reconfigured(
         self, name: str, old_config: Dict[str, Any], new_config: Dict[str, Any]
@@ -183,6 +185,7 @@ class Plugin(BasePlugin):
             return
 
         await self._on_initialize()
+        await self.on_initialize()
         self.is_initialized = True
         self.is_shutdown = False
 
@@ -193,6 +196,7 @@ class Plugin(BasePlugin):
             return
 
         await self._on_shutdown()
+        await self.on_shutdown()
         self.is_initialized = False
         self.is_shutdown = True
 
@@ -202,6 +206,20 @@ class Plugin(BasePlugin):
 
     async def _on_shutdown(self) -> None:  # pragma: no cover - default hook
         """Hook executed once during :meth:`shutdown`."""
+        return None
+
+    async def on_initialize(self) -> None:  # pragma: no cover - default hook
+        """Hook executed after initialization completes."""
+        return None
+
+    async def on_shutdown(self) -> None:  # pragma: no cover - default hook
+        """Hook executed after shutdown completes."""
+        return None
+
+    async def on_reconfigure(
+        self, old_config: Dict[str, Any], new_config: Dict[str, Any]
+    ) -> None:  # pragma: no cover - default hook
+        """Hook executed after configuration changes."""
         return None
 
     def validate_registration_stage(self, stage: PipelineStage) -> None:
