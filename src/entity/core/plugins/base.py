@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List
 
 from entity.utils.logging import get_logger
-from entity.pipeline.utils import _normalize_stages
+from ..stage_utils import _normalize_stages
 
 from ..stages import PipelineStage
 

@@ -8,7 +8,7 @@ from entity.core.plugins import (
 )
 from entity.core.stages import PipelineStage
 from entity.core.registry_validator import RegistryValidator
-from entity.pipeline.utils import StageResolver
+from entity.core.stage_utils import StageResolver
 from entity.resources.logging import LoggingResource
 
 

@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, Optional, Type, cast
 
-from entity.pipeline.utils import _normalize_stages
+from .stage_utils import _normalize_stages
 from entity.core.plugin_analyzer import suggest_upgrade
 
 from entity.utils.logging import get_logger

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 
-from entity.pipeline.stages import PipelineStage
-from entity.pipeline.utils import StageResolver
+from entity.core.stages import PipelineStage
+from entity.core.stage_utils import StageResolver
 from entity.utils.logging import get_logger
 
 

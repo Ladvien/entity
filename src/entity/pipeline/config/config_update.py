@@ -110,3 +110,6 @@ async def update_plugin_configuration(
         except Exception as rollback_exc:  # noqa: BLE001 - ignore nested error
             logger.exception("Failed to rollback plugin '%s': %s", name, rollback_exc)
         return ConfigUpdateResult(False, False, f"Failed to update: {exc}")
+
+
+__all__ = ["ConfigUpdateResult", "update_plugin_configuration"]

@@ -32,3 +32,6 @@ async def execute_pending_tools(
 
     await asyncio.gather(*(run_call(c) for c in list(state.pending_tool_calls)))
     return results
+
+
+__all__ = ["execute_pending_tools"]

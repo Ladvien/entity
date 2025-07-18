@@ -11,8 +11,8 @@ from entity.core.plugins import (
 from entity.core.registries import ToolRegistry
 from entity.core.state import PipelineState
 from entity.pipeline.errors import PluginContextError
-from entity.pipeline.stages import PipelineStage
-from entity.pipeline.utils import StageResolver
+from entity.core.stages import PipelineStage
+from entity.core.stage_utils import StageResolver
 
 
 class AttrPlugin(Plugin):
