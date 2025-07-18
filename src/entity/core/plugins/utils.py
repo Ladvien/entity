@@ -1,18 +1,15 @@
 from __future__ import annotations
 
-"""Utilities for plugin classification and discovery."""
-
 import inspect
+import sys
 from dataclasses import dataclass
 from importlib import import_module
-import sys
 from pathlib import Path
 from typing import Any, Dict, Optional, Type, cast
 
+from entity.utils.logging import get_logger
 from entity.pipeline.utils import _normalize_stages
 from entity.core.plugin_analyzer import suggest_upgrade
-
-from entity.utils.logging import get_logger
 
 
 @dataclass
@@ -140,8 +137,24 @@ class PluginAutoClassifier:
         return PluginAutoClassifier.classify(plugin_func, user_hints)
 
 
+def validate_reconfiguration_params(
+    old_config: Dict[str, Any], new_config: Dict[str, Any]
+) -> "ValidationResult":
+    """Ensure only configuration values are changed on reload."""
+
+    from . import ValidationResult
+
+    for key in ("type", "stage", "stages", "dependencies"):
+        if key in new_config and new_config.get(key) != old_config.get(key):
+            return ValidationResult.error_result("Topology changes require restart")
+
+    return ValidationResult.success_result()
+
+
 __all__ = [
     "PluginAutoClassifier",
     "import_plugin_class",
     "configure_plugins",
+    "plugin_base_registry",
+    "validate_reconfiguration_params",
 ]

@@ -7,7 +7,7 @@ from typing import Any, Callable, Optional
 
 from .stages import PipelineStage
 
-from .plugin_utils import PluginAutoClassifier, plugin_base_registry, configure_plugins
+from .plugins.utils import PluginAutoClassifier, plugin_base_registry, configure_plugins
 from .plugins import PromptPlugin, ToolPlugin
 
 

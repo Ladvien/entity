@@ -11,7 +11,7 @@ from typing import Any, Dict, Iterable, List, Tuple, Type
 
 from entity.config.environment import load_env
 from entity.config.models import EntityConfig, PluginConfig, asdict
-from entity.core.plugin_utils import import_plugin_class
+from entity.core.plugins.utils import import_plugin_class
 from entity.core.plugins import (
     Plugin,
     ResourcePlugin,
@@ -881,17 +881,3 @@ class SystemInitializer:
                 f"Missing canonical resources: {missing_list}. Add them to your configuration.",
                 kind="Resource",
             )
-
-
-def validate_reconfiguration_params(
-    old_config: Dict[str, Any], new_config: Dict[str, Any]
-) -> ValidationResult:
-    """Ensure only configuration values are changed on reload."""
-
-    from entity.core.plugins import ValidationResult
-
-    for key in ("type", "stage", "stages", "dependencies"):
-        if key in new_config and new_config.get(key) != old_config.get(key):
-            return ValidationResult.error_result("Topology changes require restart")
-
-    return ValidationResult.success_result()

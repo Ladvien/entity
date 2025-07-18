@@ -308,8 +308,8 @@ class PluginToolCLI:
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
 
-        from entity.core import plugin_utils
-        from entity.core.plugin_utils import PluginAutoClassifier
+        from entity.core.plugins import utils as plugin_utils
+        from entity.core.plugins.utils import PluginAutoClassifier
 
         if plugin_utils.plugin_base_registry.auto_plugin is object:
             plugin_utils.configure_plugins(

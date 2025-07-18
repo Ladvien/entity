@@ -8,8 +8,8 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Type, cast
 
-from entity.core import plugin_utils
-from .plugin_utils import PluginAutoClassifier
+from entity.core.plugins import utils as plugin_utils
+from .plugins.utils import PluginAutoClassifier
 from entity.pipeline.exceptions import PipelineError
 from entity.pipeline.utils import StageResolver
 from entity.pipeline.stages import PipelineStage
