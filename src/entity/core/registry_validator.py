@@ -10,37 +10,13 @@ import sys
 from typing import Dict, List
 
 from entity.core.resources.container import DependencyGraph
+from entity.core.registries import PluginRegistry
 
 SRC_PATH = pathlib.Path(__file__).resolve().parents[1]
 if str(SRC_PATH) not in sys.path:
     sys.path.insert(0, str(SRC_PATH))
 
 from entity.core.plugins.utils import import_plugin_class  # noqa: E402
-
-
-class ClassRegistry:
-    def __init__(self) -> None:
-        self._classes: Dict[str, type] = {}
-        self._configs: Dict[str, Dict] = {}
-        self._order: List[str] = []
-
-    def register_class(self, plugin_class: type, config: Dict, name: str) -> None:
-        self._classes[name] = plugin_class
-        self._configs[name] = config
-        self._order.append(name)
-
-    def has_plugin(self, name: str) -> bool:
-        return name in self._classes
-
-    def list_plugins(self) -> List[str]:
-        return list(self._order)
-
-    def all_plugin_classes(self):
-        for name in self._order:
-            yield self._classes[name], self._configs[name]
-
-    def get_class(self, name: str) -> type | None:
-        return self._classes.get(name)
 
 
 class SystemInitializer:
@@ -68,7 +44,7 @@ class RegistryValidator:
 
     def __init__(self, config_path: str) -> None:
         self.initializer = SystemInitializer.from_yaml(config_path)
-        self.registry = ClassRegistry()
+        self.registry = PluginRegistry()
         self.dep_graph: Dict[str, List[str]] = {}
         self.has_vector_memory = False
         self.has_complex_prompt = False
@@ -129,10 +105,11 @@ class RegistryValidator:
             for name, cfg in section_cfg.items():
                 cls = import_plugin_class(cfg.get("type", name))
                 self._validate_plugin_type(name, cls, section)
-                self.registry.register_class(cls, cfg, name)
                 cfg_deps = list(cfg.get("dependencies", []))
                 class_deps = list(getattr(cls, "dependencies", []))
-                self.dep_graph[name] = cfg_deps or class_deps
+                deps = cfg_deps or class_deps
+                self.registry.register_plugin(cls, name, dependencies=deps, config=cfg)
+                self.dep_graph[name] = deps
                 self._validate_stage_assignment(name, cls, cfg)
 
                 if name == "vector_store" or cls.__name__ == "PgVectorStore":
@@ -196,47 +173,15 @@ class RegistryValidator:
             raise SystemError("AdapterPlugin stages must be INPUT and/or OUTPUT")
 
     def _validate_dependencies(self) -> None:
-        for cls, _ in self.registry.all_plugin_classes():
-            validate = getattr(cls, "validate_dependencies", None)
-            if validate is None:
-                from entity.core.plugins import ValidationResult
-
-                result = ValidationResult.success_result()
-            else:
-                result = validate(self.registry)
-                if inspect.isawaitable(result):
-                    result = asyncio.run(result)
-            if not result.success:
-                raise SystemError(
-                    f"Dependency validation failed for {cls.__name__}: {result.message}"
-                )
-
-        graph_map: Dict[str, List[str]] = {name: [] for name in self.dep_graph}
-        for plugin_name, deps in self.dep_graph.items():
-            for dep in deps:
-                optional = dep.endswith("?")
-                dep_name = dep[:-1] if optional else dep
-                if not self.registry.has_plugin(dep_name):
-                    if optional:
-                        continue
-                    available = self.registry.list_plugins()
-                    raise SystemError(
-                        (
-                            f"Plugin '{plugin_name}' requires '{dep_name}' but it's not registered. "
-                            f"Available: {available}"
-                        )
-                    )
-                if dep_name in graph_map:
-                    graph_map[dep_name].append(plugin_name)
-
-        DependencyGraph(graph_map).topological_sort()
+        self.registry.validate_dependencies()
 
     def _validate_resource_levels(self) -> None:
         from entity.core.plugins import AgentResource, ResourcePlugin
         from entity.resources.base import AgentResource as CanonicalAgentResource
 
-        for plugin_name, plugin_cls in self.registry._classes.items():
-            if issubclass(plugin_cls, ResourcePlugin):
+        for plugin_name in self.registry.list_plugin_names():
+            plugin_cls = self.registry.get_class(plugin_name)
+            if plugin_cls is None or issubclass(plugin_cls, ResourcePlugin):
                 continue
             for dep in self.dep_graph.get(plugin_name, []):
                 dep_name = dep[:-1] if dep.endswith("?") else dep
@@ -250,7 +195,9 @@ class RegistryValidator:
                 )
 
     def _validate_configs(self) -> None:
-        for cls, cfg in self.registry.all_plugin_classes():
+        for name in self.registry.list_plugin_names():
+            cls = self.registry.get_class(name)
+            cfg = self.registry.get_config(name) or {}
             validate = getattr(cls, "validate_config", None)
             if validate is None:
                 from entity.core.plugins import ValidationResult
