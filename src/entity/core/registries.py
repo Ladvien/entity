@@ -4,6 +4,11 @@ from dataclasses import dataclass
 from collections import OrderedDict
 from typing import Any, Awaitable, Callable, Dict, List
 import logging
+import asyncio
+import inspect
+
+from entity.core.resources.container import DependencyGraph
+from entity.core.validation import verify_dependencies, verify_stage_assignment
 
 from entity.core.validation import verify_stage_assignment
 from entity.pipeline.stages import PipelineStage
@@ -26,6 +31,8 @@ class PluginRegistry:
     def __init__(self) -> None:
         self._stage_plugins: "OrderedDict[str, OrderedDict[Any, str]]" = OrderedDict()
         self._names: "OrderedDict[Any, str]" = OrderedDict()
+        self._plugins_by_name: "OrderedDict[str, Any]" = OrderedDict()
+        self._configs: Dict[str, Dict] = {}
         self._capabilities: Dict[Any, PluginCapabilities] = {}
 
     async def register_plugin_for_stage(
@@ -50,6 +57,8 @@ class PluginRegistry:
         )
         if plugin not in self._names:
             self._names[plugin] = plugin_name
+        if plugin_name not in self._plugins_by_name:
+            self._plugins_by_name[plugin_name] = plugin
         caps = self._capabilities.get(plugin)
         if caps is None:
             deps = list(getattr(plugin, "dependencies", []))
@@ -78,6 +87,80 @@ class PluginRegistry:
                 if dep not in caps.required_resources:
                     caps.required_resources.append(dep)
 
+    def register_plugin(
+        self,
+        plugin: Any,
+        name: str,
+        *,
+        dependencies: list[str] | None = None,
+        config: Dict | None = None,
+    ) -> None:
+        """Register a plugin class for dependency validation."""
+
+        if name in self._plugins_by_name:
+            return
+        self._plugins_by_name[name] = plugin
+        self._names[plugin] = name
+        self._configs[name] = config or {}
+        deps = (
+            dependencies
+            if dependencies is not None
+            else list(getattr(plugin, "dependencies", []))
+        )
+        self._capabilities[plugin] = PluginCapabilities([], list(deps))
+
+    def get_class(self, name: str) -> Any | None:
+        return self._plugins_by_name.get(name)
+
+    def get_config(self, name: str) -> Dict | None:
+        return self._configs.get(name)
+
+    def list_plugin_names(self) -> List[str]:
+        return list(self._plugins_by_name.keys())
+
+    def dependency_graph(self) -> Dict[str, List[str]]:
+        graph: Dict[str, List[str]] = {n: [] for n in self._plugins_by_name}
+        for plugin, caps in self._capabilities.items():
+            src = self._names.get(plugin)
+            if src is None:
+                continue
+            for dep in caps.required_resources:
+                dep_name = dep[:-1] if dep.endswith("?") else dep
+                if dep_name in graph:
+                    graph[dep_name].append(src)
+        return graph
+
+    def validate_dependencies(self) -> None:
+        names = set(self._plugins_by_name)
+        for plugin in self._plugins_by_name.values():
+            caps = self._capabilities.get(plugin)
+            deps = (
+                caps.required_resources
+                if caps is not None
+                else list(getattr(plugin, "dependencies", []))
+            )
+            plugin_name = getattr(plugin, "name", plugin.__class__.__name__)
+            for dep in deps:
+                optional = str(dep).endswith("?")
+                dep_name = str(dep)[:-1] if optional else str(dep)
+                if dep_name == plugin_name:
+                    raise SystemError(f"Plugin '{plugin_name}' cannot depend on itself")
+                if dep_name not in names and not optional:
+                    available = ", ".join(sorted(names))
+                    raise SystemError(
+                        f"Plugin '{plugin_name}' requires '{dep_name}' but it's not registered. Available: {available}"
+                    )
+            validator = getattr(plugin, "validate_dependencies", None)
+            if callable(validator):
+                result = validator(self)
+                if inspect.isawaitable(result):
+                    result = asyncio.run(result)
+                if not result.success:
+                    raise SystemError(
+                        f"Dependency validation failed for {plugin.__name__}: {result.message}"
+                    )
+        DependencyGraph(self.dependency_graph()).topological_sort()
+
     def get_plugins_for_stage(self, stage: str | PipelineStage) -> List[Any]:
         stage_key = stage if isinstance(stage, str) else str(stage)
         plugins = self._stage_plugins.get(stage_key)
@@ -102,7 +185,7 @@ class PluginRegistry:
     def has_plugin(self, name: str) -> bool:
         """Return ``True`` if a plugin registered under ``name`` exists."""
 
-        return any(n == name for n in self._names.values())
+        return name in self._plugins_by_name
 
     def get_capabilities(self, plugin: Any) -> PluginCapabilities | None:
         return self._capabilities.get(plugin)
