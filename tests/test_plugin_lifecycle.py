@@ -4,8 +4,8 @@ from entity.core.agent import Agent
 from entity.core.plugins import Plugin
 from entity.core.stages import PipelineStage
 from entity.infrastructure import DuckDBInfrastructure
-from entity.resources.interfaces.duckdb_resource import DuckDBResource
-from entity.resources.interfaces.duckdb_vector_store import DuckDBVectorStore
+from entity.resources.database import DuckDBResource
+from entity.resources.duckdb_vector_store import DuckDBVectorStore
 
 
 class LifecyclePlugin(Plugin):

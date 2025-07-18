@@ -2,7 +2,7 @@ import pytest
 
 from entity.core.resources.container import ResourceContainer
 from entity.resources.metrics import MetricsCollectorResource
-from entity.resources.interfaces.vector_store import VectorStoreResource
+from entity.resources.vector_store import VectorStoreResource
 from entity.core.plugins import InfrastructurePlugin
 
 

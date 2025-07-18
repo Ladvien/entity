@@ -10,8 +10,8 @@ from entity.cli import EntityCLI
 from entity.core.registries import PluginRegistry
 from entity.infrastructure import DuckDBInfrastructure
 from entity.pipeline.config.config_update import update_plugin_configuration
-from entity.resources.interfaces.duckdb_resource import DuckDBResource
-from entity.resources.interfaces.duckdb_vector_store import DuckDBVectorStore
+from entity.resources.database import DuckDBResource
+from entity.resources.duckdb_vector_store import DuckDBVectorStore
 
 
 class RuntimeCheckPlugin(Plugin):

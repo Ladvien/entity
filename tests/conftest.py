@@ -43,8 +43,7 @@ OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", f"http://localhost:{OLLAMA_PORT}"
 from entity.infrastructure import DuckDBInfrastructure, AsyncPGInfrastructure
 from entity.resources import Memory, LLM
 from plugins.builtin.resources.pg_vector_store import PgVectorStore
-from entity.resources.interfaces.duckdb_resource import DuckDBResource
-from entity.resources.interfaces.database import DatabaseResource
+from entity.resources.database import DuckDBResource, DatabaseResource
 from entity.core.resources.container import ResourceContainer
 
 

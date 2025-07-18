@@ -5,7 +5,7 @@ from typing import Any, Dict, List
 from pgvector.asyncpg import register_vector, Vector
 
 from entity.core.plugins import ValidationResult
-from entity.resources.interfaces.vector_store import VectorStoreResource
+from entity.resources.vector_store import VectorStoreResource
 
 
 class PgVectorStore(VectorStoreResource):

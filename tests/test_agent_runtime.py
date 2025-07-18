@@ -5,8 +5,8 @@ from entity.core.plugins import Plugin
 from entity.infrastructure import DuckDBInfrastructure
 from entity.pipeline.stages import PipelineStage
 from entity.pipeline.workflow import Pipeline, Workflow
-from entity.resources.interfaces.duckdb_resource import DuckDBResource
-from entity.resources.interfaces.duckdb_vector_store import DuckDBVectorStore
+from entity.resources.database import DuckDBResource
+from entity.resources.duckdb_vector_store import DuckDBVectorStore
 
 
 class ThoughtPlugin(Plugin):

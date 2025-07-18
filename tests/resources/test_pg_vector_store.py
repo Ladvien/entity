@@ -6,7 +6,7 @@ from pgvector.asyncpg import register_vector
 
 from entity.resources import Memory
 from entity.core.state import ConversationEntry
-from entity.resources.interfaces.database import DatabaseResource
+from entity.resources.database import DatabaseResource
 from plugins.builtin.resources.pg_vector_store import PgVectorStore
 
 

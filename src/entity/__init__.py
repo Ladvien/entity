@@ -15,7 +15,7 @@ from .core.agent import AgentRuntime
 from .core.stages import PipelineStage
 from .infrastructure import DuckDBInfrastructure
 from .resources import LLM, Memory, Storage
-from .resources.interfaces.duckdb_vector_store import DuckDBVectorStore
+from .resources.duckdb_vector_store import DuckDBVectorStore
 from .resources.logging import LoggingResource
 from .utils.setup_manager import Layer0SetupManager
 from entity.workflows.minimal import minimal_workflow

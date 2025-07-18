@@ -6,7 +6,7 @@ import pytest
 
 from tests.conftest import AsyncPGDatabase
 from entity.resources import Memory
-from entity.resources.interfaces.database import DatabaseResource
+from entity.resources.database import DatabaseResource
 
 from entity.core.state import ConversationEntry
 

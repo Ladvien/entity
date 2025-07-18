@@ -4,7 +4,7 @@ from entity.pipeline.errors import InitializationError
 from entity.pipeline.initializer import ClassRegistry, SystemInitializer
 from entity.pipeline.stages import PipelineStage
 from entity.core.plugins import PromptPlugin
-from entity.resources.interfaces.database import DatabaseResource
+from entity.resources.database import DatabaseResource
 from entity.resources.base import AgentResource as CanonicalResource  # noqa: F401
 
 
