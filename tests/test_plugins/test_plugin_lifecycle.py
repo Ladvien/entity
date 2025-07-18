@@ -1,6 +1,6 @@
 import pytest
 
-from entity.core.plugins.base import Plugin, ResourcePlugin
+from entity.core.plugins import Plugin, ResourcePlugin
 from entity.resources.metrics import MetricsCollectorResource
 
 

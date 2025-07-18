@@ -1,6 +1,6 @@
 import pytest
 
-from entity.core import plugin_utils
+from entity.core.plugins import utils as plugin_utils
 from entity.core.plugins import (
     Plugin,
     PromptPlugin,

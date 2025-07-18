@@ -1,7 +1,7 @@
 import pytest
 
 from entity.core.plugins import InputAdapterPlugin, OutputAdapterPlugin
-from entity.core.plugins.base import ConfigurationError
+from entity.core.plugins import ConfigurationError
 from entity.core.registries import PluginRegistry
 from entity.pipeline.stages import PipelineStage
 

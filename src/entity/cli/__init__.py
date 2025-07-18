@@ -463,7 +463,7 @@ class EntityCLI:
             return 1
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        from entity.core.plugin_utils import PluginAutoClassifier
+        from entity.core.plugins.utils import PluginAutoClassifier
 
         found = False
         for name, obj in module.__dict__.items():

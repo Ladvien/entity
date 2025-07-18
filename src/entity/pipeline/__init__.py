@@ -162,7 +162,7 @@ def __getattr__(name: str) -> Any:
             "FailurePlugin",
             "ResourcePlugin",
         }:
-            from entity.core import plugin_utils
+            from entity.core.plugins import utils as plugin_utils
 
             if plugin_utils.plugin_base_registry.auto_plugin is object:
                 plugin_utils.configure_plugins(

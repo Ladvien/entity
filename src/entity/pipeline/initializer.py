@@ -11,7 +11,7 @@ from typing import Any, Dict, Iterable, List, Tuple, Type
 
 from entity.config.environment import load_env
 from entity.config.models import EntityConfig, PluginConfig, asdict
-from entity.core.plugin_utils import import_plugin_class
+from entity.core.plugins.utils import import_plugin_class
 from entity.core.plugins import (
     Plugin,
     ResourcePlugin,
@@ -881,6 +881,7 @@ class SystemInitializer:
                 f"Missing canonical resources: {missing_list}. Add them to your configuration.",
                 kind="Resource",
             )
+<<<<<<< HEAD
 
 
 def validate_reconfiguration_params(
@@ -904,3 +905,5 @@ __all__ = [
     "plugin_cleanup_context",
     "validate_reconfiguration_params",
 ]
+=======
+>>>>>>> pr-1794

@@ -6,7 +6,7 @@ from typing import Any
 
 from entity.core.plugins import ValidationResult
 from entity.core.registries import PluginRegistry
-from entity.pipeline.initializer import validate_reconfiguration_params
+from entity.core.plugins.utils import validate_reconfiguration_params
 from entity.utils.logging import get_logger
 
 

@@ -15,7 +15,7 @@ SRC_PATH = pathlib.Path(__file__).resolve().parents[1]
 if str(SRC_PATH) not in sys.path:
     sys.path.insert(0, str(SRC_PATH))
 
-from entity.core.plugin_utils import import_plugin_class  # noqa: E402
+from entity.core.plugins.utils import import_plugin_class  # noqa: E402
 
 
 class ClassRegistry:
