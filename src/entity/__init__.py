@@ -17,7 +17,7 @@ from .infrastructure import DuckDBInfrastructure
 from .resources import LLM, Memory, Storage
 from .resources.duckdb_vector_store import DuckDBVectorStore
 from .resources.logging import LoggingResource
-from .utils.setup_manager import Layer0SetupManager
+from .defaults import ensure_defaults
 from entity.workflows.minimal import minimal_workflow
 from entity.utils.logging import get_logger
 
@@ -50,11 +50,7 @@ except ModuleNotFoundError:  # pragma: no cover - optional dependency
 def _create_default_agent() -> Agent:
     """Return a fully configured default :class:`Agent`."""
 
-    setup = Layer0SetupManager()
-    try:  # best effort environment preparation
-        asyncio.run(setup.setup())
-    except Exception:  # noqa: BLE001
-        pass
+    setup = ensure_defaults()
 
     agent = Agent()
     builder = agent.builder

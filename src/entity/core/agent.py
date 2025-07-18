@@ -27,6 +27,7 @@ from .registries import PluginRegistry, SystemRegistries, ToolRegistry
 from .resources.container import ResourceContainer
 from entity.workflows.base import Workflow
 from entity.workflows.discovery import discover_workflows, register_module_workflows
+from ..defaults import ensure_defaults
 
 from typing import TYPE_CHECKING
 
@@ -459,6 +460,8 @@ class Agent:
         pipeline: Pipeline | None = None,
         workflow: Workflow | None = None,
     ) -> None:
+        if config_path is None:
+            ensure_defaults()
         self.config_path = config_path
         self.pipeline = pipeline
         self.workflow = workflow
