@@ -100,7 +100,7 @@ def postgres_dsn(docker_ip: str, docker_services) -> str:
     def check():
         return loop.run_until_complete(_can_connect(dsn))
 
-    docker_services.wait_until_responsive(timeout=30, pause=0.5, check=check)
+    docker_services.wait_until_responsive(timeout=60, pause=0.5, check=check)
     return dsn
 
 
