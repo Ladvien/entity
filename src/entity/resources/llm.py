@@ -7,12 +7,8 @@ from typing import Any, Dict
 from html import escape
 from ..core.plugins import ResourcePlugin, ValidationResult
 from entity.config.models import LLMConfig
-<<<<<<< HEAD
-from entity.core.validation import validate_model
-=======
 from pydantic import ValidationError
 from entity.core.state import LLMResponse
->>>>>>> pr-1783
 
 from ..core.resources.container import PoolConfig, ResourcePool
 from .base import AgentResource
@@ -106,7 +102,11 @@ class LLM(AgentResource):
 
     @classmethod
     async def validate_config(cls, config: Dict[str, Any]) -> ValidationResult:
-        return validate_model(LLMConfig, config)
+        try:
+            LLMConfig.parse_obj(config)
+        except ValidationError as exc:
+            return ValidationResult.error_result(str(exc))
+        return ValidationResult.success_result()
 
     async def _execute_impl(self, context: Any) -> None:  # pragma: no cover - stub
         return None
@@ -118,12 +118,3 @@ class LLM(AgentResource):
             if not result.success:
                 return ValidationResult.error_result(f"provider: {result.message}")
         return ValidationResult.success_result()
-
-    async def health_check(self) -> bool:
-        """Return ``True`` when the provider is reachable."""
-        if self.provider is None:
-            return True
-        if hasattr(self.provider, "validate_runtime"):
-            result = await self.provider.validate_runtime()
-            return result.success
-        return True
