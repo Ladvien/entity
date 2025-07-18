@@ -1,7 +1,7 @@
 import pytest
 from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
 from entity.core.resources.container import ResourceContainer
-from entity.pipeline.worker import PipelineWorker
+from entity.worker.pipeline_worker import PipelineWorker
 
 
 @pytest.mark.asyncio

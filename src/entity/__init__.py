@@ -11,7 +11,7 @@ from .core.agent import Agent
 from .core.plugins import PromptPlugin, ToolPlugin
 from .core.registries import SystemRegistries
 from .core.resources.container import ResourceContainer
-from .core.runtime import AgentRuntime
+from .core.agent import AgentRuntime
 from .core.stages import PipelineStage
 from .infrastructure import DuckDBInfrastructure
 from .resources import LLM, Memory, Storage
