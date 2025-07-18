@@ -1,11 +1,8 @@
 from datetime import datetime
-import asyncio
 import pytest
 
-from entity.core.context import PluginContext
 from entity.core.state import ConversationEntry, PipelineState
-from entity.core.registries import SystemRegistries, PluginRegistry, ToolRegistry
-from entity.core.resources.container import ResourceContainer
+from tests.utils import make_async_context, make_context
 
 
 class DummyTool:
@@ -13,30 +10,9 @@ class DummyTool:
         return params
 
 
-async def make_context_async(state=None):
-    if state is None:
-        state = PipelineState(conversation=[])
-    container = ResourceContainer()
-    tool = DummyTool()
-    registry = ToolRegistry()
-    await registry.add("dummy", tool.execute_function)
-    return PluginContext(
-        state,
-        SystemRegistries(
-            resources=container,
-            tools=registry,
-            plugins=PluginRegistry(),
-        ),
-    )
-
-
-def make_context(state=None):
-    return asyncio.run(make_context_async(state))
-
-
 @pytest.mark.asyncio
 async def test_replace_conversation_history():
-    ctx = await make_context_async()
+    ctx = await make_async_context()
     new_history = [
         ConversationEntry("hi", "user", datetime.now()),
         ConversationEntry("hello", "assistant", datetime.now()),
@@ -48,7 +24,7 @@ async def test_replace_conversation_history():
 
 def test_update_response():
     state = PipelineState(conversation=[], response="foo")
-    ctx = make_context(state)
+    ctx = make_context(state=state)
     ctx.update_response(lambda r: r + "bar")
 
     assert ctx.response == "foobar"
@@ -57,7 +33,8 @@ def test_update_response():
 @pytest.mark.asyncio
 async def test_queue_tool_use_via_property_and_wrapper():
     state = PipelineState(conversation=[])
-    ctx = await make_context_async(state)
+    tool = DummyTool()
+    ctx = await make_async_context(state=state, tools={"dummy": tool.execute_function})
 
     key1 = await ctx.advanced.queue_tool_use("dummy", x=1)
     key2 = await ctx.queue_tool_use("dummy", x=2)

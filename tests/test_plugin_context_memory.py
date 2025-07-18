@@ -1,22 +1,10 @@
 import asyncio
 from datetime import datetime
 import pytest
-from entity.core.context import PluginContext
-from entity.core.state import PipelineState, ConversationEntry
+from entity.core.state import ConversationEntry
 from entity.resources import Memory
 from entity.pipeline.errors import ResourceInitializationError
-from entity.core.resources.container import ResourceContainer
-from entity.core.registries import SystemRegistries, ToolRegistry, PluginRegistry
-
-
-async def make_context(memory: Memory) -> PluginContext:
-    regs = SystemRegistries(
-        resources=ResourceContainer(),
-        tools=ToolRegistry(),
-        plugins=PluginRegistry(),
-    )
-    await regs.resources.add("memory", memory)
-    return PluginContext(PipelineState(conversation=[]), regs)
+from tests.utils import make_async_context
 
 
 async def run_test(memory: Memory) -> None:
@@ -37,7 +25,7 @@ async def run_test(memory: Memory) -> None:
 
 @pytest.mark.asyncio
 async def test_memory_roundtrip(memory_db: Memory) -> None:
-    ctx = await make_context(memory_db)
+    ctx = await make_async_context(memory=memory_db)
     await ctx.remember("foo", "bar")
     assert await ctx.recall("foo") == "bar"
 

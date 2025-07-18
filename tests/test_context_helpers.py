@@ -1,22 +1,5 @@
-import types
 import pytest
-from entity.core.context import PluginContext
-from entity.core.state import PipelineState
-
-
-class DummyRegistries:
-    def __init__(self, resources):
-        self.resources = resources
-        self.tools = types.SimpleNamespace()
-
-
-def make_context(memory=None, storage=None, llm=None):
-    resources = {
-        "memory": memory,
-        "storage": storage or object(),
-        "llm": llm or object(),
-    }
-    return PluginContext(PipelineState(conversation=[]), DummyRegistries(resources))
+from tests.utils import make_context
 
 
 @pytest.mark.asyncio
