@@ -9,13 +9,13 @@ from typing import TYPE_CHECKING, Any
 
 __path__ = pkgutil.extend_path(globals().get("__path__", []), __name__)
 
+from .stages import PipelineStage
 from .exceptions import CircuitBreakerTripped
 from entity.core.circuit_breaker import CircuitBreaker, RetryPolicy
 
 # Registry classes are no longer imported eagerly.
 # Access ``PluginRegistry`` and related classes via ``registry`` or
 # rely on this module's ``__getattr__`` for lazy loading.
-from .stages import PipelineStage
 
 # Expose plugin configuration API used by the pipeline package
 
