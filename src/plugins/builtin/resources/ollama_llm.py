@@ -5,7 +5,7 @@ from typing import Dict
 import httpx
 
 from entity.core.state import LLMResponse
-from entity.resources.interfaces.llm import LLMResource
+from entity.resources.llm import LLMResource
 
 
 class OllamaLLMResource(LLMResource):

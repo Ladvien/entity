@@ -21,7 +21,7 @@ plugins:
   # Layer 2 - resource interfaces built on infrastructure
   resources:
     database:
-      type: entity.resources.interfaces.duckdb_resource:DuckDBResource
+      type: entity.resources.database:DuckDBResource
       path: ./agent.duckdb
     # vector_store:
     #   type: plugins.builtin.resources.duckdb_vector_store:DuckDBVectorStore

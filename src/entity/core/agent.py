@@ -321,14 +321,12 @@ class _AgentBuilder:
             container.register("database_backend", DuckDBInfrastructure, {}, layer=1)
 
         if not container.has_plugin("database"):
-            from entity.resources.interfaces.duckdb_resource import DuckDBResource
+            from entity.resources.database import DuckDBResource
 
             container.register("database", DuckDBResource, {}, layer=2)
 
         if not container.has_plugin("vector_store"):
-            from entity.resources.interfaces.duckdb_vector_store import (
-                DuckDBVectorStore,
-            )
+            from entity.resources.duckdb_vector_store import DuckDBVectorStore
 
             container.register("vector_store", DuckDBVectorStore, {}, layer=2)
 
@@ -343,7 +341,7 @@ class _AgentBuilder:
             container.register("echo_llm_backend", EchoLLMBackend, {}, layer=1)
 
         if not container.has_plugin("llm_provider"):
-            from entity.resources.interfaces.echo_llm import EchoLLMResource
+            from entity.resources.llm import EchoLLMResource
 
             # Echo LLM acts as the default interface resource.
             # Register at layer 2 so canonical LLM can depend on it.

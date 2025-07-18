@@ -5,13 +5,11 @@ import types
 
 import pytest
 
-sys.modules.setdefault(
-    "entity.resources.interfaces.duckdb_resource", types.ModuleType("duckdb_resource")
-)
+sys.modules.setdefault("entity.resources.database", types.ModuleType("duckdb_resource"))
 
 from entity.core.resources.container import ResourceContainer
 from entity.resources.llm import LLM
-from entity.resources.interfaces.llm import LLMResource
+from entity.resources.llm import LLMResource
 from entity.resources.metrics import MetricsCollectorResource
 
 

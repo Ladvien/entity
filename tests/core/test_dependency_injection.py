@@ -151,7 +151,7 @@ def test_dependencies_without_logging():
 
 
 def test_interface_resource_no_metrics_dependency() -> None:
-    from entity.resources.interfaces.database import DatabaseResource
+    from entity.resources.database import DatabaseResource
     from entity.resources.memory import Memory
 
     base_deps = DatabaseResource.dependencies.copy()
@@ -167,9 +167,7 @@ def test_interface_resource_no_metrics_dependency() -> None:
                 }
             },
             "resources": {
-                "database": {
-                    "type": "entity.resources.interfaces.database:DatabaseResource"
-                }
+                "database": {"type": "entity.resources.database:DatabaseResource"}
             },
             "agent_resources": {
                 "memory": {"type": "entity.resources.memory:Memory"},

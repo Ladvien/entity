@@ -2,11 +2,11 @@ from contextlib import asynccontextmanager
 import asyncio
 
 from entity.resources import LLM, Memory, Storage, StandardResources
-from entity.resources.interfaces.database import DatabaseResource
-from entity.resources.interfaces.llm import LLMResource
+from entity.resources.database import DatabaseResource
+from entity.resources.llm import LLMResource
 from entity.core.state import LLMResponse
-from entity.resources.interfaces.storage import StorageResource
-from entity.resources.interfaces.vector_store import VectorStoreResource
+from entity.resources.storage import StorageResource
+from entity.resources.vector_store import VectorStoreResource
 
 
 class DummyConnection:

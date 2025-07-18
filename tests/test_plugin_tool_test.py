@@ -3,8 +3,8 @@ import logging
 from entity.cli.plugin_tool.main import PluginToolArgs, PluginToolCLI
 from entity.core.plugins import ToolPlugin
 from entity.infrastructure import DuckDBInfrastructure
-from entity.resources.interfaces.duckdb_resource import DuckDBResource
-from entity.resources.interfaces.duckdb_vector_store import DuckDBVectorStore
+from entity.resources.database import DuckDBResource
+from entity.resources.duckdb_vector_store import DuckDBVectorStore
 
 
 class _TestPluginToolCLI(PluginToolCLI):

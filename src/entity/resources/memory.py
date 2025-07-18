@@ -8,10 +8,8 @@ import json
 import inspect
 
 from .base import AgentResource
-from .interfaces.database import DatabaseResource as DatabaseInterface
-from .interfaces.vector_store import (
-    VectorStoreResource as VectorStoreInterface,
-)
+from .database import DatabaseResource as DatabaseInterface
+from .vector_store import VectorStoreResource as VectorStoreInterface
 from .sql_utils import _execute, _maybe_await
 from ..core.plugins import ValidationResult
 from entity.config.models import MemoryConfig

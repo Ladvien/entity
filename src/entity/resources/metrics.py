@@ -39,7 +39,7 @@ class CustomMetricRecord:
 
 
 from .base import AgentResource
-from .interfaces.database import DatabaseResource
+from .database import DatabaseResource
 import aiosqlite
 
 

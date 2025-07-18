@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from typing import Dict, List
+from contextlib import asynccontextmanager
 
 from entity.core.plugins import ResourcePlugin, ValidationResult
 from entity.core.resources.container import PoolConfig, ResourcePool
-from contextlib import asynccontextmanager
 
 
 class VectorStoreResource(ResourcePlugin):
@@ -63,3 +63,6 @@ class VectorStoreResource(ResourcePlugin):
         except Exception as exc:  # noqa: BLE001
             return ValidationResult.error_result(str(exc))
         return ValidationResult.success_result()
+
+
+__all__ = ["VectorStoreResource"]

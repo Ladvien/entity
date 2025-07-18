@@ -63,6 +63,6 @@ automatically created DuckDB infrastructure and is registered if omitted.
 plugins:
   resources:
     database:
-      type: entity.resources.interfaces.duckdb_resource:DuckDBResource
+      type: entity.resources.database:DuckDBResource
       path: ./agent.duckdb
 ```
