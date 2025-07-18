@@ -13,24 +13,11 @@ from entity.pipeline.stages import PipelineStage
 from entity.pipeline.pipeline import execute_pipeline
 from entity.pipeline.errors import PluginContextError
 from entity.core.resources.container import ResourceContainer
-
-
-def make_context(stage: PipelineStage) -> PluginContext:
-    state = PipelineState(conversation=[])
-    container = ResourceContainer()
-    ctx = PluginContext(
-        state,
-        SystemRegistries(
-            resources=container, tools=ToolRegistry(), plugins=PluginRegistry()
-        ),
-    )
-    ctx.set_current_stage(stage)
-    ctx.set_current_plugin("test")
-    return ctx
+from tests.utils import make_context
 
 
 def test_say_only_output_stage() -> None:
-    ctx = make_context(PipelineStage.THINK)
+    ctx = make_context(stage=PipelineStage.THINK)
     with pytest.raises(PluginContextError):
         ctx.say("hi")
 

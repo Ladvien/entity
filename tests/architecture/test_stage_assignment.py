@@ -6,6 +6,7 @@ from entity.core.stages import PipelineStage
 from entity.core.state import PipelineState
 from entity.pipeline.errors import PluginContextError
 from entity.pipeline.utils import resolve_stages
+from tests.utils import make_async_context
 
 
 class AttrPlugin(Plugin):
@@ -42,23 +43,9 @@ class SayDuringParse(PromptPlugin):
         context.say("oops")
 
 
-class DummyRegs:
-    def __init__(self) -> None:
-        self.resources = {}
-        self.tools = ToolRegistry()
-
-
-def make_context(stage: PipelineStage) -> PluginContext:
-    state = PipelineState(conversation=[])
-    ctx = PluginContext(state, DummyRegs())
-    ctx.set_current_stage(stage)
-    ctx.set_current_plugin("test")
-    return ctx
-
-
 @pytest.mark.asyncio
 async def test_say_only_allowed_for_output() -> None:
-    ctx = make_context(PipelineStage.PARSE)
+    ctx = await make_async_context(stage=PipelineStage.PARSE)
     plugin = SayDuringParse({})
     with pytest.raises(PluginContextError):
         await plugin.execute(ctx)
