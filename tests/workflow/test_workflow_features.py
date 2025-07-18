@@ -35,6 +35,7 @@ class ChildWF(BaseWF):
 
 @pytest.mark.asyncio
 async def test_conditional_stage_skip():
+    MarkerPlugin.executed = False
     agent = Agent()
     builder = agent.builder
     await builder.add_plugin(MarkerPlugin({}))

@@ -12,6 +12,7 @@ logging
 configuration
 plugin_examples
 plugins
+workflows
 multi_user
 ```
 
