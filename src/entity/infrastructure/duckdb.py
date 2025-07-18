@@ -4,9 +4,6 @@ from contextlib import asynccontextmanager
 from typing import Any, Dict, Iterator
 import os
 
-from entity.pipeline.exceptions import CircuitBreakerTripped
-from entity.core.circuit_breaker import CircuitBreaker
-
 import importlib
 
 try:
@@ -30,28 +27,17 @@ class DuckDBInfrastructure(InfrastructurePlugin):
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
         self.path: str = self.config.get("path", ":memory:")
-        pool_cfg = PoolConfig(**self.config.get("pool", {}))
-        self._pool = ResourcePool(self._create_conn, pool_cfg, "duckdb")
-        self._conn: duckdb.DuckDBPyConnection | None = None
-        self._breaker = CircuitBreaker(
-            failure_threshold=self.config.get("failure_threshold", 3),
-            recovery_timeout=self.config.get("recovery_timeout", 60.0),
-        )
 
     async def _execute_impl(self, context: Any) -> None:  # pragma: no cover - stub
         return None
 
     async def initialize(self) -> None:
-        """Initialize the connection pool."""
+        """Prepare the database for use."""
         if duckdb is None:
             print(
                 "DuckDB not installed. Run 'poetry install --with dev' to enable local storage."
             )
             return
-        metrics = getattr(self, "metrics_collector", None)
-        if metrics is not None:
-            self._pool.set_metrics_collector(metrics)
-        await self._pool.initialize()
 
     async def _create_conn(self) -> duckdb.DuckDBPyConnection:
         if duckdb is None:
@@ -62,32 +48,28 @@ class DuckDBInfrastructure(InfrastructurePlugin):
 
     @asynccontextmanager
     async def connection(self) -> Iterator[duckdb.DuckDBPyConnection]:
-        """Yield an existing connection or acquire one from the pool."""
+        """Yield a new DuckDB connection."""
         if duckdb is None:
             raise RuntimeError(
                 "DuckDB missing. Install with 'poetry install --with dev'."
             )
-        if self._conn is not None:
-            yield self._conn
-        else:
-            async with self._pool as conn:
-                yield conn
-
-    async def shutdown(self) -> None:
-        while not self._pool._pool.empty():
-            conn = await self._pool._pool.get()
+        conn = duckdb.connect(self.path)
+        try:
+            yield conn
+        finally:
             conn.close()
 
+    async def shutdown(self) -> None:
+        pass
+
     def get_connection_pool(self) -> ResourcePool:
-        return self._pool
+        return ResourcePool(self._create_conn, PoolConfig(), "duckdb")
 
     def get_pool(self) -> ResourcePool:
-        """Return the existing connection pool."""
-        return self._pool
+        """Return a connection pool for one-time use."""
+        return self.get_connection_pool()
 
-    async def validate_runtime(
-        self, breaker: CircuitBreaker | None = None
-    ) -> ValidationResult:
+    async def validate_runtime(self, breaker: Any | None = None) -> ValidationResult:
         """Check connectivity using a simple query."""
 
         if duckdb is None:
@@ -106,15 +88,9 @@ class DuckDBInfrastructure(InfrastructurePlugin):
                     f"database directory not writable: {directory}"
                 )
 
-        async def _query() -> None:
+        try:
             async with self.connection() as conn:
                 conn.execute("SELECT 1")
-
-        breaker = breaker or self._breaker
-        try:
-            await breaker.call(_query)
-        except CircuitBreakerTripped:
-            return ValidationResult.error_result("circuit breaker open")
         except Exception as exc:  # noqa: BLE001 - return as validation error
             return ValidationResult.error_result(str(exc))
         return ValidationResult.success_result()

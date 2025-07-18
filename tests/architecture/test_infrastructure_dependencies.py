@@ -1,18 +1,14 @@
-from entity.infrastructure.aws_standard import AWSStandardInfrastructure
 from entity.infrastructure.docker import DockerInfrastructure
 from entity.infrastructure.duckdb import DuckDBInfrastructure
 from entity.infrastructure.llamacpp import LlamaCppInfrastructure
-from entity.infrastructure.opentofu import OpenTofuInfrastructure
 from entity.infrastructure.postgres import PostgresInfrastructure
 
 
 def test_infrastructure_plugins_have_no_dependencies() -> None:
     classes = [
-        AWSStandardInfrastructure,
         DockerInfrastructure,
         DuckDBInfrastructure,
         LlamaCppInfrastructure,
-        OpenTofuInfrastructure,
         PostgresInfrastructure,
     ]
     for cls in classes:

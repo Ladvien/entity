@@ -19,14 +19,11 @@ from jsonschema import Draft7Validator
 from entity.core.agent import Agent
 from entity.core.plugins import Plugin, ValidationResult
 from entity.pipeline.config.config_update import update_plugin_configuration
-from entity.pipeline.exceptions import CircuitBreakerTripped
-from entity.core.circuit_breaker import CircuitBreaker
 from entity.utils.logging import get_logger
 from entity.config.environment import load_config
 from importlib import import_module  # noqa: E402
 from entity.infrastructure import (
     DockerInfrastructure,
-    AWSStandardInfrastructure,
 )  # noqa: E402
 
 try:  # Resolve plugin helpers from installed package
@@ -507,8 +504,6 @@ class EntityCLI:
     async def _infra_deploy(self, typ: str, path: str) -> int:
         if typ == "docker":
             infra = DockerInfrastructure({"path": path})
-        elif typ == "aws-standard":
-            infra = AWSStandardInfrastructure(region="us-east-1", config={"path": path})
         else:
             logger.error("Unknown infrastructure type %s", typ)
             return 1
@@ -518,8 +513,6 @@ class EntityCLI:
     async def _infra_destroy(self, typ: str, path: str) -> int:
         if typ == "docker":
             infra = DockerInfrastructure({"path": path})
-        elif typ == "aws-standard":
-            infra = AWSStandardInfrastructure(region="us-east-1", config={"path": path})
         else:
             logger.error("Unknown infrastructure type %s", typ)
             return 1
@@ -724,12 +717,6 @@ class EntityCLI:
             registry = agent.runtime.capabilities.plugins
             pipeline_manager = getattr(agent.runtime, "manager", None)
 
-            breaker_cfg = new_cfg.get("runtime_validation_breaker", {})
-            breaker = CircuitBreaker(
-                failure_threshold=breaker_cfg.get("failure_threshold", 3),
-                recovery_timeout=breaker_cfg.get("recovery_timeout", 60.0),
-            )
-
             plugins = new_cfg.get("plugins", {})
             runtime_tasks = []
             for section in plugins.values():
@@ -777,20 +764,10 @@ class EntityCLI:
                     if callable(validate):
 
                         async def _run_validation(p: Any, plugin_name: str) -> None:
-                            async def _validate() -> None:
+                            try:
                                 v_result = await validate()
                                 if not v_result.success:
                                     raise RuntimeError(v_result.message)
-
-                            try:
-                                await breaker.call(_validate)
-                            except CircuitBreakerTripped as exc:
-                                logger.error(
-                                    "Runtime validation failure threshold exceeded: %s",
-                                    exc,
-                                )
-                                await p.rollback_config(p.config_version - 1)
-                                raise
                             except Exception as exc:  # noqa: BLE001
                                 logger.error(
                                     "Runtime validation failed for %s: %s",
@@ -798,10 +775,6 @@ class EntityCLI:
                                     exc,
                                 )
                                 await p.rollback_config(p.config_version - 1)
-                                if breaker._failure_count >= breaker.failure_threshold:
-                                    logger.error(
-                                        "Runtime validation failure threshold exceeded"
-                                    )
                                 raise
 
                         runtime_tasks.append(
