@@ -53,7 +53,7 @@ async def test_conversation_id_generation(pg_container: ResourceContainer) -> No
         convo_ids = {
             row[0]
             for row in await conn.fetch(
-                "SELECT conversation_id FROM conversation_history", ()
+                "SELECT conversation_id FROM conversation_history"
             )
         }
     assert "u123_pipe1" in convo_ids
@@ -115,10 +115,10 @@ async def test_conversation_and_memory_namespaces(
         convo_ids = {
             row[0]
             for row in await conn.fetch(
-                "SELECT conversation_id FROM conversation_history", ()
+                "SELECT conversation_id FROM conversation_history"
             )
         }
-        kv_keys = {row[0] for row in await conn.fetch("SELECT key FROM memory_kv", ())}
+        kv_keys = {row[0] for row in await conn.fetch("SELECT key FROM memory_kv")}
 
     assert convo_ids == {"alice_chat"}
     assert kv_keys == {"alice:last"}
