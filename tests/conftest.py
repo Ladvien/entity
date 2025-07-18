@@ -111,6 +111,10 @@ class AsyncPGDatabase(DatabaseResource):
         self._dsn = dsn
         self.database_backend = None
 
+    @classmethod
+    def from_config(cls, cfg: dict) -> "AsyncPGDatabase":
+        return cls(cfg["dsn"])
+
     @asynccontextmanager
     async def connection(self):
         backend = getattr(self, "database_backend", None)

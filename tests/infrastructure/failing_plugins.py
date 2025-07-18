@@ -27,6 +27,10 @@ class FailingPostgresInfrastructure(PostgresInfrastructure):
 
     name = "failing_postgres"
 
+    async def initialize(self) -> None:  # type: ignore[override]
+        """Skip real connection setup."""
+        return None
+
     @asynccontextmanager
     async def connection(self):  # type: ignore[override]
         class BadConn:
