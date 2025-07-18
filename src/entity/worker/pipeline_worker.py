@@ -55,9 +55,12 @@ class PipelineWorker:
             await memory.save_conversation(
                 pipeline_id, state.conversation, user_id=user_id
             )
-            await memory.store_persistent(
-                temp_key, state.temporary_thoughts, user_id=user_id
-            )
+            if state.temporary_thoughts:
+                await memory.store_persistent(
+                    temp_key, state.temporary_thoughts, user_id=user_id
+                )
+            else:
+                await memory.delete_persistent(temp_key, user_id=user_id)
             return result
 
         if hasattr(container, "__aenter__"):

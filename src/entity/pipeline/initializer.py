@@ -268,11 +268,11 @@ class SystemInitializer:
         resources = self._config_model.plugins.resources
         if "database" not in resources:
             resources["database"] = PluginConfig(
-                type="entity.resources.interfaces.duckdb_resource:DuckDBResource"
+                type="entity.resources.database:DuckDBResource"
             )
             self.config.setdefault("plugins", {}).setdefault("resources", {})[
                 "database"
-            ] = {"type": "entity.resources.interfaces.duckdb_resource:DuckDBResource"}
+            ] = {"type": "entity.resources.database:DuckDBResource"}
         if "logging" not in resources:
             resources["logging"] = PluginConfig(
                 type="entity.resources.logging:LoggingResource"
@@ -858,15 +858,13 @@ class SystemInitializer:
             registered.add("database_backend")
 
         if "database" not in registered:
-            from entity.resources.interfaces.duckdb_resource import DuckDBResource
+            from entity.resources.database import DuckDBResource
 
             container.register("database", DuckDBResource, {}, layer=2)
             registered.add("database")
 
         if "vector_store" not in registered:
-            from entity.resources.interfaces.duckdb_vector_store import (
-                DuckDBVectorStore,
-            )
+            from entity.resources.duckdb_vector_store import DuckDBVectorStore
 
             container.register("vector_store", DuckDBVectorStore, {}, layer=2)
             registered.add("vector_store")

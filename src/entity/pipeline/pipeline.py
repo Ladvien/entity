@@ -283,11 +283,15 @@ async def execute_stage(
             state.conversation,
             user_id=user_id,
         )
-        await memory.store_persistent(
-            f"{state.pipeline_id}_temp",
-            state.temporary_thoughts,
-            user_id=user_id,
-        )
+        temp_key = f"{state.pipeline_id}_temp"
+        if state.temporary_thoughts:
+            await memory.store_persistent(
+                temp_key,
+                state.temporary_thoughts,
+                user_id=user_id,
+            )
+        else:
+            await memory.delete_persistent(temp_key, user_id=user_id)
     _elapsed = time.perf_counter() - _start
     # elapsed time could be logged here if needed
 
