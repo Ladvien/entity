@@ -1,24 +1,22 @@
 from __future__ import annotations
 
-"""Unified command line interface for the Entity framework."""
+"""Simplified command line interface for running Entity agents."""
 
 import argparse
 import asyncio
 import importlib.util
 import inspect
-import shutil
-import difflib
-import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Awaitable, Callable, Optional
+from typing import Any, Optional, Type
 
 import yaml
-from jsonschema import Draft7Validator
 
 from entity.core.agent import Agent
-from entity.core.plugins import Plugin, ValidationResult
+from entity.core.circuit_breaker import CircuitBreaker
+from entity.core.plugins import Plugin
 from entity.pipeline.config.config_update import update_plugin_configuration
+<<<<<<< HEAD
 from entity.utils.logging import get_logger
 from entity.config.environment import load_config
 from importlib import import_module  # noqa: E402
@@ -37,6 +35,11 @@ except ModuleNotFoundError:  # Fallback for local executions without package mod
     generate_plugin = import_module("entity.cli.plugin_tool.generate").generate_plugin
     load_plugin = import_module("entity.cli.plugin_tool.utils").load_plugin
     PLUGIN_TYPES = import_module("entity.cli.plugin_tool.main").PLUGIN_TYPES
+=======
+from entity.pipeline.exceptions import CircuitBreakerTripped
+from entity.utils.logging import get_logger
+from entity.config.environment import load_config
+>>>>>>> pr-1793
 
 logger = get_logger(__name__)
 
@@ -48,29 +51,13 @@ class CLIArgs:
     config: Optional[str]
     state_log: Optional[str]
     command: str
-    plugin_cmd: Optional[str] = None
-    name: Optional[str] = None
-    type: Optional[str] = None
-    out: Optional[str] = None
-    docs_dir: Optional[str] = None
-    path: Optional[str] = None
-    paths: Optional[list[str]] = None
     file: Optional[str] = None
-    workflow_cmd: Optional[str] = None
-    workflow_name: Optional[str] = None
-    fmt: Optional[str] = None
     env: Optional[str] = None
-    infra_cmd: Optional[str] = None
-    infra_type: Optional[str] = None
-    infra_path: Optional[str] = None
-    user_id: Optional[str] = None
-    message: Optional[str] = None
-    files: Optional[list[str]] = None
     strict_stages: bool = False
 
 
 class EntityCLI:
-    """Expose commands for running agents and working with plugins."""
+    """Expose commands for running agents and reloading configuration."""
 
     def __init__(self) -> None:
         self.args = self._parse_args()
@@ -90,132 +77,19 @@ class EntityCLI:
         sub = parser.add_subparsers(dest="command", required=True)
         sub.add_parser("run", help="Start the agent")
         sub.add_parser("serve-websocket", help="Start the agent via WebSocket")
-        sub.add_parser("verify", help="Load plugins and exit")
-        sub.add_parser("validate", help="Validate configuration and exit")
-        search = sub.add_parser("search-plugin", help="Search the plugin marketplace")
-        search.add_argument("name")
-        replay = sub.add_parser("replay-log", help="Replay a state log file")
-        replay.add_argument("file")
         reload_p = sub.add_parser(
             "reload-config", help="Reload plugin configuration from a YAML file"
         )
         reload_p.add_argument("file")
-
-        diff_p = sub.add_parser(
-            "diff-config", help="Show differences with the current configuration"
-        )
-        diff_p.add_argument("file")
-
-        lint_p = sub.add_parser(
-            "lint-config", help="Validate configuration files against schema"
-        )
-        lint_p.add_argument("files", nargs="+")
-
-        stats = sub.add_parser(
-            "get-conversation-stats", help="Show conversation metrics"
-        )
-        stats.add_argument("user_id")
-
-        debug = sub.add_parser("debug", help="Step through pipeline execution")
-        debug.add_argument("message", help="Input message")
-
-        new_p = sub.add_parser("new", help="Scaffold a new project")
-        new_p.add_argument("path")
-
-        create_agent = sub.add_parser("create-agent", help="Create a new agent project")
-        create_agent.add_argument("name")
-
-        workflow = sub.add_parser("workflow", help="Workflow utilities")
-        wf_sub = workflow.add_subparsers(dest="workflow_cmd", required=True)
-        create = wf_sub.add_parser("create", help="Create a workflow module")
-        create.add_argument("workflow_name")
-        create.add_argument("--out", default="src/workflows")
-        validate = wf_sub.add_parser(
-            "validate", help="Validate a workflow module or YAML file"
-        )
-        validate.add_argument("file", help="Workflow .py or .yaml file")
-        visualize = wf_sub.add_parser(
-            "visualize",
-            help="Visualize workflow from module or YAML file",
-        )
-        visualize.add_argument("file", help="Workflow .py or .yaml file")
-        visualize.add_argument(
-            "--format", dest="fmt", choices=["ascii", "graphviz"], default="ascii"
-        )
-
-        plugin = sub.add_parser("plugin", help="Plugin development tools")
-        plug_sub = plugin.add_subparsers(dest="plugin_cmd", required=True)
-        gen = plug_sub.add_parser("generate", help="Generate plugin boilerplate")
-        gen.add_argument("name")
-        gen.add_argument("--type", required=True, choices=list(PLUGIN_TYPES))
-        gen.add_argument("--out", default="src")
-        gen.add_argument("--docs-dir", default="docs/source")
-
-        scaffold = plug_sub.add_parser(
-            "scaffold", help="Create a standalone plugin project"
-        )
-        scaffold.add_argument("name")
-        scaffold.add_argument("--type", required=True, choices=list(PLUGIN_TYPES))
-        scaffold.add_argument("--out", default="user_plugins")
-
-        val = plug_sub.add_parser("validate", help="Validate plugin structure")
-        val.add_argument("path")
-
-        tst = plug_sub.add_parser("test", help="Run plugin in isolation")
-        tst.add_argument("path")
-
-        cfg = plug_sub.add_parser("config", help="Interactive configuration builder")
-        cfg.add_argument("--name", required=True)
-        cfg.add_argument("--type", required=True, choices=list(PLUGIN_TYPES))
-
-        dep = plug_sub.add_parser("deps", help="Analyze plugin dependencies")
-        dep.add_argument("paths", nargs="+")
-
-        doc = plug_sub.add_parser("docs", help="Generate documentation for plugin")
-        doc.add_argument("path")
-        doc.add_argument("--out", default="docs/source")
-
-        ana = plug_sub.add_parser(
-            "analyze-plugin",
-            help=(
-                "Show plugin stages and whether they come from config hints"
-                " or class attributes"
-            ),
-        )
-        ana.add_argument("path")
-
-        infra = sub.add_parser("infra", help="Infrastructure operations")
-        infra_sub = infra.add_subparsers(dest="infra_cmd", required=True)
-        deploy = infra_sub.add_parser("deploy", help="Deploy infrastructure")
-        deploy.add_argument("--type", required=True, dest="infra_type")
-        deploy.add_argument("--path", dest="infra_path", default="infra")
-        destroy = infra_sub.add_parser("destroy", help="Destroy infrastructure")
-        destroy.add_argument("--type", required=True, dest="infra_type")
-        destroy.add_argument("--path", dest="infra_path", default="infra")
 
         parsed = parser.parse_args()
         return CLIArgs(
             config=getattr(parsed, "config", None),
             state_log=getattr(parsed, "state_log", None),
             command=parsed.command,
-            plugin_cmd=getattr(parsed, "plugin_cmd", None),
-            name=getattr(parsed, "name", None),
-            type=getattr(parsed, "type", None),
-            out=getattr(parsed, "out", None),
-            docs_dir=getattr(parsed, "docs_dir", None),
-            path=getattr(parsed, "path", None),
-            paths=getattr(parsed, "paths", None),
             file=getattr(parsed, "file", None),
-            workflow_cmd=getattr(parsed, "workflow_cmd", None),
-            workflow_name=getattr(parsed, "workflow_name", None),
-            fmt=getattr(parsed, "fmt", None),
             env=getattr(parsed, "env", None),
-            infra_cmd=getattr(parsed, "infra_cmd", None),
-            infra_type=getattr(parsed, "infra_type", None),
-            infra_path=getattr(parsed, "infra_path", None),
-            user_id=getattr(parsed, "user_id", None),
-            message=getattr(parsed, "message", None),
-            files=getattr(parsed, "files", None),
+            strict_stages=getattr(parsed, "strict_stages", False),
         )
 
     # -----------------------------------------------------
@@ -224,57 +98,14 @@ class EntityCLI:
     def run(self) -> int:  # noqa: D401 - CLI side effects
         """Execute the selected command."""
         cmd = self.args.command
-        if cmd == "plugin":
-            return self._handle_plugin()
-        if cmd == "create-agent":
-            assert self.args.name is not None
-            return self._create_agent(self.args.name)
-        if cmd == "new":
-            assert self.args.path is not None
-            return self._create_project(self.args.path)
-        if cmd == "verify":
-            assert self.args.config is not None
-            return self._verify_plugins(self.args.config)
-        if cmd == "validate":
-            assert self.args.config is not None
-            return self._validate_config(
-                self.args.config,
-                env=self.args.env,
-                strict_stages=self.args.strict_stages,
-            )
-        if cmd == "search-plugin":
-            assert self.args.name is not None
-            return self._search_plugin(self.args.name)
-        if cmd == "workflow":
-            return self._handle_workflow()
-        if cmd == "infra":
-            return self._handle_infra()
-        if cmd == "replay-log":
-            assert self.args.file is not None
-            from entity.core.state_logger import LogReplayer
-
-            LogReplayer(self.args.file).replay()
-            return 0
         if self.args.config:
             cfg = self._load_config_files(self.args.config)
             agent = Agent.from_config(cfg, strict_stages=self.args.strict_stages)
         else:
             agent = Agent()
-        if cmd == "debug":
-            assert self.args.message is not None
-            return asyncio.run(self._debug_run(agent, self.args.message))
-        if cmd == "get-conversation-stats":
-            assert self.args.user_id is not None
-            return asyncio.run(self._get_conversation_stats(agent, self.args.user_id))
         if cmd == "reload-config":
             assert self.args.file is not None
             return self._reload_config(agent, self.args.file)
-        if cmd == "diff-config":
-            assert self.args.file is not None
-            return self._diff_config(agent, self.args.file)
-        if cmd == "lint-config":
-            assert self.args.files is not None
-            return self._lint_config(self.args.files)
 
         async def _serve() -> None:
             await agent._ensure_runtime()
@@ -303,6 +134,7 @@ class EntityCLI:
         return 0
 
     # -----------------------------------------------------
+<<<<<<< HEAD
     # plugin helpers
     # -----------------------------------------------------
     def _handle_plugin(self) -> int:
@@ -638,6 +470,8 @@ class EntityCLI:
         return 0
 
     # -----------------------------------------------------
+=======
+>>>>>>> pr-1793
     # configuration helpers
     # -----------------------------------------------------
     def _load_config_files(
@@ -650,26 +484,6 @@ class EntityCLI:
         if env:
             overlay = Path("config") / f"{env}.yaml"
         return load_config(config_path, overlay)
-
-    def _verify_plugins(self, config_path: str) -> int:
-        async def _run() -> int:
-            from entity.pipeline import SystemInitializer
-            import yaml
-            from pathlib import Path
-
-            try:
-                data = yaml.safe_load(Path(config_path).read_text()) or {}
-                initializer = SystemInitializer(
-                    data, strict_stages=self.args.strict_stages
-                )
-                await initializer.initialize()
-            except Exception as exc:  # noqa: BLE001
-                logger.error("Plugin validation failed: %s", exc)
-                return 1
-            logger.info("All plugins loaded successfully")
-            return 0
-
-        return asyncio.run(_run())
 
     def _validate_config(
         self,
@@ -792,97 +606,29 @@ class EntityCLI:
 
         return asyncio.run(_run())
 
-    def _diff_config(self, agent: Agent, file_path: str) -> int:
-        """Show differences between running config and ``file_path``."""
 
-        if agent.config_path is None:
-            logger.error("Agent was not started from a config file")
-            return 1
+# ---------------------------------------------------------
+# Helper functions from the old plugin_tool module
+# ---------------------------------------------------------
 
-        current = self._load_config_files(agent.config_path)
-        with open(file_path, "r", encoding="utf-8") as handle:
-            new_cfg = yaml.safe_load(handle) or {}
 
-        diff = difflib.unified_diff(
-            yaml.safe_dump(current, sort_keys=True).splitlines(),
-            yaml.safe_dump(new_cfg, sort_keys=True).splitlines(),
-            fromfile="current",
-            tofile=file_path,
-        )
-        print("\n".join(diff))
-        return 0
-
-    def _lint_config(self, files: list[str]) -> int:
-        """Validate YAML files against the generated configuration schema."""
-        from docs.generate_config_docs import build_schema
-
-        schema = build_schema()["EntityConfig"]
-        validator = Draft7Validator(schema)
-        ok = True
-        for path in files:
-            data = yaml.safe_load(Path(path).read_text()) or {}
-            errors = list(validator.iter_errors(data))
-            if errors:
-                ok = False
-                logger.error("%s is invalid", path)
-                for err in errors:
-                    logger.error("  %s", err.message)
-        return 0 if ok else 1
-
-    def _create_project(self, path: str) -> int:
-        target = Path(path)
-        if target.exists() and any(target.iterdir()):
-            logger.error("%s already exists and is not empty", path)
-            return 1
-        (target / "config").mkdir(parents=True, exist_ok=True)
-        (target / "src").mkdir(parents=True, exist_ok=True)
-        template = (
-            Path(__file__).resolve().parent.parent.parent.parent
-            / "config"
-            / "template.yaml"
-        )
-        shutil.copy(template, target / "config" / "dev.yaml")
-        main_path = target / "src" / "main.py"
-        main_path.write_text(
-            "def main() -> None:\n"
-            "    agent = Agent('config/dev.yaml')\n"
-            "    agent.run_http()\n\n\n"
-            "if __name__ == '__main__':\n"
-            "    main()\n"
-        )
-        logger.info("Created project at %s", target)
-        return 0
-
-    def _create_agent(self, name: str) -> int:
-        """Scaffold a simple agent project."""
-        target = Path(name)
-        if target.exists() and any(target.iterdir()):
-            logger.error("%s already exists and is not empty", name)
-            return 1
-
-        (target / "config").mkdir(parents=True, exist_ok=True)
-        (target / "src").mkdir(parents=True, exist_ok=True)
-
-        template = (
-            Path(__file__).resolve().parent.parent.parent.parent
-            / "config"
-            / "template.yaml"
-        )
-        shutil.copy(template, target / "config" / "dev.yaml")
-
-        main_path = target / "src" / "main.py"
-        main_code = (
-            "from entity.core.agent import Agent\n\n"
-            "def main() -> None:\n"
-            "    agent = Agent('config/dev.yaml')\n"
-            "    agent.run_http()\n\n"
-            "if __name__ == '__main__':\n"
-            "    main()\n"
-        )
-        main_path.write_text(main_code)
-
-        logger.info("Created agent project at %s", target)
-        return 0
+def load_plugin(path: str) -> Type[Plugin]:
+    mod_path = Path(path)
+    module_name = mod_path.stem
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Cannot import {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    for obj in module.__dict__.values():
+        if (
+            inspect.isclass(obj)
+            and issubclass(obj, Plugin)
+            and obj is not Plugin
+            and obj.__module__ == module.__name__
+        ):
+            return obj
+    raise RuntimeError("No plugin class found")
 
 
 def main() -> None:
@@ -890,4 +636,4 @@ def main() -> None:
     raise SystemExit(EntityCLI().run())
 
 
-__all__ = ["EntityCLI", "main"]
+__all__ = ["EntityCLI", "load_plugin", "main"]
