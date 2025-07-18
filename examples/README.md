@@ -5,6 +5,7 @@ Each subdirectory contains a small agent showcasing different features.
 - **kitchen_sink** – demonstrates a ReAct loop with tool usage.
 - **default** – minimal zero-config agent using decorators.
 - **plugins** – minimal plugins for INPUT, PARSE, and REVIEW stages.
+- **full_workflow** – multiple LLM providers with PostgreSQL and monitoring.
 
 Run any example with:
 
