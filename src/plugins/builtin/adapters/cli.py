@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from entity.core.plugins import InputAdapterPlugin
+from entity.core.plugins import AdapterPlugin
 from entity.pipeline.stages import PipelineStage
 
 
-class CLIAdapter(InputAdapterPlugin):
+class CLIAdapter(AdapterPlugin):
     """Placeholder CLI adapter."""
 
     stages = [PipelineStage.INPUT, PipelineStage.OUTPUT]

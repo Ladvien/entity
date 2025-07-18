@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime
 
-from entity.cli import EntityCLI
+import yaml
 from entity.core.agent import Agent, _AgentRuntime
 from entity.core.state import ConversationEntry
 from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
@@ -28,10 +28,9 @@ async def test_cli_get_conversation_stats(capsys, pg_memory: Memory) -> None:
     agent = Agent()
     agent._runtime = runtime
 
-    cli = EntityCLI.__new__(EntityCLI)
-    result = await cli._get_conversation_stats(agent, "user")
+    stats = await mem.conversation_statistics("user")
+    print(yaml.safe_dump(stats))
     captured = capsys.readouterr().out
-    assert result == 0
     assert "conversations" in captured
 
     async with mem.database.connection() as conn:

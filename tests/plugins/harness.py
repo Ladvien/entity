@@ -4,7 +4,7 @@ import asyncio
 import inspect
 
 from entity.core.plugins import Plugin
-from entity.cli.plugin_tool.utils import load_plugin
+from entity.cli import load_plugin
 
 
 class DummyContext:
