@@ -90,8 +90,9 @@ def test_initializer_inherited_stage_not_explicit():
 def test_warning_for_stage_override(caplog):
     """Test if a warning is logged when a stage override occurs."""
     plugin = AttrPrompt({})
+    logger = logging.getLogger("stage-test")
     with caplog.at_level(logging.WARNING):
         StageResolver._resolve_plugin_stages(
-            AttrPrompt, {"stage": PipelineStage.REVIEW}, plugin
+            AttrPrompt, {"stage": PipelineStage.REVIEW}, plugin, logger=logger
         )
     assert any("configuration stages" in r.message for r in caplog.records)
