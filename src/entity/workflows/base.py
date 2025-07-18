@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Workflow definitions for pipeline execution."""
 
-from typing import Any, ClassVar, Dict, Iterable, List, Mapping, Protocol
+from typing import Any, Callable, ClassVar, Dict, Iterable, List, Mapping, Protocol
 
 
 class _HasPlugin(Protocol):
@@ -26,6 +26,9 @@ class Workflow(BaseModel):
     parent: ClassVar[type["Workflow"] | None] = None
 
     stages: Dict[PipelineStage, List[str]] = Field(default_factory=dict)
+    conditions: Dict[PipelineStage, Callable[[PipelineState], bool]] = Field(
+        default_factory=dict
+    )
 
     model_config = {"arbitrary_types_allowed": True}
 
@@ -33,6 +36,7 @@ class Workflow(BaseModel):
         self,
         mapping: Mapping[PipelineStage | str, Iterable[str]] | None = None,
         registry: _HasPlugin | None = None,
+        conditions: Dict[PipelineStage, Callable[[PipelineState], bool]] | None = None,
         **params: str,
     ) -> None:
         mapping = mapping or self.combined_stage_map()
@@ -40,7 +44,7 @@ class Workflow(BaseModel):
         for stage, plugins in mapping.items():
             formatted = [str(p).format(**params) for p in plugins]
             self._assign_to(processed, stage, formatted)
-        super().__init__(stages=processed)
+        super().__init__(stages=processed, conditions=conditions or {})
         object.__setattr__(self, "stage_map", processed)
         if registry is not None:
             self.validate_plugins(registry)
@@ -64,7 +68,8 @@ class Workflow(BaseModel):
     # ------------------------------------------------------------------
 
     def should_execute(self, stage: PipelineStage, state: PipelineState) -> bool:
-        return True
+        condition = self.conditions.get(stage, lambda _s: True)
+        return bool(condition(state))
 
     @staticmethod
     def _assign_to(

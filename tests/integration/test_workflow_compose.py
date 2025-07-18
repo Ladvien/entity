@@ -35,6 +35,7 @@ class WF2(Workflow):
 
 @pytest.mark.asyncio
 async def test_compose_workflows_execute():
+    MarkerPlugin.executed = False
     agent = Agent()
     builder = agent.builder
     await builder.add_plugin(MarkerPlugin({}))
