@@ -1,10 +1,10 @@
 import pytest
-from tests.utils import make_context
+from tests.utils import make_async_context, make_context
 
 
 @pytest.mark.asyncio
 async def test_think_reflect_and_clear(pg_memory, clear_pg_memory):
-    ctx = make_context(memory=pg_memory)
+    ctx = await make_async_context(memory=pg_memory)
     await ctx.think("x", 1)
     assert await ctx.reflect("x") == 1
     assert ctx._state.stage_results["x"] == 1
@@ -15,7 +15,7 @@ async def test_think_reflect_and_clear(pg_memory, clear_pg_memory):
 
 @pytest.mark.asyncio
 async def test_advanced_temp_helpers(pg_memory, clear_pg_memory):
-    ctx = make_context(memory=pg_memory)
+    ctx = await make_async_context(memory=pg_memory)
     await ctx.advanced.think_temp("y", 2)
     assert await ctx.advanced.reflect_temp("y") == 2
     assert ctx._state.temporary_thoughts["y"] == 2
