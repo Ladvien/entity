@@ -1,6 +1,11 @@
 from __future__ import annotations
 
-from typing import Any, Iterable, List, Mapping, Type
+from typing import Any, Iterable, List, Mapping, Type, TYPE_CHECKING
+
+import logging
+
+if TYPE_CHECKING:  # pragma: no cover - imported for type checking only
+    from .plugins import InputAdapterPlugin, OutputAdapterPlugin
 
 from .stages import PipelineStage
 
@@ -23,7 +28,9 @@ class StageResolver:
         logger: Any | None = None,
     ) -> tuple[list[PipelineStage], bool]:
         """Return stages and whether they were explicit."""
-        logger = logger
+        logger = logger or logging.getLogger(__name__)
+        from .plugins import InputAdapterPlugin, OutputAdapterPlugin
+
         cfg_value = config.get("stages") or config.get("stage")
         declared_value = getattr(plugin_class, "stages", None) or getattr(
             plugin_class, "stage", None
@@ -56,35 +63,24 @@ class StageResolver:
         else:
             stages = [PipelineStage.THINK]
 
-        if (
-            hasattr(plugin_class, "InputAdapterPlugin")
-            and any(
-                base.__name__ == "InputAdapterPlugin" for base in plugin_class.mro()[1:]
+        if issubclass(plugin_class, InputAdapterPlugin) and stages != [
+            PipelineStage.INPUT
+        ]:
+            logger.warning(
+                "%s can only run in INPUT stage; ignoring configured %s",
+                plugin_class.__name__,
+                stages,
             )
-            and stages != [PipelineStage.INPUT]
-        ):
-            if logger is not None:
-                logger.warning(
-                    "%s can only run in INPUT stage; ignoring configured %s",
-                    plugin_class.__name__,
-                    stages,
-                )
             stages = [PipelineStage.INPUT]
 
-        if (
-            hasattr(plugin_class, "OutputAdapterPlugin")
-            and any(
-                base.__name__ == "OutputAdapterPlugin"
-                for base in plugin_class.mro()[1:]
+        if issubclass(plugin_class, OutputAdapterPlugin) and stages != [
+            PipelineStage.OUTPUT
+        ]:
+            logger.warning(
+                "%s can only run in OUTPUT stage; ignoring configured %s",
+                plugin_class.__name__,
+                stages,
             )
-            and stages != [PipelineStage.OUTPUT]
-        ):
-            if logger is not None:
-                logger.warning(
-                    "%s can only run in OUTPUT stage; ignoring configured %s",
-                    plugin_class.__name__,
-                    stages,
-                )
             stages = [PipelineStage.OUTPUT]
 
         if (

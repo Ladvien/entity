@@ -146,6 +146,7 @@ class ClassRegistry(StageResolver):
         stages, explicit = StageResolver._resolve_plugin_stages(
             cls, config, logger=logger
         )
+        stages = [PipelineStage.ensure(s) for s in stages]
         if not explicit:
             raise InitializationError(
                 name,
