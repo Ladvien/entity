@@ -1,13 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Iterable, List, Mapping, Type, TYPE_CHECKING
+from typing import Any, Iterable, List, Mapping, Type
 
-import logging
-
-if TYPE_CHECKING:  # pragma: no cover - imported for type checking only
-    from .plugins import InputAdapterPlugin, OutputAdapterPlugin
-
-import logging
 from .stages import PipelineStage
 
 
@@ -29,18 +23,7 @@ class StageResolver:
         logger: Any | None = None,
     ) -> tuple[list[PipelineStage], bool]:
         """Return stages and whether they were explicit."""
-<<<<<<< HEAD
-<<<<<<< HEAD
-        if logger is None:
-            logger = logging.getLogger(__name__)
-=======
-        logger = logger or logging.getLogger(__name__)
-        from .plugins import InputAdapterPlugin, OutputAdapterPlugin
-
->>>>>>> pr-1789
-=======
         logger = logger or getattr(_instance, "logger", None)
->>>>>>> pr-1790
         cfg_value = config.get("stages") or config.get("stage")
         declared_value = getattr(plugin_class, "stages", None) or getattr(
             plugin_class, "stage", None
@@ -73,10 +56,6 @@ class StageResolver:
         else:
             stages = [PipelineStage.THINK]
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> pr-1790
         from .plugins import InputAdapterPlugin, OutputAdapterPlugin
 
         if issubclass(plugin_class, InputAdapterPlugin) and stages != [
@@ -88,38 +67,17 @@ class StageResolver:
                     plugin_class.__name__,
                     stages,
                 )
-=======
-        if issubclass(plugin_class, InputAdapterPlugin) and stages != [
-            PipelineStage.INPUT
-        ]:
-            logger.warning(
-                "%s can only run in INPUT stage; ignoring configured %s",
-                plugin_class.__name__,
-                stages,
-            )
->>>>>>> pr-1789
             stages = [PipelineStage.INPUT]
 
         if issubclass(plugin_class, OutputAdapterPlugin) and stages != [
             PipelineStage.OUTPUT
         ]:
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> pr-1790
             if logger is not None:
                 logger.warning(
                     "%s can only run in OUTPUT stage; ignoring configured %s",
                     plugin_class.__name__,
                     stages,
                 )
-=======
-            logger.warning(
-                "%s can only run in OUTPUT stage; ignoring configured %s",
-                plugin_class.__name__,
-                stages,
-            )
->>>>>>> pr-1789
             stages = [PipelineStage.OUTPUT]
 
         if (

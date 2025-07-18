@@ -25,8 +25,7 @@ from entity.core.resources.container import ResourceContainer
 from entity.utils.logging import configure_logging, get_logger
 from entity.workflows.discovery import discover_workflows, register_module_workflows
 from .config import ConfigLoader
-from .utils import DependencyGraph, resolve_stages
-from entity.core.stage_utils import StageResolver
+from .utils import DependencyGraph, resolve_stages, StageResolver
 from entity.core.circuit_breaker import CircuitBreaker, BreakerManager
 from .exceptions import CircuitBreakerTripped
 from .errors import InitializationError
@@ -146,7 +145,6 @@ class ClassRegistry(StageResolver):
         stages, explicit = StageResolver._resolve_plugin_stages(
             cls, config, logger=logger
         )
-        stages = [PipelineStage.ensure(s) for s in stages]
         if not explicit:
             raise InitializationError(
                 name,
@@ -270,11 +268,11 @@ class SystemInitializer:
         resources = self._config_model.plugins.resources
         if "database" not in resources:
             resources["database"] = PluginConfig(
-                type="entity.resources.database:DuckDBResource"
+                type="entity.resources.interfaces.duckdb_resource:DuckDBResource"
             )
             self.config.setdefault("plugins", {}).setdefault("resources", {})[
                 "database"
-            ] = {"type": "entity.resources.database:DuckDBResource"}
+            ] = {"type": "entity.resources.interfaces.duckdb_resource:DuckDBResource"}
         if "logging" not in resources:
             resources["logging"] = PluginConfig(
                 type="entity.resources.logging:LoggingResource"
@@ -860,13 +858,15 @@ class SystemInitializer:
             registered.add("database_backend")
 
         if "database" not in registered:
-            from entity.resources.database import DuckDBResource
+            from entity.resources.interfaces.duckdb_resource import DuckDBResource
 
             container.register("database", DuckDBResource, {}, layer=2)
             registered.add("database")
 
         if "vector_store" not in registered:
-            from entity.resources.duckdb_vector_store import DuckDBVectorStore
+            from entity.resources.interfaces.duckdb_vector_store import (
+                DuckDBVectorStore,
+            )
 
             container.register("vector_store", DuckDBVectorStore, {}, layer=2)
             registered.add("vector_store")
@@ -881,29 +881,3 @@ class SystemInitializer:
                 f"Missing canonical resources: {missing_list}. Add them to your configuration.",
                 kind="Resource",
             )
-<<<<<<< HEAD
-
-
-def validate_reconfiguration_params(
-    old_config: Dict[str, Any], new_config: Dict[str, Any]
-) -> ValidationResult:
-    """Ensure only configuration values are changed on reload."""
-
-    from entity.core.plugins import ValidationResult
-
-    for key in ("type", "stage", "stages", "dependencies"):
-        if key in new_config and new_config.get(key) != old_config.get(key):
-            return ValidationResult.error_result("Topology changes require restart")
-
-    return ValidationResult.success_result()
-
-
-__all__ = [
-    "ClassRegistry",
-    "SystemInitializer",
-    "initialization_cleanup_context",
-    "plugin_cleanup_context",
-    "validate_reconfiguration_params",
-]
-=======
->>>>>>> pr-1794

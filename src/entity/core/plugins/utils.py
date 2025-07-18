@@ -7,12 +7,8 @@ from importlib import import_module
 from pathlib import Path
 from typing import Any, Dict, Optional, Type, cast
 
-<<<<<<< HEAD:src/entity/core/plugin_utils.py
-from .stage_utils import _normalize_stages
-=======
 from entity.utils.logging import get_logger
 from entity.pipeline.utils import _normalize_stages
->>>>>>> pr-1794:src/entity/core/plugins/utils.py
 from entity.core.plugin_analyzer import suggest_upgrade
 
 
