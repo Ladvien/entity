@@ -41,6 +41,7 @@ class PipelineState:
     last_completed_stage: Optional[PipelineStage] = None
     next_stage: Optional[PipelineStage] = None
     skip_stages: set[PipelineStage] = field(default_factory=set)
+    failure_info: "FailureInfo" | None = None
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -117,6 +118,33 @@ class PipelineState:
         state.skip_stages = {PipelineStage.from_str(s) for s in skips}
         state.max_stage_results = data.get("max_stage_results")
         return state
+
+    # ------------------------------------------------------------------
+    # Convenience helpers
+    # ------------------------------------------------------------------
+
+    def _last_entry(self, role: str) -> Optional[ConversationEntry]:
+        for entry in reversed(self.conversation):
+            if entry.role == role:
+                return entry
+        return None
+
+    def last_user_message(self) -> Optional[str]:
+        entry = self._last_entry("user")
+        return entry.content if entry else None
+
+    def last_assistant_message(self) -> Optional[str]:
+        entry = self._last_entry("assistant")
+        return entry.content if entry else None
+
+    def get_stage_result(self, key: str, default: Any | None = None) -> Any:
+        return self.stage_results.get(key, default)
+
+    def get_temp_thought(self, key: str, default: Any | None = None) -> Any:
+        return self.temporary_thoughts.get(key, default)
+
+    def clear_temp_thoughts(self) -> None:
+        self.temporary_thoughts.clear()
 
 
 @dataclass

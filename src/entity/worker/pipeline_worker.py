@@ -4,9 +4,8 @@ from datetime import datetime
 from typing import Any
 
 from entity.core.registries import SystemRegistries
-from entity.core.state import ConversationEntry
+from entity.core.state import ConversationEntry, PipelineState
 from entity.pipeline.pipeline import execute_pipeline
-from entity.pipeline.state import PipelineState
 
 
 class PipelineWorker:

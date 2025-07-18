@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 from entity.pipeline.stages import PipelineStage
 
 
-from entity.pipeline.state import PipelineState
+from entity.core.state import PipelineState
 
 
 class Workflow(BaseModel):

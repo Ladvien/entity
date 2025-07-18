@@ -1,13 +1,6 @@
 from datetime import datetime
 
 from entity.core.state import ConversationEntry, PipelineState
-from entity.core.state_utils import (
-    clear_temp_thoughts,
-    get_stage_result,
-    get_temp_thought,
-    last_assistant_message,
-    last_user_message,
-)
 
 
 def _make_state() -> PipelineState:
@@ -23,17 +16,17 @@ def _make_state() -> PipelineState:
 
 def test_last_user_message() -> None:
     state = _make_state()
-    assert last_user_message(state) == "hi"
+    assert state.last_user_message() == "hi"
 
 
 def test_last_assistant_message() -> None:
     state = _make_state()
-    assert last_assistant_message(state) == "there"
+    assert state.last_assistant_message() == "there"
 
 
 def test_stage_and_temp_access() -> None:
     state = _make_state()
-    assert get_stage_result(state, "x") == 1
-    assert get_temp_thought(state, "y") == 2
-    clear_temp_thoughts(state)
-    assert get_temp_thought(state, "y") is None
+    assert state.get_stage_result("x") == 1
+    assert state.get_temp_thought("y") == 2
+    state.clear_temp_thoughts()
+    assert state.get_temp_thought("y") is None

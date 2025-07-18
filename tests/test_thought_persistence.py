@@ -4,7 +4,7 @@ import pytest
 from entity.core.plugins import Plugin
 from entity.core.registries import PluginRegistry, SystemRegistries, ToolRegistry
 from entity.pipeline.stages import PipelineStage
-from entity.pipeline.state import PipelineState, ConversationEntry
+from entity.core.state import PipelineState, ConversationEntry
 from entity.pipeline.pipeline import execute_pipeline
 
 
