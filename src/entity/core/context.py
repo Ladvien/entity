@@ -7,7 +7,6 @@ from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, cast
 
 from entity.core.state import ConversationEntry, PipelineState, ToolCall
-import warnings
 from entity.pipeline.errors import PluginContextError
 from entity.pipeline.stages import PipelineStage
 
@@ -298,24 +297,6 @@ class PluginContext:
         result = await tool.execute_function(params)
         return result
 
-    async def queue_tool_use(
-        self, name: str, *, result_key: str | None = None, **params: Any
-    ) -> str:
-        warnings.warn(
-            "PluginContext.queue_tool_use is deprecated; use context.advanced.queue_tool_use",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return await self.advanced.queue_tool_use(name, result_key=result_key, **params)
-
-    def discover_tools(self, **filters: Any) -> list[tuple[str, Any]]:
-        warnings.warn(
-            "PluginContext.discover_tools is deprecated; use context.advanced.discover_tools",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.advanced.discover_tools(**filters)
-
     # ------------------------------------------------------------------
     # Stage result helpers ("think"/"reflect")
     # ------------------------------------------------------------------
@@ -359,31 +340,9 @@ class PluginContext:
         if self._memory is not None:
             await self._memory.delete_persistent(key, user_id=self._user_id)
 
-    def set_metadata(self, key: str, value: Any) -> None:
-        warnings.warn(
-            "PluginContext.set_metadata is deprecated; use context.advanced.set_metadata",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.advanced.set_metadata(key, value)
-
-    def get_metadata(self, key: str, default: Any | None = None) -> Any:
-        warnings.warn(
-            "PluginContext.get_metadata is deprecated; use context.advanced.get_metadata",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.advanced.get_metadata(key, default)
+    # Backwards compatibility shims removed; use ``context.advanced`` directly.
 
     @property
     def failure_info(self) -> Any:
         """Return information about the most recent failure."""
         return self._state.failure_info
-
-    def set_response(self, value: Any) -> None:
-        warnings.warn(
-            "PluginContext.set_response is deprecated; use context.say",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.say(value)

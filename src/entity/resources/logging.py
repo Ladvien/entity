@@ -224,6 +224,16 @@ class LoggingResource(AgentResource):
         for stream in self._stream_outputs:
             await stream.stop()
 
+    async def health_check(self) -> bool:
+        """Return ``True`` if all log outputs are writable."""
+        try:
+            for out in self._outputs:
+                if isinstance(out, StructuredFileOutput):
+                    out._handle.flush()
+            return True
+        except Exception:  # noqa: BLE001
+            return False
+
     async def log(
         self,
         level: str,

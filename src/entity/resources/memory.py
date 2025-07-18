@@ -62,6 +62,17 @@ class Memory(AgentResource):
     async def _execute_impl(self, context: Any) -> None:  # pragma: no cover - stub
         return None
 
+    async def health_check(self) -> bool:
+        """Return ``True`` if the database connection is healthy."""
+        if self.database is None:
+            return True
+        try:
+            async with self.database.connection() as conn:
+                await _execute(conn, "SELECT 1")
+            return True
+        except Exception:  # noqa: BLE001
+            return False
+
     # ------------------------------------------------------------------
     # Key-value helpers
     # ------------------------------------------------------------------

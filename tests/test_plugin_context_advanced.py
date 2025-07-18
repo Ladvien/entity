@@ -55,12 +55,12 @@ def test_update_response():
 
 
 @pytest.mark.asyncio
-async def test_queue_tool_use_via_property_and_wrapper():
+async def test_queue_tool_use():
     state = PipelineState(conversation=[])
     ctx = await make_context_async(state)
 
     key1 = await ctx.advanced.queue_tool_use("dummy", x=1)
-    key2 = await ctx.queue_tool_use("dummy", x=2)
+    key2 = await ctx.advanced.queue_tool_use("dummy", x=2)
 
     assert key1 == "dummy_0"
     assert key2 == "dummy_1"
