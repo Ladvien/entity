@@ -6,7 +6,7 @@ from typing import Any, Dict
 
 from ..core.plugins import ValidationResult
 from entity.config.models import StorageConfig
-from pydantic import ValidationError
+from entity.core.validation import validate_model
 
 
 from .base import AgentResource
@@ -24,11 +24,7 @@ class Storage(AgentResource):
 
     @classmethod
     async def validate_config(cls, config: Dict[str, Any]) -> ValidationResult:
-        try:
-            StorageConfig.parse_obj(config)
-        except ValidationError as exc:
-            return ValidationResult.error_result(str(exc))
-        return ValidationResult.success_result()
+        return validate_model(StorageConfig, config)
 
     async def _execute_impl(self, context: Any) -> None:  # pragma: no cover - stub
         return None

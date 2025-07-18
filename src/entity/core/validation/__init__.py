@@ -1,5 +1,6 @@
 from .input import PluginInputValidator, sanitize_text, validate_params
 from .plugin import verify_dependencies, verify_stage_assignment
+from .config import validate_model
 
 __all__ = [
     "PluginInputValidator",
@@ -7,4 +8,5 @@ __all__ = [
     "sanitize_text",
     "verify_stage_assignment",
     "verify_dependencies",
+    "validate_model",
 ]

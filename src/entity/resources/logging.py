@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional
 
 from .base import AgentResource
 from entity.config.models import LoggingConfig
-from pydantic import ValidationError
+from entity.core.validation import validate_model
 from entity.core.plugins import ValidationResult
 
 
@@ -187,11 +187,7 @@ class LoggingResource(AgentResource):
 
     @classmethod
     async def validate_config(cls, config: Dict[str, Any]) -> ValidationResult:
-        try:
-            LoggingConfig.parse_obj(config)
-        except ValidationError as exc:
-            return ValidationResult.error_result(str(exc))
-        return ValidationResult.success_result()
+        return validate_model(LoggingConfig, config)
 
     async def initialize(self) -> None:
         outputs_cfg = self.config.get("outputs", [{"type": "console"}])
