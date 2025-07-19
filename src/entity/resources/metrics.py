@@ -275,6 +275,90 @@ class MetricsCollectorResource(AgentResource):
             for row in rows
         ]
 
+    async def get_unified_agent_log(
+        self, pipeline_id: str | None = None
+    ) -> List[Dict[str, Any]]:
+        """Return plugin and resource events in a single list."""
+
+        plugins = await self.get_plugin_executions(pipeline_id)
+        resources = await self.get_resource_operations(pipeline_id)
+        combined: List[Dict[str, Any]] = []
+
+        for rec in plugins:
+            combined.append(
+                {
+                    "type": "plugin",
+                    "pipeline_id": rec.pipeline_id,
+                    "stage": rec.stage.name if rec.stage else None,
+                    "plugin_name": rec.plugin_name,
+                    "duration_ms": rec.duration_ms,
+                    "success": rec.success,
+                    "error_type": rec.error_type,
+                }
+            )
+
+        for rec in resources:
+            combined.append(
+                {
+                    "type": "resource",
+                    "pipeline_id": rec.pipeline_id,
+                    "resource_name": rec.resource_name,
+                    "operation": rec.operation,
+                    "duration_ms": rec.duration_ms,
+                    "success": rec.success,
+                    "metadata": rec.metadata,
+                }
+            )
+
+        return combined
+
+    async def get_performance_summary(
+        self, agent_name: str, hours: int = 24
+    ) -> Dict[str, Any]:
+        """Return basic success and timing stats for ``agent_name``."""
+
+        executions = await self.get_plugin_executions(agent_name)
+        total_runs = len(executions)
+        if total_runs == 0:
+            return {
+                "pipeline_id": agent_name,
+                "runs": 0,
+                "average_duration_ms": 0.0,
+                "success_rate": 0.0,
+                "plugins": {},
+            }
+
+        plugin_stats: Dict[str, Dict[str, float]] = {}
+        success_count = 0
+        total_duration = 0.0
+
+        for rec in executions:
+            stats = plugin_stats.setdefault(
+                rec.plugin_name,
+                {"count": 0.0, "success": 0.0, "duration": 0.0},
+            )
+            stats["count"] += 1
+            stats["duration"] += rec.duration_ms
+            if rec.success:
+                stats["success"] += 1
+                success_count += 1
+            total_duration += rec.duration_ms
+
+        for name, stats in plugin_stats.items():
+            count = stats["count"]
+            plugin_stats[name] = {
+                "average_duration_ms": stats["duration"] / count if count else 0.0,
+                "success_rate": stats["success"] / count if count else 0.0,
+            }
+
+        return {
+            "pipeline_id": agent_name,
+            "runs": total_runs,
+            "average_duration_ms": total_duration / total_runs,
+            "success_rate": success_count / total_runs,
+            "plugins": plugin_stats,
+        }
+
     # ------------------------------------------------------------------
     # Context managers
     # ------------------------------------------------------------------

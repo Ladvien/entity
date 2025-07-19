@@ -55,6 +55,15 @@ plugins:
 When present, the collector is passed to each plugin automatically so they can
 record execution metrics without extra configuration.
 
+```python
+metrics = agent.get_resource("metrics_collector")
+log = await metrics.get_unified_agent_log("my_agent")
+summary = await metrics.get_performance_summary("my_agent")
+```
+
+`log` contains plugin and resource events. `summary` aggregates basic timing
+stats per plugin.
+
 ## DatabaseResource
 
 `DuckDBResource` provides a zero-config persistent database. It depends on the

@@ -73,13 +73,18 @@ async def _execute(conn: Any, sql: str, params: Any | None = None) -> Any:
 
     if not params:
         result = conn.execute(sql)
-    else:
-        try:
-            result = conn.execute(sql, *params)
-        except Exception:
-            result = conn.execute(sql, params)
-    if inspect.isawaitable(result):
-        result = await result
+        if inspect.isawaitable(result):
+            result = await result
+        return result
+
+    try:
+        result = conn.execute(sql, *params)
+        if inspect.isawaitable(result):
+            result = await result
+    except Exception:
+        result = conn.execute(sql, params)
+        if inspect.isawaitable(result):
+            result = await result
     return result
 
 

@@ -50,6 +50,16 @@ INPUT, PARSE, and REVIEW stages. Each shows how to interact with the
 [Plugin Examples](https://entity.readthedocs.io/en/latest/plugin_examples.html)
 documentation.
 
+## Metrics & Performance
+
+Use the bundled `MetricsCollectorResource` to inspect plugin and resource activity.
+
+```python
+metrics = agent.get_resource("metrics_collector")
+log = await metrics.get_unified_agent_log("my_agent")
+summary = await metrics.get_performance_summary("my_agent")
+```
+
 ## Running Tests
 
 The test suite depends on **Docker** and the **`pytest-docker`** plugin.
