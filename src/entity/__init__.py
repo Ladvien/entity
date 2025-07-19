@@ -16,6 +16,7 @@ from .core.stages import PipelineStage
 from .infrastructure import DuckDBInfrastructure
 from .resources import LLM, Memory, Storage
 from .resources.duckdb_vector_store import DuckDBVectorStore
+from .infrastructure.duckdb_vector import DuckDBVectorInfrastructure
 from .resources.logging import LoggingResource
 from .defaults import ensure_defaults
 from entity.workflows.minimal import minimal_workflow
@@ -66,6 +67,7 @@ def _create_default_agent() -> Agent:
             pass
 
     llm = LLM({})
+    vector_backend = DuckDBVectorInfrastructure({"path": str(setup.db_path)})
     vector_store = DuckDBVectorStore({})
     memory = Memory({})
     storage = Storage({})
@@ -74,18 +76,20 @@ def _create_default_agent() -> Agent:
     if llm_provider is not None:
         llm.provider = llm_provider
     memory.database = db
-    vector_store.database = db
+    vector_store.vector_store_backend = vector_backend
     memory.vector_store = vector_store
 
     resources = ResourceContainer()
 
     async def init_resources() -> None:
         await db.initialize()
+        await vector_backend.initialize()
         await vector_store.initialize()
         await memory.initialize()
         await logging_res.initialize()
 
         await resources.add("database", db)
+        await resources.add("vector_store_backend", vector_backend)
         await resources.add("vector_store", vector_store)
         if llm_provider is not None:
             await resources.add("llm_provider", llm_provider)

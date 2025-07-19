@@ -7,6 +7,7 @@ from entity.pipeline.stages import PipelineStage
 from entity.pipeline.workflow import Pipeline
 from entity.resources.database import DuckDBResource
 from entity.resources.duckdb_vector_store import DuckDBVectorStore
+from entity.infrastructure.duckdb_vector import DuckDBVectorInfrastructure
 from entity.workflows.base import Workflow
 
 
@@ -45,6 +46,9 @@ async def test_conditional_stage_skip():
     pipeline = Pipeline(builder=builder, workflow=wf)
     agent.register_resource("database_backend", DuckDBInfrastructure, {}, layer=1)
     agent.register_resource("database", DuckDBResource, {}, layer=2)
+    agent.register_resource(
+        "vector_store_backend", DuckDBVectorInfrastructure, {}, layer=1
+    )
     agent.register_resource("vector_store", DuckDBVectorStore, {}, layer=2)
     runtime = await pipeline.build_runtime()
     result = await runtime.handle("hi")
