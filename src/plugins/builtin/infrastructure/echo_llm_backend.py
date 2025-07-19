@@ -9,7 +9,7 @@ class EchoLLMBackend(InfrastructurePlugin):
     """Simple backend that echoes prompts."""
 
     name = "echo_llm_backend"
-    infrastructure_type = "llm_backend"
+    infrastructure_type = "llm_provider"
     resource_category = "llm"
     stages: list = []
     dependencies: list[str] = []

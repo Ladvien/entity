@@ -15,7 +15,7 @@ from .base import AgentResource
 class StorageResource(ResourcePlugin):
     """Abstract interface for key/value storage backends."""
 
-    infrastructure_dependencies = ["storage_backend"]
+    infrastructure_dependencies = ["file_system"]
     resource_category = "filesystem"
 
     def __init__(self, config: Dict | None = None) -> None:
