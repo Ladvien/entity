@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-from entity.core.plugins import InfrastructurePlugin, ValidationResult
+from entity.plugins.base import InfrastructurePlugin, ValidationResult
 
 
 class EchoLLMBackend(InfrastructurePlugin):

@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional
 from .base import AgentResource
 from entity.config.models import LoggingConfig
 from entity.core.validation import validate_model
-from entity.core.plugins import ValidationResult
+from entity.plugins.base import ValidationResult
 
 
 def _level(name: str) -> int:

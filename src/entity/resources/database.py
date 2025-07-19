@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator, Dict
 
 from entity.core.resources.container import PoolConfig, ResourcePool
-from entity.core.plugins import ResourcePlugin
+from entity.plugins.base import ResourcePlugin
 from entity.infrastructure.duckdb import DuckDBInfrastructure
 from entity.infrastructure.postgres import PostgresInfrastructure
 

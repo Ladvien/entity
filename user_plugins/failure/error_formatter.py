@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from entity.core.plugins import FailurePlugin
+from entity.plugins.base import FailurePlugin
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from entity.core.context import PluginContext
-from entity.core.plugins import FailurePlugin
+from entity.plugins.base import FailurePlugin
 from entity.pipeline.stages import PipelineStage
 
 

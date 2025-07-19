@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from entity.core.context import PluginContext
-from entity.core.plugins import PromptPlugin
+from entity.plugins.base import PromptPlugin
 from entity.pipeline.stages import PipelineStage
 
 

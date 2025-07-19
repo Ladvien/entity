@@ -5,7 +5,7 @@ from typing import Any, AsyncIterator, Dict
 
 import asyncpg
 
-from entity.core.plugins import InfrastructurePlugin, ValidationResult
+from entity.plugins.base import InfrastructurePlugin, ValidationResult
 from entity.core.resources.container import PoolConfig, ResourcePool
 from entity.config.models import PostgresConfig
 

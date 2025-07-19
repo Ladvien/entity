@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from entity.core.plugins import PromptPlugin, ValidationResult
+from entity.plugins.base import PromptPlugin, ValidationResult
 from entity.core.context import PluginContext
 from entity.core.stages import PipelineStage
 

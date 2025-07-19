@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from entity.core.plugins import PromptPlugin
+from entity.plugins.base import PromptPlugin
 from entity.core.context import PluginContext
 from entity.core.stages import PipelineStage
 from entity.core.state import ConversationEntry

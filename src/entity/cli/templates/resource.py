@@ -8,7 +8,7 @@ workflow = {PipelineStage.PARSE: ["MyResource"]}
 ```
 """
 
-from entity.core.plugins import ResourcePlugin, ValidationResult
+from entity.plugins.base import ResourcePlugin, ValidationResult
 from entity.core.stages import PipelineStage
 
 

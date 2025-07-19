@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from entity.core.plugins import FailurePlugin
+from entity.plugins.base import FailurePlugin
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
     from entity.core.context import PluginContext
