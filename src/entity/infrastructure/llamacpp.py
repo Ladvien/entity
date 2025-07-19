@@ -6,6 +6,7 @@ from typing import Dict, Sequence
 import httpx
 
 from entity.core.plugins import InfrastructurePlugin, ValidationResult
+from entity.config.models import LlamaCppConfig
 
 
 class LlamaCppInfrastructure(InfrastructurePlugin):
@@ -25,6 +26,14 @@ class LlamaCppInfrastructure(InfrastructurePlugin):
         self.port = int(self.config.get("port", 8000))
         self.args: Sequence[str] = self.config.get("args", [])
         self._process: asyncio.subprocess.Process | None = None
+
+    @classmethod
+    async def validate_config(cls, config: Dict[str, Any]) -> ValidationResult:
+        try:
+            LlamaCppConfig(**config)
+        except Exception as exc:  # noqa: BLE001
+            return ValidationResult.error_result(str(exc))
+        return ValidationResult.success_result()
 
     async def initialize(self) -> None:
         if self._process is not None:

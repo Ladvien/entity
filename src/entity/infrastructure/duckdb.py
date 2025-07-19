@@ -13,6 +13,7 @@ except ModuleNotFoundError:  # pragma: no cover - optional dependency
 
 from entity.core.plugins import InfrastructurePlugin, ValidationResult
 from entity.core.resources.container import PoolConfig, ResourcePool
+from entity.config.models import DuckDBConfig
 
 
 class DuckDBInfrastructure(InfrastructurePlugin):
@@ -27,6 +28,14 @@ class DuckDBInfrastructure(InfrastructurePlugin):
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
         self.path: str = self.config.get("path", ":memory:")
+
+    @classmethod
+    async def validate_config(cls, config: Dict[str, Any]) -> ValidationResult:
+        try:
+            DuckDBConfig(**config)
+        except Exception as exc:  # noqa: BLE001
+            return ValidationResult.error_result(str(exc))
+        return ValidationResult.success_result()
 
     async def _execute_impl(self, context: Any) -> None:  # pragma: no cover - stub
         return None
