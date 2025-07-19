@@ -1,8 +1,8 @@
 # Full Workflow Example
 
-This example demonstrates how to combine multiple LLM providers with a PostgreSQL
-backend and pgvector. It also enables structured logging and metrics
-collection.
+This extended story wires together PostgreSQL, pgvector, and multiple LLM providers.
+It also enables structured logging and metrics collection to showcase a realistic
+production setup.
 
 ## Prerequisites
 

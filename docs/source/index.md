@@ -11,6 +11,7 @@ error_handling
 logging
 configuration
 plugin_examples
+examples
 plugins
 workflows
 multi_user

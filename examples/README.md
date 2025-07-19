@@ -1,11 +1,14 @@
 # Example Agents
 
-Each subdirectory contains a small agent showcasing different features.
+Each subdirectory demonstrates a specific capability.
 
-- **kitchen_sink** – demonstrates a ReAct loop with tool usage.
-- **default** – minimal zero-config agent using decorators.
-- **plugins** – minimal plugins for INPUT, PARSE, and REVIEW stages.
-- **full_workflow** – multiple LLM providers with PostgreSQL and monitoring.
+- **basic_agent** – simplest echo example.
+- **default** – decorator-based workflow with one tool.
+- **default_setup** – global agent initialized automatically.
+- **duckdb_memory_agent** – custom memory backed by DuckDB.
+- **full_workflow** – multiple LLM providers with PostgreSQL and metrics.
+- **intermediate_agent** – chained prompt and responder plugins.
+- **kitchen_sink** – small ReAct loop using the calculator tool.
 
 Run any example with:
 

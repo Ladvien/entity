@@ -1,8 +1,8 @@
 # Kitchen Sink Agent
 
-This example demonstrates a ReAct-style loop with the built-in calculator tool.
-The THINK stage stores analysis with `ctx.think()` and the OUTPUT stage
-returns it using `ctx.reflect()`.
+This story runs a small ReAct loop using the calculator tool. Thoughts are stored
+with `ctx.think()` and reviewed later with `ctx.reflect()` to produce the final
+answer.
 
 ```bash
 poetry run python examples/kitchen_sink/main.py

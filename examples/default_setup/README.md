@@ -1,8 +1,7 @@
 # Default Setup Agent
 
-This example uses the global `agent` with the
-`@agent.tool` and `@agent.output` decorators. No configuration is
-required; the default resources are set up automatically.
+This story mirrors the `default` example but shows that the global `agent`
+initializes its own resources. No configuration files are needed.
 
 Run it with:
 

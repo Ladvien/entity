@@ -7,8 +7,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
 
 from entity.core.agent import Agent
-from entity.core.registries import SystemRegistries
-from entity.core.agent import AgentRuntime
 from entity.core.stages import PipelineStage
 from entity.resources.llm import LLM
 from entity.resources.memory import Memory

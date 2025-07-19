@@ -1,8 +1,8 @@
 # Default Setup Agent
 
-This example uses the default `agent` instance with the
-`@agent.tool` and `@agent.output` decorators. The output plugin
-emits the final response at the correct stage.
+This short story highlights the decorator API. The agent registers a small tool
+and an output plugin. When invoked it adds two numbers and replies with the
+result alongside the original user message.
 
 Run it with:
 
