@@ -166,6 +166,57 @@ class StorageConfig(BaseModel):
         extra = "forbid"
 
 
+class PostgresConfig(BaseModel):
+    """Configuration for :class:`~entity.infrastructure.postgres.PostgresInfrastructure`."""
+
+    dsn: str = ""
+    pool: Dict[str, int] = Field(default_factory=dict)
+
+    class Config:
+        extra = "allow"
+
+
+class AsyncPGConfig(BaseModel):
+    """Configuration for :class:`~entity.infrastructure.asyncpg.AsyncPGInfrastructure`."""
+
+    dsn: str = ""
+    pool: Dict[str, int] = Field(default_factory=dict)
+
+    class Config:
+        extra = "allow"
+
+
+class DuckDBConfig(BaseModel):
+    """Configuration for :class:`~entity.infrastructure.duckdb.DuckDBInfrastructure`."""
+
+    path: str = ":memory:"
+
+    class Config:
+        extra = "allow"
+
+
+class DockerConfig(BaseModel):
+    """Configuration for :class:`~entity.infrastructure.docker.DockerInfrastructure`."""
+
+    path: str = "."
+
+    class Config:
+        extra = "allow"
+
+
+class LlamaCppConfig(BaseModel):
+    """Configuration for :class:`~entity.infrastructure.llamacpp.LlamaCppInfrastructure`."""
+
+    binary: str = "llama"
+    model: str
+    host: str = "127.0.0.1"
+    port: int = 8000
+    args: list[str] = Field(default_factory=list)
+
+    class Config:
+        extra = "allow"
+
+
 class LogOutputConfig(BaseModel):
     """Configuration for a single logging output."""
 
@@ -255,6 +306,11 @@ __all__ = [
     "MemoryConfig",
     "LLMConfig",
     "StorageConfig",
+    "PostgresConfig",
+    "AsyncPGConfig",
+    "DuckDBConfig",
+    "DockerConfig",
+    "LlamaCppConfig",
     "LogOutputConfig",
     "LoggingConfig",
     "WorkflowSettings",

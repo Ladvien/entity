@@ -7,6 +7,7 @@ import asyncpg
 
 from entity.core.plugins import InfrastructurePlugin, ValidationResult
 from entity.core.resources.container import PoolConfig, ResourcePool
+from entity.config.models import AsyncPGConfig
 
 
 class AsyncPGInfrastructure(InfrastructurePlugin):
@@ -23,6 +24,14 @@ class AsyncPGInfrastructure(InfrastructurePlugin):
         self.dsn: str = self.config.get("dsn", "")
         pool_cfg = PoolConfig(**self.config.get("pool", {}))
         self._pool = ResourcePool(self._create_conn, pool_cfg, "asyncpg")
+
+    @classmethod
+    async def validate_config(cls, config: Dict[str, Any]) -> ValidationResult:
+        try:
+            AsyncPGConfig(**config)
+        except Exception as exc:  # noqa: BLE001
+            return ValidationResult.error_result(str(exc))
+        return ValidationResult.success_result()
 
     async def _execute_impl(self, context: Any) -> None:  # pragma: no cover - stub
         return None

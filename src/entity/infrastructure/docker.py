@@ -3,7 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict
 
-from entity.core.plugins import InfrastructurePlugin
+from entity.core.plugins import InfrastructurePlugin, ValidationResult
+from entity.config.models import DockerConfig
 
 
 class DockerInfrastructure(InfrastructurePlugin):
@@ -19,6 +20,14 @@ class DockerInfrastructure(InfrastructurePlugin):
         super().__init__(config or {})
         self.path = Path(self.config.get("path", ".")).resolve()
         self.deployed = False
+
+    @classmethod
+    async def validate_config(cls, config: Dict[str, Any]) -> ValidationResult:
+        try:
+            DockerConfig(**config)
+        except Exception as exc:  # noqa: BLE001
+            return ValidationResult.error_result(str(exc))
+        return ValidationResult.success_result()
 
     # ---------------------------------------------------------
     # helpers
