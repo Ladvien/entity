@@ -100,7 +100,14 @@ def postgres_dsn(docker_ip: str, docker_services) -> str:
     def check():
         return loop.run_until_complete(_can_connect(dsn))
 
-    docker_services.wait_until_responsive(timeout=60, pause=0.5, check=check)
+    try:
+        docker_services.wait_until_responsive(timeout=60, pause=0.5, check=check)
+    except Exception:
+        try:
+            print("\n❌ Postgres container logs:\n" + docker_services.logs("postgres"))
+        except Exception as log_error:
+            print(f"Failed to retrieve postgres logs: {log_error}")
+        raise
     return dsn
 
 
