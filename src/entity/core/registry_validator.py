@@ -9,7 +9,6 @@ import pathlib
 import sys
 from typing import Dict, List
 
-from entity.core.resources.container import DependencyGraph
 from entity.core.registries import PluginRegistry
 
 SRC_PATH = pathlib.Path(__file__).resolve().parents[1]

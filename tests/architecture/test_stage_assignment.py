@@ -1,9 +1,7 @@
 import pytest
 from entity.core.context import PluginContext
 from entity.core.plugins import Plugin, PromptPlugin
-from entity.core.registries import ToolRegistry
 from entity.core.stages import PipelineStage
-from entity.core.state import PipelineState
 from entity.pipeline.errors import PluginContextError
 from entity.pipeline.utils import resolve_stages
 from tests.utils import make_async_context

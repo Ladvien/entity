@@ -8,8 +8,6 @@ from entity.core.plugins import (
     Plugin,
     PromptPlugin,
 )
-from entity.core.registries import ToolRegistry
-from entity.core.state import PipelineState
 from entity.pipeline.errors import PluginContextError
 from entity.core.stages import PipelineStage
 from entity.core.stage_utils import StageResolver

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from entity.pipeline.errors import ResourceInitializationError
 from entity.infrastructure.duckdb_vector import DuckDBVectorInfrastructure

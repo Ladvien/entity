@@ -8,9 +8,8 @@ import asyncio
 import inspect
 
 from entity.core.resources.container import DependencyGraph
-from entity.core.validation import verify_dependencies, verify_stage_assignment
-
 from entity.core.validation import verify_stage_assignment
+
 from entity.pipeline.stages import PipelineStage
 
 
