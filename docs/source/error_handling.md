@@ -41,8 +41,9 @@ You can override defaults in your configuration:
 
 ```yaml
 plugins:
-  - db:
-      type: Postgres
+  infrastructure:
+    postgres_backend:
+      type: entity.infrastructure.asyncpg:AsyncPGInfrastructure
       failure_threshold: 5
       failure_reset_timeout: 120
       init_failure_threshold: 2

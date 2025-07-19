@@ -50,6 +50,22 @@ INPUT, PARSE, and REVIEW stages. Each shows how to interact with the
 [Plugin Examples](https://entity.readthedocs.io/en/latest/plugin_examples.html)
 documentation.
 
+## Infrastructure Plugins
+
+Register infrastructure plugins under the `database_backend` and `vector_store`
+keys when configuring resources.
+
+```yaml
+plugins:
+  infrastructure:
+    postgres_backend:
+      type: entity.infrastructure.asyncpg:AsyncPGInfrastructure
+      dsn: postgresql://user:pass@localhost:5432/agent
+  resources:
+    vector_store:
+      type: entity.resources.duckdb_vector_store:DuckDBVectorStore
+```
+
 ## Metrics & Performance
 
 Use the bundled `MetricsCollectorResource` to inspect plugin and resource activity.

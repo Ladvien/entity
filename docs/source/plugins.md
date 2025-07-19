@@ -56,3 +56,16 @@ plugins:
 ```
 
 No configuration options are required.
+
+## AsyncPGInfrastructure
+
+`AsyncPGInfrastructure` connects to a PostgreSQL server and exposes a
+`database_backend` for resources.
+
+```yaml
+plugins:
+  infrastructure:
+    postgres_backend:
+      type: entity.infrastructure.asyncpg:AsyncPGInfrastructure
+      dsn: postgresql://user:pass@localhost:5432/agent
+```

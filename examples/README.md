@@ -6,7 +6,8 @@ Each subdirectory demonstrates a specific capability.
 - **default** – decorator-based workflow with one tool.
 - **default_setup** – global agent initialized automatically.
 - **duckdb_memory_agent** – custom memory backed by DuckDB.
-- **full_workflow** – multiple LLM providers with PostgreSQL and metrics.
+- **full_workflow** – multiple LLM providers with PostgreSQL, a vector store,
+  and metrics.
 - **intermediate_agent** – chained prompt and responder plugins.
 - **kitchen_sink** – small ReAct loop using the calculator tool.
 

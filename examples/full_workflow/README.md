@@ -1,6 +1,7 @@
 # Full Workflow Example
 
-This extended story wires together PostgreSQL, pgvector, and multiple LLM providers.
+This extended story wires together PostgreSQL, a pgvector-based vector store,
+and multiple LLM providers.
 It also enables structured logging and metrics collection to showcase a realistic
 production setup.
 
