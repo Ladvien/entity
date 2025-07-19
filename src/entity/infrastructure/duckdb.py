@@ -11,7 +11,7 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
     duckdb = None
 
-from entity.core.plugins import InfrastructurePlugin, ValidationResult
+from entity.plugins.base import InfrastructurePlugin, ValidationResult
 from entity.core.resources.container import PoolConfig, ResourcePool
 from entity.config.models import DuckDBConfig
 

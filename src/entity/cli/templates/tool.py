@@ -10,7 +10,7 @@ workflow = {PipelineStage.DO: ["MyTool"]}
 
 from typing import Any, Dict
 
-from entity.core.plugins import ToolPlugin
+from entity.plugins.base import ToolPlugin
 from entity.core.stages import PipelineStage
 
 

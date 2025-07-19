@@ -11,7 +11,7 @@ from .base import AgentResource
 from .database import DatabaseResource as DatabaseInterface
 from .vector_store import VectorStoreResource as VectorStoreInterface
 from .sql_utils import _execute, _maybe_await
-from ..core.plugins import ValidationResult
+from ..plugins.base import ValidationResult
 from entity.config.models import MemoryConfig
 from ..core.state import ConversationEntry
 from entity.core.validation import validate_model

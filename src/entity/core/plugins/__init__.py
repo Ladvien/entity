@@ -1,6 +1,14 @@
 from __future__ import annotations
 
+import warnings
+
 """Expose lightweight plugin wrappers used throughout the framework."""
+
+warnings.warn(
+    "Importing from 'entity.core.plugins' is deprecated; use 'entity.plugins.base' instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 import time
 from dataclasses import dataclass

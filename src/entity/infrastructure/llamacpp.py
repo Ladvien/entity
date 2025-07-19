@@ -5,7 +5,7 @@ from typing import Dict, Sequence
 
 import httpx
 
-from entity.core.plugins import InfrastructurePlugin, ValidationResult
+from entity.plugins.base import InfrastructurePlugin, ValidationResult
 from entity.config.models import LlamaCppConfig
 
 

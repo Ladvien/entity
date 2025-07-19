@@ -12,7 +12,7 @@ An OUTPUT-stage plugin should later read those results and call
 :meth:`context.say` to generate the final response.
 """
 
-from entity.core.plugins import PromptPlugin
+from entity.plugins.base import PromptPlugin
 from entity.core.stages import PipelineStage
 
 

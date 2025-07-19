@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from ..core.plugins import ResourcePlugin, ValidationResult
+from ..plugins.base import ResourcePlugin, ValidationResult
 from entity.config.models import StorageConfig
 from entity.core.validation import validate_model
 

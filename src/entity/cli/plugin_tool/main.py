@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent  # noqa: E402
 if str(ROOT) not in sys.path:  # noqa: E402
     sys.path.insert(0, str(ROOT))
 
-from entity.core.plugins import (
+from entity.plugins.base import (
     Plugin,
     FailurePlugin,
     PromptPlugin,

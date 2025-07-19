@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List
 
-from entity.core.plugins import PromptPlugin
+from entity.plugins.base import PromptPlugin
 from entity.core.state import ConversationEntry
 from entity.core.context import PluginContext
 from entity.resources.memory import Memory

@@ -8,7 +8,7 @@ workflow = {PipelineStage.ERROR: ["MyFailureHandler"]}
 ```
 """
 
-from entity.core.plugins import FailurePlugin
+from entity.plugins.base import FailurePlugin
 from entity.core.stages import PipelineStage
 
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from entity.core.plugins import AdapterPlugin
+from entity.plugins.base import AdapterPlugin
 from entity.pipeline.stages import PipelineStage
 
 

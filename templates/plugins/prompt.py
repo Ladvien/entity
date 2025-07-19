@@ -8,7 +8,7 @@ workflow = {PipelineStage.THINK: ["MyPromptPlugin"]}
 ```
 """
 
-from entity.core.plugins import PromptPlugin
+from entity.plugins.base import PromptPlugin
 from entity.core.stages import PipelineStage
 
 

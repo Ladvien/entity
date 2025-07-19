@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ..core.plugins import ResourcePlugin
+from ..plugins.base import ResourcePlugin
 
 
 class AgentResource(ResourcePlugin):

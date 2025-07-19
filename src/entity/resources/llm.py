@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any, Dict
 
 from html import escape
-from ..core.plugins import ResourcePlugin, ValidationResult
+from ..plugins.base import ResourcePlugin, ValidationResult
 from entity.config.models import LLMConfig
 from pydantic import ValidationError
 from entity.core.state import LLMResponse

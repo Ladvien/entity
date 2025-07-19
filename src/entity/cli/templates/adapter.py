@@ -8,7 +8,7 @@ workflow = {PipelineStage.OUTPUT: ["MyAdapter"]}
 ```
 """
 
-from entity.core.plugins import AdapterPlugin
+from entity.plugins.base import AdapterPlugin
 from entity.core.stages import PipelineStage
 
 
