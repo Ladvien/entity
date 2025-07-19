@@ -53,17 +53,19 @@ documentation.
 ## Running Tests
 
 The test suite depends on **Docker** and the **`pytest-docker`** plugin.
-After cloning the repository, trust the local `mise` configuration and install
-the development dependencies:
+After cloning the repository, **copy `.env.example` to `.env`**, trust the local
+`mise` configuration, and install the development dependencies. Set
+`POSTGRES_READY_TIMEOUT` in this file if the database container takes longer to
+become healthy:
 
 ```bash
 mise trust
 poetry install --with dev
 ```
 
-With Docker running, use the Poe task to spin up services and run the tests.
-The task now runs a shell script that tears down containers even if the tests
-fail:
+With Docker running, use the Poe task below to spin up services and run the full
+test suite. The task runs a shell script that tears down containers even if the
+tests fail:
 
 ```bash
 poetry run poe test-with-docker
@@ -99,8 +101,10 @@ Integration tests rely on containers defined in `tests/docker-compose.yml`.
 If Docker isn't running, `pytest-docker` automatically marks these tests as
 skipped so the rest of the suite can continue.
 
-Before starting Docker, copy `.env.example` to `.env` and adjust the values for
-your local setup. The compose files read this file automatically.
+Before starting Docker, **copy `.env.example` to `.env`** and adjust the values
+for your local setup. You can set `POSTGRES_READY_TIMEOUT` here if you need to
+wait longer for the database container. The compose files read this file
+automatically.
 
 The Postgres service uses the `pgvector/pgvector:pg16` image so the `vector`
 extension is available without additional setup.
