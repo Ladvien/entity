@@ -7,6 +7,7 @@ from entity.pipeline.stages import PipelineStage
 from entity.pipeline.workflow import Pipeline, Workflow
 from entity.resources.database import DuckDBResource
 from entity.resources.duckdb_vector_store import DuckDBVectorStore
+from entity.infrastructure.duckdb_vector import DuckDBVectorInfrastructure
 
 
 class ThoughtPlugin(Plugin):
@@ -40,6 +41,9 @@ async def test_builder_runtime_executes_workflow():
     agent.pipeline = Pipeline(builder=builder, workflow=wf)
     agent.register_resource("database_backend", DuckDBInfrastructure, {}, layer=1)
     agent.register_resource("database", DuckDBResource, {}, layer=2)
+    agent.register_resource(
+        "vector_store_backend", DuckDBVectorInfrastructure, {}, layer=1
+    )
     agent.register_resource("vector_store", DuckDBVectorStore, {}, layer=2)
     runtime = await agent.build_runtime()
     result = await runtime.handle("hello")
@@ -57,6 +61,9 @@ async def test_agent_handle_runs_workflow():
     agent.pipeline = Pipeline(builder=agent.builder, workflow=wf)
     agent.register_resource("database_backend", DuckDBInfrastructure, {}, layer=1)
     agent.register_resource("database", DuckDBResource, {}, layer=2)
+    agent.register_resource(
+        "vector_store_backend", DuckDBVectorInfrastructure, {}, layer=1
+    )
     agent.register_resource("vector_store", DuckDBVectorStore, {}, layer=2)
     runtime = await agent.build_runtime()
     result = await runtime.handle("bye")
@@ -69,6 +76,9 @@ async def test_builder_registers_default_resources() -> None:
     builder = agent.builder
     agent.register_resource("database_backend", DuckDBInfrastructure, {}, layer=1)
     agent.register_resource("database", DuckDBResource, {}, layer=2)
+    agent.register_resource(
+        "vector_store_backend", DuckDBVectorInfrastructure, {}, layer=1
+    )
     agent.register_resource("vector_store", DuckDBVectorStore, {}, layer=2)
     runtime = await agent.build_runtime()
     assert runtime is not None

@@ -6,6 +6,7 @@ from entity.core.stages import PipelineStage
 from entity.infrastructure import DuckDBInfrastructure
 from entity.resources.database import DuckDBResource
 from entity.resources.duckdb_vector_store import DuckDBVectorStore
+from entity.infrastructure.duckdb_vector import DuckDBVectorInfrastructure
 
 
 class LifecyclePlugin(Plugin):
@@ -34,6 +35,9 @@ def test_plugin_lifecycle():
     asyncio.run(ag.builder.add_plugin(plugin))
     ag.register_resource("database_backend", DuckDBInfrastructure, {}, layer=1)
     ag.register_resource("database", DuckDBResource, {}, layer=2)
+    ag.register_resource(
+        "vector_store_backend", DuckDBVectorInfrastructure, {}, layer=1
+    )
     ag.register_resource("vector_store", DuckDBVectorStore, {}, layer=2)
     asyncio.run(ag.builder.build_runtime())
 

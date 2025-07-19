@@ -5,6 +5,7 @@ from entity.core.plugins import ToolPlugin
 from entity.infrastructure import DuckDBInfrastructure
 from entity.resources.database import DuckDBResource
 from entity.resources.duckdb_vector_store import DuckDBVectorStore
+from entity.infrastructure.duckdb_vector import DuckDBVectorInfrastructure
 
 
 class _TestPluginToolCLI(PluginToolCLI):
@@ -32,6 +33,9 @@ class _TestPluginToolCLI(PluginToolCLI):
                 "database_backend", DuckDBInfrastructure, {}, layer=1
             )
             agent.register_resource("database", DuckDBResource, {}, layer=2)
+            agent.register_resource(
+                "vector_store_backend", DuckDBVectorInfrastructure, {}, layer=1
+            )
             agent.register_resource("vector_store", DuckDBVectorStore, {}, layer=2)
             wf = {stage: [plugin_cls.__name__] for stage in plugin_cls.stages}
             pipeline = PipelineWrapper(builder=agent.builder, workflow=wf)

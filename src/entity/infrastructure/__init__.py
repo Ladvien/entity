@@ -3,6 +3,8 @@ from .duckdb import DuckDBInfrastructure
 from .docker import DockerInfrastructure
 from .llamacpp import LlamaCppInfrastructure
 from .asyncpg import AsyncPGInfrastructure
+from .vector_store import VectorStoreInfrastructure
+from .duckdb_vector import DuckDBVectorInfrastructure
 
 __all__ = [
     "PostgresInfrastructure",
@@ -10,4 +12,6 @@ __all__ = [
     "DockerInfrastructure",
     "LlamaCppInfrastructure",
     "AsyncPGInfrastructure",
+    "VectorStoreInfrastructure",
+    "DuckDBVectorInfrastructure",
 ]

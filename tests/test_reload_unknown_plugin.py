@@ -9,6 +9,7 @@ from entity.cli import EntityCLI
 from entity.infrastructure import DuckDBInfrastructure
 from entity.resources.database import DuckDBResource
 from entity.resources.duckdb_vector_store import DuckDBVectorStore
+from entity.infrastructure.duckdb_vector import DuckDBVectorInfrastructure
 
 from .test_reload_runtime_validation import run_reload
 
@@ -32,6 +33,9 @@ async def test_reload_requires_restart_when_plugin_missing(tmp_path: Path) -> No
     await agent.add_plugin(plugin)
     agent.register_resource("database_backend", DuckDBInfrastructure, {}, layer=1)
     agent.register_resource("database", DuckDBResource, {}, layer=2)
+    agent.register_resource(
+        "vector_store_backend", DuckDBVectorInfrastructure, {}, layer=1
+    )
     agent.register_resource("vector_store", DuckDBVectorStore, {}, layer=2)
     await agent.build_runtime()
 

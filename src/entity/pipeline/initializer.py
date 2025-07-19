@@ -863,6 +863,14 @@ class SystemInitializer:
             container.register("database", DuckDBResource, {}, layer=2)
             registered.add("database")
 
+        if "vector_store_backend" not in registered:
+            from entity.infrastructure.duckdb_vector import DuckDBVectorInfrastructure
+
+            container.register(
+                "vector_store_backend", DuckDBVectorInfrastructure, {}, layer=1
+            )
+            registered.add("vector_store_backend")
+
         if "vector_store" not in registered:
             from entity.resources.duckdb_vector_store import DuckDBVectorStore
 
