@@ -39,6 +39,8 @@ os.environ.setdefault("ENTITY_AUTO_INIT", "0")
 OLLAMA_PORT = int(os.getenv("OLLAMA_PORT", "11434"))
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3:8b-instruct-q6_K")
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", f"http://localhost:{OLLAMA_PORT}")
+POSTGRES_READY_TIMEOUT = int(os.getenv("POSTGRES_READY_TIMEOUT", "180"))
+OLLAMA_READY_TIMEOUT = int(os.getenv("OLLAMA_READY_TIMEOUT", "180"))
 
 from entity.infrastructure import DuckDBInfrastructure, AsyncPGInfrastructure
 from entity.resources import Memory, LLM
@@ -100,7 +102,9 @@ def postgres_dsn(docker_ip: str, docker_services) -> str:
     def check():
         return loop.run_until_complete(_can_connect(dsn))
 
-    docker_services.wait_until_responsive(timeout=60, pause=0.5, check=check)
+    docker_services.wait_until_responsive(
+        timeout=POSTGRES_READY_TIMEOUT, pause=0.5, check=check
+    )
     return dsn
 
 
@@ -231,7 +235,9 @@ def ollama_url(docker_ip: str, docker_services) -> str:
         except Exception:
             return False
 
-    docker_services.wait_until_responsive(timeout=60, pause=1.0, check=is_responsive)
+    docker_services.wait_until_responsive(
+        timeout=OLLAMA_READY_TIMEOUT, pause=1.0, check=is_responsive
+    )
     return base_url
 
 
