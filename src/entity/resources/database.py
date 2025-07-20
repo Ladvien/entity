@@ -37,6 +37,7 @@ class DuckDBResource(DatabaseResource):  # type: ignore[misc]
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
         super().__init__(config)
         self._database: DuckDBInfrastructure | None = None
+        self._database_backend: DuckDBInfrastructure | None = None
 
     @asynccontextmanager
     async def connection(self) -> AsyncIterator[Any]:
@@ -54,6 +55,15 @@ class DuckDBResource(DatabaseResource):  # type: ignore[misc]
     def database(self, value: DuckDBInfrastructure | None) -> None:
         self._database = value
 
+    @property
+    def database_backend(self) -> DuckDBInfrastructure | None:
+        return self._database_backend
+
+    @database_backend.setter
+    def database_backend(self, value: DuckDBInfrastructure | None) -> None:
+        self._database_backend = value
+        self._database = value
+
 
 class PostgresResource(DatabaseResource):  # type: ignore[misc]
     """Database interface over :class:`PostgresInfrastructure`."""
@@ -61,6 +71,7 @@ class PostgresResource(DatabaseResource):  # type: ignore[misc]
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
         super().__init__(config)
         self._database: PostgresInfrastructure | None = None
+        self._database_backend: PostgresInfrastructure | None = None
 
     @asynccontextmanager
     async def connection(self) -> AsyncIterator[Any]:
@@ -76,6 +87,15 @@ class PostgresResource(DatabaseResource):  # type: ignore[misc]
 
     @database.setter
     def database(self, value: PostgresInfrastructure | None) -> None:
+        self._database = value
+
+    @property
+    def database_backend(self) -> PostgresInfrastructure | None:
+        return self._database_backend
+
+    @database_backend.setter
+    def database_backend(self, value: PostgresInfrastructure | None) -> None:
+        self._database_backend = value
         self._database = value
 
 
