@@ -53,6 +53,14 @@ Lower thresholds provide rapid feedback during development. Production deploymen
 
 ## BasicErrorHandler
 
-`BasicErrorHandler` runs in the **ERROR** stage. It records the failure using the
-configured logging resource and produces a JSON error message for the caller.
-Import it from `plugins.builtin` when building custom workflows.
+`BasicErrorHandler` runs in the **ERROR** stage. It logs the failure using the
+configured logging resource and stores the error details so a responder can
+create the final message. Import it from `plugins.builtin` when building custom
+workflows.
+
+## BasicErrorResponder
+
+`BasicErrorResponder` executes in the **OUTPUT** stage. It reads the information
+recorded by `BasicErrorHandler` and calls `context.say()` to deliver the final
+message to the user. According to *Decision&nbsp;#7*, only OUTPUT stage plugins may
+terminate the pipeline in this way.
