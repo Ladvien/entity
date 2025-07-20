@@ -90,6 +90,7 @@ pytest tests/performance/ -m benchmark
 - **Built-in plugins:** Add to `src/entity/plugins/` if the plugin ships with the framework
 - **Example/demo plugins:** Add to `plugin_library/` for examples, local development, or sharing
 - **Custom plugins:** Users develop in `plugin_library/` or their own repositories
+- **Sample plugins:** Copy any plugin in `plugin_library/` and modify it to create your own.
 
 ### Plugin Architecture Rules
 - **Import restrictions:** Plugins must NOT import core modules directly (enforces architectural boundaries)
