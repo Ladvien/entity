@@ -10,7 +10,10 @@ from . import Workflow
 class ChainOfThoughtWorkflow(Workflow):
     """Reason through problems step by step."""
 
-    stage_map = {PipelineStage.THINK: ["{prompt}"]}
+    stage_map = {
+        PipelineStage.THINK: ["{prompt}"],
+        PipelineStage.OUTPUT: ["failure_responder"],
+    }
 
     def __init__(
         self,
@@ -22,7 +25,10 @@ class ChainOfThoughtWorkflow(Workflow):
 class ReActWorkflow(Workflow):
     """Iteratively reason and act using tools."""
 
-    stage_map = {PipelineStage.THINK: ["{prompt}"]}
+    stage_map = {
+        PipelineStage.THINK: ["{prompt}"],
+        PipelineStage.OUTPUT: ["failure_responder"],
+    }
 
     def __init__(
         self,
@@ -34,7 +40,10 @@ class ReActWorkflow(Workflow):
 class IntentClassificationWorkflow(Workflow):
     """Classify the user's intent with a single prompt."""
 
-    stage_map = {PipelineStage.THINK: ["{prompt}"]}
+    stage_map = {
+        PipelineStage.THINK: ["{prompt}"],
+        PipelineStage.OUTPUT: ["failure_responder"],
+    }
 
     def __init__(
         self,

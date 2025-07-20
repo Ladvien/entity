@@ -14,6 +14,7 @@ class StandardWorkflow(Workflow):
         PipelineStage.PARSE: ["conversation_history"],
         PipelineStage.THINK: ["complex_prompt"],
         PipelineStage.REVIEW: ["pii_scrubber"],
+        PipelineStage.OUTPUT: ["failure_responder"],
         PipelineStage.ERROR: ["default_responder"],
     }
 
@@ -24,6 +25,7 @@ class ReActWorkflow(Workflow):
     stage_map = {
         PipelineStage.THINK: ["react"],
         PipelineStage.REVIEW: ["pii_scrubber"],
+        PipelineStage.OUTPUT: ["failure_responder"],
         PipelineStage.ERROR: ["default_responder"],
     }
 
@@ -34,5 +36,6 @@ class ChainOfThoughtWorkflow(Workflow):
     stage_map = {
         PipelineStage.THINK: ["chain_of_thought"],
         PipelineStage.REVIEW: ["pii_scrubber"],
+        PipelineStage.OUTPUT: ["failure_responder"],
         PipelineStage.ERROR: ["default_responder"],
     }
