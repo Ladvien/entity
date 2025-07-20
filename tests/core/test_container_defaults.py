@@ -8,7 +8,7 @@ from entity.resources.metrics import MetricsCollectorResource
 
 
 class DummyDatabase(InfrastructurePlugin):
-    infrastructure_type = "database_backend"
+    infrastructure_type = "database"
     stages: list = []
     dependencies: list = []
 

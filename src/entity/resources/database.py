@@ -12,13 +12,13 @@ from entity.infrastructure.postgres import PostgresInfrastructure
 class DatabaseResource(ResourcePlugin):
     """Abstract database interface over a concrete backend."""
 
-    infrastructure_dependencies = ["database_backend"]
+    infrastructure_dependencies = ["database"]
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
 
     def get_connection_pool(self) -> ResourcePool:
-        infrastructure = getattr(self, "database_backend", None)
+        infrastructure = getattr(self, "database", None)
         if infrastructure:
             return infrastructure.get_connection_pool()
         return ResourcePool(lambda: None, PoolConfig())
@@ -36,23 +36,23 @@ class DuckDBResource(DatabaseResource):  # type: ignore[misc]
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
         super().__init__(config)
-        self.database_backend: DuckDBInfrastructure | None = None
+        self.database: DuckDBInfrastructure | None = None
 
     @asynccontextmanager
     async def connection(self) -> AsyncIterator[Any]:
-        if self.database_backend is None:
+        if self.database is None:
             yield None
         else:
-            async with self.database_backend.connection() as conn:
+            async with self.database.connection() as conn:
                 yield conn
 
     @property
     def database(self) -> DuckDBInfrastructure | None:
-        return self.database_backend
+        return self.database
 
     @database.setter
     def database(self, value: DuckDBInfrastructure | None) -> None:
-        self.database_backend = value
+        self.database = value
 
 
 class PostgresResource(DatabaseResource):  # type: ignore[misc]
@@ -60,23 +60,23 @@ class PostgresResource(DatabaseResource):  # type: ignore[misc]
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
         super().__init__(config)
-        self.database_backend: PostgresInfrastructure | None = None
+        self.database: PostgresInfrastructure | None = None
 
     @asynccontextmanager
     async def connection(self) -> AsyncIterator[Any]:
-        if self.database_backend is None:
+        if self.database is None:
             yield None
         else:
-            async with self.database_backend.connection() as conn:
+            async with self.database.connection() as conn:
                 yield conn
 
     @property
     def database(self) -> PostgresInfrastructure | None:
-        return self.database_backend
+        return self.database
 
     @database.setter
     def database(self, value: PostgresInfrastructure | None) -> None:
-        self.database_backend = value
+        self.database = value
 
 
 __all__ = ["DatabaseResource", "DuckDBResource", "PostgresResource"]

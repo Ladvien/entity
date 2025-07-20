@@ -52,7 +52,7 @@ documentation.
 
 ## Infrastructure Plugins
 
-Register infrastructure plugins under the `database_backend` and `vector_store`
+Register infrastructure plugins under the `database` and `vector_store`
 keys when configuring resources.
 
 ```yaml

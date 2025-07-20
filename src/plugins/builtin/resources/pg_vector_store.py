@@ -12,7 +12,7 @@ class PgVectorStore(VectorStoreResource):
     """Placeholder pgvector-based store."""
 
     name = "pg_vector_store"
-    infrastructure_dependencies = ["database_backend"]
+    infrastructure_dependencies = ["database"]
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})

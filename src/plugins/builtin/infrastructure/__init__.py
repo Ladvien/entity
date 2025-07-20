@@ -1,5 +1,5 @@
 """Infrastructure implementations shipped with the framework."""
 
-from .echo_llm_backend import EchoLLMBackend
+from .echo_llm_provider import EchoLLMProvider
 
-__all__ = ["EchoLLMBackend"]
+__all__ = ["EchoLLMProvider"]

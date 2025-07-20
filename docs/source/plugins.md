@@ -51,8 +51,8 @@ back to the caller and exposes the `"llm_backend"` infrastructure type.
 ```yaml
 plugins:
   infrastructure:
-    echo_llm_backend:
-      type: plugins.builtin.infrastructure.echo_llm_backend:EchoLLMBackend
+    echo_llm_provider:
+      type: plugins.builtin.infrastructure.echo_llm_provider:EchoLLMProvider
 ```
 
 No configuration options are required.
@@ -60,7 +60,7 @@ No configuration options are required.
 ## AsyncPGInfrastructure
 
 `AsyncPGInfrastructure` connects to a PostgreSQL server and exposes a
-`database_backend` for resources.
+`database` for resources.
 
 ```yaml
 plugins:
