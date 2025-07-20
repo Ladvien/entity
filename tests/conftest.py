@@ -119,7 +119,7 @@ class AsyncPGDatabase(DatabaseResource):
     def __init__(self, dsn: str) -> None:
         super().__init__({})
         self._dsn = dsn
-        self.database_backend = None
+        self.database = None
 
     @classmethod
     def from_config(cls, cfg: dict) -> "AsyncPGDatabase":
@@ -127,7 +127,7 @@ class AsyncPGDatabase(DatabaseResource):
 
     @asynccontextmanager
     async def connection(self):
-        backend = getattr(self, "database_backend", None)
+        backend = getattr(self, "database", None)
         if backend is None:
             parsed = urlparse(self._dsn)
             wait_for_port(parsed.hostname, parsed.port)
@@ -145,7 +145,7 @@ class AsyncPGDatabase(DatabaseResource):
                 yield conn
 
     def get_connection_pool(self):
-        backend = getattr(self, "database_backend", None)
+        backend = getattr(self, "database", None)
         if backend is not None:
             return backend.get_connection_pool()
         return self._dsn

@@ -5,10 +5,10 @@ from typing import Dict
 from entity.plugins.base import InfrastructurePlugin, ValidationResult
 
 
-class EchoLLMBackend(InfrastructurePlugin):
+class EchoLLMProvider(InfrastructurePlugin):
     """Simple backend that echoes prompts."""
 
-    name = "echo_llm_backend"
+    name = "echo_llm_provider"
     infrastructure_type = "llm_provider"
     resource_category = "llm"
     stages: list = []

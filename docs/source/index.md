@@ -67,7 +67,7 @@ stats per plugin.
 ## DatabaseResource
 
 `DuckDBResource` provides a zero-config persistent database. It depends on the
-automatically created `database_backend` infrastructure and is registered if omitted.
+automatically created `database` infrastructure and is registered if omitted.
 
 ```yaml
 plugins:
@@ -80,8 +80,13 @@ plugins:
 ## VectorStoreResource
 
 `VectorStoreResource` adds semantic search using a pluggable vector store. The
+<<<<<<< HEAD
 bundled `DuckDBVectorStore` registers at **layer 2** and relies on a dedicated
 `vector_store_backend` infrastructure.
+=======
+bundled `DuckDBVectorStore` registers at **layer 2** and relies on the same
+`database` infrastructure.
+>>>>>>> pr-1816
 
 ```yaml
 plugins:

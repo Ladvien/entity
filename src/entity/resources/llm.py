@@ -49,7 +49,7 @@ class LLMResource(ResourcePlugin):
 class EchoLLMResource(LLMResource):
     """LLM that simply echoes the prompt."""
 
-    infrastructure_dependencies = ["echo_llm_backend"]
+    infrastructure_dependencies = ["echo_llm_provider"]
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
