@@ -53,12 +53,17 @@ documentation.
 ## Infrastructure Plugins
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 Register infrastructure plugins under the `database_backend` and
 `vector_store_backend` keys when configuring resources.
 =======
 Register infrastructure plugins under the `database` and `vector_store`
 keys when configuring resources.
 >>>>>>> pr-1816
+=======
+Register infrastructure plugins under the `database_backend` and
+`vector_store_backend` keys when configuring resources.
+>>>>>>> pr-1820
 
 ```yaml
 plugins:
@@ -66,6 +71,10 @@ plugins:
     postgres_backend:
       type: entity.infrastructure.asyncpg:AsyncPGInfrastructure
       dsn: postgresql://user:pass@localhost:5432/agent
+    vector_store_backend:
+      type: entity.infrastructure.duckdb_vector:DuckDBVectorInfrastructure
+      path: ./agent.duckdb
+      table: vector_mem
   resources:
     vector_store:
       type: entity.resources.duckdb_vector_store:DuckDBVectorStore
