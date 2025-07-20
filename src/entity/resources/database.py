@@ -12,7 +12,7 @@ from entity.infrastructure.postgres import PostgresInfrastructure
 class DatabaseResource(ResourcePlugin):
     """Abstract database interface over a concrete backend."""
 
-    infrastructure_dependencies = ["database"]
+    infrastructure_dependencies = ["database_backend"]
 
     def __init__(self, config: Dict | None = None) -> None:
         super().__init__(config or {})
@@ -36,7 +36,7 @@ class DuckDBResource(DatabaseResource):  # type: ignore[misc]
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
         super().__init__(config)
-        self.database: DuckDBInfrastructure | None = None
+        self._database: DuckDBInfrastructure | None = None
 
     @asynccontextmanager
     async def connection(self) -> AsyncIterator[Any]:
@@ -48,11 +48,11 @@ class DuckDBResource(DatabaseResource):  # type: ignore[misc]
 
     @property
     def database(self) -> DuckDBInfrastructure | None:
-        return self.database
+        return self._database
 
     @database.setter
     def database(self, value: DuckDBInfrastructure | None) -> None:
-        self.database = value
+        self._database = value
 
 
 class PostgresResource(DatabaseResource):  # type: ignore[misc]
@@ -60,7 +60,7 @@ class PostgresResource(DatabaseResource):  # type: ignore[misc]
 
     def __init__(self, config: Dict[str, Any] | None = None) -> None:
         super().__init__(config)
-        self.database: PostgresInfrastructure | None = None
+        self._database: PostgresInfrastructure | None = None
 
     @asynccontextmanager
     async def connection(self) -> AsyncIterator[Any]:
@@ -72,11 +72,11 @@ class PostgresResource(DatabaseResource):  # type: ignore[misc]
 
     @property
     def database(self) -> PostgresInfrastructure | None:
-        return self.database
+        return self._database
 
     @database.setter
     def database(self, value: PostgresInfrastructure | None) -> None:
-        self.database = value
+        self._database = value
 
 
 __all__ = ["DatabaseResource", "DuckDBResource", "PostgresResource"]
