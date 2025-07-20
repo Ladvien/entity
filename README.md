@@ -52,18 +52,9 @@ documentation.
 
 ## Infrastructure Plugins
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 Register infrastructure plugins under the `database_backend` and
-`vector_store_backend` keys when configuring resources.
-=======
-Register infrastructure plugins under the `database` and `vector_store`
-keys when configuring resources.
->>>>>>> pr-1816
-=======
-Register infrastructure plugins under the `database_backend` and
-`vector_store_backend` keys when configuring resources.
->>>>>>> pr-1820
+`vector_store_backend` keys when configuring resources. Earlier versions used
+the shorter `database` and `vector_store` keys.
 
 ```yaml
 plugins:

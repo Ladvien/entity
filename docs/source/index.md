@@ -80,18 +80,9 @@ plugins:
 ## VectorStoreResource
 
 `VectorStoreResource` adds semantic search using a pluggable vector store. The
-<<<<<<< HEAD
-<<<<<<< HEAD
-bundled `DuckDBVectorStore` registers at **layer 2** and relies on a dedicated
-`vector_store_backend` infrastructure.
-=======
-bundled `DuckDBVectorStore` registers at **layer 2** and relies on the same
-`database` infrastructure.
->>>>>>> pr-1816
-=======
-bundled `DuckDBVectorStore` registers at **layer 2** and depends on the
-`vector_store_backend` infrastructure.
->>>>>>> pr-1820
+bundled `DuckDBVectorStore` registers at **layer 2**. It typically depends on
+the `vector_store_backend` infrastructure, although earlier versions relied on
+the same `database` infrastructure.
 
 ```yaml
 plugins:
