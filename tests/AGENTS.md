@@ -74,5 +74,5 @@ e2e = "pytest tests/e2e"
 ### Ollama
 
 Integration tests expecting an LLM always use the `ollama/ollama` container
-from `tests/docker-compose.yml`. The suite no longer includes the
+from `docker-compose.yml`. The suite no longer includes the
 `fake_ollama` server, so ensure Docker is available when running these tests.

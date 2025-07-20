@@ -219,7 +219,7 @@ async def clear_pg_memory(pg_memory):
 def docker_compose_file(pytestconfig: pytest.Config) -> str:
     if not _require_docker():
         pytest.skip("Docker is required for docker-compose fixtures.")
-    return str(Path(pytestconfig.rootpath) / "tests" / "docker-compose.yml")
+    return str(Path(pytestconfig.rootpath) / "docker-compose.yml")
 
 
 @pytest.fixture(scope="session")

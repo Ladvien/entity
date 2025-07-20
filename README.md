@@ -128,7 +128,7 @@ If Docker isn't available, the integration tests will be skipped automatically.
 
 ### Docker Requirement for Integration Tests
 
-Integration tests rely on containers defined in `tests/docker-compose.yml`.
+Integration tests rely on containers defined in `docker-compose.yml`.
 If Docker isn't running, `pytest-docker` automatically marks these tests as
 skipped so the rest of the suite can continue.
 
@@ -142,7 +142,7 @@ extension is available without additional setup.
 
 ### Integration Tests & Docker
 
-Integration tests spin up containers defined in `tests/docker-compose.yml`.
+Integration tests spin up containers defined in `docker-compose.yml`.
 
 `pytest-docker` exposes the `docker_ip` and `docker_services` fixtures used by
 the integration tests. Make sure the optional dependencies `pyyaml` and
