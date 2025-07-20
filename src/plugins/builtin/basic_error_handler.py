@@ -56,4 +56,4 @@ class BasicErrorHandler(FailurePlugin):
                 "type": "plugin_error",
             }
 
-        context._state.response = message
+        await context.think("failure_response", message)

@@ -13,7 +13,7 @@ class MinimalWorkflow(Workflow):
     stage_map = {
         PipelineStage.INPUT: ["input_logger"],
         PipelineStage.THINK: ["ComplexPrompt"],
-        PipelineStage.OUTPUT: ["ComplexPromptResponder"],
+        PipelineStage.OUTPUT: ["ComplexPromptResponder", "basic_error_responder"],
         PipelineStage.ERROR: ["basic_error_handler"],
     }
 
