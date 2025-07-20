@@ -70,7 +70,7 @@ plugins:
   custom_resources: {}
   tools:
     calculator:
-      type: user_plugins.tools.calculator_tool:CalculatorTool
+      type: plugin_library.tools.calculator_tool:CalculatorTool
   adapters: {}
     # http:
     #   type: plugins.builtin.adapters.http:HTTPAdapter
@@ -96,11 +96,11 @@ plugins:
       type: entity.plugins.prompts.react:ReActPrompt
       max_steps: 3
     conversation_history:
-      type: user_plugins.prompts.conversation_history:ConversationHistory
+      type: plugin_library.prompts.conversation_history:ConversationHistory
     memory_retrieval:
-      type: user_plugins.prompts.memory_retrieval:MemoryRetrievalPrompt
+      type: plugin_library.prompts.memory_retrieval:MemoryRetrievalPrompt
       max_context_length: 4000
       stages: [think]
     intent_classifier:
-      type: user_plugins.prompts.intent_classifier:IntentClassifierPrompt
+      type: plugin_library.prompts.intent_classifier:IntentClassifierPrompt
       confidence_threshold: 0.8

@@ -35,7 +35,7 @@ plugins:
   custom_resources: {}
   tools:
     calculator:
-      type: user_plugins.tools.calculator_tool:CalculatorTool
+      type: plugin_library.tools.calculator_tool:CalculatorTool
   adapters: {}
     # http:
     #   type: plugins.builtin.adapters.http:HTTPAdapter
@@ -59,9 +59,9 @@ plugins:
       dependencies: [llm]
       max_steps: 5
     memory_retrieval:
-      type: user_plugins.prompts.memory_retrieval:MemoryRetrievalPrompt
+      type: plugin_library.prompts.memory_retrieval:MemoryRetrievalPrompt
       dependencies: [memory]
       max_context_length: 4000
     intent_classifier:
-      type: user_plugins.prompts.intent_classifier:IntentClassifierPrompt
+      type: plugin_library.prompts.intent_classifier:IntentClassifierPrompt
       confidence_threshold: 0.8

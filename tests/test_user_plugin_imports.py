@@ -2,7 +2,11 @@ import re
 from pathlib import Path
 
 
+<<<<<<< HEAD
 def test_user_plugins_do_not_import_pipeline():
+=======
+def test_plugin_library_does_not_import_pipeline():
+>>>>>>> pr-1829
     base = Path("plugin_library")
     pattern = re.compile(r"^(?:from|import)\s+(entity\.pipeline|pipeline)")
     offending = []

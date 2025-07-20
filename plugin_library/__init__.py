@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 """Alias to `user_plugins` for backward compatibility."""
 
 from importlib import import_module
@@ -26,3 +27,6 @@ _submodules = [
 
 for _name in _submodules:
     sys.modules[f"{__name__}.{_name}"] = import_module(f"user_plugins.{_name}")
+=======
+"""Community contributed plugins."""
+>>>>>>> pr-1829
