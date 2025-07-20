@@ -17,7 +17,7 @@ class DefaultWorkflow(Workflow):
         PipelineStage.PARSE: ["message_parser"],
         PipelineStage.THINK: [],
         PipelineStage.REVIEW: ["response_reviewer"],
-        PipelineStage.OUTPUT: [],
+        PipelineStage.OUTPUT: ["failure_responder"],
         PipelineStage.ERROR: ["basic_error_handler"],
     }
 
