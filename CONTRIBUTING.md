@@ -21,18 +21,9 @@ This installs all required development dependencies including code quality tools
 - **`src/entity/config/`** - Configuration models and validation
 - **`src/entity/cli/`** - Developer CLI tools and utilities
 - **`src/entity/utils/`** - Shared utilities (logging, retries, etc.)
-<<<<<<< HEAD
-<<<<<<< HEAD
-- **`plugin_library/`** - Community plugin examples for learning and local development
-- **`user_plugins/`** - Your personal plugins that are not shipped with the framework
-=======
 - **`plugin_library/`** - Example plugins and local development plugins (not shipped with framework)
   Use this folder as a starting point for your own plugins. Copy any sample plugin
   and modify it to fit your needs.
->>>>>>> pr-1827
-=======
-- **`plugin_library/`** - Example plugins and local development plugins (not shipped with framework)
->>>>>>> pr-1829
 
 ### Test Organization
 Mirror the source structure in tests:
@@ -97,18 +88,8 @@ pytest tests/performance/ -m benchmark
 
 ### Plugin Location Rules
 - **Built-in plugins:** Add to `src/entity/plugins/` if the plugin ships with the framework
-<<<<<<< HEAD
-<<<<<<< HEAD
-- **Community examples:** Use `plugin_library/` for demo plugins and local tutorials (see [plugin_library/README.md](plugin_library/README.md))
-- **Custom plugins:** Users develop in `user_plugins/` or their own repositories
-=======
 - **Example/demo plugins:** Add to `plugin_library/` for examples, local development, or sharing
 - **Custom plugins:** Users develop in `plugin_library/` or their own repositories
->>>>>>> pr-1827
-=======
-- **Example/demo plugins:** Add to `plugin_library/` for examples, local development, or sharing
-- **Custom plugins:** Users develop in `plugin_library/` or their own repositories
->>>>>>> pr-1829
 
 ### Plugin Architecture Rules
 - **Import restrictions:** Plugins must NOT import core modules directly (enforces architectural boundaries)
