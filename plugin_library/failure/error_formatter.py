@@ -24,4 +24,4 @@ class ErrorFormatter(FailurePlugin):
             }
         elif hasattr(failure_msg, "to_dict"):
             failure_msg = failure_msg.to_dict()
-        await context.say(failure_msg)
+        await context.think("failure_response", failure_msg)
