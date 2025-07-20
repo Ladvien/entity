@@ -1,7 +1,7 @@
 import pytest
 from entity import agent, prompt
-from user_plugins.tools.calculator_tool import CalculatorTool
-from user_plugins.responders import ReactResponder
+from plugin_library.tools.calculator_tool import CalculatorTool
+from plugin_library.responders import ReactResponder
 
 
 @prompt
