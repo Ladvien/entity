@@ -4,6 +4,7 @@ from entity.infrastructure.llamacpp import LlamaCppInfrastructure
 from entity.infrastructure.postgres import PostgresInfrastructure
 from entity.infrastructure.duckdb_vector import DuckDBVectorInfrastructure
 from entity.resources.duckdb_vector_store import DuckDBVectorStore
+from entity.resources.vector_store import VectorStoreResource
 
 
 def test_infrastructure_plugins_have_no_dependencies() -> None:
@@ -25,3 +26,7 @@ def test_infrastructure_plugins_have_no_dependencies() -> None:
 
 def test_vector_store_resource_requires_backend() -> None:
     assert DuckDBVectorStore.infrastructure_dependencies == ["vector_store_backend"]
+
+
+def test_vector_store_interface_dependency() -> None:
+    assert VectorStoreResource.infrastructure_dependencies == ["vector_store"]
