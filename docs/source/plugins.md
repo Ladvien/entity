@@ -69,3 +69,17 @@ plugins:
       type: entity.infrastructure.asyncpg:AsyncPGInfrastructure
       dsn: postgresql://user:pass@localhost:5432/agent
 ```
+
+## DuckDBVectorInfrastructure
+
+`DuckDBVectorInfrastructure` is a lightweight vector-store backend. It
+registers under the `vector_store_backend` key at layer 1.
+
+```yaml
+plugins:
+  infrastructure:
+    vector_store_backend:
+      type: entity.infrastructure.duckdb_vector:DuckDBVectorInfrastructure
+      path: ./agent.duckdb
+      table: vector_mem
+```
