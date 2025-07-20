@@ -93,24 +93,49 @@ The following architecture decisions were made through systematic analysis of th
 
 Folder structure:
 ```plaintext
-entity/
-├── user_plugins/              # Example or custom plugins for local use or sharing
+.
+├── README.md
+├── ARCHITECTURE.md
+├── CONTRIBUTING.md
+├── LICENSE
+├── AGENTS.md
+├── src/                           # Core framework code
+│   ├── entity/
+│   │   ├── __init__.py
+│   │   ├── cli/
+│   │   ├── config/
+│   │   ├── core/
+│   │   ├── debug/
+│   │   ├── defaults.py
+│   │   ├── infrastructure/
+│   │   ├── pipeline/
+│   │   ├── plugins/               # Built-in plugins only
+│   │   ├── resources/
+│   │   ├── utils/
+│   │   ├── worker/
+│   │   └── workflows/
+│   └── plugins/                   # Framework plugin system
+│       ├── builtin/
+│       └── examples/
 │
-├── src/
-│   └── entity/                # Main Python package
-│       ├── core/              # Core execution engine and orchestration logic
-│       ├── plugins/           # Plugin definitions grouped by type
-│       ├── resources/         # Composed resource interfaces (memory, storage, llm)
-│       ├── config/             # Configuration models and validation logic
-│       ├── cli/               # Developer CLI tools and utilities
-│       └── utils/             # Misc shared utilities (logging, retries, etc.)
+├── examples/                      # Framework usage examples
+│   ├── README.md
+│   ├── basic_agent/
+│   └── etc.
 │
-└── tests/                     # Unit and integration tests
-    ├── test_core/             # Tests for pipeline, agent, and context
-    ├── test_plugins/          # Tests for plugin behaviors and base classes
-    ├── test_resources/        # Tests for memory, storage, and LLM resources
-    ├── test_config/            # Tests for config model parsing and validation
-    └── test_cli/              # Tests for CLI commands and developer tools
+├── plugin_library/                # Example plugins (formerly user_plugins)
+│   ├── README.md                  # "Community Plugin Examples"
+│   ├── failure/                   # Failure handling plugins
+│   │   ├── basic_logger.py
+│   │   ├── default_responder.py
+│   │   └── error_formatter.py
+│   ├── prompts/                   # Prompt plugins
+│   ├── responders/                # Response plugins
+│   ├── tools/                     # Tool plugins
+│   └── resources/                 # Resource plugins
+├── docs/
+├── tests/
+└── scripts/
 ```
 
 # 1. Core Mental Model: Plugin Taxonomy and 4-Layer Resource Architecture
