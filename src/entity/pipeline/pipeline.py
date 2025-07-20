@@ -173,7 +173,7 @@ async def execute_stage(
                         pipeline_id=state.pipeline_id,
                     )
                 state.failure_info = FailureInfo(
-                    stage=str(stage),
+                    stage=f"PipelineStage.{stage.name}",
                     plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
                     error_type="circuit_breaker",
                     error_message=str(exc),
@@ -191,7 +191,7 @@ async def execute_stage(
                         pipeline_id=state.pipeline_id,
                     )
                 state.failure_info = FailureInfo(
-                    stage=str(stage),
+                    stage=f"PipelineStage.{stage.name}",
                     plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
                     error_type=exc.original_exception.__class__.__name__,
                     error_message=str(exc.original_exception),
@@ -209,7 +209,7 @@ async def execute_stage(
                         pipeline_id=state.pipeline_id,
                     )
                 state.failure_info = FailureInfo(
-                    stage=str(stage),
+                    stage=f"PipelineStage.{stage.name}",
                     plugin_name=exc.tool_name,
                     error_type=exc.original_exception.__class__.__name__,
                     error_message=str(exc.original_exception),
@@ -227,7 +227,7 @@ async def execute_stage(
                         pipeline_id=state.pipeline_id,
                     )
                 state.failure_info = FailureInfo(
-                    stage=str(stage),
+                    stage=f"PipelineStage.{stage.name}",
                     plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
                     error_type=exc.__class__.__name__,
                     error_message=str(exc),
@@ -245,7 +245,7 @@ async def execute_stage(
                         pipeline_id=state.pipeline_id,
                     )
                 state.failure_info = FailureInfo(
-                    stage=str(stage),
+                    stage=f"PipelineStage.{stage.name}",
                     plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
                     error_type=exc.__class__.__name__,
                     error_message=str(exc),
@@ -265,7 +265,7 @@ async def execute_stage(
 
                 message = exc.args[0] if exc.args else str(exc)
                 state.failure_info = FailureInfo(
-                    stage=str(stage),
+                    stage=f"PipelineStage.{stage.name}",
                     plugin_name=getattr(plugin, "name", plugin.__class__.__name__),
                     error_type=exc.__class__.__name__,
                     error_message=message,
@@ -427,6 +427,8 @@ async def execute_pipeline(
                     )
                     if state_logger is not None:
                         state_logger.log(state, PipelineStage.ERROR)
+                if state.response is None and "failure_response" in state.stage_results:
+                    state.response = state.stage_results["failure_response"]
                 await execute_stage(
                     PipelineStage.OUTPUT, state, capabilities, user_id=user_id
                 )

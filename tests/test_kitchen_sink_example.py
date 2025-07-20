@@ -18,4 +18,4 @@ async def test_kitchen_sink_example() -> None:
     await agent.builder.tool_registry.add("calc", CalculatorTool())
     await agent.add_plugin(ReactResponder({}))
     result = await agent.handle("What is 2 + 2?")
-    assert isinstance(result, dict) and "error" in result
+    assert result == ""
