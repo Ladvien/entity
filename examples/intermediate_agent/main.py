@@ -7,7 +7,7 @@ sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
 
 from entity import agent
 from entity.core.stages import PipelineStage
-from user_plugins.responders import ComplexPromptResponder
+from plugin_library.responders import ComplexPromptResponder
 
 
 @agent.prompt(stage=PipelineStage.THINK)
