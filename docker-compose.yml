@@ -3,7 +3,6 @@ version: '3.8'
 services:
   postgres:
     image: pgvector/pgvector:pg16
-    container_name: test-postgres
     env_file:
       - .env
     environment:
@@ -19,7 +18,27 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
-    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama
+    privileged: true
+    env_file:
+      - .env
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    entrypoint: >
+      bash -c '
+        set -e
+        ollama serve &
+        sleep 3
+        ollama pull ${OLLAMA_MODEL:-llama3:8b-instruct-q6_K} || true
+        wait
+      '
 
 volumes:
   postgres_data:
+  ollama_data:

@@ -6,7 +6,7 @@ command -v docker >/dev/null 2>&1 || {
 	exit 1
 }
 
-docker compose -f tests/docker-compose.yml up -d
-trap 'docker compose -f tests/docker-compose.yml down -v' EXIT
+docker compose up -d
+trap 'docker compose down -v' EXIT
 
 PYTHONPATH=src pytest "$@"
