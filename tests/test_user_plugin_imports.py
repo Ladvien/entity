@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 def test_user_plugins_do_not_import_pipeline():
-    base = Path("user_plugins")
+    base = Path("plugin_library")
     pattern = re.compile(r"^(?:from|import)\s+(entity\.pipeline|pipeline)")
     offending = []
     for py_file in base.rglob("*.py"):
