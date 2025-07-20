@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from entity.core.context import PluginContext
-from entity.core.plugins import InputAdapterPlugin
+from entity.plugins.base import InputAdapterPlugin
 from entity.core.stages import PipelineStage
 
 

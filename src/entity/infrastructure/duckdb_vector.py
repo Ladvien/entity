@@ -6,7 +6,7 @@ import math
 import importlib
 
 from entity.config.models import DuckDBConfig
-from entity.core.plugins import ValidationResult
+from entity.plugins.base import ValidationResult
 from entity.core.resources.container import PoolConfig, ResourcePool
 
 from .vector_store import VectorStoreInfrastructure
