@@ -3,7 +3,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Iterator
 
-from entity.core.plugins import InfrastructurePlugin, ValidationResult
+from entity.plugins.base import InfrastructurePlugin, ValidationResult
 from entity.core.resources.container import PoolConfig, ResourcePool
 
 

@@ -12,7 +12,7 @@ import duckdb
 sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
 
 from entity import agent
-from entity.core.plugins import PromptPlugin, ResourcePlugin
+from entity.plugins.base import PromptPlugin, ResourcePlugin
 from entity.core.context import PluginContext
 from entity.core.state import ConversationEntry
 from entity.core.stages import PipelineStage
