@@ -109,8 +109,8 @@ def _create_default_agent() -> Agent:
     try:  # optional default plugins
         from plugins.builtin.basic_error_handler import BasicErrorHandler
         from plugins.examples import InputLogger, MessageParser, ResponseReviewer
-        from user_plugins.prompts import ComplexPrompt
-        from user_plugins.responders import ComplexPromptResponder
+        from plugin_library.prompts import ComplexPrompt
+        from plugin_library.responders import ComplexPromptResponder
 
         asyncio.run(builder.add_plugin(BasicErrorHandler({})))
         asyncio.run(builder.add_plugin(InputLogger({})))

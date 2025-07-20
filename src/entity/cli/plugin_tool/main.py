@@ -77,7 +77,7 @@ class PluginToolCLI:
         scaffold.add_argument("--type", required=True, choices=list(PLUGIN_TYPES))
         scaffold.add_argument(
             "--out",
-            default="user_plugins",
+            default="plugin_library",
             help="Directory to create the project in",
         )
 

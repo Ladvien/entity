@@ -14,7 +14,7 @@ class ChainOfThoughtWorkflow(Workflow):
 
     def __init__(
         self,
-        prompt: str = "user_plugins.prompts.chain_of_thought:ChainOfThoughtPrompt",
+        prompt: str = "plugin_library.prompts.chain_of_thought:ChainOfThoughtPrompt",
     ) -> None:
         super().__init__(prompt=prompt)
 
@@ -26,7 +26,7 @@ class ReActWorkflow(Workflow):
 
     def __init__(
         self,
-        prompt: str = "user_plugins.prompts.react_prompt:ReActPrompt",
+        prompt: str = "plugin_library.prompts.react_prompt:ReActPrompt",
     ) -> None:
         super().__init__(prompt=prompt)
 
@@ -38,7 +38,7 @@ class IntentClassificationWorkflow(Workflow):
 
     def __init__(
         self,
-        prompt: str = "user_plugins.prompts.intent_classifier:IntentClassifierPrompt",
+        prompt: str = "plugin_library.prompts.intent_classifier:IntentClassifierPrompt",
     ) -> None:
         super().__init__(prompt=prompt)
 
