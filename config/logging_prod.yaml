@@ -1,7 +1,0 @@
-logging:
-  level: INFO
-  json_enabled: true
-  file_enabled: true
-  file_path: logs/entity.log
-  max_file_size: 10485760
-  backup_count: 5

@@ -188,7 +188,7 @@ output/
 /models
 talking.log
 *.txt
-*.log*
+# *.log*
 
 audio_output/*
 .claude/*
