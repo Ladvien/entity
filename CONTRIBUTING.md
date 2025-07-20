@@ -21,7 +21,8 @@ This installs all required development dependencies including code quality tools
 - **`src/entity/config/`** - Configuration models and validation
 - **`src/entity/cli/`** - Developer CLI tools and utilities
 - **`src/entity/utils/`** - Shared utilities (logging, retries, etc.)
-- **`user_plugins/`** - Example plugins and local development plugins (not shipped with framework)
+- **`plugin_library/`** - Community plugin examples for learning and local development
+- **`user_plugins/`** - Your personal plugins that are not shipped with the framework
 
 ### Test Organization
 Mirror the source structure in tests:
@@ -86,7 +87,7 @@ pytest tests/performance/ -m benchmark
 
 ### Plugin Location Rules
 - **Built-in plugins:** Add to `src/entity/plugins/` if the plugin ships with the framework
-- **Example/demo plugins:** Add to `user_plugins/` for examples, local development, or sharing
+- **Community examples:** Use `plugin_library/` for demo plugins and local tutorials (see [plugin_library/README.md](plugin_library/README.md))
 - **Custom plugins:** Users develop in `user_plugins/` or their own repositories
 
 ### Plugin Architecture Rules

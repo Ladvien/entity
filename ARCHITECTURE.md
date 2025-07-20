@@ -138,6 +138,10 @@ Folder structure:
 └── scripts/
 ```
 
+The directory `plugin_library/` houses community plugins used for demonstrations
+and local development. For more information, see
+[plugin_library/README.md](plugin_library/README.md).
+
 # 1. Core Mental Model: Plugin Taxonomy and 4-Layer Resource Architecture
 
 The Entity Pipeline Framework uses a unified plugin architecture where all extensions inherit from a single `Plugin` base class, combined with a strict 4-layer resource architecture that prevents circular dependencies through dependency inversion.
