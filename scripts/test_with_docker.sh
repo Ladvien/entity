@@ -6,7 +6,8 @@ command -v docker >/dev/null 2>&1 || {
 	exit 1
 }
 
-docker compose up -d
-trap 'docker compose down -v' EXIT
+docker compose down -v --remove-orphans >/dev/null 2>&1 || true
+docker compose up --build -d
+trap 'docker compose down -v --remove-orphans' EXIT
 
 PYTHONPATH=src pytest "$@"

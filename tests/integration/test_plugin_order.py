@@ -46,6 +46,7 @@ class Finish(PromptPlugin):
         await context.say("done")
 
 
+@pytest.mark.skip(reason="Prompt plugins can no longer run in the OUTPUT stage.")
 @pytest.mark.asyncio
 async def test_prompt_plugin_order(tmp_path) -> None:
     config = f"""
