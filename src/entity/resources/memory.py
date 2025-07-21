@@ -25,10 +25,15 @@ class Memory(AgentResource):
     dependencies = ["database", "vector_store?"]
     resource_category = "database"
 
-    def __init__(self, config: Dict[str, Any] | None = None) -> None:
+    def __init__(
+        self,
+        config: Dict[str, Any] | None = None,
+        database: DatabaseInterface | None = None,
+        vector_store: VectorStoreInterface | None = None,
+    ) -> None:
         super().__init__(config or {})
-        self.database: DatabaseInterface | None = None
-        self.vector_store: VectorStoreInterface | None = None
+        self.database = database
+        self.vector_store = vector_store
         self._kv_table = self.config.get("kv_table", "memory_kv")
         self._history_table = self.config.get("history_table", "conversation_history")
 

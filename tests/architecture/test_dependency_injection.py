@@ -13,18 +13,18 @@ class DBInterface(ResourcePlugin):
     stages: list = []
     dependencies: list = []
 
-    def __init__(self, config=None) -> None:
+    def __init__(self, config=None, database=None) -> None:
         super().__init__(config or {})
-        self.database = None
+        self.database = database
 
 
 class DepResource(AgentResource):
     dependencies = ["db"]
     stages: list = []
 
-    def __init__(self, config=None) -> None:
+    def __init__(self, config=None, db=None) -> None:
         super().__init__(config or {})
-        self.db = None
+        self.db = db
 
     @classmethod
     async def validate_dependencies(cls, registry):

@@ -474,9 +474,27 @@ class ResourceContainer:
         return metrics
 
     def _create_instance(self, cls: type, cfg: Dict) -> Any:
+        """Instantiate ``cls`` with injected constructor dependencies."""
+
+        deps = list(getattr(cls, "dependencies", []))
+        from entity.core.plugins import ResourcePlugin
+
+        if issubclass(cls, ResourcePlugin):
+            deps.extend(getattr(cls, "infrastructure_dependencies", []))
+
+        kwargs: Dict[str, Any] = {}
+        if deps:
+            import inspect
+
+            params = inspect.signature(cls.__init__).parameters
+            for dep in deps:
+                name = dep[:-1] if dep.endswith("?") else dep
+                if name in params:
+                    kwargs[name] = self.get(name)
+
         if hasattr(cls, "from_config"):
-            return cls.from_config(cfg)
-        return cls(config=cfg)
+            return cls.from_config(cfg, **kwargs)
+        return cls(config=cfg, **kwargs)
 
     def _dependents(self, name: str) -> List[str]:
         deps: List[str] = []

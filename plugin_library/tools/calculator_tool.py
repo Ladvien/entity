@@ -80,6 +80,9 @@ class CalculatorTool(ToolPlugin):
     intents = ["math"]
     _evaluator = SafeEvaluator()
 
+    def __init__(self, config: Dict[str, Any] | None = None) -> None:
+        super().__init__(config or {})
+
     class Params(BaseModel):
         expression: str
 

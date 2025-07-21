@@ -25,8 +25,9 @@ class DepPlugin(Plugin):
     stages = [PipelineStage.THINK]
     dependencies = ["cfg"]
 
-    def __init__(self, cfg=None):
-        super().__init__(cfg or {})
+    def __init__(self, config=None, cfg=None):
+        super().__init__(config or {})
+        self.cfg = cfg
         self.seen = None
 
     async def _execute_impl(self, context):
@@ -90,8 +91,8 @@ async def test_update_rejects_type_change():
 class FailingRollbackPlugin(DepPlugin):
     stages = [PipelineStage.THINK]
 
-    def __init__(self, config=None):
-        super().__init__(config or {})
+    def __init__(self, config=None, cfg=None):
+        super().__init__(config, cfg=cfg)
         self.value = self.config.get("value", 0)
 
     async def _execute_impl(self, context):

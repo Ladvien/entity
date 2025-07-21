@@ -29,7 +29,7 @@ class B(Plugin):
     stages = [PipelineStage.THINK]
     dependencies = ["a"]
 
-    def __init__(self, a: A, config=None):
+    def __init__(self, a: A | None = None, config=None):
         super().__init__(config or {})
         self.a = a
 
@@ -45,7 +45,7 @@ class C(Plugin):
     dependencies = ["missing"]
 
     def __init__(
-        self, missing, config=None
+        self, missing=None, config=None
     ):  # pragma: no cover - constructed in validator
         super().__init__(config or {})
 
@@ -60,7 +60,9 @@ class D(Plugin):
     stages = [PipelineStage.PARSE]
     dependencies = ["e"]
 
-    def __init__(self, e, config=None):  # pragma: no cover - constructed in validator
+    def __init__(
+        self, e=None, config=None
+    ):  # pragma: no cover - constructed in validator
         super().__init__(config or {})
 
     async def _execute_impl(self, context):
@@ -74,7 +76,9 @@ class E(Plugin):
     stages = [PipelineStage.DO]
     dependencies = ["d"]
 
-    def __init__(self, d, config=None):  # pragma: no cover - constructed in validator
+    def __init__(
+        self, d=None, config=None
+    ):  # pragma: no cover - constructed in validator
         super().__init__(config or {})
 
     async def _execute_impl(self, context):
@@ -153,7 +157,7 @@ class ComplexPrompt(Plugin):
     dependencies = ["memory"]
 
     def __init__(
-        self, memory, config=None
+        self, memory=None, config=None
     ):  # pragma: no cover - constructed in validator
         super().__init__(config or {})
         self.memory = memory

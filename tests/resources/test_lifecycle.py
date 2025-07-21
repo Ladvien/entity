@@ -33,10 +33,10 @@ class Interface(ResourcePlugin):
     stages: list = []
     dependencies: list = []
 
-    def __init__(self, config=None) -> None:
+    def __init__(self, config=None, infra: Infra | None = None) -> None:
         super().__init__(config or {})
         self.initialized = False
-        self.infra: Infra | None = None
+        self.infra = infra
 
     async def initialize(self) -> None:
         events.append("init:iface")
@@ -48,9 +48,9 @@ class FailingResource(AgentResource):
     dependencies = ["iface"]
     stages: list = []
 
-    def __init__(self, config=None) -> None:
+    def __init__(self, config=None, iface: Interface | None = None) -> None:
         super().__init__(config or {})
-        self.iface: Interface | None = None
+        self.iface = iface
         self.healthy = True
 
     async def initialize(self) -> None:
