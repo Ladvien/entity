@@ -100,23 +100,20 @@ Folder structure:
 ├── LICENSE
 ├── AGENTS.md
 ├── src/                           # Core framework code
-│   ├── entity/
-│   │   ├── __init__.py
-│   │   ├── cli/
-│   │   ├── config/
-│   │   ├── core/
-│   │   ├── debug/
-│   │   ├── defaults.py
-│   │   ├── infrastructure/
-│   │   ├── pipeline/
-│   │   ├── plugins/               # Built-in plugins only
-│   │   ├── resources/
-│   │   ├── utils/
-│   │   ├── worker/
-│   │   └── workflows/
-│   └── plugins/                   # Framework plugin system
-│       ├── builtin/
-│       └── examples/
+│   └── entity/
+│       ├── __init__.py
+│       ├── cli/
+│       ├── config/
+│       ├── core/
+│       ├── debug/
+│       ├── defaults.py
+│       ├── infrastructure/
+│       ├── pipeline/
+│       ├── plugins/               # Built-in plugins only
+│       ├── resources/
+│       ├── utils/
+│       ├── worker/
+│       └── aworkflows/
 │
 ├── examples/                      # Framework usage examples
 │   ├── README.md
@@ -126,9 +123,6 @@ Folder structure:
 ├── plugin_library/                # Example plugins (formerly user_plugins)
 │   ├── README.md                  # "Community Plugin Examples"
 │   ├── failure/                   # Failure handling plugins
-│   │   ├── basic_logger.py
-│   │   ├── default_responder.py
-│   │   └── error_formatter.py
 │   ├── prompts/                   # Prompt plugins
 │   ├── responders/                # Response plugins
 │   ├── tools/                     # Tool plugins

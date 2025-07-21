@@ -2,42 +2,7 @@ I'll analyze this Python agent framework repository against the architecture doc
 
 Based on my analysis, here are the tasks needed to align the codebase with the architecture document:
 
-## Infrastructure & Resource Layer Tasks
 
-### Task 1: Fix Resource Dependency Injection Pattern
-- **Issue**: Resources are using both constructor injection AND post-construction injection inconsistently
-- **Action**: Standardize all resources to use post-construction dependency injection as per Decision #11
-- **Files**: Update all resources in `src/entity/resources/` to remove constructor dependencies
-
-### Task 2: Implement Missing Infrastructure Plugins
-- **Issue**: Missing several infrastructure plugins defined in the architecture
-- **Action**: Create infrastructure plugins for:
-  - `OpenAIInfrastructure` 
-  - `ChromaInfrastructure`
-  - `S3Infrastructure`
-- **Location**: `src/entity/infrastructure/`
-
-### Task 3: Fix Layer Violations in Resources
-- **Issue**: Some resources have incorrect layer assignments and dependencies
-- **Action**: Audit and fix layer assignments to match 4-layer architecture
-- **Files**: `src/entity/core/resources/container.py`, all resource files
-
-## Plugin System Tasks
-
-### Task 4: Remove Deprecated Plugin Imports
-- **Issue**: Old import paths from `entity.core.plugins` still exist
-- **Action**: Update all imports to use `entity.plugins.base`
-- **Files**: Multiple files still importing from deprecated location
-
-### Task 5: Implement Stage-Specific Plugin Validation
-- **Issue**: Missing validation that only OUTPUT plugins can call `context.say()`
-- **Action**: Add runtime validation in `PluginContext` to enforce Decision #7
-- **File**: `src/entity/core/context.py`
-
-### Task 6: Fix Plugin Stage Assignment Logic
-- **Issue**: Complex precedence logic doesn't match Decision #4's simple rules
-- **Action**: Simplify to config → class → fallback precedence only
-- **File**: `src/entity/core/stage_utils.py`
 
 ## Memory & State Management Tasks
 
@@ -120,3 +85,36 @@ Based on my analysis, here are the tasks needed to align the codebase with the a
 - **Action**: Add tests for circuit breaker thresholds and recovery
 
 These tasks focus on bringing the codebase into strict compliance with the architecture document while removing unnecessary complexity and ensuring all architectural decisions are properly implemented.
+
+
+
+
+
+
+
+
+
+
+
+
+
+# DONE:
+
+## Infrastructure & Resource Layer Tasks
+### Task 1: Fix Resource Dependency Injection Pattern
+- **Issue**: Resources are using both constructor injection AND post-construction injection inconsistently
+- **Action**: Standardize all resources to use post-construction dependency injection as per Decision #11
+- **Files**: Update all resources in `src/entity/resources/` to remove constructor dependencies
+
+### Task 2: Implement Missing Infrastructure Plugins
+- **Issue**: Missing several infrastructure plugins defined in the architecture
+- **Action**: Create infrastructure plugins for:
+  - `OpenAIInfrastructure` 
+  - `ChromaInfrastructure`
+  - `S3Infrastructure`
+- **Location**: `src/entity/infrastructure/`
+
+### Task 3: Fix Layer Violations in Resources
+- **Issue**: Some resources have incorrect layer assignments and dependencies
+- **Action**: Audit and fix layer assignments to match 4-layer architecture
+- **Files**: `src/entity/core/resources/container.py`, all resource files

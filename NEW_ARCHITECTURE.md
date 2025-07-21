@@ -1,31 +1,6 @@
-# Entity Pipeline Contributor Guide
+# Entity Framework Architecture Guide
 
-This repository contains a plugin-based framework for building AI agents.
-Use this document when preparing changes or reviewing pull requests.
-
-## Important Notes
-- **You must adhere to architectural guidelines when making changes.** See `ARCHITECTURE.md` for details on the architectural design and principles.
-- **DO NOT change the `ARCHITECTURE.md` file!** It contains 31 architectural decisions that define the framework.
-- Refer to `CONTRIBUTING.md` for general contribution guidelines.
-- The project is pre-alpha; remove unused code rather than keeping backward compatibility.  Actively remove deprecated, unused, or legacy code when adding new features.
-- Prefer adding `TODO:` comments when scope is unclear.
-- Create `AGENT NOTE:` comments for other agents.
-- Always use the Poetry environment for development.
-- Run `poetry install --with dev` before executing any quality checks or tests.
-- Run tests using `poetry run poe test` or related tasks to ensure `PYTHONPATH` is set.
-- Run integration tests with Docker using `poetry run poe test-with-docker`.
-
-
-
-
-
-
-
-
-
-
-
-# Architecture Guide
+## Overview
 
 The Entity framework provides a **4-layer resource architecture** with **Layer 0 zero-config defaults** that enable immediate development while supporting seamless progression to production-grade configurations.
 
@@ -289,42 +264,74 @@ agent = Agent.from_config({
 
 
 
+## Plugin Validation Requirements
 
+**Decision**: Every plugin implements mandatory `validate_config()` (synchronous) and `validate_runtime()` (asynchronous) methods called during agent startup. All validations must pass or the entire system fails with detailed error attribution.
 
+**Implementation Pattern**:
+```python
+class BasePlugin:
+    def validate_config(self) -> ValidationResult:
+        """Synchronous validation: config syntax, required fields, dependency declarations"""
+        
+    async def validate_runtime(self) -> ValidationResult:
+        """Asynchronous validation: external connectivity, infrastructure readiness"""
 
-### Review Commands
-
-Before approving any PR, verify architectural compliance:
-
-```bash
-# Code quality checks
-poetry run black src tests
-poetry run ruff check --fix src tests
-poetry run mypy src
-poetry run bandit -r src
-poetry run vulture src tests
-poetry run unimport --remove-all src tests
-
-# Configuration validation
-poetry run entity-cli --config config/dev.yaml verify
-poetry run entity-cli --config config/prod.yaml verify
-poetry run python -m src.entity.core.registry_validator
-
-# Test architectural boundaries
-poetry run poe test-architecture
-poetry run poe test-plugins
-poetry run poe test-resources
+# Startup Validation Sequence:
+# 1. Load configuration and inject dependencies
+# 2. Call validate_config() on all plugins (fail-fast on any error)
+# 3. Call validate_runtime() on all plugins in parallel (fail-fast on any error)
+# 4. Only proceed to agent execution if all validations pass
 ```
 
-## Review Decision Tree
+**Validation Scope**:
+- **Config validation**: Syntax correctness, required fields, dependency availability, parameter ranges
+- **Runtime validation**: Database connectivity, API key validity, external service accessibility, file system permissions, hardware requirements
 
-When reviewing code changes:
+**Benefits**: Eliminates runtime surprises, provides clear startup error attribution, ensures consistent system state, and improves debugging through early failure detection.
 
-1. **Does it add new plugins?** → Check 4-layer architecture, import restrictions, stage assignment
-2. **Does it modify resources?** → Check dependency injection, lifecycle management, external persistence
-3. **Does it change pipeline flow?** → Check stage assignment, response termination, state management
-4. **Does it add configuration?** → Check Pydantic validation, hot-reload scope, explicit patterns
-5. **Does it handle errors?** → Check fail-fast behavior, ERROR stage processing
-6. **Does it support multiple users?** → Check user_id parameter, conversation namespacing
 
-Always verify that changes maintain the core architectural principles while advancing the framework's capabilities.
+
+
+
+
+
+
+
+
+
+
+
+## Plugin Discovery Architecture
+
+**Decision**: Git-based plugin distribution with CLI installation tools. Future registry integration planned as ecosystem grows.
+
+**Implementation Pattern**:
+```bash
+# Git-based installation
+entity-cli plugin install https://github.com/user/weather-plugin
+entity-cli plugin install git@company.com:internal/custom-tools
+
+# Plugin manifest (entity-plugin.yaml in repo root)
+name: weather-plugin
+version: 1.0.0
+permissions: [external_api, storage]
+dependencies: [requests, aiohttp]
+entry_point: weather_plugin.WeatherPlugin
+```
+
+**Core Features**:
+- **Git repositories**: Primary distribution mechanism for public and private plugins
+- **Plugin manifests**: Declare permissions, dependencies, and entry points
+- **CLI management**: Install, uninstall, list, and update commands  
+- **Validation pipeline**: Automatic structure and security validation during install
+- **Permission model**: User confirms plugin capabilities before installation
+- **Local cache**: Downloaded plugins stored in `~/.entity/plugins/`
+
+**Security Model**:
+- Plugin manifests declare required permissions (API access, file system, network)
+- Install-time validation of plugin structure and dependencies
+- User explicit confirmation for permission grants
+- Sandboxed execution environment for untrusted plugins
+
+**Future Growth**: Optional centralized registry (`registry.entity.dev`) will enable shortened commands (`entity-cli plugin install weather`) while maintaining full Git URL support for private and custom plugins.
