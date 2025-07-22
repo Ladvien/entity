@@ -4,9 +4,7 @@ This repository contains a plugin-based framework for building AI agents.
 Use this document when preparing changes or reviewing pull requests.
 
 ## Important Notes
-- **You must adhere to architectural guidelines when making changes.** See `ARCHITECTURE.md` for details on the architectural design and principles.
-- **DO NOT change the `ARCHITECTURE.md` file!** It contains 31 architectural decisions that define the framework.
-- Refer to `CONTRIBUTING.md` for general contribution guidelines.
+- **CRITICAL:** Before beginning any work, please read the `AGENTS.md` file completely. It contains the core architecture and design decisions that must be followed.
 - The project is pre-alpha; remove unused code rather than keeping backward compatibility.  Actively remove deprecated, unused, or legacy code when adding new features.
 - Prefer adding `TODO:` comments when scope is unclear.
 - Create `AGENT NOTE:` comments for other agents.
@@ -14,13 +12,6 @@ Use this document when preparing changes or reviewing pull requests.
 - Run `poetry install --with dev` before executing any quality checks or tests.
 - Run tests using `poetry run poe test` or related tasks to ensure `PYTHONPATH` is set.
 - Run integration tests with Docker using `poetry run poe test-with-docker`.
-
-
-
-
-
-
-
 
 
 # Entity Framework: Complete Architecture Guide
@@ -91,8 +82,11 @@ class ReasoningPlugin(PromptPlugin):
 ```
 
 ### 6-Stage Workflow Pipeline
+
 ```
 INPUT → PARSE → THINK → DO → REVIEW → OUTPUT
+  ↓       ↓       ↓     ↓      ↓        ↓
+  └───────────── ERROR ─────────────────┘
 ```
 
 Each stage serves a specific purpose:
@@ -102,6 +96,7 @@ Each stage serves a specific purpose:
 - **DO**: Execute actions, tool calls, and external operations
 - **REVIEW**: Validate results and ensure response quality
 - **OUTPUT**: Format and deliver final responses
+- **ERROR**: Handle failures from any stage with graceful user responses
 
 ## Layer 0: Zero-Config Development Strategy
 
@@ -169,6 +164,7 @@ defaults:
   do: [basic_tool_executor]  
   review: [basic_validator]
   output: [basic_formatter]
+  error: [basic_error_handler]
 ```
 
 ### Workflow Templates
@@ -179,12 +175,14 @@ workflows:
   helpful_assistant:
     think: [friendly_reasoning_plugin]
     output: [polite_formatter_plugin]
+    error: [friendly_error_handler]
     # Other stages use framework defaults
     
   data_analyst:
     parse: [csv_parser_plugin]
     think: [statistical_analysis_plugin]
     output: [chart_generator_plugin]
+    error: [technical_error_handler]
     # Other stages use framework defaults
 ```
 
@@ -199,12 +197,16 @@ class ValidationPlugin(PromptPlugin):
 class UniversalFormatterPlugin(PromptPlugin):
     supported_stages = [PARSE, THINK, OUTPUT]  # More flexible usage
 
+class ErrorHandlerPlugin(FailurePlugin):
+    supported_stages = [ERROR]  # ERROR stage only
+
 # Workflow can use same plugin in multiple stages
 workflows:
   careful_analyst:
     parse: [validation_plugin]     # ✅ Supported
     review: [validation_plugin]    # ✅ Supported  
     think: [validation_plugin]     # ❌ Error - not supported
+    error: [error_handler_plugin]  # ✅ ERROR stage
 ```
 
 ## Configuration Options
@@ -269,6 +271,7 @@ workflows:
     do: [secure_tool_executor, audit_logger]
     review: [quality_assurance, security_validator]
     output: [professional_formatter, response_logger]
+    error: [production_error_handler, security_logger]
 ```
 
 ```python
@@ -276,12 +279,6 @@ workflows:
 agent = Agent.from_config("config.yaml")
 response = await agent.chat("Analyze this...")  # Uses PostgreSQL + S3 + GPT-4 + production workflow
 ```
-
-
-
-No, .env credential interpolation is not in the new architecture document. I see `${OPENAI_API_KEY}` examples but no explanation of the substitution system.
-
-**Add this section after "Configuration Options" and before "Progressive Disclosure Model":**
 
 ## Environment Variable Substitution
 
@@ -333,9 +330,6 @@ plugins:
 
 **Security**: Credential values are obfuscated in logs as `api***key` format.
 
-
-
-
 ## Progressive Disclosure Model
 
 ### Layer 1: Named Workflow Templates
@@ -359,6 +353,7 @@ workflows:
     do: [specialized_tools, external_apis]
     review: [domain_validator, compliance_checker]
     output: [technical_formatter, audit_logger]
+    error: [specialist_error_handler]
 ```
 
 ```python
@@ -400,6 +395,10 @@ The system supports both approaches simultaneously:
 class ReasoningPlugin(PromptPlugin):
     stage = THINK  # Plugin declares default stage
     supported_stages = [THINK, REVIEW]
+
+class ErrorHandlerPlugin(FailurePlugin):
+    stage = ERROR  # Auto-assigns to ERROR stage
+    supported_stages = [ERROR]
 ```
 
 **Workflow Override**
@@ -408,6 +407,7 @@ workflows:
   analyst:
     think: [statistical_reasoning]  # Overrides ReasoningPlugin default
     review: [statistical_reasoning] # Same plugin, different stage
+    error: [friendly_error_handler] # Override default error handling
     # Other stages use auto-assigned plugins or defaults
 ```
 
@@ -430,8 +430,14 @@ class BasicPlugin(PromptPlugin):
         await context.remember("user_prefs", data)     # Persistent storage
         prefs = await context.recall("user_prefs")     # Persistent retrieval
         
-        # Final response
+        # Final response (only OUTPUT and ERROR stages)
         await context.say("Here's my response")        # Final response
+
+class ErrorHandlerPlugin(FailurePlugin):
+    async def _execute_impl(self, context: PluginContext) -> None:
+        # Error handling (in ERROR stage only)
+        failure_info = context.get_failure_info()
+        await context.say("Sorry, something went wrong")  # ERROR stage can terminate
 ```
 
 ### Direct Resource Access for Advanced Operations
@@ -447,6 +453,83 @@ class AdvancedPlugin(PromptPlugin):
         # Still can use anthropomorphic interface
         await context.think("search_results", similar)
 ```
+
+## Error Handling and Pipeline Termination
+
+**Decision**: Plugin failures immediately trigger ERROR stage processing, providing graceful error responses while maintaining simple linear workflow execution.
+
+### Error Flow Architecture
+
+```
+INPUT → PARSE → THINK → DO → REVIEW → OUTPUT
+  ↓       ↓       ↓     ↓      ↓        ↓
+  └───────────── ERROR ─────────────────┘
+                   ↓
+               context.say() ← Early Termination
+```
+
+**Implementation Pattern**:
+```python
+# Normal plugin execution
+class ReasoningPlugin(PromptPlugin):
+    async def _execute_impl(self, context: PluginContext) -> None:
+        if not self.can_process(context.message):
+            raise ProcessingError("Unable to understand request")
+        # Normal processing continues...
+
+# Error handling plugin  
+class FriendlyErrorPlugin(FailurePlugin):
+    stage = ERROR
+    supported_stages = [ERROR]
+    
+    async def _execute_impl(self, context: PluginContext) -> None:
+        error_info = context.get_failure_info()
+        
+        if isinstance(error_info.exception, ProcessingError):
+            await context.say("I'm sorry, I didn't understand your request. Could you rephrase it?")
+        elif isinstance(error_info.exception, ExternalAPIError):
+            await context.say("I'm having trouble connecting to external services. Please try again later.")
+        else:
+            await context.say("Something went wrong. Please contact support.")
+```
+
+### Error Stage Capabilities
+
+**ERROR stage plugins can:**
+- Access failure information via `context.get_failure_info()`
+- Provide user-friendly error messages with `context.say()`
+- Log errors for debugging and monitoring
+- Attempt recovery strategies before terminating
+- Terminate pipeline execution early (only ERROR and OUTPUT stages)
+
+### Workflow Integration
+
+```yaml
+workflows:
+  production_agent:
+    input: [secure_input_handler]
+    parse: [data_validator]
+    think: [advanced_reasoning]
+    do: [external_api_caller]
+    review: [quality_checker]
+    output: [professional_formatter]
+    error: [error_logger, friendly_error_responder]  # Handles any stage failures
+```
+
+### Benefits
+
+1. **Simple Mental Model**: Linear workflow with single error path
+2. **Graceful Degradation**: User-friendly error messages instead of stack traces  
+3. **Developer Control**: Plugins handle their own logic, framework handles failures
+4. **Early Termination**: Errors can end execution without forcing full pipeline
+5. **Centralized Error Handling**: All failures funnel to ERROR stage for consistent response
+6. **Recovery Options**: ERROR stage can implement retry logic or fallback behaviors
+
+### Plugin Responsibility Model
+
+- **Normal Plugins**: Focus on their domain logic, throw exceptions for failures
+- **ERROR Plugins**: Handle all failure scenarios, provide user experience
+- **Framework**: Routes failures to ERROR stage, maintains workflow integrity
 
 ## Plugin Discovery Architecture
 
@@ -528,7 +611,8 @@ response = await agent.chat("Hello, how are you?")
 # Custom workflow with specific plugin combinations
 custom_workflow = {
     "think": ["analytical_reasoning", "creativity_booster"],
-    "output": ["markdown_formatter", "emoji_enhancer"]
+    "output": ["markdown_formatter", "emoji_enhancer"],
+    "error": ["gentle_error_handler"]
 }
 
 agent = Agent.from_workflow_dict(custom_workflow)
@@ -540,7 +624,8 @@ response = await agent.chat("Write a creative analysis of this data")
 # Same plugin used in multiple stages
 validation_workflow = {
     "parse": ["data_validator"],     # Validate input structure
-    "review": ["data_validator"]     # Validate output quality
+    "review": ["data_validator"],    # Validate output quality
+    "error": ["validation_error_handler"]  # Handle validation failures
 }
 
 agent = Agent.from_workflow_dict(validation_workflow)
@@ -559,6 +644,7 @@ agent = Agent.from_workflow_dict(validation_workflow)
 9. **Dual interface**: Anthropomorphic simplicity + technical power when needed
 10. **Constructor injection**: Immediate validation with no incomplete state
 11. **Development to production**: Same patterns scale from laptop to cloud
+12. **Graceful error handling**: Robust failure management with user-friendly responses
 
 ## Developer Guidelines
 
@@ -587,6 +673,13 @@ class MyPlugin(PromptPlugin):
         
         # Use persistent memory for user data
         await context.remember("user_preference", user_data)
+
+class MyErrorHandler(FailurePlugin):
+    supported_stages = [ERROR]
+    
+    async def _execute_impl(self, context: PluginContext) -> None:
+        failure_info = context.get_failure_info()
+        await context.say(f"Error in {failure_info.failed_stage}: {failure_info.user_message}")
 ```
 
 ### Creating Workflow Templates
@@ -597,7 +690,8 @@ workflows:
     think: [my_reasoning_plugin] 
     review: [my_reasoning_plugin]  # Same plugin, different stage
     output: [my_formatter_plugin]
+    error: [my_error_handler]
     # Missing stages inherit from defaults
 ```
 
-This architecture provides a foundation for building powerful, flexible AI agents while maintaining simplicity and developer productivity through clear mental models, progressive disclosure, and intelligent defaults.
+This architecture provides a foundation for building powerful, flexible AI agents while maintaining simplicity and developer productivity through clear mental models, progressive disclosure, intelligent defaults, and robust error handling.
