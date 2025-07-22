@@ -24,7 +24,7 @@ Use this document when preparing changes or reviewing pull requests.
 
 ## Overview
 
-The Entity framework provides a **unified agent architecture** combining a **4-layer resource system** with a **6-stage workflow pipeline**. This enables immediate development through zero-config defaults while supporting seamless progression to production-grade configurations.
+The Entity framework provides a **unified agent architecture** combining a **4-layer resource system** with a **6-stage workflow**. This enables immediate development through zero-config defaults while supporting seamless progression to production-grade configurations.
 
 ## Core Mental Model
 
@@ -68,7 +68,7 @@ memory = Memory(db_resource, vector_resource)  # Constructor injection
 llm = LLM(llm_resource)
 storage = Storage(storage_resource)
 
-# Layer 4: Agent with Workflow (resources + processing pipeline)
+# Layer 4: Agent with Workflow (resources + processing workflow)
 agent = Agent(resources=[memory, llm, storage], workflow=my_workflow)
 ```
 
@@ -104,7 +104,7 @@ class SmartMemory(AgentResource):
 
 ### Core Canonical Resources (Layer 3)
 
-The framework guarantees these three resources are available to every pipeline:
+The framework guarantees these three resources are available to every workflow:
 
 ```python
 class StandardResources:
@@ -113,9 +113,9 @@ class StandardResources:
     storage: Storage   # File and object storage capabilities
 ```
 
-## 6-Stage Workflow Pipeline
+## 6-Stage Workflow
 
-### Pipeline Flow
+### Workflow
 ```
 INPUT → PARSE → THINK → DO → REVIEW → OUTPUT
 ```
@@ -127,11 +127,11 @@ Each stage serves a specific purpose with clear termination control:
 - **THINK**: Perform reasoning, planning, and decision-making
 - **DO**: Execute actions, tool calls, and external operations
 - **REVIEW**: Validate results and ensure response quality
-- **OUTPUT**: Format and deliver final responses (ONLY stage that can terminate pipeline)
+- **OUTPUT**: Format and deliver final responses (ONLY stage that can terminate workflow)
 
 ### Response Termination Control
 
-**Decision**: Only OUTPUT stage plugins can set the final response that terminates the pipeline iteration loop.
+**Decision**: Only OUTPUT stage plugins can set the final response that terminates the workflow iteration loop.
 
 ```python
 # THINK stage - store analysis in persistent memory
@@ -141,7 +141,7 @@ class ReasoningPlugin(PromptPlugin):
     async def _execute_impl(self, context: PluginContext) -> None:
         analysis = await self.call_llm(context, "Analyze this request...")
         await context.remember("reasoning_result", analysis.content)
-        # No context.say() - plugin cannot terminate pipeline
+        # No context.say() - plugin cannot terminate workflow
 
 # OUTPUT stage - compose final response and terminate
 class ResponsePlugin(PromptPlugin):
@@ -151,10 +151,10 @@ class ResponsePlugin(PromptPlugin):
         reasoning = await context.recall("reasoning_result", "")
         response = await self.call_llm(context, f"Respond based on: {reasoning}")
         
-        await context.say(response.content)  # This terminates the pipeline
+        await context.say(response.content)  # This terminates the workflow
 ```
 
-**Pipeline continues looping through all stages until an OUTPUT plugin calls `context.say()`**
+**Workflow continues looping through all stages until an OUTPUT plugin calls `context.say()`**
 
 ## Layer 0: Zero-Config Development Strategy
 
@@ -264,11 +264,11 @@ class ToolPlugin(Plugin):
 
 # Interface plugins with specific purposes  
 class InputAdapterPlugin(Plugin):
-    """Convert external input into pipeline messages"""
+    """Convert external input into workflow messages"""
     supported_stages = [INPUT]
     
 class OutputAdapterPlugin(Plugin):
-    """Convert pipeline responses to external formats"""
+    """Convert workflow responses to external formats"""
     supported_stages = [OUTPUT]
 ```
 
@@ -347,7 +347,7 @@ class AdvancedPlugin(PromptPlugin):
 
 ### Inter-Stage Communication via Persistent Memory
 
-Plugins communicate across stages using persistent memory that survives across pipeline iterations:
+Plugins communicate across stages using persistent memory that survives across workflow iterations:
 
 ```python
 # INPUT stage - capture initial request
@@ -390,7 +390,7 @@ class ActionPlugin(ToolPlugin):
         # Queued execution - parallel processing
         context.queue_tool_use("search", query="SF weather")
         context.queue_tool_use("news", topic="weather alerts")
-        # Tools execute automatically between pipeline stages
+        # Tools execute automatically between workflow stages
 ```
 
 ### Tool Discovery Architecture
@@ -411,7 +411,7 @@ class SmartToolSelectorPlugin(PromptPlugin):
 
 ## Error Handling & Validation
 
-### 2-Phase Validation Pipeline
+### 2-Phase Validation Workflow
 
 **Decision**: Fail-fast error handling with comprehensive startup validation:
 
@@ -448,21 +448,21 @@ class BasicErrorPlugin(FailurePlugin):
 **Decision**: Framework implements stateless worker processes with externally-persistent conversation state:
 
 ```python
-class PipelineWorker:
+class WorkflowWorker:
     def __init__(self, registries: SystemRegistries):
         self.registries = registries  # Shared resource pools only - no user data
     
-    async def execute_pipeline(self, pipeline_id: str, message: str, *, user_id: str) -> Any:
+    async def execute_workflow(self, workflow_id: str, message: str, *, user_id: str) -> Any:
         # Load conversation state from external storage each request
         memory = self.registries.resources.get("memory")
-        conversation = await memory.load_conversation(f"{user_id}_{pipeline_id}")
+        conversation = await memory.load_conversation(f"{user_id}_{workflow_id}")
         
         # Execute with ephemeral state (discarded after response)
-        state = PipelineState(conversation=conversation, pipeline_id=pipeline_id)
+        state = WorkflowState(conversation=conversation, workflow_id=workflow_id)
         result = await self.run_stages(state)
         
         # Persist updated state back to external storage
-        await memory.save_conversation(f"{user_id}_{pipeline_id}", state.conversation)
+        await memory.save_conversation(f"{user_id}_{workflow_id}", state.conversation)
         return result
 ```
 
@@ -655,7 +655,7 @@ logger = context.get_resource("logging")
 await logger.log("info", "Plugin execution started",
                  component="plugin",
                  user_id=context.user_id,
-                 pipeline_id=context.pipeline_id,
+                 workflow_id=context.workflow_id,
                  stage=context.current_stage,
                  plugin_name=self.__class__.__name__)
 ```
