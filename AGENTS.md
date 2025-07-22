@@ -22,23 +22,23 @@ Use this document when preparing changes or reviewing pull requests.
 
 
 
-
 # Entity Framework: Complete Architecture Guide
 
 ## Overview
 
-The Entity framework provides a **unified agent architecture** combining a **4-layer resource system** with a **workflow-based processing model**. This enables immediate development through zero-config defaults while supporting seamless progression to production-grade configurations.
+The Entity framework provides a **unified agent architecture** combining a **4-layer resource system** with a **6-stage workflow pipeline**. This enables immediate development through zero-config defaults while supporting seamless progression to production-grade configurations.
 
 ## Core Mental Model
 
 ### Agent Composition
-```
-Agent = Resources + Workflow
+```python
+Agent = Resources + Workflow + Infrastructure
 ```
 
-An **Agent** consists of two primary components:
+An **Agent** consists of three primary components:
 - **Resources**: Shared capabilities (LLM, Memory, Storage) that plugins can access
-- **Workflow**: Stage-specific plugin assignments that define the agent's processing behavior and personality
+- **Workflow**: Stage-specific plugin assignments that define the agent's processing behavior and personality  
+- **Infrastructure**: Deployment and scaling patterns from local Docker to cloud production
 
 ### Agent Personality Through Plugin Composition
 Agent personality and capabilities emerge from the specific plugins assigned to each workflow stage:
@@ -47,9 +47,11 @@ Agent personality and capabilities emerge from the specific plugins assigned to 
 - **Data Analyst**: Statistical analysis plugins + chart generators
 - **Creative Writer**: Imagination plugins + storytelling formatters
 
-## Core Architecture: 4-Layer Resource System + Workflow Pipeline
+## Core Architecture: 4-Layer Resource System
 
-### Layer Composition with Constructor Injection
+### Layer Hierarchy with Constructor Injection
+
+The framework uses strict dependency layers to prevent circular dependencies and ensure predictable initialization:
 
 ```python
 # Layer 1: Infrastructure Primitives (concrete technology)
@@ -57,13 +59,13 @@ duckdb_infra = DuckDBInfrastructure("./agent_memory.duckdb")
 ollama_infra = OllamaInfrastructure("http://localhost:11434", "llama3.2:3b")
 s3_infra = S3Infrastructure(bucket="my-bucket")
 
-# Layer 2: Concrete Resource Implementations (technology-specific logic)
-db_resource = DuckDBDatabaseResource(duckdb_infra)
-vector_resource = DuckDBVectorStoreResource(duckdb_infra)
-llm_resource = OllamaLLMResource(ollama_infra)
-storage_resource = S3StorageResource(s3_infra)
+# Layer 2: Resource Interfaces (technology-agnostic APIs)
+db_resource = DatabaseResource(duckdb_infra)
+vector_resource = VectorStoreResource(duckdb_infra) 
+llm_resource = LLMResource(ollama_infra)
+storage_resource = StorageResource(s3_infra)
 
-# Layer 3: Canonical Agent Resources (unified interfaces)
+# Layer 3: Canonical Agent Resources (guaranteed building blocks)
 memory = Memory(db_resource, vector_resource)  # Constructor injection
 llm = LLM(llm_resource)
 storage = Storage(storage_resource)
@@ -72,229 +74,492 @@ storage = Storage(storage_resource)
 agent = Agent(resources=[memory, llm, storage], workflow=my_workflow)
 ```
 
-**Constructor-Based Dependency Injection** provides immediate validation with no incomplete state:
+### Resource Dependency Rules
 
 ```python
 class Memory(AgentResource):
-    def __init__(self, database: DatabaseResource, vector_store: VectorStoreResource):
-        self.database = database      # Constructor injection
-        self.vector_store = vector_store
-        # Immediate validation - no incomplete state
-
-class ReasoningPlugin(PromptPlugin):
-    dependencies = ["llm", "memory"]
-    supported_stages = [THINK, REVIEW]  # Multi-stage support
+    """Layer 3: Canonical building blocks - depend only on Layer 2"""
     
-    def __init__(self, llm: LLM, memory: Memory, config: Dict | None = None):
-        self.llm = llm        # Constructor injection
-        self.memory = memory  # Constructor injection
+    def __init__(self, database: DatabaseResource, vector_store: VectorStoreResource, config: Dict | None = None):
+        # Constructor injection provides immediate validation
+        self.database = database
+        self.vector_store = vector_store
+        self.config = config or {}
+        
+        # Validation at construction - no incomplete state
+        if not database or not vector_store:
+            raise ResourceInitializationError("Database and vector store required")
+
+class SmartMemory(AgentResource):
+    """Layer 4: Custom compositions - depend only on Layer 3"""
+    
+    def __init__(self, memory: Memory, llm: LLM, config: Dict | None = None):
+        self.memory = memory
+        self.llm = llm
+        
+    async def contextual_recall(self, query: str) -> Dict[str, Any]:
+        """Smart recall with LLM-enhanced semantic search"""
+        results = await self.memory.vector_search(query, k=5)
+        context = await self.llm.generate(f"Summarize relevant context: {results}")
+        return {"results": results, "summary": context.content}
 ```
 
-### 6-Stage Workflow Pipeline
+### Core Canonical Resources (Layer 3)
+
+The framework guarantees these three resources are available to every pipeline:
+
+```python
+class StandardResources:
+    llm: LLM           # Unified LLM interface for reasoning
+    memory: Memory     # External persistence for conversations and data  
+    storage: Storage   # File and object storage capabilities
+```
+
+## 6-Stage Workflow Pipeline
+
+### Pipeline Flow
 ```
 INPUT → PARSE → THINK → DO → REVIEW → OUTPUT
 ```
 
-Each stage serves a specific purpose:
+Each stage serves a specific purpose with clear termination control:
+
 - **INPUT**: Receive and initially process user requests
 - **PARSE**: Extract and structure important information  
 - **THINK**: Perform reasoning, planning, and decision-making
 - **DO**: Execute actions, tool calls, and external operations
 - **REVIEW**: Validate results and ensure response quality
-- **OUTPUT**: Format and deliver final responses
+- **OUTPUT**: Format and deliver final responses (ONLY stage that can terminate pipeline)
+
+### Response Termination Control
+
+**Decision**: Only OUTPUT stage plugins can set the final response that terminates the pipeline iteration loop.
+
+```python
+# THINK stage - store analysis in persistent memory
+class ReasoningPlugin(PromptPlugin):
+    stage = THINK
+    
+    async def _execute_impl(self, context: PluginContext) -> None:
+        analysis = await self.call_llm(context, "Analyze this request...")
+        await context.remember("reasoning_result", analysis.content)
+        # No context.say() - plugin cannot terminate pipeline
+
+# OUTPUT stage - compose final response and terminate
+class ResponsePlugin(PromptPlugin):
+    stage = OUTPUT
+    
+    async def _execute_impl(self, context: PluginContext) -> None:
+        reasoning = await context.recall("reasoning_result", "")
+        response = await self.call_llm(context, f"Respond based on: {reasoning}")
+        
+        await context.say(response.content)  # This terminates the pipeline
+```
+
+**Pipeline continues looping through all stages until an OUTPUT plugin calls `context.say()`**
 
 ## Layer 0: Zero-Config Development Strategy
 
 ### Automatic Resource Defaults
 
-Layer 0 acts as intelligent fallbacks that automatically provide working resources when no explicit configuration exists:
+Layer 0 provides immediate functionality with zero configuration using local-first resources:
 
 ```python
 # This just works - no config files needed
 from entity import Agent
 
-# Create agent with default workflow and resources
 agent = Agent()  # Automatically uses Layer 0 defaults
 
-# Automatically uses:
-# - Ollama LLM (localhost:11434, llama3.2:3b)
-# - DuckDB Memory (./agent_memory.duckdb) 
+# Automatically configured:
+# - Ollama LLM (localhost:11434, llama3.2:3b)  
+# - DuckDB Memory (./agent_memory.duckdb)
 # - LocalFileSystem Storage (./agent_files/)
 # - Default workflow with basic plugins per stage
 
 response = await agent.chat("What's 5 * 7?")
 ```
 
-### Fallback Behavior Rules
+### Plugin Registration via Configuration
 
-1. **No Configuration → Layer 0 Defaults**
 ```python
-agent = Agent()  # Uses Ollama + DuckDB + LocalFileSystem + default workflow
+# Simple workflow configuration
+simple_workflow = {
+    "input": ["web_input_plugin"],
+    "parse": ["entity_extractor_plugin"],
+    "think": ["reasoning_plugin"],
+    "do": ["calculator_plugin"],
+    "review": ["quality_checker_plugin"],
+    "output": ["formatter_plugin"]
+}
+
+agent = Agent.from_workflow_dict(simple_workflow)
+response = await agent.chat("What's 15 * 23?")
 ```
 
-2. **Partial Configuration → Selective Override**
+### Fallback Behavior Rules
+
 ```python
+# 1. No Configuration → Layer 0 Defaults
+agent = Agent()  # Uses Ollama + DuckDB + LocalFileSystem
+
+# 2. Partial Configuration → Selective Override  
 agent = Agent.from_config({
     "plugins": {
         "resources": {
             "llm": {"type": "openai", "model": "gpt-4"}
             # memory, storage use Layer 0 defaults
         }
-    },
-    "workflows": {
-        "custom": {
-            "think": ["advanced_reasoning"]
-            # other stages use defaults
-        }
     }
 })
+
+# 3. Full Configuration → No Defaults
+agent = Agent.from_config("config.yaml")  # Everything explicit
 ```
 
-3. **Full Configuration → No Defaults**
+## Plugin System Architecture
+
+### Universal Plugin Base Class
+
+All framework extensions inherit from a single base with explicit stage declaration:
+
 ```python
-# If config.yaml specifies all resources and workflow, no defaults used
-agent = Agent.from_config("config.yaml")
-```
-
-## Workflow System Implementation
-
-### Default Framework Plugins
-The framework provides sensible defaults for all stages:
-
-```yaml
-defaults:
-  input: [basic_input_adapter]
-  parse: [basic_parser]
-  think: [basic_reasoning]
-  do: [basic_tool_executor]  
-  review: [basic_validator]
-  output: [basic_formatter]
-```
-
-### Workflow Templates
-Named workflows override defaults as needed:
-
-```yaml
-workflows:
-  helpful_assistant:
-    think: [friendly_reasoning_plugin]
-    output: [polite_formatter_plugin]
-    # Other stages use framework defaults
+class Plugin(ABC):
+    """Universal extension point - all framework extensions inherit from this"""
+    supported_stages = [THINK]  # Default stage support
+    dependencies = []           # Required resources
     
-  data_analyst:
-    parse: [csv_parser_plugin]
-    think: [statistical_analysis_plugin]
-    output: [chart_generator_plugin]
-    # Other stages use framework defaults
+    def validate_config(self) -> ValidationResult:
+        """Configuration syntax, required fields, dependency declarations"""
+        if hasattr(self, 'assigned_stage') and self.assigned_stage not in self.supported_stages:
+            return ValidationResult.error(f"Plugin not supported in {self.assigned_stage}")
+    
+    def validate_workflow(self, workflow: Workflow) -> ValidationResult:
+        """Validate plugin usage within workflow context"""
+        if self.assigned_stage not in workflow.supported_stages:
+            return ValidationResult.error(f"Workflow doesn't support stage {self.assigned_stage}")
+        return ValidationResult.success()
+        
+    async def execute(self, context: PluginContext) -> Any:
+        # Runtime safety check
+        if context.current_stage not in self.supported_stages:
+            raise UnsupportedStageError(f"Plugin cannot run in {context.current_stage}")
+        return await self._execute_impl(context)
+    
+    @abstractmethod
+    async def _execute_impl(self, context: PluginContext) -> Any:
+        """Plugin-specific implementation"""
+```
+
+### Plugin Categories with Stage Restrictions
+
+```python
+# Processing plugins with stage flexibility
+class PromptPlugin(Plugin):
+    """LLM-based reasoning and processing logic"""
+    supported_stages = [THINK, REVIEW]  # Can reason or validate
+    dependencies = ["llm"]
+    
+class ToolPlugin(Plugin):
+    """External function calls and actions"""
+    supported_stages = [DO]  # Actions only in DO stage
+    dependencies = []
+
+# Interface plugins with specific purposes  
+class InputAdapterPlugin(Plugin):
+    """Convert external input into pipeline messages"""
+    supported_stages = [INPUT]
+    
+class OutputAdapterPlugin(Plugin):
+    """Convert pipeline responses to external formats"""
+    supported_stages = [OUTPUT]
 ```
 
 ### Multi-Stage Plugin Support
-
-Plugins can operate in multiple stages with author-defined restrictions:
 
 ```python
 class ValidationPlugin(PromptPlugin):
     supported_stages = [PARSE, REVIEW]  # Author-defined limitations
     
-class UniversalFormatterPlugin(PromptPlugin):
-    supported_stages = [PARSE, THINK, OUTPUT]  # More flexible usage
+    async def _execute_impl(self, context: PluginContext) -> None:
+        if context.current_stage == PARSE:
+            await self._validate_input_structure(context)
+        elif context.current_stage == REVIEW:
+            await self._validate_output_quality(context)
 
 # Workflow can use same plugin in multiple stages
 workflows:
   careful_analyst:
     parse: [validation_plugin]     # ✅ Supported
     review: [validation_plugin]    # ✅ Supported  
-    think: [validation_plugin]     # ❌ Error - not supported
+    think: [validation_plugin]     # ❌ Error - not in supported_stages
 ```
 
-## Configuration Options
+### Plugin Execution Order
 
-### Zero Config (Layer 0 Defaults)
-```python
-agent = Agent()  # Works immediately with defaults
-response = await agent.chat("Hello")
-```
+**Decision**: Plugins execute in YAML configuration order within each stage.
 
-### Partial Configuration (Layer 0 + Custom)
-```python
-# Override just LLM, keep other defaults
-agent = Agent.from_config({
-    "plugins": {
-        "resources": {
-            "llm": {
-                "type": "entity.resources.llm:OpenAILLMResource",
-                "api_key": "${OPENAI_API_KEY}",
-                "model": "gpt-4"
-            }
-            # memory, storage automatically use Layer 0 defaults
-        }
-    },
-    "workflows": {
-        "my_agent": {
-            "think": ["creative_reasoning"],
-            "output": ["markdown_formatter"]
-        }
-    }
-})
-
-agent = Agent.from_workflow("my_agent")
-# Uses: OpenAI LLM + DuckDB Memory + LocalFileSystem Storage + custom workflow
-```
-
-### Full Configuration (Explicit Control)
 ```yaml
-# config.yaml - explicit resource and workflow configuration
 plugins:
-  resources:
-    llm:
-      type: entity.resources.llm:OpenAILLMResource
-      api_key: ${OPENAI_API_KEY}
-      model: gpt-4-turbo
-      
-    memory:
-      type: entity.resources.memory:PostgresMemory
-      host: localhost
-      database: production_db
-      
-    storage:
-      type: entity.resources.storage:S3Storage
-      bucket: my-agent-files
-      region: us-west-2
-
-workflows:
-  production_agent:
-    input: [secure_input_handler]
-    parse: [enterprise_parser, compliance_checker]
-    think: [advanced_reasoning, domain_expertise]
-    do: [secure_tool_executor, audit_logger]
-    review: [quality_assurance, security_validator]
-    output: [professional_formatter, response_logger]
+  prompts:
+    reasoning_step_1: {...}    # Runs first in THINK stage
+    reasoning_step_2: {...}    # Runs second in THINK stage  
+    final_decision: {...}      # Runs third in THINK stage
 ```
 
+## State Management & Context: Persistent Memory Pattern
+
+### Unified Memory Interface for All State
+
+The framework uses persistent Memory for all state management - no temporary storage:
+
 ```python
-# No Layer 0 defaults used - everything explicit
-agent = Agent.from_config("config.yaml")
-response = await agent.chat("Analyze this...")  # Uses PostgreSQL + S3 + GPT-4 + production workflow
+class BasicPlugin(PromptPlugin):
+    async def _execute_impl(self, context: PluginContext) -> None:
+        # All state persisted to Memory - nothing temporary
+        await context.remember("analysis_result", result)      # Store persistent data
+        analysis = await context.recall("analysis_result")     # Retrieve persistent data
+        
+        # User-specific data automatically namespaced by user_id
+        await context.remember("user_prefs", data)             # User-specific storage
+        prefs = await context.recall("user_prefs")             # User-specific retrieval
+        
+        # Conversation operations
+        await context.say("Here's my response")                # Final response (OUTPUT only)
+        history = await context.conversation()                 # Get conversation history
+        last_msg = await context.listen()                      # Get last user message
 ```
 
+### Direct Resource Access for Advanced Operations
 
-
-No, .env credential interpolation is not in the new architecture document. I see `${OPENAI_API_KEY}` examples but no explanation of the substitution system.
-
-**Add this section after "Configuration Options" and before "Progressive Disclosure Model":**
-
-## Environment Variable Substitution
-
-**Decision**: All plugins/resources implement `config()` method that recursively substitutes `${VAR}` patterns in dictionary values. Uses `${VAR}` syntax only, fails on missing variables, obfuscates credentials in logs, and auto-discovers `.env` with explicit path override.
-
-**Implementation Pattern**:
 ```python
-class BasePlugin:
-    @classmethod
-    def config(cls, config_dict: Dict[str, Any], env_file: str = None) -> Dict[str, Any]:
-        """Recursively substitute ${VAR} in all dictionary values"""
-        return substitute_variables(config_dict, env_file)
+class AdvancedPlugin(PromptPlugin):
+    async def _execute_impl(self, context: PluginContext) -> None:
+        # Advanced interface - complex operations
+        memory = context.get_resource("memory")
+        results = await memory.query("SELECT * FROM user_prefs WHERE category = ?", ["style"])
+        similar = await memory.vector_search("user preferences", k=5)
+        
+        # Tool execution patterns
+        result = await context.tool_use("weather", location="SF")  # Immediate execution
+        context.queue_tool_use("search", query="AI news")         # Queued execution
+        
+        # Still can use simple memory interface
+        await context.remember("search_results", similar)
+```
 
+### Inter-Stage Communication via Persistent Memory
+
+Plugins communicate across stages using persistent memory that survives across pipeline iterations:
+
+```python
+# INPUT stage - capture initial request
+class InputPlugin(InputAdapterPlugin):
+    async def _execute_impl(self, context: PluginContext) -> None:
+        await context.remember("user_intent", "weather query")
+
+# PARSE stage - structure information
+class ParsePlugin(PromptPlugin):
+    async def _execute_impl(self, context: PluginContext) -> None:
+        user_intent = await context.recall("user_intent", "")
+        await context.remember("location", "San Francisco")
+
+# THINK stage - analyze and plan
+class ThinkPlugin(PromptPlugin):
+    async def _execute_impl(self, context: PluginContext) -> None:
+        location = await context.recall("location", "")
+        await context.remember("analysis", f"User wants weather for {location}")
+
+# OUTPUT stage - compose final response using all persistent data
+class OutputPlugin(OutputAdapterPlugin):
+    async def _execute_impl(self, context: PluginContext) -> None:
+        analysis = await context.recall("analysis", "")
+        await context.say(f"Based on analysis: {analysis}")
+```
+
+## Tool System Architecture
+
+### Tool Execution Patterns
+
+**Decision**: Support both immediate and queued tool execution patterns:
+
+```python
+class ActionPlugin(ToolPlugin):
+    async def _execute_impl(self, context: PluginContext) -> None:
+        # Immediate execution - synchronous workflow
+        weather = await context.tool_use("weather", location="SF")
+        await context.remember("weather_data", weather)
+        
+        # Queued execution - parallel processing
+        context.queue_tool_use("search", query="SF weather")
+        context.queue_tool_use("news", topic="weather alerts")
+        # Tools execute automatically between pipeline stages
+```
+
+### Tool Discovery Architecture
+
+**Decision**: Lightweight registry query with plugin-level orchestration logic:
+
+```python
+class SmartToolSelectorPlugin(PromptPlugin):
+    async def _execute_impl(self, context: PluginContext) -> None:
+        # Discover available tools
+        available_tools = context.discover_tools(category="weather")
+        
+        # Plugin implements selection logic
+        best_tool = self._rank_tools_by_relevance(available_tools, context.message)
+        result = await context.tool_use(best_tool.name, location="San Francisco")
+        await context.remember("selected_tool", best_tool.name)
+```
+
+## Error Handling & Validation
+
+### 2-Phase Validation Pipeline
+
+**Decision**: Fail-fast error handling with comprehensive startup validation:
+
+```python
+class PluginValidation:
+    # Phase 1: Quick validation (<100ms)
+    def validate_config(self) -> ValidationResult:
+        """Configuration syntax, plugin structure, dependency conflicts"""
+        
+    # Phase 2: Workflow compatibility validation (<1s)  
+    def validate_workflow(self, workflow: Workflow) -> ValidationResult:
+        """Stage compatibility, workflow requirements, plugin ordering"""
+```
+
+### Failure Propagation Strategy
+
+**Decision**: Fail-fast error propagation where any plugin failure immediately fails the stage and triggers ERROR stage processing.
+
+```python
+# Failed plugin immediately terminates stage execution
+# ERROR stage plugins provide user-friendly error responses
+class BasicErrorPlugin(FailurePlugin):
+    stage = ERROR
+    
+    async def _execute_impl(self, context: PluginContext) -> None:
+        error_info = context.failure_info
+        await context.say(f"I encountered an error: {error_info.user_message}")
+```
+
+## Multi-User Support & Scaling
+
+### Stateless Workers with Persistent State
+
+**Decision**: Framework implements stateless worker processes with externally-persistent conversation state:
+
+```python
+class PipelineWorker:
+    def __init__(self, registries: SystemRegistries):
+        self.registries = registries  # Shared resource pools only - no user data
+    
+    async def execute_pipeline(self, pipeline_id: str, message: str, *, user_id: str) -> Any:
+        # Load conversation state from external storage each request
+        memory = self.registries.resources.get("memory")
+        conversation = await memory.load_conversation(f"{user_id}_{pipeline_id}")
+        
+        # Execute with ephemeral state (discarded after response)
+        state = PipelineState(conversation=conversation, pipeline_id=pipeline_id)
+        result = await self.run_stages(state)
+        
+        # Persist updated state back to external storage
+        await memory.save_conversation(f"{user_id}_{pipeline_id}", state.conversation)
+        return result
+```
+
+### Multi-User Support via user_id Parameter
+
+**Decision**: Simple `user_id` parameter provides user isolation through conversation namespacing:
+
+```python
+# Same agent instance handles multiple users
+agent = Agent.from_config("support-bot.yaml")
+
+# User isolation through external persistence namespacing
+response1 = await agent.chat("Hello, I need help", user_id="user123")
+response2 = await agent.chat("Hi there", user_id="user456")  # Completely isolated
+
+class PluginContext:
+    async def remember(self, key: str, value: Any) -> None:
+        """User-specific persistent storage with automatic namespacing"""
+        namespaced_key = f"{self.user_id}:{key}"
+        await self._memory.store_persistent(namespaced_key, value)
+```
+
+## Infrastructure & Deployment
+
+### Docker + OpenTofu Architecture
+
+**Decision**: Composable infrastructure using Docker for local development and OpenTofu with Terragrunt for cloud deployment:
+
+```python
+# Same agent config everywhere
+agent = Agent.from_config("agent.yaml")
+
+# Local development
+docker_infra = DockerInfrastructure()
+await docker_infra.deploy(agent)
+
+# Production deployment (same agent)
+aws_infra = AWSStandardInfrastructure()
+await aws_infra.deploy(agent)
+```
+
+### CLI as Input/Output Adapter
+
+The `ent` command-line tool is implemented as an Adapter supporting both Input and Output stages:
+
+```python
+class EntCLIAdapter(InputAdapterPlugin, OutputAdapterPlugin):
+    """CLI tool that handles both input collection and output formatting"""
+    supported_stages = [INPUT, OUTPUT]
+    
+    async def _execute_impl(self, context: PluginContext) -> None:
+        if context.current_stage == INPUT:
+            await self._handle_cli_input(context)
+        elif context.current_stage == OUTPUT:
+            await self._format_cli_output(context)
+            
+    async def _handle_cli_input(self, context: PluginContext) -> None:
+        # Parse command line arguments and user input
+        user_message = self._get_user_input()
+        await context.remember("cli_input", user_message)
+        
+    async def _format_cli_output(self, context: PluginContext) -> None:
+        # Format and display response to terminal
+        response = await context.recall("final_response", "")
+        self._display_to_terminal(response)
+```
+
+### Infrastructure Management Commands
+
+```bash
+# Local development
+ent infra init docker --profile development
+ent infra deploy --local
+
+# Cloud deployment
+ent infra init aws-standard --region us-east-1
+ent infra deploy --cloud
+
+# Test locally → Deploy to cloud
+ent infra test --local
+ent infra migrate --from docker --to aws-standard
+
+# Agent management
+ent agent create my-agent --template helpful-assistant
+ent agent deploy my-agent --environment production
+ent agent logs my-agent --follow
+```
+
+## Configuration & Environment Management
+
+### Environment Variable Substitution
+
+**Decision**: All plugins implement recursive `${VAR}` substitution with `.env` auto-discovery:
+
+```python
 def substitute_variables(obj: Any, env_file: str = None) -> Any:
     """Recursively substitute ${VAR} patterns with environment values"""
     if env_file:
@@ -310,153 +575,66 @@ def substitute_variables(obj: Any, env_file: str = None) -> Any:
                 raise ValueError(f"Environment variable ${{{var_name}}} not found")
             return value
         return re.sub(r'\$\{([^}]+)\}', replace_var, obj)
-    elif isinstance(obj, dict):
-        return {k: substitute_variables(v, env_file) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [substitute_variables(item, env_file) for item in obj]
-    return obj
+    # Handle dict, list recursively...
 ```
 
-**Usage Examples**:
 ```yaml
-# config.yaml
+# config.yaml with environment substitution
 plugins:
   resources:
     llm:
       api_key: ${OPENAI_API_KEY}
       model: ${LLM_MODEL}
-      
     database:
       host: ${DB_HOST}
       password: ${DB_PASS}
 ```
 
-**Security**: Credential values are obfuscated in logs as `api***key` format.
+### Configuration Validation with Pydantic
 
-
-
-
-## Progressive Disclosure Model
-
-### Layer 1: Named Workflow Templates
-```python
-# Pre-built agent types with sensible workflows
-agent = Agent.from_workflow("helpful_assistant")
-agent = Agent.from_workflow("data_analyst") 
-agent = Agent.from_workflow("creative_writer")
-
-response = await agent.chat("Hello, how can I help?")
-```
-
-### Layer 2: Custom Workflow Definitions
-```yaml
-# custom_workflow.yaml
-workflows:
-  my_specialist:
-    input: [specialized_input_handler]
-    parse: [domain_parser, entity_extractor]
-    think: [expert_reasoning, domain_knowledge]
-    do: [specialized_tools, external_apis]
-    review: [domain_validator, compliance_checker]
-    output: [technical_formatter, audit_logger]
-```
+**Decision**: Use Pydantic models exclusively for all configuration validation:
 
 ```python
-agent = Agent.from_config("custom_workflow.yaml")
+class HTTPAdapterConfig(BaseModel):
+    host: str = "127.0.0.1"
+    port: int = Field(ge=1, le=65535, default=8000)
+    dashboard: bool = False
+
+class HTTPAdapter(AdapterPlugin):
+    @classmethod
+    def validate_config(cls, config: Dict) -> ValidationResult:
+        try:
+            HTTPAdapterConfig(**config)
+            return ValidationResult.success()
+        except ValidationError as e:
+            return ValidationResult.error(str(e))
 ```
 
-## Plugin System Architecture
+### Configuration Hot-Reload Scope
 
-### Plugin Validation Requirements
+**Decision**: Support only parameter changes for hot-reload; topology changes require restart:
 
-Every plugin implements mandatory validation methods called during agent startup:
+- **Supported**: Parameter updates (temperature, timeouts, API keys, model settings)
+- **Requires Restart**: Plugin additions/removals, stage reassignments, dependency changes
 
-```python
-class BasePlugin:
-    supported_stages = [THINK]  # Default stage support
-    
-    def validate_config(self) -> ValidationResult:
-        """Synchronous validation: config syntax, required fields, dependency declarations"""
-        # Creation-time validation - fail fast
-        if hasattr(self, 'assigned_stage') and self.assigned_stage not in self.supported_stages:
-            return ValidationResult.error(f"Plugin not supported in {self.assigned_stage}")
-        
-    async def validate_runtime(self) -> ValidationResult:
-        """Asynchronous validation: external connectivity, infrastructure readiness"""
-        
-    async def _execute_impl(self, context: PluginContext) -> None:
-        # Runtime safety check
-        if context.current_stage not in self.supported_stages:
-            raise UnsupportedStageError(f"Plugin cannot run in {context.current_stage}")
-```
+## Plugin Discovery & Distribution
 
-**Validation Strategy**: Both fail-fast at creation time and runtime safety checks ensure system reliability.
+### Git-Based Distribution
 
-### Workflow + Auto-Assignment Coexistence
-The system supports both approaches simultaneously:
-
-**Plugin Auto-Assignment**
-```python
-class ReasoningPlugin(PromptPlugin):
-    stage = THINK  # Plugin declares default stage
-    supported_stages = [THINK, REVIEW]
-```
-
-**Workflow Override**
-```yaml
-workflows:
-  analyst:
-    think: [statistical_reasoning]  # Overrides ReasoningPlugin default
-    review: [statistical_reasoning] # Same plugin, different stage
-    # Other stages use auto-assigned plugins or defaults
-```
-
-**Priority Order**: Workflow assignment → Plugin class default → Framework default
-
-## Plugin Context: Dual Interface Pattern
-
-### Anthropomorphic Interface for Simplicity
-
-```python
-class BasicPlugin(PromptPlugin):
-    async def _execute_impl(self, context: PluginContext) -> None:
-        # Simple interface - most common usage
-        
-        # Temporary thoughts (cleared after pipeline execution)
-        await context.think("analysis", result)        # Store temporary thoughts
-        analysis = await context.reflect("analysis")   # Retrieve temporary thoughts
-        
-        # Persistent memory (survives across conversations)
-        await context.remember("user_prefs", data)     # Persistent storage
-        prefs = await context.recall("user_prefs")     # Persistent retrieval
-        
-        # Final response
-        await context.say("Here's my response")        # Final response
-```
-
-### Direct Resource Access for Advanced Operations
-
-```python
-class AdvancedPlugin(PromptPlugin):
-    async def _execute_impl(self, context: PluginContext) -> None:
-        # Advanced interface - complex operations
-        memory = context.get_resource("memory")
-        results = await memory.query("SELECT * FROM user_prefs WHERE...")
-        similar = await memory.vector_search("preferences", k=5)
-        
-        # Still can use anthropomorphic interface
-        await context.think("search_results", similar)
-```
-
-## Plugin Discovery Architecture
-
-**Decision**: Git-based plugin distribution with CLI installation tools. Future registry integration planned as ecosystem grows.
+**Decision**: Git repositories as primary distribution mechanism with CLI installation tools:
 
 ```bash
 # Git-based installation
-entity-cli plugin install https://github.com/user/weather-plugin
-entity-cli plugin install git@company.com:internal/custom-tools
+ent plugin install https://github.com/user/weather-plugin
+ent plugin install git@company.com:internal/custom-tools
 
+# Plugin management
+ent plugin list
+ent plugin update weather-plugin
+ent plugin uninstall weather-plugin
+```
+
+```yaml
 # Plugin manifest (entity-plugin.yaml in repo root)
 name: weather-plugin
 version: 1.0.0
@@ -466,130 +644,82 @@ entry_point: weather_plugin.WeatherPlugin
 supported_stages: [DO, REVIEW]
 ```
 
-**Core Features**:
-- **Git repositories**: Primary distribution mechanism for public and private plugins
-- **Plugin manifests**: Declare permissions, dependencies, and supported stages
-- **CLI management**: Install, uninstall, list, and update commands  
-- **Validation pipeline**: Automatic structure and security validation during install
-- **Permission model**: User confirms plugin capabilities before installation
-- **Local cache**: Downloaded plugins stored in `~/.entity/plugins/`
+## Observability & Monitoring
 
-**Security Model**:
-- Plugin manifests declare required permissions and supported stages
-- Install-time validation of plugin structure and dependencies
-- User explicit confirmation for permission grants
-- Sandboxed execution environment for untrusted plugins
+### Unified Logging System
 
-## Error Handling
-
-### Missing Layer 0 Dependencies
+**Decision**: `LoggingResource` provides unified, multi-output logging for all agent components:
 
 ```python
-# If Ollama not available
-agent = Agent()  # Clear error: "Ollama not found. Install: brew install ollama"
+# All components use the same logging interface
+logger = context.get_resource("logging")
 
-# If DuckDB creation fails  
-agent = Agent()  # Graceful fallback: in-memory storage with warning
+await logger.log("info", "Plugin execution started",
+                 component="plugin",
+                 user_id=context.user_id,
+                 pipeline_id=context.pipeline_id,
+                 stage=context.current_stage,
+                 plugin_name=self.__class__.__name__)
 ```
 
-### Configuration Validation
+### Shared Metrics Collection
+
+**Decision**: `MetricsCollectorResource` automatically injected into all plugins for unified performance tracking:
 
 ```python
-# Invalid resource config fails fast
-agent = Agent.from_config({
-    "plugins": {
-        "resources": {
-            "llm": {"type": "invalid_llm"}  # Immediate error
-        }
-    }
-})
-
-# Invalid stage assignment fails fast
-agent = Agent.from_config({
-    "workflows": {
-        "my_workflow": {
-            "think": ["invalid_plugin_for_stage"]  # Validation error
-        }
-    }
-})
+class BasePlugin:
+    dependencies = ["metrics_collector"]  # Automatic for all plugins
+    
+    async def execute(self, context: PluginContext) -> Any:
+        # Automatic metric collection wrapper
+        start_time = time.perf_counter()
+        try:
+            result = await self._execute_impl(context)
+            await self.metrics_collector.record_plugin_execution(
+                plugin_name=self.__class__.__name__,
+                duration_ms=(time.perf_counter() - start_time) * 1000,
+                success=True
+            )
+            return result
+        except Exception as e:
+            # Error metrics automatically collected
+            raise
 ```
 
-## Implementation Examples
-
-### Basic Usage
-```python
-# Using pre-built workflow template
-agent = Agent.from_workflow("helpful_assistant")
-response = await agent.chat("Hello, how are you?")
-```
-
-### Advanced Customization
-```python
-# Custom workflow with specific plugin combinations
-custom_workflow = {
-    "think": ["analytical_reasoning", "creativity_booster"],
-    "output": ["markdown_formatter", "emoji_enhancer"]
-}
-
-agent = Agent.from_workflow_dict(custom_workflow)
-response = await agent.chat("Write a creative analysis of this data")
-```
-
-### Multi-Stage Plugin Usage
-```python
-# Same plugin used in multiple stages
-validation_workflow = {
-    "parse": ["data_validator"],     # Validate input structure
-    "review": ["data_validator"]     # Validate output quality
-}
-
-agent = Agent.from_workflow_dict(validation_workflow)
-```
-
-## Key Benefits
-
-1. **Clear Mental Model**: Agent = Resources + Workflow is intuitive and powerful
-2. **Zero friction start**: Agents work immediately with sensible defaults
-3. **Intelligent defaults**: Production-capable local stack (Ollama + DuckDB + Files)
-4. **Selective upgrade**: Override only what you need to change
-5. **Flexible plugin reuse**: Same plugin can work across multiple appropriate stages
-6. **Gradual complexity**: Start with templates, customize as needed
-7. **Safe composition**: Validation prevents invalid plugin-stage combinations
-8. **Personality through composition**: Agent behavior emerges from plugin choices
-9. **Dual interface**: Anthropomorphic simplicity + technical power when needed
-10. **Constructor injection**: Immediate validation with no incomplete state
-11. **Development to production**: Same patterns scale from laptop to cloud
-
-## Developer Guidelines
+## Development Guidelines
 
 ### Creating New Plugins
+
 ```python
 class MyPlugin(PromptPlugin):
     supported_stages = [THINK, REVIEW]  # Declare supported stages
     dependencies = ["llm", "memory"]     # Required resources
     
     def validate_config(self) -> ValidationResult:
-        # Implement creation-time validation
+        """Implement creation-time validation"""
         if self.assigned_stage not in self.supported_stages:
             return ValidationResult.error(f"Unsupported stage: {self.assigned_stage}")
         
-    async def validate_runtime(self) -> ValidationResult:
-        # Implement runtime connectivity validation
-        pass
+    def validate_workflow(self, workflow: Workflow) -> ValidationResult:
+        """Validate plugin usage within workflow"""
+        if not workflow.supports_stage(self.assigned_stage):
+            return ValidationResult.error(f"Workflow doesn't support {self.assigned_stage}")
+        return ValidationResult.success()
         
     async def _execute_impl(self, context: PluginContext) -> None:
-        # Runtime safety check
-        if context.current_stage not in self.supported_stages:
-            raise UnsupportedStageError(f"Unsupported stage: {context.current_stage}")
-            
-        # Use temporary thoughts for inter-stage communication
-        await context.think("my_analysis", analysis_result)
+        # Use persistent memory for all state
+        await context.remember("my_analysis", analysis_result)
         
-        # Use persistent memory for user data
+        # User-specific data automatically namespaced
         await context.remember("user_preference", user_data)
+        
+        # Final response (OUTPUT stage only)
+        if context.current_stage == OUTPUT:
+            await context.say("My response")
 ```
 
 ### Creating Workflow Templates
+
 ```yaml
 workflows:
   my_agent_type:
@@ -600,4 +730,37 @@ workflows:
     # Missing stages inherit from defaults
 ```
 
-This architecture provides a foundation for building powerful, flexible AI agents while maintaining simplicity and developer productivity through clear mental models, progressive disclosure, and intelligent defaults.
+### Progressive Complexity Examples
+
+```python
+# Layer 0: Zero config
+agent = Agent()
+
+# Layer 1: Named workflows
+agent = Agent.from_workflow("helpful_assistant")
+
+# Layer 2: Custom workflows
+agent = Agent.from_workflow_dict({
+    "think": ["analytical_reasoning", "creativity_booster"],
+    "output": ["markdown_formatter"]
+})
+
+# Layer 3: Full configuration
+agent = Agent.from_config("production-config.yaml")
+```
+
+## Key Architectural Benefits
+
+1. **Clear Mental Model**: Agent = Resources + Workflow + Infrastructure
+2. **Zero friction start**: Agents work immediately with sensible defaults
+3. **Stateless scaling**: Horizontal scaling through external persistence
+4. **Multi-user support**: Simple user isolation through namespacing
+5. **Progressive complexity**: Start simple, add sophistication as needed
+6. **Fail-fast validation**: Errors caught at startup, not runtime
+7. **Persistent state only**: All state stored in Memory - no temporary data
+8. **Constructor injection**: Immediate validation with no incomplete state
+9. **Universal plugin system**: Single interface for all extensions
+10. **CLI as Adapter**: Command-line tool implemented as Input/Output adapter
+11. **Production-ready**: Built-in observability, security, and deployment patterns
+
+This architecture provides a foundation for building powerful, scalable AI agents while maintaining developer productivity through clear mental models, progressive disclosure, and intelligent defaults that scale from local development to production deployment.

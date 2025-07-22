@@ -58,14 +58,16 @@ if ! echo "$PR_API_RESPONSE" | jq -e 'type == "array"' > /dev/null; then
   exit 1
 fi
 
-PR_NUMBERS=$(echo "$PR_API_RESPONSE" | jq -r '.[].number')
+# --- Filter PRs that are not checkpoint-related ---
+PR_INFO=$(echo "$PR_API_RESPONSE" | jq -c '.[] | {number: .number, head: .head.ref}')
+PR_NUMBERS=$(echo "$PR_INFO" | jq -r 'select(.head | contains("checkpoint") | not) | .number')
 
 if [[ -z "$PR_NUMBERS" ]]; then
-  echo "✅ No open PRs to merge."
+  echo "✅ No mergeable PRs (excluding checkpoint-related ones)."
   exit 0
 fi
 
-# --- Merge PRs with conflict markers ---
+# --- Merge PRs ---
 for PR in $PR_NUMBERS; do
   echo "🔀 Merging PR #$PR..."
   PR_BRANCH="pr-$PR"
@@ -92,12 +94,12 @@ done
 echo "🚀 Pushing merged 'main' to origin..."
 git push origin main
 
-# --- Optional cleanup: dangerous if PRs still open ---
-# echo "🧹 Deleting all remote branches except 'main'..."
-# REMOTE_BRANCHES=$(git ls-remote --heads origin | awk '{print $2}' | sed 's|refs/heads/||' | grep -v '^main$')
+# --- Optional cleanup ---
+# echo "🧹 Deleting all remote branches except 'main' and those with 'checkpoint'..."
+# REMOTE_BRANCHES=$(git ls-remote --heads origin | awk '{print $2}' | sed 's|refs/heads/||' | grep -vE '^(main|.*checkpoint.*)$')
 # for BR in $REMOTE_BRANCHES; do
 #   echo "❌ Deleting remote branch: $BR"
 #   git push origin --delete "$BR" || echo "⚠️ Failed to delete branch: $BR"
 # done
 
-echo "✅ All PRs merged, conflicts preserved with markers, main pushed."
+echo "✅ All applicable PRs merged, conflicts preserved with markers, main pushed."
