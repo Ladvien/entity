@@ -12,7 +12,10 @@ class WorkflowContext:
         self.message: str | None = None
 
     def say(self, message: str) -> None:
-        """Store the final response and mark workflow as complete."""
+        """Store the final response only during the OUTPUT stage."""
+
+        if self.current_stage != WorkflowExecutor.OUTPUT:
+            raise RuntimeError("context.say() only allowed in OUTPUT stage")
 
         self._response = message
 
