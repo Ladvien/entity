@@ -8,6 +8,8 @@ class WorkflowContext:
 
     def __init__(self) -> None:
         self._response: str | None = None
+        self.current_stage: str | None = None
+        self.message: str | None = None
 
     def say(self, message: str) -> None:
         """Store the final response and mark workflow as complete."""
@@ -52,7 +54,14 @@ class WorkflowExecutor:
                 plugin = plugin_cls(self.resources)
                 if hasattr(plugin, "context"):
                     plugin.context = self.context
-                result = await plugin.run(result, user_id)
+
+                self.context.current_stage = stage
+                self.context.message = result
+                if hasattr(plugin, "execute"):
+                    result = await plugin.execute(self.context)
+                else:
+                    # Fallback for legacy plugins
+                    result = await plugin.run(result, user_id)
 
                 if stage == self.OUTPUT and self.context.response is not None:
                     return self.context.response

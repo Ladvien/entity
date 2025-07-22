@@ -4,39 +4,39 @@ from ..base import Plugin
 
 
 class InputPlugin(Plugin):
-    async def run(self, message: str, user_id: str) -> str:  # noqa: D401
+    async def _execute_impl(self, context) -> str:  # noqa: D401
         """Return input unchanged."""
-        return message
+        return context.message or ""
 
 
 class ParsePlugin(Plugin):
-    async def run(self, message: str, user_id: str) -> str:  # noqa: D401
+    async def _execute_impl(self, context) -> str:  # noqa: D401
         """Return message unchanged."""
-        return message
+        return context.message or ""
 
 
 class ThinkPlugin(Plugin):
-    async def run(self, message: str, user_id: str) -> str:  # noqa: D401
+    async def _execute_impl(self, context) -> str:  # noqa: D401
         """Return message unchanged."""
-        return message
+        return context.message or ""
 
 
 class DoPlugin(Plugin):
-    async def run(self, message: str, user_id: str) -> str:  # noqa: D401
+    async def _execute_impl(self, context) -> str:  # noqa: D401
         """Return message unchanged."""
-        return message
+        return context.message or ""
 
 
 class ReviewPlugin(Plugin):
-    async def run(self, message: str, user_id: str) -> str:  # noqa: D401
+    async def _execute_impl(self, context) -> str:  # noqa: D401
         """Return message unchanged."""
-        return message
+        return context.message or ""
 
 
 class OutputPlugin(Plugin):
-    async def run(self, message: str, user_id: str) -> str:  # noqa: D401
+    async def _execute_impl(self, context) -> str:  # noqa: D401
         """Return final response."""
-        return message
+        return context.message or ""
 
 
 def default_workflow() -> list[type[Plugin]]:
