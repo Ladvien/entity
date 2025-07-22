@@ -4,6 +4,7 @@ from .database import DatabaseResource
 from .vector_store import VectorStoreResource
 from .llm import LLMResource
 from .storage import StorageResource
+from .local_storage import LocalStorageResource
 from .exceptions import ResourceInitializationError
 from .memory import Memory
 from .llm_wrapper import LLM
@@ -14,6 +15,7 @@ __all__ = [
     "VectorStoreResource",
     "LLMResource",
     "StorageResource",
+    "LocalStorageResource",
     "ResourceInitializationError",
     "Memory",
     "LLM",
