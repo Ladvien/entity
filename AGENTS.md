@@ -3,18 +3,16 @@
 This repository contains a plugin-based framework for building AI agents.
 Use this document when preparing changes or reviewing pull requests.
 
-## Important Notes
-- **You must adhere to architectural guidelines when making changes.** See `ARCHITECTURE.md` for details on the architectural design and principles.
-- **DO NOT change the `ARCHITECTURE.md` file!** It contains 31 architectural decisions that define the framework.
-- Refer to `CONTRIBUTING.md` for general contribution guidelines.
-- The project is pre-alpha; remove unused code rather than keeping backward compatibility.  Actively remove deprecated, unused, or legacy code when adding new features.
+## Critical Guidance
+- **CRITICAL:** Before beginning any work, please read the this file completely. You _must_ comply with the architecture defined below.
+- If something is not explicitly stated in this document, it is **not** allowed.  Create a `AGENT NOTE:` instead.
+- The project is unreleased.  Do not support legacy, deprecated, or backwards compatibility.
 - Prefer adding `TODO:` comments when scope is unclear.
 - Create `AGENT NOTE:` comments for other agents.
 - Always use the Poetry environment for development.
 - Run `poetry install --with dev` before executing any quality checks or tests.
 - Run tests using `poetry run poe test` or related tasks to ensure `PYTHONPATH` is set.
 - Run integration tests with Docker using `poetry run poe test-with-docker`.
-
 
 
 
