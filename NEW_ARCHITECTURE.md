@@ -335,3 +335,47 @@ entry_point: weather_plugin.WeatherPlugin
 - Sandboxed execution environment for untrusted plugins
 
 **Future Growth**: Optional centralized registry (`registry.entity.dev`) will enable shortened commands (`entity-cli plugin install weather`) while maintaining full Git URL support for private and custom plugins.
+
+
+
+
+
+
+
+
+
+
+
+## Plugin Discovery Architecture
+
+**Decision**: Git-based plugin distribution with CLI installation tools. Future registry integration planned as ecosystem grows.
+
+**Implementation Pattern**:
+```bash
+# Git-based installation
+entity-cli plugin install https://github.com/user/weather-plugin
+entity-cli plugin install git@company.com:internal/custom-tools
+
+# Plugin manifest (entity-plugin.yaml in repo root)
+name: weather-plugin
+version: 1.0.0
+permissions: [external_api, storage]
+dependencies: [requests, aiohttp]
+entry_point: weather_plugin.WeatherPlugin
+```
+
+**Core Features**:
+- **Git repositories**: Primary distribution mechanism for public and private plugins
+- **Plugin manifests**: Declare permissions, dependencies, and entry points
+- **CLI management**: Install, uninstall, list, and update commands  
+- **Validation pipeline**: Automatic structure and security validation during install
+- **Permission model**: User confirms plugin capabilities before installation
+- **Local cache**: Downloaded plugins stored in `~/.entity/plugins/`
+
+**Security Model**:
+- Plugin manifests declare required permissions (API access, file system, network)
+- Install-time validation of plugin structure and dependencies
+- User explicit confirmation for permission grants
+- Sandboxed execution environment for untrusted plugins
+
+**Future Growth**: Optional centralized registry (`registry.entity.dev`) will enable shortened commands (`entity-cli plugin install weather`) while maintaining full Git URL support for private and custom plugins.
