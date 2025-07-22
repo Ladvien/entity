@@ -1,41 +1,7 @@
 from __future__ import annotations
 
-from typing import List, Dict, Optional, Any, Iterable
 import asyncio
-
-
-class Resource:
-    async def setup(self) -> None:
-        pass
-
-
-class Memory(Resource):
-    def __init__(self, path: str = "./agent_memory.duckdb") -> None:
-        self.path = path
-
-    async def setup(self) -> None:
-        # placeholder for creating a DuckDB database
-        pass
-
-
-class LLM(Resource):
-    def __init__(
-        self, base_url: str = "http://localhost:11434", model: str = "llama3.2:3b"
-    ) -> None:
-        self.base_url = base_url
-        self.model = model
-
-    async def setup(self) -> None:
-        # placeholder for ensuring Ollama model is ready
-        pass
-
-
-class Storage(Resource):
-    def __init__(self, base_path: str = "./agent_files") -> None:
-        self.base_path = base_path
-
-    async def setup(self) -> None:
-        pass
+from typing import Any, Dict, Iterable, List, Optional
 
 
 # --- Plugins -----------------------------------------------------------------
@@ -92,10 +58,10 @@ DEFAULT_PLUGINS = {
 class Agent:
     def __init__(
         self,
-        resources: Optional[Iterable[Resource]] = None,
+        resources: Optional[Iterable[Any]] = None,
         workflow: Optional[Dict[str, List[Plugin]]] = None,
     ) -> None:
-        self.resources = list(resources) if resources else [Memory(), LLM(), Storage()]
+        self.resources = list(resources) if resources else []
         self.workflow = workflow or DEFAULT_PLUGINS
 
     async def setup(self) -> None:
