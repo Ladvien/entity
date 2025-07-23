@@ -43,6 +43,8 @@ class PluginContext(WorkflowContext):
         self._conversation: List[str] = []
         self._tools: Dict[str, Any] = resources.get("tools", {})
         self._tool_queue: List[tuple[str, Dict[str, Any]]] = []
+        self.logger = resources.get("logging")
+        self.metrics_collector = resources.get("metrics_collector")
 
     async def remember(self, key: str, value: Any) -> None:
         """Persist value namespaced by ``user_id``."""

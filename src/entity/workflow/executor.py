@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 
+from ..resources.logging import LoggingResource
+from ..resources.metrics import MetricsCollectorResource
+
 from ..plugins.context import PluginContext
 
 
@@ -24,7 +27,9 @@ class WorkflowExecutor:
         resources: dict[str, Any],
         workflow: dict[str, Iterable[type]] | None = None,
     ) -> None:
-        self.resources = resources
+        self.resources = dict(resources)
+        self.resources.setdefault("logging", LoggingResource())
+        self.resources.setdefault("metrics_collector", MetricsCollectorResource())
         self.workflow = {
             stage: list(plugins) for stage, plugins in (workflow or {}).items()
         }
@@ -40,23 +45,16 @@ class WorkflowExecutor:
                 if hasattr(plugin, "context"):
                     plugin.context = context
 
-<<<<<<< HEAD
                 context.current_stage = stage
                 context.message = result
                 try:
                     if hasattr(plugin, "execute"):
                         result = await plugin.execute(context)
                     else:
-                        # Fallback for legacy plugins
                         result = await plugin.run(result, user_id)
                 except Exception as exc:  # pragma: no cover - runtime errors
-                    await self._handle_error(context, exc, user_id)
+                    await self._handle_error(context, exc.__cause__ or exc, user_id)
                     raise
-=======
-                self.context.current_stage = stage
-                self.context.message = result
-                result = await plugin.execute(self.context)
->>>>>>> pr-1862
 
             await context.run_tool_queue()
 
