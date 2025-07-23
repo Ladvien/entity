@@ -41,6 +41,8 @@ class PluginContext(WorkflowContext):
         self.user_id = user_id
         self._memory: Dict[str, Any] = memory if memory is not None else {}
         self._conversation: List[str] = []
+        self._tools: Dict[str, Any] = resources.get("tools", {})
+        self._tool_queue: List[tuple[str, Dict[str, Any]]] = []
 
     async def remember(self, key: str, value: Any) -> None:
         """Persist value namespaced by ``user_id``."""
@@ -70,3 +72,24 @@ class PluginContext(WorkflowContext):
     def get_resource(self, name: str) -> Any:
         """Return a resource by name."""
         return self._resources.get(name)
+
+    async def tool_use(self, name: str, **kwargs: Any) -> Any:
+        """Execute a registered tool immediately."""
+        tool = self._tools.get(name)
+        if tool is None:
+            raise RuntimeError(f"Tool '{name}' not found")
+
+        result = tool(**kwargs)
+        if hasattr(result, "__await__"):
+            return await result
+        return result
+
+    def queue_tool_use(self, name: str, **kwargs: Any) -> None:
+        """Add a tool call to be executed later."""
+        self._tool_queue.append((name, kwargs))
+
+    async def run_tool_queue(self) -> None:
+        """Execute all queued tools in order."""
+        while self._tool_queue:
+            name, kwargs = self._tool_queue.pop(0)
+            await self.tool_use(name, **kwargs)
