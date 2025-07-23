@@ -9,5 +9,8 @@ class InputReader(InputAdapterPlugin):
     async def _execute_impl(self, context) -> str:  # noqa: D401
         """Store and return the incoming message."""
         message = context.message or ""
+        history = await context.recall("history", [])
+        history.append(message)
+        await context.remember("history", history)
         await context.remember("input", message)
         return message

@@ -1,5 +1,6 @@
 from ..defaults import load_defaults
 from ..plugins.defaults import default_workflow
+from ..workflow import WorkflowExecutor
 
 
 class Agent:
@@ -8,13 +9,17 @@ class Agent:
         self.workflow = workflow
         self.infrastructure = infrastructure
 
-    async def chat(self, message, user_id="default"):
-        """Process the message through the configured workflow."""
+    async def chat(self, message: str, user_id: str = "default"):
+        """Process ``message`` through the workflow for ``user_id``."""
 
         steps = self.workflow or default_workflow()
-        result = message
-        for plugin_cls in steps:
-            plugin = plugin_cls(self.resources)
-            result = await plugin.run(result, user_id)
+        if isinstance(steps, dict):
+            workflow_steps = steps
+        else:
+            workflow_steps = {
+                stage: [plugin] for stage, plugin in zip(WorkflowExecutor._ORDER, steps)
+            }
 
+        executor = WorkflowExecutor(self.resources, workflow_steps)
+        result = await executor.run(message, user_id=user_id)
         return {"response": result}

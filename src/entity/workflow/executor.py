@@ -34,10 +34,15 @@ class WorkflowExecutor:
             stage: list(plugins) for stage, plugins in (workflow or {}).items()
         }
 
-    async def run(self, message: str, user_id: str = "default") -> str:
+    async def run(
+        self,
+        message: str,
+        user_id: str = "default",
+        memory: dict[str, Any] | None = None,
+    ) -> str:
         """Execute configured plugins in order until an OUTPUT plugin calls ``say``."""
 
-        context = PluginContext(self.resources, user_id)
+        context = PluginContext(self.resources, user_id, memory=memory)
         result = message
         for stage in self._ORDER:
             for plugin_cls in self.workflow.get(stage, []):
