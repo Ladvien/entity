@@ -7,5 +7,7 @@ class InputReader(InputAdapterPlugin):
     """Simple INPUT stage plugin that passes the prompt through."""
 
     async def _execute_impl(self, context) -> str:  # noqa: D401
-        """Return the incoming message unchanged."""
-        return context.message or ""
+        """Store and return the incoming message."""
+        message = context.message or ""
+        await context.remember("input", message)
+        return message
