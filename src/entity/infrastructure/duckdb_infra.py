@@ -2,6 +2,8 @@ class DuckDBInfrastructure:
     """Layer 1 infrastructure for managing a DuckDB database file."""
 
     def __init__(self, file_path: str) -> None:
+        """Create the infrastructure for a given database file."""
+
         self.file_path = file_path
         self._connection = None
 

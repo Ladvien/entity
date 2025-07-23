@@ -5,6 +5,8 @@ class OllamaInfrastructure:
     """Layer 1 infrastructure for communicating with an Ollama server."""
 
     def __init__(self, base_url: str, model: str) -> None:
+        """Configure the client base URL and model."""
+
         self.base_url = base_url.rstrip("/")
         self.model = model
 
