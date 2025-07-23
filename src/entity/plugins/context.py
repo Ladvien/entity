@@ -2,7 +2,29 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from ..workflow.executor import WorkflowContext
+
+class WorkflowContext:
+    """Simple context passed to plugins during execution."""
+
+    def __init__(self) -> None:
+        self._response: str | None = None
+        self.current_stage: str | None = None
+        self.message: str | None = None
+
+    def say(self, message: str) -> None:
+        """Store the final response only during the OUTPUT stage."""
+
+        from ..workflow.executor import WorkflowExecutor
+
+        if self.current_stage != WorkflowExecutor.OUTPUT:
+            raise RuntimeError("context.say() only allowed in OUTPUT stage")
+
+        self._response = message
+
+    @property
+    def response(self) -> str | None:  # noqa: D401
+        """Return the response set by :py:meth:`say`."""
+        return self._response
 
 
 class PluginContext(WorkflowContext):
