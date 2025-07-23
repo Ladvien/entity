@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from ..base import Plugin
+from ...cli.ent_cli_adapter import EntCLIAdapter
 
 
 class InputPlugin(Plugin):
@@ -43,10 +44,10 @@ def default_workflow() -> list[type[Plugin]]:
     """Return the built-in workflow with one plugin per stage."""
 
     return [
-        InputPlugin,
+        EntCLIAdapter,
         ParsePlugin,
         ThinkPlugin,
         DoPlugin,
         ReviewPlugin,
-        OutputPlugin,
+        EntCLIAdapter,
     ]
