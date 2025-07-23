@@ -9,6 +9,8 @@ from .exceptions import ResourceInitializationError
 from .memory import Memory
 from .llm_wrapper import LLM
 from .storage_wrapper import Storage
+from .logging import LoggingResource
+from .metrics import MetricsCollectorResource
 
 __all__ = [
     "DatabaseResource",
@@ -20,4 +22,6 @@ __all__ = [
     "Memory",
     "LLM",
     "Storage",
+    "LoggingResource",
+    "MetricsCollectorResource",
 ]
