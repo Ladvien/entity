@@ -7,6 +7,8 @@ class MetricsCollectorResource:
     """Simple in-memory metrics collector."""
 
     def __init__(self) -> None:
+        """Start with an empty list of metric records."""
+
         self.records: List[Dict[str, Any]] = []
 
     async def record_plugin_execution(
@@ -16,6 +18,8 @@ class MetricsCollectorResource:
         duration_ms: float,
         success: bool,
     ) -> None:
+        """Record execution metrics for a plugin call."""
+
         self.records.append(
             {
                 "plugin_name": plugin_name,

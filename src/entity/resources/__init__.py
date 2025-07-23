@@ -1,16 +1,16 @@
 """Public resource interfaces and canonical wrappers."""
 
-from .database import DatabaseResource
-from .vector_store import VectorStoreResource
-from .llm import LLMResource
-from .storage import StorageResource
-from .local_storage import LocalStorageResource
-from .exceptions import ResourceInitializationError
-from .memory import Memory
-from .llm_wrapper import LLM
-from .storage_wrapper import Storage
-from .logging import LoggingResource
-from .metrics import MetricsCollectorResource
+from entity.resources.database import DatabaseResource
+from entity.resources.vector_store import VectorStoreResource
+from entity.resources.llm import LLMResource
+from entity.resources.storage import StorageResource
+from entity.resources.local_storage import LocalStorageResource
+from entity.resources.exceptions import ResourceInitializationError
+from entity.resources.memory import Memory
+from entity.resources.llm_wrapper import LLM
+from entity.resources.storage_wrapper import Storage
+from entity.resources.logging import LoggingResource
+from entity.resources.metrics import MetricsCollectorResource
 
 __all__ = [
     "DatabaseResource",

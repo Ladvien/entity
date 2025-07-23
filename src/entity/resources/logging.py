@@ -7,6 +7,8 @@ class LoggingResource:
     """Collect log entries for later inspection."""
 
     def __init__(self) -> None:
+        """Initialize an empty list of log records."""
+
         self.records: List[Dict[str, Any]] = []
 
     async def log(self, level: str, message: str, **fields: Any) -> None:
