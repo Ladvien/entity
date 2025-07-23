@@ -14,8 +14,10 @@ class WorkflowExecutor:
     DO = "do"
     REVIEW = "review"
     OUTPUT = "output"
+    ERROR = "error"
 
     _ORDER = [INPUT, PARSE, THINK, DO, REVIEW, OUTPUT]
+    _STAGES = _ORDER + [ERROR]
 
     def __init__(
         self,
@@ -40,12 +42,31 @@ class WorkflowExecutor:
 
                 context.current_stage = stage
                 context.message = result
-                if hasattr(plugin, "execute"):
-                    result = await plugin.execute(context)
-                else:
-                    # Fallback for legacy plugins
-                    result = await plugin.run(result, user_id)
+                try:
+                    if hasattr(plugin, "execute"):
+                        result = await plugin.execute(context)
+                    else:
+                        # Fallback for legacy plugins
+                        result = await plugin.run(result, user_id)
+                except Exception as exc:  # pragma: no cover - runtime errors
+                    await self._handle_error(context, exc, user_id)
+                    raise
 
                 if stage == self.OUTPUT and context.response is not None:
                     return context.response
         return result
+
+    async def _handle_error(
+        self, context: PluginContext, exc: Exception, user_id: str
+    ) -> None:
+        """Run error stage plugins when a plugin fails."""
+        context.current_stage = self.ERROR
+        context.message = str(exc)
+        for plugin_cls in self.workflow.get(self.ERROR, []):
+            plugin = plugin_cls(self.resources)
+            if hasattr(plugin, "context"):
+                plugin.context = context
+            if hasattr(plugin, "execute"):
+                await plugin.execute(context)
+            else:  # pragma: no cover - legacy hook
+                await plugin.run(str(exc), user_id)

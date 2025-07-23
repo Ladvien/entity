@@ -44,7 +44,7 @@ class Workflow:
 
         steps: Dict[str, List[Type[Plugin]]] = {}
         for stage, plugins in config.items():
-            if stage not in WorkflowExecutor._ORDER:
+            if stage not in WorkflowExecutor._STAGES:
                 raise WorkflowConfigError(f"Unknown stage: {stage}")
 
             steps[stage] = []
