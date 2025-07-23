@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, Iterable
+from itertools import count
 
 from ..resources.logging import LoggingResource
 from ..resources.metrics import MetricsCollectorResource
@@ -40,31 +41,50 @@ class WorkflowExecutor:
         user_id: str = "default",
         memory: dict[str, Any] | None = None,
     ) -> str:
-        """Execute configured plugins in order until an OUTPUT plugin calls ``say``."""
+        """Run plugins in sequence until an OUTPUT plugin produces a response."""
 
         context = PluginContext(self.resources, user_id, memory=memory)
         result = message
-        for stage in self._ORDER:
-            for plugin_cls in self.workflow.get(stage, []):
-                plugin = plugin_cls(self.resources)
-                if hasattr(plugin, "context"):
-                    plugin.context = context
 
-                context.current_stage = stage
-                context.message = result
-                try:
-                    if hasattr(plugin, "execute"):
-                        result = await plugin.execute(context)
-                    else:
-                        result = await plugin.run(result, user_id)
-                except Exception as exc:  # pragma: no cover - runtime errors
-                    await self._handle_error(context, exc.__cause__ or exc, user_id)
-                    raise
+        output_configured = bool(self.workflow.get(self.OUTPUT))
+        for loop_count in count():
+            context.loop_count = loop_count
+            for stage in self._ORDER:
+                result = await self._run_stage(stage, context, result, user_id)
+                if stage == self.OUTPUT and context.response is not None:
+                    return context.response
+            if not output_configured:
+                break
+        return result
 
-            await context.run_tool_queue()
+    async def _run_stage(
+        self,
+        stage: str,
+        context: PluginContext,
+        message: str,
+        user_id: str,
+    ) -> str:
+        """Execute all plugins configured for ``stage`` and return the result."""
 
-            if stage == self.OUTPUT and context.response is not None:
-                return context.response
+        context.current_stage = stage
+        context.message = message
+        result = message
+
+        for plugin_cls in self.workflow.get(stage, []):
+            plugin = plugin_cls(self.resources)
+            if hasattr(plugin, "context"):
+                plugin.context = context
+
+            try:
+                if hasattr(plugin, "execute"):
+                    result = await plugin.execute(context)
+                else:
+                    result = await plugin.run(result, user_id)
+            except Exception as exc:  # pragma: no cover - runtime errors
+                await self._handle_error(context, exc.__cause__ or exc, user_id)
+                raise
+
+        await context.run_tool_queue()
         return result
 
     async def _handle_error(

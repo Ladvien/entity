@@ -64,3 +64,22 @@ async def test_error_hook_runs_on_failure():
     with pytest.raises(RuntimeError):
         await executor.run("hello")
     assert called == ["boom"]
+
+
+class LoopingOutput(Plugin):
+    stage = WorkflowExecutor.OUTPUT
+
+    async def _execute_impl(self, context):
+        if getattr(context, "loop_count", 0) >= 2:
+            context.say("done")
+            return "done"
+        return f"loop{getattr(context, 'loop_count', 0)}"
+
+
+@pytest.mark.asyncio
+async def test_executor_repeats_until_response():
+    wf = {WorkflowExecutor.OUTPUT: [LoopingOutput]}
+    executor = WorkflowExecutor({}, wf)
+
+    result = await executor.run("hi")
+    assert result == "done"
