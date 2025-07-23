@@ -5,28 +5,6 @@ from typing import Any, Iterable
 from ..plugins.context import PluginContext
 
 
-class WorkflowContext:
-    """Simple context passed to plugins during execution."""
-
-    def __init__(self) -> None:
-        self._response: str | None = None
-        self.current_stage: str | None = None
-        self.message: str | None = None
-
-    def say(self, message: str) -> None:
-        """Store the final response only during the OUTPUT stage."""
-
-        if self.current_stage != WorkflowExecutor.OUTPUT:
-            raise RuntimeError("context.say() only allowed in OUTPUT stage")
-
-        self._response = message
-
-    @property
-    def response(self) -> str | None:  # noqa: D401
-        """Return the response set by :py:meth:`say`."""
-        return self._response
-
-
 class WorkflowExecutor:
     """Run plugins through the standard workflow stages."""
 
