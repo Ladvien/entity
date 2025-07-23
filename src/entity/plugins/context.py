@@ -93,3 +93,9 @@ class PluginContext(WorkflowContext):
         while self._tool_queue:
             name, kwargs = self._tool_queue.pop(0)
             await self.tool_use(name, **kwargs)
+
+    def discover_tools(self, **filters: Any):
+        """Return registered tools filtered by ``filters``."""
+        from ..tools.registry import discover_tools
+
+        return discover_tools(**filters)
