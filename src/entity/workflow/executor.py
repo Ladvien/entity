@@ -40,6 +40,7 @@ class WorkflowExecutor:
                 if hasattr(plugin, "context"):
                     plugin.context = context
 
+<<<<<<< HEAD
                 context.current_stage = stage
                 context.message = result
                 try:
@@ -51,6 +52,11 @@ class WorkflowExecutor:
                 except Exception as exc:  # pragma: no cover - runtime errors
                     await self._handle_error(context, exc, user_id)
                     raise
+=======
+                self.context.current_stage = stage
+                self.context.message = result
+                result = await plugin.execute(self.context)
+>>>>>>> pr-1862
 
             await context.run_tool_queue()
 
