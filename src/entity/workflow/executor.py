@@ -52,8 +52,10 @@ class WorkflowExecutor:
                     await self._handle_error(context, exc, user_id)
                     raise
 
-                if stage == self.OUTPUT and context.response is not None:
-                    return context.response
+            await context.run_tool_queue()
+
+            if stage == self.OUTPUT and context.response is not None:
+                return context.response
         return result
 
     async def _handle_error(
