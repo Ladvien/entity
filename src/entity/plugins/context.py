@@ -30,11 +30,16 @@ class WorkflowContext:
 class PluginContext(WorkflowContext):
     """Extended context exposing memory and resources."""
 
-    def __init__(self, resources: Dict[str, Any], user_id: str) -> None:
+    def __init__(
+        self,
+        resources: Dict[str, Any],
+        user_id: str,
+        memory: Dict[str, Any] | None = None,
+    ) -> None:
         super().__init__()
         self._resources = resources
         self.user_id = user_id
-        self._memory: Dict[str, Any] = {}
+        self._memory: Dict[str, Any] = memory if memory is not None else {}
         self._conversation: List[str] = []
 
     async def remember(self, key: str, value: Any) -> None:

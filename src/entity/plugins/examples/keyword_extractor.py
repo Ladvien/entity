@@ -12,7 +12,7 @@ class KeywordExtractor(Plugin):
 
     async def _execute_impl(self, context) -> str:  # noqa: D401
         """Persist keywords and return the original message."""
-        text = context.message or ""
+        text = await context.recall("input", context.message or "")
         keywords = list(dict.fromkeys(re.findall(r"\w+", text.lower())))
         await context.remember("keywords", keywords)
         return text
