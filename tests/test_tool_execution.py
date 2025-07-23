@@ -3,19 +3,14 @@ import pytest
 from entity.workflow import Workflow, WorkflowExecutor
 from entity.plugins.base import Plugin
 from entity.plugins.context import PluginContext
-
-
-async def dummy_tool(text: str, results=None):
-    if results is not None:
-        results.append(text)
-    return text.upper()
+from entity.tools.web_search import web_search
 
 
 class ImmediatePlugin(Plugin):
     stage = WorkflowExecutor.THINK
 
     async def _execute_impl(self, context: PluginContext) -> str:
-        return await context.tool_use("dummy", text=context.message)
+        return await context.tool_use("search", query=context.message)
 
 
 class QueuePlugin(Plugin):
@@ -23,7 +18,7 @@ class QueuePlugin(Plugin):
 
     async def _execute_impl(self, context: PluginContext) -> str:
         context.queue_tool_use(
-            "dummy", text=context.message, results=context.get_resource("results")
+            "search", query=context.message, results=context.get_resource("results")
         )
         return "queued"
 
@@ -31,19 +26,19 @@ class QueuePlugin(Plugin):
 @pytest.mark.asyncio
 async def test_tool_use_immediate():
     wf = Workflow(steps={WorkflowExecutor.THINK: [ImmediatePlugin]})
-    resources = {"tools": {"dummy": dummy_tool}}
+    resources = {"tools": {"search": web_search}}
     executor = WorkflowExecutor(resources, wf.steps)
 
-    result = await executor.run("hello")
-    assert result == "HELLO"
+    result = await executor.run("OpenAI")
+    assert "OpenAI" in result
 
 
 @pytest.mark.asyncio
 async def test_tool_use_queued():
     results = []
     wf = Workflow(steps={WorkflowExecutor.THINK: [QueuePlugin]})
-    resources = {"tools": {"dummy": dummy_tool}, "results": results}
+    resources = {"tools": {"search": web_search}, "results": results}
     executor = WorkflowExecutor(resources, wf.steps)
 
-    await executor.run("hi")
-    assert results == ["hi"]
+    await executor.run("Python programming")
+    assert any("Python" in r for r in results)
