@@ -60,11 +60,7 @@ class WorkflowExecutor:
 
                 self.context.current_stage = stage
                 self.context.message = result
-                if hasattr(plugin, "execute"):
-                    result = await plugin.execute(self.context)
-                else:
-                    # Fallback for legacy plugins
-                    result = await plugin.run(result, user_id)
+                result = await plugin.execute(self.context)
 
                 if stage == self.OUTPUT and self.context.response is not None:
                     return self.context.response

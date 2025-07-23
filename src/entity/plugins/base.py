@@ -8,6 +8,7 @@ class Plugin(ABC):
     """Base class for all plugins."""
 
     stage: str | None = None
+    supported_stages: list[str] = []
     dependencies: list[str] = []
 
     def __init__(self, resources: dict[str, Any]):
@@ -19,14 +20,19 @@ class Plugin(ABC):
         self._validate_dependencies()
         try:
             return await self._execute_impl(context)
-        except Exception:  # pragma: no cover - simple example
-            # In real system we'd log the error and propagate.
-            raise
+        except Exception as exc:  # pragma: no cover - simple example
+            raise RuntimeError(
+                f"{self.__class__.__name__} failed during execution"
+            ) from exc
 
     def _enforce_stage(self, context: Any) -> None:
-        expected = self.stage
         current = getattr(context, "current_stage", None)
+        expected = self.stage
         if expected and current != expected:
+            raise RuntimeError(
+                f"{self.__class__.__name__} cannot run in stage '{current}'"
+            )
+        if self.supported_stages and current not in self.supported_stages:
             raise RuntimeError(
                 f"{self.__class__.__name__} cannot run in stage '{current}'"
             )
