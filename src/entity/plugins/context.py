@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
+from ..tools.sandbox import SandboxedToolRunner
+from ..tools.registry import ToolInfo
+from pydantic import BaseModel, ValidationError
+
 
 class WorkflowContext:
     """Simple context passed to plugins during execution."""
@@ -42,11 +46,26 @@ class PluginContext(WorkflowContext):
         self._memory = memory if memory is not None else resources.get("memory")
         if self._memory is None:
             raise RuntimeError("Memory resource required")
+<<<<<<< HEAD
         self._tools: Dict[str, Any] = resources.get("tools", {})
         self._tool_queue: List[tuple[str, Dict[str, Any]]] = []
         self.logger = resources.get("logging")
         self.metrics_collector = resources.get("metrics_collector")
         self._conversation: List[str] = []
+=======
+        self._conversation: List[str] = []
+        tools_src = resources.get("tools", {})
+        self._tools: Dict[str, ToolInfo] = {}
+        for t_name, t in tools_src.items():
+            if isinstance(t, ToolInfo):
+                self._tools[t_name] = t
+            else:
+                self._tools[t_name] = ToolInfo(t_name, t)
+        self._tool_queue: List[tuple[str, Dict[str, Any]]] = []
+        self.logger = resources.get("logging")
+        self.metrics_collector = resources.get("metrics_collector")
+        self.sandbox = resources.get("sandbox", SandboxedToolRunner())
+>>>>>>> pr-1897
 
     async def remember(self, key: str, value: Any) -> None:
         """Persist value namespaced by ``user_id``."""
@@ -87,14 +106,24 @@ class PluginContext(WorkflowContext):
         return self._resources.get(name)
 
     async def tool_use(self, name: str, **kwargs: Any) -> Any:
-        """Execute a registered tool immediately."""
-        tool = self._tools.get(name)
+        """Execute a registered tool immediately using the sandbox."""
+        tool: ToolInfo | None = self._tools.get(name)
         if tool is None:
             raise RuntimeError(f"Tool '{name}' not found")
 
-        result = tool(**kwargs)
-        if hasattr(result, "__await__"):
-            return await result
+        if tool.input_model is not None:
+            try:
+                validated = tool.input_model(**kwargs)
+            except ValidationError as exc:
+                raise RuntimeError(f"Invalid input for tool {name}: {exc}") from exc
+            kwargs = validated.model_dump()
+
+        result = await self.sandbox.run(tool.func, **kwargs)
+
+        if tool.output_model is not None:
+            if isinstance(result, tool.output_model):
+                return result
+            return tool.output_model.model_validate(result)
         return result
 
     def queue_tool_use(self, name: str, **kwargs: Any) -> None:
