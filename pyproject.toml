@@ -56,11 +56,9 @@ envfile = ".env"
 
 # Remove the envfile line and use explicit env vars on each task
 [tool.poe.tasks]
-docs = { cmd = "sphinx-build -c docs/source docs/source docs/build/html" }
-docs_view = { cmd = "sphinx-autobuild -c docs/source docs/source docs/build/html" }
 patch = { cmd = "poetry version patch" }
 _publish = { cmd = "poetry publish --build" }
-release = ["docs", "patch", "_publish"]
+release = ["patch", "_publish"]
 
 # Development helpers
 start-db = { cmd = "docker compose up -d postgres" }
