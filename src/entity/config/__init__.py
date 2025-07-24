@@ -3,6 +3,7 @@
 This module provides helpers for loading and validating configuration files. It
 also offers `${VAR}` style environment variable substitution with cycle
 detection and optional ``.env`` loading.
+Errors raised during substitution use :class:`SubstitutionError` for clarity.
 """
 
 from __future__ import annotations
@@ -13,6 +14,12 @@ from pathlib import Path
 from typing import Any
 
 from .validation import validate_config, validate_workflow
+
+
+class SubstitutionError(ValueError):
+    """Raised when environment variable substitution fails."""
+
+    pass
 
 
 class VariableResolver:
@@ -47,9 +54,9 @@ class VariableResolver:
             var = match.group(1)
             if var in stack:
                 cycle = " -> ".join(stack + [var])
-                raise ValueError(f"Circular reference detected: {cycle}")
+                raise SubstitutionError(f"Circular reference detected: {cycle}")
             if var not in self.env:
-                raise ValueError(f"Environment variable '{var}' not found")
+                raise SubstitutionError(f"Environment variable '{var}' not found")
             return self._resolve_value(self.env[var], stack + [var])
 
         return self._pattern.sub(replace, value)
@@ -65,6 +72,7 @@ def substitute_variables(obj: Any, env_file: str | None = None) -> Any:
 __all__ = [
     "validate_config",
     "validate_workflow",
+    "SubstitutionError",
     "VariableResolver",
     "substitute_variables",
 ]

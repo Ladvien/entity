@@ -68,3 +68,11 @@ resources:
     host: ${DB_HOST}
     password: ${DB_PASS}
 ```
+
+You can resolve placeholders in Python using `substitute_variables`:
+
+```python
+from entity.config import substitute_variables
+
+config = substitute_variables({"endpoint": "${DB_HOST}/api"})
+```
