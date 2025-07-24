@@ -21,6 +21,8 @@ def test_nested_substitution_in_docker(tmp_path):
             "print(json.dumps(resolver.substitute({'endpoint': '${URL}'})))",
         ]
     )
+    script_file = tmp_path / "run.py"
+    script_file.write_text(script)
 
     result = subprocess.check_output(
         [
@@ -31,10 +33,12 @@ def test_nested_substitution_in_docker(tmp_path):
             f"{Path.cwd()}:/src",
             "-v",
             f"{tmp_path}:/data",
+            "-w",
+            "/src",
             "python:3.11-slim",
-            "python",
+            "sh",
             "-c",
-            script,
+            "pip install /src >/tmp/pip.log && python /data/run.py",
         ],
         text=True,
     ).strip()

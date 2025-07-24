@@ -69,16 +69,19 @@ def test_docker_logging_metrics(tmp_path):
             "from entity.resources.logging import LoggingResource",
             "from entity.resources.metrics import MetricsCollectorResource",
             "",
-            "async def main():",
+            "async def main(container_id):",
             "    logger = LoggingResource()",
             "    metrics = MetricsCollectorResource()",
-            "    await logger.log('info', 'hello', container='id')",
+            "    await logger.log('info', 'hello', container=container_id)",
             "    await metrics.record_plugin_execution('p', 'stage', 0.1, True)",
             "    print(json.dumps({'logs': logger.records, 'metrics': metrics.records}))",
             "",
-            "asyncio.run(main())",
+            "asyncio.run(main(sys.argv[1]))",
         ]
     )
+    script_file = tmp_path / "run.py"
+    script_file.write_text(script)
+
     result1 = subprocess.check_output(
         [
             "docker",
@@ -86,10 +89,14 @@ def test_docker_logging_metrics(tmp_path):
             "--rm",
             "-v",
             f"{Path.cwd()}:/src",
+            "-v",
+            f"{tmp_path}:/data",
+            "-w",
+            "/src",
             "python:3.11-slim",
-            "python",
+            "sh",
             "-c",
-            script.replace("id", "one"),
+            "pip install /src >/tmp/pip.log && python /data/run.py one",
         ],
         text=True,
     )
@@ -100,10 +107,14 @@ def test_docker_logging_metrics(tmp_path):
             "--rm",
             "-v",
             f"{Path.cwd()}:/src",
+            "-v",
+            f"{tmp_path}:/data",
+            "-w",
+            "/src",
             "python:3.11-slim",
-            "python",
+            "sh",
             "-c",
-            script.replace("id", "two"),
+            "pip install /src >/tmp/pip.log && python /data/run.py two",
         ],
         text=True,
     )
