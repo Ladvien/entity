@@ -46,13 +46,6 @@ class PluginContext(WorkflowContext):
         self._memory = memory if memory is not None else resources.get("memory")
         if self._memory is None:
             raise RuntimeError("Memory resource required")
-<<<<<<< HEAD
-        self._tools: Dict[str, Any] = resources.get("tools", {})
-        self._tool_queue: List[tuple[str, Dict[str, Any]]] = []
-        self.logger = resources.get("logging")
-        self.metrics_collector = resources.get("metrics_collector")
-        self._conversation: List[str] = []
-=======
         self._conversation: List[str] = []
         tools_src = resources.get("tools", {})
         self._tools: Dict[str, ToolInfo] = {}
@@ -65,7 +58,6 @@ class PluginContext(WorkflowContext):
         self.logger = resources.get("logging")
         self.metrics_collector = resources.get("metrics_collector")
         self.sandbox = resources.get("sandbox", SandboxedToolRunner())
->>>>>>> pr-1897
 
     async def remember(self, key: str, value: Any) -> None:
         """Persist value namespaced by ``user_id``."""

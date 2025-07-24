@@ -1,3 +1,8 @@
+import json
+import shutil
+import subprocess
+from pathlib import Path
+
 import pytest
 
 from entity.workflow import Workflow, WorkflowExecutor
@@ -13,18 +18,6 @@ class LogPlugin(Plugin):
     stage = WorkflowExecutor.THINK
 
     async def _execute_impl(self, context: PluginContext) -> str:
-        await context.logger.log(
-            "info",
-            "running",
-            stage=context.current_stage,
-            plugin_name=self.__class__.__name__,
-        )
-        await context.metrics_collector.record_plugin_execution(
-            plugin_name=self.__class__.__name__,
-            stage=context.current_stage,
-            duration_ms=0.0,
-            success=True,
-        )
         return context.message or ""
 
 
@@ -32,18 +25,6 @@ class OutputPlugin(Plugin):
     stage = WorkflowExecutor.OUTPUT
 
     async def _execute_impl(self, context: PluginContext) -> str:
-        await context.logger.log(
-            "info",
-            "output",
-            stage=context.current_stage,
-            plugin_name=self.__class__.__name__,
-        )
-        await context.metrics_collector.record_plugin_execution(
-            plugin_name=self.__class__.__name__,
-            stage=context.current_stage,
-            duration_ms=0.0,
-            success=True,
-        )
         context.say("done")
         return "done"
 
@@ -66,11 +47,62 @@ async def test_logging_and_metrics_per_stage():
     logs = executor.resources["logging"].records
     metrics = executor.resources["metrics_collector"].records
 
-    assert [r["stage"] for r in logs] == [
+    assert [r["fields"]["stage"] for r in logs] == [
         WorkflowExecutor.THINK,
+        WorkflowExecutor.THINK,
+        WorkflowExecutor.OUTPUT,
         WorkflowExecutor.OUTPUT,
     ]
     assert [m["stage"] for m in metrics] == [
         WorkflowExecutor.THINK,
         WorkflowExecutor.OUTPUT,
     ]
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(shutil.which("docker") is None, reason="docker not installed")
+def test_docker_logging_metrics(tmp_path):
+    script = (
+        "import json, asyncio;"
+        "from entity.resources.logging import LoggingResource;"
+        "from entity.resources.metrics import MetricsCollectorResource;"
+        "async def main():\n"
+        "    logger = LoggingResource();\n"
+        "    metrics = MetricsCollectorResource();\n"
+        "    await logger.log('info', 'hello', container='id');\n"
+        "    await metrics.record_plugin_execution('p','stage',0.1,True);\n"
+        "    print(json.dumps({'logs': logger.records, 'metrics': metrics.records}))\n"
+        "asyncio.run(main())"
+    )
+    result1 = subprocess.check_output(
+        [
+            "docker",
+            "run",
+            "--rm",
+            "-v",
+            f"{Path.cwd()}:/src",
+            "python:3.11-slim",
+            "python",
+            "-c",
+            script.replace("id", "one"),
+        ],
+        text=True,
+    )
+    result2 = subprocess.check_output(
+        [
+            "docker",
+            "run",
+            "--rm",
+            "-v",
+            f"{Path.cwd()}:/src",
+            "python:3.11-slim",
+            "python",
+            "-c",
+            script.replace("id", "two"),
+        ],
+        text=True,
+    )
+    data1 = json.loads(result1)
+    data2 = json.loads(result2)
+    assert len(data1["logs"]) == len(data1["metrics"]) == 1
+    assert len(data2["logs"]) == len(data2["metrics"]) == 1

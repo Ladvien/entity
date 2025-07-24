@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+import time
 from typing import Any, Dict, Type
 
 from pydantic import BaseModel, ValidationError
@@ -58,14 +59,53 @@ class Plugin(ABC):
             )
 
     async def execute(self, context: Any) -> Any:
-        """Validate and run the plugin implementation."""
+        """Validate and run the plugin implementation with observability."""
         self._enforce_stage(context)
+
+        logger = getattr(context, "logger", None)
+        metrics = getattr(context, "metrics_collector", None)
+        start = time.perf_counter()
+
+        if logger is not None:
+            await logger.log(
+                "info",
+                "plugin_start",
+                stage=context.current_stage,
+                plugin_name=self.__class__.__name__,
+            )
+
         try:
-            return await self._execute_impl(context)
+            result = await self._execute_impl(context)
+            success = True
+            return result
         except Exception as exc:  # pragma: no cover - simple example
+            success = False
+            if logger is not None:
+                await logger.log(
+                    "error",
+                    "plugin_error",
+                    stage=context.current_stage,
+                    plugin_name=self.__class__.__name__,
+                    error=str(exc),
+                )
             raise RuntimeError(
                 f"{self.__class__.__name__} failed during execution"
             ) from exc
+        finally:
+            if metrics is not None:
+                await metrics.record_plugin_execution(
+                    plugin_name=self.__class__.__name__,
+                    stage=context.current_stage,
+                    duration_ms=(time.perf_counter() - start) * 1000,
+                    success=success,
+                )
+            if logger is not None and success:
+                await logger.log(
+                    "info",
+                    "plugin_end",
+                    stage=context.current_stage,
+                    plugin_name=self.__class__.__name__,
+                )
 
     def _enforce_stage(self, context: Any) -> None:
         current = getattr(context, "current_stage", None)

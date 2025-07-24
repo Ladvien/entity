@@ -91,6 +91,33 @@ from entity.config import substitute_variables
 config = substitute_variables({"endpoint": "${DB_HOST}/api"})
 ```
 
+## Observability
+
+Logs are captured using `LoggingResource` which stores structured entries as
+JSON dictionaries. Each entry contains a UTC timestamp, log level and any
+additional fields supplied by the caller:
+
+```python
+{
+    "level": "info",
+    "message": "plugin_start",
+    "timestamp": "2024-05-01T12:00:00Z",
+    "fields": {"stage": "think", "plugin_name": "MyPlugin"}
+}
+```
+
+Execution metrics are aggregated by `MetricsCollectorResource`. The collector
+stores individual records and keeps running totals per plugin and stage:
+
+```python
+{
+    "plugin_name": "MyPlugin",
+    "stage": "think",
+    "duration_ms": 12.4,
+    "success": True
+}
+```
+
 ## Tool Security
 
 Registered tools run inside a small sandbox that limits CPU time and memory.
