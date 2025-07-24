@@ -23,3 +23,18 @@ class PluginValidationTests:
     def test_invalid_stage(self):
         with pytest.raises(WorkflowConfigError):
             self.Plugin.validate_workflow("invalid")
+
+
+class PluginDependencyTests:
+    """Mixin verifying dependency checks during initialization."""
+
+    Plugin: type[Plugin]
+    resources: dict = {}
+    config: dict = {}
+
+    def test_missing_dependency_error(self):
+        if not self.Plugin.dependencies:
+            pytest.skip("plugin has no dependencies")
+        partial = {d: object() for d in self.Plugin.dependencies[:-1]}
+        with pytest.raises(RuntimeError):
+            self.Plugin(partial, config=self.config)

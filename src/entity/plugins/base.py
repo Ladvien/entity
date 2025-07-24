@@ -20,8 +20,11 @@ class Plugin(ABC):
     dependencies: list[str] = []
 
     def __init__(self, resources: dict[str, Any], config: Dict[str, Any] | None = None):
+        """Instantiate the plugin and run all startup validations."""
         self.resources = resources
+        # Fail fast on misconfigured options
         self.config = self.validate_config(config or {})
+        # Ensure required resources are available before execution starts
         self._validate_dependencies()
 
     # ------------------------------------------------------------------
@@ -30,7 +33,7 @@ class Plugin(ABC):
 
     @classmethod
     def validate_config(cls, config: Dict[str, Any]) -> ConfigModel:
-        """Return validated configuration for ``cls``."""
+        """Validate ``config`` using ``ConfigModel`` and return the model."""
         try:
             return cls.ConfigModel(**config)
         except ValidationError as exc:  # pragma: no cover - simple conversion
@@ -40,18 +43,18 @@ class Plugin(ABC):
 
     @classmethod
     def validate_workflow(cls, stage: str) -> None:
-        """Ensure ``cls`` can run at ``stage``."""
+        """Validate that ``cls`` can run in ``stage`` before workflow execution."""
         from ..workflow.workflow import WorkflowConfigError
 
         if cls.supported_stages and stage not in cls.supported_stages:
             allowed = ", ".join(cls.supported_stages)
             raise WorkflowConfigError(
-                f"{cls.__name__} does not support stage '{stage}'. "
+                f"{cls.__name__} cannot run in stage '{stage}'. "
                 f"Supported stages: {allowed}"
             )
         if cls.stage and cls.stage != stage:
             raise WorkflowConfigError(
-                f"{cls.__name__} is fixed to stage '{cls.stage}', not '{stage}'"
+                f"{cls.__name__} is fixed to stage '{cls.stage}' and cannot be scheduled for '{stage}'"
             )
 
     async def execute(self, context: Any) -> Any:
@@ -84,7 +87,7 @@ class Plugin(ABC):
         if missing:
             needed = ", ".join(missing)
             raise RuntimeError(
-                f"{self.__class__.__name__} requires resources: {needed}"
+                f"{self.__class__.__name__} missing required resources: {needed}"
             )
 
     @abstractmethod
