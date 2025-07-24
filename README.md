@@ -32,3 +32,25 @@ infra = DuckDBInfrastructure("agent.db")
 memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
 await memory.store("bob:greeting", "hello")
 ```
+
+## Configuration via Environment Variables
+
+`load_defaults()` reads a few environment variables when building default resources:
+
+| Variable | Default |
+| --- | --- |
+| `ENTITY_DUCKDB_PATH` | `./agent_memory.duckdb` |
+| `ENTITY_OLLAMA_URL` | `http://localhost:11434` |
+| `ENTITY_OLLAMA_MODEL` | `llama3.2:3b` |
+| `ENTITY_STORAGE_PATH` | `./agent_files` |
+
+Services are checked for availability when defaults are built. If a component is
+unreachable, an in-memory or stub implementation is used so the framework still
+starts:
+
+```bash
+ENTITY_DUCKDB_PATH=/data/db.duckdb \
+ENTITY_OLLAMA_URL=http://ollama:11434 \
+ENTITY_STORAGE_PATH=/data/files \
+python -m entity.examples
+```

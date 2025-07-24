@@ -14,3 +14,12 @@ class DuckDBInfrastructure:
         if self._connection is None:
             self._connection = duckdb.connect(self.file_path)
         return self._connection
+
+    def health_check(self) -> bool:
+        """Return ``True`` if the database can be opened."""
+        try:
+            conn = self.connect()
+            conn.execute("SELECT 1")
+            return True
+        except Exception:
+            return False

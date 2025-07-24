@@ -20,3 +20,12 @@ class OllamaInfrastructure:
             response.raise_for_status()
             data = response.json()
             return data.get("response", "")
+
+    def health_check(self) -> bool:
+        """Return ``True`` if the Ollama server responds."""
+        try:
+            response = httpx.get(f"{self.base_url}/api/tags", timeout=2)
+            response.raise_for_status()
+            return True
+        except Exception:
+            return False
