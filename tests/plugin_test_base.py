@@ -21,7 +21,7 @@ class PluginValidationTests:
         self.Plugin.validate_workflow(self.stage)
 
     def test_invalid_stage(self):
-        with pytest.raises(WorkflowConfigError):
+        with pytest.raises(WorkflowConfigError, match="cannot"):
             self.Plugin.validate_workflow("invalid")
 
 
@@ -36,5 +36,5 @@ class PluginDependencyTests:
         if not self.Plugin.dependencies:
             pytest.skip("plugin has no dependencies")
         partial = {d: object() for d in self.Plugin.dependencies[:-1]}
-        with pytest.raises(RuntimeError):
+        with pytest.raises(RuntimeError, match="missing required resources"):
             self.Plugin(partial, config=self.config)
