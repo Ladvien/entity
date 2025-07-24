@@ -3,7 +3,7 @@ name = "entity"
 version = "0.0.1"
 description = "Entity agentic system with PostgreSQL memory"
 authors = [
-  { name = "C. Thomas Brittain", email = "cthomasbrittain@hotmail.com" },
+    { name = "C. Thomas Brittain", email = "cthomasbrittain@hotmail.com" },
 ]
 license = { text = "MIT" }
 readme = "README.md"
@@ -46,6 +46,7 @@ flake8 = "7.0.0"
 bandit = "^1.8.5"
 poethepoet = "^0.36.0"
 vulture = "^2.14"
+httpx = "0.27.*"
 
 [build-system]
 requires = ["poetry-core"]
