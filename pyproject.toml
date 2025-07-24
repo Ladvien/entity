@@ -35,9 +35,6 @@ websockets = "^15.0"
 grpcio = "^1.62.2"
 grpcio-tools = "^1.62.2"
 
-[tool.poetry.extras]
-examples = ["websockets", "grpcio", "grpcio-tools"]
-
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
 pytest = "^8.4.1"
