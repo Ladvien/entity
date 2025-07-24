@@ -37,13 +37,4 @@ def validate_workflow(workflow: Workflow) -> None:
         if stage not in WorkflowExecutor._STAGES:
             raise WorkflowConfigError(f"Unknown stage: {stage}")
         for plugin_cls in plugins:
-            supported = getattr(plugin_cls, "supported_stages", None)
-            explicit = getattr(plugin_cls, "stage", None)
-            if supported and stage not in supported:
-                raise WorkflowConfigError(
-                    f"{plugin_cls.__name__} does not support stage '{stage}'"
-                )
-            if explicit and explicit != stage:
-                raise WorkflowConfigError(
-                    f"{plugin_cls.__name__} expects stage '{explicit}', not '{stage}'"
-                )
+            plugin_cls.validate_workflow(stage)

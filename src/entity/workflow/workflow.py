@@ -52,7 +52,10 @@ class Workflow:
                 plugin_cls = (
                     _import_string(plugin) if isinstance(plugin, str) else plugin
                 )
-                _validate_plugin_stage(plugin_cls, stage)
+                if hasattr(plugin_cls, "validate_workflow"):
+                    plugin_cls.validate_workflow(stage)
+                else:
+                    _legacy_validate_plugin_stage(plugin_cls, stage)
                 steps[stage].append(plugin_cls)
         return cls(steps)
 
@@ -67,9 +70,8 @@ class Workflow:
         return cls.from_dict(data)
 
 
-def _validate_plugin_stage(plugin_cls: Type[Plugin], stage: str) -> None:
-    """Ensure ``plugin_cls`` supports ``stage``."""
-
+def _legacy_validate_plugin_stage(plugin_cls: Type[Plugin], stage: str) -> None:
+    """Fallback validation for plugins without ``validate_workflow``."""
     supported = getattr(plugin_cls, "supported_stages", None)
     explicit = getattr(plugin_cls, "stage", None)
 
