@@ -54,3 +54,17 @@ ENTITY_OLLAMA_URL=http://ollama:11434 \
 ENTITY_STORAGE_PATH=/data/files \
 python -m entity.examples
 ```
+
+### Environment Variable Substitution
+
+Configuration files support `${VAR}` references. Values are resolved using the
+current environment and variables defined in a local `.env` file if present.
+Nested references are expanded recursively and circular references raise a
+`ValueError`.
+
+```yaml
+resources:
+  database:
+    host: ${DB_HOST}
+    password: ${DB_PASS}
+```
