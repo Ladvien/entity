@@ -52,9 +52,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poe]
-envfile = ".env"
-
-# Remove the envfile line and use explicit env vars on each task
+# envfile removed; tasks now declare necessary variables explicitly
 [tool.poe.tasks]
 patch = { cmd = "poetry version patch" }
 _publish = { cmd = "poetry publish --build" }
@@ -98,7 +96,7 @@ sequence = [
     { cmd = "poetry run mypy src" },
     { cmd = "bandit -r src" },
     { ref = "validate" },
-    { cmd = "pytest" },
+    { cmd = "pytest", env = { PYTHONPATH = "src" } },
 ]
 
 
