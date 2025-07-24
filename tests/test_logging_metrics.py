@@ -3,6 +3,10 @@ import pytest
 from entity.workflow import Workflow, WorkflowExecutor
 from entity.plugins.base import Plugin
 from entity.plugins.context import PluginContext
+from entity.resources.memory import Memory
+from entity.resources.database import DatabaseResource
+from entity.resources.vector_store import VectorStoreResource
+from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
 
 
 class LogPlugin(Plugin):
@@ -52,7 +56,9 @@ async def test_logging_and_metrics_per_stage():
             WorkflowExecutor.OUTPUT: [OutputPlugin],
         }
     )
-    executor = WorkflowExecutor({}, wf.steps)
+    infra = DuckDBInfrastructure(":memory:")
+    memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
+    executor = WorkflowExecutor({"memory": memory}, wf.steps)
     result = await executor.run("hi")
 
     assert result == "done"

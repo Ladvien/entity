@@ -3,6 +3,10 @@ import pytest
 from entity.plugins.base import Plugin
 from entity.workflow.executor import WorkflowExecutor
 from entity.plugins.context import PluginContext
+from entity.resources.memory import Memory
+from entity.resources.database import DatabaseResource
+from entity.resources.vector_store import VectorStoreResource
+from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
 
 
 @pytest.mark.asyncio
@@ -19,7 +23,9 @@ async def test_output_plugin_sets_response_on_second_iteration():
             return "ignored"
 
     wf = {WorkflowExecutor.OUTPUT: [TwoPassOutputPlugin]}
-    executor = WorkflowExecutor({}, wf)
+    infra = DuckDBInfrastructure(":memory:")
+    memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
+    executor = WorkflowExecutor({"memory": memory}, wf)
 
     result = await executor.run("hello")
 

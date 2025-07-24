@@ -34,12 +34,14 @@ class PluginContext(WorkflowContext):
         self,
         resources: Dict[str, Any],
         user_id: str,
-        memory: Dict[str, Any] | None = None,
+        memory: Any | None = None,
     ) -> None:
         super().__init__()
         self._resources = resources
         self.user_id = user_id
-        self._memory: Dict[str, Any] = memory if memory is not None else {}
+        self._memory = memory if memory is not None else resources.get("memory")
+        if self._memory is None:
+            raise RuntimeError("Memory resource required")
         self._conversation: List[str] = []
         self._tools: Dict[str, Any] = resources.get("tools", {})
         self._tool_queue: List[tuple[str, Dict[str, Any]]] = []
@@ -49,12 +51,12 @@ class PluginContext(WorkflowContext):
     async def remember(self, key: str, value: Any) -> None:
         """Persist value namespaced by ``user_id``."""
         namespaced = f"{self.user_id}:{key}"
-        self._memory[namespaced] = value
+        await self._memory.store(namespaced, value)
 
     async def recall(self, key: str, default: Any | None = None) -> Any:
         """Retrieve stored value for ``key`` or ``default``."""
         namespaced = f"{self.user_id}:{key}"
-        return self._memory.get(namespaced, default)
+        return await self._memory.load(namespaced, default)
 
     def say(self, message: str) -> None:  # type: ignore[override]
         super().say(message)

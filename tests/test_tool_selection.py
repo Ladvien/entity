@@ -4,6 +4,10 @@ from entity.plugins.context import PluginContext
 from entity.plugins.smart_selector import SmartToolSelectorPlugin
 from entity.tools.registry import clear_registry, register_tool
 from entity.workflow import Workflow, WorkflowExecutor
+from entity.resources.memory import Memory
+from entity.resources.database import DatabaseResource
+from entity.resources.vector_store import VectorStoreResource
+from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
 
 
 async def tool_a():
@@ -19,7 +23,9 @@ async def test_discover_tools_filtered():
     clear_registry()
     register_tool(tool_a, name="a", category="letters")
     register_tool(tool_b, name="b", category="symbols")
-    ctx = PluginContext({}, user_id="t")
+    infra = DuckDBInfrastructure(":memory:")
+    memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
+    ctx = PluginContext({"memory": memory}, user_id="t")
     tools = ctx.discover_tools(category="letters")
     assert [t.name for t in tools] == ["a"]
 
@@ -30,7 +36,9 @@ async def test_smart_selector_picks_correct_tool():
     register_tool(tool_a, name="a")
     register_tool(tool_b, name="b")
     wf = Workflow(steps={WorkflowExecutor.THINK: [SmartToolSelectorPlugin]})
-    resources = {"tools": {"a": tool_a, "b": tool_b}}
+    infra = DuckDBInfrastructure(":memory:")
+    memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
+    resources = {"tools": {"a": tool_a, "b": tool_b}, "memory": memory}
     executor = WorkflowExecutor(resources, wf.steps)
 
     result_a = await executor.run("run a")

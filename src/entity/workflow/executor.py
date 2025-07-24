@@ -39,7 +39,7 @@ class WorkflowExecutor:
         self,
         message: str,
         user_id: str = "default",
-        memory: dict[str, Any] | None = None,
+        memory: Any | None = None,
     ) -> str:
         """Run plugins in sequence until an OUTPUT plugin produces a response."""
 

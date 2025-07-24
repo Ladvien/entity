@@ -3,6 +3,10 @@ from __future__ import annotations
 import pytest
 
 from entity.plugins.base import Plugin
+from entity.resources.memory import Memory
+from entity.resources.database import DatabaseResource
+from entity.resources.vector_store import VectorStoreResource
+from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
 
 from entity.workflow.workflow import Workflow, WorkflowConfigError
 from entity.workflow.executor import WorkflowExecutor
@@ -60,7 +64,9 @@ async def test_error_hook_runs_on_failure():
         WorkflowExecutor.THINK: [FailingPlugin],
         WorkflowExecutor.ERROR: [ErrorPlugin],
     }
-    executor = WorkflowExecutor({}, wf)
+    infra = DuckDBInfrastructure(":memory:")
+    memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
+    executor = WorkflowExecutor({"memory": memory}, wf)
     with pytest.raises(RuntimeError):
         await executor.run("hello")
     assert called == ["boom"]
@@ -79,7 +85,9 @@ class LoopingOutput(Plugin):
 @pytest.mark.asyncio
 async def test_executor_repeats_until_response():
     wf = {WorkflowExecutor.OUTPUT: [LoopingOutput]}
-    executor = WorkflowExecutor({}, wf)
+    infra = DuckDBInfrastructure(":memory:")
+    memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
+    executor = WorkflowExecutor({"memory": memory}, wf)
 
     result = await executor.run("hi")
     assert result == "done"

@@ -3,6 +3,10 @@ import pytest
 from entity.workflow import Workflow, WorkflowExecutor
 from entity.plugins.base import Plugin
 from entity.plugins.context import PluginContext
+from entity.resources.memory import Memory
+from entity.resources.database import DatabaseResource
+from entity.resources.vector_store import VectorStoreResource
+from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
 from entity.tools.web_search import web_search
 
 
@@ -26,7 +30,9 @@ class QueuePlugin(Plugin):
 @pytest.mark.asyncio
 async def test_tool_use_immediate():
     wf = Workflow(steps={WorkflowExecutor.THINK: [ImmediatePlugin]})
-    resources = {"tools": {"search": web_search}}
+    infra = DuckDBInfrastructure(":memory:")
+    memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
+    resources = {"tools": {"search": web_search}, "memory": memory}
     executor = WorkflowExecutor(resources, wf.steps)
 
     result = await executor.run("OpenAI")
@@ -37,7 +43,9 @@ async def test_tool_use_immediate():
 async def test_tool_use_queued():
     results = []
     wf = Workflow(steps={WorkflowExecutor.THINK: [QueuePlugin]})
-    resources = {"tools": {"search": web_search}, "results": results}
+    infra = DuckDBInfrastructure(":memory:")
+    memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
+    resources = {"tools": {"search": web_search}, "results": results, "memory": memory}
     executor = WorkflowExecutor(resources, wf.steps)
 
     await executor.run("Python programming")
