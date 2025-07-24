@@ -7,6 +7,12 @@ try:
 except Exception:  # pragma: no cover - package not installed
     __version__ = "0.0.0"
 
-from .core.agent import Agent
-
 __all__ = ["Agent", "__version__"]
+
+
+def __getattr__(name: str):
+    if name == "Agent":
+        from .core.agent import Agent  # Lazy import to avoid heavy deps at import time
+
+        return Agent
+    raise AttributeError(name)
