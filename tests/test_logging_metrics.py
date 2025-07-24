@@ -62,17 +62,22 @@ async def test_logging_and_metrics_per_stage():
 @pytest.mark.integration
 @pytest.mark.skipif(shutil.which("docker") is None, reason="docker not installed")
 def test_docker_logging_metrics(tmp_path):
-    script = (
-        "import json, asyncio;"
-        "from entity.resources.logging import LoggingResource;"
-        "from entity.resources.metrics import MetricsCollectorResource;"
-        "async def main():\n"
-        "    logger = LoggingResource();\n"
-        "    metrics = MetricsCollectorResource();\n"
-        "    await logger.log('info', 'hello', container='id');\n"
-        "    await metrics.record_plugin_execution('p','stage',0.1,True);\n"
-        "    print(json.dumps({'logs': logger.records, 'metrics': metrics.records}))\n"
-        "asyncio.run(main())"
+    script = "\n".join(
+        [
+            "import json, asyncio, sys",
+            "sys.path.insert(0, '/src/src')",
+            "from entity.resources.logging import LoggingResource",
+            "from entity.resources.metrics import MetricsCollectorResource",
+            "",
+            "async def main():",
+            "    logger = LoggingResource()",
+            "    metrics = MetricsCollectorResource()",
+            "    await logger.log('info', 'hello', container='id')",
+            "    await metrics.record_plugin_execution('p', 'stage', 0.1, True)",
+            "    print(json.dumps({'logs': logger.records, 'metrics': metrics.records}))",
+            "",
+            "asyncio.run(main())",
+        ]
     )
     result1 = subprocess.check_output(
         [
