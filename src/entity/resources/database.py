@@ -14,5 +14,5 @@ class DatabaseResource:
     def execute(self, query: str, *params: object) -> object:
         """Execute a SQL query and return the result cursor."""
 
-        conn = self.infrastructure.connect()
-        return conn.execute(query, params)
+        with self.infrastructure.connect() as conn:
+            return conn.execute(query, params)

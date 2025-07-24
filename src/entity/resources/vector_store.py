@@ -14,11 +14,11 @@ class VectorStoreResource:
     def add_vector(self, table: str, vector: object) -> None:
         """Insert a vector into the given table."""
 
-        conn = self.infrastructure.connect()
-        conn.execute(f"INSERT INTO {table} VALUES (?)", (vector,))
+        with self.infrastructure.connect() as conn:
+            conn.execute(f"INSERT INTO {table} VALUES (?)", (vector,))
 
     def query(self, query: str) -> object:
         """Run a vector search query."""
 
-        conn = self.infrastructure.connect()
-        return conn.execute(query)
+        with self.infrastructure.connect() as conn:
+            return conn.execute(query)

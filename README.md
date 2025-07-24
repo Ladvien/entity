@@ -11,6 +11,20 @@ namespaced by user ID to keep data isolated between users. The `Memory` API is
 asynchronous and protected by an internal lock so concurrent workflows remain
 thread safe.
 
+## Stateless Scaling
+
+Because all user data lives in the `Memory` resource, multiple workers can
+share the same database file without keeping any local state. Start several
+processes pointing at the same DuckDB path to horizontally scale:
+
+```bash
+ENTITY_DUCKDB_PATH=/data/agent.duckdb python -m entity.examples &
+ENTITY_DUCKDB_PATH=/data/agent.duckdb python -m entity.examples &
+```
+
+Connection pooling in `DuckDBInfrastructure` allows many concurrent users to
+read and write without exhausting file handles.
+
 ## Plugin Lifecycle
 
 Plugins are validated before any workflow executes:
