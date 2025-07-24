@@ -17,6 +17,7 @@ include = ["src/entity/py.typed"]
 
 [tool.poetry.scripts]
 entity-cli = "entity.cli.__main__:main"
+workflow-viz = "entity.tools.workflow_viz:main"
 
 
 [tool.poetry.urls]

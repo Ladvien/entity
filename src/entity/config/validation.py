@@ -5,6 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict
 
+from pydantic import BaseModel, ValidationError
+
 import yaml
 
 from ..workflow.workflow import Workflow, WorkflowConfigError
@@ -13,7 +15,12 @@ from ..workflow.executor import WorkflowExecutor
 REQUIRED_KEYS = {"resources", "workflow"}
 
 
-def validate_config(path: str | Path) -> Dict[str, Any]:
+class ConfigModel(BaseModel):
+    resources: Dict[str, Any] = {}
+    workflow: Dict[str, list[str]] = {}
+
+
+def validate_config(path: str | Path) -> ConfigModel:
     """Load and validate a YAML configuration file."""
     try:
         with open(path, "r", encoding="utf-8") as handle:
@@ -28,7 +35,10 @@ def validate_config(path: str | Path) -> Dict[str, Any]:
     if missing:
         raise ValueError(f"Missing required keys: {', '.join(sorted(missing))}")
 
-    return data
+    try:
+        return ConfigModel.model_validate(data)
+    except ValidationError as exc:
+        raise ValueError(f"Invalid configuration:\n{exc}") from exc
 
 
 def validate_workflow(workflow: Workflow) -> None:

@@ -13,7 +13,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from .validation import validate_config, validate_workflow
+from .validation import ConfigModel, validate_config, validate_workflow
 
 
 class SubstitutionError(ValueError):
@@ -72,6 +72,7 @@ def substitute_variables(obj: Any, env_file: str | None = None) -> Any:
 __all__ = [
     "validate_config",
     "validate_workflow",
+    "ConfigModel",
     "SubstitutionError",
     "VariableResolver",
     "substitute_variables",
