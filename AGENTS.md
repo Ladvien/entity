@@ -13,6 +13,7 @@ Use this document when preparing changes or reviewing pull requests.
 - Run `poetry install --with dev` before executing any quality checks or tests.
 - Run tests using `poetry run poe test` or related tasks to ensure `PYTHONPATH` is set.
 - Run integration tests with Docker using `poetry run poe test-with-docker`.
+AGENT NOTE: build-react, open-app, dev, start-test-services, stop-test-services, test-with-docker, and test-layer-boundaries tasks were not found in pyproject.toml. No removal performed.
 
 
 
