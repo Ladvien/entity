@@ -44,6 +44,7 @@ class WorkflowExecutor:
         """Run plugins in sequence until an OUTPUT plugin produces a response."""
 
         context = PluginContext(self.resources, user_id, memory=memory)
+        await context.load_state()
         result = message
 
         output_configured = bool(self.workflow.get(self.OUTPUT))
@@ -55,6 +56,7 @@ class WorkflowExecutor:
                     return context.response
             if not output_configured:
                 break
+        await context.flush_state()
         return result
 
     async def _run_stage(
@@ -85,6 +87,7 @@ class WorkflowExecutor:
                 raise
 
         await context.run_tool_queue()
+        await context.flush_state()
         return result
 
     async def _handle_error(

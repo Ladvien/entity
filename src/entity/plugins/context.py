@@ -42,11 +42,11 @@ class PluginContext(WorkflowContext):
         self._memory = memory if memory is not None else resources.get("memory")
         if self._memory is None:
             raise RuntimeError("Memory resource required")
-        self._conversation: List[str] = []
         self._tools: Dict[str, Any] = resources.get("tools", {})
         self._tool_queue: List[tuple[str, Dict[str, Any]]] = []
         self.logger = resources.get("logging")
         self.metrics_collector = resources.get("metrics_collector")
+        self._conversation: List[str] = []
 
     async def remember(self, key: str, value: Any) -> None:
         """Persist value namespaced by ``user_id``."""
@@ -62,12 +62,21 @@ class PluginContext(WorkflowContext):
         super().say(message)
         self._conversation.append(message)
 
+    async def load_state(self) -> None:
+        """Load persistent conversation state."""
+        self._conversation = await self.recall("conversation", [])
+
+    async def flush_state(self) -> None:
+        """Persist conversation state."""
+        await self.remember("conversation", self._conversation)
+
     def listen(self) -> str | None:
         """Return the last user message."""
         return self.message
 
     def conversation(self) -> List[str]:
         """Return conversation history including outputs."""
+
         history = list(self._conversation)
         if self.message:
             history.insert(0, self.message)
