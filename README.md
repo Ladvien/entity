@@ -76,3 +76,17 @@ from entity.config import substitute_variables
 
 config = substitute_variables({"endpoint": "${DB_HOST}/api"})
 ```
+
+## Tool Security
+
+Registered tools run inside a small sandbox that limits CPU time and memory.
+Inputs and outputs can be validated with Pydantic models when registering a
+function. Use `SandboxedToolRunner` to adjust limits.
+
+To list available tools:
+
+```python
+from entity.tools import generate_docs
+print(generate_docs())
+```
+
