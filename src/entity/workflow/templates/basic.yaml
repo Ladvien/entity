@@ -1,0 +1,8 @@
+input:
+  - entity.plugins.defaults.InputPlugin
+parse:
+  - entity.plugins.defaults.ParsePlugin
+think:
+  - {think_plugin}
+output:
+  - {output_plugin}

@@ -4,6 +4,23 @@ Python agent framework
 ## Examples
 Run `python -m entity.examples` to see sample workflows. The old `[examples]` extra has been removed.
 
+### Workflow Templates
+
+Parameterized workflow templates live in `entity.workflow.templates`.
+Load them with custom values and visualize the result:
+
+```python
+from entity.workflow.templates import load_template
+from entity.tools.workflow_viz import ascii_diagram
+
+wf = load_template(
+    "basic",
+    think_plugin="entity.plugins.defaults.ThinkPlugin",
+    output_plugin="entity.plugins.defaults.OutputPlugin",
+)
+print(ascii_diagram(wf))
+```
+
 ## Persistent Memory
 
 Entity uses a DuckDB database to store all remembered values. Keys are

@@ -27,7 +27,8 @@ def test_validate_config_success(tmp_path):
     cfg = tmp_path / "conf.yml"
     cfg.write_text("resources: {}\nworkflow: {}")
     data = validate_config(cfg)
-    assert data == {"resources": {}, "workflow": {}}
+    assert data.resources == {}
+    assert data.workflow == {}
 
 
 def test_validate_config_missing(tmp_path):
