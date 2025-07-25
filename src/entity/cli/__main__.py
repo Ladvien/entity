@@ -41,7 +41,9 @@ def _load_workflow(name: str) -> list[type] | dict[str, list[type]]:
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run an Entity workflow")
+    parser = argparse.ArgumentParser(
+        description="Run an Entity workflow locally with automatic resource setup"
+    )
     parser.add_argument(
         "--workflow",
         default="default",

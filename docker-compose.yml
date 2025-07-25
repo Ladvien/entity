@@ -1,6 +1,9 @@
+# Optional stack for integration tests or production.
+# The framework runs locally without these services.
 version: '3.8'
 
 services:
+  # Optional Postgres database for tests
   postgres:
     image: pgvector/pgvector:pg16
     env_file:
@@ -18,7 +21,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
-
+  # Optional LLM service for development
   ollama:
     build: .
     image: entity-ollama

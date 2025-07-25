@@ -1,14 +1,9 @@
 # Entity Framework
-Python agent framework
+Entity is a Python framework for building AI agents. It runs locally by default and sets up resources automatically.
 
 ## Examples
-First start the local services:
 
-```bash
-docker compose up -d
-```
-
-Then run `python examples/zero_config_agent.py` for a minimal CLI demo or
+Run `python examples/zero_config_agent.py` for a minimal CLI demo or
 `python examples/advanced_workflow.py` to see a multi-stage workflow in action.
 The old `[examples]` extra has been removed.
 
@@ -174,10 +169,9 @@ poetry run poe test-with-docker
 This task brings the containers up, runs all tests marked `integration` in
 parallel, and then tears the services down so no state is shared between runs.
 
-## Docker Usage
+## Advanced Setup
 
-Spin up the local services defined in `docker-compose.yml`.
-The `ollama` service is built from the provided Dockerfile:
+Optional services are provided in `docker-compose.yml`. Use them when you need Postgres or Ollama:
 
 ```bash
 docker compose build ollama
@@ -185,6 +179,4 @@ docker compose up -d
 # run agents or tests here
 docker compose down -v
 ```
-
-See `install_docker.sh` for an automated install script on Ubuntu.
-
+See `install_docker.sh` for an automated install script on Ubuntu. Detailed deployment steps live in `docs/production_deployment.md`. For help migrating away from Docker, check `docs/migration_from_docker.md`.
