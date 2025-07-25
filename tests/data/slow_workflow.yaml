@@ -1,0 +1,6 @@
+parse:
+  - entity.plugins.defaults.ParsePlugin
+think:
+  - tests.slow_plugin.SlowPlugin
+output:
+  - entity.plugins.defaults.OutputPlugin

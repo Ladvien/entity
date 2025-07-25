@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import sys
 from pathlib import Path
 
 from entity.core.agent import Agent
@@ -53,6 +54,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Suppress informational logs",
     )
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        default=None,
+        help="Maximum seconds to wait for the workflow to complete",
+    )
     return parser.parse_args(argv)
 
 
@@ -71,7 +78,10 @@ async def _run(args: argparse.Namespace) -> None:
         if not message:
             return
 
-        result = await agent.chat(message)
+        if args.timeout:
+            result = await asyncio.wait_for(agent.chat(message), args.timeout)
+        else:
+            result = await agent.chat(message)
 
         out_ctx = PluginContext(resources, "cli")
         out_ctx.current_stage = WorkflowExecutor.OUTPUT
@@ -80,6 +90,9 @@ async def _run(args: argparse.Namespace) -> None:
         await adapter.execute(out_ctx)
     except KeyboardInterrupt:  # pragma: no cover - user interrupt
         pass
+    except asyncio.TimeoutError:
+        print("Execution timed out", file=sys.stderr)
+        return
     finally:
         await adapter.wait_closed()
 
