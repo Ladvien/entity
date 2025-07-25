@@ -14,6 +14,11 @@ class MetricsCollectorResource:
         self.aggregates: Dict[str, Dict[str, Any]] = {}
         self._lock = asyncio.Lock()
 
+    def health_check(self) -> bool:
+        """Return ``True`` as metrics collection has no external deps."""
+
+        return True
+
     async def record_plugin_execution(
         self,
         plugin_name: str,

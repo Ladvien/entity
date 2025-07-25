@@ -28,6 +28,11 @@ class Memory:
         self._lock = asyncio.Lock()
         self._ensure_table()
 
+    def health_check(self) -> bool:
+        """Return ``True`` if both underlying resources are healthy."""
+
+        return self.database.health_check() and self.vector_store.health_check()
+
     def execute(self, query: str, *params: object) -> object:
         """Execute a database query."""
 

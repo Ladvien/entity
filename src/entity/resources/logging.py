@@ -24,6 +24,11 @@ class LoggingResource:
         self.records: List[Dict[str, Any]] = []
         self._lock = asyncio.Lock()
 
+    def health_check(self) -> bool:
+        """Always returns ``True`` as logging has no external deps."""
+
+        return True
+
     async def log(self, level: str, message: str, **fields: Any) -> None:
         """Store a log entry if ``level`` is above the configured threshold."""
 

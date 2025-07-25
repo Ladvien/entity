@@ -13,6 +13,11 @@ class Storage:
             raise ResourceInitializationError("StorageResource is required")
         self.resource = resource
 
+    def health_check(self) -> bool:
+        """Return ``True`` if the underlying resource is healthy."""
+
+        return self.resource.health_check()
+
     async def upload_text(self, key: str, data: str) -> None:
         """Proxy text upload to the underlying resource."""
 

@@ -21,3 +21,13 @@ class S3Infrastructure:
         """Create an S3 client from the session."""
 
         return self.session().client("s3")
+
+    def health_check(self) -> bool:
+        """Return ``True`` if the bucket is reachable."""
+
+        try:
+            client = self.client()
+            client.list_buckets()
+            return True
+        except Exception:
+            return False
