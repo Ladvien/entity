@@ -60,6 +60,7 @@ async def test_logging_and_metrics_per_stage():
 
 
 @pytest.mark.integration
+@pytest.mark.docker
 @pytest.mark.skipif(shutil.which("docker") is None, reason="docker not installed")
 def test_docker_logging_metrics(tmp_path):
     script = "\n".join(

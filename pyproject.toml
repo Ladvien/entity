@@ -120,6 +120,7 @@ python_functions = ["test_*"]
 
 # Make sure src is in the Python path for pytest
 pythonpath = ["src"]
+env = { ENTITY_TEST_MODE = "local" }
 
 addopts = [
     "-v",
@@ -144,6 +145,7 @@ markers = [
     "cli: Tests related to CLI interface",
     "benchmark: Performance benchmarking tests",
     "examples: Tests that run example scripts",
+    "docker: Tests that require Docker",
 ]
 filterwarnings = [
     "ignore::DeprecationWarning",
