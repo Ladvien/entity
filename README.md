@@ -157,9 +157,12 @@ poetry install --with dev
 poetry run poe test
 ```
 
-For integration tests that require Docker, install Docker and then run:
+Integration tests rely on the services defined in `docker-compose.yml`.
+Run them with Docker installed:
 
 ```bash
 poetry run poe test-with-docker
 ```
+This task brings the containers up, runs all tests marked `integration` in
+parallel, and then tears the services down so no state is shared between runs.
 

@@ -62,6 +62,8 @@ release = ["patch", "_publish"]
 
 # Development helpers
 start-db = { cmd = "docker compose up -d postgres" }
+start-test-services = { cmd = "docker compose up -d" }
+stop-test-services = { cmd = "docker compose down -v" }
 
 # ALL test tasks need the env variable
 test = { cmd = "pytest", env = { PYTHONPATH = "src" } }
@@ -75,8 +77,15 @@ unit = { cmd = "pytest tests/unit", env = { PYTHONPATH = "src" } }
 integration = { cmd = "pytest tests/integration", env = { PYTHONPATH = "src" } }
 e2e = { cmd = "pytest tests/e2e", env = { PYTHONPATH = "src" } }
 
+[tool.poe.tasks.test-with-docker]
+sequence = [
+    { ref = "start-test-services" },
+    { cmd = "pytest -m integration -n auto", env = { PYTHONPATH = "src" } },
+    { ref = "stop-test-services" },
+]
 
-setup-dev = { cmd = "poetry install --with dev" }
+[tool.poe.tasks.setup-dev]
+cmd = "poetry install --with dev"
 
 [tool.poe.tasks.lint]
 sequence = [
