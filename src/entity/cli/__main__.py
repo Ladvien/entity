@@ -97,6 +97,7 @@ async def _run(args: argparse.Namespace) -> None:
         pass
     except asyncio.TimeoutError:
         print("Execution timed out", file=sys.stderr)
+        adapter.stop()
         return
     finally:
         await adapter.wait_closed()

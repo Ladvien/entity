@@ -23,6 +23,10 @@ class EntCLIAdapter(InputAdapterPlugin, OutputAdapterPlugin):
         super().__init__(resources, config)
         self._stop = asyncio.Event()
 
+    def stop(self) -> None:
+        """Signal any waiting ``wait_closed`` calls to exit."""
+        self._stop.set()
+
     def _install_signals(self) -> None:
         loop = asyncio.get_running_loop()
         for sig in (signal.SIGINT, signal.SIGTERM):
