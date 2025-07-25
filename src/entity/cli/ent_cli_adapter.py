@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import signal
 import sys
 from typing import Any
 
@@ -10,18 +12,54 @@ from entity.plugins.context import PluginContext
 
 
 class EntCLIAdapter(InputAdapterPlugin, OutputAdapterPlugin):
-    """Simple CLI adapter using stdin and stdout."""
+    """Simple CLI adapter using stdin and stdout with signal handling."""
 
     supported_stages = [WorkflowExecutor.INPUT, WorkflowExecutor.OUTPUT]
 
+    def __init__(
+        self, resources: dict[str, Any], config: dict[str, Any] | None = None
+    ) -> None:
+        super().__init__(resources, config)
+        self._stop = asyncio.Event()
+
+    def _install_signals(self) -> None:
+        loop = asyncio.get_running_loop()
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            try:
+                loop.add_signal_handler(sig, self._stop.set)
+            except NotImplementedError:  # pragma: no cover - windows fallback
+                signal.signal(sig, lambda _s, _f: self._stop.set())
+
+    async def _read_line(self) -> str:
+        return await asyncio.to_thread(sys.stdin.readline)
+
     async def _execute_impl(self, context: PluginContext) -> str:
-        if context.current_stage == WorkflowExecutor.INPUT:
-            message = sys.stdin.readline().rstrip("\n")
-            await context.remember("cli_input", message)
-            return message
-        if context.current_stage == WorkflowExecutor.OUTPUT:
-            output = context.message or ""
-            print(output)
-            context.say(output)
-            return output
+        self._install_signals()
+        logger = context.get_resource("logging")
+        try:
+            if context.current_stage == WorkflowExecutor.INPUT:
+                line = await self._read_line()
+                if not line:
+                    self._stop.set()
+                    raise KeyboardInterrupt
+                message = line.rstrip("\n")
+                await context.remember("cli_input", message)
+                return message
+
+            if context.current_stage == WorkflowExecutor.OUTPUT:
+                output = context.response or context.message or ""
+                try:
+                    print(output)
+                except BrokenPipeError:
+                    self._stop.set()
+                context.say(output)
+                return output
+        except Exception as exc:  # pragma: no cover - runtime safety
+            if logger is not None:
+                await logger.log("error", "cli_error", error=str(exc))
+            raise
+
         return context.message or ""
+
+    async def wait_closed(self) -> None:
+        await self._stop.wait()

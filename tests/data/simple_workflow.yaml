@@ -1,0 +1,10 @@
+parse:
+  - entity.plugins.defaults.ParsePlugin
+think:
+  - entity.plugins.defaults.ThinkPlugin
+do:
+  - entity.plugins.defaults.DoPlugin
+review:
+  - entity.plugins.defaults.ReviewPlugin
+output:
+  - entity.plugins.defaults.OutputPlugin
