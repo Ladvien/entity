@@ -27,6 +27,7 @@ async def test_local_storage_startup_shutdown(tmp_path):
 
 
 @pytest.mark.integration
+@pytest.mark.docker
 @pytest.mark.skipif(shutil.which("docker") is None, reason="docker not installed")
 @pytest.mark.asyncio
 async def test_ollama_health(compose_services):

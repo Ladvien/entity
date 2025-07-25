@@ -8,6 +8,7 @@ import pytest
 
 
 @pytest.mark.integration
+@pytest.mark.docker
 @pytest.mark.skipif(shutil.which("docker") is None, reason="docker not installed")
 def test_nested_substitution_in_docker(tmp_path):
     env_file = tmp_path / ".env"

@@ -6,6 +6,7 @@ import pytest
 
 
 @pytest.mark.integration
+@pytest.mark.docker
 @pytest.mark.skipif(shutil.which("docker") is None, reason="docker not installed")
 def test_template_loading_in_docker(tmp_path):
     script = "\n".join(
