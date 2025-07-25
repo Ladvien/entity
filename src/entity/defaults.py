@@ -4,6 +4,7 @@ import os
 import tempfile
 from dataclasses import dataclass
 
+# TODO: Do not use relative imports
 from .infrastructure.duckdb_infra import DuckDBInfrastructure
 from .infrastructure.ollama_infra import OllamaInfrastructure
 from .infrastructure.local_storage_infra import LocalStorageInfrastructure
@@ -18,11 +19,13 @@ from .resources import (
 )
 
 
+# TODO: Should be using Pydantic BaseModel or similar
 @dataclass
 class DefaultConfig:
     """Configuration values for default resources."""
 
     duckdb_path: str = "./agent_memory.duckdb"
+    # TODO: Port should be configurable
     ollama_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.2:3b"
     storage_path: str = "./agent_files"
@@ -49,6 +52,7 @@ class _NullLLMInfrastructure:
         return False
 
 
+# TODO: Please use OOP
 def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
     """Build canonical resources using ``config`` or environment overrides."""
 

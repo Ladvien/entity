@@ -9,6 +9,7 @@ from pydantic import BaseModel, ValidationError
 
 import yaml
 
+# TODO: Use absolute imports
 from ..workflow.workflow import Workflow, WorkflowConfigError
 from ..workflow.executor import WorkflowExecutor
 
@@ -20,6 +21,7 @@ class ConfigModel(BaseModel):
     workflow: Dict[str, list[str]] = {}
 
 
+# TODO: Orphan function, consider removing or refactoring into a class method
 def validate_config(path: str | Path) -> ConfigModel:
     """Load and validate a YAML configuration file."""
     try:
@@ -41,6 +43,7 @@ def validate_config(path: str | Path) -> ConfigModel:
         raise ValueError(f"Invalid configuration:\n{exc}") from exc
 
 
+# TODO: Orphan function, consider removing or refactoring into a class method
 def validate_workflow(workflow: Workflow) -> None:
     """Validate plugin stages for a ``Workflow``."""
     for stage, plugins in workflow.steps.items():

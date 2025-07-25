@@ -8,6 +8,7 @@ Use this document when preparing changes or reviewing pull requests.
 - If something is not explicitly stated in this document, it is **not** allowed.  Create a `AGENT NOTE:` instead.
 - The project is unreleased.  Do not support legacy, deprecated, or backwards compatibility.
 - Prefer adding `TODO:` comments when scope is unclear.
+- Please use explaining variables.
 - Create `AGENT NOTE:` comments for other agents.
 - Always use the Poetry environment for development.
 - Run `poetry install --with dev` before executing any quality checks or tests.

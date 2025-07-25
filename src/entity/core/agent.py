@@ -1,9 +1,11 @@
+# TODO: Use absolute imports
 from ..defaults import load_defaults
 from ..plugins.defaults import default_workflow
 from ..workflow import WorkflowExecutor
 
 
 class Agent:
+    # TODO: Arguments should have typehints
     def __init__(self, resources=None, workflow=None, infrastructure=None):
         self.resources = resources or load_defaults()
         self.workflow = workflow
@@ -22,4 +24,5 @@ class Agent:
 
         executor = WorkflowExecutor(self.resources, workflow_steps)
         result = await executor.run(message, user_id=user_id)
+        # TODO: Use a response object instead of a dict
         return {"response": result}
