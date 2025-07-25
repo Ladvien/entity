@@ -17,7 +17,13 @@ class DuckDBInfrastructure(BaseInfrastructure):
 
         super().__init__(version)
         self.file_path = file_path
-        self._pool: Queue = Queue(maxsize=pool_size)
+        if file_path == ":memory:":
+            self._pool = Queue(maxsize=1)
+            import duckdb
+
+            self._pool.put_nowait(duckdb.connect(file_path))
+        else:
+            self._pool = Queue(maxsize=pool_size)
 
     def _acquire(self):
         import duckdb
@@ -25,6 +31,8 @@ class DuckDBInfrastructure(BaseInfrastructure):
         try:
             return self._pool.get_nowait()
         except Empty:  # No available connection
+            if self.file_path == ":memory:":
+                return self._pool.get()
             return duckdb.connect(self.file_path)
 
     def _release(self, conn) -> None:
