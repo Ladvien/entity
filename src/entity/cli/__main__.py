@@ -20,7 +20,12 @@ def _load_workflow(name: str) -> list[type] | dict[str, list[type]]:
     """Return workflow steps from ``name`` or exit with a helpful error."""
 
     if name == "default":
-        return default_workflow()
+        steps = list(default_workflow())
+        if steps and steps[0] is EntCLIAdapter:
+            steps = steps[1:]
+        if steps and steps[-1] is EntCLIAdapter:
+            steps = steps[:-1]
+        return steps
 
     path = Path(name)
     if path.exists():
