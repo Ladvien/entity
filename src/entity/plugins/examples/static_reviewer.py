@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from ..base import Plugin
-from ...workflow.executor import WorkflowExecutor
+from entity.plugins.base import Plugin
+from entity.workflow.executor import WorkflowExecutor
 
 
 class StaticReviewer(Plugin):

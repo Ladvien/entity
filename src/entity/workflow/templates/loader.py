@@ -5,7 +5,7 @@ from typing import Any, Dict, List
 
 import yaml
 
-from ..workflow import Workflow, WorkflowConfigError
+from entity.workflow.workflow import Workflow, WorkflowConfigError
 
 TEMPLATES_DIR = Path(__file__).parent
 

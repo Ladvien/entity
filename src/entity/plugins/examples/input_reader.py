@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ..input_adapter import InputAdapterPlugin
+from entity.plugins.input_adapter import InputAdapterPlugin
 
 
 class InputReader(InputAdapterPlugin):

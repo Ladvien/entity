@@ -45,7 +45,7 @@ class Plugin(ABC):
     @classmethod
     def validate_workflow(cls, stage: str) -> None:
         """Validate that ``cls`` can run in ``stage`` before workflow execution."""
-        from ..workflow.workflow import WorkflowConfigError
+        from entity.workflow.workflow import WorkflowConfigError
 
         if cls.supported_stages and stage not in cls.supported_stages:
             allowed = ", ".join(cls.supported_stages)

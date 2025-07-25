@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 
-from .prompt import PromptPlugin
-from ..tools.registry import ToolInfo
-from ..workflow.executor import WorkflowExecutor
+from entity.plugins.prompt import PromptPlugin
+from entity.tools.registry import ToolInfo
+from entity.workflow.executor import WorkflowExecutor
 
 
 class SmartToolSelectorPlugin(PromptPlugin):

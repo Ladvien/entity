@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from ..prompt import PromptPlugin
-from ...workflow.executor import WorkflowExecutor
+from entity.plugins.prompt import PromptPlugin
+from entity.workflow.executor import WorkflowExecutor
 
 
 class ReasonGenerator(PromptPlugin):

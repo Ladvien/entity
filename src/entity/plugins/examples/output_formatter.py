@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ..output_adapter import OutputAdapterPlugin
+from entity.plugins.output_adapter import OutputAdapterPlugin
 
 
 class OutputFormatter(OutputAdapterPlugin):

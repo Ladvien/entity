@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from .base import Plugin
-from ..workflow.executor import WorkflowExecutor
+from entity.plugins.base import Plugin
+from entity.workflow.executor import WorkflowExecutor
 
 
 class ToolPlugin(Plugin):

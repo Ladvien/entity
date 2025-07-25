@@ -13,7 +13,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from .validation import ConfigModel, validate_config, validate_workflow
+from entity.config.validation import ConfigModel, validate_config, validate_workflow
 
 
 class SubstitutionError(ValueError):

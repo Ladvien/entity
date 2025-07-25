@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import asyncio
 
-from ..core.agent import Agent
-from ..plugins.defaults import (
+from entity.core.agent import Agent
+from entity.plugins.defaults import (
     ParsePlugin,
     ThinkPlugin,
     DoPlugin,
     ReviewPlugin,
 )
-from .ent_cli_adapter import EntCLIAdapter
+from entity.cli.ent_cli_adapter import EntCLIAdapter
 
 
 async def _run() -> None:
