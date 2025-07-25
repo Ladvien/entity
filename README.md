@@ -2,9 +2,14 @@
 Entity is a Python framework for building AI agents. It runs locally by default and sets up resources automatically.
 
 ## Examples
+<<<<<<< HEAD
 
+=======
+>>>>>>> pr-1930
 Run `python examples/zero_config_agent.py` for a minimal CLI demo or
 `python examples/advanced_workflow.py` to see a multi-stage workflow in action.
+Resources are prepared automatically using ``load_defaults()`` so Docker is no
+longer required for these examples.
 The old `[examples]` extra has been removed.
 
 ### Workflow Templates

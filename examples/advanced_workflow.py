@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-"""Demonstrate a multi-stage agent with Docker services.
+"""Demonstrate a multi-stage agent.
 
-Run the supporting containers first:
-
-```
-docker compose up -d
-```
+All resources are prepared automatically. Any initialization errors are
+reported to the console.
 """
 
 import asyncio
@@ -21,7 +18,12 @@ class DummyLLM:
 
 
 async def main() -> None:
-    resources = load_defaults()
+    try:
+        resources = load_defaults()
+    except Exception as exc:  # pragma: no cover - example runtime guard
+        print(f"Failed to initialize resources: {exc}")
+        return
+
     resources["llm"] = DummyLLM()
     agent = Agent.from_workflow("examples/advanced_workflow.yaml", resources=resources)
     result = await agent.chat("2 + 2")
