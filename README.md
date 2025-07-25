@@ -2,7 +2,9 @@
 Python agent framework
 
 ## Examples
-Run `python -m entity.examples` to see sample workflows. The old `[examples]` extra has been removed.
+Run `python examples/zero_config_agent.py` for a minimal CLI demo or
+`python examples/advanced_workflow.py` to see a multi-stage workflow in action.
+The old `[examples]` extra has been removed.
 
 ### Workflow Templates
 
@@ -165,4 +167,16 @@ poetry run poe test-with-docker
 ```
 This task brings the containers up, runs all tests marked `integration` in
 parallel, and then tears the services down so no state is shared between runs.
+
+## Docker Usage
+
+Spin up the local services defined in `docker-compose.yml`:
+
+```bash
+docker compose up -d
+# run agents or tests here
+docker compose down -v
+```
+
+See `install_docker.sh` for an automated install script on Ubuntu.
 
