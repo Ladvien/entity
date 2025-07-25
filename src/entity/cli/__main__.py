@@ -12,25 +12,26 @@ from entity.defaults import load_defaults
 from entity.workflow.templates.loader import load_template, TemplateNotFoundError
 from entity.workflow.workflow import Workflow
 from entity.workflow.executor import WorkflowExecutor
+from entity.plugins.context import PluginContext
 
 
 def _load_workflow(name: str) -> list[type] | dict[str, list[type]]:
+    """Return workflow steps from ``name`` or exit with a helpful error."""
+
     if name == "default":
         return default_workflow()
 
     path = Path(name)
-    try:
-        if path.exists():
-            wf = Workflow.from_yaml(str(path))
-        else:
-            wf = load_template(name)
-    except (TemplateNotFoundError, FileNotFoundError):
-        raise SystemExit(f"Unknown workflow '{name}'")
+    if path.exists():
+        try:
+            return Workflow.from_yaml(str(path)).steps
+        except Exception as exc:  # pragma: no cover - corrupt file
+            raise SystemExit(f"Failed to load workflow file '{name}': {exc}") from exc
 
-    steps = wf.steps
-    steps.setdefault(WorkflowExecutor.INPUT, []).insert(0, EntCLIAdapter)
-    steps.setdefault(WorkflowExecutor.OUTPUT, []).append(EntCLIAdapter)
-    return steps
+    try:
+        return load_template(name).steps
+    except TemplateNotFoundError as exc:
+        raise SystemExit(f"Workflow template '{name}' not found") from exc
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -61,10 +62,26 @@ async def _run(args: argparse.Namespace) -> None:
     resources["logging"] = LoggingResource(level)
     workflow = _load_workflow(args.workflow)
     agent = Agent(resources=resources, workflow=workflow)
+
+    adapter = EntCLIAdapter(resources)
     try:
-        await agent.chat("")
+        in_ctx = PluginContext(resources, "cli")
+        in_ctx.current_stage = WorkflowExecutor.INPUT
+        message = await adapter.execute(in_ctx)
+        if not message:
+            return
+
+        result = await agent.chat(message)
+
+        out_ctx = PluginContext(resources, "cli")
+        out_ctx.current_stage = WorkflowExecutor.OUTPUT
+        out_ctx.message = result["response"]
+        out_ctx.say(result["response"])
+        await adapter.execute(out_ctx)
     except KeyboardInterrupt:  # pragma: no cover - user interrupt
         pass
+    finally:
+        await adapter.wait_closed()
 
 
 def main(argv: list[str] | None = None) -> None:

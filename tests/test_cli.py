@@ -12,7 +12,7 @@ def test_cli_help():
         capture_output=True,
         text=True,
     )
-    assert "usage" in result.stdout.lower()
+    assert "workflow" in result.stdout.lower()
 
 
 @pytest.mark.integration
@@ -25,6 +25,18 @@ def test_cli_default_workflow():
         timeout=5,
     )
     assert proc.stdout.strip() == "hello"
+
+
+@pytest.mark.integration
+def test_cli_verbose_flag():
+    proc = subprocess.run(
+        [sys.executable, "-m", "entity.cli", "--workflow", "default", "--verbose"],
+        input="hi\n",
+        capture_output=True,
+        text=True,
+        timeout=5,
+    )
+    assert proc.stdout.strip() == "hi"
 
 
 @pytest.mark.integration
@@ -44,3 +56,14 @@ def test_cli_custom_workflow(tmp_path):
         timeout=5,
     )
     assert proc.stdout.strip() == "ping"
+
+
+@pytest.mark.integration
+def test_cli_unknown_workflow():
+    proc = subprocess.run(
+        [sys.executable, "-m", "entity.cli", "--workflow", "missing"],
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode != 0
+    assert "not found" in proc.stderr.lower()
