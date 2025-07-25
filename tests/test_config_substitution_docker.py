@@ -1,6 +1,7 @@
 import json
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -24,6 +25,13 @@ def test_nested_substitution_in_docker(tmp_path):
     script_file = tmp_path / "run.py"
     script_file.write_text(script)
 
+    wheel_dir = tmp_path / "wheel"
+    wheel_dir.mkdir()
+    subprocess.check_call(
+        [sys.executable, "-m", "build", "--wheel", "--outdir", str(wheel_dir)]
+    )
+    wheel_path = next(wheel_dir.glob("*.whl"))
+
     result = subprocess.check_output(
         [
             "docker",
@@ -38,7 +46,7 @@ def test_nested_substitution_in_docker(tmp_path):
             "python:3.11-slim",
             "sh",
             "-c",
-            "pip install /src >/tmp/pip.log && python /data/run.py",
+            f"pip install /data/wheel/{wheel_path.name} --no-deps >/tmp/pip.log && python /data/run.py",
         ],
         text=True,
     ).strip()
