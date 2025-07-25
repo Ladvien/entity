@@ -11,7 +11,7 @@ class LocalStorageInfrastructure(BaseInfrastructure):
 
         super().__init__(version)
         self.base_path = Path(base_path)
-        self.base_path.mkdir(parents=True, exist_ok=True)
+        self.base_path.mkdir(parents=True, exist_ok=True, mode=0o755)
 
     def resolve_path(self, key: str) -> Path:
         """Return the absolute path for the given storage key."""
@@ -24,8 +24,10 @@ class LocalStorageInfrastructure(BaseInfrastructure):
             test_file = self.base_path / ".health_check"
             test_file.write_text("ok")
             test_file.unlink()
+            self.logger.debug("Health check succeeded for %s", self.base_path)
             return True
-        except Exception:
+        except Exception as exc:
+            self.logger.warning("Health check failed for %s: %s", self.base_path, exc)
             return False
 
     async def startup(self) -> None:  # pragma: no cover - thin wrapper

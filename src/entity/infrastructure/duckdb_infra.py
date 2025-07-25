@@ -65,6 +65,8 @@ class DuckDBInfrastructure(BaseInfrastructure):
         try:
             with self.connect() as conn:
                 conn.execute("SELECT 1")
+            self.logger.debug("Health check succeeded for %s", self.file_path)
             return True
-        except Exception:
+        except Exception as exc:
+            self.logger.warning("Health check failed for %s: %s", self.file_path, exc)
             return False

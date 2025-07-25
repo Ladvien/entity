@@ -36,6 +36,8 @@ class OllamaInfrastructure(BaseInfrastructure):
         try:
             response = httpx.get(f"{self.base_url}/api/tags", timeout=2)
             response.raise_for_status()
+            self.logger.debug("Health check succeeded for %s", self.base_url)
             return True
-        except Exception:
+        except Exception as exc:
+            self.logger.warning("Health check failed for %s: %s", self.base_url, exc)
             return False
