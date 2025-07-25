@@ -58,6 +58,13 @@ class ErrorPlugin(Plugin):
         called.append(context.message)
 
 
+class RecoveryPlugin(Plugin):
+    stage = WorkflowExecutor.ERROR
+
+    async def _execute_impl(self, context):
+        context.say("recovered")
+
+
 @pytest.mark.asyncio
 async def test_error_hook_runs_on_failure():
     wf = {
@@ -70,6 +77,19 @@ async def test_error_hook_runs_on_failure():
     with pytest.raises(RuntimeError):
         await executor.run("hello")
     assert called == ["boom"]
+
+
+@pytest.mark.asyncio
+async def test_error_hook_recovers():
+    wf = {
+        WorkflowExecutor.THINK: [FailingPlugin],
+        WorkflowExecutor.ERROR: [RecoveryPlugin],
+    }
+    infra = DuckDBInfrastructure(":memory:")
+    memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
+    executor = WorkflowExecutor({"memory": memory}, wf)
+    result = await executor.run("oops")
+    assert result == "recovered"
 
 
 class LoopingOutput(Plugin):

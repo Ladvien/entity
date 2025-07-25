@@ -1,6 +1,10 @@
 import pytest
 
-from entity.config.validation import validate_config, validate_workflow
+from entity.config.validation import (
+    validate_config,
+    validate_workflow,
+    validate_workflow_compatibility,
+)
 from entity.workflow.workflow import Workflow, WorkflowConfigError
 from entity.plugins import Plugin
 from entity.workflow.executor import WorkflowExecutor
@@ -67,3 +71,23 @@ def test_plugin_config_validation():
 
     with pytest.raises(ValueError):
         TestPlugin({}, config={"value": "bad"})
+
+
+def test_workflow_compatibility_pass(tmp_path):
+    cfg_file = tmp_path / "good.yml"
+    cfg_file.write_text(
+        "resources: {}\nworkflow:\n  think: ['entity.plugins.examples.reason_generator.ReasonGenerator']"
+    )
+    cfg = validate_config(cfg_file)
+    wf = validate_workflow_compatibility(cfg)
+    assert wf.steps["think"][0].__name__ == "ReasonGenerator"
+
+
+def test_workflow_compatibility_fail(tmp_path):
+    cfg_file = tmp_path / "bad.yml"
+    cfg_file.write_text(
+        "resources: {}\nworkflow:\n  parse: ['entity.plugins.examples.reason_generator.ReasonGenerator']"
+    )
+    cfg = validate_config(cfg_file)
+    with pytest.raises(WorkflowConfigError):
+        validate_workflow_compatibility(cfg)

@@ -23,7 +23,7 @@ class ConfigModel(BaseModel):
 
 # TODO: Orphan function, consider removing or refactoring into a class method
 def validate_config(path: str | Path) -> ConfigModel:
-    """Load and validate a YAML configuration file."""
+    """Load ``path`` and perform fast validation without importing plugins."""
     try:
         with open(path, "r", encoding="utf-8") as handle:
             data = yaml.safe_load(handle) or {}
@@ -35,13 +35,20 @@ def validate_config(path: str | Path) -> ConfigModel:
 
     missing = REQUIRED_KEYS - data.keys()
     if missing:
-        # TODO: Use explaining variables
         raise ValueError(f"Missing required keys: {', '.join(sorted(missing))}")
 
     try:
         return ConfigModel.model_validate(data)
     except ValidationError as exc:
         raise ValueError(f"Invalid configuration:\n{exc}") from exc
+
+
+def validate_workflow_compatibility(cfg: ConfigModel) -> Workflow:
+    """Second-phase validation that imports plugins and checks stages."""
+
+    workflow = Workflow.from_dict(cfg.workflow)
+    validate_workflow(workflow)
+    return workflow
 
 
 # TODO: Orphan function refactor into a class method

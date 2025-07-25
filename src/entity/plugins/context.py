@@ -20,8 +20,11 @@ class WorkflowContext:
 
         from entity.workflow.executor import WorkflowExecutor
 
-        if self.current_stage != WorkflowExecutor.OUTPUT:
-            raise RuntimeError("context.say() only allowed in OUTPUT stage")
+        if self.current_stage not in {
+            WorkflowExecutor.OUTPUT,
+            WorkflowExecutor.ERROR,
+        }:
+            raise RuntimeError("context.say() only allowed in OUTPUT or ERROR stage")
 
         self._response = message
 
