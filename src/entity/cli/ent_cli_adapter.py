@@ -69,6 +69,9 @@ class EntCLIAdapter(InputAdapterPlugin, OutputAdapterPlugin):
             print(output)
         except BrokenPipeError:
             self._stop.set()
+        else:
+            # ensure CLI exits after successfully writing output
+            self._stop.set()
         context.say(output)
         return output
 
