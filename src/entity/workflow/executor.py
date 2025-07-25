@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 from itertools import count
+import warnings
 
 from entity.resources.logging import LoggingResource
 from entity.resources.metrics import MetricsCollectorResource
@@ -83,6 +84,11 @@ class WorkflowExecutor:
                 if hasattr(plugin, "execute"):
                     result = await plugin.execute(context)
                 else:
+                    warnings.warn(
+                        f"{plugin_cls.__name__}.run is deprecated. "
+                        "Implement 'execute' to conform to Plugin interface.",
+                        DeprecationWarning,
+                    )
                     result = await plugin.run(result, user_id)
             except Exception as exc:  # pragma: no cover - runtime errors
                 await self._handle_error(context, exc.__cause__ or exc, user_id)
@@ -107,6 +113,11 @@ class WorkflowExecutor:
             if hasattr(plugin, "execute"):
                 await plugin.execute(context)
             else:  # pragma: no cover - legacy hook
+                warnings.warn(
+                    f"{plugin_cls.__name__}.run is deprecated. "
+                    "Implement 'execute' to conform to Plugin interface.",
+                    DeprecationWarning,
+                )
                 await plugin.run(str(exc), user_id)
         await context.run_tool_queue()
         await context.flush_state()

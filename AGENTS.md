@@ -247,9 +247,14 @@ class Plugin(ABC):
         return await self._execute_impl(context)
     
     @abstractmethod
+
     async def _execute_impl(self, context: PluginContext) -> Any:
         """Plugin-specific implementation"""
 ```
+
+Previous `run` hooks have been removed. Plugins must define an `execute`
+method that calls `_execute_impl`. Using a legacy `run` method will trigger a
+`DeprecationWarning` during workflow execution.
 
 ### Plugin Categories with Stage Restrictions
 
