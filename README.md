@@ -148,3 +148,18 @@ from entity.tools import generate_docs
 print(generate_docs())
 ```
 
+## Running Tests
+
+Install dependencies with Poetry and run the full suite:
+
+```bash
+poetry install --with dev
+poetry run poe test
+```
+
+For integration tests that require Docker, install Docker and then run:
+
+```bash
+poetry run poe test-with-docker
+```
+
