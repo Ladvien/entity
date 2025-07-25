@@ -20,24 +20,15 @@ services:
       retries: 5
 
   ollama:
-    image: ollama/ollama
+    build: .
+    image: entity-ollama
     privileged: true
     env_file:
       - .env
     ports:
-      - "11434"
+      - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
-    environment:
-      - OLLAMA_HOST=0.0.0.0
-    entrypoint: >
-      bash -c '
-        set -e
-        ollama serve &
-        sleep 3
-        ollama pull ${OLLAMA_MODEL:-llama3:8b-instruct-q6_K} || true
-        wait
-      '
 
 volumes:
   postgres_data:

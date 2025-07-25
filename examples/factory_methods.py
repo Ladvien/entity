@@ -1,4 +1,11 @@
-"""Demonstrate Agent factory helpers."""
+"""Demonstrate Agent factory helpers.
+
+Start the service stack before running:
+
+```
+docker compose up -d
+```
+"""
 
 from entity.core.agent import Agent
 

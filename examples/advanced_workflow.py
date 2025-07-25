@@ -1,5 +1,14 @@
 from __future__ import annotations
 
+"""Demonstrate a multi-stage agent with Docker services.
+
+Run the supporting containers first:
+
+```
+docker compose up -d
+```
+"""
+
 import asyncio
 
 from entity.core.agent import Agent

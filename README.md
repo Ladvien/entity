@@ -2,7 +2,13 @@
 Python agent framework
 
 ## Examples
-Run `python examples/zero_config_agent.py` for a minimal CLI demo or
+First start the local services:
+
+```bash
+docker compose up -d
+```
+
+Then run `python examples/zero_config_agent.py` for a minimal CLI demo or
 `python examples/advanced_workflow.py` to see a multi-stage workflow in action.
 The old `[examples]` extra has been removed.
 
@@ -170,9 +176,11 @@ parallel, and then tears the services down so no state is shared between runs.
 
 ## Docker Usage
 
-Spin up the local services defined in `docker-compose.yml`:
+Spin up the local services defined in `docker-compose.yml`.
+The `ollama` service is built from the provided Dockerfile:
 
 ```bash
+docker compose build ollama
 docker compose up -d
 # run agents or tests here
 docker compose down -v
