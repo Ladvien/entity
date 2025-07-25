@@ -1,7 +1,5 @@
 import multiprocessing
 import asyncio
-import tempfile
-
 import pytest
 
 from entity.plugins.context import PluginContext
@@ -32,7 +30,7 @@ async def test_multiple_processes_share_memory(tmp_path):
 
     infra = DuckDBInfrastructure(str(db_file))
     memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
-    ctx = PluginContext({}, user_id="0", memory=memory)
+    PluginContext({}, user_id="0", memory=memory)
     try:
         values = [await memory.load(f"{i}:val") for i in range(5)]
     except Exception as exc:

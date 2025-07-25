@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-from pathlib import Path
 
 from entity.infrastructure.local_storage_infra import LocalStorageInfrastructure
 from entity.resources.exceptions import ResourceInitializationError

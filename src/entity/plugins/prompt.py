@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any
-
 from entity.plugins.base import Plugin
 from entity.workflow.executor import WorkflowExecutor
 

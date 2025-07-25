@@ -1,5 +1,3 @@
-import asyncio
-
 import pytest
 
 from entity.workflow import Workflow, WorkflowExecutor

@@ -4,7 +4,7 @@ from typing import Any, Dict, List
 
 from entity.tools.sandbox import SandboxedToolRunner
 from entity.tools.registry import ToolInfo
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
 
 class WorkflowContext:

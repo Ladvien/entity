@@ -13,7 +13,11 @@ def test_template_loading_in_docker(tmp_path):
             "import sys",
             "sys.path.insert(0, '/src/src')",
             "from entity.workflow.templates import load_template",
-            "wf = load_template('basic', think_plugin='entity.plugins.defaults.ThinkPlugin', output_plugin='entity.plugins.defaults.OutputPlugin')",
+            (
+                "wf = load_template('basic',"
+                " think_plugin='entity.plugins.defaults.ThinkPlugin',"
+                " output_plugin='entity.plugins.defaults.OutputPlugin')"
+            ),
             "print(wf.plugins_for('think')[0].__name__)",
         ]
     )

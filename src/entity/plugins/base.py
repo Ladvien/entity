@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import time
-from typing import Any, Dict, Type
+from typing import Any, Dict
 
 from pydantic import BaseModel, ValidationError
 
@@ -56,7 +56,8 @@ class Plugin(ABC):
             )
         if cls.stage and cls.stage != stage:
             raise WorkflowConfigError(
-                f"{cls.__name__} is fixed to stage '{cls.stage}' and cannot be scheduled for '{stage}'"
+                f"{cls.__name__} is fixed to stage '{cls.stage}' and cannot "
+                f"be scheduled for '{stage}'"
             )
 
     async def execute(self, context: Any) -> Any:
