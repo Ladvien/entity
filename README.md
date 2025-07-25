@@ -2,14 +2,10 @@
 Python agent framework
 
 ## Examples
-First start the local services:
-
-```bash
-docker compose up -d
-```
-
-Then run `python examples/zero_config_agent.py` for a minimal CLI demo or
+Run `python examples/zero_config_agent.py` for a minimal CLI demo or
 `python examples/advanced_workflow.py` to see a multi-stage workflow in action.
+Resources are prepared automatically using ``load_defaults()`` so Docker is no
+longer required for these examples.
 The old `[examples]` extra has been removed.
 
 ### Workflow Templates
