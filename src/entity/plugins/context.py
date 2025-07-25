@@ -40,6 +40,7 @@ class PluginContext(WorkflowContext):
         user_id: str,
         memory: Any | None = None,
     ) -> None:
+        # TODO: Refactor for readability
         super().__init__()
         self._resources = resources
         self.user_id = user_id

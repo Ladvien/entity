@@ -28,6 +28,7 @@ class Plugin(ABC):
         # Ensure required resources are available before execution starts
         self._validate_dependencies()
 
+    # TODO: Remove unnecessary comments, they are self-explanatory
     # ------------------------------------------------------------------
     # Validation helpers
     # ------------------------------------------------------------------
