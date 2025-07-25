@@ -29,6 +29,7 @@ class DefaultConfig:
     ollama_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.2:3b"
     storage_path: str = "./agent_files"
+    auto_install_ollama: bool = True
 
     @classmethod
     def from_env(cls) -> "DefaultConfig":
@@ -39,6 +40,11 @@ class DefaultConfig:
             ollama_url=os.getenv("ENTITY_OLLAMA_URL", cls.ollama_url),
             ollama_model=os.getenv("ENTITY_OLLAMA_MODEL", cls.ollama_model),
             storage_path=os.getenv("ENTITY_STORAGE_PATH", cls.storage_path),
+            auto_install_ollama=os.getenv(
+                "ENTITY_AUTO_INSTALL_OLLAMA",
+                str(cls.auto_install_ollama),
+            ).lower()
+            in {"1", "true", "yes"},
         )
 
 
@@ -58,12 +64,24 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
 
     cfg = config or DefaultConfig.from_env()
 
+    if cfg.auto_install_ollama:
+        from entity.installers.ollama import OllamaInstaller
+
+        OllamaInstaller.ensure_installed()
+
     duckdb = DuckDBInfrastructure(cfg.duckdb_path)
     if not duckdb.health_check():
         duckdb = DuckDBInfrastructure(":memory:")
 
-    ollama = OllamaInfrastructure(cfg.ollama_url, cfg.ollama_model)
-    if not ollama.health_check():
+    ollama = OllamaInfrastructure(
+        cfg.ollama_url, cfg.ollama_model, auto_install=cfg.auto_install_ollama
+    )
+    if ollama.health_check():
+        if cfg.auto_install_ollama:
+            from entity.installers.ollama import OllamaInstaller
+
+            OllamaInstaller.pull_default_model(cfg.ollama_model)
+    else:
         ollama = _NullLLMInfrastructure()
 
     storage_infra = LocalStorageInfrastructure(cfg.storage_path)
