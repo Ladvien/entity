@@ -42,7 +42,6 @@ def test_constructors_success(tmp_path):
 
     storage_infra = LocalStorageInfrastructure(tmp_path)
     local_res = LocalStorageResource(storage_infra)
-    s3_res = StorageResource(HealthyInfra())
     storage = Storage(local_res)
 
     assert mem.health_check()

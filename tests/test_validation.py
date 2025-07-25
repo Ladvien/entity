@@ -76,7 +76,8 @@ def test_plugin_config_validation():
 def test_workflow_compatibility_pass(tmp_path):
     cfg_file = tmp_path / "good.yml"
     cfg_file.write_text(
-        "resources: {}\nworkflow:\n  think: ['entity.plugins.examples.reason_generator.ReasonGenerator']"
+        "resources: {}\nworkflow:\n  think: ["
+        "'entity.plugins.examples.reason_generator.ReasonGenerator']"
     )
     cfg = validate_config(cfg_file)
     wf = validate_workflow_compatibility(cfg)
@@ -86,7 +87,8 @@ def test_workflow_compatibility_pass(tmp_path):
 def test_workflow_compatibility_fail(tmp_path):
     cfg_file = tmp_path / "bad.yml"
     cfg_file.write_text(
-        "resources: {}\nworkflow:\n  parse: ['entity.plugins.examples.reason_generator.ReasonGenerator']"
+        "resources: {}\nworkflow:\n  parse: ["
+        "'entity.plugins.examples.reason_generator.ReasonGenerator']"
     )
     cfg = validate_config(cfg_file)
     with pytest.raises(WorkflowConfigError):

@@ -46,7 +46,10 @@ def test_nested_substitution_in_docker(tmp_path):
             "python:3.11-slim",
             "sh",
             "-c",
-            f"pip install /data/wheel/{wheel_path.name} --no-deps >/tmp/pip.log && python /data/run.py",
+            (
+                f"pip install /data/wheel/{wheel_path.name} --no-deps >/tmp/pip.log"
+                " && python /data/run.py"
+            ),
         ],
         text=True,
     ).strip()
