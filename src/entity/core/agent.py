@@ -1,7 +1,7 @@
 # TODO: Use absolute imports
-from ..defaults import load_defaults
-from ..plugins.defaults import default_workflow
-from ..workflow import WorkflowExecutor
+from entity.defaults import load_defaults
+from entity.plugins.defaults import default_workflow
+from entity.workflow import WorkflowExecutor
 
 
 class Agent:

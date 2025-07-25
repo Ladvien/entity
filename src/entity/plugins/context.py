@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from ..tools.sandbox import SandboxedToolRunner
-from ..tools.registry import ToolInfo
+from entity.tools.sandbox import SandboxedToolRunner
+from entity.tools.registry import ToolInfo
 from pydantic import BaseModel, ValidationError
 
 
@@ -18,7 +18,7 @@ class WorkflowContext:
     def say(self, message: str) -> None:
         """Store the final response only during the OUTPUT stage."""
 
-        from ..workflow.executor import WorkflowExecutor
+        from entity.workflow.executor import WorkflowExecutor
 
         if self.current_stage != WorkflowExecutor.OUTPUT:
             raise RuntimeError("context.say() only allowed in OUTPUT stage")
@@ -130,6 +130,6 @@ class PluginContext(WorkflowContext):
 
     def discover_tools(self, **filters: Any):
         """Return registered tools filtered by ``filters``."""
-        from ..tools.registry import discover_tools
+        from entity.tools.registry import discover_tools
 
         return discover_tools(**filters)

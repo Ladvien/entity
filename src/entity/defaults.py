@@ -5,10 +5,10 @@ import tempfile
 from dataclasses import dataclass
 
 # TODO: Do not use relative imports
-from .infrastructure.duckdb_infra import DuckDBInfrastructure
-from .infrastructure.ollama_infra import OllamaInfrastructure
-from .infrastructure.local_storage_infra import LocalStorageInfrastructure
-from .resources import (
+from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
+from entity.infrastructure.ollama_infra import OllamaInfrastructure
+from entity.infrastructure.local_storage_infra import LocalStorageInfrastructure
+from entity.resources import (
     DatabaseResource,
     VectorStoreResource,
     LLMResource,

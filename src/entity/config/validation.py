@@ -10,8 +10,8 @@ from pydantic import BaseModel, ValidationError
 import yaml
 
 # TODO: Use absolute imports
-from ..workflow.workflow import Workflow, WorkflowConfigError
-from ..workflow.executor import WorkflowExecutor
+from entity.workflow.workflow import Workflow, WorkflowConfigError
+from entity.workflow.executor import WorkflowExecutor
 
 REQUIRED_KEYS = {"resources", "workflow"}
 

@@ -3,10 +3,10 @@ from __future__ import annotations
 import sys
 from typing import Any
 
-from ..plugins.input_adapter import InputAdapterPlugin
-from ..plugins.output_adapter import OutputAdapterPlugin
-from ..workflow.executor import WorkflowExecutor
-from ..plugins.context import PluginContext
+from entity.plugins.input_adapter import InputAdapterPlugin
+from entity.plugins.output_adapter import OutputAdapterPlugin
+from entity.workflow.executor import WorkflowExecutor
+from entity.plugins.context import PluginContext
 
 
 class EntCLIAdapter(InputAdapterPlugin, OutputAdapterPlugin):

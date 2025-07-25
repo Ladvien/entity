@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import Any, Iterable
 from itertools import count
 
-from ..resources.logging import LoggingResource
-from ..resources.metrics import MetricsCollectorResource
+from entity.resources.logging import LoggingResource
+from entity.resources.metrics import MetricsCollectorResource
 
-from ..plugins.context import PluginContext
+from entity.plugins.context import PluginContext
 
 
 class WorkflowExecutor:

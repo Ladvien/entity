@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from ..base import Plugin
-from ...cli.ent_cli_adapter import EntCLIAdapter
+from entity.plugins.base import Plugin
+from entity.cli.ent_cli_adapter import EntCLIAdapter
 
 
 class InputPlugin(Plugin):

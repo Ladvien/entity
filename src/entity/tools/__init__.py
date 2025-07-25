@@ -1,10 +1,10 @@
-from .registry import (
+from entity.tools.registry import (
     discover_tools,
     register_tool,
     ToolInfo,
     clear_registry,
 )
-from .sandbox import SandboxedToolRunner
+from entity.tools.sandbox import SandboxedToolRunner
 
 __all__ = [
     "discover_tools",

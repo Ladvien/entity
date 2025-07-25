@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import ast
 import operator
-from ..tool import ToolPlugin
-from ...workflow.executor import WorkflowExecutor
+from entity.plugins.tool import ToolPlugin
+from entity.workflow.executor import WorkflowExecutor
 
 
 _ALLOWED_OPS = {

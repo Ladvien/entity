@@ -6,8 +6,8 @@ from typing import Dict, Iterable, List, Type
 
 import yaml
 
-from ..plugins.base import Plugin
-from .executor import WorkflowExecutor
+from entity.plugins.base import Plugin
+from entity.workflow.executor import WorkflowExecutor
 
 
 class WorkflowConfigError(Exception):
