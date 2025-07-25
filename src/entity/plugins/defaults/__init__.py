@@ -36,8 +36,11 @@ class ReviewPlugin(Plugin):
 
 class OutputPlugin(Plugin):
     async def _execute_impl(self, context) -> str:  # noqa: D401
-        """Return final response."""
-        return context.message or ""
+        """Return final response and terminate the workflow."""
+
+        message = context.message or ""
+        context.say(message)
+        return message
 
 
 def default_workflow() -> list[type[Plugin]]:
