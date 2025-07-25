@@ -52,6 +52,8 @@ class WorkflowExecutor:
             context.loop_count = loop_count
             for stage in self._ORDER:
                 result = await self._run_stage(stage, context, result, user_id)
+                if context.current_stage == self.ERROR:
+                    return result
                 if stage == self.OUTPUT and context.response is not None:
                     return context.response
             if not output_configured:
@@ -84,6 +86,8 @@ class WorkflowExecutor:
                     result = await plugin.run(result, user_id)
             except Exception as exc:  # pragma: no cover - runtime errors
                 await self._handle_error(context, exc.__cause__ or exc, user_id)
+                if context.response is not None:
+                    return context.response
                 raise
 
         await context.run_tool_queue()
@@ -104,3 +108,5 @@ class WorkflowExecutor:
                 await plugin.execute(context)
             else:  # pragma: no cover - legacy hook
                 await plugin.run(str(exc), user_id)
+        await context.run_tool_queue()
+        await context.flush_state()
