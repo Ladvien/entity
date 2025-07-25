@@ -2,7 +2,25 @@ from __future__ import annotations
 
 import asyncio
 import json
+from pathlib import Path
 from typing import Any
+
+import fcntl
+
+
+class _InterProcessLock:
+    """Simple file-based lock for cross-process synchronization."""
+
+    def __init__(self, path: str) -> None:
+        self._file = open(path, "w")
+
+    async def __aenter__(self) -> "_InterProcessLock":
+        await asyncio.to_thread(fcntl.flock, self._file, fcntl.LOCK_EX)
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        await asyncio.to_thread(fcntl.flock, self._file, fcntl.LOCK_UN)
+
 
 from entity.resources.database import DatabaseResource
 from entity.resources.vector_store import VectorStoreResource
@@ -26,7 +44,14 @@ class Memory:
         self.database = database
         self.vector_store = vector_store
         self._lock = asyncio.Lock()
-        self._ensure_table()
+        db_path = getattr(self.database.infrastructure, "file_path", None)
+        lock_file = (
+            Path(str(db_path)).with_suffix(".lock") if db_path is not None else None
+        )
+        self._process_lock = (
+            _InterProcessLock(str(lock_file)) if lock_file is not None else None
+        )
+        self._table_ready = False
 
     def health_check(self) -> bool:
         """Return ``True`` if both underlying resources are healthy."""
@@ -52,35 +77,62 @@ class Memory:
     # Persistent key-value storage helpers
     # ------------------------------------------------------------------
 
-    def _ensure_table(self) -> None:
+    async def _ensure_table(self) -> None:
         """Create the backing table if it doesn't exist."""
 
-        self.database.execute(
-            "CREATE TABLE IF NOT EXISTS memory (key TEXT PRIMARY KEY, value TEXT)"
+        if self._table_ready:
+            return
+        await asyncio.to_thread(
+            self.database.execute,
+            "CREATE TABLE IF NOT EXISTS memory (key TEXT PRIMARY KEY, value TEXT)",
         )
+        self._table_ready = True
 
     async def store(self, key: str, value: Any) -> None:
         """Persist ``value`` for ``key`` asynchronously."""
 
         serialized = json.dumps(value)
-        async with self._lock:
-            await asyncio.to_thread(
-                self.database.execute,
-                "INSERT OR REPLACE INTO memory (key, value) VALUES (?, ?)",
-                key,
-                serialized,
-            )
+        if self._process_lock is not None:
+            async with self._process_lock:
+                await self._ensure_table()
+                async with self._lock:
+                    await asyncio.to_thread(
+                        self.database.execute,
+                        "INSERT OR REPLACE INTO memory (key, value) VALUES (?, ?)",
+                        key,
+                        serialized,
+                    )
+        else:
+            async with self._lock:
+                await self._ensure_table()
+                await asyncio.to_thread(
+                    self.database.execute,
+                    "INSERT OR REPLACE INTO memory (key, value) VALUES (?, ?)",
+                    key,
+                    serialized,
+                )
 
     async def load(self, key: str, default: Any | None = None) -> Any:
         """Retrieve the stored value for ``key`` or ``default`` if missing."""
-
-        async with self._lock:
-            relation = await asyncio.to_thread(
-                self.database.execute,
-                "SELECT value FROM memory WHERE key = ?",
-                key,
-            )
-            row = relation.fetchone()
+        if self._process_lock is not None:
+            async with self._process_lock:
+                await self._ensure_table()
+                async with self._lock:
+                    relation = await asyncio.to_thread(
+                        self.database.execute,
+                        "SELECT value FROM memory WHERE key = ?",
+                        key,
+                    )
+                    row = relation.fetchone()
+        else:
+            async with self._lock:
+                await self._ensure_table()
+                relation = await asyncio.to_thread(
+                    self.database.execute,
+                    "SELECT value FROM memory WHERE key = ?",
+                    key,
+                )
+                row = relation.fetchone()
         if row is None:
             return default
         return json.loads(row[0])
