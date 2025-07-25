@@ -35,6 +35,7 @@ def validate_config(path: str | Path) -> ConfigModel:
 
     missing = REQUIRED_KEYS - data.keys()
     if missing:
+        # TODO: Use explaining variables
         raise ValueError(f"Missing required keys: {', '.join(sorted(missing))}")
 
     try:
@@ -43,7 +44,7 @@ def validate_config(path: str | Path) -> ConfigModel:
         raise ValueError(f"Invalid configuration:\n{exc}") from exc
 
 
-# TODO: Orphan function, consider removing or refactoring into a class method
+# TODO: Orphan function refactor into a class method
 def validate_workflow(workflow: Workflow) -> None:
     """Validate plugin stages for a ``Workflow``."""
     for stage, plugins in workflow.steps.items():

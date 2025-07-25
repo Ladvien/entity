@@ -22,6 +22,8 @@ class SubstitutionError(ValueError):
     pass
 
 
+# TODO: Refactor using Extract Method, Extract Variable, and
+# Single Responsibility Principle
 class VariableResolver:
     """Resolve ``${VAR}`` patterns recursively with cycle detection."""
 
@@ -31,6 +33,7 @@ class VariableResolver:
         self.env: dict[str, str] = dict(os.environ)
 
         env_path = Path(env_file or ".env")
+        # TODO: Refactor for readability
         if env_path.exists():
             for line in env_path.read_text().splitlines():
                 if not line or line.startswith("#") or "=" not in line:
@@ -62,6 +65,7 @@ class VariableResolver:
         return self._pattern.sub(replace, value)
 
 
+# TODO: Refactor to use a class method or static method
 def substitute_variables(obj: Any, env_file: str | None = None) -> Any:
     """Public helper to substitute environment variables in ``obj``."""
 
