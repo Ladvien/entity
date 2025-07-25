@@ -13,7 +13,12 @@ import re
 from pathlib import Path
 from typing import Any
 
-from entity.config.validation import ConfigModel, validate_config, validate_workflow
+from functools import lru_cache
+from entity.config.validation import (
+    ConfigModel,
+    validate_config,
+    validate_workflow,
+)
 
 
 class SubstitutionError(ValueError):
@@ -73,6 +78,26 @@ def substitute_variables(obj: Any, env_file: str | None = None) -> Any:
     return resolver.substitute(obj)
 
 
+@lru_cache(maxsize=32)
+def _cached_validate(path: str) -> ConfigModel:
+    """Internal helper cached by path."""
+
+    return validate_config(path)
+
+
+def load_config(path: str | Path) -> ConfigModel:
+    """Load and validate ``path`` with caching."""
+
+    resolved = str(Path(path).resolve())
+    return _cached_validate(resolved)
+
+
+def clear_config_cache() -> None:
+    """Reset the internal configuration cache."""
+
+    _cached_validate.cache_clear()
+
+
 __all__ = [
     "validate_config",
     "validate_workflow",
@@ -80,4 +105,6 @@ __all__ = [
     "SubstitutionError",
     "VariableResolver",
     "substitute_variables",
+    "load_config",
+    "clear_config_cache",
 ]

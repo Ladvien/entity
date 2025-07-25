@@ -1,0 +1,8 @@
+resources: {}
+workflow:
+  parse:
+    - entity.plugins.defaults.ParsePlugin
+  think:
+    - entity.plugins.defaults.ThinkPlugin
+  output:
+    - entity.plugins.defaults.OutputPlugin
