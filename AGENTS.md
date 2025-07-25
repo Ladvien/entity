@@ -7,6 +7,7 @@ Use this document when preparing changes or reviewing pull requests.
 - **CRITICAL:** Before beginning any work, please read the this file completely. You _must_ comply with the architecture defined below.
 - If something is not explicitly stated in this document, it is **not** allowed.  Create a `AGENT NOTE:` instead.
 - The project is unreleased.  Do not support legacy, deprecated, or backwards compatibility.
+- Prefer `Protocol` over inheritance for interfaces.
 - Prefer adding `TODO:` comments when scope is unclear.
 - Please use explaining variables.
 - Create `AGENT NOTE:` comments for other agents.
