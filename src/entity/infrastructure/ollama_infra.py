@@ -45,9 +45,14 @@ class OllamaInfrastructure(BaseInfrastructure):
         try:
             response = httpx.get(f"{self.base_url}/api/tags", timeout=2)
             response.raise_for_status()
+            self.logger.debug("Health check succeeded for %s", self.base_url)
             return True
         except Exception as exc:
+<<<<<<< HEAD
             if self.auto_install:
                 self.logger.debug("Health check failed: %s", exc)
                 OllamaInstaller.ensure_installed()
+=======
+            self.logger.warning("Health check failed for %s: %s", self.base_url, exc)
+>>>>>>> pr-1927
             return False
