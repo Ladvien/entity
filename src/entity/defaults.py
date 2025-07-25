@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
 from entity.infrastructure.ollama_infra import OllamaInfrastructure
 from entity.infrastructure.local_storage_infra import LocalStorageInfrastructure
-from entity.infrastructure.ollama_installer import OllamaInstaller
+from entity.installers.ollama import OllamaInstaller
 from entity.resources import (
     DatabaseResource,
     VectorStoreResource,
@@ -77,27 +77,29 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
         logger.debug("Falling back to in-memory DuckDB")
         duckdb = DuckDBInfrastructure(":memory:")
 
-<<<<<<< HEAD
     ollama = OllamaInfrastructure(
-        cfg.ollama_url, cfg.ollama_model, auto_install=cfg.auto_install_ollama
+        cfg.ollama_url,
+        cfg.ollama_model,
+        auto_install=cfg.auto_install_ollama,
     )
+    logger.debug("Checking local Ollama at %s", cfg.ollama_url)
     if ollama.health_check():
         if cfg.auto_install_ollama:
             from entity.installers.ollama import OllamaInstaller
 
             OllamaInstaller.pull_default_model(cfg.ollama_model)
     else:
-        ollama = _NullLLMInfrastructure()
-=======
-    ollama = OllamaInfrastructure(cfg.ollama_url, cfg.ollama_model)
-    logger.debug("Checking local Ollama at %s", cfg.ollama_url)
-    if not ollama.health_check():
         logger.debug("Ollama not reachable; attempting installation")
-        OllamaInstaller.ensure_installed()
-        if not ollama.health_check():
+        if cfg.auto_install_ollama:
+            OllamaInstaller.ensure_installed()
+            if ollama.health_check():
+                OllamaInstaller.pull_default_model(cfg.ollama_model)
+            else:
+                logger.warning("Using stub LLM implementation")
+                ollama = _NullLLMInfrastructure()
+        else:
             logger.warning("Using stub LLM implementation")
             ollama = _NullLLMInfrastructure()
->>>>>>> pr-1927
 
     storage_infra = LocalStorageInfrastructure(cfg.storage_path)
     if not storage_infra.health_check():

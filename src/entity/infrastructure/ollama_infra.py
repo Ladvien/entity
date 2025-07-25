@@ -48,11 +48,8 @@ class OllamaInfrastructure(BaseInfrastructure):
             self.logger.debug("Health check succeeded for %s", self.base_url)
             return True
         except Exception as exc:
-<<<<<<< HEAD
-            if self.auto_install:
-                self.logger.debug("Health check failed: %s", exc)
-                OllamaInstaller.ensure_installed()
-=======
             self.logger.warning("Health check failed for %s: %s", self.base_url, exc)
->>>>>>> pr-1927
+            if self.auto_install:
+                self.logger.debug("Attempting automatic Ollama install")
+                OllamaInstaller.ensure_installed()
             return False
