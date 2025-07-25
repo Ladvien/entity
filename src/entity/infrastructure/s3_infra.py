@@ -1,12 +1,15 @@
 import aioboto3
 
+from .base import BaseInfrastructure
 
-class S3Infrastructure:
+
+class S3Infrastructure(BaseInfrastructure):
     """Layer 1 infrastructure for interacting with an S3 bucket."""
 
-    def __init__(self, bucket: str) -> None:
+    def __init__(self, bucket: str, version: str | None = None) -> None:
         """Configure the target bucket."""
 
+        super().__init__(version)
         self.bucket = bucket
         self._session: aioboto3.Session | None = None
 
@@ -21,6 +24,14 @@ class S3Infrastructure:
         """Create an S3 client from the session."""
 
         return self.session().client("s3")
+
+    async def startup(self) -> None:  # pragma: no cover - thin wrapper
+        await super().startup()
+        self._session = aioboto3.Session()
+        self.logger.info("Using bucket %s", self.bucket)
+
+    async def shutdown(self) -> None:  # pragma: no cover - thin wrapper
+        await super().shutdown()
 
     def health_check(self) -> bool:
         """Return ``True`` if the bucket is reachable."""

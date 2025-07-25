@@ -1,12 +1,15 @@
 from pathlib import Path
 
+from .base import BaseInfrastructure
 
-class LocalStorageInfrastructure:
+
+class LocalStorageInfrastructure(BaseInfrastructure):
     """Layer 1 infrastructure for storing files on the local filesystem."""
 
-    def __init__(self, base_path: str) -> None:
+    def __init__(self, base_path: str, version: str | None = None) -> None:
         """Create the infrastructure rooted at ``base_path``."""
 
+        super().__init__(version)
         self.base_path = Path(base_path)
         self.base_path.mkdir(parents=True, exist_ok=True)
 
@@ -24,3 +27,10 @@ class LocalStorageInfrastructure:
             return True
         except Exception:
             return False
+
+    async def startup(self) -> None:  # pragma: no cover - thin wrapper
+        await super().startup()
+        self.logger.info("Storage path %s ready", self.base_path)
+
+    async def shutdown(self) -> None:  # pragma: no cover - thin wrapper
+        await super().shutdown()

@@ -4,13 +4,18 @@ from contextlib import contextmanager
 from queue import Empty, Full, Queue
 from typing import Generator
 
+from .base import BaseInfrastructure
 
-class DuckDBInfrastructure:
+
+class DuckDBInfrastructure(BaseInfrastructure):
     """Layer 1 infrastructure for managing a DuckDB database file."""
 
-    def __init__(self, file_path: str, pool_size: int = 5) -> None:
+    def __init__(
+        self, file_path: str, pool_size: int = 5, version: str | None = None
+    ) -> None:
         """Create the infrastructure with a simple connection pool."""
 
+        super().__init__(version)
         self.file_path = file_path
         self._pool: Queue = Queue(maxsize=pool_size)
 
@@ -37,6 +42,15 @@ class DuckDBInfrastructure:
             yield conn
         finally:
             self._release(conn)
+
+    async def startup(self) -> None:  # pragma: no cover - thin wrapper
+        await super().startup()
+        self.logger.info("DuckDB file %s ready", self.file_path)
+
+    async def shutdown(self) -> None:  # pragma: no cover - thin wrapper
+        await super().shutdown()
+        while not self._pool.empty():
+            self._pool.get_nowait().close()
 
     def health_check(self) -> bool:
         """Return ``True`` if the database can be opened."""

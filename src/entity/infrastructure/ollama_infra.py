@@ -1,12 +1,15 @@
 import httpx
 
+from .base import BaseInfrastructure
 
-class OllamaInfrastructure:
+
+class OllamaInfrastructure(BaseInfrastructure):
     """Layer 1 infrastructure for communicating with an Ollama server."""
 
-    def __init__(self, base_url: str, model: str) -> None:
+    def __init__(self, base_url: str, model: str, version: str | None = None) -> None:
         """Configure the client base URL and model."""
 
+        super().__init__(version)
         self.base_url = base_url.rstrip("/")
         self.model = model
 
@@ -20,6 +23,13 @@ class OllamaInfrastructure:
             response.raise_for_status()
             data = response.json()
             return data.get("response", "")
+
+    async def startup(self) -> None:  # pragma: no cover - thin wrapper
+        await super().startup()
+        self.logger.info("Ollama endpoint %s", self.base_url)
+
+    async def shutdown(self) -> None:  # pragma: no cover - thin wrapper
+        await super().shutdown()
 
     def health_check(self) -> bool:
         """Return ``True`` if the Ollama server responds."""
