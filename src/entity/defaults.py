@@ -16,15 +16,9 @@ from entity.resources import (
     Memory,
     LLM,
     LocalStorageResource,
-<<<<<<< HEAD
     FileStorage,
-    ConsoleLoggingResource,
-    JSONLoggingResource,
-=======
-    Storage,
     RichConsoleLoggingResource,
     RichJSONLoggingResource,
->>>>>>> pr-1957
 )
 
 
