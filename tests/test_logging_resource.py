@@ -19,7 +19,7 @@ async def test_console_logging(capsys):
     await logger.log(LogLevel.INFO, LogCategory.USER_ACTION, "hello", ctx)
     captured = capsys.readouterr().out
     assert "hello" in captured
-    assert logger.records[0]["level"] == LogLevel.INFO
+    assert logger.records[0]["level"] == LogLevel.INFO.value
 
 
 @pytest.mark.asyncio

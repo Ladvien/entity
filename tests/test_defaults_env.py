@@ -2,6 +2,8 @@ from entity.defaults import load_defaults
 
 
 def test_env_overrides(monkeypatch, tmp_path):
+    monkeypatch.setenv("ENTITY_AUTO_INSTALL_OLLAMA", "0")
+    monkeypatch.setenv("ENTITY_AUTO_INSTALL_VLLM", "0")
     monkeypatch.setenv("ENTITY_DUCKDB_PATH", str(tmp_path / "custom.db"))
     monkeypatch.setenv("ENTITY_OLLAMA_URL", "http://example.com")
     monkeypatch.setenv("ENTITY_OLLAMA_MODEL", "dummy")
