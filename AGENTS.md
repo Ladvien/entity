@@ -37,7 +37,7 @@ Agent = Resources + Workflow + Infrastructure
 ```
 
 An **Agent** consists of three primary components:
-- **Resources**: Shared capabilities (LLM, Memory, Storage) that plugins can access
+- **Resources**: Shared capabilities (LLM, Memory, FileStorage, Logging) that plugins can access
 - **Workflow**: Stage-specific plugin assignments that define the agent's processing behavior and personality  
 - **Infrastructure**: Deployment and scaling patterns from local Docker to cloud production
 
@@ -57,23 +57,24 @@ The framework uses strict dependency layers to prevent circular dependencies and
 ```python
 # Layer 1: Infrastructure Primitives (concrete technology)
 duckdb_infra = DuckDBInfrastructure("./agent_memory.duckdb")
-vllm_infra = VLLMInfrastructure(auto_detect_model=True)  # NEW: vLLM default
+vllm_infra = VLLMInfrastructure(auto_detect_model=True)  # Primary default
 ollama_infra = OllamaInfrastructure("http://localhost:11434", "llama3.2:3b")  # Fallback
-s3_infra = S3Infrastructure(bucket="my-bucket")
+local_storage_infra = LocalStorageInfrastructure("./agent_files")
 
 # Layer 2: Resource Interfaces (technology-agnostic APIs)
 db_resource = DatabaseResource(duckdb_infra)
 vector_resource = VectorStoreResource(duckdb_infra) 
-llm_resource = LLMResource(vllm_infra)  # NEW: Uses vLLM by default
-storage_resource = StorageResource(s3_infra)
+llm_resource = LLMResource(vllm_infra)  # Uses vLLM by default
+storage_resource = StorageResource(local_storage_infra)
 
 # Layer 3: Canonical Agent Resources (guaranteed building blocks)
 memory = Memory(db_resource, vector_resource)  # Constructor injection
 llm = LLM(llm_resource)
-storage = Storage(storage_resource)
+file_storage = FileStorage(storage_resource)
+logging = LoggingResource()  # Rich-based structured logging
 
 # Layer 4: Agent with Workflow (resources + processing workflow)
-agent = Agent(resources=[memory, llm, storage], workflow=my_workflow)
+agent = Agent(resources=[memory, llm, file_storage, logging], workflow=my_workflow)
 ```
 
 ### Resource Dependency Rules
@@ -108,13 +109,14 @@ class SmartMemory(AgentResource):
 
 ### Core Canonical Resources (Layer 3)
 
-The framework guarantees these three resources are available to every workflow:
+The framework guarantees these four resources are available to every workflow:
 
 ```python
 class StandardResources:
-    llm: LLM           # Unified LLM interface for reasoning
-    memory: Memory     # External persistence for conversations and data  
-    storage: Storage   # File and object storage capabilities
+    llm: LLM                    # Unified LLM interface for reasoning
+    memory: Memory              # External persistence for conversations and data  
+    file_storage: FileStorage   # File and object storage capabilities
+    logging: LoggingResource    # Rich-based structured logging
 ```
 
 ## 6-Stage Workflow
@@ -143,8 +145,13 @@ class ReasoningPlugin(PromptPlugin):
     stage = THINK
     
     async def _execute_impl(self, context: PluginContext) -> None:
+        logger = context.get_resource("logging")
+        await logger.log(LogLevel.INFO, LogCategory.PLUGIN_LIFECYCLE, "Starting reasoning")
+        
         analysis = await self.call_llm(context, "Analyze this request...")
         await context.remember("reasoning_result", analysis.content)
+        
+        await logger.log(LogLevel.DEBUG, LogCategory.MEMORY_OPERATION, "Stored reasoning result")
         # No context.say() - plugin cannot terminate workflow
 
 # OUTPUT stage - compose final response and terminate
@@ -152,10 +159,14 @@ class ResponsePlugin(PromptPlugin):
     stage = OUTPUT
     
     async def _execute_impl(self, context: PluginContext) -> None:
+        logger = context.get_resource("logging")
+        await logger.log(LogLevel.INFO, LogCategory.PLUGIN_LIFECYCLE, "Formatting final response")
+        
         reasoning = await context.recall("reasoning_result", "")
         response = await self.call_llm(context, f"Respond based on: {reasoning}")
         
         await context.say(response.content)  # This terminates the workflow
+        await logger.log(LogLevel.INFO, LogCategory.WORKFLOW_EXECUTION, "Workflow completed")
 ```
 
 **Workflow continues looping through all stages until an OUTPUT plugin calls `context.say()`**
@@ -173,9 +184,10 @@ from entity import Agent
 agent = Agent()  # Automatically uses Layer 0 defaults
 
 # Automatically configured:
-# - vLLM with auto-detected optimal model (NEW: primary default)
+# - vLLM with auto-detected optimal model (primary default)
 # - DuckDB Memory (./agent_memory.duckdb)
 # - LocalFileSystem Storage (./agent_files/)
+# - Rich-based Console Logging
 # - Default workflow with basic plugins per stage
 
 response = await agent.chat("What's 5 * 7?")
@@ -202,14 +214,14 @@ response = await agent.chat("What's 15 * 23?")
 
 ```python
 # 1. No Configuration → Layer 0 Defaults
-agent = Agent()  # Uses vLLM + DuckDB + LocalFileSystem
+agent = Agent()  # Uses vLLM + DuckDB + LocalFileSystem + Rich Console
 
 # 2. Partial Configuration → Selective Override  
 agent = Agent.from_config({
     "plugins": {
         "resources": {
             "llm": {"type": "openai", "model": "gpt-4"}
-            # memory, storage use Layer 0 defaults
+            # memory, file_storage, logging use Layer 0 defaults
         }
     }
 })
@@ -218,7 +230,7 @@ agent = Agent.from_config({
 agent = Agent.from_config("config.yaml")  # Everything explicit
 ```
 
-### NEW: vLLM Infrastructure Integration
+### vLLM Infrastructure Integration
 
 #### Automatic Model Selection and Resource Detection
 
@@ -285,7 +297,7 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
     cfg = config or DefaultConfig.from_env()
     logger = logging.getLogger("defaults")
 
-    # Try vLLM first (NEW: primary default)
+    # Try vLLM first (primary default)
     if cfg.auto_install_vllm:
         try:
             VLLMInstaller.ensure_vllm_available()
@@ -313,8 +325,8 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
     return {
         "memory": Memory(db_resource, vector_resource),
         "llm": LLM(llm_resource),
-        "storage": Storage(storage_resource),
-        "logging": EnhancedLoggingResource(),  # NEW: Enhanced logging
+        "file_storage": FileStorage(storage_resource),
+        "logging": RichLoggingResource(),  # Rich-based console logging
     }
 ```
 
@@ -352,10 +364,6 @@ class Plugin(ABC):
         """Plugin-specific implementation"""
 ```
 
-Previous `run` hooks have been removed. Plugins must define an `execute`
-method that calls `_execute_impl`. Using a legacy `run` method will trigger a
-`DeprecationWarning` during workflow execution.
-
 ### Plugin Categories with Stage Restrictions
 
 ```python
@@ -387,9 +395,13 @@ class ValidationPlugin(PromptPlugin):
     supported_stages = [PARSE, REVIEW]  # Author-defined limitations
     
     async def _execute_impl(self, context: PluginContext) -> None:
+        logger = context.get_resource("logging")
+        
         if context.current_stage == PARSE:
+            await logger.log(LogLevel.DEBUG, LogCategory.PLUGIN_LIFECYCLE, "Validating input structure")
             await self._validate_input_structure(context)
         elif context.current_stage == REVIEW:
+            await logger.log(LogLevel.DEBUG, LogCategory.PLUGIN_LIFECYCLE, "Validating output quality")
             await self._validate_output_quality(context)
 
 # Workflow can use same plugin in multiple stages
@@ -412,6 +424,122 @@ plugins:
     final_decision: {...}      # Runs third in THINK stage
 ```
 
+## Rich-Based Logging System
+
+### Structured Logging Architecture
+
+```python
+from enum import Enum
+from dataclasses import dataclass
+from typing import Any, Dict
+from rich.console import Console
+from rich.logging import RichHandler
+
+class LogLevel(Enum):
+    DEBUG = "debug"
+    INFO = "info" 
+    WARNING = "warning"
+    ERROR = "error"
+
+class LogCategory(Enum):
+    PLUGIN_LIFECYCLE = "plugin_lifecycle"
+    USER_ACTION = "user_action"
+    RESOURCE_ACCESS = "resource_access"
+    TOOL_USAGE = "tool_usage"
+    MEMORY_OPERATION = "memory_operation"
+    WORKFLOW_EXECUTION = "workflow_execution"
+    PERFORMANCE = "performance"
+    ERROR = "error"
+
+@dataclass
+class LogContext:
+    """Context information injected into every log entry."""
+    user_id: str
+    workflow_id: str | None = None
+    stage: str | None = None
+    plugin_name: str | None = None
+    execution_id: str | None = None
+
+class LoggingResource(ABC):
+    """Rich-based logging with structured output."""
+    
+    @abstractmethod
+    async def log(
+        self,
+        level: LogLevel,
+        category: LogCategory,
+        message: str,
+        context: LogContext | None = None,
+        **extra_fields: Any
+    ) -> None:
+        """Log structured entry with Rich formatting."""
+```
+
+### Environment-Specific Logging Implementations
+
+```python
+# Development: Rich console logging
+class RichConsoleLoggingResource(LoggingResource):
+    """Beautiful Rich console logging for development."""
+    
+    def __init__(self, level: LogLevel = LogLevel.INFO, show_context: bool = True):
+        self.level = level
+        self.show_context = show_context
+        self.console = Console()
+    
+    async def log(self, level, category, message, context=None, **extra_fields):
+        if self._should_log(level):
+            formatted = self._format_rich_entry(level, category, message, context, extra_fields)
+            self.console.print(formatted)
+
+# Production: Structured JSON logging with Rich CLI output
+class RichJSONLoggingResource(LoggingResource):
+    """Rich console + JSON file logging for production."""
+    
+    def __init__(self, level: LogLevel = LogLevel.INFO, output_file: str | None = None):
+        self.level = level
+        self.output_file = output_file
+        self.console = Console()
+    
+    async def log(self, level, category, message, context=None, **extra_fields):
+        if self._should_log(level):
+            # Rich console output for operators
+            rich_entry = self._format_rich_entry(level, category, message, context, extra_fields)
+            self.console.print(rich_entry)
+            
+            # JSON file output for log aggregation
+            json_entry = self._build_json_entry(level, category, message, context, extra_fields)
+            await self._write_json_entry(json_entry)
+```
+
+### Plugin Logging Usage
+
+```python
+class MyPlugin(PromptPlugin):
+    async def _execute_impl(self, context: PluginContext) -> None:
+        logger = context.get_resource("logging")
+        
+        # Simple structured logging - plugins control what to log
+        await logger.log(
+            LogLevel.INFO, 
+            LogCategory.USER_ACTION,
+            "Processing user request",
+            request_type="weather_query"
+        )
+        
+        # Standard resource access
+        llm = context.get_resource("llm")
+        await context.remember("result", data)
+        result = await context.tool_use("weather", location="SF")
+        
+        await logger.log(
+            LogLevel.INFO,
+            LogCategory.PLUGIN_LIFECYCLE, 
+            "Request processing complete",
+            result_size=len(result)
+        )
+```
+
 ## State Management & Context: Persistent Memory Pattern
 
 ### Unified Memory Interface for All State
@@ -421,6 +549,8 @@ The framework uses persistent Memory for all state management - no temporary sto
 ```python
 class BasicPlugin(PromptPlugin):
     async def _execute_impl(self, context: PluginContext) -> None:
+        logger = context.get_resource("logging")
+        
         # All state persisted to Memory - nothing temporary
         await context.remember("analysis_result", result)      # Store persistent data
         analysis = await context.recall("analysis_result")     # Retrieve persistent data
@@ -433,6 +563,8 @@ class BasicPlugin(PromptPlugin):
         await context.say("Here's my response")                # Final response (OUTPUT only)
         history = await context.conversation()                 # Get conversation history
         last_msg = await context.listen()                      # Get last user message
+        
+        await logger.log(LogLevel.DEBUG, LogCategory.MEMORY_OPERATION, "Completed memory operations")
 ```
 
 ### Direct Resource Access for Advanced Operations
@@ -440,6 +572,8 @@ class BasicPlugin(PromptPlugin):
 ```python
 class AdvancedPlugin(PromptPlugin):
     async def _execute_impl(self, context: PluginContext) -> None:
+        logger = context.get_resource("logging")
+        
         # Advanced interface - complex operations
         memory = context.get_resource("memory")
         results = await memory.query("SELECT * FROM user_prefs WHERE category = ?", ["style"])
@@ -451,6 +585,8 @@ class AdvancedPlugin(PromptPlugin):
         
         # Still can use simple memory interface
         await context.remember("search_results", similar)
+        
+        await logger.log(LogLevel.INFO, LogCategory.TOOL_USAGE, "Advanced operations completed")
 ```
 
 ### Inter-Stage Communication via Persistent Memory
@@ -461,25 +597,33 @@ Plugins communicate across stages using persistent memory that survives across w
 # INPUT stage - capture initial request
 class InputPlugin(InputAdapterPlugin):
     async def _execute_impl(self, context: PluginContext) -> None:
+        logger = context.get_resource("logging")
+        await logger.log(LogLevel.INFO, LogCategory.PLUGIN_LIFECYCLE, "Processing input")
         await context.remember("user_intent", "weather query")
 
 # PARSE stage - structure information
 class ParsePlugin(PromptPlugin):
     async def _execute_impl(self, context: PluginContext) -> None:
+        logger = context.get_resource("logging")
         user_intent = await context.recall("user_intent", "")
         await context.remember("location", "San Francisco")
+        await logger.log(LogLevel.DEBUG, LogCategory.MEMORY_OPERATION, "Parsed location")
 
 # THINK stage - analyze and plan
 class ThinkPlugin(PromptPlugin):
     async def _execute_impl(self, context: PluginContext) -> None:
+        logger = context.get_resource("logging")
         location = await context.recall("location", "")
         await context.remember("analysis", f"User wants weather for {location}")
+        await logger.log(LogLevel.INFO, LogCategory.PLUGIN_LIFECYCLE, "Analysis complete")
 
 # OUTPUT stage - compose final response using all persistent data
 class OutputPlugin(OutputAdapterPlugin):
     async def _execute_impl(self, context: PluginContext) -> None:
+        logger = context.get_resource("logging")
         analysis = await context.recall("analysis", "")
         await context.say(f"Based on analysis: {analysis}")
+        await logger.log(LogLevel.INFO, LogCategory.WORKFLOW_EXECUTION, "Response delivered")
 ```
 
 ## Tool System Architecture
@@ -491,11 +635,15 @@ class OutputPlugin(OutputAdapterPlugin):
 ```python
 class ActionPlugin(ToolPlugin):
     async def _execute_impl(self, context: PluginContext) -> None:
+        logger = context.get_resource("logging")
+        
         # Immediate execution - synchronous workflow
+        await logger.log(LogLevel.INFO, LogCategory.TOOL_USAGE, "Starting immediate tool execution")
         weather = await context.tool_use("weather", location="SF")
         await context.remember("weather_data", weather)
         
         # Queued execution - parallel processing
+        await logger.log(LogLevel.DEBUG, LogCategory.TOOL_USAGE, "Queueing parallel tools")
         context.queue_tool_use("search", query="SF weather")
         context.queue_tool_use("news", topic="weather alerts")
         # Tools execute automatically between workflow stages
@@ -508,13 +656,18 @@ class ActionPlugin(ToolPlugin):
 ```python
 class SmartToolSelectorPlugin(PromptPlugin):
     async def _execute_impl(self, context: PluginContext) -> None:
+        logger = context.get_resource("logging")
+        
         # Discover available tools
         available_tools = context.discover_tools(category="weather")
+        await logger.log(LogLevel.DEBUG, LogCategory.TOOL_USAGE, f"Found {len(available_tools)} tools")
         
         # Plugin implements selection logic
         best_tool = self._rank_tools_by_relevance(available_tools, context.message)
         result = await context.tool_use(best_tool.name, location="San Francisco")
         await context.remember("selected_tool", best_tool.name)
+        
+        await logger.log(LogLevel.INFO, LogCategory.TOOL_USAGE, f"Executed tool: {best_tool.name}")
 ```
 
 ## Error Handling & Validation
@@ -545,7 +698,10 @@ class BasicErrorPlugin(FailurePlugin):
     stage = ERROR
     
     async def _execute_impl(self, context: PluginContext) -> None:
+        logger = context.get_resource("logging")
         error_info = context.failure_info
+        
+        await logger.log(LogLevel.ERROR, LogCategory.ERROR, f"Workflow error: {error_info.user_message}")
         await context.say(f"I encountered an error: {error_info.user_message}")
 ```
 
@@ -563,7 +719,11 @@ class WorkflowWorker:
     async def execute_workflow(self, workflow_id: str, message: str, *, user_id: str) -> Any:
         # Load conversation state from external storage each request
         memory = self.registries.resources.get("memory")
+        logging = self.registries.resources.get("logging")
         conversation = await memory.load_conversation(f"{user_id}_{workflow_id}")
+        
+        await logging.log(LogLevel.INFO, LogCategory.WORKFLOW_EXECUTION, 
+                         f"Starting workflow for user {user_id}")
         
         # Execute with ephemeral state (discarded after response)
         state = WorkflowState(conversation=conversation, workflow_id=workflow_id)
@@ -589,8 +749,11 @@ response2 = await agent.chat("Hi there", user_id="user456")  # Completely isolat
 class PluginContext:
     async def remember(self, key: str, value: Any) -> None:
         """User-specific persistent storage with automatic namespacing"""
+        logger = self.get_resource("logging")
         namespaced_key = f"{self.user_id}:{key}"
         await self._memory.store_persistent(namespaced_key, value)
+        await logger.log(LogLevel.DEBUG, LogCategory.MEMORY_OPERATION, 
+                        f"Stored {key} for user {self.user_id}")
 ```
 
 ## Infrastructure & Deployment
@@ -618,24 +781,30 @@ The `ent` command-line tool is implemented as an Adapter supporting both Input a
 
 ```python
 class EntCLIAdapter(InputAdapterPlugin, OutputAdapterPlugin):
-    """CLI tool that handles both input collection and output formatting"""
+    """Rich CLI tool that handles both input collection and output formatting"""
     supported_stages = [INPUT, OUTPUT]
     
+    def __init__(self, resources: dict[str, Any], config: dict[str, Any] | None = None):
+        super().__init__(resources, config)
+        self.console = Console()  # Rich console for beautiful output
+    
     async def _execute_impl(self, context: PluginContext) -> None:
+        logger = context.get_resource("logging")
+        
         if context.current_stage == INPUT:
             await self._handle_cli_input(context)
         elif context.current_stage == OUTPUT:
             await self._format_cli_output(context)
             
     async def _handle_cli_input(self, context: PluginContext) -> None:
-        # Parse command line arguments and user input
-        user_message = self._get_user_input()
+        # Rich input prompts and validation
+        user_message = self._get_rich_user_input()
         await context.remember("cli_input", user_message)
         
     async def _format_cli_output(self, context: PluginContext) -> None:
-        # Format and display response to terminal
+        # Rich formatted output to terminal
         response = await context.recall("final_response", "")
-        self._display_to_terminal(response)
+        self.console.print(Panel(response, title="Agent Response", border_style="green"))
 ```
 
 ### Infrastructure Management Commands
@@ -689,7 +858,7 @@ def substitute_variables(obj: Any, env_file: str = None) -> Any:
 plugins:
   resources:
     llm:
-      type: vllm  # NEW: vLLM configuration
+      type: vllm  # vLLM configuration
       model: ${VLLM_MODEL}
       gpu_memory_utilization: ${GPU_MEMORY_UTIL}
     database:
@@ -745,321 +914,10 @@ ent plugin uninstall weather-plugin
 # Plugin manifest (entity-plugin.yaml in repo root)
 name: weather-plugin
 version: 1.0.0
-permissions: [external_api, storage]
+permissions: [external_api, file_storage]
 dependencies: [requests, aiohttp]
 entry_point: weather_plugin.WeatherPlugin
 supported_stages: [DO, REVIEW]
-```
-
-## Observability & Monitoring
-
-### ENHANCED: Unified Logging System
-
-**Decision**: Enhanced `LoggingResource` provides unified, structured logging across all framework components with automatic context injection and environment-specific formatting.
-
-#### Structured Logging Architecture
-
-```python
-from enum import Enum
-from dataclasses import dataclass
-from typing import Any, Dict
-
-class LogLevel(Enum):
-    DEBUG = "debug"
-    INFO = "info" 
-    WARNING = "warning"
-    ERROR = "error"
-
-class LogCategory(Enum):
-    PLUGIN_LIFECYCLE = "plugin_lifecycle"
-    USER_ACTION = "user_action"
-    RESOURCE_ACCESS = "resource_access"
-    TOOL_USAGE = "tool_usage"
-    MEMORY_OPERATION = "memory_operation"
-    WORKFLOW_EXECUTION = "workflow_execution"
-    PERFORMANCE = "performance"
-    ERROR = "error"
-
-@dataclass
-class LogContext:
-    """Automatic context injected into every log entry."""
-    user_id: str
-    workflow_id: str | None = None
-    stage: str | None = None
-    plugin_name: str | None = None
-    execution_id: str | None = None
-
-class EnhancedLoggingResource(ABC):
-    """Enhanced logging with automatic context and structured output."""
-    
-    @abstractmethod
-    async def log(
-        self,
-        level: LogLevel,
-        category: LogCategory,
-        message: str,
-        context: LogContext | None = None,
-        **extra_fields: Any
-    ) -> None:
-        """Log structured entry with automatic context injection."""
-```
-
-#### Environment-Specific Logging Implementations
-
-```python
-# Development: Pretty console logging
-class ConsoleLoggingResource(EnhancedLoggingResource):
-    """Colored, formatted console logging for development."""
-    
-    def __init__(self, level: LogLevel = LogLevel.INFO, show_context: bool = True):
-        self.level = level
-        self.show_context = show_context
-        self._colors = {
-            LogLevel.DEBUG: "\033[36m",    # Cyan
-            LogLevel.INFO: "\033[32m",     # Green  
-            LogLevel.WARNING: "\033[33m",  # Yellow
-            LogLevel.ERROR: "\033[31m",    # Red
-        }
-    
-    async def log(self, level, category, message, context=None, **extra_fields):
-        if self._should_log(level):
-            formatted = self._format_console_entry(level, category, message, context, extra_fields)
-            print(formatted)
-
-# Production: Structured JSON logging  
-class JSONLoggingResource(EnhancedLoggingResource):
-    """Structured JSON logging for production environments."""
-    
-    def __init__(self, level: LogLevel = LogLevel.INFO, output_file: str | None = None):
-        self.level = level
-        self.output_file = output_file
-    
-    async def log(self, level, category, message, context=None, **extra_fields):
-        if self._should_log(level):
-            entry = self._build_json_entry(level, category, message, context, extra_fields)
-            await self._write_entry(entry)
-```
-
-#### Enhanced Plugin Context with Automatic Logging
-
-```python
-class PluginContext(WorkflowContext):
-    """Enhanced context with comprehensive automatic logging."""
-    
-    def __init__(
-        self,
-        resources: Dict[str, Any],
-        user_id: str,
-        workflow_id: str | None = None,
-        execution_id: str | None = None,
-        memory: Any | None = None,
-    ) -> None:
-        super().__init__()
-        # ... existing initialization ...
-        self._log_context = LogContext(
-            user_id=user_id,
-            workflow_id=workflow_id or self._generate_workflow_id(),
-            execution_id=execution_id or self._generate_execution_id()
-        )
-    
-    async def log(
-        self,
-        level: LogLevel,
-        category: LogCategory,
-        message: str,
-        **extra_fields: Any
-    ) -> None:
-        """Convenience method with automatic context injection."""
-        logger = self.get_resource("logging")
-        if logger:
-            context = LogContext(
-                user_id=self._log_context.user_id,
-                workflow_id=self._log_context.workflow_id,
-                stage=self.current_stage,
-                plugin_name=getattr(self, '_current_plugin_name', None),
-                execution_id=self._log_context.execution_id
-            )
-            await logger.log(level, category, message, context, **extra_fields)
-```
-
-#### Enhanced Plugin Base Class with Comprehensive Logging
-
-```python
-class Plugin(ABC):
-    """Enhanced base class with automatic comprehensive logging."""
-    
-    async def execute(self, context: Any) -> Any:
-        """Enhanced execution with comprehensive automatic logging."""
-        context._current_plugin_name = self.__class__.__name__
-        start_time = time.perf_counter()
-        
-        # Plugin lifecycle logging
-        await context.log(
-            LogLevel.INFO,
-            LogCategory.PLUGIN_LIFECYCLE,
-            "Starting plugin execution",
-            plugin_class=self.__class__.__name__,
-            stage=context.current_stage,
-            dependencies=self.dependencies
-        )
-        
-        try:
-            # Execute with automatic resource access logging
-            result = await self._execute_with_logging(context)
-            
-            # Success logging
-            await context.log(
-                LogLevel.INFO,
-                LogCategory.PLUGIN_LIFECYCLE,
-                "Plugin execution completed successfully",
-                duration_ms=(time.perf_counter() - start_time) * 1000,
-                result_type=type(result).__name__
-            )
-            
-            return result
-            
-        except Exception as exc:
-            # Error logging with full context
-            await context.log(
-                LogLevel.ERROR,
-                LogCategory.ERROR,
-                f"Plugin execution failed: {str(exc)}",
-                exception_type=exc.__class__.__name__,
-                duration_ms=(time.perf_counter() - start_time) * 1000,
-                traceback=traceback.format_exc()
-            )
-            raise
-    
-    async def _execute_with_logging(self, context: Any) -> Any:
-        """Wrapper that adds automatic logging for all context operations."""
-        # Monkey-patch context methods to add comprehensive logging
-        original_get_resource = context.get_resource
-        original_remember = context.remember
-        original_recall = context.recall
-        original_tool_use = context.tool_use
-        
-        async def logged_get_resource(name: str):
-            await context.log(
-                LogLevel.DEBUG,
-                LogCategory.RESOURCE_ACCESS,
-                f"Accessing resource: {name}"
-            )
-            return original_get_resource(name)
-        
-        async def logged_remember(key: str, value: Any):
-            await context.log(
-                LogLevel.DEBUG,
-                LogCategory.MEMORY_OPERATION,
-                f"Storing memory key: {key}",
-                value_type=type(value).__name__
-            )
-            return await original_remember(key, value)
-        
-        async def logged_recall(key: str, default: Any = None):
-            result = await original_recall(key, default)
-            await context.log(
-                LogLevel.DEBUG,
-                LogCategory.MEMORY_OPERATION,
-                f"Retrieved memory key: {key}",
-                found=result is not None,
-                value_type=type(result).__name__ if result is not None else None
-            )
-            return result
-        
-        async def logged_tool_use(name: str, **kwargs):
-            await context.log(
-                LogLevel.INFO,
-                LogCategory.TOOL_USAGE,
-                f"Executing tool: {name}",
-                tool_args=list(kwargs.keys())
-            )
-            start = time.perf_counter()
-            try:
-                result = await original_tool_use(name, **kwargs)
-                await context.log(
-                    LogLevel.INFO,
-                    LogCategory.TOOL_USAGE,
-                    f"Tool execution completed: {name}",
-                    duration_ms=(time.perf_counter() - start) * 1000,
-                    success=True
-                )
-                return result
-            except Exception as exc:
-                await context.log(
-                    LogLevel.ERROR,
-                    LogCategory.TOOL_USAGE,
-                    f"Tool execution failed: {name}",
-                    duration_ms=(time.perf_counter() - start) * 1000,
-                    success=False,
-                    error=str(exc)
-                )
-                raise
-        
-        # Patch context methods
-        context.get_resource = logged_get_resource
-        context.remember = logged_remember
-        context.recall = logged_recall
-        context.tool_use = logged_tool_use
-        
-        try:
-            return await self._execute_impl(context)
-        finally:
-            # Restore original methods
-            context.get_resource = original_get_resource
-            context.remember = original_remember
-            context.recall = original_recall
-            context.tool_use = original_tool_use
-```
-
-#### Developer Experience: Simple Logging API
-
-```python
-# Simple plugin logging - automatic context injection
-class MyPlugin(PromptPlugin):
-    async def _execute_impl(self, context: PluginContext) -> None:
-        # Simple structured logging with automatic context
-        await context.log(
-            LogLevel.INFO, 
-            LogCategory.USER_ACTION,
-            "Processing user request",
-            request_type="weather_query"
-        )
-        
-        # All resource access automatically logged at DEBUG level
-        llm = context.get_resource("llm")  # Auto-logged
-        await context.remember("result", data)  # Auto-logged
-        result = await context.tool_use("weather", location="SF")  # Auto-logged
-        
-        await context.log(
-            LogLevel.INFO,
-            LogCategory.PLUGIN_LIFECYCLE, 
-            "Request processing complete",
-            result_size=len(result)
-        )
-```
-
-### Shared Metrics Collection
-
-**Decision**: `MetricsCollectorResource` automatically injected into all plugins for unified performance tracking:
-
-```python
-class BasePlugin:
-    dependencies = ["metrics_collector"]  # Automatic for all plugins
-    
-    async def execute(self, context: PluginContext) -> Any:
-        # Automatic metric collection wrapper
-        start_time = time.perf_counter()
-        try:
-            result = await self._execute_impl(context)
-            await self.metrics_collector.record_plugin_execution(
-                plugin_name=self.__class__.__name__,
-                duration_ms=(time.perf_counter() - start_time) * 1000,
-                success=True
-            )
-            return result
-        except Exception as e:
-            # Error metrics automatically collected
-            raise
 ```
 
 ## Development Guidelines
@@ -1083,8 +941,9 @@ class MyPlugin(PromptPlugin):
         return ValidationResult.success()
         
     async def _execute_impl(self, context: PluginContext) -> None:
-        # Use enhanced logging for development visibility
-        await context.log(LogLevel.INFO, LogCategory.PLUGIN_LIFECYCLE, "Starting analysis")
+        # Use Rich-based logging for development visibility
+        logger = context.get_resource("logging")
+        await logger.log(LogLevel.INFO, LogCategory.PLUGIN_LIFECYCLE, "Starting analysis")
         
         # Use persistent memory for all state
         await context.remember("my_analysis", analysis_result)
@@ -1095,6 +954,7 @@ class MyPlugin(PromptPlugin):
         # Final response (OUTPUT stage only)
         if context.current_stage == OUTPUT:
             await context.say("My response")
+            await logger.log(LogLevel.INFO, LogCategory.WORKFLOW_EXECUTION, "Response delivered")
 ```
 
 ### Creating Workflow Templates
@@ -1121,7 +981,7 @@ agent = Agent.from_workflow("helpful_assistant")
 # Layer 2: Custom workflows with specific vLLM model
 agent = Agent.from_workflow_dict({
     "think": ["analytical_reasoning", "creativity_booster"],
-    "output": ["markdown_formatter"]
+    "output": ["rich_formatter"]
 }, resources={
     "llm": LLM(LLMResource(VLLMInfrastructure(model="Qwen/Qwen2.5-7B-Instruct")))
 })
@@ -1134,15 +994,18 @@ agent = Agent.from_config("production-config.yaml")
 
 1. **Clear Mental Model**: Agent = Resources + Workflow + Infrastructure
 2. **Zero friction start**: Agents work immediately with vLLM auto-detection and sensible defaults
-3. **Stateless scaling**: Horizontal scaling through external persistence
-4. **Multi-user support**: Simple user isolation through namespacing
-5. **Progressive complexity**: Start simple, add sophistication as needed
-6. **Fail-fast validation**: Errors caught at startup, not runtime
-7. **Persistent state only**: All state stored in Memory - no temporary data
-8. **Constructor injection**: Immediate validation with no incomplete state
-9. **Universal plugin system**: Single interface for all extensions
-10. **CLI as Adapter**: Command-line tool implemented as Input/Output adapter
-11. **Production-ready observability**: Comprehensive automatic logging and metrics
-12. **Optimal performance**: vLLM with automatic hardware detection and model selection
+3. **Four canonical resources**: LLM, Memory, FileStorage, Logging always available
+4. **Rich-based interfaces**: Beautiful console output and structured logging
+5. **Plugin-controlled logging**: Developers explicitly use LoggingResource when needed
+6. **Stateless scaling**: Horizontal scaling through external persistence
+7. **Multi-user support**: Simple user isolation through namespacing
+8. **Progressive complexity**: Start simple, add sophistication as needed
+9. **Fail-fast validation**: Errors caught at startup, not runtime
+10. **Persistent state only**: All state stored in Memory - no temporary data
+11. **Constructor injection**: Immediate validation with no incomplete state
+12. **Universal plugin system**: Single interface for all extensions
+13. **CLI as Adapter**: Command-line tool implemented as Input/Output adapter
+14. **Production-ready observability**: Rich console + structured JSON logging
+15. **Optimal performance**: vLLM with automatic hardware detection and model selection
 
-This architecture provides a foundation for building powerful, scalable AI agents while maintaining developer productivity through clear mental models, progressive disclosure, intelligent defaults, and comprehensive observability that scales from local development to production deployment.
+This architecture provides a foundation for building powerful, scalable AI agents while maintaining developer productivity through clear mental models, progressive disclosure, intelligent defaults, and beautiful Rich-based interfaces that scale from local development to production deployment.
