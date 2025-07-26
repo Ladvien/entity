@@ -9,7 +9,11 @@ from entity.resources.exceptions import ResourceInitializationError
 from entity.resources.memory import Memory
 from entity.resources.llm_wrapper import LLM
 from entity.resources.storage_wrapper import Storage
-from entity.resources.logging import LoggingResource
+from entity.resources.logging import (
+    LoggingResource,
+    ConsoleLoggingResource,
+    JSONLoggingResource,
+)
 from entity.resources.metrics import MetricsCollectorResource
 
 __all__ = [
@@ -23,5 +27,7 @@ __all__ = [
     "LLM",
     "Storage",
     "LoggingResource",
+    "ConsoleLoggingResource",
+    "JSONLoggingResource",
     "MetricsCollectorResource",
 ]

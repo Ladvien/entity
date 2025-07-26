@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from typing import Any, Dict, List
@@ -42,3 +43,23 @@ class LoggingResource:
         )
         async with self._lock:
             self.records.append(asdict(record))
+
+
+class ConsoleLoggingResource(LoggingResource):
+    """Store logs in memory like ``LoggingResource``."""
+
+    async def log(self, level: str, message: str, **fields: Any) -> None:
+        await super().log(level, message, **fields)
+
+
+class JSONLoggingResource(LoggingResource):
+    """Append log entries to ``path`` in JSON lines format."""
+
+    def __init__(self, path: str, level: str = "info") -> None:
+        super().__init__(level)
+        self.path = path
+
+    async def log(self, level: str, message: str, **fields: Any) -> None:
+        await super().log(level, message, **fields)
+        with open(self.path, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(self.records[-1]) + "\n")

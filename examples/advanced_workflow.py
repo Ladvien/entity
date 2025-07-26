@@ -7,6 +7,7 @@ reported to the console.
 """
 
 import asyncio
+import os
 
 from entity.core.agent import Agent
 from entity.defaults import load_defaults
@@ -15,6 +16,8 @@ from entity.setup.ollama_installer import OllamaInstaller
 
 async def main() -> None:
     try:
+        # Enable verbose logging for this run
+        os.environ.setdefault("ENTITY_LOG_LEVEL", "debug")
         resources = load_defaults()
     except Exception as exc:  # pragma: no cover - example runtime guard
         print(

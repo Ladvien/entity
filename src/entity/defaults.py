@@ -18,6 +18,8 @@ from entity.resources import (
     LLM,
     LocalStorageResource,
     Storage,
+    ConsoleLoggingResource,
+    JSONLoggingResource,
 )
 
 
@@ -67,6 +69,15 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
     cfg = config or DefaultConfig.from_env()
     logger = logging.getLogger("defaults")
 
+    log_level = os.getenv("ENTITY_LOG_LEVEL", "info")
+    json_logs = os.getenv("ENTITY_JSON_LOGS", "0").lower() in {"1", "true", "yes"}
+    log_file = os.getenv("ENTITY_LOG_FILE", "./agent.log")
+    logging_resource = (
+        JSONLoggingResource(log_file, log_level)
+        if json_logs
+        else ConsoleLoggingResource(log_level)
+    )
+
     if cfg.auto_install_ollama:
         OllamaInstaller.ensure_ollama_available(cfg.ollama_model)
 
@@ -114,4 +125,5 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
         "memory": Memory(db_resource, vector_resource),
         "llm": LLM(llm_resource),
         "storage": Storage(storage_resource),
+        "logging": logging_resource,
     }
