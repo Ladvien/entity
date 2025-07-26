@@ -16,7 +16,7 @@ from entity.resources import (
     Memory,
     LLM,
     LocalStorageResource,
-    Storage,
+    FileStorage,
     ConsoleLoggingResource,
     JSONLoggingResource,
 )
@@ -145,6 +145,6 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
     return {
         "memory": Memory(db_resource, vector_resource),
         "llm": LLM(llm_resource),
-        "storage": Storage(storage_resource),
+        "file_storage": FileStorage(storage_resource),
         "logging": logging_resource,
     }

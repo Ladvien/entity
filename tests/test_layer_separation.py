@@ -12,7 +12,7 @@ from entity.resources.storage import StorageResource
 from entity.resources.local_storage import LocalStorageResource
 from entity.resources.memory import Memory
 from entity.resources.llm_wrapper import LLM
-from entity.resources.storage_wrapper import Storage
+from entity.resources.file_storage_wrapper import FileStorage
 from entity.resources.exceptions import ResourceInitializationError
 
 
@@ -39,4 +39,4 @@ def test_wrappers_require_resources():
     with pytest.raises(ResourceInitializationError):
         LLM(None)
     with pytest.raises(ResourceInitializationError):
-        Storage(None)
+        FileStorage(None)

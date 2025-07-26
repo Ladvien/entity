@@ -8,7 +8,7 @@ from entity.resources import (
     StorageResource,
     Memory,
     LLM,
-    Storage,
+    FileStorage,
     ResourceInitializationError,
 )
 from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
@@ -45,7 +45,7 @@ def test_constructors_success(tmp_path):
 
     storage_infra = LocalStorageInfrastructure(tmp_path)
     local_res = LocalStorageResource(storage_infra)
-    storage = Storage(local_res)
+    storage = FileStorage(local_res)
 
     assert mem.health_check()
     assert llm.health_check()
@@ -68,7 +68,7 @@ def test_constructor_failure():
     with pytest.raises(ResourceInitializationError):
         LLM(None)
     with pytest.raises(ResourceInitializationError):
-        Storage(None)
+        FileStorage(None)
 
 
 def test_infrastructures_satisfy_protocol():

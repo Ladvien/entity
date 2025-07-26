@@ -8,7 +8,7 @@ from entity.resources.local_storage import LocalStorageResource
 from entity.resources.exceptions import ResourceInitializationError
 from entity.resources.memory import Memory
 from entity.resources.llm_wrapper import LLM
-from entity.resources.storage_wrapper import Storage
+from entity.resources.file_storage_wrapper import FileStorage
 from entity.resources.logging import (
     ConsoleLoggingResource,
     EnhancedLoggingResource,
@@ -25,7 +25,7 @@ __all__ = [
     "ResourceInitializationError",
     "Memory",
     "LLM",
-    "Storage",
+    "FileStorage",
     "EnhancedLoggingResource",
     "ConsoleLoggingResource",
     "JSONLoggingResource",

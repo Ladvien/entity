@@ -3,7 +3,7 @@ from entity.resources.local_storage import LocalStorageResource
 from entity.resources.exceptions import ResourceInitializationError
 
 
-class Storage:
+class FileStorage:
     """Layer 3 wrapper around a storage resource."""
 
     def __init__(self, resource: StorageResource | LocalStorageResource | None) -> None:
