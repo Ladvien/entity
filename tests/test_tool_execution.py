@@ -37,7 +37,7 @@ async def test_tool_use_immediate():
     resources = {"tools": {"search": web_search}, "memory": memory}
     executor = WorkflowExecutor(resources, wf.steps)
 
-    result = await executor.run("OpenAI")
+    result = await executor.execute("OpenAI")
     assert "OpenAI" in result
 
 
@@ -50,5 +50,5 @@ async def test_tool_use_queued():
     resources = {"tools": {"search": web_search}, "results": results, "memory": memory}
     executor = WorkflowExecutor(resources, wf.steps)
 
-    await executor.run("Python programming")
+    await executor.execute("Python programming")
     assert any("Python" in r for r in results)

@@ -27,7 +27,7 @@ async def test_output_plugin_sets_response_on_second_iteration():
     memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
     executor = WorkflowExecutor({"memory": memory}, wf)
 
-    result = await executor.run("hello")
+    result = await executor.execute("hello")
 
     assert result == "final"
     assert calls == [0, 1]

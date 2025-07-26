@@ -127,6 +127,6 @@ class Agent:
             }
 
         executor = WorkflowExecutor(self.resources, workflow_steps)
-        result = await executor.run(message, user_id=user_id)
+        result = await executor.execute(message, user_id=user_id)
         # TODO: Use a response object instead of a dict
         return {"response": result}

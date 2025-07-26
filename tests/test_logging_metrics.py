@@ -41,7 +41,7 @@ async def test_logging_and_metrics_per_stage():
     infra = DuckDBInfrastructure(":memory:")
     memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
     executor = WorkflowExecutor({"memory": memory}, wf.steps)
-    result = await executor.run("hi")
+    result = await executor.execute("hi")
 
     assert result == "done"
 
