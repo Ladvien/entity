@@ -16,14 +16,12 @@ class WorkflowContext:
         self.message: str | None = None
 
     def say(self, message: str) -> None:
-        """Store the final response only during the OUTPUT stage."""
+        """Store the final response only during the OUTPUT or ERROR stage."""
 
         from entity.workflow.executor import WorkflowExecutor
 
-        if self.current_stage not in {
-            WorkflowExecutor.OUTPUT,
-            WorkflowExecutor.ERROR,
-        }:
+        allowed_stages = {WorkflowExecutor.OUTPUT, WorkflowExecutor.ERROR}
+        if self.current_stage not in allowed_stages:
             raise RuntimeError("context.say() only allowed in OUTPUT or ERROR stage")
 
         self._response = message
