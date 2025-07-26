@@ -3,7 +3,7 @@ from __future__ import annotations
 from entity.plugins import Plugin
 from entity.workflow.executor import WorkflowExecutor
 
-from plugin_test_base import PluginValidationTests, PluginDependencyTests
+from tests.plugin_test_base import PluginValidationTests, PluginDependencyTests
 
 
 class ExamplePlugin(Plugin):

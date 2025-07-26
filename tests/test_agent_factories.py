@@ -52,8 +52,7 @@ workflow:
 """
     )
     agent = Agent.from_config(str(cfg), resources={"memory": _memory()})
-    loop = asyncio.get_event_loop()
-    result = loop.run_until_complete(agent.chat("hey"))
+    result = asyncio.run(agent.chat("hey"))
     assert result["response"] == "hey"
 
 
