@@ -6,6 +6,8 @@ from typing import Any, Dict
 
 from pydantic import BaseModel, ValidationError
 
+from entity.resources.logging import LogCategory, LogLevel
+
 
 class Plugin(ABC):
     """Base class for all plugins."""
@@ -70,10 +72,12 @@ class Plugin(ABC):
 
         if logger is not None:
             await logger.log(
-                "info",
-                "plugin_start",
+                LogLevel.INFO,
+                LogCategory.PLUGIN_LIFECYCLE,
+                "Starting plugin execution",
                 stage=context.current_stage,
                 plugin_name=self.__class__.__name__,
+                dependencies=self.dependencies,
             )
 
         try:
@@ -84,8 +88,9 @@ class Plugin(ABC):
             success = False
             if logger is not None:
                 await logger.log(
-                    "error",
-                    "plugin_error",
+                    LogLevel.ERROR,
+                    LogCategory.ERROR,
+                    f"Plugin execution failed: {str(exc)}",
                     stage=context.current_stage,
                     plugin_name=self.__class__.__name__,
                     error=str(exc),
@@ -103,8 +108,9 @@ class Plugin(ABC):
                 )
             if logger is not None and success:
                 await logger.log(
-                    "info",
-                    "plugin_end",
+                    LogLevel.INFO,
+                    LogCategory.PLUGIN_LIFECYCLE,
+                    "Plugin execution completed successfully",
                     stage=context.current_stage,
                     plugin_name=self.__class__.__name__,
                 )

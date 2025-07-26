@@ -9,6 +9,7 @@ from entity.plugins.input_adapter import InputAdapterPlugin
 from entity.plugins.output_adapter import OutputAdapterPlugin
 from entity.workflow.executor import WorkflowExecutor
 from entity.plugins.context import PluginContext
+from entity.resources.logging import LogCategory, LogLevel
 
 
 class EntCLIAdapter(InputAdapterPlugin, OutputAdapterPlugin):
@@ -48,7 +49,12 @@ class EntCLIAdapter(InputAdapterPlugin, OutputAdapterPlugin):
                 return await self._handle_output(context)
         except Exception as exc:  # pragma: no cover - runtime safety
             if logger is not None:
-                await logger.log("error", "cli_error", error=str(exc))
+                await logger.log(
+                    LogLevel.ERROR,
+                    LogCategory.ERROR,
+                    "CLI adapter error",
+                    error=str(exc),
+                )
             raise
 
         return context.message or ""
