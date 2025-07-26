@@ -14,10 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from functools import lru_cache
-from entity.config.validation import (
-    ConfigModel,
-    validate_config,
-)
+from entity.config.validation import ConfigModel
 
 
 class SubstitutionError(ValueError):
@@ -26,8 +23,6 @@ class SubstitutionError(ValueError):
     pass
 
 
-# TODO: Refactor using Extract Method, Extract Variable, and
-# Single Responsibility Principle
 class VariableResolver:
     """Resolve ``${VAR}`` patterns recursively with cycle detection."""
 
@@ -35,9 +30,10 @@ class VariableResolver:
 
     def __init__(self, env_file: str | None = None) -> None:
         self.env: dict[str, str] = dict(os.environ)
+        self._load_env_file(env_file)
 
+    def _load_env_file(self, env_file: str | None) -> None:
         env_path = Path(env_file or ".env")
-        # TODO: Refactor for readability
         if env_path.exists():
             for line in env_path.read_text().splitlines():
                 if not line or line.startswith("#") or "=" not in line:
@@ -47,7 +43,6 @@ class VariableResolver:
 
     def substitute(self, obj: Any) -> Any:
         """Recursively substitute environment variables in ``obj``."""
-
         if isinstance(obj, dict):
             return {k: self.substitute(v) for k, v in obj.items()}
         if isinstance(obj, list):
@@ -68,20 +63,18 @@ class VariableResolver:
 
         return self._pattern.sub(replace, value)
 
-
-# TODO: Refactor to use a class method or static method
-def substitute_variables(obj: Any, env_file: str | None = None) -> Any:
-    """Public helper to substitute environment variables in ``obj``."""
-
-    resolver = VariableResolver(env_file)
-    return resolver.substitute(obj)
+    @staticmethod
+    def substitute_variables(obj: Any, env_file: str | None = None) -> Any:
+        """Public helper to substitute environment variables in ``obj``."""
+        resolver = VariableResolver(env_file)
+        return resolver.substitute(obj)
 
 
 @lru_cache(maxsize=32)
 def _cached_validate(path: str) -> ConfigModel:
     """Internal helper cached by path."""
 
-    return validate_config(path)
+    return ConfigModel.validate_config(path)
 
 
 def load_config(path: str | Path) -> ConfigModel:
@@ -98,11 +91,9 @@ def clear_config_cache() -> None:
 
 
 __all__ = [
-    "validate_config",
     "ConfigModel",
     "SubstitutionError",
     "VariableResolver",
-    "substitute_variables",
     "load_config",
     "clear_config_cache",
 ]

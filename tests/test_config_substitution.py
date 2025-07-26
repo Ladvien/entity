@@ -1,6 +1,6 @@
 import os
 import pytest
-from entity.config import substitute_variables, VariableResolver
+from entity.config import VariableResolver
 
 
 def test_env_file_substitution(tmp_path):
@@ -31,7 +31,7 @@ def test_auto_env_loading(tmp_path, monkeypatch):
     cwd = os.getcwd()
     os.chdir(tmp_path)
     try:
-        result = substitute_variables("${VAR}")
+        result = VariableResolver.substitute_variables("${VAR}")
         assert result == "value"
     finally:
         os.chdir(cwd)

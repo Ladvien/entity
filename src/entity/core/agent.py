@@ -1,4 +1,3 @@
-# TODO: Use absolute imports
 from pathlib import Path
 from typing import Any, Iterable
 

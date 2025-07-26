@@ -1,8 +1,6 @@
 import pytest
 
-from entity.config.validation import (
-    validate_config,
-)
+from entity.config.validation import ConfigModel
 from entity.plugins import Plugin
 
 
@@ -26,7 +24,7 @@ class MultiStagePlugin(Plugin):
 def test_validate_config_success(tmp_path):
     cfg = tmp_path / "conf.yml"
     cfg.write_text("resources: {}\nworkflow: {}")
-    data = validate_config(cfg)
+    data = ConfigModel.validate_config(cfg)
     assert data.resources == {}
     assert data.workflow == {}
 
@@ -35,7 +33,7 @@ def test_validate_config_missing(tmp_path):
     cfg = tmp_path / "bad.yml"
     cfg.write_text("workflow: {}")
     with pytest.raises(ValueError):
-        validate_config(cfg)
+        ConfigModel.validate_config(cfg)
 
 
 def test_plugin_config_validation():
