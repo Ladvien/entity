@@ -67,6 +67,3 @@ def test_cli_unknown_workflow():
     )
     assert proc.returncode != 0
     assert "not found" in proc.stderr.lower()
-
-
-# TODO: Timeout functionality removed - not part of MVP scope
