@@ -135,17 +135,6 @@ additional fields supplied by the caller:
 }
 ```
 
-Execution metrics are aggregated by `MetricsCollectorResource`. The collector
-stores individual records and keeps running totals per plugin and stage:
-
-```python
-{
-    "plugin_name": "MyPlugin",
-    "stage": "think",
-    "duration_ms": 12.4,
-    "success": True
-}
-```
 
 ## Tool Security
 

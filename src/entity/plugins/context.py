@@ -1,15 +1,10 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List
-from uuid import uuid4
-
-from entity.resources.logging import LogContext, LogLevel, LogCategory
 
 from entity.tools.sandbox import SandboxedToolRunner
 from entity.tools.registry import ToolInfo
 from pydantic import ValidationError
-
-from entity.resources.logging import LogCategory, LogContext, LogLevel
 
 
 class WorkflowContext:
@@ -64,38 +59,7 @@ class PluginContext(WorkflowContext):
             else:
                 self._tools[t_name] = ToolInfo(t_name, t)
         self._tool_queue: List[tuple[str, Dict[str, Any]]] = []
-        self.logger = resources.get("logging")
-        self.metrics_collector = resources.get("metrics_collector")
         self.sandbox = resources.get("sandbox", SandboxedToolRunner())
-        self._log_context = LogContext(
-            user_id=user_id,
-            workflow_id=self._generate_workflow_id(),
-            execution_id=self._generate_execution_id(),
-        )
-
-    def _generate_workflow_id(self) -> str:
-        return str(uuid4())
-
-    def _generate_execution_id(self) -> str:
-        return str(uuid4())
-
-    async def log(
-        self,
-        level: LogLevel,
-        category: LogCategory,
-        message: str,
-        **extra_fields: Any,
-    ) -> None:
-        logger = self.get_resource("logging")
-        if logger:
-            context = LogContext(
-                user_id=self._log_context.user_id,
-                workflow_id=self._log_context.workflow_id,
-                stage=self.current_stage,
-                plugin_name=getattr(self, "_current_plugin_name", None),
-                execution_id=self._log_context.execution_id,
-            )
-            await logger.log(level, category, message, context, **extra_fields)
 
     async def remember(self, key: str, value: Any) -> None:
         """Persist value namespaced by ``user_id``."""
@@ -165,24 +129,6 @@ class PluginContext(WorkflowContext):
         while self._tool_queue:
             name, kwargs = self._tool_queue.pop(0)
             await self.tool_use(name, **kwargs)
-
-    async def log(
-        self,
-        level: LogLevel,
-        category: LogCategory,
-        message: str,
-        **extra_fields: Any,
-    ) -> None:
-        """Convenience wrapper that injects execution context."""
-        logger = self.get_resource("logging")
-        if logger:
-            context = LogContext(
-                user_id=self.user_id,
-                workflow_id=None,
-                stage=self.current_stage,
-                plugin_name=getattr(self, "_current_plugin_name", None),
-            )
-            await logger.log(level, category, message, context, **extra_fields)
 
     def discover_tools(self, **filters: Any):
         """Return registered tools filtered by ``filters``."""

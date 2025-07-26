@@ -1,12 +1,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-import time
-import traceback
 from typing import Any, Dict
 
 from pydantic import BaseModel, ValidationError
-from entity.resources.logging import LogLevel, LogCategory
 
 
 class Plugin(ABC):
@@ -63,54 +60,12 @@ class Plugin(ABC):
             )
 
     async def execute(self, context: Any) -> Any:
-        """Run the plugin with automatic structured logging."""
+        """Run the plugin."""
         self._enforce_stage(context)
 
         context._current_plugin_name = self.__class__.__name__
-        metrics = getattr(context, "metrics_collector", None)
-        start = time.perf_counter()
 
-        await context.log(
-            LogLevel.INFO,
-            LogCategory.PLUGIN_LIFECYCLE,
-            "Starting plugin execution",
-            plugin_class=self.__class__.__name__,
-            stage=context.current_stage,
-            dependencies=self.dependencies,
-        )
-
-        try:
-            result = await self._execute_impl(context)
-            success = True
-            await context.log(
-                LogLevel.INFO,
-                LogCategory.PLUGIN_LIFECYCLE,
-                "Plugin execution completed successfully",
-                duration_ms=(time.perf_counter() - start) * 1000,
-                result_type=type(result).__name__,
-            )
-            return result
-        except Exception as exc:
-            success = False
-            await context.log(
-                LogLevel.ERROR,
-                LogCategory.ERROR,
-                f"Plugin execution failed: {str(exc)}",
-                exception_type=exc.__class__.__name__,
-                duration_ms=(time.perf_counter() - start) * 1000,
-                traceback=traceback.format_exc(),
-            )
-            raise RuntimeError(
-                f"{self.__class__.__name__} failed during execution"
-            ) from exc
-        finally:
-            if metrics is not None:
-                await metrics.record_plugin_execution(
-                    plugin_name=self.__class__.__name__,
-                    stage=context.current_stage,
-                    duration_ms=(time.perf_counter() - start) * 1000,
-                    success=success,
-                )
+        return await self._execute_impl(context)
 
     def _enforce_stage(self, context: Any) -> None:
         current = getattr(context, "current_stage", None)
