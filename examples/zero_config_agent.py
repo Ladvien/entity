@@ -9,12 +9,12 @@ an error message is printed and the program exits.
 import asyncio
 
 from entity import Agent
-from entity.defaults import load_defaults
+from entity.defaults import DefaultConfig, load_defaults
 
 
 async def main() -> None:
     try:
-        resources = load_defaults()
+        resources = load_defaults(DefaultConfig(auto_install_ollama=False))
     except Exception as exc:  # pragma: no cover - example runtime guard
         print(f"Failed to initialize resources: {exc}")
         return
