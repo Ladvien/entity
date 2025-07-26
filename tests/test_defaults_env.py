@@ -13,7 +13,7 @@ def test_env_overrides(monkeypatch, tmp_path):
 
     memory = defaults["memory"]
     llm = defaults["llm"]
-    storage = defaults["storage"]
+    storage = defaults["file_storage"]
 
     assert memory.database.infrastructure.file_path.endswith("custom.db")
     llm_infra = llm.resource.infrastructure

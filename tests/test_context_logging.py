@@ -1,16 +1,11 @@
 import pytest
 from entity.plugins.context import PluginContext
-<<<<<<< HEAD
 from entity.resources.logging import (
     LogLevel,
     LogCategory,
     RichConsoleLoggingResource,
 )
-=======
-from entity.resources.logging import LogLevel, LogCategory, LoggingResource
-
-pytest.skip("Context logging integration unstable", allow_module_level=True)
->>>>>>> pr-1959
+from entity.workflow.executor import WorkflowExecutor
 from entity.resources.memory import Memory
 from entity.resources.database import DatabaseResource
 from entity.resources.vector_store import VectorStoreResource
@@ -26,8 +21,8 @@ async def test_context_log_injects_ids():
     )
     await ctx.log(LogLevel.INFO, LogCategory.USER_ACTION, "hello")
     record = ctx.get_resource("logging").records[0]
-    fields = record["fields"]
-    assert fields["user_id"] == "u"
-    assert fields.get("workflow_id")
-    assert fields.get("execution_id")
-    assert fields["category"] == LogCategory.USER_ACTION.value
+    context = record["context"]
+    assert context["user_id"] == "u"
+    assert context == {"user_id": "u"}
+    assert record["fields"] == {}
+    assert record["category"] == LogCategory.USER_ACTION.value
