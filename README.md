@@ -186,3 +186,11 @@ See `install_docker.sh` for an automated install script on Ubuntu. Detailed depl
 
 `ollama pull` requires an authentication key at `~/.ollama/id_ed25519`. Run `ollama login` once to generate this file before using `entity-cli`.
 Automatic installation can be skipped by setting `ENTITY_AUTO_INSTALL_OLLAMA=false` when you prefer manual setup.
+
+### vLLM Setup
+
+The framework can start a vLLM server automatically. See [docs/vllm.md](docs/vllm.md) for configuration options and troubleshooting tips.
+
+### Logging Workflows
+
+Example workflow templates showing console and JSON logging live in [docs/logging_templates.md](docs/logging_templates.md).
