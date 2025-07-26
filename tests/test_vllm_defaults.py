@@ -15,6 +15,7 @@ def _available_infra():
     return None
 
 
+@pytest.mark.requires_ollama
 def test_load_defaults_uses_available_llm():
     infra = _available_infra()
     if infra is None:

@@ -68,6 +68,7 @@ def test_config_cache(tmp_path):
     assert first is not third
 
 
+@pytest.mark.requires_ollama
 def test_from_config_caching(tmp_path):
     cfg = tmp_path / "cfg.yaml"
     cfg.write_text(
