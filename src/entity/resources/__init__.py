@@ -3,6 +3,7 @@
 from entity.resources.database import DatabaseResource
 from entity.resources.vector_store import VectorStoreResource
 from entity.resources.llm import LLMResource
+from entity.resources.llm_protocol import LLMInfrastructure
 from entity.resources.storage import StorageResource
 from entity.resources.local_storage import LocalStorageResource
 from entity.resources.exceptions import ResourceInitializationError
@@ -16,6 +17,7 @@ __all__ = [
     "DatabaseResource",
     "VectorStoreResource",
     "LLMResource",
+    "LLMInfrastructure",
     "StorageResource",
     "LocalStorageResource",
     "ResourceInitializationError",

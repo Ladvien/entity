@@ -1,17 +1,17 @@
-"""Resource wrapper around an Ollama LLM deployment."""
+"""Resource wrapper around an LLM infrastructure."""
 
-from entity.infrastructure.ollama_infra import OllamaInfrastructure
 from entity.resources.exceptions import ResourceInitializationError
+from .llm_protocol import LLMInfrastructure
 
 
 class LLMResource:
-    """Layer 2 resource that wraps an Ollama LLM."""
+    """Layer 2 resource that wraps an LLM infrastructure."""
 
-    def __init__(self, infrastructure: OllamaInfrastructure | None) -> None:
-        """Initialize with the Ollama infrastructure instance."""
+    def __init__(self, infrastructure: LLMInfrastructure | None) -> None:
+        """Initialize with the infrastructure instance."""
 
         if infrastructure is None:
-            raise ResourceInitializationError("OllamaInfrastructure is required")
+            raise ResourceInitializationError("LLM infrastructure is required")
         self.infrastructure = infrastructure
 
     def health_check(self) -> bool:
