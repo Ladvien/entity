@@ -8,8 +8,6 @@ from typing import Any, Dict
 from pydantic import BaseModel, ValidationError
 from entity.resources.logging import LogLevel, LogCategory
 
-from entity.resources.logging import LogCategory, LogLevel
-
 
 class Plugin(ABC):
     """Base class for all plugins."""
@@ -72,7 +70,6 @@ class Plugin(ABC):
         metrics = getattr(context, "metrics_collector", None)
         start = time.perf_counter()
 
-<<<<<<< HEAD
         await context.log(
             LogLevel.INFO,
             LogCategory.PLUGIN_LIFECYCLE,
@@ -81,17 +78,6 @@ class Plugin(ABC):
             stage=context.current_stage,
             dependencies=self.dependencies,
         )
-=======
-        if logger is not None:
-            await logger.log(
-                LogLevel.INFO,
-                LogCategory.PLUGIN_LIFECYCLE,
-                "Starting plugin execution",
-                stage=context.current_stage,
-                plugin_name=self.__class__.__name__,
-                dependencies=self.dependencies,
-            )
->>>>>>> pr-1948
 
         try:
             result = await self._execute_with_logging(context)
@@ -106,7 +92,6 @@ class Plugin(ABC):
             return result
         except Exception as exc:
             success = False
-<<<<<<< HEAD
             await context.log(
                 LogLevel.ERROR,
                 LogCategory.ERROR,
@@ -115,17 +100,6 @@ class Plugin(ABC):
                 duration_ms=(time.perf_counter() - start) * 1000,
                 traceback=traceback.format_exc(),
             )
-=======
-            if logger is not None:
-                await logger.log(
-                    LogLevel.ERROR,
-                    LogCategory.ERROR,
-                    f"Plugin execution failed: {str(exc)}",
-                    stage=context.current_stage,
-                    plugin_name=self.__class__.__name__,
-                    error=str(exc),
-                )
->>>>>>> pr-1948
             raise RuntimeError(
                 f"{self.__class__.__name__} failed during execution"
             ) from exc
@@ -137,17 +111,6 @@ class Plugin(ABC):
                     duration_ms=(time.perf_counter() - start) * 1000,
                     success=success,
                 )
-<<<<<<< HEAD
-=======
-            if logger is not None and success:
-                await logger.log(
-                    LogLevel.INFO,
-                    LogCategory.PLUGIN_LIFECYCLE,
-                    "Plugin execution completed successfully",
-                    stage=context.current_stage,
-                    plugin_name=self.__class__.__name__,
-                )
->>>>>>> pr-1948
 
     def _enforce_stage(self, context: Any) -> None:
         current = getattr(context, "current_stage", None)

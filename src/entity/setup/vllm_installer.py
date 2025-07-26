@@ -1,16 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-"""Utilities for validating local vLLM availability."""
-
-from __future__ import annotations
-
-import importlib
-import logging
-
-
-class VLLMInstaller:
-    """Ensure the vLLM package is installed."""
-=======
 """Utilities for ensuring vLLM is installed with the correct backend."""
 
 from __future__ import annotations
@@ -31,31 +18,10 @@ class VLLMInstaller:
     """Install vLLM and download models for local execution."""
 
     DEFAULT_MODEL: Final[str] = "Qwen/Qwen2.5-0.5B-Instruct"
->>>>>>> pr-1946
-=======
-import logging
-import importlib.util
-import os
-import subprocess
-import sys
-
-
-class VLLMInstaller:
-    """Install the vLLM package when not already present."""
->>>>>>> pr-1954
 
     logger = logging.getLogger(__name__)
 
     @classmethod
-<<<<<<< HEAD
-<<<<<<< HEAD
-    def ensure_vllm_available(cls) -> None:
-        try:
-            importlib.import_module("vllm")
-            cls.logger.debug("vLLM package available")
-        except ModuleNotFoundError:
-            cls.logger.warning("vLLM package not installed")
-=======
     def ensure_vllm_available(cls, model: str | None = None) -> None:
         """Install vLLM with the best backend and download ``model``."""
 
@@ -136,21 +102,3 @@ class VLLMInstaller:
                 model,
                 exc,
             )
->>>>>>> pr-1946
-=======
-    def ensure_vllm_available(cls, model: str | None = None) -> None:
-        """Install vLLM via pip if ``ENTITY_AUTO_INSTALL_VLLM`` is truthy."""
-
-        auto_env = os.getenv("ENTITY_AUTO_INSTALL_VLLM", "true").lower()
-        if auto_env not in {"1", "true", "yes"}:
-            cls.logger.debug("Auto install disabled via environment")
-            return
-
-        if importlib.util.find_spec("vllm") is None:
-            cls.logger.info("Installing vLLM package")
-            subprocess.run(
-                [sys.executable, "-m", "pip", "install", "vllm"], check=False
-            )
-        else:
-            cls.logger.debug("vLLM package already available")
->>>>>>> pr-1954

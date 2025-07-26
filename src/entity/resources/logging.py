@@ -1,22 +1,16 @@
-from __future__ import annotations
-
 import asyncio
 import json
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
+import os
 import sys
->>>>>>> pr-1950
-from dataclasses import dataclass, asdict
+import time
+from abc import ABC, abstractmethod
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
-@dataclass
 class LogLevel(Enum):
-    """Supported log levels."""
-
     DEBUG = "debug"
     INFO = "info"
     WARNING = "warning"
@@ -24,8 +18,6 @@ class LogLevel(Enum):
 
 
 class LogCategory(Enum):
-    """High level categories for structured log events."""
-
     PLUGIN_LIFECYCLE = "plugin_lifecycle"
     USER_ACTION = "user_action"
     RESOURCE_ACCESS = "resource_access"
@@ -41,45 +33,6 @@ class LogContext:
     """Contextual fields automatically injected into each log entry."""
 
     user_id: str
-    workflow_id: Optional[str] = None
-    stage: Optional[str] = None
-    plugin_name: Optional[str] = None
-    execution_id: Optional[str] = None
-=======
-import os
-import sys
-import time
-from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass
-from datetime import datetime
-from enum import Enum
-from typing import Any, Dict, List
->>>>>>> pr-1948
-
-
-class LogLevel(Enum):
-    DEBUG = "debug"
-    INFO = "info"
-    WARNING = "warning"
-    ERROR = "error"
-
-
-class LogCategory(Enum):
-    PLUGIN_LIFECYCLE = "plugin_lifecycle"
-    USER_ACTION = "user_action"
-    RESOURCE_ACCESS = "resource_access"
-    TOOL_USAGE = "tool_usage"
-    MEMORY_OPERATION = "memory_operation"
-    WORKFLOW_EXECUTION = "workflow_execution"
-    PERFORMANCE = "performance"
-    ERROR = "error"
-
-
-@dataclass
-class LogContext:
-    """Automatic context injected into every log entry."""
-
-    user_id: str
     workflow_id: str | None = None
     stage: str | None = None
     plugin_name: str | None = None
@@ -88,12 +41,49 @@ class LogContext:
 
 @dataclass
 class LogRecord:
-    level: LogLevel
-    category: LogCategory
+    level: str
     message: str
     timestamp: str
-    context: LogContext | None
     fields: Dict[str, Any]
+
+
+class LoggingResource:
+    """Collect structured log entries with level filtering."""
+
+    LEVELS = {"debug": 10, "info": 20, "warning": 30, "error": 40}
+
+    def __init__(self, level: str = "info") -> None:
+        self.level = level
+        self.records: List[Dict[str, Any]] = []
+        self._lock = asyncio.Lock()
+
+    def health_check(self) -> bool:
+        return True
+
+    async def log(
+        self,
+        level: LogLevel,
+        category: LogCategory,
+        message: str,
+        context: LogContext | None = None,
+        **extra_fields: Any,
+    ) -> None:
+        if self.LEVELS.get(level.value, 0) < self.LEVELS.get(self.level, 0):
+            return
+
+        fields: Dict[str, Any] = {"category": category.value}
+        if context is not None:
+            fields.update({k: v for k, v in asdict(context).items() if v is not None})
+        fields.update(extra_fields)
+
+        record = LogRecord(
+            level=level.value,
+            message=message,
+            timestamp=datetime.utcnow().isoformat(),
+            fields=fields,
+        )
+        async with self._lock:
+            self.records.append(asdict(record))
 
 
 class EnhancedLoggingResource(ABC):
@@ -114,29 +104,6 @@ class EnhancedLoggingResource(ABC):
     def health_check(self) -> bool:
         return True
 
-<<<<<<< HEAD
-    async def log(
-        self,
-        level: LogLevel,
-        category: LogCategory,
-        message: str,
-        context: LogContext | None = None,
-        **extra_fields: Any,
-    ) -> None:
-        """Store a log entry if ``level`` is above the configured threshold."""
-
-        level_str = level.value
-        if self.LEVELS.get(level_str, 0) < self.LEVELS.get(self.level, 0):
-            return
-
-        fields: Dict[str, Any] = {"category": category.value}
-        if context is not None:
-            fields.update({k: v for k, v in asdict(context).items() if v is not None})
-        fields.update(extra_fields)
-
-        record = LogRecord(
-            level=level_str,
-=======
     def _should_log(self, level: LogLevel) -> bool:
         return self.LEVELS[level] >= self.LEVELS[self.level]
 
@@ -198,78 +165,23 @@ class ConsoleLoggingResource(EnhancedLoggingResource):
     ) -> None:
         if not self._should_log(level):
             return
-        entry = LogRecord(
-            level=level,
-            category=category,
->>>>>>> pr-1948
-            message=message,
-            timestamp=datetime.utcnow().isoformat(),
-            context=context,
-            fields=extra_fields,
-        )
+        entry = {
+            "level": level.value,
+            "category": category.value,
+            "message": message,
+            "timestamp": datetime.utcnow().isoformat(),
+            "fields": extra_fields,
+        }
+        if context is not None:
+            entry["context"] = {
+                k: v for k, v in asdict(context).items() if v is not None
+            }
         formatted = self._format_console_entry(
             level, category, message, context, extra_fields
         )
         print(formatted)
         async with self._lock:
-<<<<<<< HEAD
-            self.records.append(asdict(record))
-
-
-class ConsoleLoggingResource(LoggingResource):
-<<<<<<< HEAD
-    """Store logs in memory like ``LoggingResource``."""
-
-    async def log(self, level: str, message: str, **fields: Any) -> None:
-        await super().log(level, message, **fields)
-
-
-class JSONLoggingResource(LoggingResource):
-    """Append log entries to ``path`` in JSON lines format."""
-
-    def __init__(self, path: str, level: str = "info") -> None:
-        super().__init__(level)
-        self.path = path
-
-    async def log(self, level: str, message: str, **fields: Any) -> None:
-        await super().log(level, message, **fields)
-        with open(self.path, "a", encoding="utf-8") as fh:
-            fh.write(json.dumps(self.records[-1]) + "\n")
-=======
-    """Logging resource that echoes entries to ``stream`` in human format."""
-
-    def __init__(self, level: str = "info", stream: Any | None = None) -> None:
-        super().__init__(level)
-        self.stream = stream or sys.stdout
-
-    async def log(self, level: str, message: str, **fields: Any) -> None:
-        await super().log(level, message, **fields)
-        if self.LEVELS.get(level, 0) >= self.LEVELS.get(self.level, 0):
-            text = f"{level.upper()}: {message} {fields}\n"
-            self.stream.write(text)
-            self.stream.flush()
-
-
-class JSONLoggingResource(LoggingResource):
-    """Logging resource that emits JSON log lines to ``stream``."""
-
-    def __init__(self, level: str = "info", stream: Any | None = None) -> None:
-        super().__init__(level)
-        self.stream = stream or sys.stdout
-
-    async def log(self, level: str, message: str, **fields: Any) -> None:
-        await super().log(level, message, **fields)
-        if self.LEVELS.get(level, 0) >= self.LEVELS.get(self.level, 0):
-            record = {
-                "level": level,
-                "message": message,
-                "fields": fields,
-            }
-            self.stream.write(json.dumps(record) + "\n")
-            self.stream.flush()
->>>>>>> pr-1950
-=======
-            self.records.append(asdict(entry))
+            self.records.append(entry)
 
 
 class JSONLoggingResource(EnhancedLoggingResource):
@@ -322,14 +234,16 @@ class JSONLoggingResource(EnhancedLoggingResource):
         async with self._lock:
             self.records.append(entry)
 
-    def _build_json_entry(
+    async def log(
         self,
         level: LogLevel,
         category: LogCategory,
         message: str,
-        context: LogContext | None,
-        extra_fields: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        context: LogContext | None = None,
+        **extra_fields: Any,
+    ) -> None:
+        if not self._should_log(level):
+            return
         entry = {
             "level": level.value,
             "category": category.value,
@@ -341,18 +255,4 @@ class JSONLoggingResource(EnhancedLoggingResource):
             entry["context"] = {
                 k: v for k, v in asdict(context).items() if v is not None
             }
-        return entry
-
-    async def log(
-        self,
-        level: LogLevel,
-        category: LogCategory,
-        message: str,
-        context: LogContext | None = None,
-        **extra_fields: Any,
-    ) -> None:
-        if not self._should_log(level):
-            return
-        entry = self._build_json_entry(level, category, message, context, extra_fields)
         await self._write_entry(entry)
->>>>>>> pr-1948

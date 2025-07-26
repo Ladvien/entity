@@ -3,7 +3,6 @@
 from entity.resources.database import DatabaseResource
 from entity.resources.vector_store import VectorStoreResource
 from entity.resources.llm import LLMResource
-from entity.resources.llm_protocol import LLMInfrastructure
 from entity.resources.storage import StorageResource
 from entity.resources.local_storage import LocalStorageResource
 from entity.resources.exceptions import ResourceInitializationError
@@ -11,13 +10,8 @@ from entity.resources.memory import Memory
 from entity.resources.llm_wrapper import LLM
 from entity.resources.storage_wrapper import Storage
 from entity.resources.logging import (
-<<<<<<< HEAD
-    LoggingResource,
-    ConsoleLoggingResource,
-=======
     ConsoleLoggingResource,
     EnhancedLoggingResource,
->>>>>>> pr-1948
     JSONLoggingResource,
 )
 from entity.resources.metrics import MetricsCollectorResource
@@ -26,18 +20,13 @@ __all__ = [
     "DatabaseResource",
     "VectorStoreResource",
     "LLMResource",
-    "LLMInfrastructure",
     "StorageResource",
     "LocalStorageResource",
     "ResourceInitializationError",
     "Memory",
     "LLM",
     "Storage",
-<<<<<<< HEAD
-    "LoggingResource",
-=======
     "EnhancedLoggingResource",
->>>>>>> pr-1948
     "ConsoleLoggingResource",
     "JSONLoggingResource",
     "MetricsCollectorResource",
