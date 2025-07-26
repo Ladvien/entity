@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List
+from uuid import uuid4
+
+from entity.resources.logging import LogContext, LogLevel, LogCategory
 
 from entity.tools.sandbox import SandboxedToolRunner
 from entity.tools.registry import ToolInfo
@@ -62,6 +65,35 @@ class PluginContext(WorkflowContext):
         self.logger = resources.get("logging")
         self.metrics_collector = resources.get("metrics_collector")
         self.sandbox = resources.get("sandbox", SandboxedToolRunner())
+        self._log_context = LogContext(
+            user_id=user_id,
+            workflow_id=self._generate_workflow_id(),
+            execution_id=self._generate_execution_id(),
+        )
+
+    def _generate_workflow_id(self) -> str:
+        return str(uuid4())
+
+    def _generate_execution_id(self) -> str:
+        return str(uuid4())
+
+    async def log(
+        self,
+        level: LogLevel,
+        category: LogCategory,
+        message: str,
+        **extra_fields: Any,
+    ) -> None:
+        logger = self.get_resource("logging")
+        if logger:
+            context = LogContext(
+                user_id=self._log_context.user_id,
+                workflow_id=self._log_context.workflow_id,
+                stage=self.current_stage,
+                plugin_name=getattr(self, "_current_plugin_name", None),
+                execution_id=self._log_context.execution_id,
+            )
+            await logger.log(level, category, message, context, **extra_fields)
 
     async def remember(self, key: str, value: Any) -> None:
         """Persist value namespaced by ``user_id``."""

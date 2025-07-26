@@ -3,6 +3,7 @@ import pytest
 from entity.workflow import Workflow, WorkflowExecutor
 from entity.plugins.base import Plugin
 from entity.plugins.context import PluginContext
+from entity.resources.logging import LogCategory
 from entity.resources.memory import Memory
 from entity.resources.database import DatabaseResource
 from entity.resources.vector_store import VectorStoreResource
@@ -42,9 +43,15 @@ async def test_logging_and_metrics_per_stage():
     logs = executor.resources["logging"].records
     metrics = executor.resources["metrics_collector"].records
 
-    assert [r["fields"]["stage"] for r in logs] == [
+    assert [r["fields"]["category"] for r in logs[:2]] == [
+        LogCategory.PLUGIN_LIFECYCLE.value,
+        LogCategory.PLUGIN_LIFECYCLE.value,
+    ]
+    assert [r["fields"]["stage"] for r in logs[:2]] == [
         WorkflowExecutor.THINK,
         WorkflowExecutor.THINK,
+    ]
+    assert [r["fields"]["stage"] for r in logs[2:]] == [
         WorkflowExecutor.OUTPUT,
         WorkflowExecutor.OUTPUT,
     ]
