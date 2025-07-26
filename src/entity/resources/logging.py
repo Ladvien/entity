@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+import json
+import sys
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from typing import Any, Dict, List
@@ -42,3 +44,37 @@ class LoggingResource:
         )
         async with self._lock:
             self.records.append(asdict(record))
+
+
+class ConsoleLoggingResource(LoggingResource):
+    """Logging resource that echoes entries to ``stream`` in human format."""
+
+    def __init__(self, level: str = "info", stream: Any | None = None) -> None:
+        super().__init__(level)
+        self.stream = stream or sys.stdout
+
+    async def log(self, level: str, message: str, **fields: Any) -> None:
+        await super().log(level, message, **fields)
+        if self.LEVELS.get(level, 0) >= self.LEVELS.get(self.level, 0):
+            text = f"{level.upper()}: {message} {fields}\n"
+            self.stream.write(text)
+            self.stream.flush()
+
+
+class JSONLoggingResource(LoggingResource):
+    """Logging resource that emits JSON log lines to ``stream``."""
+
+    def __init__(self, level: str = "info", stream: Any | None = None) -> None:
+        super().__init__(level)
+        self.stream = stream or sys.stdout
+
+    async def log(self, level: str, message: str, **fields: Any) -> None:
+        await super().log(level, message, **fields)
+        if self.LEVELS.get(level, 0) >= self.LEVELS.get(self.level, 0):
+            record = {
+                "level": level,
+                "message": message,
+                "fields": fields,
+            }
+            self.stream.write(json.dumps(record) + "\n")
+            self.stream.flush()
