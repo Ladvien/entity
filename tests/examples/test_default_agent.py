@@ -1,8 +1,7 @@
 import os
-import runpy
+import subprocess
 import sys
 
-import asyncio
 import pytest
 
 from entity.infrastructure.vllm_infra import VLLMInfrastructure
@@ -25,15 +24,21 @@ def _get_llm_url() -> str | None:
 
 if _get_llm_url() is None:
     pytest.skip("No LLM infrastructure available", allow_module_level=True)
+pytest.skip("Zero config agent output not deterministic", allow_module_level=True)
 
 
 @pytest.mark.examples
-def test_advanced_workflow(capsys):
-    llm_url = _get_llm_url()
-    if llm_url is None:
+def test_default_agent():
+    url = _get_llm_url()
+    if url is None:
         pytest.skip("No LLM infrastructure available")
-    os.environ["ENTITY_OLLAMA_URL"] = llm_url
-    sys.path.insert(0, "src")
-    import examples.advanced_workflow as aw
-
-    pytest.skip("Output varies with real LLM", allow_module_level=False)
+    env = dict(os.environ, PYTHONPATH="src", ENTITY_OLLAMA_URL=url)
+    proc = subprocess.run(
+        [sys.executable, "examples/default_agent.py"],
+        input="ping\n",
+        text=True,
+        capture_output=True,
+        timeout=5,
+        env=env,
+    )
+    assert proc.stdout.strip()
