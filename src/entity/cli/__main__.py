@@ -8,7 +8,7 @@ from pathlib import Path
 from entity.core.agent import Agent
 from entity.plugins.defaults import default_workflow
 from entity.cli.ent_cli_adapter import EntCLIAdapter
-from entity.resources.logging import ConsoleLoggingResource, LogLevel
+from entity.resources.logging import RichConsoleLoggingResource, LogLevel
 from entity.defaults import load_defaults
 from entity.workflow.templates.loader import load_template, TemplateNotFoundError
 from entity.workflow.workflow import Workflow
@@ -73,7 +73,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 async def _run(args: argparse.Namespace) -> None:
     level = "debug" if args.verbose else "error" if args.quiet else "info"
     resources = load_defaults()
-    resources["logging"] = ConsoleLoggingResource(LogLevel(level))
+    resources["logging"] = RichConsoleLoggingResource(LogLevel(level))
     workflow = _load_workflow(args.workflow)
     agent = Agent(resources=resources, workflow=workflow)
 

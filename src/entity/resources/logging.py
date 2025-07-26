@@ -9,6 +9,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List
 
+from rich.console import Console
+
 
 class LogLevel(Enum):
     DEBUG = "debug"
@@ -47,45 +49,6 @@ class LogRecord:
     fields: Dict[str, Any]
 
 
-class LoggingResource:
-    """Collect structured log entries with level filtering."""
-
-    LEVELS = {"debug": 10, "info": 20, "warning": 30, "error": 40}
-
-    def __init__(self, level: str = "info") -> None:
-        self.level = level
-        self.records: List[Dict[str, Any]] = []
-        self._lock = asyncio.Lock()
-
-    def health_check(self) -> bool:
-        return True
-
-    async def log(
-        self,
-        level: LogLevel,
-        category: LogCategory,
-        message: str,
-        context: LogContext | None = None,
-        **extra_fields: Any,
-    ) -> None:
-        if self.LEVELS.get(level.value, 0) < self.LEVELS.get(self.level, 0):
-            return
-
-        fields: Dict[str, Any] = {"category": category.value}
-        if context is not None:
-            fields.update({k: v for k, v in asdict(context).items() if v is not None})
-        fields.update(extra_fields)
-
-        record = LogRecord(
-            level=level.value,
-            message=message,
-            timestamp=datetime.utcnow().isoformat(),
-            fields=fields,
-        )
-        async with self._lock:
-            self.records.append(asdict(record))
-
-
 class EnhancedLoggingResource(ABC):
     """Enhanced logging with automatic context and structured output."""
 
@@ -119,22 +82,22 @@ class EnhancedLoggingResource(ABC):
         """Log structured entry with automatic context injection."""
 
 
-class ConsoleLoggingResource(EnhancedLoggingResource):
-    """Colored, formatted console logging for development."""
+class RichConsoleLoggingResource(EnhancedLoggingResource):
+    """Colored, formatted console logging using Rich."""
 
-    _colors = {
-        LogLevel.DEBUG: "\033[36m",
-        LogLevel.INFO: "\033[32m",
-        LogLevel.WARNING: "\033[33m",
-        LogLevel.ERROR: "\033[31m",
+    _styles = {
+        LogLevel.DEBUG: "cyan",
+        LogLevel.INFO: "green",
+        LogLevel.WARNING: "yellow",
+        LogLevel.ERROR: "red",
     }
-    _reset = "\033[0m"
 
     def __init__(
         self, level: LogLevel = LogLevel.INFO, show_context: bool = True
     ) -> None:
         super().__init__(level)
         self.show_context = show_context
+        self.console = Console()
 
     def _format_console_entry(
         self,
@@ -144,8 +107,8 @@ class ConsoleLoggingResource(EnhancedLoggingResource):
         context: LogContext | None,
         extra_fields: Dict[str, Any],
     ) -> str:
-        color = self._colors[level]
-        parts = [f"{color}[{level.value}] {message}{self._reset}"]
+        style = self._styles[level]
+        parts = [f"[{style}][{level.value}] {message}[/]"]
         parts.append(f"({category.value})")
         if self.show_context and context is not None:
             ctx = {k: v for k, v in asdict(context).items() if v is not None}
@@ -179,13 +142,13 @@ class ConsoleLoggingResource(EnhancedLoggingResource):
         formatted = self._format_console_entry(
             level, category, message, context, extra_fields
         )
-        print(formatted)
+        self.console.print(formatted)
         async with self._lock:
             self.records.append(entry)
 
 
-class JSONLoggingResource(EnhancedLoggingResource):
-    """Structured JSON logging for production environments."""
+class RichJSONLoggingResource(EnhancedLoggingResource):
+    """Structured JSON logging with optional Rich console output."""
 
     def __init__(
         self,
@@ -198,6 +161,7 @@ class JSONLoggingResource(EnhancedLoggingResource):
         self.output_file = output_file
         self.max_bytes = max_bytes
         self.backup_count = backup_count
+        self.console = Console()
 
     async def _rotate_if_needed(self) -> None:
         if not self.output_file or self.max_bytes <= 0:
@@ -230,7 +194,7 @@ class JSONLoggingResource(EnhancedLoggingResource):
                 with open(self.output_file, "a", encoding="utf-8") as fh:
                     fh.write(data + "\n")
         else:
-            print(data)
+            self.console.print_json(data)
         async with self._lock:
             self.records.append(entry)
 
