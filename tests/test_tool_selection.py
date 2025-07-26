@@ -43,8 +43,8 @@ async def test_smart_selector_picks_correct_tool():
     resources = {"tools": {"a": tool_a, "b": tool_b}, "memory": memory}
     executor = WorkflowExecutor(resources, wf.steps)
 
-    result_a = await executor.run("run a")
+    result_a = await executor.execute("run a")
     assert result_a == "A"
 
-    result_b = await executor.run("use b")
+    result_b = await executor.execute("use b")
     assert result_b == "B"

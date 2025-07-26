@@ -39,7 +39,7 @@ async def test_basic_example_workflow():
     resources = {"llm": llm_infra, "memory": memory}
     executor = WorkflowExecutor(resources, wf.steps)
 
-    result = await executor.run("2 + 2", user_id="test")
+    result = await executor.execute("2 + 2", user_id="test")
     assert result == "Result: 4"
 
 
@@ -55,8 +55,8 @@ async def test_example_workflow_multiple_users():
     infra = DuckDBInfrastructure(":memory:")
     memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
 
-    await executor.run("1 + 1", user_id="a", memory=memory)
-    await executor.run("2 + 2", user_id="b", memory=memory)
+    await executor.execute("1 + 1", user_id="a", memory=memory)
+    await executor.execute("2 + 2", user_id="b", memory=memory)
 
     assert await memory.load("a:history") == ["1 + 1"]
     assert await memory.load("b:history") == ["2 + 2"]

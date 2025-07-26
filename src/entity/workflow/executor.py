@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 from itertools import count
-import warnings
 
 from entity.resources.logging import RichConsoleLoggingResource
 from entity.resources.metrics import MetricsCollectorResource
@@ -36,7 +35,7 @@ class WorkflowExecutor:
             stage: list(plugins) for stage, plugins in (workflow or {}).items()
         }
 
-    async def run(
+    async def execute(
         self,
         message: str,
         user_id: str = "default",
@@ -81,15 +80,7 @@ class WorkflowExecutor:
                 plugin.context = context
 
             try:
-                if hasattr(plugin, "execute"):
-                    result = await plugin.execute(context)
-                else:
-                    warnings.warn(
-                        f"{plugin_cls.__name__}.run is deprecated. "
-                        "Implement 'execute' to conform to Plugin interface.",
-                        DeprecationWarning,
-                    )
-                    result = await plugin.run(result, user_id)
+                result = await plugin.execute(context)
             except Exception as exc:  # pragma: no cover - runtime errors
                 await self._handle_error(context, exc.__cause__ or exc, user_id)
                 if context.response is not None:
@@ -110,14 +101,6 @@ class WorkflowExecutor:
             plugin = plugin_cls(self.resources)
             if hasattr(plugin, "context"):
                 plugin.context = context
-            if hasattr(plugin, "execute"):
-                await plugin.execute(context)
-            else:  # pragma: no cover - legacy hook
-                warnings.warn(
-                    f"{plugin_cls.__name__}.run is deprecated. "
-                    "Implement 'execute' to conform to Plugin interface.",
-                    DeprecationWarning,
-                )
-                await plugin.run(str(exc), user_id)
+            await plugin.execute(context)
         await context.run_tool_queue()
         await context.flush_state()

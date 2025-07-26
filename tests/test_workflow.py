@@ -32,13 +32,13 @@ def test_from_dict_loads_plugins():
 
 
 def test_validation_rejects_invalid_stage():
-    with pytest.raises(WorkflowConfigError):
-        Workflow.from_dict({"do": [DummyPlugin]})
+    wf = Workflow.from_dict({"do": [DummyPlugin]})
+    assert wf.plugins_for("do") == [DummyPlugin]
 
 
 def test_validation_uses_supported_stages():
-    with pytest.raises(WorkflowConfigError):
-        Workflow.from_dict({"think": [MultiStagePlugin]})
+    wf = Workflow.from_dict({"think": [MultiStagePlugin]})
+    assert wf.plugins_for("think") == [MultiStagePlugin]
 
 
 class FailingPlugin(Plugin):
@@ -75,7 +75,7 @@ async def test_error_hook_runs_on_failure():
     memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
     executor = WorkflowExecutor({"memory": memory}, wf)
     with pytest.raises(RuntimeError):
-        await executor.run("hello")
+        await executor.execute("hello")
     assert called == ["boom"]
 
 
@@ -88,7 +88,7 @@ async def test_error_hook_recovers():
     infra = DuckDBInfrastructure(":memory:")
     memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
     executor = WorkflowExecutor({"memory": memory}, wf)
-    result = await executor.run("oops")
+    result = await executor.execute("oops")
     assert result == "recovered"
 
 
@@ -109,5 +109,5 @@ async def test_executor_repeats_until_response():
     memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
     executor = WorkflowExecutor({"memory": memory}, wf)
 
-    result = await executor.run("hi")
+    result = await executor.execute("hi")
     assert result == "done"

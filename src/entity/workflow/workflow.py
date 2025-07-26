@@ -54,8 +54,6 @@ class Workflow:
                 )
                 if hasattr(plugin_cls, "validate_workflow"):
                     plugin_cls.validate_workflow(stage)
-                else:
-                    _legacy_validate_plugin_stage(plugin_cls, stage)
                 steps[stage].append(plugin_cls)
         return cls(steps)
 
@@ -68,18 +66,3 @@ class Workflow:
         if not isinstance(data, dict):
             raise WorkflowConfigError("Workflow configuration must be a mapping")
         return cls.from_dict(data)
-
-
-def _legacy_validate_plugin_stage(plugin_cls: Type[Plugin], stage: str) -> None:
-    """Fallback validation for plugins without ``validate_workflow``."""
-    supported = getattr(plugin_cls, "supported_stages", None)
-    explicit = getattr(plugin_cls, "stage", None)
-
-    if supported and stage not in supported:
-        raise WorkflowConfigError(
-            f"{plugin_cls.__name__} does not support stage '{stage}'"
-        )
-    if explicit and explicit != stage:
-        raise WorkflowConfigError(
-            f"{plugin_cls.__name__} expects stage '{explicit}', not '{stage}'"
-        )
