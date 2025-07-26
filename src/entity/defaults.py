@@ -53,7 +53,7 @@ class DefaultConfig:
 class _NullLLMInfrastructure:
     """Fallback LLM implementation used when Ollama is unavailable."""
 
-    def generate(self, prompt: str) -> str:  # pragma: no cover - simple stub
+    async def generate(self, prompt: str) -> str:  # pragma: no cover - simple stub
         return "LLM service unavailable"
 
     def health_check(self) -> bool:  # pragma: no cover - constant result
