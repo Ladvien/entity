@@ -181,3 +181,8 @@ docker compose up -d
 docker compose down -v
 ```
 See `install_docker.sh` for an automated install script on Ubuntu. Detailed deployment steps live in `docs/production_deployment.md`. For help migrating away from Docker, check `docs/migration_from_docker.md`.
+
+### Ollama Setup
+
+`ollama pull` requires an authentication key at `~/.ollama/id_ed25519`. Run `ollama login` once to generate this file before using `entity-cli`.
+Automatic installation can be skipped by setting `ENTITY_AUTO_INSTALL_OLLAMA=false` when you prefer manual setup.

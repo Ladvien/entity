@@ -106,6 +106,23 @@ class OllamaInstaller:
     @classmethod
     def _pull_model(cls, model: str) -> None:
         try:
-            subprocess.run(["ollama", "pull", model], check=True)
+            result = subprocess.run(
+                ["ollama", "pull", model],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            if result.stderr:
+                cls.logger.debug("ollama pull stderr: %s", result.stderr)
         except subprocess.CalledProcessError as exc:
+            err_text = (exc.stderr or str(exc)).lower()
+            if "id_ed25519" in err_text or "no such file" in err_text:
+                cls.logger.error(
+                    "Ollama key not found. Run 'ollama login' to generate ~/.ollama/id_ed25519."
+                )
+                raise RuntimeError(
+                    "Missing Ollama key. Run 'ollama login' and try again."
+                ) from exc
+
             cls.logger.error("Failed to pull model %s: %s", model, exc)
+            raise
