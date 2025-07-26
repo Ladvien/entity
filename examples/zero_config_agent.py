@@ -7,14 +7,16 @@ an error message is printed and the program exits.
 """
 
 import asyncio
+import os
 
 from entity import Agent
-from entity.defaults import DefaultConfig, load_defaults
+from entity.defaults import load_defaults
 
 
 async def main() -> None:
     try:
-        resources = load_defaults(DefaultConfig(auto_install_ollama=False))
+        os.environ.setdefault("ENTITY_AUTO_INSTALL_OLLAMA", "0")
+        resources = load_defaults()
     except Exception as exc:  # pragma: no cover - example runtime guard
         print(f"Failed to initialize resources: {exc}")
         return
