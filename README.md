@@ -78,6 +78,8 @@ await memory.store("bob:greeting", "hello")
 | `ENTITY_OLLAMA_URL` | `http://localhost:11434` |
 | `ENTITY_OLLAMA_MODEL` | `llama3.2:3b` |
 | `ENTITY_STORAGE_PATH` | `./agent_files` |
+| `ENTITY_AUTO_INSTALL_VLLM` | `true` |
+| `ENTITY_VLLM_MODEL` | *(auto)* |
 
 Services are checked for availability when defaults are built. If a component is
 unreachable, an in-memory or stub implementation is used so the framework still
