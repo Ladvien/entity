@@ -57,13 +57,14 @@ The framework uses strict dependency layers to prevent circular dependencies and
 ```python
 # Layer 1: Infrastructure Primitives (concrete technology)
 duckdb_infra = DuckDBInfrastructure("./agent_memory.duckdb")
-ollama_infra = OllamaInfrastructure("http://localhost:11434", "llama3.2:3b")
+vllm_infra = VLLMInfrastructure(auto_detect_model=True)  # NEW: vLLM default
+ollama_infra = OllamaInfrastructure("http://localhost:11434", "llama3.2:3b")  # Fallback
 s3_infra = S3Infrastructure(bucket="my-bucket")
 
 # Layer 2: Resource Interfaces (technology-agnostic APIs)
 db_resource = DatabaseResource(duckdb_infra)
 vector_resource = VectorStoreResource(duckdb_infra) 
-llm_resource = LLMResource(ollama_infra)
+llm_resource = LLMResource(vllm_infra)  # NEW: Uses vLLM by default
 storage_resource = StorageResource(s3_infra)
 
 # Layer 3: Canonical Agent Resources (guaranteed building blocks)
@@ -172,7 +173,7 @@ from entity import Agent
 agent = Agent()  # Automatically uses Layer 0 defaults
 
 # Automatically configured:
-# - Ollama LLM (localhost:11434, llama3.2:3b)  
+# - vLLM with auto-detected optimal model (NEW: primary default)
 # - DuckDB Memory (./agent_memory.duckdb)
 # - LocalFileSystem Storage (./agent_files/)
 # - Default workflow with basic plugins per stage
@@ -201,7 +202,7 @@ response = await agent.chat("What's 15 * 23?")
 
 ```python
 # 1. No Configuration → Layer 0 Defaults
-agent = Agent()  # Uses Ollama + DuckDB + LocalFileSystem
+agent = Agent()  # Uses vLLM + DuckDB + LocalFileSystem
 
 # 2. Partial Configuration → Selective Override  
 agent = Agent.from_config({
@@ -215,6 +216,106 @@ agent = Agent.from_config({
 
 # 3. Full Configuration → No Defaults
 agent = Agent.from_config("config.yaml")  # Everything explicit
+```
+
+### NEW: vLLM Infrastructure Integration
+
+#### Automatic Model Selection and Resource Detection
+
+The framework automatically detects local hardware capabilities and selects optimal models:
+
+```python
+class VLLMInfrastructure(BaseInfrastructure):
+    """Layer 1 infrastructure for vLLM serving with automatic resource detection."""
+    
+    MODEL_SELECTION_MATRIX = {
+        "high_gpu": {  # >16GB VRAM
+            "models": ["meta-llama/Llama-3.1-8b-instruct", "Qwen/Qwen2.5-7B-Instruct"],
+            "priority": "performance"
+        },
+        "medium_gpu": {  # 4-16GB VRAM
+            "models": ["Qwen/Qwen2.5-3B-Instruct", "microsoft/DialoGPT-medium"],
+            "priority": "balanced"
+        },
+        "low_gpu": {  # <4GB VRAM
+            "models": ["Qwen/Qwen2.5-1.5B-Instruct", "Qwen/Qwen2.5-0.5B-Instruct"],
+            "priority": "efficiency"
+        },
+        "cpu_only": {
+            "models": ["Qwen/Qwen2.5-0.5B-Instruct"],
+            "priority": "compatibility"
+        }
+    }
+    
+    def __init__(
+        self,
+        model: str | None = None,
+        auto_detect_model: bool = True,
+        gpu_memory_utilization: float = 0.9,
+        port: int | None = None,
+        version: str | None = None,
+    ) -> None:
+        super().__init__(version)
+        self.model = model or (self._detect_optimal_model() if auto_detect_model else "Qwen/Qwen2.5-0.5B-Instruct")
+        self.gpu_memory_utilization = gpu_memory_utilization
+        self.port = port or self._find_available_port()
+        self._server_process: subprocess.Popen | None = None
+    
+    def _detect_optimal_model(self) -> str:
+        """Automatically select model based on available hardware."""
+        hardware_tier = self._detect_hardware_tier()
+        return self.MODEL_SELECTION_MATRIX[hardware_tier]["models"][0]
+    
+    async def startup(self) -> None:
+        await super().startup()
+        if not self._server_process:
+            await self._start_vllm_server()
+    
+    async def _start_vllm_server(self) -> None:
+        """Start vLLM API server as managed subprocess."""
+        # Implementation starts vLLM with detected configuration
+```
+
+#### Enhanced Default Loading with vLLM
+
+```python
+def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
+    """Build canonical resources using vLLM as the primary LLM infrastructure."""
+    
+    cfg = config or DefaultConfig.from_env()
+    logger = logging.getLogger("defaults")
+
+    # Try vLLM first (NEW: primary default)
+    if cfg.auto_install_vllm:
+        try:
+            VLLMInstaller.ensure_vllm_available()
+            vllm_infra = VLLMInfrastructure(auto_detect_model=True)
+            if vllm_infra.health_check():
+                llm_resource = LLMResource(vllm_infra)
+                logger.info("Using vLLM with auto-detected model: %s", vllm_infra.model)
+            else:
+                raise InfrastructureError("vLLM setup failed")
+        except Exception as exc:
+            logger.warning("vLLM setup failed, falling back to Ollama: %s", exc)
+            # Fallback to existing Ollama logic...
+            if cfg.auto_install_ollama:
+                OllamaInstaller.ensure_ollama_available(cfg.ollama_model)
+            # ... rest of Ollama fallback logic
+    
+    # Rest of resource setup unchanged...
+    duckdb = DuckDBInfrastructure(cfg.duckdb_path)
+    storage_infra = LocalStorageInfrastructure(cfg.storage_path)
+    
+    db_resource = DatabaseResource(duckdb)
+    vector_resource = VectorStoreResource(duckdb)
+    storage_resource = LocalStorageResource(storage_infra)
+
+    return {
+        "memory": Memory(db_resource, vector_resource),
+        "llm": LLM(llm_resource),
+        "storage": Storage(storage_resource),
+        "logging": EnhancedLoggingResource(),  # NEW: Enhanced logging
+    }
 ```
 
 ## Plugin System Architecture
@@ -247,7 +348,6 @@ class Plugin(ABC):
         return await self._execute_impl(context)
     
     @abstractmethod
-
     async def _execute_impl(self, context: PluginContext) -> Any:
         """Plugin-specific implementation"""
 ```
@@ -589,8 +689,9 @@ def substitute_variables(obj: Any, env_file: str = None) -> Any:
 plugins:
   resources:
     llm:
-      api_key: ${OPENAI_API_KEY}
-      model: ${LLM_MODEL}
+      type: vllm  # NEW: vLLM configuration
+      model: ${VLLM_MODEL}
+      gpu_memory_utilization: ${GPU_MEMORY_UTIL}
     database:
       host: ${DB_HOST}
       password: ${DB_PASS}
@@ -652,20 +753,289 @@ supported_stages: [DO, REVIEW]
 
 ## Observability & Monitoring
 
-### Unified Logging System
+### ENHANCED: Unified Logging System
 
-**Decision**: `LoggingResource` provides unified, multi-output logging for all agent components:
+**Decision**: Enhanced `LoggingResource` provides unified, structured logging across all framework components with automatic context injection and environment-specific formatting.
+
+#### Structured Logging Architecture
 
 ```python
-# All components use the same logging interface
-logger = context.get_resource("logging")
+from enum import Enum
+from dataclasses import dataclass
+from typing import Any, Dict
 
-await logger.log("info", "Plugin execution started",
-                 component="plugin",
-                 user_id=context.user_id,
-                 workflow_id=context.workflow_id,
-                 stage=context.current_stage,
-                 plugin_name=self.__class__.__name__)
+class LogLevel(Enum):
+    DEBUG = "debug"
+    INFO = "info" 
+    WARNING = "warning"
+    ERROR = "error"
+
+class LogCategory(Enum):
+    PLUGIN_LIFECYCLE = "plugin_lifecycle"
+    USER_ACTION = "user_action"
+    RESOURCE_ACCESS = "resource_access"
+    TOOL_USAGE = "tool_usage"
+    MEMORY_OPERATION = "memory_operation"
+    WORKFLOW_EXECUTION = "workflow_execution"
+    PERFORMANCE = "performance"
+    ERROR = "error"
+
+@dataclass
+class LogContext:
+    """Automatic context injected into every log entry."""
+    user_id: str
+    workflow_id: str | None = None
+    stage: str | None = None
+    plugin_name: str | None = None
+    execution_id: str | None = None
+
+class EnhancedLoggingResource(ABC):
+    """Enhanced logging with automatic context and structured output."""
+    
+    @abstractmethod
+    async def log(
+        self,
+        level: LogLevel,
+        category: LogCategory,
+        message: str,
+        context: LogContext | None = None,
+        **extra_fields: Any
+    ) -> None:
+        """Log structured entry with automatic context injection."""
+```
+
+#### Environment-Specific Logging Implementations
+
+```python
+# Development: Pretty console logging
+class ConsoleLoggingResource(EnhancedLoggingResource):
+    """Colored, formatted console logging for development."""
+    
+    def __init__(self, level: LogLevel = LogLevel.INFO, show_context: bool = True):
+        self.level = level
+        self.show_context = show_context
+        self._colors = {
+            LogLevel.DEBUG: "\033[36m",    # Cyan
+            LogLevel.INFO: "\033[32m",     # Green  
+            LogLevel.WARNING: "\033[33m",  # Yellow
+            LogLevel.ERROR: "\033[31m",    # Red
+        }
+    
+    async def log(self, level, category, message, context=None, **extra_fields):
+        if self._should_log(level):
+            formatted = self._format_console_entry(level, category, message, context, extra_fields)
+            print(formatted)
+
+# Production: Structured JSON logging  
+class JSONLoggingResource(EnhancedLoggingResource):
+    """Structured JSON logging for production environments."""
+    
+    def __init__(self, level: LogLevel = LogLevel.INFO, output_file: str | None = None):
+        self.level = level
+        self.output_file = output_file
+    
+    async def log(self, level, category, message, context=None, **extra_fields):
+        if self._should_log(level):
+            entry = self._build_json_entry(level, category, message, context, extra_fields)
+            await self._write_entry(entry)
+```
+
+#### Enhanced Plugin Context with Automatic Logging
+
+```python
+class PluginContext(WorkflowContext):
+    """Enhanced context with comprehensive automatic logging."""
+    
+    def __init__(
+        self,
+        resources: Dict[str, Any],
+        user_id: str,
+        workflow_id: str | None = None,
+        execution_id: str | None = None,
+        memory: Any | None = None,
+    ) -> None:
+        super().__init__()
+        # ... existing initialization ...
+        self._log_context = LogContext(
+            user_id=user_id,
+            workflow_id=workflow_id or self._generate_workflow_id(),
+            execution_id=execution_id or self._generate_execution_id()
+        )
+    
+    async def log(
+        self,
+        level: LogLevel,
+        category: LogCategory,
+        message: str,
+        **extra_fields: Any
+    ) -> None:
+        """Convenience method with automatic context injection."""
+        logger = self.get_resource("logging")
+        if logger:
+            context = LogContext(
+                user_id=self._log_context.user_id,
+                workflow_id=self._log_context.workflow_id,
+                stage=self.current_stage,
+                plugin_name=getattr(self, '_current_plugin_name', None),
+                execution_id=self._log_context.execution_id
+            )
+            await logger.log(level, category, message, context, **extra_fields)
+```
+
+#### Enhanced Plugin Base Class with Comprehensive Logging
+
+```python
+class Plugin(ABC):
+    """Enhanced base class with automatic comprehensive logging."""
+    
+    async def execute(self, context: Any) -> Any:
+        """Enhanced execution with comprehensive automatic logging."""
+        context._current_plugin_name = self.__class__.__name__
+        start_time = time.perf_counter()
+        
+        # Plugin lifecycle logging
+        await context.log(
+            LogLevel.INFO,
+            LogCategory.PLUGIN_LIFECYCLE,
+            "Starting plugin execution",
+            plugin_class=self.__class__.__name__,
+            stage=context.current_stage,
+            dependencies=self.dependencies
+        )
+        
+        try:
+            # Execute with automatic resource access logging
+            result = await self._execute_with_logging(context)
+            
+            # Success logging
+            await context.log(
+                LogLevel.INFO,
+                LogCategory.PLUGIN_LIFECYCLE,
+                "Plugin execution completed successfully",
+                duration_ms=(time.perf_counter() - start_time) * 1000,
+                result_type=type(result).__name__
+            )
+            
+            return result
+            
+        except Exception as exc:
+            # Error logging with full context
+            await context.log(
+                LogLevel.ERROR,
+                LogCategory.ERROR,
+                f"Plugin execution failed: {str(exc)}",
+                exception_type=exc.__class__.__name__,
+                duration_ms=(time.perf_counter() - start_time) * 1000,
+                traceback=traceback.format_exc()
+            )
+            raise
+    
+    async def _execute_with_logging(self, context: Any) -> Any:
+        """Wrapper that adds automatic logging for all context operations."""
+        # Monkey-patch context methods to add comprehensive logging
+        original_get_resource = context.get_resource
+        original_remember = context.remember
+        original_recall = context.recall
+        original_tool_use = context.tool_use
+        
+        async def logged_get_resource(name: str):
+            await context.log(
+                LogLevel.DEBUG,
+                LogCategory.RESOURCE_ACCESS,
+                f"Accessing resource: {name}"
+            )
+            return original_get_resource(name)
+        
+        async def logged_remember(key: str, value: Any):
+            await context.log(
+                LogLevel.DEBUG,
+                LogCategory.MEMORY_OPERATION,
+                f"Storing memory key: {key}",
+                value_type=type(value).__name__
+            )
+            return await original_remember(key, value)
+        
+        async def logged_recall(key: str, default: Any = None):
+            result = await original_recall(key, default)
+            await context.log(
+                LogLevel.DEBUG,
+                LogCategory.MEMORY_OPERATION,
+                f"Retrieved memory key: {key}",
+                found=result is not None,
+                value_type=type(result).__name__ if result is not None else None
+            )
+            return result
+        
+        async def logged_tool_use(name: str, **kwargs):
+            await context.log(
+                LogLevel.INFO,
+                LogCategory.TOOL_USAGE,
+                f"Executing tool: {name}",
+                tool_args=list(kwargs.keys())
+            )
+            start = time.perf_counter()
+            try:
+                result = await original_tool_use(name, **kwargs)
+                await context.log(
+                    LogLevel.INFO,
+                    LogCategory.TOOL_USAGE,
+                    f"Tool execution completed: {name}",
+                    duration_ms=(time.perf_counter() - start) * 1000,
+                    success=True
+                )
+                return result
+            except Exception as exc:
+                await context.log(
+                    LogLevel.ERROR,
+                    LogCategory.TOOL_USAGE,
+                    f"Tool execution failed: {name}",
+                    duration_ms=(time.perf_counter() - start) * 1000,
+                    success=False,
+                    error=str(exc)
+                )
+                raise
+        
+        # Patch context methods
+        context.get_resource = logged_get_resource
+        context.remember = logged_remember
+        context.recall = logged_recall
+        context.tool_use = logged_tool_use
+        
+        try:
+            return await self._execute_impl(context)
+        finally:
+            # Restore original methods
+            context.get_resource = original_get_resource
+            context.remember = original_remember
+            context.recall = original_recall
+            context.tool_use = original_tool_use
+```
+
+#### Developer Experience: Simple Logging API
+
+```python
+# Simple plugin logging - automatic context injection
+class MyPlugin(PromptPlugin):
+    async def _execute_impl(self, context: PluginContext) -> None:
+        # Simple structured logging with automatic context
+        await context.log(
+            LogLevel.INFO, 
+            LogCategory.USER_ACTION,
+            "Processing user request",
+            request_type="weather_query"
+        )
+        
+        # All resource access automatically logged at DEBUG level
+        llm = context.get_resource("llm")  # Auto-logged
+        await context.remember("result", data)  # Auto-logged
+        result = await context.tool_use("weather", location="SF")  # Auto-logged
+        
+        await context.log(
+            LogLevel.INFO,
+            LogCategory.PLUGIN_LIFECYCLE, 
+            "Request processing complete",
+            result_size=len(result)
+        )
 ```
 
 ### Shared Metrics Collection
@@ -713,6 +1083,9 @@ class MyPlugin(PromptPlugin):
         return ValidationResult.success()
         
     async def _execute_impl(self, context: PluginContext) -> None:
+        # Use enhanced logging for development visibility
+        await context.log(LogLevel.INFO, LogCategory.PLUGIN_LIFECYCLE, "Starting analysis")
+        
         # Use persistent memory for all state
         await context.remember("my_analysis", analysis_result)
         
@@ -739,26 +1112,28 @@ workflows:
 ### Progressive Complexity Examples
 
 ```python
-# Layer 0: Zero config
-agent = Agent()
+# Layer 0: Zero config with vLLM
+agent = Agent()  # Automatically uses vLLM with optimal model
 
-# Layer 1: Named workflows
+# Layer 1: Named workflows with vLLM  
 agent = Agent.from_workflow("helpful_assistant")
 
-# Layer 2: Custom workflows
+# Layer 2: Custom workflows with specific vLLM model
 agent = Agent.from_workflow_dict({
     "think": ["analytical_reasoning", "creativity_booster"],
     "output": ["markdown_formatter"]
+}, resources={
+    "llm": LLM(LLMResource(VLLMInfrastructure(model="Qwen/Qwen2.5-7B-Instruct")))
 })
 
-# Layer 3: Full configuration
+# Layer 3: Full configuration with production logging
 agent = Agent.from_config("production-config.yaml")
 ```
 
 ## Key Architectural Benefits
 
 1. **Clear Mental Model**: Agent = Resources + Workflow + Infrastructure
-2. **Zero friction start**: Agents work immediately with sensible defaults
+2. **Zero friction start**: Agents work immediately with vLLM auto-detection and sensible defaults
 3. **Stateless scaling**: Horizontal scaling through external persistence
 4. **Multi-user support**: Simple user isolation through namespacing
 5. **Progressive complexity**: Start simple, add sophistication as needed
@@ -767,6 +1142,7 @@ agent = Agent.from_config("production-config.yaml")
 8. **Constructor injection**: Immediate validation with no incomplete state
 9. **Universal plugin system**: Single interface for all extensions
 10. **CLI as Adapter**: Command-line tool implemented as Input/Output adapter
-11. **Production-ready**: Built-in observability, security, and deployment patterns
+11. **Production-ready observability**: Comprehensive automatic logging and metrics
+12. **Optimal performance**: vLLM with automatic hardware detection and model selection
 
-This architecture provides a foundation for building powerful, scalable AI agents while maintaining developer productivity through clear mental models, progressive disclosure, and intelligent defaults that scale from local development to production deployment.
+This architecture provides a foundation for building powerful, scalable AI agents while maintaining developer productivity through clear mental models, progressive disclosure, intelligent defaults, and comprehensive observability that scales from local development to production deployment.
