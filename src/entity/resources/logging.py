@@ -220,3 +220,45 @@ class RichJSONLoggingResource(EnhancedLoggingResource):
                 k: v for k, v in asdict(context).items() if v is not None
             }
         await self._write_entry(entry)
+
+
+class RichLoggingResource(EnhancedLoggingResource):
+    """Convenience wrapper choosing between console and JSON logging."""
+
+    def __init__(
+        self,
+        level: LogLevel = LogLevel.INFO,
+        *,
+        json: bool = False,
+        log_file: str | None = None,
+        max_bytes: int = 0,
+        backup_count: int = 0,
+        show_context: bool = True,
+    ) -> None:
+        super().__init__(level)
+        if json:
+            self._impl = RichJSONLoggingResource(
+                level=level,
+                output_file=log_file,
+                max_bytes=max_bytes,
+                backup_count=backup_count,
+            )
+        else:
+            self._impl = RichConsoleLoggingResource(
+                level=level, show_context=show_context
+            )
+        # share record list for callers expecting EnhancedLoggingResource.records
+        self.records = self._impl.records
+
+    def health_check(self) -> bool:
+        return self._impl.health_check()
+
+    async def log(
+        self,
+        level: LogLevel,
+        category: LogCategory,
+        message: str,
+        context: LogContext | None = None,
+        **extra_fields: Any,
+    ) -> None:
+        await self._impl.log(level, category, message, context, **extra_fields)
