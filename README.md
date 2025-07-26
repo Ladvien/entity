@@ -78,12 +78,17 @@ await memory.store("bob:greeting", "hello")
 | `ENTITY_OLLAMA_URL` | `http://localhost:11434` |
 | `ENTITY_OLLAMA_MODEL` | `llama3.2:3b` |
 | `ENTITY_STORAGE_PATH` | `./agent_files` |
+<<<<<<< HEAD
 | `ENTITY_LOG_LEVEL` | `info` |
 | `ENTITY_JSON_LOGS` | `0` |
 | `ENTITY_LOG_FILE` | `./agent.log` |
 
 Set `ENTITY_JSON_LOGS=1` to write structured logs to ``ENTITY_LOG_FILE`` instead
 of printing to the console.
+=======
+| `ENTITY_AUTO_INSTALL_VLLM` | `true` |
+| `ENTITY_VLLM_MODEL` | *(auto)* |
+>>>>>>> pr-1954
 
 Services are checked for availability when defaults are built. If a component is
 unreachable, an in-memory or stub implementation is used so the framework still

@@ -37,6 +37,10 @@ class DefaultConfig:
     storage_path: str = "./agent_files"
     auto_install_ollama: bool = True
     auto_install_vllm: bool = True
+<<<<<<< HEAD
+=======
+    vllm_model: str | None = None
+>>>>>>> pr-1954
 
     @classmethod
     def from_env(cls) -> "DefaultConfig":
@@ -57,6 +61,10 @@ class DefaultConfig:
                 str(cls.auto_install_vllm),
             ).lower()
             in {"1", "true", "yes"},
+<<<<<<< HEAD
+=======
+            vllm_model=os.getenv("ENTITY_VLLM_MODEL", cls.vllm_model),
+>>>>>>> pr-1954
         )
 
 
@@ -77,6 +85,7 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
     cfg = config or DefaultConfig.from_env()
     logger = logging.getLogger("defaults")
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     log_level = os.getenv("ENTITY_LOG_LEVEL", "info")
     json_logs = os.getenv("ENTITY_JSON_LOGS", "0").lower() in {"1", "true", "yes"}
@@ -106,13 +115,35 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
         if cfg.auto_install_ollama:
             OllamaInstaller.ensure_ollama_available(cfg.ollama_model)
 >>>>>>> pr-1950
+=======
+    llm_infra = None
+
+    if cfg.auto_install_vllm:
+        try:
+            VLLMInstaller.ensure_vllm_available(cfg.vllm_model)
+            vllm = VLLMInfrastructure(model=cfg.vllm_model)
+            logger.debug("Checking local vLLM at %s", vllm.base_url)
+            if vllm.health_check():
+                llm_infra = vllm
+                logger.info("Using vLLM infrastructure")
+        except Exception as exc:
+            logger.warning("vLLM setup failed: %s", exc)
+
+    if llm_infra is None:
+        if cfg.auto_install_ollama:
+            OllamaInstaller.ensure_ollama_available(cfg.ollama_model)
+>>>>>>> pr-1954
 
     duckdb = DuckDBInfrastructure(cfg.duckdb_path)
     if not duckdb.health_check():
         logger.debug("Falling back to in-memory DuckDB")
         duckdb = DuckDBInfrastructure(":memory:")
 
+<<<<<<< HEAD
     if llm_impl is None:
+=======
+    if llm_infra is None:
+>>>>>>> pr-1954
         ollama = OllamaInfrastructure(
             cfg.ollama_url,
             cfg.ollama_model,
@@ -122,19 +153,32 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
         if ollama.health_check():
             if cfg.auto_install_ollama:
                 OllamaInstaller.ensure_ollama_available(cfg.ollama_model)
+<<<<<<< HEAD
             llm_impl = ollama
+=======
+            llm_infra = ollama
+>>>>>>> pr-1954
         else:
             logger.debug("Ollama not reachable; attempting installation")
             if cfg.auto_install_ollama:
                 OllamaInstaller.ensure_ollama_available(cfg.ollama_model)
                 if not ollama.health_check():
                     logger.warning("Using stub LLM implementation")
+<<<<<<< HEAD
                     llm_impl = _NullLLMInfrastructure()
                 else:
                     llm_impl = ollama
             else:
                 logger.warning("Using stub LLM implementation")
                 llm_impl = _NullLLMInfrastructure()
+=======
+                    llm_infra = _NullLLMInfrastructure()
+                else:
+                    llm_infra = ollama
+            else:
+                logger.warning("Using stub LLM implementation")
+                llm_infra = _NullLLMInfrastructure()
+>>>>>>> pr-1954
 
     storage_infra = LocalStorageInfrastructure(cfg.storage_path)
     if not storage_infra.health_check():
@@ -148,7 +192,11 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
 
     db_resource = DatabaseResource(duckdb)
     vector_resource = VectorStoreResource(duckdb)
+<<<<<<< HEAD
     llm_resource = LLMResource(llm_impl)
+=======
+    llm_resource = LLMResource(llm_infra)
+>>>>>>> pr-1954
     storage_resource = LocalStorageResource(storage_infra)
 
     return {
