@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from entity.plugins import Plugin
-from entity.workflow.executor import WorkflowExecutor
+
 
 from tests.plugin_test_base import PluginValidationTests, PluginDependencyTests
 
 
 class ExamplePlugin(Plugin):
-    stage = WorkflowExecutor.THINK
+    supported_stages = ["think"]
     dependencies = ["memory"]
 
     class ConfigModel(Plugin.ConfigModel):
@@ -19,6 +19,6 @@ class ExamplePlugin(Plugin):
 
 class TestExamplePlugin(PluginValidationTests, PluginDependencyTests):
     Plugin = ExamplePlugin
-    stage = WorkflowExecutor.THINK
+    stage = "think"
     config = {"value": 1}
-    resources = {}
+    resources = {"memory": object()}

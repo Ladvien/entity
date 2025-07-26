@@ -17,7 +17,6 @@ from functools import lru_cache
 from entity.config.validation import (
     ConfigModel,
     validate_config,
-    validate_workflow,
 )
 
 
@@ -100,7 +99,6 @@ def clear_config_cache() -> None:
 
 __all__ = [
     "validate_config",
-    "validate_workflow",
     "ConfigModel",
     "SubstitutionError",
     "VariableResolver",

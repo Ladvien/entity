@@ -18,16 +18,13 @@ class Agent:
     def __init__(
         self,
         resources: dict[str, Any] | None = None,
-        workflow: dict[str, Iterable[type]] | list[type] | None = None,
+        workflow: Workflow | None = None,
         infrastructure: object | None = None,
     ) -> None:
         if resources is None:
             resources = load_defaults()
         if not isinstance(resources, dict):
             raise TypeError("resources must be a mapping")
-
-        if workflow is not None and not isinstance(workflow, (dict, list)):
-            raise TypeError("workflow must be a list or mapping")
 
         self.resources = resources
         self.workflow = workflow
@@ -52,21 +49,22 @@ class Agent:
         infrastructure: object | None = None,
     ) -> "Agent":
         """Build an agent from a workflow template or YAML file."""
+        _resources = resources if resources is not None else load_defaults()
 
         if name == "default":
-            workflow = default_workflow()
+            workflow = default_workflow(_resources)
         else:
             path = Path(name)
             if path.exists():
-                workflow = Workflow.from_yaml(str(path)).steps
+                workflow = Workflow.from_yaml(str(path), _resources)
             else:
                 try:
-                    workflow = load_template(name).steps
+                    workflow = load_template(name, _resources)
                 except (TemplateNotFoundError, FileNotFoundError) as exc:
                     raise ValueError(f"Unknown workflow '{name}'") from exc
 
         return cls(
-            resources=resources if resources is not None else load_defaults(),
+            resources=_resources,
             workflow=workflow,
             infrastructure=infrastructure,
         )
@@ -80,11 +78,11 @@ class Agent:
         infrastructure: object | None = None,
     ) -> "Agent":
         """Instantiate from a stage-to-plugins mapping."""
-
-        wf = Workflow.from_dict(config)
+        _resources = resources if resources is not None else load_defaults()
+        wf = Workflow.from_dict(config, _resources)
         return cls(
-            resources=resources if resources is not None else load_defaults(),
-            workflow=wf.steps,
+            resources=_resources,
+            workflow=wf,
             infrastructure=infrastructure,
         )
 
@@ -104,11 +102,12 @@ class Agent:
             if cached is not None:
                 return cached
 
+        _resources = resources if resources is not None else load_defaults()
         cfg = load_config(resolved)
-        wf = Workflow.from_dict(cfg.workflow)
+        wf = Workflow.from_dict(cfg.workflow, _resources)
         agent = cls(
-            resources=resources if resources is not None else load_defaults(),
-            workflow=wf.steps,
+            resources=_resources,
+            workflow=wf,
             infrastructure=infrastructure,
         )
         if resources is None and infrastructure is None:
@@ -118,15 +117,8 @@ class Agent:
     async def chat(self, message: str, user_id: str = "default"):
         """Process ``message`` through the workflow for ``user_id``."""
 
-        steps = self.workflow or default_workflow()
-        if isinstance(steps, dict):
-            workflow_steps = steps
-        else:
-            workflow_steps = {
-                stage: [plugin] for stage, plugin in zip(WorkflowExecutor._ORDER, steps)
-            }
-
-        executor = WorkflowExecutor(self.resources, workflow_steps)
+        workflow = self.workflow or default_workflow(self.resources)
+        executor = WorkflowExecutor(self.resources, workflow)
         result = await executor.execute(message, user_id=user_id)
         # TODO: Use a response object instead of a dict
         return {"response": result}

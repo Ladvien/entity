@@ -14,7 +14,7 @@ async def test_output_plugin_sets_response_on_second_iteration():
     calls: list[int] = []
 
     class TwoPassOutputPlugin(Plugin):
-        stage = WorkflowExecutor.OUTPUT
+        supported_stages = [WorkflowExecutor.OUTPUT]
 
         async def _execute_impl(self, context: PluginContext) -> str:
             calls.append(context.loop_count)
@@ -22,10 +22,14 @@ async def test_output_plugin_sets_response_on_second_iteration():
                 context.say("final")
             return "ignored"
 
-    wf = {WorkflowExecutor.OUTPUT: [TwoPassOutputPlugin]}
+    from entity.workflow.workflow import Workflow
+
+    wf_dict = {WorkflowExecutor.OUTPUT: [TwoPassOutputPlugin]}
     infra = DuckDBInfrastructure(":memory:")
     memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
-    executor = WorkflowExecutor({"memory": memory}, wf)
+    resources = {"memory": memory}
+    wf = Workflow.from_dict(wf_dict, resources)
+    executor = WorkflowExecutor(resources, wf)
 
     result = await executor.execute("hello")
 

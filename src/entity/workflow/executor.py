@@ -6,6 +6,10 @@ from itertools import count
 from entity.resources.logging import RichConsoleLoggingResource
 
 from entity.plugins.context import PluginContext
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from entity.workflow.workflow import Workflow
 
 
 class WorkflowExecutor:
@@ -25,13 +29,11 @@ class WorkflowExecutor:
     def __init__(
         self,
         resources: dict[str, Any],
-        workflow: dict[str, Iterable[type]] | None = None,
+        workflow: "Workflow" | None = None,
     ) -> None:
         self.resources = dict(resources)
         self.resources.setdefault("logging", RichConsoleLoggingResource())
-        self.workflow = {
-            stage: list(plugins) for stage, plugins in (workflow or {}).items()
-        }
+        self.workflow = workflow or Workflow()
 
     async def execute(
         self,
@@ -45,7 +47,7 @@ class WorkflowExecutor:
         await context.load_state()
         result = message
 
-        output_configured = bool(self.workflow.get(self.OUTPUT))
+        output_configured = bool(self.workflow.plugins_for(self.OUTPUT))
         for loop_count in count():
             context.loop_count = loop_count
             for stage in self._ORDER:
@@ -72,11 +74,7 @@ class WorkflowExecutor:
         context.message = message
         result = message
 
-        for plugin_cls in self.workflow.get(stage, []):
-            plugin = plugin_cls(self.resources)
-            if hasattr(plugin, "context"):
-                plugin.context = context
-
+        for plugin in self.workflow.plugins_for(stage):
             try:
                 result = await plugin.execute(context)
             except Exception as exc:  # pragma: no cover - runtime errors
@@ -95,10 +93,7 @@ class WorkflowExecutor:
         """Run error stage plugins when a plugin fails."""
         context.current_stage = self.ERROR
         context.message = str(exc)
-        for plugin_cls in self.workflow.get(self.ERROR, []):
-            plugin = plugin_cls(self.resources)
-            if hasattr(plugin, "context"):
-                plugin.context = context
+        for plugin in self.workflow.plugins_for(self.ERROR):
             await plugin.execute(context)
         await context.run_tool_queue()
         await context.flush_state()

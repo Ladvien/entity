@@ -10,7 +10,7 @@ from entity.resources.memory import Memory
 from entity.resources.llm_wrapper import LLM
 from entity.resources.file_storage_wrapper import FileStorage
 from entity.resources.logging import (
-    EnhancedLoggingResource,
+    RichLoggingResource,
     RichConsoleLoggingResource,
     RichJSONLoggingResource,
     RichLoggingResource,
@@ -28,7 +28,7 @@ __all__ = [
     "Memory",
     "LLM",
     "FileStorage",
-    "EnhancedLoggingResource",
+    "RichLoggingResource",
     "RichConsoleLoggingResource",
     "RichJSONLoggingResource",
     "RichLoggingResource",

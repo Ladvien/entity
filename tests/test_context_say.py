@@ -1,5 +1,7 @@
 import pytest
 
+from entity.workflow.workflow import Workflow
+
 from entity.plugins.context import WorkflowContext, PluginContext
 from entity.plugins.base import Plugin
 from entity.workflow.executor import WorkflowExecutor
@@ -25,10 +27,12 @@ async def test_plugin_say_invalid_stage() -> None:
             context.say("oops")
             return "ignored"
 
-    wf = {WorkflowExecutor.THINK: [BadPlugin]}
+    wf_dict = {WorkflowExecutor.THINK: [BadPlugin]}
     infra = DuckDBInfrastructure(":memory:")
     memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
-    executor = WorkflowExecutor({"memory": memory}, wf)
+    resources = {"memory": memory}
+    wf = Workflow.from_dict(wf_dict, resources)
+    executor = WorkflowExecutor(resources, wf)
 
     with pytest.raises(RuntimeError):
         await executor.execute("hi")

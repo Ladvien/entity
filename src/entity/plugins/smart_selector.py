@@ -5,6 +5,7 @@ from typing import Any, Iterable
 from entity.plugins.prompt import PromptPlugin
 from entity.tools.registry import ToolInfo
 from entity.workflow.executor import WorkflowExecutor
+from entity.workflow.executor import WorkflowExecutor
 
 
 class SmartToolSelectorPlugin(PromptPlugin):

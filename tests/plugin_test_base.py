@@ -5,26 +5,38 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
     from entity.plugins import Plugin  # noqa: F401
-from entity.workflow.executor import WorkflowExecutor
-from entity.workflow.workflow import WorkflowConfigError
+from entity.workflow.workflow import Workflow, WorkflowConfigError
 
 
 class PluginValidationTests:
     """Mixin with basic validation checks for plugins."""
 
     Plugin: type[Plugin]
-    stage: str = WorkflowExecutor.THINK
+    stage: str = "think"
     config: dict = {}
+    resources: dict = {} # Add resources for plugin instantiation
 
     def test_validate_config(self):
-        self.Plugin.validate_config(self.config)
+        plugin_instance = self.Plugin(self.resources, self.config)
+        result = plugin_instance.validate_config()
+        assert result.success
 
     def test_validate_workflow(self):
-        self.Plugin.validate_workflow(self.stage)
+        plugin_instance = self.Plugin(self.resources, self.config)
+        # Create a dummy workflow for validation
+        dummy_workflow = Workflow(steps={self.stage: [plugin_instance]}, supported_stages=[self.stage])
+        plugin_instance.assigned_stage = self.stage
+        result = plugin_instance.validate_workflow(dummy_workflow)
+        assert result.success
 
     def test_invalid_stage(self):
-        with pytest.raises(WorkflowConfigError, match="cannot"):
-            self.Plugin.validate_workflow("invalid")
+        plugin_instance = self.Plugin(self.resources, self.config)
+        # Create a dummy workflow that does not support the assigned stage
+        dummy_workflow = Workflow(steps={}, supported_stages=["another_stage"])
+        plugin_instance.assigned_stage = self.stage # Manually assign stage for this test
+        result = plugin_instance.validate_workflow(dummy_workflow)
+        assert not result.success
+        assert "Workflow does not support stage" in result.errors[0]
 
 
 class PluginDependencyTests:
@@ -37,6 +49,6 @@ class PluginDependencyTests:
     def test_missing_dependency_error(self):
         if not self.Plugin.dependencies:
             pytest.skip("plugin has no dependencies")
-        partial = {d: object() for d in self.Plugin.dependencies[:-1]}
+        partial_resources = {d: object() for d in self.Plugin.dependencies[:-1]}
         with pytest.raises(RuntimeError, match="missing required resources"):
-            self.Plugin(partial, config=self.config)
+            self.Plugin(partial_resources, config=self.config)

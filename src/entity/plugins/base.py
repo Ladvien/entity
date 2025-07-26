@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any, Dict, TYPE_CHECKING
 
 from pydantic import BaseModel, ValidationError
+from entity.plugins.validation import ValidationResult
+
+if TYPE_CHECKING:
+    from entity.workflow.workflow import Workflow
 
 
 class Plugin(ABC):
@@ -15,72 +19,38 @@ class Plugin(ABC):
         class Config:  # pragma: no cover - simple pydantic setup
             extra = "forbid"
 
-    stage: str | None = None
     supported_stages: list[str] = []
     dependencies: list[str] = []
 
     def __init__(self, resources: dict[str, Any], config: Dict[str, Any] | None = None):
         """Instantiate the plugin and run all startup validations."""
         self.resources = resources
-        # Fail fast on misconfigured options
-        self.config = self.validate_config(config or {})
-        # Ensure required resources are available before execution starts
+        self.config = config or {}
+        self.assigned_stage: str | None = None
         self._validate_dependencies()
 
-    # TODO: Remove unnecessary comments, they are self-explanatory
-    # ------------------------------------------------------------------
-    # Validation helpers
-    # ------------------------------------------------------------------
-
-    @classmethod
-    def validate_config(cls, config: Dict[str, Any]) -> ConfigModel:
+    def validate_config(self) -> ValidationResult:
         """Validate ``config`` using ``ConfigModel`` and return the model."""
         try:
-            return cls.ConfigModel(**config)
+            self.config = self.ConfigModel(**self.config)
+            return ValidationResult.success()
         except ValidationError as exc:  # pragma: no cover - simple conversion
-            raise ValueError(
-                f"Invalid configuration for {cls.__name__}: {exc}"
-            ) from exc
+            return ValidationResult.error(f"Invalid configuration for {self.__class__.__name__}: {exc}")
 
-    @classmethod
-    def validate_workflow(cls, stage: str) -> None:
+    def validate_workflow(self, workflow: "Workflow") -> ValidationResult:
         """Validate that ``cls`` can run in ``stage`` before workflow execution."""
-        from entity.workflow.workflow import WorkflowConfigError
-
-        if cls.supported_stages and stage not in cls.supported_stages:
-            allowed = ", ".join(cls.supported_stages)
-            raise WorkflowConfigError(
-                f"{cls.__name__} cannot run in stage '{stage}'. "
-                f"Supported stages: {allowed}"
-            )
-        if cls.stage and cls.stage != stage:
-            raise WorkflowConfigError(
-                f"{cls.__name__} is fixed to stage '{cls.stage}' and cannot "
-                f"be scheduled for '{stage}'"
-            )
+        if self.assigned_stage not in workflow.supported_stages:
+            return ValidationResult.error(f"Workflow does not support stage {self.assigned_stage}")
+        return ValidationResult.success()
 
     async def execute(self, context: Any) -> Any:
         """Run the plugin."""
-        self._enforce_stage(context)
+        if context.current_stage not in self.supported_stages:
+            raise RuntimeError(f"Plugin cannot run in {context.current_stage}")
 
         context._current_plugin_name = self.__class__.__name__
 
         return await self._execute_impl(context)
-
-    def _enforce_stage(self, context: Any) -> None:
-        current = getattr(context, "current_stage", None)
-        expected = self.stage
-        if expected and current != expected:
-            raise RuntimeError(
-                f"{self.__class__.__name__} expected stage '{expected}' but "
-                f"was scheduled for '{current}'"
-            )
-        if self.supported_stages and current not in self.supported_stages:
-            allowed = ", ".join(self.supported_stages)
-            raise RuntimeError(
-                f"{self.__class__.__name__} does not support stage '{current}'. "
-                f"Supported stages: {allowed}"
-            )
 
     def _validate_dependencies(self) -> None:
         missing = [dep for dep in self.dependencies if dep not in self.resources]

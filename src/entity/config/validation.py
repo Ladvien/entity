@@ -10,8 +10,11 @@ from pydantic import BaseModel, ValidationError
 import yaml
 
 # TODO: Use absolute imports
-from entity.workflow.workflow import Workflow, WorkflowConfigError
-from entity.workflow.executor import WorkflowExecutor
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from entity.workflow.workflow import Workflow, WorkflowConfigError
+    from entity.workflow.executor import WorkflowExecutor
 
 REQUIRED_KEYS = {"resources", "workflow"}
 
@@ -43,19 +46,7 @@ def validate_config(path: str | Path) -> ConfigModel:
         raise ValueError(f"Invalid configuration:\n{exc}") from exc
 
 
-def validate_workflow_compatibility(cfg: ConfigModel) -> Workflow:
+def validate_workflow_compatibility(cfg: ConfigModel, resources: dict[str, Any]) -> "Workflow":
     """Second-phase validation that imports plugins and checks stages."""
-
-    workflow = Workflow.from_dict(cfg.workflow)
-    validate_workflow(workflow)
-    return workflow
-
-
-# TODO: Orphan function refactor into a class method
-def validate_workflow(workflow: Workflow) -> None:
-    """Validate plugin stages for a ``Workflow``."""
-    for stage, plugins in workflow.steps.items():
-        if stage not in WorkflowExecutor._STAGES:
-            raise WorkflowConfigError(f"Unknown stage: {stage}")
-        for plugin_cls in plugins:
-            plugin_cls.validate_workflow(stage)
+    from entity.workflow.workflow import Workflow
+    return Workflow.from_dict(cfg.workflow, resources)

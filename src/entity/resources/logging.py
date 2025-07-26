@@ -49,8 +49,8 @@ class LogRecord:
     fields: Dict[str, Any]
 
 
-class EnhancedLoggingResource(ABC):
-    """Enhanced logging with automatic context and structured output."""
+class LoggingResource(ABC):
+    """Rich-based logging with structured output."""
 
     LEVELS = {
         LogLevel.DEBUG: 10,
@@ -82,7 +82,7 @@ class EnhancedLoggingResource(ABC):
         """Log structured entry with automatic context injection."""
 
 
-class RichConsoleLoggingResource(EnhancedLoggingResource):
+class RichConsoleLoggingResource(LoggingResource):
     """Colored, formatted console logging using Rich."""
 
     _styles = {
@@ -147,7 +147,7 @@ class RichConsoleLoggingResource(EnhancedLoggingResource):
             self.records.append(entry)
 
 
-class RichJSONLoggingResource(EnhancedLoggingResource):
+class RichJSONLoggingResource(LoggingResource):
     """Structured JSON logging with optional Rich console output."""
 
     def __init__(
@@ -222,7 +222,7 @@ class RichJSONLoggingResource(EnhancedLoggingResource):
         await self._write_entry(entry)
 
 
-class RichLoggingResource(EnhancedLoggingResource):
+class RichLoggingResource(LoggingResource):
     """Convenience wrapper choosing between console and JSON logging."""
 
     def __init__(
@@ -247,7 +247,7 @@ class RichLoggingResource(EnhancedLoggingResource):
             self._impl = RichConsoleLoggingResource(
                 level=level, show_context=show_context
             )
-        # share record list for callers expecting EnhancedLoggingResource.records
+        # share record list for callers expecting RichLoggingResource.records
         self.records = self._impl.records
 
     def health_check(self) -> bool:

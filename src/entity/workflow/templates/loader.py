@@ -19,7 +19,7 @@ def list_templates() -> List[str]:
     return [p.stem for p in TEMPLATES_DIR.glob("*.yaml")]
 
 
-def load_template(name: str, **params: Any) -> Workflow:
+def load_template(name: str, resources: dict[str, Any], **params: Any) -> Workflow:
     """Load a workflow template by name and substitute parameters."""
     path = TEMPLATES_DIR / f"{name}.yaml"
     if not path.exists():
@@ -36,4 +36,4 @@ def load_template(name: str, **params: Any) -> Workflow:
     data = yaml.safe_load(text) or {}
     if not isinstance(data, dict):
         raise WorkflowConfigError("Template must define a mapping")
-    return Workflow.from_dict(data)
+    return Workflow.from_dict(data, resources)
