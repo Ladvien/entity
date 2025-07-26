@@ -15,4 +15,7 @@ def test_advanced_workflow():
         timeout=5,
         env=env,
     )
+    print(f"STDOUT: {proc.stdout}")
+    print(f"STDERR: {proc.stderr}")  # ← Add this to see errors
+    print(f"Return code: {proc.returncode}")
     assert proc.stdout.strip() == "Result: 4"
