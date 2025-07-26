@@ -14,7 +14,6 @@ from entity.resources.logging import (
     RichConsoleLoggingResource,
     RichJSONLoggingResource,
 )
-from entity.resources.metrics import MetricsCollectorResource
 
 __all__ = [
     "DatabaseResource",
@@ -29,5 +28,4 @@ __all__ = [
     "EnhancedLoggingResource",
     "RichConsoleLoggingResource",
     "RichJSONLoggingResource",
-    "MetricsCollectorResource",
 ]
