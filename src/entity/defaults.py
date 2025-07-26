@@ -16,9 +16,15 @@ from entity.resources import (
     Memory,
     LLM,
     LocalStorageResource,
+<<<<<<< HEAD
     FileStorage,
     ConsoleLoggingResource,
     JSONLoggingResource,
+=======
+    Storage,
+    RichConsoleLoggingResource,
+    RichJSONLoggingResource,
+>>>>>>> pr-1957
 )
 
 
@@ -77,9 +83,9 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
     json_logs = os.getenv("ENTITY_JSON_LOGS", "0").lower() in {"1", "true", "yes"}
     log_file = os.getenv("ENTITY_LOG_FILE", "./agent.log")
     logging_resource = (
-        JSONLoggingResource(log_file, log_level)
+        RichJSONLoggingResource(log_file, log_level)
         if json_logs
-        else ConsoleLoggingResource(log_level)
+        else RichConsoleLoggingResource(log_level)
     )
 
     llm_infra = None

@@ -4,7 +4,7 @@ from typing import Any, Iterable
 from itertools import count
 import warnings
 
-from entity.resources.logging import ConsoleLoggingResource
+from entity.resources.logging import RichConsoleLoggingResource
 from entity.resources.metrics import MetricsCollectorResource
 
 from entity.plugins.context import PluginContext
@@ -30,7 +30,7 @@ class WorkflowExecutor:
         workflow: dict[str, Iterable[type]] | None = None,
     ) -> None:
         self.resources = dict(resources)
-        self.resources.setdefault("logging", ConsoleLoggingResource())
+        self.resources.setdefault("logging", RichConsoleLoggingResource())
         self.resources.setdefault("metrics_collector", MetricsCollectorResource())
         self.workflow = {
             stage: list(plugins) for stage, plugins in (workflow or {}).items()

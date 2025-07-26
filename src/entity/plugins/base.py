@@ -80,7 +80,7 @@ class Plugin(ABC):
         )
 
         try:
-            result = await self._execute_with_logging(context)
+            result = await self._execute_impl(context)
             success = True
             await context.log(
                 LogLevel.INFO,
@@ -139,81 +139,3 @@ class Plugin(ABC):
     async def _execute_impl(self, context: Any) -> Any:
         """Plugin-specific execution logic."""
         raise NotImplementedError
-
-    async def _execute_with_logging(self, context: Any) -> Any:
-        """Wrap ``_execute_impl`` with logging for context operations."""
-
-        original_get_resource = context.get_resource
-        original_remember = context.remember
-        original_recall = context.recall
-        original_tool_use = context.tool_use
-
-        async def logged_get_resource(name: str):
-            await context.log(
-                LogLevel.DEBUG,
-                LogCategory.RESOURCE_ACCESS,
-                f"Accessing resource: {name}",
-            )
-            return original_get_resource(name)
-
-        async def logged_remember(key: str, value: Any):
-            await context.log(
-                LogLevel.DEBUG,
-                LogCategory.MEMORY_OPERATION,
-                f"Storing memory key: {key}",
-                value_type=type(value).__name__,
-            )
-            return await original_remember(key, value)
-
-        async def logged_recall(key: str, default: Any = None):
-            result = await original_recall(key, default)
-            await context.log(
-                LogLevel.DEBUG,
-                LogCategory.MEMORY_OPERATION,
-                f"Retrieved memory key: {key}",
-                found=result is not None,
-                value_type=type(result).__name__ if result is not None else None,
-            )
-            return result
-
-        async def logged_tool_use(name: str, **kwargs):
-            await context.log(
-                LogLevel.INFO,
-                LogCategory.TOOL_USAGE,
-                f"Executing tool: {name}",
-                tool_args=list(kwargs.keys()),
-            )
-            start = time.perf_counter()
-            try:
-                result = await original_tool_use(name, **kwargs)
-                await context.log(
-                    LogLevel.INFO,
-                    LogCategory.TOOL_USAGE,
-                    f"Tool execution completed: {name}",
-                    duration_ms=(time.perf_counter() - start) * 1000,
-                    success=True,
-                )
-                return result
-            except Exception as exc:
-                await context.log(
-                    LogLevel.ERROR,
-                    LogCategory.TOOL_USAGE,
-                    f"Tool execution failed: {name}",
-                    duration_ms=(time.perf_counter() - start) * 1000,
-                    success=False,
-                    error=str(exc),
-                )
-                raise
-
-        context.get_resource = logged_get_resource
-        context.remember = logged_remember
-        context.recall = logged_recall
-        context.tool_use = logged_tool_use
-
-        try:
-            return await self._execute_impl(context)
-        finally:
-            context.get_resource = original_get_resource
-            context.remember = original_remember
-            context.recall = original_recall
-            context.tool_use = original_tool_use
