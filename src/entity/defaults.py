@@ -17,8 +17,8 @@ from entity.resources import (
     LLM,
     LocalStorageResource,
     FileStorage,
-    RichConsoleLoggingResource,
-    RichJSONLoggingResource,
+    RichLoggingResource,
+    LogLevel,
 )
 
 
@@ -73,13 +73,13 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
     cfg = config or DefaultConfig.from_env()
     logger = logging.getLogger("defaults")
 
-    log_level = os.getenv("ENTITY_LOG_LEVEL", "info")
+    log_level = LogLevel(os.getenv("ENTITY_LOG_LEVEL", "info"))
     json_logs = os.getenv("ENTITY_JSON_LOGS", "0").lower() in {"1", "true", "yes"}
     log_file = os.getenv("ENTITY_LOG_FILE", "./agent.log")
-    logging_resource = (
-        RichJSONLoggingResource(log_file, log_level)
-        if json_logs
-        else RichConsoleLoggingResource(log_level)
+    logging_resource = RichLoggingResource(
+        level=log_level,
+        json=json_logs,
+        log_file=log_file,
     )
 
     llm_infra = None
@@ -91,9 +91,11 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
             logger.debug("Checking local vLLM at %s", vllm.base_url)
             if vllm.health_check():
                 llm_infra = vllm
-                logger.info("Using vLLM infrastructure")
+                logger.info("Using vLLM with model %s", vllm.model)
+            else:
+                raise RuntimeError("vLLM health check failed")
         except Exception as exc:
-            logger.warning("vLLM setup failed: %s", exc)
+            logger.warning("vLLM setup failed, falling back to Ollama: %s", exc)
 
     if llm_infra is None and cfg.auto_install_ollama:
         OllamaInstaller.ensure_ollama_available(cfg.ollama_model)
