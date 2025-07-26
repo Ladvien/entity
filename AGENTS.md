@@ -4,7 +4,7 @@ This repository contains a plugin-based framework for building AI agents.
 Use this document when preparing changes or reviewing pull requests.
 
 ## Critical Guidance
-- **CRITICAL:** Before beginning any work, please read the this file completely. You _must_ comply with the architecture defined below.
+- **CRITICAL:** Before beginning any work, please read all of the architecture guidance below. You _must_ comply it.  AGAIN.  Please read this entire document before beginning any work.
 - If something is not explicitly stated in this document, it is **not** allowed.  Create a `AGENT NOTE:` instead.
 - The project is unreleased.  Do not support legacy, deprecated, or backwards compatibility.
 - Prefer `Protocol` over inheritance for interfaces.
