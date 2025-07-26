@@ -16,6 +16,7 @@ from entity.resources.logging import (
     RichLoggingResource,
     LogLevel,
 )
+from entity.resources.metrics import MetricsCollectorResource
 
 __all__ = [
     "DatabaseResource",
@@ -30,10 +31,7 @@ __all__ = [
     "EnhancedLoggingResource",
     "RichConsoleLoggingResource",
     "RichJSONLoggingResource",
-<<<<<<< HEAD
     "RichLoggingResource",
     "LogLevel",
     "MetricsCollectorResource",
-=======
->>>>>>> pr-1963
 ]
