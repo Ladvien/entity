@@ -1,20 +1,16 @@
 import pytest
 from entity.plugins.context import PluginContext
-<<<<<<< HEAD
 from entity.resources.logging import (
     LogLevel,
     LogCategory,
     RichConsoleLoggingResource,
 )
-=======
-from entity.resources.logging import LogLevel, LogCategory, LoggingResource
-
-pytest.skip("Context logging integration unstable", allow_module_level=True)
->>>>>>> pr-1959
 from entity.resources.memory import Memory
 from entity.resources.database import DatabaseResource
 from entity.resources.vector_store import VectorStoreResource
 from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
+
+pytest.skip("Context logging integration unstable", allow_module_level=True)
 
 
 @pytest.mark.asyncio
