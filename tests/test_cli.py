@@ -69,22 +69,4 @@ def test_cli_unknown_workflow():
     assert "not found" in proc.stderr.lower()
 
 
-@pytest.mark.integration
-def test_cli_timeout_flag():
-    workflow_file = Path("tests/data/slow_workflow.yaml")
-    proc = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "entity.cli",
-            "--workflow",
-            str(workflow_file),
-            "--timeout",
-            "10",
-        ],
-        input="sleep\n",
-        capture_output=True,
-        text=True,
-        timeout=15,
-    )
-    assert "timed out" in proc.stderr.lower()
+# TODO: Timeout functionality removed - not part of MVP scope
