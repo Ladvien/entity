@@ -13,6 +13,9 @@ from entity.resources import (
 )
 from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
 from entity.infrastructure.local_storage_infra import LocalStorageInfrastructure
+from entity.infrastructure.ollama_infra import OllamaInfrastructure
+from entity.infrastructure.vllm_infra import VLLMInfrastructure
+from entity.resources.llm_protocol import LLMInfrastructure
 
 
 class HealthyInfra:
@@ -66,3 +69,22 @@ def test_constructor_failure():
         LLM(None)
     with pytest.raises(ResourceInitializationError):
         Storage(None)
+
+
+def test_infrastructures_satisfy_protocol():
+    ollama = OllamaInfrastructure("http://localhost", "model", auto_install=False)
+    vllm = VLLMInfrastructure("http://localhost:8000", "model")
+
+    assert isinstance(ollama, LLMInfrastructure)
+    assert isinstance(vllm, LLMInfrastructure)
+
+
+def test_llm_resource_accepts_real_infrastructures():
+    ollama = OllamaInfrastructure("http://localhost", "model", auto_install=False)
+    vllm = VLLMInfrastructure("http://localhost:8000", "model")
+
+    res_ollama = LLMResource(ollama)
+    res_vllm = LLMResource(vllm)
+
+    assert res_ollama.infrastructure is ollama
+    assert res_vllm.infrastructure is vllm

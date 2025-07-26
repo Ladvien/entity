@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 import asyncio
 import socket
 import subprocess
@@ -9,12 +10,15 @@ from typing import Any
 
 =======
 >>>>>>> pr-1950
+=======
+>>>>>>> pr-1947
 import httpx
 
 from .base import BaseInfrastructure
 
 
 class VLLMInfrastructure(BaseInfrastructure):
+<<<<<<< HEAD
 <<<<<<< HEAD
     """Layer 1 infrastructure for vLLM serving with automatic resource detection."""
 
@@ -131,6 +135,11 @@ class VLLMInfrastructure(BaseInfrastructure):
         model: str | None = None,
         version: str | None = None,
     ) -> None:
+=======
+    """Layer 1 infrastructure for a vLLM server."""
+
+    def __init__(self, base_url: str, model: str, version: str | None = None) -> None:
+>>>>>>> pr-1947
         super().__init__(version)
         self.base_url = base_url.rstrip("/")
         self.model = model
@@ -139,6 +148,7 @@ class VLLMInfrastructure(BaseInfrastructure):
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 f"{self.base_url}/generate",
+<<<<<<< HEAD
                 json={"prompt": prompt, "model": self.model},
             )
             response.raise_for_status()
@@ -153,3 +163,18 @@ class VLLMInfrastructure(BaseInfrastructure):
             self.logger.debug("vLLM health check failed: %s", exc)
             return False
 >>>>>>> pr-1950
+=======
+                json={"model": self.model, "prompt": prompt},
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data.get("response", data.get("text", ""))
+
+    def health_check(self) -> bool:
+        try:
+            response = httpx.get(f"{self.base_url}/health", timeout=2)
+            response.raise_for_status()
+            return True
+        except Exception:
+            return False
+>>>>>>> pr-1947
