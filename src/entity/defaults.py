@@ -81,8 +81,16 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
         else:
             raise InfrastructureError("vLLM setup failed")
     except Exception as exc:
-        logger.warning("vLLM setup failed: %s", exc)
-        raise InfrastructureError("vLLM setup failed and no other LLM infrastructure is available.")
+        logger.warning("vLLM setup failed, falling back to Ollama: %s", exc)
+        # Fallback to Ollama logic here
+        try:
+            ollama_infra = OllamaInfrastructure(cfg.ollama_url, cfg.ollama_model)
+            if ollama_infra.health_check():
+                llm_infra = ollama_infra
+            else:
+                raise InfrastructureError("Both vLLM and Ollama unavailable")
+        except Exception:
+            raise InfrastructureError("No LLM infrastructure available")
 
     duckdb = DuckDBInfrastructure(cfg.duckdb_path)
     if not duckdb.health_check():

@@ -74,35 +74,21 @@ async def _run(args: argparse.Namespace) -> None:
     level = "debug" if args.verbose else "error" if args.quiet else "info"
     resources = load_defaults()
     resources["logging"] = RichConsoleLoggingResource(LogLevel(level))
-    workflow = _load_workflow(args.workflow)
+    workflow = _load_workflow(args.workflow, resources)
     agent = Agent(resources=resources, workflow=workflow)
 
-    adapter = EntCLIAdapter(resources)
     try:
-        in_ctx = PluginContext(resources, "cli")
-        in_ctx.current_stage = WorkflowExecutor.INPUT
-        message = await adapter.execute(in_ctx)
-        if not message:
-            return
-
         if args.timeout:
-            result = await asyncio.wait_for(agent.chat(message), args.timeout)
+            result = await asyncio.wait_for(agent.chat(""), args.timeout)
         else:
-            result = await agent.chat(message)
+            result = await agent.chat("")
 
-        out_ctx = PluginContext(resources, "cli")
-        out_ctx.current_stage = WorkflowExecutor.OUTPUT
-        out_ctx.message = result
-        out_ctx.say(result)
-        await adapter.execute(out_ctx)
+        print(result)
     except KeyboardInterrupt:
         pass
     except asyncio.TimeoutError:
         print("Execution timed out", file=sys.stderr)
-        adapter.stop()
         return
-    finally:
-        await adapter.wait_closed()
 
 
 def main(argv: list[str] | None = None) -> None:

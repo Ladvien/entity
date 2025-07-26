@@ -13,5 +13,4 @@ __all__ = [
     "OllamaInfrastructure",
     "VLLMInfrastructure",
     "S3Infrastructure",
-    "VLLMInfrastructure",
 ]

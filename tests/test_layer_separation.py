@@ -16,8 +16,7 @@ from entity.resources.file_storage_wrapper import FileStorage
 from entity.resources.exceptions import ResourceInitializationError
 
 
-class DummyInfra:
-    pass
+
 
 
 def test_resources_store_injected_infrastructure(tmp_path):

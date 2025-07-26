@@ -63,11 +63,11 @@ def default_workflow(resources: dict[str, Any]) -> Workflow:
     """Return the built-in workflow with one plugin per stage."""
 
     steps = {
-        WorkflowExecutor.INPUT: [EntCLIAdapter(resources)],
+        WorkflowExecutor.INPUT: [InputPlugin(resources)],
         WorkflowExecutor.PARSE: [ParsePlugin(resources)],
         WorkflowExecutor.THINK: [ThinkPlugin(resources)],
         WorkflowExecutor.DO: [DoPlugin(resources)],
         WorkflowExecutor.REVIEW: [ReviewPlugin(resources)],
-        WorkflowExecutor.OUTPUT: [EntCLIAdapter(resources)],
+        WorkflowExecutor.OUTPUT: [OutputPlugin(resources)],
     }
     return Workflow(steps, WorkflowExecutor._STAGES)

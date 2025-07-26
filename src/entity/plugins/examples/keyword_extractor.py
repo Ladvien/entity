@@ -8,7 +8,7 @@ from entity.workflow.executor import WorkflowExecutor
 class KeywordExtractor(Plugin):
     """Extract lowercase keywords from the prompt and store them."""
 
-    stage = WorkflowExecutor.PARSE
+    supported_stages = [WorkflowExecutor.PARSE]
 
     async def _execute_impl(self, context) -> str:  # noqa: D401
         """Persist keywords and return the original message."""

@@ -79,6 +79,7 @@ class Workflow:
 
         with open(path, "r", encoding="utf-8") as handle:
             data = yaml.safe_load(handle) or {}
+        data = VariableResolver.substitute_variables(data)
         if not isinstance(data, dict):
             raise WorkflowConfigError("Workflow configuration must be a mapping")
         return cls.from_dict(data, resources)

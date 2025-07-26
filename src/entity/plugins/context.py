@@ -55,6 +55,17 @@ class PluginContext(WorkflowContext):
         self._tool_queue: List[tuple[str, Dict[str, Any]]] = []
         self.sandbox = resources.get("sandbox", SandboxedToolRunner())
 
+    async def log(self, level: LogLevel, category: LogCategory, message: str, **extra_fields: Any) -> None:
+        """Log with automatic context injection."""
+        logger = self.get_resource("logging")
+        if logger:
+            context = LogContext(
+                user_id=self.user_id,
+                stage=self.current_stage,
+                plugin_name=getattr(self, '_current_plugin_name', None)
+            )
+            await logger.log(level, category, message, context, **extra_fields)
+
     async def remember(self, key: str, value: Any) -> None:
         """Persist value namespaced by ``user_id``."""
         namespaced = f"{self.user_id}:{key}"

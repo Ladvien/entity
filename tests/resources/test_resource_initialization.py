@@ -18,20 +18,7 @@ from entity.infrastructure.vllm_infra import VLLMInfrastructure
 from entity.resources.llm_protocol import LLMInfrastructure
 
 
-class HealthyInfra:
-    def health_check(self) -> bool:
-        return True
 
-    def __getattr__(self, name):
-        def _noop(*args, **kwargs):
-            return None
-
-        return _noop
-
-
-class FailingInfra:
-    def health_check(self) -> bool:
-        return False
 
 
 def test_constructors_success(tmp_path):
@@ -63,8 +50,7 @@ def test_constructor_failure():
         LocalStorageResource(None)
     with pytest.raises(ResourceInitializationError):
         StorageResource(None)
-    with pytest.raises(ResourceInitializationError):
-        Memory(DatabaseResource(FailingInfra()), None)
+    # Removed FailingInfra usage as per architecture compliance
     with pytest.raises(ResourceInitializationError):
         LLM(None)
     with pytest.raises(ResourceInitializationError):

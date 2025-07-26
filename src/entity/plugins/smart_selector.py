@@ -5,13 +5,12 @@ from typing import Any, Iterable
 from entity.plugins.prompt import PromptPlugin
 from entity.tools.registry import ToolInfo
 from entity.workflow.executor import WorkflowExecutor
-from entity.workflow.executor import WorkflowExecutor
 
 
 class SmartToolSelectorPlugin(PromptPlugin):
     """Select and execute the most relevant tool."""
 
-    stage = WorkflowExecutor.THINK
+    supported_stages = [WorkflowExecutor.THINK]
     dependencies: list[str] = []
 
     def _rank_tools_by_relevance(

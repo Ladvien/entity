@@ -9,6 +9,8 @@ from pydantic import BaseModel, ValidationError
 
 import yaml
 
+from entity.config.variable_resolver import VariableResolver
+
 if TYPE_CHECKING:
     from entity.workflow.workflow import Workflow, WorkflowConfigError
     from entity.workflow.executor import WorkflowExecutor
@@ -26,6 +28,7 @@ class ConfigModel(BaseModel):
         try:
             with open(path, "r", encoding="utf-8") as handle:
                 data = yaml.safe_load(handle) or {}
+            data = VariableResolver.substitute_variables(data)
         except yaml.YAMLError as exc:
             raise ValueError(f"Invalid YAML syntax in {path}: {exc}") from exc
 
