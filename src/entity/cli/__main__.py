@@ -31,7 +31,7 @@ def _load_workflow(name: str) -> list[type] | dict[str, list[type]]:
     if path.exists():
         try:
             return Workflow.from_yaml(str(path)).steps
-        except Exception as exc:  # pragma: no cover - corrupt file
+        except Exception as exc:
             raise SystemExit(f"Failed to load workflow file '{name}': {exc}") from exc
 
     try:
@@ -92,10 +92,10 @@ async def _run(args: argparse.Namespace) -> None:
 
         out_ctx = PluginContext(resources, "cli")
         out_ctx.current_stage = WorkflowExecutor.OUTPUT
-        out_ctx.message = result["response"]
-        out_ctx.say(result["response"])
+        out_ctx.message = result
+        out_ctx.say(result)
         await adapter.execute(out_ctx)
-    except KeyboardInterrupt:  # pragma: no cover - user interrupt
+    except KeyboardInterrupt:
         pass
     except asyncio.TimeoutError:
         print("Execution timed out", file=sys.stderr)
@@ -110,5 +110,5 @@ def main(argv: list[str] | None = None) -> None:
     asyncio.run(_run(args))
 
 
-if __name__ == "__main__":  # pragma: no cover - entry point
+if __name__ == "__main__":
     main()

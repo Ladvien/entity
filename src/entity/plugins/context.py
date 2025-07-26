@@ -39,15 +39,11 @@ class PluginContext(WorkflowContext):
         self,
         resources: Dict[str, Any],
         user_id: str,
-        memory: Any | None = None,
     ) -> None:
-        # TODO: Refactor for readability
         super().__init__()
         self._resources = resources
         self.user_id = user_id
-        self._memory = memory if memory is not None else resources.get("memory")
-        if self._memory is None:
-            raise RuntimeError("Memory resource required")
+        self._memory = resources.get("memory")
         self._conversation: List[str] = []
         tools_src = resources.get("tools", {})
         self._tools: Dict[str, ToolInfo] = {}

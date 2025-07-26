@@ -12,8 +12,8 @@ from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
 async def test_remember_isolated_by_user_id():
     infra = DuckDBInfrastructure(":memory:")
     memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
-    ctx_a = PluginContext({}, user_id="a", memory=memory)
-    ctx_b = PluginContext({}, user_id="b", memory=memory)
+    ctx_a = PluginContext({"memory": memory}, user_id="a")
+    ctx_b = PluginContext({"memory": memory}, user_id="b")
 
     await ctx_a.remember("val", 1)
     await ctx_b.remember("val", 2)
@@ -26,8 +26,8 @@ async def test_remember_isolated_by_user_id():
 async def test_memory_thread_safety_with_concurrent_users():
     infra = DuckDBInfrastructure(":memory:")
     memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
-    ctx_a = PluginContext({}, user_id="a", memory=memory)
-    ctx_b = PluginContext({}, user_id="b", memory=memory)
+    ctx_a = PluginContext({"memory": memory}, user_id="a")
+    ctx_b = PluginContext({"memory": memory}, user_id="b")
 
     await asyncio.gather(
         ctx_a.remember("count", 1),

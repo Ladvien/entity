@@ -67,15 +67,14 @@ class RecoveryPlugin(Plugin):
 
 @pytest.mark.asyncio
 async def test_error_hook_runs_on_failure():
+    global called
+    called = []  # Reset the global variable
     wf = {
         WorkflowExecutor.THINK: [FailingPlugin],
         WorkflowExecutor.ERROR: [ErrorPlugin],
     }
-    infra = DuckDBInfrastructure(":memory:")
-    memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
-    resources = {"memory": memory}
-    wf_obj = Workflow.from_dict(wf, resources)
-    executor = WorkflowExecutor(resources, wf_obj)
+    wf_obj = Workflow.from_dict(wf, {})
+    executor = WorkflowExecutor({}, wf_obj)
     with pytest.raises(RuntimeError):
         await executor.execute("hello")
     assert called == ["boom"]
@@ -87,11 +86,8 @@ async def test_error_hook_recovers():
         WorkflowExecutor.THINK: [FailingPlugin],
         WorkflowExecutor.ERROR: [RecoveryPlugin],
     }
-    infra = DuckDBInfrastructure(":memory:")
-    memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
-    resources = {"memory": memory}
-    wf_obj = Workflow.from_dict(wf, resources)
-    executor = WorkflowExecutor(resources, wf_obj)
+    wf_obj = Workflow.from_dict(wf, {})
+    executor = WorkflowExecutor({}, wf_obj)
     result = await executor.execute("oops")
     assert result == "recovered"
 
@@ -109,11 +105,8 @@ class LoopingOutput(Plugin):
 @pytest.mark.asyncio
 async def test_executor_repeats_until_response():
     wf = {WorkflowExecutor.OUTPUT: [LoopingOutput]}
-    infra = DuckDBInfrastructure(":memory:")
-    memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
-    resources = {"memory": memory}
-    wf_obj = Workflow.from_dict(wf, resources)
-    executor = WorkflowExecutor(resources, wf_obj)
+    wf_obj = Workflow.from_dict(wf, {})
+    executor = WorkflowExecutor({}, wf_obj)
 
     result = await executor.execute("hi")
     assert result == "done"

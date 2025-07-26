@@ -30,9 +30,9 @@ class LocalStorageInfrastructure(BaseInfrastructure):
             self.logger.warning("Health check failed for %s: %s", self.base_path, exc)
             return False
 
-    async def startup(self) -> None:  # pragma: no cover - thin wrapper
+    async def startup(self) -> None:
         await super().startup()
         self.logger.info("Storage path %s ready", self.base_path)
 
-    async def shutdown(self) -> None:  # pragma: no cover - thin wrapper
+    async def shutdown(self) -> None:
         await super().shutdown()

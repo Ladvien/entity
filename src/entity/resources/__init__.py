@@ -17,6 +17,7 @@ from entity.resources.logging import (
     LogLevel,
 )
 from entity.resources.metrics import MetricsCollectorResource
+from .exceptions import InfrastructureError
 
 __all__ = [
     "DatabaseResource",
@@ -34,4 +35,5 @@ __all__ = [
     "RichLoggingResource",
     "LogLevel",
     "MetricsCollectorResource",
+    "InfrastructureError",
 ]

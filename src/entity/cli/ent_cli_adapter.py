@@ -19,7 +19,7 @@ from entity.resources.logging import LogCategory, LogLevel
 class EntCLIAdapter(InputAdapterPlugin, OutputAdapterPlugin):
     """Simple CLI adapter using stdin and stdout with signal handling."""
 
-    # TODO: Consider separate classes for input and output adapters.
+    
     supported_stages = [WorkflowExecutor.INPUT, WorkflowExecutor.OUTPUT]
 
     def __init__(
@@ -38,7 +38,7 @@ class EntCLIAdapter(InputAdapterPlugin, OutputAdapterPlugin):
                 return await self._handle_input(context)
             if context.current_stage == WorkflowExecutor.OUTPUT:
                 return await self._handle_output(context)
-        except Exception as exc:  # pragma: no cover - runtime safety
+        except Exception as exc:
             if logger is not None:
                 await logger.log(
                     LogLevel.ERROR,

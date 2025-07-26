@@ -16,7 +16,7 @@ class Plugin(ABC):
     class ConfigModel(BaseModel):
         """Default empty configuration."""
 
-        class Config:  # pragma: no cover - simple pydantic setup
+        class Config:
             extra = "forbid"
 
     supported_stages: list[str] = []
@@ -34,8 +34,8 @@ class Plugin(ABC):
         try:
             self.config = self.ConfigModel(**self.config)
             return ValidationResult.success()
-        except ValidationError as exc:  # pragma: no cover - simple conversion
-            return ValidationResult.error(f"Invalid configuration for {self.__class__.__name__}: {exc}")
+        except ValidationError as exc:
+            return ValidationResult.error(str(exc))
 
     def validate_workflow(self, workflow: "Workflow") -> ValidationResult:
         """Validate that ``cls`` can run in ``stage`` before workflow execution."""

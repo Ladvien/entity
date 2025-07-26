@@ -47,7 +47,6 @@ class VLLMInfrastructure(BaseInfrastructure):
         gpu_memory_utilization: float = 0.9,
         port: int | None = None,
         version: str | None = None,
-        auto_install: bool = True,
     ) -> None:
         super().__init__(version)
         self.model = (
@@ -60,7 +59,6 @@ class VLLMInfrastructure(BaseInfrastructure):
         self.base_url = (
             base_url.rstrip("/") if base_url else f"http://localhost:{self.port}"
         )
-        self.auto_install = auto_install
         self._server_process: subprocess.Popen | None = None
 
     async def generate(self, prompt: str) -> str:
@@ -94,9 +92,6 @@ class VLLMInfrastructure(BaseInfrastructure):
                 time.sleep(1)
 
         self.logger.warning("Health check failed for %s", self.base_url)
-        if self.auto_install:
-            self.logger.debug("Attempting automatic vLLM install")
-            VLLMInstaller.ensure_vllm_available(self.model)
         return False
 
     # ------------------------------------------------------------------
@@ -109,7 +104,7 @@ class VLLMInfrastructure(BaseInfrastructure):
 
             if torch.cuda.is_available():
                 memory_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
-        except Exception:  # pragma: no cover - torch optional
+        except Exception:
             memory_gb = None
 
         if memory_gb is None:
@@ -126,7 +121,7 @@ class VLLMInfrastructure(BaseInfrastructure):
                 )
                 memory_mb = int(result.stdout.splitlines()[0].split()[0])
                 memory_gb = memory_mb / 1024
-            except Exception:  # pragma: no cover - command may not exist
+            except Exception:
                 memory_gb = None
 
         if memory_gb is None:
@@ -147,12 +142,12 @@ class VLLMInfrastructure(BaseInfrastructure):
             sock.bind(("localhost", 0))
             return sock.getsockname()[1]
 
-    async def startup(self) -> None:  # pragma: no cover - thin wrapper
+    async def startup(self) -> None:
         await super().startup()
         if not self._server_process:
             await self._start_vllm_server()
 
-    async def shutdown(self) -> None:  # pragma: no cover - thin wrapper
+    async def shutdown(self) -> None:
         await super().shutdown()
         if self._server_process and self._server_process.poll() is None:
             self._server_process.terminate()

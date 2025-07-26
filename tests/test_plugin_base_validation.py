@@ -13,7 +13,7 @@ class ExamplePlugin(Plugin):
     class ConfigModel(Plugin.ConfigModel):
         value: int
 
-    async def _execute_impl(self, context):  # pragma: no cover - not executed
+    async def _execute_impl(self, context):
         return "ok"
 
 

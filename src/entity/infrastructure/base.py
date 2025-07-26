@@ -13,13 +13,13 @@ class BaseInfrastructure(ABC):
         self.version = version or self.version
         self.logger = logging.getLogger(self.__class__.__name__)
 
-    async def startup(self) -> None:  # pragma: no cover - thin wrapper
+    async def startup(self) -> None:
         """Perform asynchronous initialization."""
         self.logger.debug(
             "Starting %s version %s", self.__class__.__name__, self.version
         )
 
-    async def shutdown(self) -> None:  # pragma: no cover - thin wrapper
+    async def shutdown(self) -> None:
         """Perform asynchronous cleanup."""
         self.logger.debug("Shutting down %s", self.__class__.__name__)
 

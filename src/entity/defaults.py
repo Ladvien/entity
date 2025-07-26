@@ -20,6 +20,7 @@ from entity.resources import (
     RichLoggingResource,
     LogLevel,
 )
+from entity.resources.exceptions import InfrastructureError
 
 
 @dataclass
@@ -40,14 +41,7 @@ class DefaultConfig:
 
         return cls(
             duckdb_path=os.getenv("ENTITY_DUCKDB_PATH", cls.duckdb_path),
-            ollama_url=os.getenv("ENTITY_OLLAMA_URL", cls.ollama_url),
-            ollama_model=os.getenv("ENTITY_OLLAMA_MODEL", cls.ollama_model),
             storage_path=os.getenv("ENTITY_STORAGE_PATH", cls.storage_path),
-            auto_install_ollama=os.getenv(
-                "ENTITY_AUTO_INSTALL_OLLAMA",
-                str(cls.auto_install_ollama),
-            ).lower()
-            in {"1", "true", "yes"},
             auto_install_vllm=os.getenv(
                 "ENTITY_AUTO_INSTALL_VLLM",
                 str(cls.auto_install_vllm),
@@ -57,14 +51,7 @@ class DefaultConfig:
         )
 
 
-class _NullLLMInfrastructure:
-    """Fallback LLM implementation used when Ollama is unavailable."""
 
-    async def generate(self, prompt: str) -> str:  # pragma: no cover - simple stub
-        return "LLM service unavailable"
-
-    def health_check(self) -> bool:  # pragma: no cover - constant result
-        return False
 
 
 def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
@@ -84,50 +71,23 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
 
     llm_infra = None
 
-    if cfg.auto_install_vllm:
-        try:
-            VLLMInstaller.ensure_vllm_available(cfg.vllm_model)
-            vllm = VLLMInfrastructure(model=cfg.vllm_model)
-            logger.debug("Checking local vLLM at %s", vllm.base_url)
-            if vllm.health_check():
-                llm_infra = vllm
-                logger.info("Using vLLM with model %s", vllm.model)
-            else:
-                raise RuntimeError("vLLM health check failed")
-        except Exception as exc:
-            logger.warning("vLLM setup failed, falling back to Ollama: %s", exc)
-
-    if llm_infra is None and cfg.auto_install_ollama:
-        OllamaInstaller.ensure_ollama_available(cfg.ollama_model)
+    # Try vLLM first (primary default)
+    try:
+        VLLMInstaller.ensure_vllm_available()
+        vllm_infra = VLLMInfrastructure(auto_detect_model=True)
+        if vllm_infra.health_check():
+            llm_infra = vllm_infra
+            logger.info("Using vLLM with auto-detected model: %s", vllm_infra.model)
+        else:
+            raise InfrastructureError("vLLM setup failed")
+    except Exception as exc:
+        logger.warning("vLLM setup failed: %s", exc)
+        raise InfrastructureError("vLLM setup failed and no other LLM infrastructure is available.")
 
     duckdb = DuckDBInfrastructure(cfg.duckdb_path)
     if not duckdb.health_check():
         logger.debug("Falling back to in-memory DuckDB")
         duckdb = DuckDBInfrastructure(":memory:")
-
-    if llm_infra is None:
-        ollama = OllamaInfrastructure(
-            cfg.ollama_url,
-            cfg.ollama_model,
-            auto_install=cfg.auto_install_ollama,
-        )
-        logger.debug("Checking local Ollama at %s", cfg.ollama_url)
-        if ollama.health_check():
-            if cfg.auto_install_ollama:
-                OllamaInstaller.ensure_ollama_available(cfg.ollama_model)
-            llm_infra = ollama
-        else:
-            logger.debug("Ollama not reachable; attempting installation")
-            if cfg.auto_install_ollama:
-                OllamaInstaller.ensure_ollama_available(cfg.ollama_model)
-                if not ollama.health_check():
-                    logger.warning("Using stub LLM implementation")
-                    llm_infra = _NullLLMInfrastructure()
-                else:
-                    llm_infra = ollama
-            else:
-                logger.warning("Using stub LLM implementation")
-                llm_infra = _NullLLMInfrastructure()
 
     storage_infra = LocalStorageInfrastructure(cfg.storage_path)
     if not storage_infra.health_check():

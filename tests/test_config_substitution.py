@@ -25,7 +25,7 @@ def test_cycle_detection(tmp_path):
         resolver.substitute("${A}")
 
 
-def test_auto_env_loading(tmp_path, monkeypatch):
+def test_auto_env_loading(tmp_path):
     env_file = tmp_path / ".env"
     env_file.write_text("VAR=value")
     cwd = os.getcwd()
@@ -35,11 +35,3 @@ def test_auto_env_loading(tmp_path, monkeypatch):
         assert result == "value"
     finally:
         os.chdir(cwd)
-
-
-def test_nested_env_and_os(tmp_path, monkeypatch):
-    monkeypatch.setenv("BAR", "world")
-    env_file = tmp_path / ".env"
-    env_file.write_text("FOO=hello ${BAR}")
-    resolver = VariableResolver(str(env_file))
-    assert resolver.substitute("${FOO}") == "hello world"

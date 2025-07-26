@@ -12,7 +12,7 @@ from entity.resources.memory import Memory
 def _worker(db_path: str, uid: int) -> None:
     infra = DuckDBInfrastructure(db_path)
     memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
-    ctx = PluginContext({}, user_id=str(uid), memory=memory)
+    ctx = PluginContext({"memory": memory}, user_id=str(uid))
     asyncio.run(ctx.remember("val", uid))
 
 
@@ -30,7 +30,7 @@ async def test_multiple_processes_share_memory(tmp_path):
 
     infra = DuckDBInfrastructure(str(db_file))
     memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
-    PluginContext({}, user_id="0", memory=memory)
+    PluginContext({"memory": memory}, user_id="0")
     try:
         values = [await memory.load(f"{i}:val") for i in range(5)]
     except Exception as exc:

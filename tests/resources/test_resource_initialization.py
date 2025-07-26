@@ -19,10 +19,10 @@ from entity.resources.llm_protocol import LLMInfrastructure
 
 
 class HealthyInfra:
-    def health_check(self) -> bool:  # pragma: no cover - simple stub
+    def health_check(self) -> bool:
         return True
 
-    def __getattr__(self, name):  # pragma: no cover - stub
+    def __getattr__(self, name):
         def _noop(*args, **kwargs):
             return None
 
@@ -30,7 +30,7 @@ class HealthyInfra:
 
 
 class FailingInfra:
-    def health_check(self) -> bool:  # pragma: no cover - simple stub
+    def health_check(self) -> bool:
         return False
 
 

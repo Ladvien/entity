@@ -14,14 +14,12 @@ class OllamaInfrastructure(BaseInfrastructure):
         base_url: str,
         model: str,
         version: str | None = None,
-        auto_install: bool = True,
     ) -> None:
         """Configure the client base URL, model, and installer settings."""
 
         super().__init__(version)
         self.base_url = base_url.rstrip("/")
         self.model = model
-        self.auto_install = auto_install
 
     async def generate(self, prompt: str) -> str:
         """Send a prompt to Ollama and return the generated text."""
@@ -34,11 +32,11 @@ class OllamaInfrastructure(BaseInfrastructure):
             data = response.json()
             return data.get("response", "")
 
-    async def startup(self) -> None:  # pragma: no cover - thin wrapper
+    async def startup(self) -> None:
         await super().startup()
         self.logger.info("Ollama endpoint %s", self.base_url)
 
-    async def shutdown(self) -> None:  # pragma: no cover - thin wrapper
+    async def shutdown(self) -> None:
         await super().shutdown()
 
     def health_check(self) -> bool:
@@ -54,7 +52,7 @@ class OllamaInfrastructure(BaseInfrastructure):
                     attempt + 1,
                 )
                 return True
-            except Exception as exc:  # pragma: no cover - network errors
+            except Exception as exc:
                 self.logger.debug(
                     "Health check attempt %s failed for %s: %s",
                     attempt + 1,
@@ -64,7 +62,4 @@ class OllamaInfrastructure(BaseInfrastructure):
                 time.sleep(1)
 
         self.logger.warning("Health check failed for %s", self.base_url)
-        if self.auto_install:
-            self.logger.debug("Attempting automatic Ollama install")
-            OllamaInstaller.ensure_ollama_available(self.model)
         return False

@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:  # pragma: no cover - used for type hints only
+if TYPE_CHECKING:
     from entity.plugins import Plugin  # noqa: F401
 from entity.workflow.workflow import Workflow, WorkflowConfigError
 

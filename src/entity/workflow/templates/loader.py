@@ -29,7 +29,7 @@ def load_template(name: str, resources: dict[str, Any], **params: Any) -> Workfl
     if params:
         try:
             text = text.format(**params)
-        except KeyError as exc:  # pragma: no cover - programmer error
+        except KeyError as exc:
             missing = ", ".join(sorted(set(exc.args)))
             raise ValueError(f"Missing template parameters: {missing}") from exc
 

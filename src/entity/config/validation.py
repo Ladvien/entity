@@ -26,7 +26,7 @@ class ConfigModel(BaseModel):
         try:
             with open(path, "r", encoding="utf-8") as handle:
                 data = yaml.safe_load(handle) or {}
-        except yaml.YAMLError as exc:  # pragma: no cover - simple parse error
+        except yaml.YAMLError as exc:
             raise ValueError(f"Invalid YAML syntax in {path}: {exc}") from exc
 
         if not isinstance(data, dict):

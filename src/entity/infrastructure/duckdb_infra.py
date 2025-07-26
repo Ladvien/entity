@@ -42,7 +42,7 @@ class DuckDBInfrastructure(BaseInfrastructure):
             conn.close()
 
     @contextmanager
-    def connect(self) -> Generator:  # pragma: no cover - thin wrapper
+    def connect(self) -> Generator:
         """Yield a database connection from the pool."""
 
         conn = self._acquire()
@@ -51,11 +51,11 @@ class DuckDBInfrastructure(BaseInfrastructure):
         finally:
             self._release(conn)
 
-    async def startup(self) -> None:  # pragma: no cover - thin wrapper
+    async def startup(self) -> None:
         await super().startup()
         self.logger.info("DuckDB file %s ready", self.file_path)
 
-    async def shutdown(self) -> None:  # pragma: no cover - thin wrapper
+    async def shutdown(self) -> None:
         await super().shutdown()
         while not self._pool.empty():
             self._pool.get_nowait().close()

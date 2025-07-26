@@ -25,12 +25,12 @@ class S3Infrastructure(BaseInfrastructure):
 
         return self.session().client("s3")
 
-    async def startup(self) -> None:  # pragma: no cover - thin wrapper
+    async def startup(self) -> None:
         await super().startup()
         self._session = aioboto3.Session()
         self.logger.info("Using bucket %s", self.bucket)
 
-    async def shutdown(self) -> None:  # pragma: no cover - thin wrapper
+    async def shutdown(self) -> None:
         await super().shutdown()
 
     def health_check(self) -> bool:

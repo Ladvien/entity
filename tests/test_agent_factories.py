@@ -4,15 +4,6 @@ import pytest
 
 from entity.core.agent import Agent
 from entity.config import clear_config_cache, load_config
-from entity.resources.memory import Memory
-from entity.resources.database import DatabaseResource
-from entity.resources.vector_store import VectorStoreResource
-from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
-
-
-def _memory() -> Memory:
-    infra = DuckDBInfrastructure(":memory:")
-    return Memory(DatabaseResource(infra), VectorStoreResource(infra))
 
 
 @pytest.mark.asyncio
@@ -24,9 +15,9 @@ think:
   - entity.plugins.defaults.ThinkPlugin
 """
     )
-    agent = Agent.from_workflow(str(path), resources={"memory": _memory()})
+    agent = Agent.from_workflow(str(path))
     result = await agent.chat("hi")
-    assert result["response"] == "hi"
+    assert result == "hi"
 
 
 @pytest.mark.asyncio
@@ -35,10 +26,9 @@ async def test_from_workflow_dict():
         {
             "think": ["entity.plugins.defaults.ThinkPlugin"],
         },
-        resources={"memory": _memory()},
     )
     out = await agent.chat("hello")
-    assert out["response"] == "hello"
+    assert out == "hello"
 
 
 def test_from_config(tmp_path):
@@ -51,9 +41,9 @@ workflow:
     - entity.plugins.defaults.ThinkPlugin
 """
     )
-    agent = Agent.from_config(str(cfg), resources={"memory": _memory()})
+    agent = Agent.from_config(str(cfg))
     result = asyncio.run(agent.chat("hey"))
-    assert result["response"] == "hey"
+    assert result == "hey"
 
 
 def test_config_cache(tmp_path):
@@ -91,3 +81,4 @@ workflow:
 def test_invalid_workflow_dict():
     with pytest.raises(Exception):
         Agent.from_workflow_dict({"bad_stage": ["entity.plugins.defaults.ThinkPlugin"]})
+

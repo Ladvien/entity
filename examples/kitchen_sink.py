@@ -24,8 +24,8 @@ async def main() -> None:
         )
         resources = load_defaults()
         resources["llm"] = LLM(LLMResource(vllm))
-    except Exception as exc:  # pragma: no cover - example runtime guard
-        print(f"Resource setup failed: {exc}")
+    except Exception as exc:
+        print(f"Failed to initialize resources: {exc}")
         return
 
     agent = Agent(resources=resources)

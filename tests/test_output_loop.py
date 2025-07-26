@@ -25,11 +25,8 @@ async def test_output_plugin_sets_response_on_second_iteration():
     from entity.workflow.workflow import Workflow
 
     wf_dict = {WorkflowExecutor.OUTPUT: [TwoPassOutputPlugin]}
-    infra = DuckDBInfrastructure(":memory:")
-    memory = Memory(DatabaseResource(infra), VectorStoreResource(infra))
-    resources = {"memory": memory}
-    wf = Workflow.from_dict(wf_dict, resources)
-    executor = WorkflowExecutor(resources, wf)
+    wf = Workflow.from_dict(wf_dict, {})
+    executor = WorkflowExecutor({}, wf)
 
     result = await executor.execute("hello")
 

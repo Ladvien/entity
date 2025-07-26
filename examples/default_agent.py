@@ -20,7 +20,7 @@ async def main() -> None:
         os.environ.setdefault("ENTITY_JSON_LOGS", "1")
         os.environ.setdefault("ENTITY_LOG_FILE", "zero_agent.log")
         resources = load_defaults()
-    except Exception as exc:  # pragma: no cover - example runtime guard
+    except Exception as exc:
         print(f"Failed to initialize resources: {exc}")
         return
 

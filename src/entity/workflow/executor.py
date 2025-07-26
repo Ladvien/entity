@@ -33,17 +33,25 @@ class WorkflowExecutor:
     ) -> None:
         self.resources = dict(resources)
         self.resources.setdefault("logging", RichConsoleLoggingResource())
+        # Ensure memory is always available, even if in-memory for tests
+        if "memory" not in self.resources:
+            from entity.resources import Memory, DatabaseResource, VectorStoreResource
+            from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
+
+            self.resources["memory"] = Memory(
+                DatabaseResource(DuckDBInfrastructure(":memory:")),
+                VectorStoreResource(DuckDBInfrastructure(":memory:")),
+            )
         self.workflow = workflow or Workflow()
 
     async def execute(
         self,
         message: str,
         user_id: str = "default",
-        memory: Any | None = None,
     ) -> str:
         """Run plugins in sequence until an OUTPUT plugin produces a response."""
 
-        context = PluginContext(self.resources, user_id, memory=memory)
+        context = PluginContext(self.resources, user_id)
         await context.load_state()
         result = message
 
@@ -77,7 +85,7 @@ class WorkflowExecutor:
         for plugin in self.workflow.plugins_for(stage):
             try:
                 result = await plugin.execute(context)
-            except Exception as exc:  # pragma: no cover - runtime errors
+            except Exception as exc:
                 await self._handle_error(context, exc.__cause__ or exc, user_id)
                 if context.response is not None:
                     return context.response
