@@ -1,6 +1,7 @@
+import time
 import httpx
 
-from entity.installers.ollama import OllamaInstaller
+from entity.setup.ollama_installer import OllamaInstaller
 
 from .base import BaseInfrastructure
 
@@ -42,14 +43,28 @@ class OllamaInfrastructure(BaseInfrastructure):
 
     def health_check(self) -> bool:
         """Return ``True`` if the Ollama server responds."""
-        try:
-            response = httpx.get(f"{self.base_url}/api/tags", timeout=2)
-            response.raise_for_status()
-            self.logger.debug("Health check succeeded for %s", self.base_url)
-            return True
-        except Exception as exc:
-            self.logger.warning("Health check failed for %s: %s", self.base_url, exc)
-            if self.auto_install:
-                self.logger.debug("Attempting automatic Ollama install")
-                OllamaInstaller.ensure_installed()
-            return False
+
+        for attempt in range(3):
+            try:
+                response = httpx.get(f"{self.base_url}/api/tags", timeout=2)
+                response.raise_for_status()
+                self.logger.debug(
+                    "Health check succeeded for %s on attempt %s",
+                    self.base_url,
+                    attempt + 1,
+                )
+                return True
+            except Exception as exc:  # pragma: no cover - network errors
+                self.logger.debug(
+                    "Health check attempt %s failed for %s: %s",
+                    attempt + 1,
+                    self.base_url,
+                    exc,
+                )
+                time.sleep(1)
+
+        self.logger.warning("Health check failed for %s", self.base_url)
+        if self.auto_install:
+            self.logger.debug("Attempting automatic Ollama install")
+            OllamaInstaller.ensure_ollama_available(self.model)
+        return False
