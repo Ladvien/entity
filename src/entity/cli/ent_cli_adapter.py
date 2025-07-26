@@ -5,6 +5,9 @@ import signal
 import sys
 from typing import Any
 
+from rich.console import Console
+from rich.panel import Panel
+
 from entity.plugins.input_adapter import InputAdapterPlugin
 from entity.plugins.output_adapter import OutputAdapterPlugin
 from entity.workflow.executor import WorkflowExecutor
@@ -23,6 +26,7 @@ class EntCLIAdapter(InputAdapterPlugin, OutputAdapterPlugin):
     ) -> None:
         super().__init__(resources, config)
         self._stop = asyncio.Event()
+        self.console = Console()
 
     def stop(self) -> None:
         """Signal any waiting ``wait_closed`` calls to exit."""
@@ -37,7 +41,7 @@ class EntCLIAdapter(InputAdapterPlugin, OutputAdapterPlugin):
                 signal.signal(sig, lambda _s, _f: self._stop.set())
 
     async def _read_line(self) -> str:
-        return await asyncio.to_thread(sys.stdin.readline)
+        return await asyncio.to_thread(self.console.input, "[bold cyan]> [/]")
 
     async def _execute_impl(self, context: PluginContext) -> str:
         self._install_signals()
@@ -55,12 +59,13 @@ class EntCLIAdapter(InputAdapterPlugin, OutputAdapterPlugin):
                     "CLI adapter error",
                     error=str(exc),
                 )
+            self.console.print(Panel(str(exc), title="Error", style="red"))
             raise
 
         return context.message or ""
 
     async def _handle_input(self, context: PluginContext) -> str:
-        """Read a single line from stdin."""
+        """Prompt the user for input."""
 
         line = await self._read_line()
         if not line:
@@ -72,15 +77,14 @@ class EntCLIAdapter(InputAdapterPlugin, OutputAdapterPlugin):
         return message
 
     async def _handle_output(self, context: PluginContext) -> str:
-        """Write ``context.response`` to stdout."""
+        """Write ``context.response`` to stdout using Rich."""
 
         output = context.response or context.message or ""
         try:
-            print(output)
+            self.console.print(Panel(output, title="Response", style="green"))
         except BrokenPipeError:
             self._stop.set()
         else:
-            # ensure CLI exits after successfully writing output
             self._stop.set()
         context.say(output)
         return output

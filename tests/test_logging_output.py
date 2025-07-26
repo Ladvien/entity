@@ -2,21 +2,24 @@ import json
 import pytest
 <<<<<<< HEAD
 from entity.resources.logging import (
-<<<<<<< HEAD
     RichConsoleLoggingResource,
     RichJSONLoggingResource,
     LogLevel,
     LogCategory,
+<<<<<<< HEAD
 =======
     LogCategory,
     LogLevel,
     RichConsoleLoggingResource,
     RichJSONLoggingResource,
 >>>>>>> pr-1962
+=======
+>>>>>>> pr-1960
 )
 
 
 @pytest.mark.asyncio
+<<<<<<< HEAD
 <<<<<<< HEAD
 async def test_console_logging_output(capsys):
 =======
@@ -32,6 +35,10 @@ from entity.resources.logging import RichLoggingResource, LogLevel, LogCategory
 async def test_console_logging_output(capsys):
     logger = RichLoggingResource(level=LogLevel.DEBUG)
 >>>>>>> pr-1961
+=======
+async def test_console_logging_output(capsys):
+    logger = RichConsoleLoggingResource(level=LogLevel.DEBUG)
+>>>>>>> pr-1960
     await logger.log(LogLevel.INFO, LogCategory.USER_ACTION, "hello", foo="bar")
     captured = capsys.readouterr()
     assert "hello" in captured.out
@@ -41,14 +48,19 @@ async def test_console_logging_output(capsys):
 @pytest.mark.asyncio
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 async def test_json_logging_output(capsys):
     pytest.skip("JSON logging requires file system access", allow_module_level=False)
+=======
+async def test_json_logging_output(capsys):
+>>>>>>> pr-1960
     logger = RichJSONLoggingResource(level=LogLevel.DEBUG)
     await logger.log(LogLevel.WARNING, LogCategory.ERROR, "oops", code=123)
     captured = capsys.readouterr()
     data = json.loads(captured.out.strip())
     assert data["message"] == "oops"
     assert data["fields"]["code"] == 123
+<<<<<<< HEAD
 =======
 async def test_json_logging_output(capsys) -> None:
     logger = RichJSONLoggingResource(level=LogLevel.DEBUG)
@@ -69,3 +81,5 @@ async def test_json_logging_output(tmp_path):
     assert data["message"] == "oops"
     assert data["fields"]["code"] == 123
 >>>>>>> pr-1961
+=======
+>>>>>>> pr-1960
