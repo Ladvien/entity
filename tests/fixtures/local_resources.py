@@ -60,3 +60,41 @@ def mock_ollama_server() -> str:
         finally:
             server.shutdown()
             thread.join()
+
+
+class _VLLMHandler(http.server.BaseHTTPRequestHandler):
+    def do_GET(self) -> None:  # pragma: no cover - simple mock
+        if self.path == "/health":
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b"ok")
+        else:
+            self.send_error(404)
+
+    def do_POST(self) -> None:  # pragma: no cover - simple mock
+        if self.path == "/generate":
+            length = int(self.headers.get("content-length", 0))
+            data = json.loads(self.rfile.read(length)) if length else {}
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            resp = json.dumps({"response": data.get("prompt", "")})
+            self.wfile.write(resp.encode())
+        else:
+            self.send_error(404)
+
+    def log_message(self, *args) -> None:  # pragma: no cover - silence log
+        return
+
+
+@pytest.fixture()
+def mock_vllm_server() -> str:
+    with socketserver.TCPServer(("localhost", 0), _VLLMHandler) as server:
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        url = f"http://localhost:{server.server_address[1]}"
+        try:
+            yield url
+        finally:
+            server.shutdown()
+            thread.join()
