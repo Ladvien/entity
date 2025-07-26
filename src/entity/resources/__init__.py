@@ -10,8 +10,13 @@ from entity.resources.memory import Memory
 from entity.resources.llm_wrapper import LLM
 from entity.resources.storage_wrapper import Storage
 from entity.resources.logging import (
+<<<<<<< HEAD
     LoggingResource,
     ConsoleLoggingResource,
+=======
+    ConsoleLoggingResource,
+    EnhancedLoggingResource,
+>>>>>>> pr-1948
     JSONLoggingResource,
 )
 from entity.resources.metrics import MetricsCollectorResource
@@ -26,7 +31,11 @@ __all__ = [
     "Memory",
     "LLM",
     "Storage",
+<<<<<<< HEAD
     "LoggingResource",
+=======
+    "EnhancedLoggingResource",
+>>>>>>> pr-1948
     "ConsoleLoggingResource",
     "JSONLoggingResource",
     "MetricsCollectorResource",

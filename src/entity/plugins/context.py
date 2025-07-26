@@ -9,6 +9,8 @@ from entity.tools.sandbox import SandboxedToolRunner
 from entity.tools.registry import ToolInfo
 from pydantic import ValidationError
 
+from entity.resources.logging import LogCategory, LogContext, LogLevel
+
 
 class WorkflowContext:
     """Simple context passed to plugins during execution."""
@@ -163,6 +165,24 @@ class PluginContext(WorkflowContext):
         while self._tool_queue:
             name, kwargs = self._tool_queue.pop(0)
             await self.tool_use(name, **kwargs)
+
+    async def log(
+        self,
+        level: LogLevel,
+        category: LogCategory,
+        message: str,
+        **extra_fields: Any,
+    ) -> None:
+        """Convenience wrapper that injects execution context."""
+        logger = self.get_resource("logging")
+        if logger:
+            context = LogContext(
+                user_id=self.user_id,
+                workflow_id=None,
+                stage=self.current_stage,
+                plugin_name=getattr(self, "_current_plugin_name", None),
+            )
+            await logger.log(level, category, message, context, **extra_fields)
 
     def discover_tools(self, **filters: Any):
         """Return registered tools filtered by ``filters``."""
