@@ -4,6 +4,7 @@ from typing import Any, Dict, List
 
 from entity.tools.sandbox import SandboxedToolRunner
 from entity.tools.registry import ToolInfo
+from entity.resources.logging import LogLevel, LogCategory, LogContext
 from pydantic import ValidationError
 
 

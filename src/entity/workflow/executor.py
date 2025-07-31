@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from typing import Any, Iterable
+from typing import Any, Iterable, TYPE_CHECKING
 from itertools import count
 
 from entity.resources.logging import RichConsoleLoggingResource
-
 from entity.plugins.context import PluginContext
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from entity.workflow.workflow import Workflow

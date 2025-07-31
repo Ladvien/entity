@@ -7,6 +7,7 @@ from typing import Any, Dict, Iterable, List, Type, TYPE_CHECKING
 import yaml
 
 from entity.plugins.validation import ValidationResult
+from entity.config.variable_resolver import VariableResolver
 
 if TYPE_CHECKING:
     from entity.plugins.base import Plugin
