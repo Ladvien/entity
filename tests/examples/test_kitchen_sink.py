@@ -15,15 +15,15 @@ def test_kitchen_sink(capsys):
         "http://localhost:11434",
         "llama3.2:3b",
     )
-    if not vllm.health_check() and not ollama.health_check():
+    if not vllm.health_check_sync() and not ollama.health_check_sync():
         pytest.skip("No LLM infrastructure available")
 
     # Determine which LLM is available and set the appropriate environment variable
     llm_url = None
-    if vllm.health_check():
+    if vllm.health_check_sync():
         llm_url = vllm.base_url
         os.environ["ENTITY_VLLM_URL"] = llm_url
-    elif ollama.health_check():
+    elif ollama.health_check_sync():
         llm_url = ollama.base_url
         os.environ["ENTITY_OLLAMA_URL"] = llm_url
     else:

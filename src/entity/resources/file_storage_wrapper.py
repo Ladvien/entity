@@ -16,7 +16,11 @@ class FileStorage:
     def health_check(self) -> bool:
         """Return ``True`` if the underlying resource is healthy."""
 
-        return self.resource.health_check()
+        return self.resource.health_check_sync()
+    
+    def health_check_sync(self) -> bool:
+        """Synchronous wrapper for health_check for compatibility."""
+        return self.health_check()
 
     async def upload_text(self, key: str, data: str) -> None:
         """Proxy text upload to the underlying resource."""

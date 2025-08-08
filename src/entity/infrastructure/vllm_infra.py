@@ -71,11 +71,12 @@ class VLLMInfrastructure(BaseInfrastructure):
             data = response.json()
             return data.get("text", "")
 
-    def health_check(self) -> bool:
+    async def health_check(self) -> bool:
         for attempt in range(3):
             try:
-                resp = httpx.get(f"{self.base_url}/health", timeout=2)
-                resp.raise_for_status()
+                async with httpx.AsyncClient() as client:
+                    resp = await client.get(f"{self.base_url}/health", timeout=2)
+                    resp.raise_for_status()
                 self.logger.debug(
                     "Health check succeeded for %s on attempt %s",
                     self.base_url,
@@ -89,7 +90,7 @@ class VLLMInfrastructure(BaseInfrastructure):
                     self.base_url,
                     exc,
                 )
-                time.sleep(1)
+                await asyncio.sleep(1)
 
         self.logger.warning("Health check failed for %s", self.base_url)
         return False
@@ -171,11 +172,31 @@ class VLLMInfrastructure(BaseInfrastructure):
             str(self.gpu_memory_utilization),
         ]
         self.logger.info("Starting vLLM server: %s", " ".join(cmd))
-        self._server_process = subprocess.Popen(cmd)
-
-        # Wait for the server to become responsive
-        for _ in range(20):
-            if self.health_check():
-                return
-            await asyncio.sleep(0.5)
-        raise RuntimeError("vLLM server failed to start")
+        try:
+            self._server_process = subprocess.Popen(cmd)
+            
+            # Wait for the server to become responsive
+            for _ in range(20):
+                if await self.health_check():
+                    return
+                await asyncio.sleep(0.5)
+            
+            # If we get here, server didn't start properly
+            if self._server_process and self._server_process.poll() is None:
+                self._server_process.terminate()
+                try:
+                    self._server_process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    self._server_process.kill()
+            self._server_process = None
+            raise RuntimeError("vLLM server failed to start")
+        except Exception:
+            # Clean up on any error
+            if self._server_process and self._server_process.poll() is None:
+                self._server_process.terminate()
+                try:
+                    self._server_process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    self._server_process.kill()
+            self._server_process = None
+            raise

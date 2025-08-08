@@ -60,7 +60,7 @@ class DuckDBInfrastructure(BaseInfrastructure):
         while not self._pool.empty():
             self._pool.get_nowait().close()
 
-    def health_check(self) -> bool:
+    async def health_check(self) -> bool:
         """Return ``True`` if the database can be opened."""
         try:
             with self.connect() as conn:

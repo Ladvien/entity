@@ -72,20 +72,35 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
     llm_infra = None
 
     # Try vLLM first (primary default)
-    try:
-        VLLMInstaller.ensure_vllm_available()
-        vllm_infra = VLLMInfrastructure(auto_detect_model=True)
-        if vllm_infra.health_check():
-            llm_infra = vllm_infra
-            logger.info("Using vLLM with auto-detected model: %s", vllm_infra.model)
-        else:
-            raise InfrastructureError("vLLM setup failed")
-    except Exception as exc:
-        logger.warning("vLLM setup failed, falling back to Ollama: %s", exc)
-        # Fallback to Ollama logic here
+    if cfg.auto_install_vllm:
         try:
+            VLLMInstaller.ensure_vllm_available()
+            vllm_infra = VLLMInfrastructure(auto_detect_model=True)
+            if vllm_infra.health_check_sync():
+                llm_infra = vllm_infra
+                logger.info("Using vLLM with auto-detected model: %s", vllm_infra.model)
+            else:
+                raise InfrastructureError("vLLM setup failed")
+        except Exception as exc:
+            logger.warning("vLLM setup failed, falling back to Ollama: %s", exc)
+    else:
+        try:
+            vllm_infra = VLLMInfrastructure(auto_detect_model=True)
+            if vllm_infra.health_check_sync():
+                llm_infra = vllm_infra
+                logger.info("Using vLLM with auto-detected model: %s", vllm_infra.model)
+            else:
+                raise InfrastructureError("vLLM setup failed")
+        except Exception as exc:
+            logger.warning("vLLM setup failed, falling back to Ollama: %s", exc)
+    
+    # If vLLM didn't work, try Ollama
+    if llm_infra is None:
+        try:
+            if cfg.auto_install_ollama:
+                OllamaInstaller.ensure_ollama_available(cfg.ollama_model)
             ollama_infra = OllamaInfrastructure(cfg.ollama_url, cfg.ollama_model)
-            if ollama_infra.health_check():
+            if ollama_infra.health_check_sync():
                 llm_infra = ollama_infra
             else:
                 raise InfrastructureError("Both vLLM and Ollama unavailable")
@@ -93,12 +108,12 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
             raise InfrastructureError("No LLM infrastructure available")
 
     duckdb = DuckDBInfrastructure(cfg.duckdb_path)
-    if not duckdb.health_check():
+    if not duckdb.health_check_sync():
         logger.debug("Falling back to in-memory DuckDB")
         duckdb = DuckDBInfrastructure(":memory:")
 
     storage_infra = LocalStorageInfrastructure(cfg.storage_path)
-    if not storage_infra.health_check():
+    if not storage_infra.health_check_sync():
         fallback = os.path.join(tempfile.gettempdir(), "entity_files")
         logger.warning(
             "Storage path %s unavailable; falling back to %s",

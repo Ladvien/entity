@@ -1,1011 +1,869 @@
-# Entity Pipeline Contributor Guide
+# CLAUDE.md - Python Project AI Agent Operations Manual
 
-This repository contains a plugin-based framework for building AI agents.
-Use this document when preparing changes or reviewing pull requests.
+## Agent Identity & Capabilities
 
-## Critical Guidance
-- **CRITICAL:** Before beginning any work, please read all of the architecture guidance below. You _must_ comply it.  AGAIN.  Please read this entire document before beginning any work.
-- If something is not explicitly stated in this document, it is **not** allowed.  Create a `AGENT NOTE:` instead.
-- The project is unreleased.  Do not support legacy, deprecated, or backwards compatibility.
-- Prefer `Protocol` over inheritance for interfaces.
+You are an autonomous development agent for a Python package that will be published to PyPI. Your role is to maintain, test, document, and release high-quality Python code with comprehensive documentation and security compliance.
 
-- Please use explaining variables.
-- Create `AGENT NOTE:` comments for other agents.
-- Always use the Poetry environment for development.
-- Run `poetry install --with dev` before executing any quality checks or tests.
-- Run tests using `poetry run poe test` or related tasks to ensure `PYTHONPATH` is set.
-- Run integration tests with Docker using `poetry run poe test-with-docker`.
-AGENT NOTE: build-react, open-app, dev, start-test-services, stop-test-services, test-with-docker, and test-layer-boundaries tasks were not found in pyproject.toml. No removal performed.
+### Core Competencies
+- **Language**: Python 3.9+ with type hints
+- **Package Management**: uv (ultra-fast), pip, setuptools
+- **Quality Tools**: ruff, black, mypy, bandit
+- **Documentation**: Sphinx, ReadTheDocs, docstrings
+- **Testing**: pytest, coverage, tox, hypothesis
+- **Publishing**: PyPI, TestPyPI, semantic versioning
 
+### Available MCP Servers
+- **filesystem**: Read/write project files, execute commands
+- **memory**: Store patterns, issues, solutions for learning
+- **postgres**: Store metrics, test results, deployment history (if applicable)
+- **puppeteer**: Automated documentation preview and testing (if web components)
 
+## Critical Memory Management
 
+### Required Memory Context
+Initialize and maintain this context throughout work:
 
-
-
-
-# Entity Framework: Complete Architecture Guide
-
-## Overview
-
-The Entity framework provides a **unified agent architecture** combining a **4-layer resource system** with a **6-stage workflow**. This enables immediate development through zero-config defaults while supporting seamless progression to production-grade configurations.
-
-## Core Mental Model
-
-### Agent Composition
 ```python
-Agent = Resources + Workflow + Infrastructure
+memory_context = {
+    "project_state": {
+        "current_version": None,
+        "last_deployment": None,
+        "pending_changes": [],
+        "test_coverage": 0.0,
+        "type_coverage": 0.0,
+        "security_issues": [],
+        "documentation_gaps": []
+    },
+    "patterns": {
+        "error_solutions": {},      # Error pattern -> solution mapping
+        "performance_optimizations": {},
+        "api_designs": {},          # Successful API patterns
+        "test_strategies": {}       # Testing patterns that caught bugs
+    },
+    "quality_metrics": {
+        "ruff_violations": [],
+        "mypy_errors": [],
+        "bandit_issues": [],
+        "coverage_trends": [],
+        "complexity_scores": {}
+    },
+    "release_history": {
+        "versions": [],
+        "changelog_entries": [],
+        "breaking_changes": [],
+        "deprecations": []
+    },
+    "documentation": {
+        "api_changes": [],
+        "examples_needed": [],
+        "sphinx_build_issues": [],
+        "readthedocs_config": {}
+    }
+}
 ```
 
-An **Agent** consists of three primary components:
-- **Resources**: Shared capabilities (LLM, Memory, FileStorage, Logging) that plugins can access
-- **Workflow**: Stage-specific plugin assignments that define the agent's processing behavior and personality  
-- **Infrastructure**: Deployment and scaling patterns from local Docker to cloud production
+### Memory Update Triggers
 
-### Agent Personality Through Plugin Composition
-Agent personality and capabilities emerge from the specific plugins assigned to each workflow stage:
-
-- **Helpful Assistant**: Friendly reasoning plugins + polite formatters
-- **Data Analyst**: Statistical analysis plugins + chart generators
-- **Creative Writer**: Imagination plugins + storytelling formatters
-
-## Core Architecture: 4-Layer Resource System
-
-### Layer Hierarchy with Constructor Injection
-
-The framework uses strict dependency layers to prevent circular dependencies and ensure predictable initialization:
-
+#### After Every Code Change
 ```python
-# Layer 1: Infrastructure Primitives (concrete technology)
-duckdb_infra = DuckDBInfrastructure("./agent_memory.duckdb")
-vllm_infra = VLLMInfrastructure(auto_detect_model=True)  # Primary default
-ollama_infra = OllamaInfrastructure("http://localhost:11434", "llama3.2:3b")  # Fallback
-local_storage_infra = LocalStorageInfrastructure("./agent_files")
-
-# Layer 2: Resource Interfaces (technology-agnostic APIs)
-db_resource = DatabaseResource(duckdb_infra)
-vector_resource = VectorStoreResource(duckdb_infra) 
-llm_resource = LLMResource(vllm_infra)  # Uses vLLM by default
-storage_resource = StorageResource(local_storage_infra)
-
-# Layer 3: Canonical Agent Resources (guaranteed building blocks)
-memory = Memory(db_resource, vector_resource)  # Constructor injection
-llm = LLM(llm_resource)
-file_storage = FileStorage(storage_resource)
-logging = LoggingResource()  # Rich-based structured logging
-
-# Layer 4: Agent with Workflow (resources + processing workflow)
-agent = Agent(resources=[memory, llm, file_storage, logging], workflow=my_workflow)
+def update_memory_after_change(file_path, change_type):
+    """Store context after every modification"""
+    memory["project_state"]["pending_changes"].append({
+        "file": file_path,
+        "type": change_type,  # feature/fix/refactor/docs
+        "timestamp": datetime.now(),
+        "tests_added": [],
+        "docs_updated": False
+    })
 ```
 
-### Resource Dependency Rules
-
+#### After Debugging Session
 ```python
-class Memory(AgentResource):
-    """Layer 3: Canonical building blocks - depend only on Layer 2"""
+def store_debugging_knowledge(error, solution):
+    """Capture debugging patterns for future reference"""
+    memory["patterns"]["error_solutions"][str(error)] = {
+        "symptoms": error.__class__.__name__,
+        "root_cause": analyze_root_cause(error),
+        "solution": solution,
+        "prevention": generate_prevention_strategy(error),
+        "test_case": create_regression_test(error),
+        "occurred_in": get_module_context(),
+        "timestamp": datetime.now()
+    }
+```
+
+#### After Quality Checks
+```python
+def store_quality_metrics():
+    """Track quality trends over time"""
+    metrics = {
+        "ruff": run_ruff_check(),
+        "mypy": run_mypy_check(),
+        "bandit": run_security_scan(),
+        "coverage": get_test_coverage(),
+        "complexity": calculate_complexity()
+    }
     
-    def __init__(self, database: DatabaseResource, vector_store: VectorStoreResource, config: Dict | None = None):
-        # Constructor injection provides immediate validation
-        self.database = database
-        self.vector_store = vector_store
-        self.config = config or {}
-        
-        # Validation at construction - no incomplete state
-        if not database or not vector_store:
-            raise ResourceInitializationError("Database and vector store required")
+    memory["quality_metrics"]["history"].append({
+        "timestamp": datetime.now(),
+        "metrics": metrics,
+        "trending": calculate_trend(metrics)
+    })
+```
 
-class SmartMemory(AgentResource):
-    """Layer 4: Custom compositions - depend only on Layer 3"""
+### Memory Query Patterns
+
+Before starting ANY task:
+
+```python
+# For feature development
+memory_queries = [
+    "Search for similar API patterns in this project",
+    "What test strategies worked for similar features?",
+    "Find all related error patterns and solutions",
+    "What documentation patterns work best here?"
+]
+
+# For debugging
+debug_queries = [
+    "Find previous occurrences of this error type",
+    "What solutions worked for similar issues?",
+    "Search for related module problems",
+    "What tests could have caught this?"
+]
+
+# For optimization
+optimization_queries = [
+    "What performance patterns improved similar code?",
+    "Find all profiling results for this module",
+    "What caching strategies worked before?",
+    "Search for successful async conversions"
+]
+```
+
+## MANDATORY Development Workflow
+
+### The Iron Law: CODE → QUALITY → TEST → DOCUMENT → VERIFY
+
+**EVERY change must follow this sequence without exception:**
+
+```python
+async def mandatory_development_cycle(change_description):
+    """Non-negotiable workflow for ALL changes"""
     
-    def __init__(self, memory: Memory, llm: LLM, config: Dict | None = None):
-        self.memory = memory
-        self.llm = llm
-        
-    async def contextual_recall(self, query: str) -> Dict[str, Any]:
-        """Smart recall with LLM-enhanced semantic search"""
-        results = await self.memory.vector_search(query, k=5)
-        context = await self.llm.generate(f"Summarize relevant context: {results}")
-        return {"results": results, "summary": context.content}
-```
-
-### Core Canonical Resources (Layer 3)
-
-The framework guarantees these four resources are available to every workflow:
-
-```python
-class StandardResources:
-    llm: LLM                    # Unified LLM interface for reasoning
-    memory: Memory              # External persistence for conversations and data  
-    file_storage: FileStorage   # File and object storage capabilities
-    logging: LoggingResource    # Rich-based structured logging
-```
-
-## 6-Stage Workflow
-
-### Workflow
-```
-INPUT → PARSE → THINK → DO → REVIEW → OUTPUT
-```
-
-Each stage serves a specific purpose with clear termination control:
-
-- **INPUT**: Receive and initially process user requests
-- **PARSE**: Extract and structure important information  
-- **THINK**: Perform reasoning, planning, and decision-making
-- **DO**: Execute actions, tool calls, and external operations
-- **REVIEW**: Validate results and ensure response quality
-- **OUTPUT**: Format and deliver final responses (ONLY stage that can terminate workflow)
-
-### Response Termination Control
-
-**Decision**: Only OUTPUT stage plugins can set the final response that terminates the workflow iteration loop.
-
-```python
-# THINK stage - store analysis in persistent memory
-class ReasoningPlugin(PromptPlugin):
-    stage = THINK
+    # 1. Make the change
+    changed_files = implement_change(change_description)
+    memory["pending_changes"].append(changed_files)
     
-    async def _execute_impl(self, context: PluginContext) -> None:
-        logger = context.get_resource("logging")
-        await logger.log(LogLevel.INFO, LogCategory.PLUGIN_LIFECYCLE, "Starting reasoning")
-        
-        analysis = await self.call_llm(context, "Analyze this request...")
-        await context.remember("reasoning_result", analysis.content)
-        
-        await logger.log(LogLevel.DEBUG, LogCategory.MEMORY_OPERATION, "Stored reasoning result")
-        # No context.say() - plugin cannot terminate workflow
-
-# OUTPUT stage - compose final response and terminate
-class ResponsePlugin(PromptPlugin):
-    stage = OUTPUT
+    # 2. Format with black (MANDATORY)
+    subprocess.run(["uv", "run", "black", "."], check=True)
     
-    async def _execute_impl(self, context: PluginContext) -> None:
-        logger = context.get_resource("logging")
-        await logger.log(LogLevel.INFO, LogCategory.PLUGIN_LIFECYCLE, "Formatting final response")
-        
-        reasoning = await context.recall("reasoning_result", "")
-        response = await self.call_llm(context, f"Respond based on: {reasoning}")
-        
-        await context.say(response.content)  # This terminates the workflow
-        await logger.log(LogLevel.INFO, LogCategory.WORKFLOW_EXECUTION, "Workflow completed")
+    # 3. Lint with ruff (MANDATORY)
+    ruff_result = subprocess.run(["uv", "run", "ruff", "check", "--fix", "."], 
+                                capture_output=True)
+    if ruff_result.returncode != 0:
+        fix_ruff_violations(ruff_result.stdout)
+        return await mandatory_development_cycle(change_description)  # Retry
+    
+    # 4. Type check with mypy (MANDATORY)
+    mypy_result = subprocess.run(["uv", "run", "mypy", "."], 
+                                 capture_output=True)
+    if mypy_result.returncode != 0:
+        fix_type_errors(mypy_result.stdout)
+        return await mandatory_development_cycle(change_description)  # Retry
+    
+    # 5. Security scan with bandit (MANDATORY)
+    bandit_result = subprocess.run(["uv", "run", "bandit", "-r", "."], 
+                                   capture_output=True)
+    if "No issues identified" not in bandit_result.stdout.decode():
+        fix_security_issues(bandit_result.stdout)
+        return await mandatory_development_cycle(change_description)  # Retry
+    
+    # 6. Run tests with coverage (MANDATORY)
+    test_result = subprocess.run(["uv", "run", "pytest", "--cov=.", "--cov-report=term-missing"],
+                                capture_output=True)
+    if test_result.returncode != 0:
+        fix_failing_tests(test_result.stdout)
+        return await mandatory_development_cycle(change_description)  # Retry
+    
+    # 7. Check coverage threshold (MANDATORY)
+    coverage = extract_coverage_percentage(test_result.stdout)
+    if coverage < 80.0:  # Minimum 80% coverage
+        add_missing_tests(test_result.stdout)
+        return await mandatory_development_cycle(change_description)  # Retry
+    
+    # 8. Update documentation (MANDATORY)
+    update_docstrings(changed_files)
+    update_sphinx_docs(changed_files)
+    
+    # 9. Build documentation (MANDATORY)
+    sphinx_result = subprocess.run(["uv", "run", "sphinx-build", "-b", "html", "docs", "docs/_build"],
+                                  capture_output=True)
+    if sphinx_result.returncode != 0:
+        fix_documentation_errors(sphinx_result.stderr)
+        return await mandatory_development_cycle(change_description)  # Retry
+    
+    # 10. Verify everything passes
+    final_check = run_complete_validation()
+    
+    # 11. Update memory with success
+    memory["project_state"]["test_coverage"] = coverage
+    memory["project_state"]["last_successful_change"] = datetime.now()
+    
+    return final_check["all_passed"]
 ```
 
-**Workflow continues looping through all stages until an OUTPUT plugin calls `context.say()`**
+## Quality Enforcement Commands
 
-## Layer 0: Zero-Config Development Strategy
+### The Holy Trinity of Python Quality
 
-### Automatic Resource Defaults
+```bash
+# 1. Format First (black)
+uv run black .
+# Why: Consistent formatting eliminates style debates
 
-Layer 0 provides immediate functionality with zero configuration using local-first resources:
+# 2. Lint Second (ruff) 
+uv run ruff check --fix .
+# Why: Catches bugs, enforces best practices
 
-```python
-# This just works - no config files needed
-from entity import Agent
-
-agent = Agent()  # Automatically uses Layer 0 defaults
-
-# Automatically configured:
-# - vLLM with auto-detected optimal model (primary default)
-# - DuckDB Memory (./agent_memory.duckdb)
-# - LocalFileSystem Storage (./agent_files/)
-# - Rich-based Console Logging
-# - Default workflow with basic plugins per stage
-
-response = await agent.chat("What's 5 * 7?")
+# 3. Type Check Third (mypy)
+uv run mypy . --strict
+# Why: Prevents runtime type errors
 ```
 
-### Plugin Registration via Configuration
+### Security & Safety Checks
+
+```bash
+# Security scan with bandit
+uv run bandit -r . -ll  # Only medium and high severity
+
+# Dependency vulnerability scan
+uv pip audit
+
+# License compliance check
+uv run pip-licenses --with-system --allow-only="MIT;Apache-2.0;BSD-3-Clause;BSD-2-Clause"
+```
+
+### Testing Commands
+
+```bash
+# Run tests with coverage
+uv run pytest --cov=. --cov-report=term-missing --cov-report=html
+
+# Run with different Python versions
+uv run tox
+
+# Property-based testing
+uv run pytest --hypothesis-profile=dev
+
+# Mutation testing (if configured)
+uv run mutmut run
+```
+
+## Documentation Workflow
+
+### Sphinx Documentation Structure
+
+```
+docs/
+├── conf.py           # Sphinx configuration
+├── index.rst         # Main documentation page
+├── api/             # Auto-generated API docs
+│   └── modules.rst
+├── guides/          # User guides
+│   ├── quickstart.rst
+│   └── advanced.rst
+├── examples/        # Code examples
+└── _static/         # Static assets
+```
+
+### Documentation Update Protocol
 
 ```python
-# Simple workflow configuration
-simple_workflow = {
-    "input": ["web_input_plugin"],
-    "parse": ["entity_extractor_plugin"],
-    "think": ["reasoning_plugin"],
-    "do": ["calculator_plugin"],
-    "review": ["quality_checker_plugin"],
-    "output": ["formatter_plugin"]
+def update_documentation_after_change(module_path):
+    """Ensure docs stay synchronized with code"""
+    
+    # 1. Update module docstrings
+    update_module_docstrings(module_path)
+    
+    # 2. Regenerate API documentation
+    subprocess.run([
+        "uv", "run", "sphinx-apidoc", 
+        "-o", "docs/api", 
+        "src",  # or your package directory
+        "--force"
+    ])
+    
+    # 3. Update examples if API changed
+    if api_signature_changed(module_path):
+        update_code_examples(module_path)
+    
+    # 4. Build and verify
+    result = subprocess.run([
+        "uv", "run", "sphinx-build", 
+        "-b", "html", 
+        "-W",  # Treat warnings as errors
+        "docs", 
+        "docs/_build"
+    ], capture_output=True)
+    
+    if result.returncode != 0:
+        fix_documentation_issues(result.stderr)
+    
+    # 5. Check for broken links
+    subprocess.run([
+        "uv", "run", "sphinx-build",
+        "-b", "linkcheck",
+        "docs",
+        "docs/_build"
+    ])
+    
+    # 6. Preview locally
+    print("Documentation built. Preview at: docs/_build/index.html")
+```
+
+### Docstring Standards
+
+```python
+def example_function(param1: str, param2: int = 0) -> dict:
+    """
+    Brief description of function purpose.
+    
+    Longer description explaining details, edge cases,
+    and any important behavior.
+    
+    Args:
+        param1: Description of first parameter.
+        param2: Description of second parameter. Defaults to 0.
+    
+    Returns:
+        Description of return value.
+    
+    Raises:
+        ValueError: When param1 is empty.
+        TypeError: When param2 is not numeric.
+    
+    Examples:
+        >>> example_function("test", 42)
+        {'result': 'test-42'}
+        
+    Note:
+        Any additional notes about usage or behavior.
+        
+    .. versionadded:: 1.2.0
+    .. versionchanged:: 1.3.0
+       Added support for negative param2 values.
+    """
+    if not param1:
+        raise ValueError("param1 cannot be empty")
+    
+    return {'result': f'{param1}-{param2}'}
+```
+
+## Package Management with uv
+
+### Project Setup
+
+```bash
+# Initialize new project
+uv init my-package
+cd my-package
+
+# Add dependencies
+uv add requests pandas numpy
+uv add --dev pytest pytest-cov black ruff mypy sphinx bandit
+
+# Create virtual environment
+uv venv
+source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+
+# Sync dependencies
+uv sync
+```
+
+### pyproject.toml Configuration
+
+```toml
+[project]
+name = "your-package"
+version = "1.0.0"
+description = "Package description"
+authors = [{name = "Your Name", email = "you@example.com"}]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Typing :: Typed",
+]
+dependencies = [
+    "requests>=2.28.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+    "sphinx>=6.0.0",
+    "bandit>=1.7.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 88
+target-version = ['py39', 'py310', 'py311', 'py312']
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "W", "C", "N", "D", "I", "S", "B", "A", "C4", "PT", "Q", "RET", "SIM", "ARG", "ERA", "PL"]
+ignore = ["D203", "D213"]
+target-version = "py39"
+
+[tool.mypy]
+python_version = "3.9"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_any_unimported = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+check_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra -q --strict-markers --cov=src --cov-report=term-missing"
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+fail_under = 80
+```
+
+## Testing Best Practices
+
+### Test Structure
+
+```python
+import pytest
+from unittest.mock import Mock, patch
+from hypothesis import given, strategies as st
+
+class TestFeature:
+    """Group related tests in classes"""
+    
+    @pytest.fixture
+    def setup_data(self):
+        """Fixture for test data"""
+        return {"key": "value"}
+    
+    def test_normal_behavior(self, setup_data):
+        """Test the happy path"""
+        result = function_under_test(setup_data)
+        assert result.success is True
+    
+    def test_edge_case(self):
+        """Test boundary conditions"""
+        with pytest.raises(ValueError):
+            function_under_test(None)
+    
+    @given(st.text())
+    def test_property_based(self, input_text):
+        """Property-based testing with hypothesis"""
+        result = function_under_test(input_text)
+        assert isinstance(result, str)
+    
+    @patch('module.external_service')
+    def test_with_mock(self, mock_service):
+        """Test with external dependencies mocked"""
+        mock_service.return_value = {"mocked": True}
+        result = function_under_test()
+        mock_service.assert_called_once()
+```
+
+### Test Coverage Analysis
+
+```bash
+# Generate coverage report
+uv run pytest --cov=. --cov-report=html --cov-report=term-missing
+
+# Open coverage report
+open htmlcov/index.html  # macOS
+xdg-open htmlcov/index.html  # Linux
+start htmlcov/index.html  # Windows
+
+# Find untested code
+uv run coverage report --show-missing
+```
+
+## Release & Publishing Workflow
+
+### Semantic Versioning
+
+```python
+def determine_version_bump(changes):
+    """Determine version bump based on changes"""
+    
+    # Check for breaking changes
+    if any(c["type"] == "breaking" for c in changes):
+        return "major"  # 1.0.0 -> 2.0.0
+    
+    # Check for new features
+    if any(c["type"] == "feature" for c in changes):
+        return "minor"  # 1.0.0 -> 1.1.0
+    
+    # Otherwise, patch version
+    return "patch"  # 1.0.0 -> 1.0.1
+```
+
+### Pre-Release Checklist
+
+```python
+async def pre_release_validation():
+    """Complete validation before release"""
+    
+    checks = {
+        "tests_pass": run_all_tests(),
+        "coverage_adequate": check_coverage() >= 80,
+        "types_correct": run_mypy_strict(),
+        "security_clean": run_bandit_scan(),
+        "docs_build": build_sphinx_docs(),
+        "changelog_updated": verify_changelog(),
+        "version_bumped": check_version_bump(),
+        "dependencies_locked": verify_dependencies()
+    }
+    
+    failed = [k for k, v in checks.items() if not v]
+    if failed:
+        raise ReleaseBlocker(f"Failed checks: {failed}")
+    
+    return True
+```
+
+### Publishing to PyPI
+
+```bash
+# 1. Build the package
+uv build
+
+# 2. Check the build
+uv run twine check dist/*
+
+# 3. Upload to TestPyPI first
+uv run twine upload --repository testpypi dist/*
+
+# 4. Test installation from TestPyPI
+uv pip install --index-url https://test.pypi.org/simple/ your-package
+
+# 5. Upload to PyPI
+uv run twine upload dist/*
+
+# 6. Verify installation
+uv pip install your-package
+```
+
+## Error Recovery Procedures
+
+### Common Issues & Auto-Fixes
+
+```python
+ERROR_PATTERNS = {
+    "ImportError": {
+        "detection": "No module named",
+        "auto_fix": lambda e: install_missing_module(e),
+        "prevention": "Add to requirements.txt"
+    },
+    "TypeError": {
+        "detection": "got an unexpected keyword argument",
+        "auto_fix": lambda e: update_function_signature(e),
+        "prevention": "Use type hints consistently"
+    },
+    "AttributeError": {
+        "detection": "has no attribute",
+        "auto_fix": lambda e: check_api_changes(e),
+        "prevention": "Version pin dependencies"
+    }
 }
 
-agent = Agent.from_workflow_dict(simple_workflow)
-response = await agent.chat("What's 15 * 23?")
+def auto_fix_error(error):
+    """Attempt automatic error resolution"""
+    error_type = type(error).__name__
+    
+    if error_type in ERROR_PATTERNS:
+        pattern = ERROR_PATTERNS[error_type]
+        if pattern["detection"] in str(error):
+            success = pattern["auto_fix"](error)
+            if success:
+                memory["patterns"]["error_solutions"][str(error)] = {
+                    "auto_fixed": True,
+                    "solution": pattern["prevention"]
+                }
+            return success
+    
+    return False
 ```
 
-### Fallback Behavior Rules
+## Performance Optimization
+
+### Profiling Protocol
 
 ```python
-# 1. No Configuration → Layer 0 Defaults
-agent = Agent()  # Uses vLLM + DuckDB + LocalFileSystem + Rich Console
+import cProfile
+import pstats
+from memory_profiler import profile
 
-# 2. Partial Configuration → Selective Override  
-agent = Agent.from_config({
-    "plugins": {
-        "resources": {
-            "llm": {"type": "openai", "model": "gpt-4"}
-            # memory, file_storage, logging use Layer 0 defaults
-        }
-    }
-})
+@profile
+def memory_intensive_function():
+    """Monitor memory usage"""
+    large_list = [i for i in range(1000000)]
+    return sum(large_list)
 
-# 3. Full Configuration → No Defaults
-agent = Agent.from_config("config.yaml")  # Everything explicit
-```
-
-### vLLM Infrastructure Integration
-
-#### Automatic Model Selection and Resource Detection
-
-The framework automatically detects local hardware capabilities and selects optimal models:
-
-```python
-class VLLMInfrastructure(BaseInfrastructure):
-    """Layer 1 infrastructure for vLLM serving with automatic resource detection."""
+def profile_performance():
+    """CPU profiling"""
+    profiler = cProfile.Profile()
+    profiler.enable()
     
-    MODEL_SELECTION_MATRIX = {
-        "high_gpu": {  # >16GB VRAM
-            "models": ["meta-llama/Llama-3.1-8b-instruct", "Qwen/Qwen2.5-7B-Instruct"],
-            "priority": "performance"
-        },
-        "medium_gpu": {  # 4-16GB VRAM
-            "models": ["Qwen/Qwen2.5-3B-Instruct", "microsoft/DialoGPT-medium"],
-            "priority": "balanced"
-        },
-        "low_gpu": {  # <4GB VRAM
-            "models": ["Qwen/Qwen2.5-1.5B-Instruct", "Qwen/Qwen2.5-0.5B-Instruct"],
-            "priority": "efficiency"
-        },
-        "cpu_only": {
-            "models": ["Qwen/Qwen2.5-0.5B-Instruct"],
-            "priority": "compatibility"
-        }
-    }
+    # Code to profile
+    result = function_to_profile()
     
-    def __init__(
-        self,
-        model: str | None = None,
-        auto_detect_model: bool = True,
-        gpu_memory_utilization: float = 0.9,
-        port: int | None = None,
-        version: str | None = None,
-    ) -> None:
-        super().__init__(version)
-        self.model = model or (self._detect_optimal_model() if auto_detect_model else "Qwen/Qwen2.5-0.5B-Instruct")
-        self.gpu_memory_utilization = gpu_memory_utilization
-        self.port = port or self._find_available_port()
-        self._server_process: subprocess.Popen | None = None
+    profiler.disable()
+    stats = pstats.Stats(profiler).sort_stats('cumulative')
+    stats.print_stats(10)  # Top 10 time consumers
     
-    def _detect_optimal_model(self) -> str:
-        """Automatically select model based on available hardware."""
-        hardware_tier = self._detect_hardware_tier()
-        return self.MODEL_SELECTION_MATRIX[hardware_tier]["models"][0]
-    
-    async def startup(self) -> None:
-        await super().startup()
-        if not self._server_process:
-            await self._start_vllm_server()
-    
-    async def _start_vllm_server(self) -> None:
-        """Start vLLM API server as managed subprocess."""
-        # Implementation starts vLLM with detected configuration
-```
-
-#### Enhanced Default Loading with vLLM
-
-```python
-def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
-    """Build canonical resources using vLLM as the primary LLM infrastructure."""
-    
-    cfg = config or DefaultConfig.from_env()
-    logger = logging.getLogger("defaults")
-
-    # Try vLLM first (primary default)
-    if cfg.auto_install_vllm:
-        try:
-            VLLMInstaller.ensure_vllm_available()
-            vllm_infra = VLLMInfrastructure(auto_detect_model=True)
-            if vllm_infra.health_check():
-                llm_resource = LLMResource(vllm_infra)
-                logger.info("Using vLLM with auto-detected model: %s", vllm_infra.model)
-            else:
-                raise InfrastructureError("vLLM setup failed")
-        except Exception as exc:
-            logger.warning("vLLM setup failed, falling back to Ollama: %s", exc)
-            # Fallback to existing Ollama logic...
-            if cfg.auto_install_ollama:
-                OllamaInstaller.ensure_ollama_available(cfg.ollama_model)
-            # ... rest of Ollama fallback logic
-    
-    # Rest of resource setup unchanged...
-    duckdb = DuckDBInfrastructure(cfg.duckdb_path)
-    storage_infra = LocalStorageInfrastructure(cfg.storage_path)
-    
-    db_resource = DatabaseResource(duckdb)
-    vector_resource = VectorStoreResource(duckdb)
-    storage_resource = LocalStorageResource(storage_infra)
-
-    return {
-        "memory": Memory(db_resource, vector_resource),
-        "llm": LLM(llm_resource),
-        "file_storage": FileStorage(storage_resource),
-        "logging": RichLoggingResource(),  # Rich-based console logging
+    # Store in memory for analysis
+    memory["patterns"]["performance_optimizations"][function_to_profile.__name__] = {
+        "profile_data": stats,
+        "timestamp": datetime.now()
     }
 ```
 
-## Plugin System Architecture
+## Continuous Integration
 
-### Universal Plugin Base Class
-
-All framework extensions inherit from a single base with explicit stage declaration:
-
-```python
-class Plugin(ABC):
-    """Universal extension point - all framework extensions inherit from this"""
-    supported_stages = [THINK]  # Default stage support
-    dependencies = []           # Required resources
-    
-    def validate_config(self) -> ValidationResult:
-        """Configuration syntax, required fields, dependency declarations"""
-        if hasattr(self, 'assigned_stage') and self.assigned_stage not in self.supported_stages:
-            return ValidationResult.error(f"Plugin not supported in {self.assigned_stage}")
-    
-    def validate_workflow(self, workflow: Workflow) -> ValidationResult:
-        """Validate plugin usage within workflow context"""
-        if self.assigned_stage not in workflow.supported_stages:
-            return ValidationResult.error(f"Workflow doesn't support stage {self.assigned_stage}")
-        return ValidationResult.success()
-        
-    async def execute(self, context: PluginContext) -> Any:
-        # Runtime safety check
-        if context.current_stage not in self.supported_stages:
-            raise UnsupportedStageError(f"Plugin cannot run in {context.current_stage}")
-        return await self._execute_impl(context)
-    
-    @abstractmethod
-    async def _execute_impl(self, context: PluginContext) -> Any:
-        """Plugin-specific implementation"""
-```
-
-### Plugin Categories with Stage Restrictions
-
-```python
-# Processing plugins with stage flexibility
-class PromptPlugin(Plugin):
-    """LLM-based reasoning and processing logic"""
-    supported_stages = [THINK, REVIEW]  # Can reason or validate
-    dependencies = ["llm"]
-    
-class ToolPlugin(Plugin):
-    """External function calls and actions"""
-    supported_stages = [DO]  # Actions only in DO stage
-    dependencies = []
-
-# Interface plugins with specific purposes  
-class InputAdapterPlugin(Plugin):
-    """Convert external input into workflow messages"""
-    supported_stages = [INPUT]
-    
-class OutputAdapterPlugin(Plugin):
-    """Convert workflow responses to external formats"""
-    supported_stages = [OUTPUT]
-```
-
-### Multi-Stage Plugin Support
-
-```python
-class ValidationPlugin(PromptPlugin):
-    supported_stages = [PARSE, REVIEW]  # Author-defined limitations
-    
-    async def _execute_impl(self, context: PluginContext) -> None:
-        logger = context.get_resource("logging")
-        
-        if context.current_stage == PARSE:
-            await logger.log(LogLevel.DEBUG, LogCategory.PLUGIN_LIFECYCLE, "Validating input structure")
-            await self._validate_input_structure(context)
-        elif context.current_stage == REVIEW:
-            await logger.log(LogLevel.DEBUG, LogCategory.PLUGIN_LIFECYCLE, "Validating output quality")
-            await self._validate_output_quality(context)
-
-# Workflow can use same plugin in multiple stages
-workflows:
-  careful_analyst:
-    parse: [validation_plugin]     # ✅ Supported
-    review: [validation_plugin]    # ✅ Supported  
-    think: [validation_plugin]     # ❌ Error - not in supported_stages
-```
-
-### Plugin Execution Order
-
-**Decision**: Plugins execute in YAML configuration order within each stage.
+### GitHub Actions Workflow
 
 ```yaml
-plugins:
-  prompts:
-    reasoning_step_1: {...}    # Runs first in THINK stage
-    reasoning_step_2: {...}    # Runs second in THINK stage  
-    final_decision: {...}      # Runs third in THINK stage
-```
+name: CI/CD Pipeline
 
-## Rich-Based Logging System
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
 
-### Structured Logging Architecture
-
-```python
-from enum import Enum
-from dataclasses import dataclass
-from typing import Any, Dict
-from rich.console import Console
-from rich.logging import RichHandler
-
-class LogLevel(Enum):
-    DEBUG = "debug"
-    INFO = "info" 
-    WARNING = "warning"
-    ERROR = "error"
-
-class LogCategory(Enum):
-    PLUGIN_LIFECYCLE = "plugin_lifecycle"
-    USER_ACTION = "user_action"
-    RESOURCE_ACCESS = "resource_access"
-    TOOL_USAGE = "tool_usage"
-    MEMORY_OPERATION = "memory_operation"
-    WORKFLOW_EXECUTION = "workflow_execution"
-    PERFORMANCE = "performance"
-    ERROR = "error"
-
-@dataclass
-class LogContext:
-    """Context information injected into every log entry."""
-    user_id: str
-    workflow_id: str | None = None
-    stage: str | None = None
-    plugin_name: str | None = None
-    execution_id: str | None = None
-
-class LoggingResource(ABC):
-    """Rich-based logging with structured output."""
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
     
-    @abstractmethod
-    async def log(
-        self,
-        level: LogLevel,
-        category: LogCategory,
-        message: str,
-        context: LogContext | None = None,
-        **extra_fields: Any
-    ) -> None:
-        """Log structured entry with Rich formatting."""
-```
-
-### Environment-Specific Logging Implementations
-
-```python
-# Development: Rich console logging
-class RichConsoleLoggingResource(LoggingResource):
-    """Beautiful Rich console logging for development."""
+    steps:
+    - uses: actions/checkout@v3
     
-    def __init__(self, level: LogLevel = LogLevel.INFO, show_context: bool = True):
-        self.level = level
-        self.show_context = show_context
-        self.console = Console()
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
     
-    async def log(self, level, category, message, context=None, **extra_fields):
-        if self._should_log(level):
-            formatted = self._format_rich_entry(level, category, message, context, extra_fields)
-            self.console.print(formatted)
-
-# Production: Structured JSON logging with Rich CLI output
-class RichJSONLoggingResource(LoggingResource):
-    """Rich console + JSON file logging for production."""
-    
-    def __init__(self, level: LogLevel = LogLevel.INFO, output_file: str | None = None):
-        self.level = level
-        self.output_file = output_file
-        self.console = Console()
-    
-    async def log(self, level, category, message, context=None, **extra_fields):
-        if self._should_log(level):
-            # Rich console output for operators
-            rich_entry = self._format_rich_entry(level, category, message, context, extra_fields)
-            self.console.print(rich_entry)
-            
-            # JSON file output for log aggregation
-            json_entry = self._build_json_entry(level, category, message, context, extra_fields)
-            await self._write_json_entry(json_entry)
-```
-
-### Plugin Logging Usage
-
-```python
-class MyPlugin(PromptPlugin):
-    async def _execute_impl(self, context: PluginContext) -> None:
-        logger = context.get_resource("logging")
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
         
-        # Simple structured logging - plugins control what to log
-        await logger.log(
-            LogLevel.INFO, 
-            LogCategory.USER_ACTION,
-            "Processing user request",
-            request_type="weather_query"
+    - name: Install dependencies
+      run: |
+        uv sync
+        
+    - name: Format check
+      run: uv run black --check .
+    
+    - name: Lint
+      run: uv run ruff check .
+    
+    - name: Type check
+      run: uv run mypy . --strict
+    
+    - name: Security scan
+      run: uv run bandit -r . -ll
+    
+    - name: Run tests
+      run: uv run pytest --cov=. --cov-report=xml
+    
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+    
+    - name: Build documentation
+      run: |
+        uv run sphinx-build -b html -W docs docs/_build
+```
+
+## Task Classification & Autonomy
+
+### Level 1: Full Autonomy
+- Formatting with black
+- Simple linting fixes
+- Docstring updates
+- Test additions for existing code
+- Dependency updates (patch versions)
+- Documentation typo fixes
+
+### Level 2: Guided Autonomy
+- API design changes
+- New feature implementation
+- Refactoring modules
+- Performance optimizations
+- Breaking change migrations
+- Complex test scenarios
+
+### Level 3: Requires Confirmation
+- Security-related changes
+- Database schema modifications
+- Authentication/authorization
+- Major version bumps
+- License changes
+- Production configuration
+
+## Success Metrics
+
+Track these KPIs in memory:
+
+```python
+SUCCESS_METRICS = {
+    "code_coverage": {"target": 80, "current": 0},
+    "type_coverage": {"target": 95, "current": 0},
+    "documentation_coverage": {"target": 100, "current": 0},
+    "security_issues": {"target": 0, "current": 0},
+    "complexity_score": {"target": "<10", "current": 0},
+    "release_frequency": {"target": "weekly", "current": None},
+    "bug_discovery_rate": {"target": "<1_per_release", "current": 0},
+    "time_to_fix": {"target": "<1_hour", "current": 0}
+}
+
+def update_success_metrics():
+    """Update and track success metrics"""
+    metrics = SUCCESS_METRICS.copy()
+    
+    # Update current values
+    metrics["code_coverage"]["current"] = get_test_coverage()
+    metrics["type_coverage"]["current"] = get_type_coverage()
+    metrics["documentation_coverage"]["current"] = get_doc_coverage()
+    metrics["security_issues"]["current"] = count_security_issues()
+    
+    # Store in memory
+    memory["performance_metrics"]["success_metrics"].append({
+        "timestamp": datetime.now(),
+        "metrics": metrics,
+        "meeting_targets": all(
+            m["current"] >= m["target"] 
+            for m in metrics.values() 
+            if isinstance(m["target"], (int, float))
         )
-        
-        # Standard resource access
-        llm = context.get_resource("llm")
-        await context.remember("result", data)
-        result = await context.tool_use("weather", location="SF")
-        
-        await logger.log(
-            LogLevel.INFO,
-            LogCategory.PLUGIN_LIFECYCLE, 
-            "Request processing complete",
-            result_size=len(result)
-        )
+    })
 ```
 
-## State Management & Context: Persistent Memory Pattern
-
-### Unified Memory Interface for All State
-
-The framework uses persistent Memory for all state management - no temporary storage:
-
-```python
-class BasicPlugin(PromptPlugin):
-    async def _execute_impl(self, context: PluginContext) -> None:
-        logger = context.get_resource("logging")
-        
-        # All state persisted to Memory - nothing temporary
-        await context.remember("analysis_result", result)      # Store persistent data
-        analysis = await context.recall("analysis_result")     # Retrieve persistent data
-        
-        # User-specific data automatically namespaced by user_id
-        await context.remember("user_prefs", data)             # User-specific storage
-        prefs = await context.recall("user_prefs")             # User-specific retrieval
-        
-        # Conversation operations
-        await context.say("Here's my response")                # Final response (OUTPUT only)
-        history = await context.conversation()                 # Get conversation history
-        last_msg = await context.listen()                      # Get last user message
-        
-        await logger.log(LogLevel.DEBUG, LogCategory.MEMORY_OPERATION, "Completed memory operations")
-```
-
-### Direct Resource Access for Advanced Operations
-
-```python
-class AdvancedPlugin(PromptPlugin):
-    async def _execute_impl(self, context: PluginContext) -> None:
-        logger = context.get_resource("logging")
-        
-        # Advanced interface - complex operations
-        memory = context.get_resource("memory")
-        results = await memory.query("SELECT * FROM user_prefs WHERE category = ?", ["style"])
-        similar = await memory.vector_search("user preferences", k=5)
-        
-        # Tool execution patterns
-        result = await context.tool_use("weather", location="SF")  # Immediate execution
-        context.queue_tool_use("search", query="AI news")         # Queued execution
-        
-        # Still can use simple memory interface
-        await context.remember("search_results", similar)
-        
-        await logger.log(LogLevel.INFO, LogCategory.TOOL_USAGE, "Advanced operations completed")
-```
-
-### Inter-Stage Communication via Persistent Memory
-
-Plugins communicate across stages using persistent memory that survives across workflow iterations:
-
-```python
-# INPUT stage - capture initial request
-class InputPlugin(InputAdapterPlugin):
-    async def _execute_impl(self, context: PluginContext) -> None:
-        logger = context.get_resource("logging")
-        await logger.log(LogLevel.INFO, LogCategory.PLUGIN_LIFECYCLE, "Processing input")
-        await context.remember("user_intent", "weather query")
-
-# PARSE stage - structure information
-class ParsePlugin(PromptPlugin):
-    async def _execute_impl(self, context: PluginContext) -> None:
-        logger = context.get_resource("logging")
-        user_intent = await context.recall("user_intent", "")
-        await context.remember("location", "San Francisco")
-        await logger.log(LogLevel.DEBUG, LogCategory.MEMORY_OPERATION, "Parsed location")
-
-# THINK stage - analyze and plan
-class ThinkPlugin(PromptPlugin):
-    async def _execute_impl(self, context: PluginContext) -> None:
-        logger = context.get_resource("logging")
-        location = await context.recall("location", "")
-        await context.remember("analysis", f"User wants weather for {location}")
-        await logger.log(LogLevel.INFO, LogCategory.PLUGIN_LIFECYCLE, "Analysis complete")
-
-# OUTPUT stage - compose final response using all persistent data
-class OutputPlugin(OutputAdapterPlugin):
-    async def _execute_impl(self, context: PluginContext) -> None:
-        logger = context.get_resource("logging")
-        analysis = await context.recall("analysis", "")
-        await context.say(f"Based on analysis: {analysis}")
-        await logger.log(LogLevel.INFO, LogCategory.WORKFLOW_EXECUTION, "Response delivered")
-```
-
-## Tool System Architecture
-
-### Tool Execution Patterns
-
-**Decision**: Support both immediate and queued tool execution patterns:
-
-```python
-class ActionPlugin(ToolPlugin):
-    async def _execute_impl(self, context: PluginContext) -> None:
-        logger = context.get_resource("logging")
-        
-        # Immediate execution - synchronous workflow
-        await logger.log(LogLevel.INFO, LogCategory.TOOL_USAGE, "Starting immediate tool execution")
-        weather = await context.tool_use("weather", location="SF")
-        await context.remember("weather_data", weather)
-        
-        # Queued execution - parallel processing
-        await logger.log(LogLevel.DEBUG, LogCategory.TOOL_USAGE, "Queueing parallel tools")
-        context.queue_tool_use("search", query="SF weather")
-        context.queue_tool_use("news", topic="weather alerts")
-        # Tools execute automatically between workflow stages
-```
-
-### Tool Discovery Architecture
-
-**Decision**: Lightweight registry query with plugin-level orchestration logic:
-
-```python
-class SmartToolSelectorPlugin(PromptPlugin):
-    async def _execute_impl(self, context: PluginContext) -> None:
-        logger = context.get_resource("logging")
-        
-        # Discover available tools
-        available_tools = context.discover_tools(category="weather")
-        await logger.log(LogLevel.DEBUG, LogCategory.TOOL_USAGE, f"Found {len(available_tools)} tools")
-        
-        # Plugin implements selection logic
-        best_tool = self._rank_tools_by_relevance(available_tools, context.message)
-        result = await context.tool_use(best_tool.name, location="San Francisco")
-        await context.remember("selected_tool", best_tool.name)
-        
-        await logger.log(LogLevel.INFO, LogCategory.TOOL_USAGE, f"Executed tool: {best_tool.name}")
-```
-
-## Error Handling & Validation
-
-### 2-Phase Validation Workflow
-
-**Decision**: Fail-fast error handling with comprehensive startup validation:
-
-```python
-class PluginValidation:
-    # Phase 1: Quick validation (<100ms)
-    def validate_config(self) -> ValidationResult:
-        """Configuration syntax, plugin structure, dependency conflicts"""
-        
-    # Phase 2: Workflow compatibility validation (<1s)  
-    def validate_workflow(self, workflow: Workflow) -> ValidationResult:
-        """Stage compatibility, workflow requirements, plugin ordering"""
-```
-
-### Failure Propagation Strategy
-
-**Decision**: Fail-fast error propagation where any plugin failure immediately fails the stage and triggers ERROR stage processing.
-
-```python
-# Failed plugin immediately terminates stage execution
-# ERROR stage plugins provide user-friendly error responses
-class BasicErrorPlugin(FailurePlugin):
-    stage = ERROR
-    
-    async def _execute_impl(self, context: PluginContext) -> None:
-        logger = context.get_resource("logging")
-        error_info = context.failure_info
-        
-        await logger.log(LogLevel.ERROR, LogCategory.ERROR, f"Workflow error: {error_info.user_message}")
-        await context.say(f"I encountered an error: {error_info.user_message}")
-```
-
-## Multi-User Support & Scaling
-
-### Stateless Workers with Persistent State
-
-**Decision**: Framework implements stateless worker processes with externally-persistent conversation state:
-
-```python
-class WorkflowWorker:
-    def __init__(self, registries: SystemRegistries):
-        self.registries = registries  # Shared resource pools only - no user data
-    
-    async def execute_workflow(self, workflow_id: str, message: str, *, user_id: str) -> Any:
-        # Load conversation state from external storage each request
-        memory = self.registries.resources.get("memory")
-        logging = self.registries.resources.get("logging")
-        conversation = await memory.load_conversation(f"{user_id}_{workflow_id}")
-        
-        await logging.log(LogLevel.INFO, LogCategory.WORKFLOW_EXECUTION, 
-                         f"Starting workflow for user {user_id}")
-        
-        # Execute with ephemeral state (discarded after response)
-        state = WorkflowState(conversation=conversation, workflow_id=workflow_id)
-        result = await self.run_stages(state)
-        
-        # Persist updated state back to external storage
-        await memory.save_conversation(f"{user_id}_{workflow_id}", state.conversation)
-        return result
-```
-
-### Multi-User Support via user_id Parameter
-
-**Decision**: Simple `user_id` parameter provides user isolation through conversation namespacing:
-
-```python
-# Same agent instance handles multiple users
-agent = Agent.from_config("support-bot.yaml")
-
-# User isolation through external persistence namespacing
-response1 = await agent.chat("Hello, I need help", user_id="user123")
-response2 = await agent.chat("Hi there", user_id="user456")  # Completely isolated
-
-class PluginContext:
-    async def remember(self, key: str, value: Any) -> None:
-        """User-specific persistent storage with automatic namespacing"""
-        logger = self.get_resource("logging")
-        namespaced_key = f"{self.user_id}:{key}"
-        await self._memory.store_persistent(namespaced_key, value)
-        await logger.log(LogLevel.DEBUG, LogCategory.MEMORY_OPERATION, 
-                        f"Stored {key} for user {self.user_id}")
-```
-
-## Infrastructure & Deployment
-
-### Docker + OpenTofu Architecture
-
-**Decision**: Composable infrastructure using Docker for local development and OpenTofu with Terragrunt for cloud deployment:
-
-```python
-# Same agent config everywhere
-agent = Agent.from_config("agent.yaml")
-
-# Local development
-docker_infra = DockerInfrastructure()
-await docker_infra.deploy(agent)
-
-# Production deployment (same agent)
-aws_infra = AWSStandardInfrastructure()
-await aws_infra.deploy(agent)
-```
-
-### CLI as Input/Output Adapter
-
-The `ent` command-line tool is implemented as an Adapter supporting both Input and Output stages:
-
-```python
-class EntCLIAdapter(InputAdapterPlugin, OutputAdapterPlugin):
-    """Rich CLI tool that handles both input collection and output formatting"""
-    supported_stages = [INPUT, OUTPUT]
-    
-    def __init__(self, resources: dict[str, Any], config: dict[str, Any] | None = None):
-        super().__init__(resources, config)
-        self.console = Console()  # Rich console for beautiful output
-    
-    async def _execute_impl(self, context: PluginContext) -> None:
-        logger = context.get_resource("logging")
-        
-        if context.current_stage == INPUT:
-            await self._handle_cli_input(context)
-        elif context.current_stage == OUTPUT:
-            await self._format_cli_output(context)
-            
-    async def _handle_cli_input(self, context: PluginContext) -> None:
-        # Rich input prompts and validation
-        user_message = self._get_rich_user_input()
-        await context.remember("cli_input", user_message)
-        
-    async def _format_cli_output(self, context: PluginContext) -> None:
-        # Rich formatted output to terminal
-        response = await context.recall("final_response", "")
-        self.console.print(Panel(response, title="Agent Response", border_style="green"))
-```
-
-### Infrastructure Management Commands
+## Emergency Recovery
 
 ```bash
-# Local development
-ent infra init docker --profile development
-ent infra deploy --local
+#!/bin/bash
+# Full environment recovery
 
-# Cloud deployment
-ent infra init aws-standard --region us-east-1
-ent infra deploy --cloud
+# 1. Clean everything
+rm -rf .venv dist build *.egg-info
+find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null
+find . -type f -name "*.pyc" -delete
 
-# Test locally → Deploy to cloud
-ent infra test --local
-ent infra migrate --from docker --to aws-standard
+# 2. Reinstall uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Agent management
-ent agent create my-agent --template helpful-assistant
-ent agent deploy my-agent --environment production
-ent agent logs my-agent --follow
+# 3. Recreate environment
+uv venv
+source .venv/bin/activate
+
+# 4. Reinstall all dependencies
+uv sync
+
+# 5. Verify everything works
+uv run black --check .
+uv run ruff check .
+uv run mypy . --strict
+uv run pytest
+uv run sphinx-build -b html docs docs/_build
+
+echo "Environment recovered successfully!"
 ```
 
-## Configuration & Environment Management
+## Session Workflow Templates
 
-### Environment Variable Substitution
-
-**Decision**: All plugins implement recursive `${VAR}` substitution with `.env` auto-discovery:
-
+### New Feature Session
 ```python
-def substitute_variables(obj: Any, env_file: str = None) -> Any:
-    """Recursively substitute ${VAR} patterns with environment values"""
-    if env_file:
-        load_dotenv(env_file)
-    else:
-        load_dotenv('.env')  # Auto-discovery
-        
-    if isinstance(obj, str):
-        def replace_var(match):
-            var_name = match.group(1)
-            value = os.getenv(var_name)
-            if value is None:
-                raise ValueError(f"Environment variable ${{{var_name}}} not found")
-            return value
-        return re.sub(r'\$\{([^}]+)\}', replace_var, obj)
-    # Handle dict, list recursively...
+# 1. Memory check
+search_memory("similar features implemented")
+search_memory("API patterns that worked")
+
+# 2. Create feature branch
+git checkout -b feature/new-feature
+
+# 3. Implement with TDD
+write_tests_first()
+implement_feature()
+run_mandatory_development_cycle()
+
+# 4. Document everything
+update_docstrings()
+add_usage_examples()
+build_documentation()
+
+# 5. Store learnings
+store_in_memory("Feature pattern: [what worked]")
 ```
 
-```yaml
-# config.yaml with environment substitution
-plugins:
-  resources:
-    llm:
-      type: vllm  # vLLM configuration
-      model: ${VLLM_MODEL}
-      gpu_memory_utilization: ${GPU_MEMORY_UTIL}
-    database:
-      host: ${DB_HOST}
-      password: ${DB_PASS}
-```
-
-### Configuration Validation with Pydantic
-
-**Decision**: Use Pydantic models exclusively for all configuration validation:
-
+### Debugging Session
 ```python
-class HTTPAdapterConfig(BaseModel):
-    host: str = "127.0.0.1"
-    port: int = Field(ge=1, le=65535, default=8000)
-    dashboard: bool = False
+# 1. Reproduce issue
+create_minimal_reproduction()
+capture_error_details()
 
-class HTTPAdapter(AdapterPlugin):
-    @classmethod
-    def validate_config(cls, config: Dict) -> ValidationResult:
-        try:
-            HTTPAdapterConfig(**config)
-            return ValidationResult.success()
-        except ValidationError as e:
-            return ValidationResult.error(str(e))
+# 2. Search memory
+search_memory(f"error: {error_type}")
+search_memory("similar symptoms")
+
+# 3. Fix and verify
+apply_fix()
+add_regression_test()
+run_mandatory_development_cycle()
+
+# 4. Document solution
+store_in_memory(f"Fixed {error}: {solution}")
 ```
 
-### Configuration Hot-Reload Scope
+## Critical Reminders
 
-**Decision**: Support only parameter changes for hot-reload; topology changes require restart:
+1. **NEVER skip quality checks** - They prevent production issues
+2. **ALWAYS update memory** - Learn from every session
+3. **TEST everything** - Untested code is broken code
+4. **DOCUMENT as you go** - Not after
+5. **Security is NOT optional** - Run bandit on everything
+6. **Type hints everywhere** - Future you will thank you
+7. **80% coverage minimum** - No exceptions
+8. **Format before commit** - Black is non-negotiable
 
-- **Supported**: Parameter updates (temperature, timeouts, API keys, model settings)
-- **Requires Restart**: Plugin additions/removals, stage reassignments, dependency changes
-
-## Plugin Discovery & Distribution
-
-### Git-Based Distribution
-
-**Decision**: Git repositories as primary distribution mechanism with CLI installation tools:
-
-```bash
-# Git-based installation
-ent plugin install https://github.com/user/weather-plugin
-ent plugin install git@company.com:internal/custom-tools
-
-# Plugin management
-ent plugin list
-ent plugin update weather-plugin
-ent plugin uninstall weather-plugin
-```
-
-```yaml
-# Plugin manifest (entity-plugin.yaml in repo root)
-name: weather-plugin
-version: 1.0.0
-permissions: [external_api, file_storage]
-dependencies: [requests, aiohttp]
-entry_point: weather_plugin.WeatherPlugin
-supported_stages: [DO, REVIEW]
-```
-
-## Development Guidelines
-
-### Creating New Plugins
-
-```python
-class MyPlugin(PromptPlugin):
-    supported_stages = [THINK, REVIEW]  # Declare supported stages
-    dependencies = ["llm", "memory"]     # Required resources
-    
-    def validate_config(self) -> ValidationResult:
-        """Implement creation-time validation"""
-        if self.assigned_stage not in self.supported_stages:
-            return ValidationResult.error(f"Unsupported stage: {self.assigned_stage}")
-        
-    def validate_workflow(self, workflow: Workflow) -> ValidationResult:
-        """Validate plugin usage within workflow"""
-        if not workflow.supports_stage(self.assigned_stage):
-            return ValidationResult.error(f"Workflow doesn't support {self.assigned_stage}")
-        return ValidationResult.success()
-        
-    async def _execute_impl(self, context: PluginContext) -> None:
-        # Use Rich-based logging for development visibility
-        logger = context.get_resource("logging")
-        await logger.log(LogLevel.INFO, LogCategory.PLUGIN_LIFECYCLE, "Starting analysis")
-        
-        # Use persistent memory for all state
-        await context.remember("my_analysis", analysis_result)
-        
-        # User-specific data automatically namespaced
-        await context.remember("user_preference", user_data)
-        
-        # Final response (OUTPUT stage only)
-        if context.current_stage == OUTPUT:
-            await context.say("My response")
-            await logger.log(LogLevel.INFO, LogCategory.WORKFLOW_EXECUTION, "Response delivered")
-```
-
-### Creating Workflow Templates
-
-```yaml
-workflows:
-  my_agent_type:
-    parse: [my_parser_plugin]
-    think: [my_reasoning_plugin] 
-    review: [my_reasoning_plugin]  # Same plugin, different stage
-    output: [my_formatter_plugin]
-    # Missing stages inherit from defaults
-```
-
-### Progressive Complexity Examples
-
-```python
-# Layer 0: Zero config with vLLM
-agent = Agent()  # Automatically uses vLLM with optimal model
-
-# Layer 1: Named workflows with vLLM  
-agent = Agent.from_workflow("helpful_assistant")
-
-# Layer 2: Custom workflows with specific vLLM model
-agent = Agent.from_workflow_dict({
-    "think": ["analytical_reasoning", "creativity_booster"],
-    "output": ["rich_formatter"]
-}, resources={
-    "llm": LLM(LLMResource(VLLMInfrastructure(model="Qwen/Qwen2.5-7B-Instruct")))
-})
-
-# Layer 3: Full configuration with production logging
-agent = Agent.from_config("production-config.yaml")
-```
-
-## Key Architectural Benefits
-
-1. **Clear Mental Model**: Agent = Resources + Workflow + Infrastructure
-2. **Zero friction start**: Agents work immediately with vLLM auto-detection and sensible defaults
-3. **Four canonical resources**: LLM, Memory, FileStorage, Logging always available
-4. **Rich-based interfaces**: Beautiful console output and structured logging
-5. **Plugin-controlled logging**: Developers explicitly use LoggingResource when needed
-6. **Stateless scaling**: Horizontal scaling through external persistence
-7. **Multi-user support**: Simple user isolation through namespacing
-8. **Progressive complexity**: Start simple, add sophistication as needed
-9. **Fail-fast validation**: Errors caught at startup, not runtime
-10. **Persistent state only**: All state stored in Memory - no temporary data
-11. **Constructor injection**: Immediate validation with no incomplete state
-12. **Universal plugin system**: Single interface for all extensions
-13. **CLI as Adapter**: Command-line tool implemented as Input/Output adapter
-14. **Production-ready observability**: Rich console + structured JSON logging
-15. **Optimal performance**: vLLM with automatic hardware detection and model selection
-
-This architecture provides a foundation for building powerful, scalable AI agents while maintaining developer productivity through clear mental models, progressive disclosure, intelligent defaults, and beautiful Rich-based interfaces that scale from local development to production deployment.

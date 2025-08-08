@@ -20,10 +20,11 @@ class S3Infrastructure(BaseInfrastructure):
             self._session = aioboto3.Session()
         return self._session
 
-    def client(self):
+    async def client(self):
         """Create an S3 client from the session."""
 
-        return self.session().client("s3")
+        async with self.session().client("s3") as client:
+            return client
 
     async def startup(self) -> None:
         await super().startup()
@@ -33,12 +34,12 @@ class S3Infrastructure(BaseInfrastructure):
     async def shutdown(self) -> None:
         await super().shutdown()
 
-    def health_check(self) -> bool:
+    async def health_check(self) -> bool:
         """Return ``True`` if the bucket is reachable."""
 
         try:
-            client = self.client()
-            client.list_buckets()
+            async with self.session().client("s3") as client:
+                await client.list_buckets()
             return True
         except Exception:
             return False

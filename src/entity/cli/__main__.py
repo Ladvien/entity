@@ -74,7 +74,21 @@ async def _run(args: argparse.Namespace) -> None:
     level = "debug" if args.verbose else "error" if args.quiet else "info"
     resources = load_defaults()
     resources["logging"] = RichConsoleLoggingResource(LogLevel(level))
-    workflow = _load_workflow(args.workflow, resources)
+    workflow_steps = _load_workflow(args.workflow)
+    
+    # Build workflow from steps
+    if isinstance(workflow_steps, list):
+        # Convert list to dict with default stages
+        workflow_dict = {
+            WorkflowExecutor.INPUT: [EntCLIAdapter],
+            WorkflowExecutor.THINK: workflow_steps,
+            WorkflowExecutor.OUTPUT: [EntCLIAdapter],
+        }
+        workflow = Workflow.from_dict(workflow_dict, resources)
+    else:
+        # Already a dict
+        workflow = Workflow.from_dict(workflow_steps, resources)
+    
     agent = Agent(resources=resources, workflow=workflow)
 
     try:

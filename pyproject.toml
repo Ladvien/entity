@@ -1,13 +1,38 @@
 [project]
-name = "entity"
-version = "0.0.1"
-description = "Entity agentic system with PostgreSQL memory"
+name = "entity-core"
+version = "0.0.2"
+description = "A flexible, plugin-based framework for building AI agents"
 authors = [
     { name = "C. Thomas Brittain", email = "cthomasbrittain@hotmail.com" },
 ]
 license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.11"
+keywords = [
+    "ai",
+    "agents",
+    "llm",
+    "framework",
+    "plugin",
+    "workflow",
+    "memory",
+    "rag",
+    "autonomous",
+    "assistant",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Typing :: Typed",
+    "Framework :: AsyncIO",
+]
 
 [tool.poetry]
 package-mode = true
@@ -24,6 +49,8 @@ workflow-viz = "entity.tools.workflow_viz:main"
 homepage = "https://github.com/Ladvien/entity"
 repository = "https://github.com/Ladvien/entity"
 documentation = "https://entity.readthedocs.io/en/latest/"
+"Bug Tracker" = "https://github.com/Ladvien/entity/issues"
+"Discussions" = "https://github.com/Ladvien/entity/discussions"
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -65,8 +92,10 @@ build-backend = "poetry.core.masonry.api"
 # envfile removed; tasks now declare necessary variables explicitly
 [tool.poe.tasks]
 patch = { cmd = "poetry version patch" }
-_publish = { cmd = "poetry publish --build" }
-release = ["patch", "_publish"]
+_build = { cmd = "poetry build" }
+_publish = { cmd = "poetry publish", env = { POETRY_PYPI_TOKEN_PYPI = "${POETRY_PYPI_TOKEN_PYPI}" } }
+release = ["patch", "_build", "_publish"]
+publish = { cmd = "poetry publish", env = { POETRY_PYPI_TOKEN_PYPI = "${POETRY_PYPI_TOKEN_PYPI}" } }
 
 # Development helpers
 start-db = { cmd = "docker compose up -d postgres" }
@@ -117,6 +146,23 @@ sequence = [
     { ref = "validate" },
     { cmd = "pytest", env = { PYTHONPATH = "src" } },
 ]
+
+# Documentation tasks
+[tool.poe.tasks.docs]
+cmd = "sphinx-build -b html docs/source docs/build"
+help = "Build documentation locally"
+
+[tool.poe.tasks.docs-serve]
+cmd = "python -m http.server 8000 -d docs/build"
+help = "Serve documentation locally on port 8000"
+
+[tool.poe.tasks.docs-clean]
+cmd = "rm -rf docs/build"
+help = "Clean documentation build files"
+
+[tool.poe.tasks.docs-check]
+cmd = "sphinx-build -b linkcheck docs/source docs/build"
+help = "Check documentation for broken links"
 
 
 [tool.pytest.ini_options]

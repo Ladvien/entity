@@ -17,7 +17,11 @@ class LLMResource:
     def health_check(self) -> bool:
         """Return ``True`` if the underlying infrastructure is healthy."""
 
-        return self.infrastructure.health_check()
+        return self.infrastructure.health_check_sync()
+    
+    def health_check_sync(self) -> bool:
+        """Synchronous wrapper for health_check for compatibility."""
+        return self.health_check()
 
     async def generate(self, prompt: str) -> str:
         """Return the model output for a given prompt."""

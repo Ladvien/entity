@@ -1,4 +1,4 @@
-import time
+import asyncio
 import httpx
 
 from entity.setup.ollama_installer import OllamaInstaller
@@ -39,13 +39,14 @@ class OllamaInfrastructure(BaseInfrastructure):
     async def shutdown(self) -> None:
         await super().shutdown()
 
-    def health_check(self) -> bool:
+    async def health_check(self) -> bool:
         """Return ``True`` if the Ollama server responds."""
 
         for attempt in range(3):
             try:
-                response = httpx.get(f"{self.base_url}/api/tags", timeout=2)
-                response.raise_for_status()
+                async with httpx.AsyncClient() as client:
+                    response = await client.get(f"{self.base_url}/api/tags", timeout=2)
+                    response.raise_for_status()
                 self.logger.debug(
                     "Health check succeeded for %s on attempt %s",
                     self.base_url,
@@ -59,7 +60,7 @@ class OllamaInfrastructure(BaseInfrastructure):
                     self.base_url,
                     exc,
                 )
-                time.sleep(1)
+                await asyncio.sleep(1)
 
         self.logger.warning("Health check failed for %s", self.base_url)
         return False

@@ -18,7 +18,7 @@ class LocalStorageInfrastructure(BaseInfrastructure):
 
         return self.base_path / key
 
-    def health_check(self) -> bool:
+    async def health_check(self) -> bool:
         """Return ``True`` if the base path is writable."""
         try:
             test_file = self.base_path / ".health_check"

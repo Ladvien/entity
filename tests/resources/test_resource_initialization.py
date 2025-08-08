@@ -18,7 +18,23 @@ from entity.infrastructure.vllm_infra import VLLMInfrastructure
 from entity.resources.llm_protocol import LLMInfrastructure
 
 
-
+class HealthyInfra:
+    """Mock infrastructure that always returns healthy."""
+    
+    async def startup(self) -> None:
+        pass
+    
+    async def shutdown(self) -> None:
+        pass
+    
+    async def health_check(self) -> bool:
+        return True
+    
+    def health_check_sync(self) -> bool:
+        return True
+    
+    async def generate(self, prompt: str) -> str:
+        return "test response"
 
 
 def test_constructors_success(tmp_path):
@@ -34,9 +50,9 @@ def test_constructors_success(tmp_path):
     local_res = LocalStorageResource(storage_infra)
     storage = FileStorage(local_res)
 
-    assert mem.health_check()
-    assert llm.health_check()
-    assert storage.health_check()
+    assert mem.health_check_sync()
+    assert llm.health_check_sync()
+    assert storage.health_check_sync()
 
 
 def test_constructor_failure():
@@ -58,7 +74,7 @@ def test_constructor_failure():
 
 
 def test_infrastructures_satisfy_protocol():
-    ollama = OllamaInfrastructure("http://localhost", "model", auto_install=False)
+    ollama = OllamaInfrastructure("http://localhost", "model")
     vllm = VLLMInfrastructure("http://localhost:8000", "model")
 
     assert isinstance(ollama, LLMInfrastructure)
@@ -66,7 +82,7 @@ def test_infrastructures_satisfy_protocol():
 
 
 def test_llm_resource_accepts_real_infrastructures():
-    ollama = OllamaInfrastructure("http://localhost", "model", auto_install=False)
+    ollama = OllamaInfrastructure("http://localhost", "model")
     vllm = VLLMInfrastructure("http://localhost:8000", "model")
 
     res_ollama = LLMResource(ollama)

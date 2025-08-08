@@ -1,0 +1,256 @@
+# Code Review Agent Configuration
+# Comprehensive code analysis with security, performance, and quality checks
+
+plugins:
+  # Resource configuration
+  resources:
+    llm:
+      type: vllm
+      model: ${CODE_REVIEW_MODEL:-Qwen/Qwen2.5-7B-Instruct}
+      temperature: 0.3  # Lower temperature for consistent analysis
+      max_tokens: 8192  # Support longer code files
+    
+    memory:
+      persistence: true
+      vector_search: false  # Not needed for code review
+    
+    file_storage:
+      base_path: ${REVIEW_DATA_PATH:-./review_data}
+      max_file_size: 10MB
+    
+    logging:
+      level: ${LOG_LEVEL:-info}
+      json: false
+      file: ./code_reviewer.log
+
+  # Workflow configuration  
+  workflow:
+    input:
+      - code_reviewer.plugins.CodeInputPlugin:
+          supported_formats: ["file", "directory", "git", "url"]
+          max_file_size: 5MB
+          supported_languages:
+            - python
+            - javascript
+            - typescript
+            - go
+            - rust
+            - java
+            - cpp
+            - csharp
+    
+    parse:
+      - code_reviewer.plugins.LanguageDetectorPlugin:
+          use_file_extension: true
+          use_content_analysis: true
+          use_shebang: true
+      
+      - code_reviewer.plugins.ASTParserPlugin:
+          extract_functions: true
+          extract_classes: true
+          extract_imports: true
+          calculate_complexity: true
+      
+      - code_reviewer.plugins.PatternExtractorPlugin:
+          patterns:
+            - security_issues
+            - code_smells
+            - anti_patterns
+            - performance_issues
+    
+    think:
+      - code_reviewer.plugins.ReviewStrategyPlugin:
+          strategies:
+            quick_scan: "Fast review for obvious issues"
+            comprehensive: "Deep analysis of all aspects"
+            security_focused: "Emphasis on security vulnerabilities"
+            performance_focused: "Focus on performance bottlenecks"
+          auto_select: true
+      
+      - code_reviewer.plugins.IssueClassifierPlugin:
+          categories:
+            - security
+            - performance  
+            - maintainability
+            - reliability
+            - documentation
+          severity_levels:
+            - critical
+            - high
+            - medium
+            - low
+            - info
+    
+    do:
+      - code_reviewer.plugins.StaticAnalyzerPlugin:
+          tools:
+            python: ["pylint", "flake8", "mypy", "black --check"]
+            javascript: ["eslint", "jshint"]
+            typescript: ["tslint", "typescript --noEmit"]
+            go: ["go vet", "golint", "gofmt -l"]
+            rust: ["cargo clippy", "cargo fmt --check"]
+          parallel_execution: true
+      
+      - code_reviewer.plugins.SecurityScannerPlugin:
+          tools:
+            python: ["bandit", "safety check"]
+            javascript: ["npm audit", "eslint-plugin-security"]
+            go: ["gosec"]
+            general: ["gitleaks", "trufflehog"]
+          check_dependencies: true
+          check_secrets: true
+      
+      - code_reviewer.plugins.PerformanceAnalyzerPlugin:
+          checks:
+            - algorithm_complexity
+            - database_queries
+            - memory_usage
+            - cpu_intensive_operations
+          suggest_optimizations: true
+      
+      - code_reviewer.plugins.DependencyCheckerPlugin:
+          check_outdated: true
+          check_vulnerabilities: true
+          check_licenses: true
+          allowed_licenses: ["MIT", "Apache-2.0", "BSD-3-Clause"]
+      
+      - code_reviewer.plugins.TestCoveragePlugin:
+          minimum_coverage: 80
+          check_test_quality: true
+          suggest_test_cases: true
+      
+      - code_reviewer.plugins.DocumentationAnalyzerPlugin:
+          check_docstrings: true
+          check_comments: true
+          check_readme: true
+          enforce_standards: true
+    
+    review:
+      - code_reviewer.plugins.IssuePrioritizerPlugin:
+          prioritization_factors:
+            - severity
+            - impact
+            - effort_to_fix
+            - security_risk
+          max_issues_per_category: 10
+      
+      - code_reviewer.plugins.FalsePositiveFilterPlugin:
+          use_ml_filtering: true
+          whitelist_patterns: []
+          learn_from_feedback: true
+      
+      - code_reviewer.plugins.RefactoringSuggesterPlugin:
+          suggestion_types:
+            - extract_method
+            - rename_variable
+            - simplify_conditional
+            - remove_duplication
+            - introduce_constant
+          provide_examples: true
+          estimate_impact: true
+    
+    output:
+      - code_reviewer.plugins.ReviewFormatterPlugin:
+          formats:
+            markdown: "Human-readable markdown report"
+            json: "Structured JSON for tooling"
+            github: "GitHub PR review format"
+            gitlab: "GitLab MR review format"
+          include_positive_feedback: true
+          include_metrics: true
+          include_suggestions: true
+          group_by: "severity"  # or "category", "file"
+
+# Language-specific settings
+languages:
+  python:
+    style_guide: "PEP 8"
+    docstring_style: "google"
+    type_checking: "strict"
+    test_framework: "pytest"
+    
+  javascript:
+    style_guide: "airbnb"
+    use_typescript: false
+    test_framework: "jest"
+    module_system: "esm"
+    
+  typescript:
+    style_guide: "airbnb"
+    strict_mode: true
+    test_framework: "jest"
+    
+  go:
+    style_guide: "effective_go"
+    test_coverage_threshold: 80
+    
+  rust:
+    edition: "2021"
+    clippy_level: "pedantic"
+
+# Review settings
+review_settings:
+  # Issue filtering
+  severity_threshold: "info"
+  max_issues_per_file: 50
+  skip_generated_files: true
+  skip_vendor_files: true
+  
+  # Analysis depth
+  max_file_size: 100000  # lines
+  max_function_length: 50  # lines
+  max_cyclomatic_complexity: 10
+  max_cognitive_complexity: 15
+  
+  # Feedback options
+  include_positive_feedback: true
+  suggest_refactoring: true
+  explain_issues: true
+  provide_fix_examples: true
+  
+  # Performance
+  parallel_workers: 4
+  cache_analysis: true
+  incremental_analysis: true
+
+# Integration settings
+integrations:
+  github:
+    post_review_comments: true
+    update_pr_status: true
+    require_approval_for_merge: false
+    
+  gitlab:
+    post_review_comments: true
+    update_mr_status: true
+    
+  ide:
+    vscode_extension: true
+    intellij_plugin: false
+
+# Custom rules
+custom_rules:
+  # Example: Company-specific naming conventions
+  naming_conventions:
+    - pattern: "^[a-z_]+$"
+      applies_to: "python_functions"
+      message: "Function names should be lowercase with underscores"
+      
+  # Example: Forbidden patterns
+  forbidden_patterns:
+    - pattern: "console.log"
+      languages: ["javascript", "typescript"]
+      message: "Use proper logging library instead of console.log"
+      severity: "warning"
+
+# Learning settings
+learning:
+  sample_size: 1000  # files to analyze
+  pattern_threshold: 0.1  # 10% occurrence to be considered a pattern
+  update_frequency: "weekly"
+  
+# Performance settings
+performance:
+  max_concurrent_files: 10
+  timeout_per_file: 60  # seconds
+  memory_limit: 2048  # MB
