@@ -188,6 +188,7 @@ output/
 /models
 talking.log
 *.txt
+!requirements-docs.txt
 *.log*
 
 audio_output/*
