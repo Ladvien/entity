@@ -30,15 +30,11 @@ This directory contains examples that demonstrate how Entity transforms complex 
 
 **The 6-Stage Plugin Pipeline** that powers every Entity agent:
 
-```
-    📝 INPUT     📊 PARSE     🧠 THINK     🔧 DO        ✅ REVIEW    📤 OUTPUT
-  (Process)  (Understand) (Reason)   (Act)     (Validate) (Deliver)
-      │          │          │         │           │          │
-  Text/Files  Language   Context   Tools    Quality   Reports/
-  Images/URLs Analysis  Synthesis  Web      Assurance Dashboards
-  Voice/Data  Structure  Planning  Search   Safety    Notifications
-              Metadata   Strategy  Analysis Compliance Export
-```
+| Stage | 📝 **INPUT** | 📊 **PARSE** | 🧠 **THINK** | 🔧 **DO** | ✅ **REVIEW** | 📤 **OUTPUT** |
+|-------|-------------|-------------|-------------|-----------|--------------|--------------|
+| **Purpose** | Process | Understand | Reason | Act | Validate | Deliver |
+| **Handles** | • Text<br>• Files<br>• Images<br>• URLs<br>• Voice<br>• Data | • Language<br>• Analysis<br>• Structure<br>• Metadata | • Context<br>• Synthesis<br>• Planning<br>• Strategy | • Tools<br>• Web<br>• Search<br>• Analysis | • Quality<br>• Assurance<br>• Safety<br>• Compliance | • Reports<br>• Dashboards<br>• Notifications<br>• Export |
+| **Plugin Role** | Input Processing | Data Understanding | Decision Making | Action Execution | Quality Control | Result Delivery |
 
 ### 🎆 **Why This Architecture is Revolutionary**
 

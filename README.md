@@ -124,14 +124,11 @@ await agent.serve(host="0.0.0.0", port=8000)  # Production API server
 
 Entity's revolutionary **6-stage plugin pipeline** transforms how you build AI applications:
 
-```
-📝 INPUT     📊 PARSE     🧠 THINK     🔧 DO        ✅ REVIEW    📤 OUTPUT
-(Receive)   (Understand) (Reason)    (Act)      (Validate)  (Deliver)
-    │           │           │          │            │          │
-Text/Files   Language    Context    Tools      Quality    Reports/
-Images/URLs  Analysis    Synthesis  Search     Safety     APIs/
-Voice/Data   Structure   Planning   Analysis   Compliance Dashboards
-```
+| Stage | 📝 **INPUT** | 📊 **PARSE** | 🧠 **THINK** | 🔧 **DO** | ✅ **REVIEW** | 📤 **OUTPUT** |
+|-------|-------------|-------------|-------------|-----------|--------------|--------------|
+| **Purpose** | Receive | Understand | Reason | Act | Validate | Deliver |
+| **Handles** | • Text<br>• Files<br>• Images<br>• URLs<br>• Voice<br>• Data | • Language<br>• Analysis<br>• Structure | • Context<br>• Synthesis<br>• Planning | • Tools<br>• Search<br>• Analysis | • Quality<br>• Safety<br>• Compliance | • Reports<br>• APIs<br>• Dashboards |
+| **Plugin Types** | Input Adapters | Parsers | Reasoning Engines | Tool Executors | Validators | Output Formatters |
 
 **Each stage is customizable through plugins**:
 - 🔌 **Modular**: One plugin = one responsibility
