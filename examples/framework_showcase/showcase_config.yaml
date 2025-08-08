@@ -1,0 +1,212 @@
+# Entity Framework Complete Showcase Configuration
+# This configuration demonstrates every major Entity Framework feature
+# in one comprehensive agent that showcases the power of plugin architecture.
+
+# Resource configuration demonstrating flexibility
+resources:
+  llm:
+    # Primary LLM for complex reasoning
+    provider: ollama
+    model: llama3.2:3b
+    temperature: 0.7
+    max_tokens: 4000
+
+  memory:
+    # Advanced memory with persistence and search
+    persistence: true
+    vector_search: true
+    namespace: "showcase"
+
+  logging:
+    # Comprehensive logging for monitoring
+    level: info
+    json_format: false
+    file_path: ./showcase.log
+
+  file_storage:
+    # File handling capabilities
+    base_path: ./showcase_data
+    max_file_size_mb: 100
+    allowed_extensions: [".txt", ".csv", ".json", ".py", ".md", ".pdf", ".jpg", ".png"]
+
+# Complete 6-stage workflow showcasing all Entity capabilities
+workflow:
+
+  # INPUT STAGE - Multi-modal input processing
+  input:
+    - framework_showcase.plugins.input_plugins.MultiModalInputPlugin:
+        # Handle text, files, images, URLs, etc.
+        supported_types:
+          - text
+          - file
+          - url
+          - csv
+          - json
+        max_file_size_mb: 50
+        auto_extract_content: true
+        preserve_metadata: true
+
+    - framework_showcase.plugins.input_plugins.SmartContentDetector:
+        # Automatically detect content type and structure
+        detect_language: true
+        extract_entities: true
+        identify_intent: true
+
+  # PARSE STAGE - Intelligent content understanding
+  parse:
+    - framework_showcase.plugins.parser_plugins.SemanticAnalyzer:
+        # Deep content understanding and structuring
+        extract_key_concepts: true
+        build_knowledge_graph: true
+        context_window: 2000
+
+    - framework_showcase.plugins.parser_plugins.IntentClassifier:
+        # Classify user intent for appropriate workflow
+        categories:
+          - data_analysis
+          - research
+          - content_creation
+          - code_review
+          - education
+          - communication
+        confidence_threshold: 0.8
+
+  # THINK STAGE - Advanced reasoning and planning
+  think:
+    - framework_showcase.plugins.thinking_plugins.ChainOfThoughtReasoner:
+        # Break down complex problems step by step
+        max_reasoning_steps: 8
+        show_thinking_process: false  # Set to true for debugging
+        validate_logic: true
+
+    - framework_showcase.plugins.thinking_plugins.ContextSynthesizer:
+        # Combine information from multiple sources
+        max_sources: 10
+        relevance_threshold: 0.7
+        prioritize_recent: true
+
+    - framework_showcase.plugins.thinking_plugins.TaskPlanner:
+        # Plan multi-step tasks and workflows
+        break_down_complex_tasks: true
+        estimate_effort: true
+        suggest_alternatives: true
+
+  # DO STAGE - Powerful actions and tool execution
+  do:
+    - framework_showcase.plugins.tool_plugins.UniversalSearchPlugin:
+        # Web search and information gathering
+        search_engines: [web, academic, news]
+        max_results: 20
+        filter_duplicates: true
+
+    - framework_showcase.plugins.tool_plugins.DataAnalysisPlugin:
+        # Statistical analysis and data processing
+        statistical_tests: true
+        auto_visualization: true
+        export_results: true
+
+    - framework_showcase.plugins.tool_plugins.FileOperationsPlugin:
+        # Safe file reading, writing, and manipulation
+        read_permissions: true
+        write_permissions: false  # Safety first
+        backup_changes: true
+
+    - framework_showcase.plugins.tool_plugins.VisualizationPlugin:
+        # Create charts, graphs, and visual content
+        chart_types: [bar, line, scatter, pie, heatmap]
+        interactive: true
+        export_formats: [png, svg, html]
+
+    - framework_showcase.plugins.tool_plugins.CodeAnalysisPlugin:
+        # Code review, analysis, and suggestions
+        languages: [python, javascript, java, go, rust]
+        check_security: true
+        suggest_improvements: true
+
+  # REVIEW STAGE - Quality assurance and validation
+  review:
+    - framework_showcase.plugins.review_plugins.FactCheckingPlugin:
+        # Verify claims against reliable sources
+        trusted_sources:
+          - wikipedia.org
+          - .edu domains
+          - .gov domains
+          - scholarly articles
+        confidence_threshold: 0.85
+        cite_sources: true
+
+    - framework_showcase.plugins.review_plugins.SafetyFilterPlugin:
+        # Content safety and compliance
+        filter_harmful_content: true
+        detect_bias: true
+        privacy_protection: true
+        content_appropriateness: strict
+
+    - framework_showcase.plugins.review_plugins.QualityAssurancePlugin:
+        # Overall response quality validation
+        check_coherence: true
+        validate_completeness: true
+        assess_accuracy: true
+        min_quality_score: 0.8
+
+  # OUTPUT STAGE - Flexible and powerful output generation
+  output:
+    - framework_showcase.plugins.output_plugins.ReportGeneratorPlugin:
+        # Generate comprehensive reports
+        formats: [markdown, html]
+        include_sources: true
+        add_table_of_contents: true
+        professional_styling: true
+
+    - framework_showcase.plugins.output_plugins.InteractiveOutputPlugin:
+        # Rich, interactive responses
+        enable_formatting: true
+        include_visualizations: true
+        add_action_buttons: false  # For CLI version
+
+    - framework_showcase.plugins.output_plugins.ExportPlugin:
+        # Export results in various formats
+        auto_export: false  # Only export on request
+        supported_formats: [json, csv, pdf, docx]
+        include_metadata: true
+
+# Environment-specific configurations
+environments:
+  development:
+    resources:
+      logging:
+        level: debug
+        show_plugin_timing: true
+
+  production:
+    resources:
+      logging:
+        level: info
+        json_format: true
+
+    workflow:
+      review:
+        # Stricter quality controls in production
+        - framework_showcase.plugins.review_plugins.SafetyFilterPlugin:
+            content_appropriateness: very_strict
+
+# Rate limiting and performance controls
+performance:
+  max_concurrent_plugins: 5
+  plugin_timeout_seconds: 30
+  cache_responses: true
+  cache_ttl_hours: 24
+
+# Monitoring and metrics
+monitoring:
+  track_performance: true
+  log_plugin_execution_time: true
+  alert_on_errors: false  # Set to true for production
+
+# Feature flags for controlled rollout
+features:
+  enable_web_search: true
+  enable_file_operations: true
+  enable_code_analysis: true
+  enable_image_processing: false  # Requires additional setup
+  enable_voice_processing: false  # Requires additional setup
