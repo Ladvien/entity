@@ -284,10 +284,8 @@ plugins:
 - **[Cookbook](docs/cookbook.md)** - Common patterns and recipes
 
 ### 💬 **Community**
-- **[Discord](https://discord.gg/entity)** - Real-time help and discussion
 - **[GitHub Discussions](https://github.com/Ladvien/entity/discussions)** - Q&A and feature requests
-- **[Newsletter](https://entity.dev/newsletter)** - Weekly tips and updates
-- **[Twitter](https://twitter.com/EntityFramework)** - News and announcements
+- **[GitHub Issues](https://github.com/Ladvien/entity/issues)** - Bug reports and feature tracking
 
 ### 🤝 **Contributing**
 - **[Contribution Guide](CONTRIBUTING.md)** - How to help improve Entity
