@@ -61,6 +61,13 @@ def test_config_cache(tmp_path):
 @pytest.mark.integration
 @pytest.mark.requires_ollama
 def test_from_config_caching(tmp_path):
+    # Skip if Ollama is not available
+    from entity.infrastructure.ollama_infra import OllamaInfrastructure
+
+    ollama = OllamaInfrastructure("http://localhost:11434", "llama3.2:3b")
+    if not ollama.health_check_sync():
+        pytest.skip("Ollama not available")
+
     cfg = tmp_path / "cfg.yaml"
     cfg.write_text(
         """
