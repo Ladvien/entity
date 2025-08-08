@@ -124,11 +124,47 @@ await agent.serve(host="0.0.0.0", port=8000)  # Production API server
 
 Entity's revolutionary **6-stage plugin pipeline** transforms how you build AI applications:
 
-| Stage | 📝 **INPUT** | 📊 **PARSE** | 🧠 **THINK** | 🔧 **DO** | ✅ **REVIEW** | 📤 **OUTPUT** |
-|-------|-------------|-------------|-------------|-----------|--------------|--------------|
-| **Purpose** | Receive | Understand | Reason | Act | Validate | Deliver |
-| **Handles** | • Text<br>• Files<br>• Images<br>• URLs<br>• Voice<br>• Data | • Language<br>• Analysis<br>• Structure | • Context<br>• Synthesis<br>• Planning | • Tools<br>• Search<br>• Analysis | • Quality<br>• Safety<br>• Compliance | • Reports<br>• APIs<br>• Dashboards |
-| **Plugin Types** | Input Adapters | Parsers | Reasoning Engines | Tool Executors | Validators | Output Formatters |
+### The Pipeline Flow
+
+**📝 INPUT** → **📊 PARSE** → **🧠 THINK** → **🔧 DO** → **✅ REVIEW** → **📤 OUTPUT**
+
+### Stage Details
+
+#### 📝 **Stage 1: INPUT**
+> **Receive and process incoming data**
+- Handles: Text, Files, Images, URLs, Voice, Data
+- Plugins: Input Adapters
+- Purpose: Accept any input format seamlessly
+
+#### 📊 **Stage 2: PARSE**
+> **Understand and structure the input**
+- Handles: Language Analysis, Structure, Metadata
+- Plugins: Parsers
+- Purpose: Extract meaning and context
+
+#### 🧠 **Stage 3: THINK**
+> **Reason about the task**
+- Handles: Context Synthesis, Planning, Strategy
+- Plugins: Reasoning Engines
+- Purpose: Decide best approach
+
+#### 🔧 **Stage 4: DO**
+> **Execute actions and operations**
+- Handles: Tools, Search, Analysis, APIs
+- Plugins: Tool Executors
+- Purpose: Perform the actual work
+
+#### ✅ **Stage 5: REVIEW**
+> **Validate and ensure quality**
+- Handles: Quality, Safety, Compliance
+- Plugins: Validators
+- Purpose: Guarantee correct output
+
+#### 📤 **Stage 6: OUTPUT**
+> **Deliver results to users**
+- Handles: Reports, APIs, Dashboards
+- Plugins: Output Formatters
+- Purpose: Present results effectively
 
 **Each stage is customizable through plugins**:
 - 🔌 **Modular**: One plugin = one responsibility

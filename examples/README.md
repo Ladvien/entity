@@ -30,11 +30,34 @@ This directory contains examples that demonstrate how Entity transforms complex 
 
 **The 6-Stage Plugin Pipeline** that powers every Entity agent:
 
-| Stage | 📝 **INPUT** | 📊 **PARSE** | 🧠 **THINK** | 🔧 **DO** | ✅ **REVIEW** | 📤 **OUTPUT** |
-|-------|-------------|-------------|-------------|-----------|--------------|--------------|
-| **Purpose** | Process | Understand | Reason | Act | Validate | Deliver |
-| **Handles** | • Text<br>• Files<br>• Images<br>• URLs<br>• Voice<br>• Data | • Language<br>• Analysis<br>• Structure<br>• Metadata | • Context<br>• Synthesis<br>• Planning<br>• Strategy | • Tools<br>• Web<br>• Search<br>• Analysis | • Quality<br>• Assurance<br>• Safety<br>• Compliance | • Reports<br>• Dashboards<br>• Notifications<br>• Export |
-| **Plugin Role** | Input Processing | Data Understanding | Decision Making | Action Execution | Quality Control | Result Delivery |
+### Pipeline Flow
+**📝 INPUT** → **📊 PARSE** → **🧠 THINK** → **🔧 DO** → **✅ REVIEW** → **📤 OUTPUT**
+
+### How Each Stage Works
+
+**📝 INPUT** - *Process incoming data*
+- Text, Files, Images, URLs, Voice, Data
+- Plugin Role: Input Processing
+
+**📊 PARSE** - *Understand the data*
+- Language Analysis, Structure, Metadata
+- Plugin Role: Data Understanding
+
+**🧠 THINK** - *Reason and plan*
+- Context, Synthesis, Planning, Strategy
+- Plugin Role: Decision Making
+
+**🔧 DO** - *Execute actions*
+- Tools, Web, Search, Analysis
+- Plugin Role: Action Execution
+
+**✅ REVIEW** - *Validate results*
+- Quality, Safety, Compliance
+- Plugin Role: Quality Control
+
+**📤 OUTPUT** - *Deliver results*
+- Reports, Dashboards, Notifications, Export
+- Plugin Role: Result Delivery
 
 ### 🎆 **Why This Architecture is Revolutionary**
 
