@@ -319,16 +319,6 @@ Entity prioritizes security and privacy:
 
 See our [Security Policy](SECURITY.md) for details.
 
-## 🗺️ Roadmap
-
-**Coming in 2024:**
-
-- **Q1 2024**: Visual workflow designer, enhanced monitoring
-- **Q2 2024**: Multi-modal plugins (vision, audio), cloud hosting
-- **Q3 2024**: Federated learning, advanced orchestration
-- **Q4 2024**: Mobile SDKs, enterprise features
-
-Vote on features and track progress in [GitHub Discussions](https://github.com/Ladvien/entity/discussions).
 
 ## ❤️ Acknowledgments
 
