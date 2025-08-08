@@ -71,10 +71,10 @@ class TestCLIGeneratedExamples:
             "from entity.defaults import load_defaults" in content
         ), "Should import load_defaults"
         assert "import asyncio" in content, "Should import asyncio"
-        assert "import os" in content, "Should import os"
+        assert "import sys" in content, "Should import sys"
 
         # Check for proper patterns
-        assert "asyncio.run(main())" in content, "Should use asyncio.run pattern"
+        assert "asyncio.run(main_async())" in content, "Should use asyncio.run pattern"
         assert "except KeyboardInterrupt:" in content, "Should handle KeyboardInterrupt"
         assert "load_defaults()" in content, "Should call load_defaults()"
 

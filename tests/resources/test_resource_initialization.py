@@ -1,38 +1,37 @@
 import pytest
 
-from entity.resources import (
-    DatabaseResource,
-    VectorStoreResource,
-    LLMResource,
-    LocalStorageResource,
-    StorageResource,
-    Memory,
-    LLM,
-    FileStorage,
-    ResourceInitializationError,
-)
 from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
 from entity.infrastructure.local_storage_infra import LocalStorageInfrastructure
 from entity.infrastructure.ollama_infra import OllamaInfrastructure
-from entity.infrastructure.vllm_infra import VLLMInfrastructure
+from entity.resources import (
+    LLM,
+    DatabaseResource,
+    FileStorage,
+    LLMResource,
+    LocalStorageResource,
+    Memory,
+    ResourceInitializationError,
+    StorageResource,
+    VectorStoreResource,
+)
 from entity.resources.llm_protocol import LLMInfrastructure
 
 
 class HealthyInfra:
     """Mock infrastructure that always returns healthy."""
-    
+
     async def startup(self) -> None:
         pass
-    
+
     async def shutdown(self) -> None:
         pass
-    
+
     async def health_check(self) -> bool:
         return True
-    
+
     def health_check_sync(self) -> bool:
         return True
-    
+
     async def generate(self, prompt: str) -> str:
         return "test response"
 
@@ -75,18 +74,13 @@ def test_constructor_failure():
 
 def test_infrastructures_satisfy_protocol():
     ollama = OllamaInfrastructure("http://localhost", "model")
-    vllm = VLLMInfrastructure("http://localhost:8000", "model")
 
     assert isinstance(ollama, LLMInfrastructure)
-    assert isinstance(vllm, LLMInfrastructure)
 
 
 def test_llm_resource_accepts_real_infrastructures():
     ollama = OllamaInfrastructure("http://localhost", "model")
-    vllm = VLLMInfrastructure("http://localhost:8000", "model")
 
     res_ollama = LLMResource(ollama)
-    res_vllm = LLMResource(vllm)
 
     assert res_ollama.infrastructure is ollama
-    assert res_vllm.infrastructure is vllm

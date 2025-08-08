@@ -181,7 +181,6 @@ python_functions = ["test_*"]
 
 # Make sure src is in the Python path for pytest
 pythonpath = ["src"]
-env = { ENTITY_TEST_MODE = "local" }
 
 addopts = [
     "-v",
