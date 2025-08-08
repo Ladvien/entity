@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any
 
 from entity.plugins.base import Plugin
-from entity.cli.ent_cli_adapter import EntCLIAdapter
 from entity.workflow.executor import WorkflowExecutor
 from entity.workflow.workflow import Workflow
 

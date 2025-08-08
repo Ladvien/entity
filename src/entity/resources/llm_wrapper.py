@@ -1,5 +1,5 @@
-from entity.resources.llm import LLMResource
 from entity.resources.exceptions import ResourceInitializationError
+from entity.resources.llm import LLMResource
 
 
 class LLM:
@@ -16,7 +16,7 @@ class LLM:
         """Return ``True`` if the underlying resource is healthy."""
 
         return self.resource.health_check_sync()
-    
+
     def health_check_sync(self) -> bool:
         """Synchronous wrapper for health_check for compatibility."""
         return self.health_check()

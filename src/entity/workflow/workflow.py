@@ -2,16 +2,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from importlib import import_module
-from typing import Any, Dict, Iterable, List, Type, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Type
 
 import yaml
 
-from entity.plugins.validation import ValidationResult
 from entity.config.variable_resolver import VariableResolver
 
 if TYPE_CHECKING:
     from entity.plugins.base import Plugin
-    from entity.workflow.executor import WorkflowExecutor
 
 
 class WorkflowConfigError(Exception):
@@ -30,7 +28,11 @@ class Workflow:
         return self.steps.get(stage, [])
 
     @classmethod
-    def from_dict(cls, config: Dict[str, Iterable[str | Type["Plugin"]]], resources: dict[str, Any]) -> "Workflow":
+    def from_dict(
+        cls,
+        config: Dict[str, Iterable[str | Type["Plugin"]]],
+        resources: dict[str, Any],
+    ) -> "Workflow":
         """Build a workflow from a stage-to-plugins mapping."""
         from entity.plugins.base import Plugin
         from entity.workflow.executor import WorkflowExecutor
@@ -58,18 +60,26 @@ class Workflow:
             steps[stage] = []
             for plugin_config in plugins:
                 plugin_cls = (
-                    _import_string(plugin_config) if isinstance(plugin_config, str) else plugin_config
+                    _import_string(plugin_config)
+                    if isinstance(plugin_config, str)
+                    else plugin_config
                 )
-                plugin = plugin_cls(resources, {}) # Pass resources to plugin constructor
+                plugin = plugin_cls(
+                    resources, {}
+                )  # Pass resources to plugin constructor
                 plugin.assigned_stage = stage
 
                 validation_result = plugin.validate_config()
                 if not validation_result.success:
-                    raise WorkflowConfigError(f"Invalid config for {plugin_cls.__name__}: {validation_result.errors}")
+                    raise WorkflowConfigError(
+                        f"Invalid config for {plugin_cls.__name__}: {validation_result.errors}"
+                    )
 
                 validation_result = plugin.validate_workflow(workflow_instance)
                 if not validation_result.success:
-                    raise WorkflowConfigError(f"Invalid workflow for {plugin_cls.__name__}: {validation_result.errors}")
+                    raise WorkflowConfigError(
+                        f"Invalid workflow for {plugin_cls.__name__}: {validation_result.errors}"
+                    )
 
                 steps[stage].append(plugin)
         return workflow_instance

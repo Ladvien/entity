@@ -1,14 +1,13 @@
 import pytest
 
-from entity.workflow.workflow import Workflow
-
-from entity.plugins.context import WorkflowContext, PluginContext
-from entity.plugins.base import Plugin
-from entity.workflow.executor import WorkflowExecutor
-from entity.resources.memory import Memory
-from entity.resources.database import DatabaseResource
-from entity.resources.vector_store import VectorStoreResource
 from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
+from entity.plugins.base import Plugin
+from entity.plugins.context import PluginContext, WorkflowContext
+from entity.resources.database import DatabaseResource
+from entity.resources.memory import Memory
+from entity.resources.vector_store import VectorStoreResource
+from entity.workflow.executor import WorkflowExecutor
+from entity.workflow.workflow import Workflow
 
 
 def test_say_rejects_invalid_stage() -> None:

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict
 
 from pydantic import BaseModel, ValidationError
+
 from entity.plugins.validation import ValidationResult
 
 if TYPE_CHECKING:
@@ -40,7 +41,9 @@ class Plugin(ABC):
     def validate_workflow(self, workflow: "Workflow") -> ValidationResult:
         """Validate that ``cls`` can run in ``stage`` before workflow execution."""
         if self.assigned_stage not in workflow.supported_stages:
-            return ValidationResult.error(f"Workflow does not support stage {self.assigned_stage}")
+            return ValidationResult.error(
+                f"Workflow does not support stage {self.assigned_stage}"
+            )
         return ValidationResult.success()
 
     async def execute(self, context: Any) -> Any:

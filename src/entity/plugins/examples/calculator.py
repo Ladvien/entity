@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import ast
 import operator
+
 from entity.plugins.tool import ToolPlugin
 from entity.workflow.executor import WorkflowExecutor
-
 
 _ALLOWED_OPS = {
     ast.Add: operator.add,

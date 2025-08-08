@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-import pytest
 from typing import TYPE_CHECKING
+
+import pytest
 
 if TYPE_CHECKING:
     from entity.plugins import Plugin  # noqa: F401
-from entity.workflow.workflow import Workflow, WorkflowConfigError
+
+from entity.workflow.workflow import Workflow
 
 
 class PluginValidationTests:
@@ -14,7 +16,7 @@ class PluginValidationTests:
     Plugin: type[Plugin]
     stage: str = "think"
     config: dict = {}
-    resources: dict = {} # Add resources for plugin instantiation
+    resources: dict = {}  # Add resources for plugin instantiation
 
     def test_validate_config(self):
         plugin_instance = self.Plugin(self.resources, self.config)
@@ -24,7 +26,9 @@ class PluginValidationTests:
     def test_validate_workflow(self):
         plugin_instance = self.Plugin(self.resources, self.config)
         # Create a dummy workflow for validation
-        dummy_workflow = Workflow(steps={self.stage: [plugin_instance]}, supported_stages=[self.stage])
+        dummy_workflow = Workflow(
+            steps={self.stage: [plugin_instance]}, supported_stages=[self.stage]
+        )
         plugin_instance.assigned_stage = self.stage
         result = plugin_instance.validate_workflow(dummy_workflow)
         assert result.success
@@ -33,7 +37,9 @@ class PluginValidationTests:
         plugin_instance = self.Plugin(self.resources, self.config)
         # Create a dummy workflow that does not support the assigned stage
         dummy_workflow = Workflow(steps={}, supported_stages=["another_stage"])
-        plugin_instance.assigned_stage = self.stage # Manually assign stage for this test
+        plugin_instance.assigned_stage = (
+            self.stage
+        )  # Manually assign stage for this test
         result = plugin_instance.validate_workflow(dummy_workflow)
         assert not result.success
         assert "Workflow does not support stage" in result.errors[0]

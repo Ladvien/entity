@@ -1,7 +1,6 @@
 import asyncio
-import httpx
 
-from entity.setup.ollama_installer import OllamaInstaller
+import httpx
 
 from .base import BaseInfrastructure
 

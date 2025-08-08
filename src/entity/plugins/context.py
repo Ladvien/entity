@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from entity.tools.sandbox import SandboxedToolRunner
-from entity.tools.registry import ToolInfo
-from entity.resources.logging import LogLevel, LogCategory, LogContext
 from pydantic import ValidationError
+
+from entity.resources.logging import LogCategory, LogContext, LogLevel
+from entity.tools.registry import ToolInfo
+from entity.tools.sandbox import SandboxedToolRunner
 
 
 class WorkflowContext:
@@ -56,14 +57,16 @@ class PluginContext(WorkflowContext):
         self._tool_queue: List[tuple[str, Dict[str, Any]]] = []
         self.sandbox = resources.get("sandbox", SandboxedToolRunner())
 
-    async def log(self, level: LogLevel, category: LogCategory, message: str, **extra_fields: Any) -> None:
+    async def log(
+        self, level: LogLevel, category: LogCategory, message: str, **extra_fields: Any
+    ) -> None:
         """Log with automatic context injection."""
         logger = self.get_resource("logging")
         if logger:
             context = LogContext(
                 user_id=self.user_id,
                 stage=self.current_stage,
-                plugin_name=getattr(self, '_current_plugin_name', None)
+                plugin_name=getattr(self, "_current_plugin_name", None),
             )
             await logger.log(level, category, message, context, **extra_fields)
 

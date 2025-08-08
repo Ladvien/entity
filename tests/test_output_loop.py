@@ -1,12 +1,8 @@
 import pytest
 
 from entity.plugins.base import Plugin
-from entity.workflow.executor import WorkflowExecutor
 from entity.plugins.context import PluginContext
-from entity.resources.memory import Memory
-from entity.resources.database import DatabaseResource
-from entity.resources.vector_store import VectorStoreResource
-from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
+from entity.workflow.executor import WorkflowExecutor
 
 
 @pytest.mark.asyncio

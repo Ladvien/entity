@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import re
-from typing import Any, Dict, List, Union
+from typing import Any
 
 from dotenv import load_dotenv
 
@@ -39,4 +39,4 @@ class VariableResolver:
                 raise ValueError(f"Environment variable ${{{var_name}}} not found")
             return value
 
-        return re.sub(r'\$\{([^}]+)\}', replace_var, text)
+        return re.sub(r"\$\{([^}]+)\}", replace_var, text)

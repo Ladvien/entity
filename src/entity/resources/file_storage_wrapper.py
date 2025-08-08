@@ -1,6 +1,6 @@
-from entity.resources.storage import StorageResource
-from entity.resources.local_storage import LocalStorageResource
 from entity.resources.exceptions import ResourceInitializationError
+from entity.resources.local_storage import LocalStorageResource
+from entity.resources.storage import StorageResource
 
 
 class FileStorage:
@@ -17,7 +17,7 @@ class FileStorage:
         """Return ``True`` if the underlying resource is healthy."""
 
         return self.resource.health_check_sync()
-    
+
     def health_check_sync(self) -> bool:
         """Synchronous wrapper for health_check for compatibility."""
         return self.health_check()

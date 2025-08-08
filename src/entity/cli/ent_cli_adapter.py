@@ -1,25 +1,21 @@
 from __future__ import annotations
 
 import asyncio
-import signal
-import sys
 from typing import Any
 
 from rich.console import Console
 from rich.panel import Panel
 
+from entity.plugins.context import PluginContext
 from entity.plugins.input_adapter import InputAdapterPlugin
 from entity.plugins.output_adapter import OutputAdapterPlugin
-from entity.workflow.executor import WorkflowExecutor
-from entity.workflow.executor import WorkflowExecutor
-from entity.plugins.context import PluginContext
 from entity.resources.logging import LogCategory, LogLevel
+from entity.workflow.executor import WorkflowExecutor
 
 
 class EntCLIAdapter(InputAdapterPlugin, OutputAdapterPlugin):
     """Simple CLI adapter using stdin and stdout with signal handling."""
 
-    
     supported_stages = [WorkflowExecutor.INPUT, WorkflowExecutor.OUTPUT]
 
     def __init__(

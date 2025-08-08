@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import Any, Iterable, TYPE_CHECKING
 from itertools import count
+from typing import TYPE_CHECKING, Any
 
-from entity.resources.logging import RichConsoleLoggingResource
 from entity.plugins.context import PluginContext
+from entity.resources.logging import RichConsoleLoggingResource
 
 if TYPE_CHECKING:
     from entity.workflow.workflow import Workflow
@@ -33,8 +33,8 @@ class WorkflowExecutor:
         self.resources.setdefault("logging", RichConsoleLoggingResource())
         # Ensure memory is always available, even if in-memory for tests
         if "memory" not in self.resources:
-            from entity.resources import Memory, DatabaseResource, VectorStoreResource
             from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
+            from entity.resources import DatabaseResource, Memory, VectorStoreResource
 
             self.resources["memory"] = Memory(
                 DatabaseResource(DuckDBInfrastructure(":memory:")),

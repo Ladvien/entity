@@ -3,17 +3,15 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, TYPE_CHECKING
-
-from pydantic import BaseModel, ValidationError
+from typing import TYPE_CHECKING, Any, Dict
 
 import yaml
+from pydantic import BaseModel, ValidationError
 
 from entity.config.variable_resolver import VariableResolver
 
 if TYPE_CHECKING:
-    from entity.workflow.workflow import Workflow, WorkflowConfigError
-    from entity.workflow.executor import WorkflowExecutor
+    from entity.workflow.workflow import Workflow
 
 REQUIRED_KEYS = {"resources", "workflow"}
 
@@ -45,8 +43,10 @@ class ConfigModel(BaseModel):
             raise ValueError(f"Invalid configuration:\n{exc}") from exc
 
 
-
-def validate_workflow_compatibility(cfg: ConfigModel, resources: dict[str, Any]) -> "Workflow":
+def validate_workflow_compatibility(
+    cfg: ConfigModel, resources: dict[str, Any]
+) -> "Workflow":
     """Second-phase validation that imports plugins and checks stages."""
     from entity.workflow.workflow import Workflow
+
     return Workflow.from_dict(cfg.workflow, resources)

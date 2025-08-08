@@ -1,5 +1,6 @@
-import pytest
 import os
+
+import pytest
 
 
 def is_ollama_key_available():

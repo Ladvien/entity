@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 from entity.plugins import Plugin
-
-
-from tests.plugin_test_base import PluginValidationTests, PluginDependencyTests
+from tests.plugin_test_base import PluginDependencyTests, PluginValidationTests
 
 
 class ExamplePlugin(Plugin):

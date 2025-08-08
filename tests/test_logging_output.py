@@ -1,12 +1,13 @@
 import json
+
 import pytest
+
 from entity.resources.logging import (
-    RichConsoleLoggingResource,
-    RichJSONLoggingResource,
     LogCategory,
     LogContext,
     LogLevel,
-    RichLoggingResource,
+    RichConsoleLoggingResource,
+    RichJSONLoggingResource,
 )
 
 

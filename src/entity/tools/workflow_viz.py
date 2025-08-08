@@ -3,8 +3,8 @@ from __future__ import annotations
 import argparse
 from textwrap import indent
 
-from entity.workflow.workflow import Workflow
 from entity.workflow.executor import WorkflowExecutor
+from entity.workflow.workflow import Workflow
 
 
 def ascii_diagram(workflow: Workflow) -> str:

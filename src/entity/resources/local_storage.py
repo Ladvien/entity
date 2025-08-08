@@ -20,7 +20,7 @@ class LocalStorageResource:
         """Return ``True`` if the underlying infrastructure is healthy."""
 
         return await self.infrastructure.health_check()
-    
+
     def health_check_sync(self) -> bool:
         """Synchronous wrapper for health_check for compatibility."""
         return self.infrastructure.health_check_sync()
@@ -29,10 +29,10 @@ class LocalStorageResource:
         """Persist text to the local filesystem."""
 
         # For LocalStorageInfrastructure, use resolve_path if available
-        if hasattr(self.infrastructure, 'resolve_path'):
+        if hasattr(self.infrastructure, "resolve_path"):
             path = self.infrastructure.resolve_path(key)
             path.parent.mkdir(parents=True, exist_ok=True)
             await asyncio.to_thread(path.write_text, data)
         else:
             # For generic StorageInfrastructure, use write method
-            await self.infrastructure.write(key, data.encode('utf-8'))
+            await self.infrastructure.write(key, data.encode("utf-8"))

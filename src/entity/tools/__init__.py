@@ -1,8 +1,8 @@
 from entity.tools.registry import (
-    discover_tools,
-    register_tool,
     ToolInfo,
     clear_registry,
+    discover_tools,
+    register_tool,
 )
 from entity.tools.sandbox import SandboxedToolRunner
 

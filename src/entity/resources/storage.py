@@ -18,7 +18,7 @@ class StorageResource:
         """Return ``True`` if the underlying infrastructure is healthy."""
 
         return await self.infrastructure.health_check()
-    
+
     def health_check_sync(self) -> bool:
         """Synchronous wrapper for health_check for compatibility."""
         return self.infrastructure.health_check_sync()
@@ -26,4 +26,4 @@ class StorageResource:
     async def upload_text(self, key: str, data: str) -> None:
         """Upload plain text to the configured storage under the given key."""
 
-        await self.infrastructure.write(key, data.encode('utf-8'))
+        await self.infrastructure.write(key, data.encode("utf-8"))

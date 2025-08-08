@@ -12,9 +12,9 @@ __all__ = ["Agent", "__version__"]
 
 def __getattr__(name: str):
     if name == "Agent":
-        from entity.core.agent import (
+        from entity.core.agent import (  # Lazy import to avoid heavy deps at import time
             Agent,
-        )  # Lazy import to avoid heavy deps at import time
+        )
 
         return Agent
     raise AttributeError(name)

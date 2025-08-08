@@ -3,13 +3,8 @@ from __future__ import annotations
 import pytest
 
 from entity.plugins.base import Plugin
-from entity.resources.memory import Memory
-from entity.resources.database import DatabaseResource
-from entity.resources.vector_store import VectorStoreResource
-from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
-
-from entity.workflow.workflow import Workflow, WorkflowConfigError
 from entity.workflow.executor import WorkflowExecutor
+from entity.workflow.workflow import Workflow, WorkflowConfigError
 
 
 class DummyPlugin(Plugin):

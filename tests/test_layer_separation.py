@@ -1,22 +1,18 @@
 import pytest
 
 from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
+from entity.infrastructure.local_storage_infra import LocalStorageInfrastructure
 from entity.infrastructure.ollama_infra import OllamaInfrastructure
 from entity.infrastructure.s3_infra import S3Infrastructure
-from entity.infrastructure.local_storage_infra import LocalStorageInfrastructure
-
 from entity.resources.database import DatabaseResource
-from entity.resources.vector_store import VectorStoreResource
+from entity.resources.exceptions import ResourceInitializationError
+from entity.resources.file_storage_wrapper import FileStorage
 from entity.resources.llm import LLMResource
-from entity.resources.storage import StorageResource
+from entity.resources.llm_wrapper import LLM
 from entity.resources.local_storage import LocalStorageResource
 from entity.resources.memory import Memory
-from entity.resources.llm_wrapper import LLM
-from entity.resources.file_storage_wrapper import FileStorage
-from entity.resources.exceptions import ResourceInitializationError
-
-
-
+from entity.resources.storage import StorageResource
+from entity.resources.vector_store import VectorStoreResource
 
 
 def test_resources_store_injected_infrastructure(tmp_path):
