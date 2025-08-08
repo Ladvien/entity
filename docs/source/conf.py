@@ -28,8 +28,8 @@ autodoc_mock_imports = [
 project = "Entity"
 copyright = f"{datetime.now().year}, C. Thomas Brittain"
 author = "C. Thomas Brittain"
-release = "0.0.5"
-version = "0.0.5"
+release = "0.0.7"
+version = "0.0.7"
 
 # General configuration
 extensions = [
@@ -40,7 +40,29 @@ extensions = [
     "sphinx.ext.githubpages",
     "sphinx.ext.todo",
     "sphinx.ext.coverage",
+    "myst_parser",
 ]
+
+# MyST-Parser configuration for Markdown support
+myst_enable_extensions = [
+    "colon_fence",
+    "deflist",
+    "dollarmath",
+    "fieldlist",
+    "html_admonition",
+    "html_image",
+    "replacements",
+    "smartquotes",
+    "strikethrough",
+    "substitution",
+    "tasklist",
+]
+
+# Source file suffixes
+source_suffix = {
+    ".rst": None,
+    ".md": None,
+}
 
 # Napoleon settings for Google-style docstrings
 napoleon_google_docstring = True
