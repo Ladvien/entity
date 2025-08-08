@@ -193,4 +193,4 @@ talking.log
 audio_output/*
 .claude/*
 *.duckdb*
-*.lock
+# *.lock  # Commented out to allow poetry.lock
