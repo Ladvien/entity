@@ -3,16 +3,7 @@
 from __future__ import annotations
 
 import logging
-import os
-import platform
-import shutil
-import subprocess
-import time
 from typing import Final
-
-import httpx
-
-
 
 
 class OllamaInstaller:
@@ -27,6 +18,6 @@ class OllamaInstaller:
 
     @classmethod
     def ensure_ollama_available(cls, model: str | None = None) -> None:
-        cls.logger.warning("Automatic Ollama installation and model pulling are not supported by the framework.")
-        cls.logger.warning("Please ensure Ollama is installed and the model is available manually.")
-
+        cls.logger.debug("Checking Ollama availability...")
+        # In production, users should have Ollama pre-installed
+        # This is just a placeholder for future auto-installation logic

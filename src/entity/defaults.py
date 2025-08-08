@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
 from entity.infrastructure.local_storage_infra import LocalStorageInfrastructure
 from entity.infrastructure.ollama_infra import OllamaInfrastructure
-from entity.infrastructure.vllm_infra import VLLMInfrastructure
 from entity.resources import (
     LLM,
     DatabaseResource,
@@ -21,7 +20,6 @@ from entity.resources import (
 )
 from entity.resources.exceptions import InfrastructureError
 from entity.setup.ollama_installer import OllamaInstaller
-from entity.setup.vllm_installer import VLLMInstaller
 
 
 @dataclass
@@ -33,8 +31,6 @@ class DefaultConfig:
     ollama_model: str = "llama3.2:3b"
     storage_path: str = "./agent_files"
     auto_install_ollama: bool = True
-    auto_install_vllm: bool = True
-    vllm_model: str | None = None
 
     @classmethod
     def from_env(cls) -> "DefaultConfig":
@@ -43,12 +39,13 @@ class DefaultConfig:
         return cls(
             duckdb_path=os.getenv("ENTITY_DUCKDB_PATH", cls.duckdb_path),
             storage_path=os.getenv("ENTITY_STORAGE_PATH", cls.storage_path),
-            auto_install_vllm=os.getenv(
-                "ENTITY_AUTO_INSTALL_VLLM",
-                str(cls.auto_install_vllm),
+            ollama_url=os.getenv("ENTITY_OLLAMA_URL", cls.ollama_url),
+            ollama_model=os.getenv("ENTITY_OLLAMA_MODEL", cls.ollama_model),
+            auto_install_ollama=os.getenv(
+                "ENTITY_AUTO_INSTALL_OLLAMA",
+                str(cls.auto_install_ollama),
             ).lower()
             in {"1", "true", "yes"},
-            vllm_model=os.getenv("ENTITY_VLLM_MODEL", cls.vllm_model),
         )
 
 
@@ -67,43 +64,18 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
         log_file=log_file,
     )
 
-    llm_infra = None
-
-    # Try vLLM first (primary default)
-    if cfg.auto_install_vllm:
-        try:
-            VLLMInstaller.ensure_vllm_available()
-            vllm_infra = VLLMInfrastructure(auto_detect_model=True)
-            if vllm_infra.health_check_sync():
-                llm_infra = vllm_infra
-                logger.info("Using vLLM with auto-detected model: %s", vllm_infra.model)
-            else:
-                raise InfrastructureError("vLLM setup failed")
-        except Exception as exc:
-            logger.warning("vLLM setup failed, falling back to Ollama: %s", exc)
-    else:
-        try:
-            vllm_infra = VLLMInfrastructure(auto_detect_model=True)
-            if vllm_infra.health_check_sync():
-                llm_infra = vllm_infra
-                logger.info("Using vLLM with auto-detected model: %s", vllm_infra.model)
-            else:
-                raise InfrastructureError("vLLM setup failed")
-        except Exception as exc:
-            logger.warning("vLLM setup failed, falling back to Ollama: %s", exc)
-
-    # If vLLM didn't work, try Ollama
-    if llm_infra is None:
-        try:
-            if cfg.auto_install_ollama:
-                OllamaInstaller.ensure_ollama_available(cfg.ollama_model)
-            ollama_infra = OllamaInfrastructure(cfg.ollama_url, cfg.ollama_model)
-            if ollama_infra.health_check_sync():
-                llm_infra = ollama_infra
-            else:
-                raise InfrastructureError("Both vLLM and Ollama unavailable")
-        except Exception:
-            raise InfrastructureError("No LLM infrastructure available")
+    # Setup Ollama as the default LLM
+    try:
+        if cfg.auto_install_ollama:
+            OllamaInstaller.ensure_ollama_available(cfg.ollama_model)
+        ollama_infra = OllamaInfrastructure(cfg.ollama_url, cfg.ollama_model)
+        if ollama_infra.health_check_sync():
+            llm_infra = ollama_infra
+            logger.info("Using Ollama with model: %s", cfg.ollama_model)
+        else:
+            raise InfrastructureError("Ollama unavailable")
+    except Exception as exc:
+        raise InfrastructureError(f"No LLM infrastructure available: {exc}")
 
     duckdb = DuckDBInfrastructure(cfg.duckdb_path)
     if not duckdb.health_check_sync():

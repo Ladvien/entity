@@ -98,11 +98,11 @@ await agent.chat("")  # Uses configured plugin pipeline
 
 ### Prerequisites
 ```bash
-# Install Entity Framework
-pip install entity-framework
+# Install Entity Core
+pip install entity-core
 
 # Or use uv (recommended)
-uv add entity-framework
+uv add entity-core
 ```
 
 ### Running Examples

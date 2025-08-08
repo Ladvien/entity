@@ -1,9 +1,9 @@
 .. Entity documentation master file
 
-Welcome to Entity Documentation
-================================
+Welcome to Entity Core Documentation
+=====================================
 
-Entity is a flexible, plugin-based framework for building AI agents with a unified architecture 
+Entity Core is a flexible, plugin-based framework for building AI agents with a unified architecture
 combining a 4-layer resource system with a 6-stage workflow.
 
 .. toctree::
@@ -36,7 +36,7 @@ Quick Start
 
    # Create agent with zero configuration
    agent = Agent()
-   
+
    # Chat with the agent
    response = await agent.chat("What's 5 * 7?")
    print(response)
@@ -46,7 +46,7 @@ Installation
 
 .. code-block:: bash
 
-   pip install entity
+   pip install entity-core
 
 Or with Poetry:
 

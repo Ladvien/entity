@@ -47,7 +47,7 @@ jobs:
 
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/entity
+      url: https://test.pypi.org/p/entity-core
 
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
@@ -74,7 +74,7 @@ jobs:
 
     environment:
       name: pypi
-      url: https://pypi.org/p/entity
+      url: https://pypi.org/p/entity-core
 
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
@@ -110,7 +110,7 @@ jobs:
 
     - name: Verify import
       run: |
-        python -c "from entity import Agent; print('Successfully imported Entity')"
+        python -c "from entity import Agent; print('Successfully imported Entity Core')"
 
     - name: Check version
       run: |

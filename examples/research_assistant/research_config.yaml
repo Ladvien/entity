@@ -5,20 +5,20 @@ plugins:
   # Resource configuration
   resources:
     llm:
-      type: vllm
-      model: ${RESEARCH_LLM_MODEL:-Qwen/Qwen2.5-7B-Instruct}
+      type: ollama
+      model: ${RESEARCH_LLM_MODEL:-llama3.2:3b}
       temperature: 0.7
       max_tokens: 4096
-    
+
     memory:
       persistence: true
       vector_search: true
       embedding_model: ${EMBEDDING_MODEL:-sentence-transformers/all-MiniLM-L6-v2}
-    
+
     file_storage:
       base_path: ${RESEARCH_DATA_PATH:-./research_data}
       max_file_size: 100MB
-    
+
     logging:
       level: ${LOG_LEVEL:-info}
       json: true
@@ -30,17 +30,17 @@ plugins:
       - research_assistant.plugins.MultiModalInputPlugin:
           supported_formats: ["text", "pdf", "url", "image"]
           max_file_size: 50MB
-    
+
     parse:
       - research_assistant.plugins.QueryParserPlugin:
           extract_entities: true
           detect_language: true
           identify_timeframe: true
-      
+
       - research_assistant.plugins.EntityExtractorPlugin:
           types: ["person", "organization", "technology", "concept"]
           use_ner: true
-    
+
     think:
       - research_assistant.plugins.ResearchPlannerPlugin:
           strategies:
@@ -49,54 +49,54 @@ plugins:
             - focused_analysis
           max_search_depth: 3
           prioritize_recent: true
-    
+
     do:
       - research_assistant.plugins.ArxivSearchPlugin:
           api_key: ${ARXIV_API_KEY:-}
           max_results: 50
           sort_by: relevance
           include_abstracts: true
-      
+
       - research_assistant.plugins.WebSearchPlugin:
           api_key: ${SEARCH_API_KEY:-}
           academic_focus: true
           exclude_domains: []
           prefer_domains: ["nature.com", "science.org", "ieee.org"]
-      
+
       - research_assistant.plugins.PDFAnalyzerPlugin:
           extract_figures: true
           extract_tables: true
           extract_references: true
           ocr_enabled: true
-      
+
       - research_assistant.plugins.SemanticScholarPlugin:
           api_key: ${SEMANTIC_SCHOLAR_API_KEY:-}
           include_citations: true
           include_references: true
-      
+
       - research_assistant.plugins.DataVisualizerPlugin:
           chart_types: ["bar", "line", "scatter", "heatmap"]
           export_formats: ["png", "svg", "html"]
-    
+
     review:
       - research_assistant.plugins.FactCheckerPlugin:
-          trusted_sources: 
+          trusted_sources:
             - "nature.com"
             - "science.org"
             - "arxiv.org"
             - "pubmed.ncbi.nlm.nih.gov"
           confidence_threshold: 0.8
-      
+
       - research_assistant.plugins.CitationValidatorPlugin:
           styles: ["APA", "MLA", "Chicago", "IEEE"]
           check_doi: true
           check_urls: true
-      
+
       - research_assistant.plugins.QualityAssurancePlugin:
           check_coherence: true
           check_completeness: true
           min_sources: 3
-    
+
     output:
       - research_assistant.plugins.ReportGeneratorPlugin:
           templates:
@@ -116,7 +116,7 @@ workflows:
       - research_assistant.plugins.WebSearchPlugin
     review:
       - research_assistant.plugins.QualityAssurancePlugin
-  
+
   literature_review:
     inherit: default
     do:
@@ -126,7 +126,7 @@ workflows:
     review:
       - research_assistant.plugins.CitationValidatorPlugin
       - research_assistant.plugins.DuplicateDetectorPlugin
-  
+
   data_analysis:
     inherit: default
     parse:
@@ -141,15 +141,14 @@ workflows:
 environments:
   development:
     llm:
-      model: "Qwen/Qwen2.5-1.5B-Instruct"  # Smaller model for dev
+      model: "llama3.2:1b"  # Smaller model for dev
     logging:
       level: debug
       json: false
-  
+
   production:
     llm:
-      model: "Qwen/Qwen2.5-7B-Instruct"
-      gpu_memory_utilization: 0.9
+      model: "llama3.2:3b"
     memory:
       cache_size: 10GB
       ttl: 86400  # 24 hours
@@ -162,11 +161,11 @@ rate_limits:
   arxiv:
     requests_per_minute: 30
     burst: 10
-  
+
   web_search:
     requests_per_minute: 60
     daily_quota: 10000
-  
+
   pdf_analysis:
     concurrent: 5
     max_file_size: 100MB

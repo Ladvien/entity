@@ -47,12 +47,12 @@ The agent can be configured via `research_config.yaml`:
 plugins:
   resources:
     llm:
-      type: vllm
-      model: "Qwen/Qwen2.5-7B-Instruct"
+      type: ollama
+      model: "llama3.2:3b"
     memory:
       persistence: true
       vector_search: true
-  
+
   workflow:
     input:
       - research_assistant.plugins.MultiModalInputPlugin

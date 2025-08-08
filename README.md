@@ -1,9 +1,8 @@
-# Entity Framework
-Entity is a Python framework for building AI agents. It runs locally by default and sets up resources automatically.
+# Entity Core Framework
+Entity Core is a Python framework for building AI agents. It runs locally by default and sets up resources automatically.
 
 ## Examples
-Run `python examples/default_agent.py` for a minimal CLI demo or
-`python examples/kitchen_sink.py` for a full-featured vLLM example.
+Run `python examples/default_agent.py` for a minimal CLI demo.
 Resources are prepared automatically using ``load_defaults()`` so Docker is no
 longer required for these examples.
 The old `[examples]` extra has been removed.
@@ -81,8 +80,7 @@ await memory.store("bob:greeting", "hello")
 | `ENTITY_LOG_LEVEL` | `info` |
 | `ENTITY_JSON_LOGS` | `0` |
 | `ENTITY_LOG_FILE` | `./agent.log` |
-| `ENTITY_AUTO_INSTALL_VLLM` | `true` |
-| `ENTITY_VLLM_MODEL` | *(auto)* |
+| `ENTITY_AUTO_INSTALL_OLLAMA` | `true` |
 
 Set `ENTITY_JSON_LOGS=1` to write structured logs to ``ENTITY_LOG_FILE`` instead
 of printing to the console.
