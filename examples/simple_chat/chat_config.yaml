@@ -1,0 +1,45 @@
+# Simple Chat Agent Configuration
+# Demonstrates Entity framework plugin architecture with a basic conversational agent
+
+# Workflow definition using Entity's 6-stage pipeline
+input:
+  - simple_chat.plugins.input_plugins.ChatInputPlugin:
+      max_history_length: 50
+      preserve_context: true
+      enable_system_commands: true
+
+parse:
+  # Basic chat doesn't need complex parsing, so we skip this stage
+  # The framework will pass through to the next stage
+
+think:
+  - simple_chat.plugins.thinking_plugins.ContextAnalyzerPlugin:
+      analyze_sentiment: true
+      detect_topics: true
+      track_preferences: true
+
+  - simple_chat.plugins.thinking_plugins.ChatReasoningPlugin:
+      personality: "helpful and friendly"
+      response_style: "conversational"
+      max_context_messages: 10
+      include_thinking: false
+
+do:
+  # Simple chat is primarily conversational, so most work happens in THINK
+  # Complex agents would have action plugins here (web search, file operations, etc.)
+
+review:
+  # Basic chat doesn't need review, but more advanced agents could have
+  # fact-checking, safety filtering, or quality assurance plugins here
+
+output:
+  - simple_chat.plugins.output_plugins.ConversationSummaryPlugin:
+      summary_trigger_length: 20
+      auto_summarize: false
+      include_insights: true
+
+  - simple_chat.plugins.output_plugins.ChatOutputPlugin:
+      format_style: "plain"
+      include_metadata: false
+      add_to_history: true
+      show_thinking: false

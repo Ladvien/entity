@@ -1,26 +1,27 @@
+import logging
 import os
 import tempfile
-import logging
 from dataclasses import dataclass
 
 from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
+from entity.infrastructure.local_storage_infra import LocalStorageInfrastructure
 from entity.infrastructure.ollama_infra import OllamaInfrastructure
 from entity.infrastructure.vllm_infra import VLLMInfrastructure
-from entity.infrastructure.local_storage_infra import LocalStorageInfrastructure
-from entity.setup.ollama_installer import OllamaInstaller
-from entity.setup.vllm_installer import VLLMInstaller
 from entity.resources import (
-    DatabaseResource,
-    VectorStoreResource,
-    LLMResource,
-    Memory,
     LLM,
-    LocalStorageResource,
+    DatabaseResource,
     FileStorage,
-    RichLoggingResource,
+    LLMResource,
+    LocalStorageResource,
     LogLevel,
+    Memory,
+    RichLoggingResource,
+    VectorStoreResource,
+    create_argument_parsing_resource,
 )
 from entity.resources.exceptions import InfrastructureError
+from entity.setup.ollama_installer import OllamaInstaller
+from entity.setup.vllm_installer import VLLMInstaller
 
 
 @dataclass
@@ -49,9 +50,6 @@ class DefaultConfig:
             in {"1", "true", "yes"},
             vllm_model=os.getenv("ENTITY_VLLM_MODEL", cls.vllm_model),
         )
-
-
-
 
 
 def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
@@ -93,7 +91,7 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
                 raise InfrastructureError("vLLM setup failed")
         except Exception as exc:
             logger.warning("vLLM setup failed, falling back to Ollama: %s", exc)
-    
+
     # If vLLM didn't work, try Ollama
     if llm_infra is None:
         try:
@@ -127,9 +125,17 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
     llm_resource = LLMResource(llm_infra)
     storage_resource = LocalStorageResource(storage_infra)
 
+    # Create argument parsing resource
+    argument_parsing_resource = create_argument_parsing_resource(
+        logger=logging_resource,
+        app_name="entity-cli",
+        app_description="Entity Framework - Build powerful AI agents",
+    )
+
     return {
         "memory": Memory(db_resource, vector_resource),
         "llm": LLM(llm_resource),
         "file_storage": FileStorage(storage_resource),
         "logging": logging_resource,
+        "argument_parsing": argument_parsing_resource,
     }

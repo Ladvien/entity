@@ -3,111 +3,100 @@ from __future__ import annotations
 import argparse
 import asyncio
 import sys
-from pathlib import Path
 
-from entity.core.agent import Agent
-from entity.plugins.defaults import default_workflow
-from entity.cli.ent_cli_adapter import EntCLIAdapter
-from entity.resources.logging import RichConsoleLoggingResource, LogLevel
-from entity.defaults import load_defaults
-from entity.workflow.templates.loader import load_template, TemplateNotFoundError
-from entity.workflow.workflow import Workflow
-from entity.workflow.executor import WorkflowExecutor
-from entity.plugins.context import PluginContext
-
-
-def _load_workflow(name: str) -> list[type] | dict[str, list[type]]:
-    """Return workflow steps from ``name`` or exit with a helpful error."""
-
-    if name == "default":
-        steps = list(default_workflow())
-        if steps and steps[0] is EntCLIAdapter:
-            steps = steps[1:]
-        if steps and steps[-1] is EntCLIAdapter:
-            steps = steps[:-1]
-        return steps
-
-    path = Path(name)
-    if path.exists():
-        try:
-            return Workflow.from_yaml(str(path)).steps
-        except Exception as exc:
-            raise SystemExit(f"Failed to load workflow file '{name}': {exc}") from exc
-
-    try:
-        return load_template(name).steps
-    except TemplateNotFoundError as exc:
-        raise SystemExit(f"Workflow template '{name}' not found") from exc
+from .commands.init import add_init_parser
+from .commands.run import add_run_parser, run_command
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    """Parse command line arguments with subcommands."""
     parser = argparse.ArgumentParser(
-        description="Run an Entity workflow locally with automatic resource setup"
+        prog="entity", description="Entity Framework - Build powerful AI agents"
     )
-    parser.add_argument(
-        "--workflow",
-        default="default",
-        help="Workflow template name or YAML path",
-    )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        help="Enable debug logging",
-    )
-    parser.add_argument(
-        "-q",
-        "--quiet",
-        action="store_true",
-        help="Suppress informational logs",
-    )
-    parser.add_argument(
-        "--timeout",
-        type=int,
-        default=None,
-        help="Maximum seconds to wait for the workflow to complete",
-    )
-    return parser.parse_args(argv)
 
+    # Add version info
+    parser.add_argument("--version", action="version", version="%(prog)s 0.0.5")
 
-async def _run(args: argparse.Namespace) -> None:
-    level = "debug" if args.verbose else "error" if args.quiet else "info"
-    resources = load_defaults()
-    resources["logging"] = RichConsoleLoggingResource(LogLevel(level))
-    workflow_steps = _load_workflow(args.workflow)
-    
-    # Build workflow from steps
-    if isinstance(workflow_steps, list):
-        # Convert list to dict with default stages
-        workflow_dict = {
-            WorkflowExecutor.INPUT: [EntCLIAdapter],
-            WorkflowExecutor.THINK: workflow_steps,
-            WorkflowExecutor.OUTPUT: [EntCLIAdapter],
-        }
-        workflow = Workflow.from_dict(workflow_dict, resources)
+    # Create subparsers for commands
+    subparsers = parser.add_subparsers(
+        dest="command", help="Available commands", metavar="<command>"
+    )
+
+    # Add subcommands
+    add_init_parser(subparsers)
+    add_run_parser(subparsers)
+
+    # Check if the first argument looks like a subcommand
+    args_to_check = argv if argv is not None else sys.argv[1:]
+
+    if (
+        args_to_check
+        and args_to_check[0] in ["init", "run"]
+        and not args_to_check[0].startswith("-")
+    ):
+        # This is a proper subcommand call
+        args = parser.parse_args(argv)
     else:
-        # Already a dict
-        workflow = Workflow.from_dict(workflow_steps, resources)
-    
-    agent = Agent(resources=resources, workflow=workflow)
-
-    try:
-        if args.timeout:
-            result = await asyncio.wait_for(agent.chat(""), args.timeout)
+        # Check if this is a help/version request first
+        if "--help" in args_to_check or "-h" in args_to_check:
+            parser.print_help()
+            sys.exit(0)
+        elif "--version" in args_to_check:
+            parser.print_version()
+            sys.exit(0)
         else:
-            result = await agent.chat("")
+            # Fallback to legacy run command behavior
+            legacy_parser = argparse.ArgumentParser(
+                description="Run an Entity workflow locally with automatic resource setup"
+            )
+            legacy_parser.add_argument(
+                "--workflow",
+                default="default",
+                help="Workflow template name or YAML path",
+            )
+            legacy_parser.add_argument(
+                "-v",
+                "--verbose",
+                action="store_true",
+                help="Enable debug logging",
+            )
+            legacy_parser.add_argument(
+                "-q",
+                "--quiet",
+                action="store_true",
+                help="Suppress informational logs",
+            )
+            legacy_parser.add_argument(
+                "--timeout",
+                type=int,
+                default=None,
+                help="Maximum seconds to wait for the workflow to complete",
+            )
+            args = legacy_parser.parse_args(argv)
+            args.func = run_command
 
-        print(result)
-    except KeyboardInterrupt:
-        pass
-    except asyncio.TimeoutError:
-        print("Execution timed out", file=sys.stderr)
-        return
+    return args
+
+
+async def main_async(args: argparse.Namespace) -> None:
+    """Execute the selected command asynchronously."""
+    if hasattr(args, "func"):
+        if asyncio.iscoroutinefunction(args.func):
+            await args.func(args)
+        else:
+            args.func(args)
+    else:
+        print(
+            "No command specified. Use --help to see available commands.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
 
 def main(argv: list[str] | None = None) -> None:
+    """Main entry point for the Entity CLI."""
     args = parse_args(argv)
-    asyncio.run(_run(args))
+    asyncio.run(main_async(args))
 
 
 if __name__ == "__main__":
