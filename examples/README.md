@@ -284,8 +284,8 @@ pip install entity-core
 # Using uv (recommended for speed)
 uv add entity-core
 
-# Using conda
-conda install -c conda-forge entity-core
+# Using Poetry
+poetry add entity-core
 ```
 
 ### 🧠 **2. Set up your LLM**
@@ -588,7 +588,7 @@ Built something amazing with Entity? We want to feature it!
 
 - 🐛 **[GitHub Issues](https://github.com/your-repo/entity/issues)** - Bug reports and feature requests
 - 💬 **[Discussions](https://github.com/your-repo/entity/discussions)** - Questions and sharing
-- 👥 **[Discord](https://discord.gg/entity)** - Real-time community chat
+- 👥 **[GitHub Discussions](https://github.com/Ladvien/entity/discussions)** - Community Q&A
 - 📧 **[Newsletter](https://entity.dev/newsletter)** - Updates and best practices
 
 ---

@@ -316,12 +316,12 @@ ollama serve
 pip install --upgrade entity-core
 
 # Verify installation
-python -c "import entity; print('Entity installed successfully!')"
+python -c "import entity"
+echo "Entity installed successfully!"
 ```
 
 ### Get Help
 
-- 💬 **[Discord Community](https://discord.gg/entity)** - Real-time help
 - 📚 **[Documentation](https://entity-core.readthedocs.io/)** - Complete guides
 - 🐛 **[GitHub Issues](https://github.com/Ladvien/entity/issues)** - Bug reports
 - 💡 **[Discussions](https://github.com/Ladvien/entity/discussions)** - Q&A and ideas
@@ -347,7 +347,7 @@ python -c "import entity; print('Entity installed successfully!')"
 
 [📚 Explore Examples](../examples/) •
 [🔧 Build Custom Tools](docs/tools.md) •
-[🤝 Join Community](https://discord.gg/entity)
+[🤝 Join Discussions](https://github.com/Ladvien/entity/discussions)
 
 **Entity Framework**: *Build better AI agents, faster.* ✨
 

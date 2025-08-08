@@ -197,9 +197,9 @@ pip install "entity-core[all]"
 uv add entity-core
 ```
 
-### Using Conda
+### Using Poetry
 ```bash
-conda install -c conda-forge entity-core
+poetry add entity-core
 ```
 
 ### From Source
@@ -280,7 +280,6 @@ plugins:
 ### 📚 **Documentation**
 - **[Full Documentation](https://entity-core.readthedocs.io/)** - Complete guides and API reference
 - **[Examples Gallery](examples/)** - From "Hello World" to production systems
-- **[Video Tutorials](docs/videos.md)** - Step-by-step screencasts
 - **[Cookbook](docs/cookbook.md)** - Common patterns and recipes
 
 ### 💬 **Community**
@@ -324,7 +323,7 @@ Entity Framework is built with love by the open-source community. Special thanks
 
 - **Core Contributors**: [List of contributors](CONTRIBUTORS.md)
 - **Inspiration**: LangChain, AutoGen, CrewAI for pioneering agent frameworks
-- **Community**: Our amazing Discord community for feedback and contributions
+- **Community**: Our amazing GitHub community for feedback and contributions
 - **Sponsors**: Organizations supporting Entity's development
 
 ## 📄 License
@@ -339,7 +338,6 @@ Entity Framework is released under the [MIT License](LICENSE).
 
 [📚 Read the Docs](https://entity-core.readthedocs.io/) •
 [🚀 Quick Start](docs/quickstart.md) •
-[💬 Join Discord](https://discord.gg/entity) •
 [🐙 GitHub](https://github.com/Ladvien/entity)
 
 **Entity Framework**: *Build better AI agents, faster.* 🚀
