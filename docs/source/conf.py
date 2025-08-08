@@ -8,6 +8,22 @@ from datetime import datetime
 sys.path.insert(0, os.path.abspath("../.."))
 sys.path.insert(0, os.path.abspath("../../src"))
 
+# Mock modules that cause issues on ReadTheDocs
+autodoc_mock_imports = [
+    "aioboto3",
+    "boto3",
+    "botocore",
+    "duckdb",
+    "websockets",
+    "grpcio",
+    "grpcio-tools",
+    "huggingface_hub",
+    "httpx",
+    "aiobotocore",
+    "aiofiles",
+    "s3transfer",
+]
+
 # Project information
 project = "Entity"
 copyright = f"{datetime.now().year}, C. Thomas Brittain"
