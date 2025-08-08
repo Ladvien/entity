@@ -28,8 +28,8 @@ autodoc_mock_imports = [
 project = "Entity"
 copyright = f"{datetime.now().year}, C. Thomas Brittain"
 author = "C. Thomas Brittain"
-release = "0.0.1"
-version = "0.0.1"
+release = "0.0.5"
+version = "0.0.5"
 
 # General configuration
 extensions = [
