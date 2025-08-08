@@ -18,7 +18,7 @@ lib/
 lib64/
 parts/
 sdist/
-var/ 
+var/
 wheels/
 share/python-wheels/
 *.egg-info/
@@ -193,4 +193,4 @@ talking.log
 audio_output/*
 .claude/*
 *.duckdb*
-# *.lock  # Commented out to allow poetry.lock
+*.lock  # Commented out to allow poetry.lock

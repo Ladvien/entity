@@ -68,7 +68,7 @@ templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # HTML output options
-html_theme = "alabaster"  # Use default theme for now
+html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 html_title = "Entity Documentation"
 html_short_title = "Entity"

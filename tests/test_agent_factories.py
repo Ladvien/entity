@@ -2,8 +2,8 @@ import asyncio
 
 import pytest
 
-from entity.core.agent import Agent
 from entity.config import clear_config_cache, load_config
+from entity.core.agent import Agent
 
 
 @pytest.mark.asyncio
@@ -58,6 +58,7 @@ def test_config_cache(tmp_path):
     assert first is not third
 
 
+@pytest.mark.integration
 @pytest.mark.requires_ollama
 def test_from_config_caching(tmp_path):
     cfg = tmp_path / "cfg.yaml"
@@ -81,4 +82,3 @@ workflow:
 def test_invalid_workflow_dict():
     with pytest.raises(Exception):
         Agent.from_workflow_dict({"bad_stage": ["entity.plugins.defaults.ThinkPlugin"]})
-

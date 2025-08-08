@@ -1,6 +1,6 @@
 [project]
 name = "entity-core"
-version = "0.0.2"
+version = "0.0.3"
 description = "A flexible, plugin-based framework for building AI agents"
 authors = [
     { name = "C. Thomas Brittain", email = "cthomasbrittain@hotmail.com" },
@@ -48,7 +48,7 @@ workflow-viz = "entity.tools.workflow_viz:main"
 [tool.poetry.urls]
 homepage = "https://github.com/Ladvien/entity"
 repository = "https://github.com/Ladvien/entity"
-documentation = "https://entity.readthedocs.io/en/latest/"
+documentation = "https://entity-core.readthedocs.io/en/latest/"
 "Bug Tracker" = "https://github.com/Ladvien/entity/issues"
 "Discussions" = "https://github.com/Ladvien/entity/discussions"
 
@@ -57,7 +57,7 @@ python = "^3.11"
 pyyaml = "^6.0.2"
 pydantic = "^2.0.0"
 httpx = "0.27.*"
-aiobotocore = "^2.13.0"
+aioboto3 = "^13.0.0"
 duckdb = "^1.3.1"
 websockets = "^15.0"
 grpcio = "^1.62.2"
@@ -83,6 +83,9 @@ poethepoet = "^0.36.0"
 vulture = "^2.14"
 httpx = "0.27.*"
 build = "^1.2"
+pre-commit = "^4.2.0"
+sphinx = "^8.2.0"
+sphinx-rtd-theme = "^3.0.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -163,6 +166,15 @@ help = "Clean documentation build files"
 [tool.poe.tasks.docs-check]
 cmd = "sphinx-build -b linkcheck docs/source docs/build"
 help = "Check documentation for broken links"
+
+# Pre-commit tasks
+[tool.poe.tasks.pre-commit-install]
+cmd = "pre-commit install"
+help = "Install pre-commit hooks"
+
+[tool.poe.tasks.pre-commit-run]
+cmd = "pre-commit run --all-files"
+help = "Run pre-commit on all files"
 
 
 [tool.pytest.ini_options]

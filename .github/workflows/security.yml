@@ -1,0 +1,114 @@
+name: Security Checks
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run security checks weekly on Mondays at 9 AM UTC
+    - cron: '0 9 * * 1'
+
+jobs:
+  security:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 1.7.1
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Install dependencies
+      run: poetry install --with dev
+
+    - name: Run Bandit security scan
+      run: |
+        poetry run bandit -r src/ -f json -o bandit-report.json || true
+        poetry run bandit -r src/ -ll
+      continue-on-error: false
+
+    - name: Run pip-audit for dependency vulnerabilities
+      run: |
+        pip install pip-audit
+        pip-audit --format=json --output=pip-audit-report.json || true
+        pip-audit
+      continue-on-error: false
+
+    - name: Run Safety scan
+      run: |
+        pip install safety
+        safety check --json --output safety-report.json || true
+        safety check
+      continue-on-error: false
+
+    - name: Upload security reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-reports
+        path: |
+          bandit-report.json
+          pip-audit-report.json
+          safety-report.json
+
+    - name: Comment security summary on PR
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          let comment = '## Security Scan Results\n\n';
+
+          // Read Bandit report
+          try {
+            const banditReport = JSON.parse(fs.readFileSync('bandit-report.json', 'utf8'));
+            const issues = banditReport.results || [];
+            comment += `**Bandit**: ${issues.length} potential security issues found\n`;
+          } catch (e) {
+            comment += '**Bandit**: Report not available\n';
+          }
+
+          comment += '\nFor detailed reports, check the workflow artifacts.';
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: python
+        queries: security-and-quality
+
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3

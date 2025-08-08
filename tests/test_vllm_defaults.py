@@ -1,8 +1,8 @@
 import pytest
 
 from entity.defaults import load_defaults
-from entity.infrastructure.vllm_infra import VLLMInfrastructure
 from entity.infrastructure.ollama_infra import OllamaInfrastructure
+from entity.infrastructure.vllm_infra import VLLMInfrastructure
 
 
 def _available_infra():
@@ -15,6 +15,7 @@ def _available_infra():
     return None
 
 
+@pytest.mark.integration
 @pytest.mark.requires_ollama
 def test_load_defaults_uses_available_llm():
     infra = _available_infra()

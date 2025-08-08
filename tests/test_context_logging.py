@@ -1,17 +1,13 @@
 import pytest
-from entity.plugins.context import PluginContext
-from entity.resources.logging import (
-    LogCategory,
-    LogLevel,
-    RichLoggingResource,
-)
-from entity.workflow.executor import WorkflowExecutor
-from entity.resources.memory import Memory
-from entity.resources.database import DatabaseResource
-from entity.resources.vector_store import VectorStoreResource
-from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
 
-pytest.skip("Context logging integration unstable", allow_module_level=True)
+from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
+from entity.plugins.context import PluginContext
+from entity.resources.database import DatabaseResource
+from entity.resources.logging import LogCategory, LogLevel, RichLoggingResource
+from entity.resources.memory import Memory
+from entity.resources.vector_store import VectorStoreResource
+
+# pytest.skip("Context logging integration unstable", allow_module_level=True)  # Re-enabled for MVP
 
 
 @pytest.mark.asyncio
