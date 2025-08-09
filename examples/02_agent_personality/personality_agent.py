@@ -33,17 +33,16 @@ async def main():
     print()
 
     # Configuration file path
-    config_path = Path(__file__).parent / "python_tutor_config.yaml"
+    config_path = Path(__file__).parent / "python_tutor.yaml"
 
     if not config_path.exists():
         print(f"❌ Configuration file not found: {config_path}")
-        print("💡 Make sure python_tutor_config.yaml is in the same directory")
+        print("💡 Make sure python_tutor.yaml is in the same directory")
         print()
         print("🔧 You can create different personality configs:")
-        print("   • python_tutor_config.yaml - Patient programming teacher")
-        print("   • data_science_config.yaml - Data analysis mentor")
-        print("   • web_dev_config.yaml - Modern web development coach")
-        print("   • creative_writer_config.yaml - Storytelling assistant")
+        print("   • python_tutor.yaml - Patient programming teacher")
+        print("   • creative_writer.yaml - Imaginative writing partner")
+        print("   • business_consultant.yaml - Professional advisor")
         return
 
     try:
