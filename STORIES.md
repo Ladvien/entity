@@ -6,48 +6,6 @@
 ---
 
 
-## 🧠 Story 2: Reasoning Trace Plugin
-**Priority:** P0 - Critical
-**Story Points:** 5
-**Sprint:** 1
-
-### User Story
-As an AI researcher, I want to capture and analyze gpt-oss's chain-of-thought reasoning, so that I can debug, audit, and improve agent decision-making.
-
-### Description
-Build a plugin that extracts and stores the raw chain-of-thought from the analysis channel, making it available for debugging while keeping it separate from user-facing responses.
-
-### Acceptance Criteria
-- [ ] Plugin runs in THINK stage of Entity pipeline
-- [ ] Captures raw CoT from analysis channel
-- [ ] Stores reasoning traces in Entity's memory system
-- [ ] Provides API to retrieve historical reasoning for analysis
-- [ ] Filters potentially harmful content from CoT before storage
-- [ ] Implements configurable reasoning levels (low, medium, high)
-
-### Technical Implementation
-```python
-# src/entity/plugins/gpt_oss/reasoning_trace.py
-class ReasoningTracePlugin(PromptPlugin):
-    supported_stages = [WorkflowExecutor.THINK]
-
-    async def _execute_impl(self, context):
-        # Configure reasoning level based on task complexity
-        reasoning_level = await self._determine_reasoning_level(context)
-
-        # Extract analysis channel content
-        analysis_content = await self._extract_analysis_channel(context.message)
-
-        # Store reasoning trace
-        await context.remember(f"reasoning_trace:{context.execution_id}", {
-            "timestamp": datetime.now().isoformat(),
-            "level": reasoning_level,
-            "analysis": analysis_content,
-            "task": context.message
-        })
-```
-
----
 
 ## 🔧 Story 3: Native Tool Orchestrator Plugin
 **Priority:** P1 - High
