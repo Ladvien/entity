@@ -1,4 +1,4 @@
-# 5-Minute Quick Start Guide 🚀
+# 5-Minute Quick Start Guide
 
 **From Zero to AI Agent in Under 5 Minutes**
 
@@ -12,11 +12,10 @@ Welcome to Entity Framework! This guide will get you from installation to a work
 - **Minute 4**: Giving it superpowers with tools
 - **Minute 5**: Exploring what you've built
 
-Let's go! ⚡
 
 ---
 
-## 🚀 **Minute 1: Installation & Setup**
+## Minute 1: Installation & Setup
 
 ### Install Entity Framework
 ```bash
@@ -40,11 +39,11 @@ ollama serve
 export OPENAI_API_KEY="your-key-here"
 ```
 
-**⏰ Time check: 1 minute** ✅
+**Time check: 1 minute**
 
 ---
 
-## 🤖 **Minute 2: Your First Agent**
+## Minute 2: Your First Agent
 
 Create your first intelligent agent with just 3 lines of code:
 
@@ -79,7 +78,7 @@ python hello_agent.py
 - 📊 **Automatic logging** for monitoring and debugging
 - 🔧 **Zero configuration** - it just works!
 
-**⏰ Time check: 2 minutes** ✅
+**Time check: 2 minutes**
 
 ---
 
@@ -139,11 +138,11 @@ python tutor_agent.py
 - 🎯 **Focused behavior** as a Python tutor
 - ⚙️ **Configuration-driven** customization (no code changes!)
 
-**⏰ Time check: 3 minutes** ✅
+**Time check: 3 minutes**
 
 ---
 
-## 🔧 **Minute 4: Superpowers with Tools**
+## Minute 4: Superpowers with Tools
 
 Let's give your agent real-world capabilities with Entity's built-in tools:
 
@@ -212,11 +211,11 @@ python super_agent.py
 - 📁 **Work with files** safely and intelligently
 - 🔗 **Chain tools** together for complex tasks
 
-**⏰ Time check: 4 minutes** ✅
+**Time check: 4 minutes**
 
 ---
 
-## 🎉 **Minute 5: Exploring What You Built**
+## Minute 5: Exploring What You Built
 
 Congratulations! In just 4 minutes, you've built increasingly sophisticated AI agents. Let's explore what makes this special:
 
@@ -254,38 +253,38 @@ await agent.chat("")  # Everything else handled automatically
 ✅ **Plugin Architecture**: Modular, testable, reusable components
 ✅ **Production Ready**: Logging, monitoring, and safety built-in
 
-**⏰ Final time check: 5 minutes** 🎉
+**Time check: 5 minutes**
 
 ---
 
-## 🚀 **What's Next?**
+## What's Next?
 
 You've mastered the basics! Here's your learning path:
 
-### 📚 **Continue Learning (10 minutes each)**
-- **[Agent Personalities](../examples/02_agent_personality/)** - Deep dive into customization
-- **[Tool Usage](../examples/03_tool_usage/)** - Master the tool system
-- **[Memory Systems](../examples/04_conversation_memory/)** - Build agents that remember
-- **[Streaming Responses](../examples/05_streaming_responses/)** - Real-time interactions
+### Continue Learning (10 minutes each)
+- **[Agent Personalities](../examples/agent_personality/)** - Deep dive into customization
+- **[Tool Usage](../examples/tool_usage/)** - Master the tool system
+- **[Memory Systems](../examples/conversation_memory/)** - Build agents that remember
+- **[Streaming Responses](../examples/streaming_responses/)** - Real-time interactions
 
-### 🎯 **Real-World Projects (30-60 minutes each)**
+### Real-World Projects (30-60 minutes each)
 - **[Customer Service Bot](../examples/customer_service/)** - Business application
 - **[Research Assistant](../examples/research_assistant/)** - Complex workflows
 - **[Code Reviewer](../examples/code_reviewer/)** - Developer tools
 
-### 🏗️ **Production Development (2+ hours)**
+### Production Development (2+ hours)
 - **[Multi-Agent Systems](../examples/multi_agent/)** - Orchestrated collaboration
 - **[API Integration](../examples/api_service/)** - FastAPI + Entity
 - **[Production Deployment](../examples/production/)** - Scalable systems
 
-### 🎓 **Advanced Topics**
+### Advanced Topics
 - **[Custom Plugin Development](docs/plugins.md)** - Extend Entity framework
 - **[Performance Optimization](docs/performance.md)** - Scale to production
 - **[Contributing Guide](CONTRIBUTING.md)** - Join the community
 
 ---
 
-## 🔧 **Troubleshooting**
+## Troubleshooting
 
 ### Common Issues
 
