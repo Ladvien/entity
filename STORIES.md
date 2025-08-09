@@ -8,43 +8,6 @@
 
 
 
-## 🎭 Story 5: Developer Override Plugin
-**Priority:** P2 - Medium
-**Story Points:** 3
-**Sprint:** 3
-
-### User Story
-As a prompt engineer, I want to use the developer role to override system instructions safely, so that I can fine-tune agent behavior without modifying base configurations.
-
-### Description
-Create a plugin that leverages harmony's developer role to inject behavior modifications that override system prompts when needed.
-
-### Acceptance Criteria
-- [ ] Plugin supports developer role injection
-- [ ] Maintains role hierarchy (developer > user)
-- [ ] Allows runtime behavior modification
-- [ ] Provides audit trail of developer overrides
-- [ ] Implements permission system for developer access
-- [ ] Integrates with Entity's configuration system
-
-### Technical Implementation
-```python
-# src/entity/plugins/gpt_oss/developer_override.py
-class DeveloperOverridePlugin(Plugin):
-    supported_stages = [WorkflowExecutor.PARSE]
-
-    async def _execute_impl(self, context):
-        # Check for developer override permissions
-        if await self._has_developer_permission(context.user_id):
-            developer_instructions = await context.recall("developer_override")
-            if developer_instructions:
-                # Apply developer role with override instructions
-                developer_content = DeveloperContent.new().with_instructions(
-                    developer_instructions
-                )
-```
-
----
 
 ## 📈 Story 6: Adaptive Reasoning Controller
 **Priority:** P2 - Medium
