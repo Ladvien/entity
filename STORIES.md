@@ -5,50 +5,6 @@
 
 ---
 
-
-
-
-
-## 📈 Story 6: Adaptive Reasoning Controller
-**Priority:** P2 - Medium
-**Story Points:** 5
-**Sprint:** 3
-
-### User Story
-As an optimization engineer, I want the agent to automatically adjust reasoning effort based on task complexity, so that we balance performance and accuracy.
-
-### Description
-Build a plugin that dynamically adjusts gpt-oss's reasoning level (low/medium/high) based on task analysis and performance requirements.
-
-### Acceptance Criteria
-- [ ] Analyzes task complexity using heuristics
-- [ ] Adjusts reasoning level dynamically
-- [ ] Monitors token usage and latency
-- [ ] Provides reasoning level recommendations
-- [ ] Supports manual override via context
-- [ ] Logs reasoning level decisions for analysis
-
-### Technical Implementation
-```python
-# src/entity/plugins/gpt_oss/adaptive_reasoning.py
-class AdaptiveReasoningPlugin(Plugin):
-    supported_stages = [WorkflowExecutor.PARSE]
-
-    async def _execute_impl(self, context):
-        complexity_score = await self._analyze_complexity(context.message)
-
-        if complexity_score > 0.8:
-            reasoning_level = ReasoningEffort.HIGH
-        elif complexity_score > 0.4:
-            reasoning_level = ReasoningEffort.MEDIUM
-        else:
-            reasoning_level = ReasoningEffort.LOW
-
-        await context.remember("reasoning_level", reasoning_level)
-```
-
----
-
 ## 🔄 Story 7: Multi-Channel Response Aggregator
 **Priority:** P2 - Medium
 **Story Points:** 5

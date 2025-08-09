@@ -1,7 +1,15 @@
 """GPT-OSS specific plugins for Entity Framework."""
 
+from .adaptive_reasoning import AdaptiveReasoningPlugin
 from .developer_override import DeveloperOverridePlugin
+from .native_tools import GPTOSSToolOrchestrator
 from .reasoning_trace import ReasoningTracePlugin
 from .structured_output import StructuredOutputPlugin
 
-__all__ = ["ReasoningTracePlugin", "StructuredOutputPlugin", "DeveloperOverridePlugin"]
+__all__ = [
+    "ReasoningTracePlugin",
+    "StructuredOutputPlugin", 
+    "DeveloperOverridePlugin",
+    "AdaptiveReasoningPlugin",
+    "GPTOSSToolOrchestrator"
+]
