@@ -2,14 +2,16 @@
 
 from .adaptive_reasoning import AdaptiveReasoningPlugin
 from .developer_override import DeveloperOverridePlugin
+from .multi_channel_aggregator import MultiChannelAggregatorPlugin
 from .native_tools import GPTOSSToolOrchestrator
 from .reasoning_trace import ReasoningTracePlugin
 from .structured_output import StructuredOutputPlugin
 
 __all__ = [
     "ReasoningTracePlugin",
-    "StructuredOutputPlugin", 
+    "StructuredOutputPlugin",
     "DeveloperOverridePlugin",
     "AdaptiveReasoningPlugin",
-    "GPTOSSToolOrchestrator"
+    "GPTOSSToolOrchestrator",
+    "MultiChannelAggregatorPlugin",
 ]

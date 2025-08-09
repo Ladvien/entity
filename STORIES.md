@@ -5,26 +5,6 @@
 
 ---
 
-## 🔄 Story 7: Multi-Channel Response Aggregator
-**Priority:** P2 - Medium
-**Story Points:** 5
-**Sprint:** 4
-
-### User Story
-As a conversation designer, I want to aggregate responses from multiple channels (analysis, commentary, final) into coherent outputs, so that users receive comprehensive yet clear responses.
-
-### Description
-Develop a plugin that intelligently combines multi-channel outputs from gpt-oss into user-friendly responses while preserving technical details for logging.
-
-### Acceptance Criteria
-- [ ] Parses all three channels (analysis, commentary, final)
-- [ ] Combines channels based on output requirements
-- [ ] Filters technical details from user-facing output
-- [ ] Preserves full context for debugging
-- [ ] Supports channel-specific formatting rules
-- [ ] Implements configurable aggregation strategies
-
----
 
 ## 🛡️ Story 8: Harmony Safety Filter Plugin
 **Priority:** P1 - High
