@@ -1,6 +1,6 @@
 [project]
 name = "entity-core"
-version = "0.0.11"
+version = "0.0.12"
 description = "A flexible, plugin-based framework for building AI agents"
 authors = [
     { name = "C. Thomas Brittain", email = "cthomasbrittain@hotmail.com" },
