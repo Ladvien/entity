@@ -7,52 +7,6 @@
 
 
 
-## 🔧 Story 3: Native Tool Orchestrator Plugin
-**Priority:** P1 - High
-**Story Points:** 8
-**Sprint:** 2
-
-### User Story
-As a developer, I want gpt-oss to use its native browser and Python tools seamlessly within Entity workflows, so agents can perform web searches and execute code autonomously.
-
-### Description
-Create a plugin that enables gpt-oss's native tool capabilities (browser and Python container) while maintaining Entity's sandboxing and security requirements.
-
-### Acceptance Criteria
-- [ ] Implements browser tool with web search capabilities
-- [ ] Implements Python tool with sandboxed code execution
-- [ ] Tools are defined in system message using harmony format
-- [ ] Integrates with Entity's existing `SandboxedToolRunner`
-- [ ] Supports tool chaining and multi-step workflows
-- [ ] Implements rate limiting and resource constraints
-
-### Technical Implementation
-```python
-# src/entity/plugins/gpt_oss/native_tools.py
-class GPTOSSToolOrchestrator(ToolPlugin):
-    supported_stages = [WorkflowExecutor.DO]
-
-    def __init__(self, resources, config=None):
-        super().__init__(resources, config)
-        self.python_tool = PythonTool()
-        self.browser_tool = BrowserTool()
-
-    async def _execute_impl(self, context):
-        # Configure tools in system message
-        system_content = SystemContent.new().with_tools([
-            self.python_tool.tool_config,
-            self.browser_tool.tool_config
-        ])
-
-        # Execute with Entity's sandbox
-        result = await context.sandbox.run(
-            self._execute_with_tools,
-            context.message,
-            timeout=30.0
-        )
-```
-
----
 
 ## 📊 Story 4: Structured Output Validator Plugin
 **Priority:** P1 - High
