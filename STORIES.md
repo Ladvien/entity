@@ -49,41 +49,6 @@
 
 ## 🔧 Framework Improvement Stories
 
-### Story 11: GPU Acceleration Compatibility Layer
-**Priority:** P0 - Critical
-**Story Points:** 8
-**Sprint:** 1
-
-#### User Story
-As a developer, I want Entity to automatically fallback to GPU-accelerated models when gpt-oss MXFP4 isn't hardware-supported, so that I maintain performance regardless of backend.
-
-#### Description
-Create an abstraction layer that detects GPU acceleration availability and swaps between gpt-oss harmony format and standard transformers models transparently.
-
-#### Acceptance Criteria
-- [ ] Detect MXFP4 GPU support at runtime
-- [ ] Implement fallback to GPTQ/AWQ quantized versions
-- [ ] Maintain API compatibility across backends
-- [ ] Add benchmark tool to compare performance
-- [ ] Document supported model alternatives
-- [ ] Preserve harmony format features when possible
-
-#### Technical Implementation
-```python
-# src/entity/infrastructure/adaptive_llm_infra.py
-class AdaptiveLLMInfrastructure(BaseInfrastructure):
-    async def _detect_acceleration(self):
-        try:
-            # Test MXFP4 acceleration
-            test_result = await self._test_mxfp4_performance()
-            if test_result.tokens_per_second < 20:
-                # Fallback to alternative
-                return await self._setup_fallback_model()
-        except Exception:
-            return await self._setup_fallback_model()
-```
-
----
 
 ### Story 12: Robust Cross-Process Locking
 **Priority:** P0 - Critical

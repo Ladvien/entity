@@ -33,6 +33,9 @@ classifiers = [
     "Typing :: Typed",
     "Framework :: AsyncIO",
 ]
+dependencies = [
+    "python-dotenv>=1.1.1",
+]
 
 [tool.poetry]
 package-mode = true
