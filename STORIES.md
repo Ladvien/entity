@@ -50,50 +50,6 @@
 ## 🔧 Framework Improvement Stories
 
 
-### Story 12: Robust Cross-Process Locking
-**Priority:** P0 - Critical
-**Story Points:** 5
-**Sprint:** 1
-
-#### User Story
-As a system administrator, I want Entity to handle process crashes gracefully without deadlocks, so that the system remains stable in production.
-
-#### Description
-Replace file-based locking with a robust mechanism using either portalocker/fasteners or DuckDB's MVCC for coordination.
-
-#### Acceptance Criteria
-- [ ] Implement timeout-based lock acquisition
-- [ ] Add automatic lock cleanup on process termination
-- [ ] Create lock recovery mechanism for orphaned locks
-- [ ] Add distributed lock support via Redis (optional)
-- [ ] Implement lock monitoring and metrics
-- [ ] Add comprehensive lock timeout configuration
-
-#### Technical Implementation
-```python
-# src/entity/resources/robust_memory.py
-import portalocker
-from contextlib import asynccontextmanager
-
-class RobustMemory(Memory):
-    @asynccontextmanager
-    async def _acquire_lock(self, timeout: float = 5.0):
-        lock_file = self._get_lock_file()
-        try:
-            lock = await asyncio.to_thread(
-                portalocker.Lock,
-                lock_file,
-                timeout=timeout,
-                flags=portalocker.LOCK_EX | portalocker.LOCK_NB
-            )
-            yield lock
-        finally:
-            lock.release()
-            # Cleanup if lock file is orphaned
-            await self._cleanup_orphaned_locks()
-```
-
----
 
 ### Story 13: SQL Injection Prevention
 **Priority:** P0 - Critical

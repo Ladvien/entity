@@ -171,12 +171,13 @@ class TestDeveloperOverridePlugin:
         assert plugin._active_overrides == {}
         assert plugin._audit_trail == []
 
-    def test_plugin_disabled(self, mock_resources, plugin_config, mock_context):
+    @pytest.mark.asyncio
+    async def test_plugin_disabled(self, mock_resources, plugin_config, mock_context):
         """Test plugin behavior when disabled."""
         plugin_config.enabled = False
         plugin = DeveloperOverridePlugin(mock_resources, plugin_config)
 
-        result = plugin._execute_impl(mock_context)
+        result = await plugin._execute_impl(mock_context)
         assert result == mock_context.message
 
     @pytest.mark.asyncio
