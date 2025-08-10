@@ -57,48 +57,6 @@
 
 
 
-### Story 19: Enhanced Error Context
-**Priority:** P3 - Low
-**Story Points:** 3
-**Sprint:** 4
-
-#### User Story
-As a developer, I want rich error context when debugging issues, so that I can quickly identify and fix problems.
-
-#### Description
-Improve error handling with detailed context, stack traces, and debugging information.
-
-#### Acceptance Criteria
-- [ ] Add structured error types for each component
-- [ ] Include plugin stack in error messages
-- [ ] Add request ID tracking through pipeline
-- [ ] Implement error recovery strategies
-- [ ] Create error analysis tools
-- [ ] Add error pattern detection
-
-#### Technical Implementation
-```python
-# src/entity/core/errors.py
-@dataclass
-class PipelineError(Exception):
-    stage: str
-    plugin: str
-    context: dict
-    request_id: str
-    user_id: str
-    original_error: Exception
-
-    def __str__(self):
-        return (
-            f"Pipeline error in {self.stage}.{self.plugin}\n"
-            f"Request: {self.request_id}\n"
-            f"User: {self.user_id}\n"
-            f"Context: {json.dumps(self.context, indent=2)}\n"
-            f"Original: {self.original_error}"
-        )
-```
-
----
 
 ### Story 20: Sandbox Security Hardening
 **Priority:** P1 - High

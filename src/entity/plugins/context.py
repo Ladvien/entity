@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from pydantic import ValidationError
 
@@ -57,6 +57,10 @@ class PluginContext(WorkflowContext):
                 self._tools[t_name] = ToolInfo(t_name, t)
         self._tool_queue: List[tuple[str, Dict[str, Any]]] = []
         self.sandbox = resources.get("sandbox", SandboxedToolRunner())
+
+        # Enhanced error context fields
+        self.request_id: Optional[str] = None
+        self.error_context: Optional[Dict[str, Any]] = None
 
     async def log(
         self, level: LogLevel, category: LogCategory, message: str, **extra_fields: Any
