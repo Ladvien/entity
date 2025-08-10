@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from entity.plugins.base import Plugin
-from entity.workflow.executor import WorkflowExecutor
+from entity.workflow.stages import REVIEW, THINK
 
 
 class PromptPlugin(Plugin):
     """LLM-driven reasoning or validation plugin."""
 
-    supported_stages = [WorkflowExecutor.THINK, WorkflowExecutor.REVIEW]
+    supported_stages = [THINK, REVIEW]
     dependencies: list[str] = ["llm"]

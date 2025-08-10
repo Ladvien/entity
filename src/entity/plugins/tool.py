@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from entity.plugins.base import Plugin
-from entity.workflow.executor import WorkflowExecutor
+from entity.workflow.stages import DO
 
 
 class ToolPlugin(Plugin):
     """Plugin type for executing external actions."""
 
-    supported_stages = [WorkflowExecutor.DO]
+    supported_stages = [DO]
     dependencies: list[str] = []

@@ -5,6 +5,17 @@ from typing import TYPE_CHECKING, Any, Dict, Set
 
 from entity.plugins.context import PluginContext
 from entity.resources.logging import LogCategory, LogLevel, RichConsoleLoggingResource
+from entity.workflow.stages import (
+    ALL_STAGES,
+    DO,
+    ERROR,
+    INPUT,
+    OUTPUT,
+    PARSE,
+    REVIEW,
+    STAGE_ORDER,
+    THINK,
+)
 
 if TYPE_CHECKING:
     from entity.workflow.workflow import Workflow
@@ -16,16 +27,17 @@ else:
 class WorkflowExecutor:
     """Run plugins through the standard workflow stages."""
 
-    INPUT = "input"
-    PARSE = "parse"
-    THINK = "think"
-    DO = "do"
-    REVIEW = "review"
-    OUTPUT = "output"
-    ERROR = "error"
+    # Stage constants for backward compatibility
+    INPUT = INPUT
+    PARSE = PARSE
+    THINK = THINK
+    DO = DO
+    REVIEW = REVIEW
+    OUTPUT = OUTPUT
+    ERROR = ERROR
 
-    _ORDER = [INPUT, PARSE, THINK, DO, REVIEW, OUTPUT]
-    _STAGES = _ORDER + [ERROR]
+    _ORDER = STAGE_ORDER
+    _STAGES = ALL_STAGES
 
     def __init__(
         self,

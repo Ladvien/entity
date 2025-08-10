@@ -56,47 +56,6 @@
 
 
 
-### Story 18: Memory Lifecycle Management
-**Priority:** P2 - Medium
-**Story Points:** 5
-**Sprint:** 4
-
-#### User Story
-As a system administrator, I want automatic memory cleanup and garbage collection, so that the system doesn't leak memory over time.
-
-#### Description
-Implement comprehensive memory lifecycle management including TTL, garbage collection, and memory pressure handling.
-
-#### Acceptance Criteria
-- [ ] Add TTL support for memory entries
-- [ ] Implement LRU eviction policy
-- [ ] Create memory pressure monitoring
-- [ ] Add manual garbage collection API
-- [ ] Implement memory usage limits per user
-- [ ] Add memory metrics and alerts
-
-#### Technical Implementation
-```python
-# src/entity/resources/managed_memory.py
-class ManagedMemory(Memory):
-    def __init__(self, database, vector_store, max_memory_mb=1000):
-        super().__init__(database, vector_store)
-        self.max_memory_mb = max_memory_mb
-        self._ttl_registry = {}
-        self._access_times = {}
-
-    async def store_with_ttl(self, key: str, value: Any, ttl_seconds: int):
-        await self.store(key, value)
-        self._ttl_registry[key] = time.time() + ttl_seconds
-        asyncio.create_task(self._expire_after(key, ttl_seconds))
-
-    async def _garbage_collect(self):
-        """Run garbage collection based on memory pressure."""
-        if await self._get_memory_usage() > self.max_memory_mb * 0.9:
-            await self._evict_lru_entries()
-```
-
----
 
 ### Story 19: Enhanced Error Context
 **Priority:** P3 - Low

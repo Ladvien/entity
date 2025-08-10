@@ -7,6 +7,7 @@ from pydantic import ValidationError
 from entity.resources.logging import LogCategory, LogContext, LogLevel
 from entity.tools.registry import ToolInfo
 from entity.tools.sandbox import SandboxedToolRunner
+from entity.workflow.stages import ERROR, OUTPUT
 
 
 class WorkflowContext:
@@ -22,9 +23,7 @@ class WorkflowContext:
     def say(self, message: str) -> None:
         """Store the final response only during the OUTPUT or ERROR stage."""
 
-        from entity.workflow.executor import WorkflowExecutor
-
-        allowed_stages = {WorkflowExecutor.OUTPUT, WorkflowExecutor.ERROR}
+        allowed_stages = {OUTPUT, ERROR}
         if self.current_stage not in allowed_stages:
             raise RuntimeError("context.say() only allowed in OUTPUT or ERROR stage")
 
