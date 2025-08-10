@@ -5,30 +5,6 @@
 
 ---
 
-
-
-
-## 🔍 Story 10: Reasoning Analytics Dashboard Plugin
-**Priority:** P3 - Low
-**Story Points:** 8
-**Sprint:** 5
-
-### User Story
-As a product manager, I want to visualize and analyze gpt-oss reasoning patterns, so that I can optimize agent performance and identify improvement opportunities.
-
-### Description
-Create an analytics plugin that collects, aggregates, and visualizes reasoning trace data from gpt-oss interactions.
-
-### Acceptance Criteria
-- [ ] Collects reasoning metrics (depth, complexity, duration)
-- [ ] Aggregates patterns across conversations
-- [ ] Provides visualization API
-- [ ] Identifies reasoning bottlenecks
-- [ ] Exports data for external analysis
-- [ ] Implements real-time monitoring capabilities
-
----
-
 ## Non-Functional Requirements
 
 ### Performance
