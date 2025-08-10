@@ -88,6 +88,7 @@ sphinx = "^8.2.0"
 sphinx-rtd-theme = "^3.0.0"
 isort = "^6.0.1"
 myst-parser = "^4.0.1"
+mypy = "^1.17.1"
 
 [build-system]
 requires = ["poetry-core"]
@@ -266,3 +267,40 @@ exclude = '''
 
 [tool.vulture]
 exclude = ["*templates*", "src/entity/resources/memory.py"]
+
+# MyPy configuration for type checking
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_any_unimported = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+check_untyped_defs = true
+enable_incomplete_feature = ["Unpack"]
+enable_error_code = ["truthy-bool", "redundant-expr"]
+
+# Modules to ignore for now (gradual migration)
+[[tool.mypy.overrides]]
+module = [
+    "entity.plugins.gpt_oss.*",
+    "entity.tools.*",
+    "entity.cli.*"
+]
+ignore_errors = true
+
+# External library stubs
+[[tool.mypy.overrides]]
+module = [
+    "duckdb",
+    "grpc.*",
+    "httpx.*",
+    "yaml",
+    "rich.*",
+    "websockets.*"
+]
+ignore_missing_imports = true

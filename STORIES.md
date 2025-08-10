@@ -53,52 +53,6 @@
 
 
 
-### Story 15: Type-Safe Dependency Injection
-**Priority:** P1 - High
-**Story Points:** 5
-**Sprint:** 2
-
-#### User Story
-As a developer, I want compile-time type checking for plugin dependencies, so that I catch errors during development rather than runtime.
-
-#### Description
-Replace string-based dependency injection with a type-safe system using Python's type hints and protocols.
-
-#### Acceptance Criteria
-- [ ] Define Protocol classes for each resource type
-- [ ] Use Generic types for plugin dependencies
-- [ ] Add mypy configuration for strict checking
-- [ ] Create dependency injection container
-- [ ] Implement IDE autocomplete support
-- [ ] Add migration guide for existing plugins
-
-#### Technical Implementation
-```python
-# src/entity/plugins/typed_base.py
-from typing import Protocol, TypeVar, Generic, get_type_hints
-
-class LLMProtocol(Protocol):
-    async def generate(self, prompt: str) -> str: ...
-
-class MemoryProtocol(Protocol):
-    async def store(self, key: str, value: Any) -> None: ...
-    async def load(self, key: str, default: Any = None) -> Any: ...
-
-T = TypeVar('T')
-
-class TypedPlugin(ABC, Generic[T]):
-    @classmethod
-    def get_dependencies(cls) -> dict[str, type]:
-        """Return type hints for dependencies."""
-        return get_type_hints(cls.__init__)
-
-    def __init__(self, llm: LLMProtocol, memory: MemoryProtocol):
-        # Type-safe injection
-        self.llm = llm
-        self.memory = memory
-```
-
----
 
 ### Story 16: Asynchronous Database Operations
 **Priority:** P2 - Medium
