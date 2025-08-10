@@ -6,26 +6,6 @@
 ---
 
 
-## 🛡️ Story 8: Harmony Safety Filter Plugin
-**Priority:** P1 - High
-**Story Points:** 5
-**Sprint:** 4
-
-### User Story
-As a safety engineer, I want to filter potentially harmful content from gpt-oss's raw chain-of-thought before it reaches users, so that we maintain safe and appropriate interactions.
-
-### Description
-Create a safety plugin that filters raw CoT content according to OpenAI's guidelines while preserving useful reasoning information.
-
-### Acceptance Criteria
-- [ ] Filters harmful content from analysis channel
-- [ ] Preserves reasoning quality indicators
-- [ ] Implements configurable safety thresholds
-- [ ] Logs filtered content for review
-- [ ] Supports multiple safety categories
-- [ ] Integrates with Entity's existing safety systems
-
----
 
 ## 📝 Story 9: Function Schema Registry Plugin
 **Priority:** P3 - Low

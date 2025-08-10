@@ -2,6 +2,7 @@
 
 from .adaptive_reasoning import AdaptiveReasoningPlugin
 from .developer_override import DeveloperOverridePlugin
+from .harmony_safety_filter import HarmonySafetyFilterPlugin
 from .multi_channel_aggregator import MultiChannelAggregatorPlugin
 from .native_tools import GPTOSSToolOrchestrator
 from .reasoning_trace import ReasoningTracePlugin
@@ -14,4 +15,5 @@ __all__ = [
     "AdaptiveReasoningPlugin",
     "GPTOSSToolOrchestrator",
     "MultiChannelAggregatorPlugin",
+    "HarmonySafetyFilterPlugin",
 ]
