@@ -14,10 +14,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from .adaptive_llm_infra import (
-    AdaptiveLLMInfrastructure,
-    PerformanceBenchmark,
-)
+from .adaptive_llm_infra import AdaptiveLLMInfrastructure, PerformanceBenchmark
 
 
 @dataclass
