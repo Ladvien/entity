@@ -8,6 +8,9 @@ from entity.resources.logging import LogCategory, LogLevel, RichConsoleLoggingRe
 
 if TYPE_CHECKING:
     from entity.workflow.workflow import Workflow
+else:
+    # Import for runtime to avoid NameError
+    from entity.workflow.workflow import Workflow
 
 
 class WorkflowExecutor:
