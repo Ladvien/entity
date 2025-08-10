@@ -52,55 +52,6 @@
 
 
 
-### Story 14: Optional Pipeline Stages
-**Priority:** P1 - High
-**Story Points:** 5
-**Sprint:** 2
-
-#### User Story
-As a developer, I want to skip unnecessary pipeline stages for simple queries, so that I reduce latency for basic operations.
-
-#### Description
-Implement a mechanism for plugins to declare whether they should run based on context, allowing stages to be skipped dynamically.
-
-#### Acceptance Criteria
-- [ ] Add `should_execute()` method to Plugin base class
-- [ ] Implement stage skipping in WorkflowExecutor
-- [ ] Create pipeline analyzer for optimization hints
-- [ ] Add metrics for skipped stages
-- [ ] Document skip patterns and best practices
-- [ ] Ensure stage dependencies are respected
-
-#### Technical Implementation
-```python
-# src/entity/plugins/base.py
-class Plugin(ABC):
-    def should_execute(self, context: PluginContext) -> bool:
-        """Determine if plugin should run for this context."""
-        # Default implementation
-        if hasattr(self, 'skip_conditions'):
-            for condition in self.skip_conditions:
-                if condition(context):
-                    return False
-        return True
-
-# src/entity/workflow/executor.py
-class WorkflowExecutor:
-    async def _run_stage(self, stage, context, message, user_id):
-        plugins = self.workflow.plugins_for(stage)
-
-        # Filter plugins that should execute
-        active_plugins = [
-            p for p in plugins
-            if p.should_execute(context)
-        ]
-
-        if not active_plugins and self._can_skip_stage(stage):
-            context.skipped_stages.append(stage)
-            return message
-```
-
----
 
 ### Story 15: Type-Safe Dependency Injection
 **Priority:** P1 - High

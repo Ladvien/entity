@@ -1,7 +1,6 @@
 import asyncio
 import json
 import os
-import sys
 import time
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
@@ -28,6 +27,7 @@ class LogCategory(Enum):
     WORKFLOW_EXECUTION = "workflow_execution"
     PERFORMANCE = "performance"
     ERROR = "error"
+    SYSTEM = "system"
 
 
 @dataclass

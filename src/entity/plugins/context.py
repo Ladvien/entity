@@ -16,6 +16,8 @@ class WorkflowContext:
         self._response: str | None = None
         self.current_stage: str | None = None
         self.message: str | None = None
+        self.skipped_stages: List[str] = []
+        self.skipped_plugins: List[str] = []
 
     def say(self, message: str) -> None:
         """Store the final response only during the OUTPUT or ERROR stage."""

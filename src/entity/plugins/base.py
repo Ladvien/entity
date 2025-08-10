@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Callable, Dict, List
 
 from pydantic import BaseModel, ValidationError
 
 from entity.plugins.validation import ValidationResult
 
 if TYPE_CHECKING:
+    from entity.plugins.context import PluginContext
     from entity.workflow.workflow import Workflow
 
 
@@ -22,6 +23,7 @@ class Plugin(ABC):
 
     supported_stages: list[str] = []
     dependencies: list[str] = []
+    skip_conditions: List[Callable[["PluginContext"], bool]] = []
 
     def __init__(self, resources: dict[str, Any], config: Dict[str, Any] | None = None):
         """Instantiate the plugin and run all startup validations."""
@@ -45,6 +47,21 @@ class Plugin(ABC):
                 f"Workflow does not support stage {self.assigned_stage}"
             )
         return ValidationResult.success()
+
+    def should_execute(self, context: "PluginContext") -> bool:
+        """Determine if plugin should run for this context.
+
+        Returns:
+            True if the plugin should execute, False to skip.
+        """
+        # Check skip conditions if defined
+        if hasattr(self, "skip_conditions") and self.skip_conditions:
+            for condition in self.skip_conditions:
+                if condition(context):
+                    return False
+
+        # Allow subclasses to override this method for custom logic
+        return True
 
     async def execute(self, context: Any) -> Any:
         """Run the plugin."""

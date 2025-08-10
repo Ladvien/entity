@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from itertools import count
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Dict, Set
 
 from entity.plugins.context import PluginContext
-from entity.resources.logging import RichConsoleLoggingResource
+from entity.resources.logging import LogCategory, LogLevel, RichConsoleLoggingResource
 
 if TYPE_CHECKING:
     from entity.workflow.workflow import Workflow
@@ -41,6 +41,25 @@ class WorkflowExecutor:
                 VectorStoreResource(DuckDBInfrastructure(":memory:")),
             )
         self.workflow = workflow or Workflow()
+
+        # Track stage dependencies - stages that must run even if no plugins
+        self._stage_dependencies: Dict[str, Set[str]] = {
+            self.INPUT: set(),
+            self.PARSE: {self.INPUT},
+            self.THINK: {self.INPUT, self.PARSE},
+            self.DO: {self.INPUT, self.PARSE},
+            self.REVIEW: {self.INPUT, self.PARSE},
+            self.OUTPUT: {self.INPUT},
+            self.ERROR: set(),  # ERROR can always run
+        }
+
+        # Pipeline optimization metrics
+        self._skip_metrics: Dict[str, int] = {
+            "stages_skipped": 0,
+            "plugins_skipped": 0,
+            "total_stages_run": 0,
+            "total_plugins_run": 0,
+        }
 
     async def execute(
         self,
@@ -80,8 +99,46 @@ class WorkflowExecutor:
         context.message = message
         result = message
 
-        for plugin in self.workflow.plugins_for(stage):
+        # Get plugins for this stage
+        plugins = self.workflow.plugins_for(stage)
+
+        # Filter plugins that should execute
+        active_plugins = []
+        for plugin in plugins:
+            if plugin.should_execute(context):
+                active_plugins.append(plugin)
+            else:
+                # Track skipped plugin
+                plugin_name = plugin.__class__.__name__
+                context.skipped_plugins.append(f"{stage}.{plugin_name}")
+                self._skip_metrics["plugins_skipped"] += 1
+
+                # Log the skip
+                await context.log(
+                    LogLevel.DEBUG,
+                    LogCategory.SYSTEM,
+                    f"Skipped plugin {plugin_name} in stage {stage}",
+                )
+
+        # Check if we can skip the entire stage
+        if not active_plugins and self._can_skip_stage(stage, context):
+            context.skipped_stages.append(stage)
+            self._skip_metrics["stages_skipped"] += 1
+
+            await context.log(
+                LogLevel.DEBUG,
+                LogCategory.SYSTEM,
+                f"Skipped stage {stage} - no active plugins",
+            )
+            return message
+
+        # Track that we're running this stage
+        self._skip_metrics["total_stages_run"] += 1
+
+        # Execute active plugins
+        for plugin in active_plugins:
             try:
+                self._skip_metrics["total_plugins_run"] += 1
                 result = await plugin.execute(context)
             except Exception as exc:
                 await self._handle_error(context, exc.__cause__ or exc, user_id)
@@ -103,3 +160,44 @@ class WorkflowExecutor:
             await plugin.execute(context)
         await context.run_tool_queue()
         await context.flush_state()
+
+    def _can_skip_stage(self, stage: str, context: PluginContext) -> bool:
+        """Determine if a stage can be skipped based on dependencies.
+
+        Args:
+            stage: The stage to check
+            context: The current plugin context
+
+        Returns:
+            True if the stage can be skipped, False otherwise
+        """
+        # Never skip INPUT, ERROR or OUTPUT stages
+        if stage in {self.INPUT, self.ERROR, self.OUTPUT}:
+            return False
+
+        # Check if any required dependencies were skipped
+        dependencies = self._stage_dependencies.get(stage, set())
+        for dep in dependencies:
+            if dep in context.skipped_stages:
+                # A required dependency was skipped, so we can't skip this stage
+                return False
+
+        # Stage can be skipped
+        return True
+
+    def get_skip_metrics(self) -> Dict[str, int]:
+        """Get pipeline optimization metrics.
+
+        Returns:
+            Dictionary containing skip metrics
+        """
+        return self._skip_metrics.copy()
+
+    def reset_skip_metrics(self) -> None:
+        """Reset skip metrics to zero."""
+        self._skip_metrics = {
+            "stages_skipped": 0,
+            "plugins_skipped": 0,
+            "total_stages_run": 0,
+            "total_plugins_run": 0,
+        }
