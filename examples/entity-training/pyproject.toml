@@ -1,0 +1,42 @@
+[tool.poetry]
+name = "entity-training-plugin"
+version = "0.1.0"
+description = "Fine-tuning plugin for Entity Framework"
+authors = ["Entity Framework Contributors"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "plugins"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+entity-core = "^0.0.7"
+torch = ">=2.0.0"
+transformers = ">=4.36.0"
+datasets = ">=2.14.0"
+peft = ">=0.7.0"
+accelerate = ">=0.25.0"
+bitsandbytes = ">=0.41.0"
+safetensors = ">=0.4.0"
+tqdm = ">=4.65.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-asyncio = "^0.21.0"
+black = "^23.0.0"
+ruff = "^0.1.0"
+ipython = "^8.17.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+asyncio_mode = "auto"
