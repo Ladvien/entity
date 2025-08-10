@@ -7,26 +7,6 @@
 
 
 
-## 📝 Story 9: Function Schema Registry Plugin
-**Priority:** P3 - Low
-**Story Points:** 3
-**Sprint:** 5
-
-### User Story
-As an API developer, I want to register and manage function schemas for gpt-oss tool calling, so that the model can reliably invoke complex functions.
-
-### Description
-Build a registry system for function schemas that integrates with gpt-oss's native function calling capabilities.
-
-### Acceptance Criteria
-- [ ] Supports OpenAPI schema definitions
-- [ ] Validates function parameters
-- [ ] Generates harmony-compatible tool descriptions
-- [ ] Provides schema versioning
-- [ ] Implements function discovery API
-- [ ] Supports dynamic function registration
-
----
 
 ## 🔍 Story 10: Reasoning Analytics Dashboard Plugin
 **Priority:** P3 - Low
