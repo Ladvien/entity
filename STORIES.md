@@ -51,49 +51,6 @@
 
 
 
-### Story 13: SQL Injection Prevention
-**Priority:** P0 - Critical
-**Story Points:** 3
-**Sprint:** 1
-
-#### User Story
-As a security engineer, I want Entity to be immune to SQL injection attacks, so that user input never compromises database integrity.
-
-#### Description
-Implement proper parameterization for all SQL operations, including table names through a safe registry system.
-
-#### Acceptance Criteria
-- [ ] Create table name registry with validation
-- [ ] Implement parameterized queries for all operations
-- [ ] Add SQL query logging for audit
-- [ ] Create security test suite for injection attempts
-- [ ] Document secure query patterns
-- [ ] Add query sanitization middleware
-
-#### Technical Implementation
-```python
-# src/entity/resources/secure_database.py
-class SecureDatabaseResource(DatabaseResource):
-    def __init__(self, infrastructure):
-        super().__init__(infrastructure)
-        self._table_registry = {}
-        self._query_validator = SQLQueryValidator()
-
-    def register_table(self, alias: str, table_name: str):
-        """Register a table with validated name."""
-        if not self._validate_table_name(table_name):
-            raise ValueError(f"Invalid table name: {table_name}")
-        self._table_registry[alias] = table_name
-
-    def execute_safe(self, query_template: str, table_alias: str, *params):
-        table_name = self._table_registry.get(table_alias)
-        if not table_name:
-            raise ValueError(f"Unregistered table alias: {table_alias}")
-        # Use proper parameterization
-        return self.execute(query_template.format(table=table_name), *params)
-```
-
----
 
 ### Story 14: Optional Pipeline Stages
 **Priority:** P1 - High
