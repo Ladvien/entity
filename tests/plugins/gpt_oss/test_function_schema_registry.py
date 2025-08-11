@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from entity.plugins.context import PluginContext
-from entity.plugins.gpt_oss.function_schema_registry import (
+from entity.plugins.gpt_oss import (
     FunctionDiscoveryResult,
     FunctionParameter,
     FunctionRegistration,

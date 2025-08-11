@@ -75,30 +75,6 @@ Complete the modularization of GPT-OSS plugins by removing code duplication betw
 ---
 
 
-## Story 2: Remove Duplicate GPT-OSS Plugin Implementations
-
-### Summary
-Delete the duplicate full implementations of GPT-OSS plugins from src/entity/plugins/gpt_oss/ directory
-
-### Description
-Remove all full plugin implementation files from the legacy location, keeping only the __init__.py file which will be updated to show deprecation warnings and import from the compatibility layer.
-
-### Acceptance Criteria
-- [ ] Delete all 9 individual plugin implementation files from src/entity/plugins/gpt_oss/
-- [ ] Keep only the __init__.py file in the gpt_oss directory
-- [ ] Update __init__.py to import from gpt_oss_compat module instead of local files
-- [ ] Ensure __init__.py maintains the same public API (all plugin classes remain importable)
-- [ ] Add clear deprecation warnings in __init__.py indicating the new import path
-- [ ] Verify no other parts of the codebase directly import from the deleted files
-
-### Technical Notes
-- Files to remove: reasoning_trace.py, structured_output.py, developer_override.py, adaptive_reasoning.py, native_tools.py, multi_channel_aggregator.py, harmony_safety_filter.py, function_schema_registry.py, reasoning_analytics_dashboard.py
-- Search entire codebase for any direct imports from these files
-- The __init__.py should only contain imports and deprecation warnings, no actual implementation
-
-### Story Points: 3
-
----
 
 ## Story 3: Enhance Compatibility Layer Error Handling
 

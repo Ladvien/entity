@@ -22,7 +22,7 @@ warnings.warn(
     stacklevel=2,
 )
 
-# Import compatibility shims
+# Import compatibility shims (plugins and helper classes)
 from ..gpt_oss_compat import (
     AdaptiveReasoningPlugin,
     DeveloperOverridePlugin,
@@ -34,6 +34,15 @@ from ..gpt_oss_compat import (
     ReasoningTracePlugin,
     StructuredOutputPlugin,
 )
+
+
+# Use module-level __getattr__ for dynamic imports of helper classes
+def __getattr__(name):
+    """Forward attribute access to gpt_oss_compat module for helper classes."""
+    from ..gpt_oss_compat import __getattr__ as compat_getattr
+
+    return compat_getattr(name)
+
 
 __all__ = [
     "ReasoningTracePlugin",

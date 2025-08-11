@@ -5,10 +5,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from entity.plugins.gpt_oss.reasoning_analytics_dashboard import (
-    ReasoningAnalyticsDashboardPlugin,
-    ReasoningMetrics,
-)
+from entity.plugins.gpt_oss import ReasoningAnalyticsDashboardPlugin, ReasoningMetrics
 
 
 class MockContext:

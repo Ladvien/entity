@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from entity.plugins.context import PluginContext
-from entity.plugins.gpt_oss.developer_override import (
+from entity.plugins.gpt_oss import (
     AuditEntry,
     DeveloperOverride,
     DeveloperOverridePlugin,

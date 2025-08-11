@@ -109,7 +109,70 @@ ReasoningAnalyticsDashboardPlugin = _CompatibilityShim(
     "entity_plugin_gpt_oss.reasoning_analytics_dashboard",
 )
 
+
+# Module-level imports for helper classes and enums
+def __getattr__(name: str) -> Any:
+    """
+    Dynamic import for helper classes and enums from the GPT-OSS package.
+
+    This allows importing not just plugin classes but also helper classes
+    like ReasoningLevel, ReasoningTrace, etc. that are used by the tests.
+    """
+
+    # Mapping of helper class names to their module locations
+    helper_class_mapping = {
+        # From reasoning_trace.py
+        "ReasoningLevel": "entity_plugin_gpt_oss.reasoning_trace",
+        "ReasoningTrace": "entity_plugin_gpt_oss.reasoning_trace",
+        # From structured_output.py
+        "OutputFormat": "entity_plugin_gpt_oss.structured_output",
+        "ValidationResult": "entity_plugin_gpt_oss.structured_output",
+        # From developer_override.py
+        "DeveloperOverride": "entity_plugin_gpt_oss.developer_override",
+        "OverrideScope": "entity_plugin_gpt_oss.developer_override",
+        "PermissionLevel": "entity_plugin_gpt_oss.developer_override",
+        # From adaptive_reasoning.py
+        "ReasoningEffort": "entity_plugin_gpt_oss.adaptive_reasoning",
+        "ComplexityFactors": "entity_plugin_gpt_oss.adaptive_reasoning",
+        "ComplexityScore": "entity_plugin_gpt_oss.adaptive_reasoning",
+        "ReasoningDecision": "entity_plugin_gpt_oss.adaptive_reasoning",
+        "PerformanceMetrics": "entity_plugin_gpt_oss.adaptive_reasoning",
+        # From native_tools.py
+        "ToolExecutionContext": "entity_plugin_gpt_oss.native_tools",
+        "ToolResult": "entity_plugin_gpt_oss.native_tools",
+        # From multi_channel_aggregator.py
+        "ChannelConfig": "entity_plugin_gpt_oss.multi_channel_aggregator",
+        "AggregationStrategy": "entity_plugin_gpt_oss.multi_channel_aggregator",
+        # From harmony_safety_filter.py
+        "SafetyLevel": "entity_plugin_gpt_oss.harmony_safety_filter",
+        "FilterResult": "entity_plugin_gpt_oss.harmony_safety_filter",
+        # From function_schema_registry.py
+        "FunctionSchema": "entity_plugin_gpt_oss.function_schema_registry",
+        "SchemaValidation": "entity_plugin_gpt_oss.function_schema_registry",
+        # From reasoning_analytics_dashboard.py
+        "AnalyticsMetric": "entity_plugin_gpt_oss.reasoning_analytics_dashboard",
+        "DashboardConfig": "entity_plugin_gpt_oss.reasoning_analytics_dashboard",
+    }
+
+    if name in helper_class_mapping:
+        _warn_deprecated_import(name)
+
+        try:
+            module_path = helper_class_mapping[name]
+            module = __import__(module_path, fromlist=[name])
+            return getattr(module, name)
+        except ImportError as e:
+            raise ImportError(
+                f"Failed to import {name} from {module_path}. "
+                f"Please install 'entity-plugin-gpt-oss' package: pip install entity-plugin-gpt-oss"
+            ) from e
+
+    # If not found in helper classes, raise AttributeError
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+
+
 # Export all plugin classes
+# Helper classes are handled by __getattr__ and don't need to be in __all__
 __all__ = [
     "ReasoningTracePlugin",
     "StructuredOutputPlugin",

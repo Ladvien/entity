@@ -8,10 +8,7 @@ import pytest
 from pydantic import BaseModel
 
 from entity.plugins.context import PluginContext
-from entity.plugins.gpt_oss.structured_output import (
-    StructuredOutputPlugin,
-    ValidationResult,
-)
+from entity.plugins.gpt_oss import StructuredOutputPlugin, ValidationResult
 from entity.workflow.executor import WorkflowExecutor
 
 
