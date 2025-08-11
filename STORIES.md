@@ -76,31 +76,6 @@ Complete the modularization of GPT-OSS plugins by removing code duplication betw
 
 
 
-## Story 3: Enhance Compatibility Layer Error Handling
-
-### Summary
-Improve the gpt_oss_compat.py compatibility shim to provide better error messages and migration guidance
-
-### Description
-The current compatibility layer provides basic functionality but needs enhancement to better guide users through the migration process and handle edge cases where the new package might not be installed.
-
-### Acceptance Criteria
-- [ ] Add version checking to ensure entity-plugin-gpt-oss is installed when compatibility layer is used
-- [ ] Provide clear, actionable error messages when the package is missing
-- [ ] Include migration instructions in error messages
-- [ ] Add logging for deprecation warnings (not just warnings.warn)
-- [ ] Implement fallback behavior that clearly indicates the plugin is not available rather than failing silently
-- [ ] Add a migration guide comment block at the top of the file
-- [ ] Ensure all 9 plugin shims follow the same pattern and quality standards
-
-### Technical Notes
-- Consider environment detection (development vs. production) for warning verbosity
-- Error messages should include: pip install command, new import path, deprecation timeline
-- Consider adding a environment variable to suppress deprecation warnings for CI/CD systems
-
-### Story Points: 3
-
----
 
 ## Story 4: Update Integration Tests
 
