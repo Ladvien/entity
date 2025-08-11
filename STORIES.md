@@ -8,34 +8,6 @@
 ---
 
 
-## 🔄 Story 2: Initialize and Push Plugin Code
-**Key:** ENTITY-102
-**Type:** Task
-**Priority:** High
-**Story Points:** 3
-**Blocked By:** ENTITY-101
-**Assignee:** Backend Team
-
-### Description
-Initialize each plugin directory as a Git repository and push to GitHub using gh CLI's configured git credentials.
-
-### Acceptance Criteria
-- [ ] Each plugin directory initialized with git
-- [ ] Initial commits created with descriptive messages
-- [ ] Code pushed using gh's HTTPS authentication
-- [ ] All four repositories contain code
-- [ ] Push operations logged
-
-### Technical Notes
-- gh CLI's token provides git credentials via HTTPS
-- Use `gh repo view --json sshUrl,httpsUrl` to get repository URLs
-- Ensure `.gitignore` files are appropriate for each plugin
-
-### Definition of Done
-- [ ] Verify via `gh repo view --web` that code is present
-- [ ] Each repo has initial commit visible in GitHub
-
----
 
 ## 🧹 Story 3: Clean Plugin Directories from Main Repository
 **Key:** ENTITY-103
