@@ -11,12 +11,11 @@ import re
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
-
-from pydantic import BaseModel, Field
+from typing import Any
 
 from entity.plugins.prompt import PromptPlugin
 from entity.workflow.executor import WorkflowExecutor
+from pydantic import BaseModel, Field
 
 
 class ReasoningLevel(Enum):
@@ -35,14 +34,14 @@ class ReasoningTrace(BaseModel):
     level: str = Field(description="Reasoning level used")  # Store as string
     task: str = Field(description="Original task/message")
     analysis: str = Field(description="Raw analysis channel content")
-    commentary: Optional[str] = Field(
+    commentary: str | None = Field(
         default=None, description="Commentary channel if present"
     )
-    filtered_content: List[str] = Field(
+    filtered_content: list[str] = Field(
         default_factory=list, description="Content filtered for safety"
     )
     complexity_score: float = Field(description="Computed complexity score (0-1)")
-    tokens_used: Optional[int] = Field(
+    tokens_used: int | None = Field(
         default=None, description="Tokens used in reasoning"
     )
 
@@ -61,7 +60,7 @@ class ReasoningTracePlugin(PromptPlugin):
     supported_stages = [WorkflowExecutor.THINK]
     dependencies = ["llm", "memory"]
 
-    def __init__(self, resources: dict[str, Any], config: Dict[str, Any] | None = None):
+    def __init__(self, resources: dict[str, Any], config: dict[str, Any] | None = None):
         """Initialize the plugin and validate configuration."""
         super().__init__(resources, config)
         # Validate and set config as model instance
@@ -91,7 +90,7 @@ class ReasoningTracePlugin(PromptPlugin):
         max_trace_length: int = Field(
             default=10000, description="Maximum characters to store per trace"
         )
-        harmful_patterns: List[str] = Field(
+        harmful_patterns: list[str] = Field(
             default_factory=lambda: [
                 r"(?i)(exploit|attack|hack|malicious)",
                 r"(?i)(kill|harm|hurt|destroy)",
@@ -283,7 +282,7 @@ class ReasoningTracePlugin(PromptPlugin):
 
         return "\n".join(analysis_parts) if analysis_parts else ""
 
-    async def _filter_harmful_content(self, content: str) -> tuple[str, List[str]]:
+    async def _filter_harmful_content(self, content: str) -> tuple[str, list[str]]:
         """Filter potentially harmful content from reasoning traces."""
         filtered_lines = []
         clean_lines = []
@@ -306,9 +305,9 @@ class ReasoningTracePlugin(PromptPlugin):
         cls,
         context,
         limit: int = 10,
-        min_complexity: Optional[float] = None,
-        level: Optional[ReasoningLevel] = None,
-    ) -> List[Dict[str, Any]]:
+        min_complexity: float | None = None,
+        level: ReasoningLevel | None = None,
+    ) -> list[dict[str, Any]]:
         """Retrieve historical reasoning traces based on filters.
 
         Args:
@@ -338,7 +337,7 @@ class ReasoningTracePlugin(PromptPlugin):
     @classmethod
     async def get_reasoning_trace(
         cls, context, execution_id: str
-    ) -> Optional[ReasoningTrace]:
+    ) -> ReasoningTrace | None:
         """Retrieve a specific reasoning trace by execution ID.
 
         Args:
@@ -356,7 +355,7 @@ class ReasoningTracePlugin(PromptPlugin):
     @classmethod
     async def analyze_reasoning_patterns(
         cls, context, time_window_hours: int = 24
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Analyze reasoning patterns over a time window.
 
         Args:

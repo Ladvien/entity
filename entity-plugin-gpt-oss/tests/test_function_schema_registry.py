@@ -3,8 +3,9 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
 from entity.plugins.context import PluginContext
+from entity.workflow.executor import WorkflowExecutor
+
 from entity_plugin_gpt_oss.function_schema_registry import (
     FunctionDiscoveryResult,
     FunctionParameter,
@@ -16,7 +17,6 @@ from entity_plugin_gpt_oss.function_schema_registry import (
     ValidationMode,
     ValidationResult,
 )
-from entity.workflow.executor import WorkflowExecutor
 
 
 class TestFunctionSchemaRegistryPlugin:

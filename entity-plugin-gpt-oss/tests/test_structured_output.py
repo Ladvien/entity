@@ -1,18 +1,18 @@
 """Tests for Structured Output Validator Plugin."""
 
 import json
-from typing import Any, Dict, Optional
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from entity.plugins.context import PluginContext
+from entity.workflow.executor import WorkflowExecutor
 from pydantic import BaseModel
 
-from entity.plugins.context import PluginContext
 from entity_plugin_gpt_oss.structured_output import (
     StructuredOutputPlugin,
     ValidationResult,
 )
-from entity.workflow.executor import WorkflowExecutor
 
 
 class DemoOutputModel(BaseModel):
@@ -20,7 +20,7 @@ class DemoOutputModel(BaseModel):
 
     name: str
     age: int
-    email: Optional[str] = None
+    email: str | None = None
     is_active: bool = True
 
 
@@ -37,7 +37,7 @@ class NestedOutputModel(BaseModel):
 
     user: PersonModel
     company: CompanyModel
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 @pytest.fixture

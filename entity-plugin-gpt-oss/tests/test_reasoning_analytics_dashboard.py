@@ -16,13 +16,13 @@ class MockContext:
 
     def __init__(self, **kwargs):
         self.execution_id = kwargs.get("execution_id", "test-exec-1")
-        self.reasoning_trace = kwargs.get("reasoning_trace", None)
+        self.reasoning_trace = kwargs.get("reasoning_trace")
         self.execution_duration_ms = kwargs.get("execution_duration_ms", 1000)
         self.token_count = kwargs.get("token_count", 100)
         self.reasoning_level = kwargs.get("reasoning_level", "medium")
         self.task = kwargs.get("task", "test task")
         self.execution_success = kwargs.get("execution_success", True)
-        self.error_type = kwargs.get("error_type", None)
+        self.error_type = kwargs.get("error_type")
         self.current_stage = kwargs.get("current_stage", "analysis")
 
 

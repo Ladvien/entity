@@ -8,13 +8,12 @@ outputs and ensure schema compliance.
 import json
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Type, Union
+from typing import Any
 
-from pydantic import BaseModel, ValidationError, create_model
-
-from entity.plugins.context import PluginContext
 from entity.plugins.base import Plugin
+from entity.plugins.context import PluginContext
 from entity.workflow.executor import WorkflowExecutor
+from pydantic import BaseModel, ValidationError, create_model
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +23,9 @@ class ValidationResult:
     """Result of schema validation with details."""
 
     is_valid: bool
-    validated_data: Optional[Dict[str, Any]] = None
-    errors: Optional[list] = None
-    raw_output: Optional[str] = None
+    validated_data: dict[str, Any] | None = None
+    errors: list | None = None
+    raw_output: str | None = None
     regeneration_needed: bool = False
 
 
@@ -43,13 +42,13 @@ class StructuredOutputPlugin(Plugin):
     class ConfigModel(BaseModel):
         """Configuration for structured output validation."""
 
-        output_schema: Optional[Type[BaseModel]] = None
-        schema_dict: Optional[Dict[str, Any]] = None
+        output_schema: type[BaseModel] | None = None
+        schema_dict: dict[str, Any] | None = None
         strict_mode: bool = True
         max_regeneration_attempts: int = 3
         allow_partial_match: bool = False
         extract_json_from_text: bool = True
-        custom_error_messages: Optional[Dict[str, str]] = None
+        custom_error_messages: dict[str, str] | None = None
         validation_timeout: float = 5.0
 
         class Config:
@@ -162,7 +161,7 @@ class StructuredOutputPlugin(Plugin):
                 regeneration_needed=True,
             )
 
-    def _extract_json_from_text(self, text: str) -> Dict[str, Any]:
+    def _extract_json_from_text(self, text: str) -> dict[str, Any]:
         """Extract JSON from text that may contain other content.
 
         Args:
@@ -206,7 +205,7 @@ class StructuredOutputPlugin(Plugin):
         # If no JSON found, try to parse the whole thing
         raise json.JSONDecodeError("No valid JSON found in text", text, 0)
 
-    async def _get_validation_schema(self) -> Union[Type[BaseModel], Dict[str, Any]]:
+    async def _get_validation_schema(self) -> type[BaseModel] | dict[str, Any]:
         """Get the validation schema from configuration.
 
         Returns:
@@ -238,7 +237,7 @@ class StructuredOutputPlugin(Plugin):
 
         raise ValueError("No validation schema configured")
 
-    def _json_type_to_python_type(self, field_schema: Dict[str, Any]) -> Type:
+    def _json_type_to_python_type(self, field_schema: dict[str, Any]) -> type:
         """Convert JSON schema type to Python type.
 
         Args:
@@ -262,7 +261,7 @@ class StructuredOutputPlugin(Plugin):
         return type_mapping.get(json_type, str)
 
     async def _validate_with_json_schema(
-        self, data: Dict[str, Any], schema: Dict[str, Any], raw_output: str
+        self, data: dict[str, Any], schema: dict[str, Any], raw_output: str
     ) -> ValidationResult:
         """Validate data against JSON schema.
 
@@ -376,7 +375,7 @@ class StructuredOutputPlugin(Plugin):
         return enhanced_context
 
     def _create_regeneration_message(
-        self, validation_result: ValidationResult, schema_info: Dict[str, Any]
+        self, validation_result: ValidationResult, schema_info: dict[str, Any]
     ) -> str:
         """Create message for regeneration request.
 
@@ -446,7 +445,7 @@ Please provide a response that strictly conforms to the schema above.
             self.config.output_schema is not None or self.config.schema_dict is not None
         )
 
-    def get_schema_info(self) -> Dict[str, Any]:
+    def get_schema_info(self) -> dict[str, Any]:
         """Get information about the configured schema.
 
         Returns:

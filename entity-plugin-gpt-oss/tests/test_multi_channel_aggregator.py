@@ -3,8 +3,9 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
 from entity.plugins.context import PluginContext
+from entity.workflow.executor import WorkflowExecutor
+
 from entity_plugin_gpt_oss.multi_channel_aggregator import (
     AggregatedResponse,
     AggregationStrategy,
@@ -12,7 +13,6 @@ from entity_plugin_gpt_oss.multi_channel_aggregator import (
     ChannelType,
     MultiChannelAggregatorPlugin,
 )
-from entity.workflow.executor import WorkflowExecutor
 
 
 class TestMultiChannelAggregatorPlugin:

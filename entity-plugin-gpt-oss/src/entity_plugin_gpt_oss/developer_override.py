@@ -9,13 +9,12 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
-
-from pydantic import BaseModel, Field
+from typing import Any
 
 from entity.plugins.base import Plugin
 from entity.plugins.context import PluginContext
 from entity.workflow.executor import WorkflowExecutor
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
@@ -45,11 +44,11 @@ class DeveloperOverride:
     id: str
     instructions: str
     scope: OverrideScope
-    user_id: Optional[str] = None
-    conditions: Optional[Dict[str, Any]] = None
-    created_by: Optional[str] = None
-    created_at: Optional[datetime] = None
-    expires_at: Optional[datetime] = None
+    user_id: str | None = None
+    conditions: dict[str, Any] | None = None
+    created_by: str | None = None
+    created_at: datetime | None = None
+    expires_at: datetime | None = None
     priority: int = 0  # Higher numbers have higher priority
     active: bool = True
 
@@ -93,7 +92,7 @@ class AuditEntry:
     developer_id: str
     action: str  # "applied", "created", "modified", "disabled"
     instructions: str
-    context: Dict[str, Any]
+    context: dict[str, Any]
     result: str
 
 
@@ -114,7 +113,7 @@ class DeveloperOverridePlugin(Plugin):
         enabled: bool = True
         require_explicit_permission: bool = True
         default_permission_level: PermissionLevel = PermissionLevel.NONE
-        developer_permissions: Dict[str, PermissionLevel] = Field(default_factory=dict)
+        developer_permissions: dict[str, PermissionLevel] = Field(default_factory=dict)
 
         # Override behavior
         max_active_overrides: int = 10
@@ -143,8 +142,8 @@ class DeveloperOverridePlugin(Plugin):
             config: Plugin configuration
         """
         super().__init__(resources, config)
-        self._active_overrides: Dict[str, DeveloperOverride] = {}
-        self._audit_trail: List[AuditEntry] = []
+        self._active_overrides: dict[str, DeveloperOverride] = {}
+        self._audit_trail: list[AuditEntry] = []
 
         # Load existing overrides from memory
         self._load_overrides_from_memory()
@@ -197,7 +196,7 @@ class DeveloperOverridePlugin(Plugin):
 
     async def _get_applicable_overrides(
         self, context: PluginContext
-    ) -> List[DeveloperOverride]:
+    ) -> list[DeveloperOverride]:
         """Get all overrides that apply to the current context.
 
         Args:
@@ -306,11 +305,11 @@ class DeveloperOverridePlugin(Plugin):
         instructions: str,
         scope: OverrideScope,
         developer_id: str,
-        user_id: Optional[str] = None,
-        conditions: Optional[Dict[str, Any]] = None,
+        user_id: str | None = None,
+        conditions: dict[str, Any] | None = None,
         priority: int = None,
-        expires_at: Optional[datetime] = None,
-        justification: Optional[str] = None,
+        expires_at: datetime | None = None,
+        justification: str | None = None,
     ) -> str:
         """Create a new developer override.
 
@@ -454,7 +453,7 @@ class DeveloperOverridePlugin(Plugin):
 
     async def list_overrides(
         self, developer_id: str, include_inactive: bool = False
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """List overrides visible to the developer.
 
         Args:
@@ -515,7 +514,7 @@ class DeveloperOverridePlugin(Plugin):
         user_id: str,
         developer_id: str,
         instructions: str,
-        context: Dict[str, Any],
+        context: dict[str, Any],
     ):
         """Log an audit entry.
 
@@ -605,10 +604,10 @@ class DeveloperOverridePlugin(Plugin):
     def get_audit_trail(
         self,
         developer_id: str,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         limit: int = 100,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get audit trail entries.
 
         Args:

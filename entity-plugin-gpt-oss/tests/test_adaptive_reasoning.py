@@ -3,8 +3,9 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
 from entity.plugins.context import PluginContext
+from entity.workflow.executor import WorkflowExecutor
+
 from entity_plugin_gpt_oss.adaptive_reasoning import (
     AdaptiveReasoningPlugin,
     ComplexityFactors,
@@ -13,7 +14,6 @@ from entity_plugin_gpt_oss.adaptive_reasoning import (
     ReasoningDecision,
     ReasoningEffort,
 )
-from entity.workflow.executor import WorkflowExecutor
 
 
 class TestAdaptiveReasoningPlugin:

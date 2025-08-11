@@ -11,7 +11,6 @@ This compatibility layer will be deprecated in a future version.
 import warnings
 from typing import Any
 
-
 # Deprecation warning message
 DEPRECATION_MESSAGE = (
     "Importing GPT-OSS plugins from 'entity.plugins.gpt_oss' is deprecated. "
@@ -23,108 +22,102 @@ DEPRECATION_MESSAGE = (
 def _warn_deprecated_import(plugin_name: str) -> None:
     """Issue deprecation warning for old imports."""
     warnings.warn(
-        f"{plugin_name}: {DEPRECATION_MESSAGE}",
-        DeprecationWarning,
-        stacklevel=3
+        f"{plugin_name}: {DEPRECATION_MESSAGE}", DeprecationWarning, stacklevel=3
     )
 
 
 class _CompatibilityShim:
     """Base class for compatibility shims."""
-    
+
     def __init__(self, plugin_class_name: str, new_module_path: str):
         self.plugin_class_name = plugin_class_name
         self.new_module_path = new_module_path
         self._plugin_class = None
-    
+
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         """Create plugin instance with deprecation warning."""
         _warn_deprecated_import(self.plugin_class_name)
-        
+
         if self._plugin_class is None:
             try:
-                module = __import__(self.new_module_path, fromlist=[self.plugin_class_name])
+                module = __import__(
+                    self.new_module_path, fromlist=[self.plugin_class_name]
+                )
                 self._plugin_class = getattr(module, self.plugin_class_name)
             except ImportError as e:
                 raise ImportError(
                     f"Failed to import {self.plugin_class_name} from {self.new_module_path}. "
                     f"Please install 'entity-plugin-gpt-oss' package: pip install entity-plugin-gpt-oss"
                 ) from e
-        
+
         return self._plugin_class(*args, **kwargs)
-    
+
     def __getattr__(self, name: str) -> Any:
         """Forward attribute access to the actual plugin class."""
         _warn_deprecated_import(self.plugin_class_name)
-        
+
         if self._plugin_class is None:
             try:
-                module = __import__(self.new_module_path, fromlist=[self.plugin_class_name])
+                module = __import__(
+                    self.new_module_path, fromlist=[self.plugin_class_name]
+                )
                 self._plugin_class = getattr(module, self.plugin_class_name)
             except ImportError as e:
                 raise ImportError(
                     f"Failed to import {self.plugin_class_name} from {self.new_module_path}. "
                     f"Please install 'entity-plugin-gpt-oss' package: pip install entity-plugin-gpt-oss"
                 ) from e
-        
+
         return getattr(self._plugin_class, name)
 
 
 # Create compatibility shims for all GPT-OSS plugins
 ReasoningTracePlugin = _CompatibilityShim(
-    "ReasoningTracePlugin", 
-    "entity_plugin_gpt_oss.reasoning_trace"
+    "ReasoningTracePlugin", "entity_plugin_gpt_oss.reasoning_trace"
 )
 
 StructuredOutputPlugin = _CompatibilityShim(
-    "StructuredOutputPlugin", 
-    "entity_plugin_gpt_oss.structured_output"
+    "StructuredOutputPlugin", "entity_plugin_gpt_oss.structured_output"
 )
 
 DeveloperOverridePlugin = _CompatibilityShim(
-    "DeveloperOverridePlugin", 
-    "entity_plugin_gpt_oss.developer_override"
+    "DeveloperOverridePlugin", "entity_plugin_gpt_oss.developer_override"
 )
 
 AdaptiveReasoningPlugin = _CompatibilityShim(
-    "AdaptiveReasoningPlugin", 
-    "entity_plugin_gpt_oss.adaptive_reasoning"
+    "AdaptiveReasoningPlugin", "entity_plugin_gpt_oss.adaptive_reasoning"
 )
 
 GPTOSSToolOrchestrator = _CompatibilityShim(
-    "GPTOSSToolOrchestrator", 
-    "entity_plugin_gpt_oss.native_tools"
+    "GPTOSSToolOrchestrator", "entity_plugin_gpt_oss.native_tools"
 )
 
 MultiChannelAggregatorPlugin = _CompatibilityShim(
-    "MultiChannelAggregatorPlugin", 
-    "entity_plugin_gpt_oss.multi_channel_aggregator"
+    "MultiChannelAggregatorPlugin", "entity_plugin_gpt_oss.multi_channel_aggregator"
 )
 
 HarmonySafetyFilterPlugin = _CompatibilityShim(
-    "HarmonySafetyFilterPlugin", 
-    "entity_plugin_gpt_oss.harmony_safety_filter"
+    "HarmonySafetyFilterPlugin", "entity_plugin_gpt_oss.harmony_safety_filter"
 )
 
 FunctionSchemaRegistryPlugin = _CompatibilityShim(
-    "FunctionSchemaRegistryPlugin", 
-    "entity_plugin_gpt_oss.function_schema_registry"
+    "FunctionSchemaRegistryPlugin", "entity_plugin_gpt_oss.function_schema_registry"
 )
 
 ReasoningAnalyticsDashboardPlugin = _CompatibilityShim(
-    "ReasoningAnalyticsDashboardPlugin", 
-    "entity_plugin_gpt_oss.reasoning_analytics_dashboard"
+    "ReasoningAnalyticsDashboardPlugin",
+    "entity_plugin_gpt_oss.reasoning_analytics_dashboard",
 )
 
 # Export all plugin classes
 __all__ = [
     "ReasoningTracePlugin",
-    "StructuredOutputPlugin", 
+    "StructuredOutputPlugin",
     "DeveloperOverridePlugin",
     "AdaptiveReasoningPlugin",
     "GPTOSSToolOrchestrator",
     "MultiChannelAggregatorPlugin",
     "HarmonySafetyFilterPlugin",
-    "FunctionSchemaRegistryPlugin", 
+    "FunctionSchemaRegistryPlugin",
     "ReasoningAnalyticsDashboardPlugin",
 ]

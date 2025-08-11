@@ -4,8 +4,9 @@ from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from entity.plugins.context import PluginContext
+from entity.workflow.executor import WorkflowExecutor
+
 from entity_plugin_gpt_oss.native_tools import (
     BrowserTool,
     GPTOSSToolOrchestrator,
@@ -19,7 +20,6 @@ from entity_plugin_gpt_oss.native_tools import (
     ToolStatus,
     ToolType,
 )
-from entity.workflow.executor import WorkflowExecutor
 
 
 class TestGPTOSSToolOrchestrator:

@@ -300,15 +300,17 @@ class DeveloperOverridePlugin(Plugin):
         permission = self.config.developer_permissions.get(
             developer_id, self.config.default_permission_level
         )
-        
+
         # Handle both string and enum values for backward compatibility
         if isinstance(permission, str):
             try:
                 return PermissionLevel(permission)
             except ValueError:
-                logger.warning(f"Invalid permission level '{permission}' for developer {developer_id}")
+                logger.warning(
+                    f"Invalid permission level '{permission}' for developer {developer_id}"
+                )
                 return self.config.default_permission_level
-        
+
         return permission
 
     async def create_override(

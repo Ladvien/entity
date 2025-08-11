@@ -13,13 +13,12 @@ import re
 import time
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 from urllib.parse import urlparse
-
-from pydantic import BaseModel, Field
 
 from entity.plugins.base import Plugin
 from entity.workflow.executor import WorkflowExecutor
+from pydantic import BaseModel, Field
 
 
 class ToolType(Enum):
@@ -56,7 +55,7 @@ class ToolConfig(BaseModel):
     tool_type: ToolType = Field(description="Type of tool")
     name: str = Field(description="Tool name for harmony format")
     description: str = Field(description="Tool description")
-    parameters: Dict[str, Any] = Field(
+    parameters: dict[str, Any] = Field(
         default_factory=dict, description="Tool parameters schema"
     )
     execution_mode: ToolExecutionMode = Field(
@@ -69,7 +68,7 @@ class ToolConfig(BaseModel):
     rate_limit_per_minute: int = Field(
         default=10, description="Rate limit per minute", ge=1, le=100
     )
-    resource_limits: Dict[str, Any] = Field(
+    resource_limits: dict[str, Any] = Field(
         default_factory=dict, description="Resource constraints"
     )
 
@@ -78,10 +77,10 @@ class ToolInvocation(BaseModel):
     """A single tool invocation request."""
 
     tool_name: str = Field(description="Name of tool to invoke")
-    parameters: Dict[str, Any] = Field(description="Parameters for tool")
+    parameters: dict[str, Any] = Field(description="Parameters for tool")
     correlation_id: str = Field(description="Unique ID for this invocation")
     timestamp: datetime = Field(default_factory=datetime.now)
-    timeout_ms: Optional[int] = Field(
+    timeout_ms: int | None = Field(
         default=None, description="Override timeout for this invocation"
     )
 
@@ -92,22 +91,22 @@ class ToolResult(BaseModel):
     tool_name: str = Field(description="Name of tool that was invoked")
     correlation_id: str = Field(description="Correlation ID from invocation")
     status: ToolStatus = Field(description="Execution status")
-    result: Optional[Any] = Field(default=None, description="Tool output")
-    error: Optional[str] = Field(default=None, description="Error message if failed")
+    result: Any | None = Field(default=None, description="Tool output")
+    error: str | None = Field(default=None, description="Error message if failed")
     execution_time_ms: float = Field(default=0, description="Time taken to execute")
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class ToolChain(BaseModel):
     """A chain of tool invocations for multi-step workflows."""
 
     chain_id: str = Field(description="Unique chain identifier")
-    steps: List[ToolInvocation] = Field(description="Ordered list of tool invocations")
-    parallel_groups: List[List[int]] = Field(
+    steps: list[ToolInvocation] = Field(description="Ordered list of tool invocations")
+    parallel_groups: list[list[int]] = Field(
         default_factory=list,
         description="Groups of step indices that can run in parallel",
     )
-    context_passing: Dict[str, str] = Field(
+    context_passing: dict[str, str] = Field(
         default_factory=dict,
         description="Map of output->input for context passing between tools",
     )
@@ -119,7 +118,7 @@ class ToolChain(BaseModel):
 class BrowserTool:
     """Browser tool for web search and navigation."""
 
-    def __init__(self, config: Optional[ToolConfig] = None):
+    def __init__(self, config: ToolConfig | None = None):
         """Initialize browser tool."""
         self.config = config or ToolConfig(
             tool_type=ToolType.BROWSER,
@@ -150,7 +149,7 @@ class BrowserTool:
         self.rate_limiter = RateLimiter(self.config.rate_limit_per_minute)
 
     async def execute(
-        self, parameters: Dict[str, Any], sandbox: Optional[Any] = None
+        self, parameters: dict[str, Any], sandbox: Any | None = None
     ) -> ToolResult:
         """Execute browser tool action."""
         correlation_id = f"browser_{int(time.time() * 1000)}"
@@ -208,7 +207,7 @@ class BrowserTool:
                 execution_time_ms=execution_time_ms,
             )
 
-    async def _search_web(self, query: str, sandbox: Optional[Any]) -> Dict[str, Any]:
+    async def _search_web(self, query: str, sandbox: Any | None) -> dict[str, Any]:
         """Perform web search."""
         # In production, this would integrate with a real search API
         # For now, return mock results
@@ -229,9 +228,7 @@ class BrowserTool:
             ],
         }
 
-    async def _navigate_to_url(
-        self, url: str, sandbox: Optional[Any]
-    ) -> Dict[str, Any]:
+    async def _navigate_to_url(self, url: str, sandbox: Any | None) -> dict[str, Any]:
         """Navigate to URL and get content."""
         # In production, this would use a real browser automation tool
         await asyncio.sleep(0.3)  # Simulate page load
@@ -243,8 +240,8 @@ class BrowserTool:
         }
 
     async def _extract_content(
-        self, url: str, selector: Optional[str], sandbox: Optional[Any]
-    ) -> Dict[str, Any]:
+        self, url: str, selector: str | None, sandbox: Any | None
+    ) -> dict[str, Any]:
         """Extract specific content from URL."""
         # Navigate first
         page_data = await self._navigate_to_url(url, sandbox)
@@ -276,7 +273,7 @@ class BrowserTool:
         if allowed and parsed.hostname not in allowed:
             raise ValueError(f"Domain {parsed.hostname} is not in allowed list")
 
-    def get_harmony_format(self) -> Dict[str, Any]:
+    def get_harmony_format(self) -> dict[str, Any]:
         """Get tool configuration in harmony format."""
         return {
             "type": "tool",
@@ -289,7 +286,7 @@ class BrowserTool:
 class PythonTool:
     """Python tool for sandboxed code execution."""
 
-    def __init__(self, config: Optional[ToolConfig] = None):
+    def __init__(self, config: ToolConfig | None = None):
         """Initialize Python tool."""
         self.config = config or ToolConfig(
             tool_type=ToolType.PYTHON,
@@ -335,7 +332,7 @@ class PythonTool:
         self.execution_contexts = {}  # Store contexts for chaining
 
     async def execute(
-        self, parameters: Dict[str, Any], sandbox: Optional[Any] = None
+        self, parameters: dict[str, Any], sandbox: Any | None = None
     ) -> ToolResult:
         """Execute Python code in sandbox."""
         correlation_id = f"python_{int(time.time() * 1000)}"
@@ -399,10 +396,10 @@ class PythonTool:
     async def _execute_in_sandbox(
         self,
         code: str,
-        imports: List[str],
+        imports: list[str],
         persist_context: bool,
         sandbox: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute code in Entity's sandbox."""
         # Build safe execution environment
         exec_env = self._build_safe_environment(imports)
@@ -427,8 +424,8 @@ class PythonTool:
         return result
 
     async def _execute_restricted(
-        self, code: str, imports: List[str], persist_context: bool
-    ) -> Dict[str, Any]:
+        self, code: str, imports: list[str], persist_context: bool
+    ) -> dict[str, Any]:
         """Execute code with restrictions (no sandbox available)."""
         # Build safe execution environment
         exec_env = self._build_safe_environment(imports)
@@ -495,7 +492,7 @@ class PythonTool:
                 "error": str(e),
             }
 
-    def _build_safe_environment(self, imports: List[str]) -> Dict[str, Any]:
+    def _build_safe_environment(self, imports: list[str]) -> dict[str, Any]:
         """Build safe execution environment with allowed imports."""
         env = {}
 
@@ -533,7 +530,7 @@ class PythonTool:
 
         return env
 
-    def _validate_imports(self, imports: List[str]) -> None:
+    def _validate_imports(self, imports: list[str]) -> None:
         """Validate requested imports against security policy."""
         blocked = self.config.resource_limits.get("blocked_modules", [])
         for module in imports:
@@ -571,14 +568,14 @@ class PythonTool:
                 raise ValueError(f"Dangerous pattern detected: {pattern}")
 
     async def _execute_code(
-        self, code: str, exec_env: Dict[str, Any], timeout: float
-    ) -> Dict[str, Any]:
+        self, code: str, exec_env: dict[str, Any], timeout: float
+    ) -> dict[str, Any]:
         """Execute code with timeout."""
         # This would be called within the sandbox
         # Implementation depends on the sandbox system
         return {"output": f"Executed: {code[:50]}...", "success": True}
 
-    def get_harmony_format(self) -> Dict[str, Any]:
+    def get_harmony_format(self) -> dict[str, Any]:
         """Get tool configuration in harmony format."""
         return {
             "type": "tool",
@@ -663,7 +660,7 @@ class GPTOSSToolOrchestrator(Plugin):
         global_rate_limit_per_minute: int = Field(
             default=20, description="Global rate limit across all tools", ge=1, le=100
         )
-        per_tool_rate_limits: Dict[str, int] = Field(
+        per_tool_rate_limits: dict[str, int] = Field(
             default_factory=lambda: {"browser": 10, "python": 15},
             description="Per-tool rate limits",
         )
@@ -688,7 +685,7 @@ class GPTOSSToolOrchestrator(Plugin):
             default=True, description="Store execution history in memory"
         )
 
-    def __init__(self, resources: dict[str, Any], config: Dict[str, Any] | None = None):
+    def __init__(self, resources: dict[str, Any], config: dict[str, Any] | None = None):
         """Initialize the tool orchestrator plugin."""
         super().__init__(resources, config)
 
@@ -737,12 +734,12 @@ class GPTOSSToolOrchestrator(Plugin):
             await context.log(
                 level="error",
                 category="tool_orchestrator",
-                message=f"Tool orchestration error: {str(e)}",
+                message=f"Tool orchestration error: {e!s}",
                 error=str(e),
             )
-            return f"Tool execution failed: {str(e)}"
+            return f"Tool execution failed: {e!s}"
 
-    async def _parse_tool_invocations(self, message: str) -> List[ToolInvocation]:
+    async def _parse_tool_invocations(self, message: str) -> list[ToolInvocation]:
         """Parse tool invocations from message."""
         invocations = []
 
@@ -771,7 +768,7 @@ class GPTOSSToolOrchestrator(Plugin):
 
         return invocations
 
-    def _parse_simple_params(self, params_str: str) -> Dict[str, Any]:
+    def _parse_simple_params(self, params_str: str) -> dict[str, Any]:
         """Parse simple parameter format."""
         params = {}
         lines = params_str.strip().split("\n")
@@ -826,8 +823,8 @@ class GPTOSSToolOrchestrator(Plugin):
         return result
 
     async def _execute_tool_chain(
-        self, context, invocations: List[ToolInvocation]
-    ) -> List[ToolResult]:
+        self, context, invocations: list[ToolInvocation]
+    ) -> list[ToolResult]:
         """Execute a chain of tool invocations."""
         if len(invocations) > self.config.max_chain_length:
             raise ValueError(
@@ -863,7 +860,7 @@ class GPTOSSToolOrchestrator(Plugin):
         return results
 
     async def _format_tool_result(
-        self, result: ToolResult | List[ToolResult], context
+        self, result: ToolResult | list[ToolResult], context
     ) -> str:
         """Format tool results for output."""
         if isinstance(result, list):
@@ -923,18 +920,18 @@ class GPTOSSToolOrchestrator(Plugin):
 
     # Public API methods
 
-    def get_available_tools(self) -> List[str]:
+    def get_available_tools(self) -> list[str]:
         """Get list of available tools."""
         return list(self.tools.keys())
 
-    def get_tool_config(self, tool_name: str) -> Optional[ToolConfig]:
+    def get_tool_config(self, tool_name: str) -> ToolConfig | None:
         """Get configuration for a specific tool."""
         if tool_name in self.tools:
             return self.tools[tool_name].config
         return None
 
     async def execute_tool(
-        self, tool_name: str, parameters: Dict[str, Any], context: Optional[Any] = None
+        self, tool_name: str, parameters: dict[str, Any], context: Any | None = None
     ) -> ToolResult:
         """Execute a tool programmatically."""
         invocation = ToolInvocation(
@@ -958,7 +955,7 @@ class GPTOSSToolOrchestrator(Plugin):
             tool = self.tools[tool_name]
             return await tool.execute(parameters)
 
-    def get_harmony_tool_definitions(self) -> List[Dict[str, Any]]:
+    def get_harmony_tool_definitions(self) -> list[dict[str, Any]]:
         """Get all tool definitions in harmony format."""
         definitions = []
         for tool in self.tools.values():
@@ -972,7 +969,7 @@ class GPTOSSToolOrchestrator(Plugin):
             if hasattr(tool, "rate_limiter"):
                 tool.rate_limiter.reset()
 
-    async def get_execution_stats(self) -> Dict[str, Any]:
+    async def get_execution_stats(self) -> dict[str, Any]:
         """Get execution statistics."""
         stats = {
             "total_executions": len(self.execution_history),

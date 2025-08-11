@@ -4,8 +4,9 @@ from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from entity.plugins.context import PluginContext
+from entity.workflow.executor import WorkflowExecutor
+
 from entity_plugin_gpt_oss.developer_override import (
     AuditEntry,
     DeveloperOverride,
@@ -13,7 +14,6 @@ from entity_plugin_gpt_oss.developer_override import (
     OverrideScope,
     PermissionLevel,
 )
-from entity.workflow.executor import WorkflowExecutor
 
 
 @pytest.fixture

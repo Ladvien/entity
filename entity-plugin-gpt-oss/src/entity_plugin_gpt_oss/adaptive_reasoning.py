@@ -11,12 +11,11 @@ import re
 import time
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
-
-from pydantic import BaseModel, Field
+from typing import Any
 
 from entity.plugins.base import Plugin
 from entity.workflow.executor import WorkflowExecutor
+from pydantic import BaseModel, Field
 
 
 class ReasoningEffort(Enum):
@@ -69,7 +68,7 @@ class ReasoningDecision(BaseModel):
     task_id: str = Field(description="Unique task identifier")
     complexity_score: ComplexityScore = Field(description="Complexity analysis result")
     selected_level: ReasoningEffort = Field(description="Selected reasoning level")
-    override_reason: Optional[str] = Field(
+    override_reason: str | None = Field(
         default=None, description="Reason if manually overridden"
     )
     estimated_tokens: int = Field(description="Estimated token usage")
@@ -176,7 +175,7 @@ class AdaptiveReasoningPlugin(Plugin):
             default=10, description="Decisions between metrics updates"
         )
 
-    def __init__(self, resources: dict[str, Any], config: Dict[str, Any] | None = None):
+    def __init__(self, resources: dict[str, Any], config: dict[str, Any] | None = None):
         """Initialize the adaptive reasoning controller plugin."""
         super().__init__(resources, config)
 
@@ -189,7 +188,7 @@ class AdaptiveReasoningPlugin(Plugin):
         self.technical_terms = self._load_technical_terms()
 
         # Initialize performance tracking
-        self.recent_decisions: List[ReasoningDecision] = []
+        self.recent_decisions: list[ReasoningDecision] = []
         self.performance_metrics = PerformanceMetrics()
 
     def _load_technical_terms(self) -> set:
@@ -363,7 +362,7 @@ class AdaptiveReasoningPlugin(Plugin):
             await context.log(
                 level="error",
                 category="adaptive_reasoning",
-                message=f"Error in adaptive reasoning: {str(e)}",
+                message=f"Error in adaptive reasoning: {e!s}",
                 error=str(e),
             )
 
@@ -734,7 +733,7 @@ class AdaptiveReasoningPlugin(Plugin):
 
     # Public API methods
 
-    async def get_metrics(self) -> Dict[str, Any]:
+    async def get_metrics(self) -> dict[str, Any]:
         """Get current performance metrics."""
         return self.performance_metrics.model_dump()
 
@@ -744,12 +743,12 @@ class AdaptiveReasoningPlugin(Plugin):
             f"user_reasoning_preference:{user_id}", level.value
         )
 
-    async def get_recent_decisions(self, count: int = 10) -> List[Dict[str, Any]]:
+    async def get_recent_decisions(self, count: int = 10) -> list[dict[str, Any]]:
         """Get recent reasoning decisions."""
         recent = self.recent_decisions[-count:]
         return [d.model_dump() for d in recent]
 
-    async def analyze_message(self, message: str) -> Dict[str, Any]:
+    async def analyze_message(self, message: str) -> dict[str, Any]:
         """Analyze a message and return complexity score (for testing/debugging)."""
         score = await self._analyze_complexity(message)
         return score.model_dump()

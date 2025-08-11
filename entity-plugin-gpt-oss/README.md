@@ -55,8 +55,8 @@ git submodule update --init --recursive
 
 ```python
 from entity_plugin_gpt_oss import (
-    ReasoningTracePlugin, 
-    GPTOSSToolOrchestrator, 
+    ReasoningTracePlugin,
+    GPTOSSToolOrchestrator,
     StructuredOutputPlugin
 )
 from entity.workflow.executor import WorkflowExecutor
@@ -84,7 +84,7 @@ structured_output = StructuredOutputPlugin(config={
 # Add to workflow
 executor = WorkflowExecutor()
 executor.add_plugin(reasoning_trace, stage="processing")
-executor.add_plugin(tool_orchestrator, stage="processing") 
+executor.add_plugin(tool_orchestrator, stage="processing")
 executor.add_plugin(structured_output, stage="postprocessing")
 
 # Execute workflow with GPT-OSS capabilities
@@ -100,7 +100,7 @@ result = await executor.run({
 ```python
 from entity_plugin_gpt_oss import (
     AdaptiveReasoningPlugin,
-    HarmonySafetyFilterPlugin, 
+    HarmonySafetyFilterPlugin,
     ReasoningAnalyticsDashboardPlugin
 )
 
@@ -147,8 +147,8 @@ plugins:
       capture_level: detailed
       trace_storage: persistent
       analysis_depth: deep
-      
-  - name: GPTOSSToolOrchestrator  
+
+  - name: GPTOSSToolOrchestrator
     stage: processing
     config:
       enabled_tools:
@@ -160,7 +160,7 @@ plugins:
       rate_limits:
         browser: "10/minute"
         python: "5/minute"
-        
+
   - name: HarmonySafetyFilterPlugin
     stage: preprocessing
     config:

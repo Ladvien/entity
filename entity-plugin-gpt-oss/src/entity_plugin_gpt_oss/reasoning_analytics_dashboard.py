@@ -10,11 +10,10 @@ from __future__ import annotations
 import statistics
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
-
-from pydantic import BaseModel, Field
+from typing import Any
 
 from entity.plugins.base import Plugin
+from pydantic import BaseModel, Field
 
 
 class ReasoningMetrics(BaseModel):
@@ -29,7 +28,7 @@ class ReasoningMetrics(BaseModel):
     reasoning_level: str = Field(description="Reasoning level (low/medium/high)")
     task_category: str = Field(description="Category of the task")
     success: bool = Field(description="Whether execution was successful")
-    error_type: Optional[str] = Field(default=None, description="Error type if failed")
+    error_type: str | None = Field(default=None, description="Error type if failed")
 
 
 class PatternAnalysis(BaseModel):
@@ -47,7 +46,7 @@ class BottleneckAnalysis(BaseModel):
 
     bottleneck_type: str = Field(description="Type of bottleneck")
     severity: str = Field(description="Severity level (low/medium/high)")
-    affected_tasks: List[str] = Field(description="Task categories affected")
+    affected_tasks: list[str] = Field(description="Task categories affected")
     impact_score: float = Field(description="Impact score 0-1")
     suggested_optimization: str = Field(description="Optimization suggestion")
 
@@ -59,9 +58,9 @@ class DashboardData(BaseModel):
     avg_complexity: float = Field(description="Average complexity score")
     avg_duration_ms: int = Field(description="Average execution duration")
     success_rate: float = Field(description="Overall success rate")
-    patterns: List[PatternAnalysis] = Field(description="Identified patterns")
-    bottlenecks: List[BottleneckAnalysis] = Field(description="Identified bottlenecks")
-    time_series: Dict[str, List[float]] = Field(description="Time series data")
+    patterns: list[PatternAnalysis] = Field(description="Identified patterns")
+    bottlenecks: list[BottleneckAnalysis] = Field(description="Identified bottlenecks")
+    time_series: dict[str, list[float]] = Field(description="Time series data")
 
 
 class ReasoningAnalyticsDashboardPlugin(Plugin):
@@ -93,7 +92,7 @@ class ReasoningAnalyticsDashboardPlugin(Plugin):
     supported_stages = ["analysis", "post_processing"]
     dependencies = []
 
-    def __init__(self, resources: dict[str, Any], config: Dict[str, Any] | None = None):
+    def __init__(self, resources: dict[str, Any], config: dict[str, Any] | None = None):
         """Initialize the reasoning analytics dashboard plugin."""
         super().__init__(resources, config)
 
@@ -103,10 +102,10 @@ class ReasoningAnalyticsDashboardPlugin(Plugin):
             raise ValueError(f"Invalid config: {', '.join(result.errors)}")
 
         # In-memory storage for metrics (in production, use persistent storage)
-        self._metrics_store: List[ReasoningMetrics] = []
-        self._patterns_cache: Optional[List[PatternAnalysis]] = None
-        self._bottlenecks_cache: Optional[List[BottleneckAnalysis]] = None
-        self._last_analysis_time: Optional[datetime] = None
+        self._metrics_store: list[ReasoningMetrics] = []
+        self._patterns_cache: list[PatternAnalysis] | None = None
+        self._bottlenecks_cache: list[BottleneckAnalysis] | None = None
+        self._last_analysis_time: datetime | None = None
 
     async def _execute_impl(self, context: Any) -> Any:
         """Execute reasoning analytics collection and analysis."""
@@ -136,9 +135,7 @@ class ReasoningAnalyticsDashboardPlugin(Plugin):
 
         return context
 
-    async def _extract_reasoning_metrics(
-        self, context: Any
-    ) -> Optional[ReasoningMetrics]:
+    async def _extract_reasoning_metrics(self, context: Any) -> ReasoningMetrics | None:
         """Extract reasoning metrics from execution context."""
         try:
             # Get execution metadata
@@ -408,9 +405,7 @@ class ReasoningAnalyticsDashboardPlugin(Plugin):
 
         self._bottlenecks_cache = bottlenecks
 
-    def get_dashboard_data(
-        self, time_window_hours: Optional[int] = None
-    ) -> DashboardData:
+    def get_dashboard_data(self, time_window_hours: int | None = None) -> DashboardData:
         """Get aggregated dashboard data for visualization."""
         window_hours = time_window_hours or self.config.analysis_window_hours
         cutoff_time = datetime.now() - timedelta(hours=window_hours)
@@ -449,8 +444,8 @@ class ReasoningAnalyticsDashboardPlugin(Plugin):
         )
 
     def _generate_time_series(
-        self, metrics: List[ReasoningMetrics], window_hours: int
-    ) -> Dict[str, List[float]]:
+        self, metrics: list[ReasoningMetrics], window_hours: int
+    ) -> dict[str, list[float]]:
         """Generate time series data for visualization."""
         # Create hourly buckets
         buckets = defaultdict(list)
@@ -494,7 +489,7 @@ class ReasoningAnalyticsDashboardPlugin(Plugin):
         return time_series
 
     def export_data(
-        self, format_type: str = "json", time_window_hours: Optional[int] = None
+        self, format_type: str = "json", time_window_hours: int | None = None
     ) -> str:
         """Export analytics data for external analysis."""
         dashboard_data = self.get_dashboard_data(time_window_hours)
@@ -522,7 +517,7 @@ class ReasoningAnalyticsDashboardPlugin(Plugin):
         else:
             raise ValueError(f"Unsupported export format: {format_type}")
 
-    def get_real_time_status(self) -> Dict[str, Any]:
+    def get_real_time_status(self) -> dict[str, Any]:
         """Get real-time monitoring status."""
         if not self.config.enable_real_time_monitoring:
             return {"status": "disabled"}

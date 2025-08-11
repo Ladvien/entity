@@ -10,12 +10,11 @@ from __future__ import annotations
 import re
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
-
-from pydantic import BaseModel, Field
+from typing import Any
 
 from entity.plugins.base import Plugin
 from entity.workflow.executor import WorkflowExecutor
+from pydantic import BaseModel, Field
 
 
 class SafetyCategory(Enum):
@@ -61,14 +60,14 @@ class SafetyFilterResult(BaseModel):
     filtered_content: str = Field(description="Content after safety filtering")
     original_length: int = Field(description="Length of original content")
     filtered_length: int = Field(description="Length of filtered content")
-    violations_detected: List[SafetyViolation] = Field(
+    violations_detected: list[SafetyViolation] = Field(
         description="List of detected violations"
     )
     filter_applied: bool = Field(description="Whether any filtering was applied")
     reasoning_quality_preserved: bool = Field(
         description="Whether reasoning quality indicators were preserved"
     )
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict, description="Additional filtering metadata"
     )
 
@@ -96,11 +95,11 @@ class HarmonySafetyFilterPlugin(Plugin):
         )
 
         # Safety categories and thresholds
-        enabled_categories: List[str] = Field(
+        enabled_categories: list[str] = Field(
             default_factory=lambda: [cat.value for cat in SafetyCategory],
             description="Enabled safety categories",
         )
-        severity_thresholds: Dict[str, str] = Field(
+        severity_thresholds: dict[str, str] = Field(
             default_factory=lambda: {
                 SafetyCategory.HARMFUL_CONTENT.value: SafetySeverity.LOW.value,
                 SafetyCategory.EXPLOIT_INSTRUCTIONS.value: SafetySeverity.MEDIUM.value,
@@ -130,7 +129,7 @@ class HarmonySafetyFilterPlugin(Plugin):
         )
 
         # Reasoning preservation
-        reasoning_indicators: List[str] = Field(
+        reasoning_indicators: list[str] = Field(
             default_factory=lambda: [
                 "therefore",
                 "because",
@@ -183,7 +182,7 @@ class HarmonySafetyFilterPlugin(Plugin):
             default=True, description="Cache filtering results for performance"
         )
 
-    def __init__(self, resources: dict[str, Any], config: Dict[str, Any] | None = None):
+    def __init__(self, resources: dict[str, Any], config: dict[str, Any] | None = None):
         """Initialize the harmony safety filter plugin."""
         super().__init__(resources, config)
 
@@ -196,12 +195,12 @@ class HarmonySafetyFilterPlugin(Plugin):
         self._safety_patterns = self._initialize_safety_patterns()
 
         # Initialize audit log
-        self._audit_log: List[Dict[str, Any]] = []
+        self._audit_log: list[dict[str, Any]] = []
 
         # Initialize content cache for performance
-        self._content_cache: Dict[str, SafetyFilterResult] = {}
+        self._content_cache: dict[str, SafetyFilterResult] = {}
 
-    def _initialize_safety_patterns(self) -> Dict[SafetyCategory, List[Dict[str, Any]]]:
+    def _initialize_safety_patterns(self) -> dict[SafetyCategory, list[dict[str, Any]]]:
         """Initialize safety detection patterns by category."""
         return {
             SafetyCategory.HARMFUL_CONTENT: [
@@ -394,7 +393,7 @@ class HarmonySafetyFilterPlugin(Plugin):
             await context.log(
                 level="error",
                 category="harmony_safety_filter",
-                message=f"Safety filtering error: {str(e)}",
+                message=f"Safety filtering error: {e!s}",
                 error=str(e),
             )
             return context.message
@@ -409,7 +408,7 @@ class HarmonySafetyFilterPlugin(Plugin):
         Returns:
             Safety filtering result
         """
-        violations: List[SafetyViolation] = []
+        violations: list[SafetyViolation] = []
         filtered_content = content
         original_length = len(content)
 
@@ -464,7 +463,7 @@ class HarmonySafetyFilterPlugin(Plugin):
 
     async def _detect_violations_in_category(
         self, content: str, category: SafetyCategory
-    ) -> List[SafetyViolation]:
+    ) -> list[SafetyViolation]:
         """Detect safety violations in a specific category."""
         violations = []
         patterns = self._safety_patterns.get(category, [])
@@ -580,7 +579,7 @@ class HarmonySafetyFilterPlugin(Plugin):
         return hashlib.md5(content.encode()).hexdigest()
 
     async def _log_audit_entry(
-        self, action: str, context, metadata: Dict[str, Any] = None
+        self, action: str, context, metadata: dict[str, Any] = None
     ) -> None:
         """Log audit entry for safety filtering actions."""
         if not self.config.enable_audit_logging:
@@ -653,7 +652,7 @@ class HarmonySafetyFilterPlugin(Plugin):
 
     # Public API methods for external usage
 
-    async def get_safety_stats(self) -> Dict[str, Any]:
+    async def get_safety_stats(self) -> dict[str, Any]:
         """Get safety filtering statistics."""
         return {
             "enabled_categories": self.config.enabled_categories,
@@ -707,7 +706,7 @@ class HarmonySafetyFilterPlugin(Plugin):
         except re.error:
             return False
 
-    def get_audit_log(self, limit: Optional[int] = None) -> List[Dict[str, Any]]:
+    def get_audit_log(self, limit: int | None = None) -> list[dict[str, Any]]:
         """Get audit log entries."""
         if limit:
             return self._audit_log[-limit:]

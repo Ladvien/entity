@@ -19,7 +19,7 @@ warnings.warn(
     "Please install 'entity-plugin-gpt-oss' and update your imports. "
     "This compatibility layer will be removed in entity-core 0.1.0.",
     DeprecationWarning,
-    stacklevel=2
+    stacklevel=2,
 )
 
 # Import compatibility shims

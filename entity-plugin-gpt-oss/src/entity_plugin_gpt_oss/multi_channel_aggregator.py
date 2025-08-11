@@ -9,12 +9,11 @@ from __future__ import annotations
 
 import re
 from enum import Enum
-from typing import Any, Dict, List, Optional
-
-from pydantic import BaseModel, Field
+from typing import Any
 
 from entity.plugins.base import Plugin
 from entity.workflow.executor import WorkflowExecutor
+from pydantic import BaseModel, Field
 
 
 class ChannelType(Enum):
@@ -39,13 +38,13 @@ class ChannelContent(BaseModel):
 
     channel_type: ChannelType = Field(description="Type of channel")
     raw_content: str = Field(description="Raw content from channel")
-    processed_content: Optional[str] = Field(
+    processed_content: str | None = Field(
         default=None, description="Processed/filtered content"
     )
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict, description="Channel-specific metadata"
     )
-    confidence_score: Optional[float] = Field(
+    confidence_score: float | None = Field(
         default=None, description="Confidence in content quality", ge=0.0, le=1.0
     )
 
@@ -55,16 +54,16 @@ class AggregatedResponse(BaseModel):
 
     user_response: str = Field(description="User-facing response")
     debug_response: str = Field(description="Full response for debugging")
-    channels_used: List[ChannelType] = Field(
+    channels_used: list[ChannelType] = Field(
         description="Channels included in aggregation"
     )
     strategy_applied: AggregationStrategy = Field(
         description="Aggregation strategy used"
     )
-    filtering_applied: List[str] = Field(
+    filtering_applied: list[str] = Field(
         default_factory=list, description="List of filters applied"
     )
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict, description="Aggregation metadata"
     )
 
@@ -157,7 +156,7 @@ class MultiChannelAggregatorPlugin(Plugin):
         class Config:
             use_enum_values = True
 
-    def __init__(self, resources: dict[str, Any], config: Dict[str, Any] | None = None):
+    def __init__(self, resources: dict[str, Any], config: dict[str, Any] | None = None):
         """Initialize the multi-channel aggregator plugin."""
         super().__init__(resources, config)
 
@@ -256,12 +255,12 @@ class MultiChannelAggregatorPlugin(Plugin):
             await context.log(
                 level="error",
                 category="multi_channel_aggregator",
-                message=f"Multi-channel aggregation error: {str(e)}",
+                message=f"Multi-channel aggregation error: {e!s}",
                 error=str(e),
             )
             return context.message
 
-    async def _parse_channels(self, message: str) -> List[ChannelContent]:
+    async def _parse_channels(self, message: str) -> list[ChannelContent]:
         """Parse multi-channel content from message.
 
         Args:
@@ -333,7 +332,7 @@ class MultiChannelAggregatorPlugin(Plugin):
 
     async def _process_channel(
         self, channel: ChannelContent, context
-    ) -> Optional[ChannelContent]:
+    ) -> ChannelContent | None:
         """Process a single channel's content.
 
         Args:
@@ -394,7 +393,7 @@ class MultiChannelAggregatorPlugin(Plugin):
             await context.log(
                 level="warning",
                 category="channel_processing",
-                message=f"Error processing {channel.channel_type.value} channel: {str(e)}",
+                message=f"Error processing {channel.channel_type.value} channel: {e!s}",
                 channel_type=channel.channel_type.value,
                 error=str(e),
             )
@@ -494,7 +493,7 @@ class MultiChannelAggregatorPlugin(Plugin):
         return max(0.0, min(1.0, confidence))
 
     async def _aggregate_channels(
-        self, channels: List[ChannelContent], strategy: AggregationStrategy, context
+        self, channels: list[ChannelContent], strategy: AggregationStrategy, context
     ) -> AggregatedResponse:
         """Aggregate multiple channels into a coherent response.
 
@@ -546,7 +545,7 @@ class MultiChannelAggregatorPlugin(Plugin):
         return priority_map.get(channel_type, 0)
 
     async def _aggregate_user_friendly(
-        self, channels: List[ChannelContent], context
+        self, channels: list[ChannelContent], context
     ) -> AggregatedResponse:
         """Aggregate channels for user-friendly output."""
         user_parts = []
@@ -599,7 +598,7 @@ class MultiChannelAggregatorPlugin(Plugin):
         )
 
     async def _aggregate_debugging(
-        self, channels: List[ChannelContent], context
+        self, channels: list[ChannelContent], context
     ) -> AggregatedResponse:
         """Aggregate channels for debugging output (full context)."""
         debug_parts = []
@@ -638,7 +637,7 @@ class MultiChannelAggregatorPlugin(Plugin):
         )
 
     async def _aggregate_balanced(
-        self, channels: List[ChannelContent], context
+        self, channels: list[ChannelContent], context
     ) -> AggregatedResponse:
         """Aggregate channels for balanced output (mix of user-friendly and technical)."""
         user_parts = []
@@ -675,7 +674,7 @@ class MultiChannelAggregatorPlugin(Plugin):
         )
 
     async def _aggregate_custom(
-        self, channels: List[ChannelContent], context
+        self, channels: list[ChannelContent], context
     ) -> AggregatedResponse:
         """Aggregate channels using custom strategy (fallback to balanced)."""
         # For now, use balanced strategy as custom fallback
@@ -747,7 +746,7 @@ class MultiChannelAggregatorPlugin(Plugin):
         """
         await context.remember(self.config.strategy_override_key, strategy.value)
 
-    async def get_channel_stats(self) -> Dict[str, Any]:
+    async def get_channel_stats(self) -> dict[str, Any]:
         """Get statistics about channel processing."""
         return {
             "supported_channels": [c.value for c in ChannelType],
@@ -761,7 +760,7 @@ class MultiChannelAggregatorPlugin(Plugin):
         }
 
     async def process_multi_channel_content(
-        self, content: str, strategy: Optional[AggregationStrategy] = None
+        self, content: str, strategy: AggregationStrategy | None = None
     ) -> AggregatedResponse:
         """Process multi-channel content programmatically.
 

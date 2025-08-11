@@ -10,14 +10,14 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from collections.abc import Callable
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
-
-from pydantic import BaseModel, Field
+from typing import Any
 
 from entity.plugins.base import Plugin
 from entity.workflow.executor import WorkflowExecutor
+from pydantic import BaseModel, Field
 
 
 class SchemaFormat(Enum):
@@ -55,41 +55,33 @@ class FunctionParameter(BaseModel):
     """Definition of a function parameter."""
 
     name: str = Field(description="Parameter name")
-    type: Union[ParameterType, List[ParameterType]] = Field(
-        description="Parameter type(s)"
-    )
-    description: Optional[str] = Field(
-        default=None, description="Parameter description"
-    )
+    type: ParameterType | list[ParameterType] = Field(description="Parameter type(s)")
+    description: str | None = Field(default=None, description="Parameter description")
     required: bool = Field(default=True, description="Whether parameter is required")
-    default: Optional[Any] = Field(
+    default: Any | None = Field(
         default=None, description="Default value if not provided"
     )
-    enum: Optional[List[Any]] = Field(
+    enum: list[Any] | None = Field(
         default=None, description="Allowed values for the parameter"
     )
-    pattern: Optional[str] = Field(
+    pattern: str | None = Field(
         default=None, description="Regex pattern for string validation"
     )
-    minimum: Optional[float] = Field(
-        default=None, description="Minimum value for numbers"
-    )
-    maximum: Optional[float] = Field(
-        default=None, description="Maximum value for numbers"
-    )
-    min_length: Optional[int] = Field(
+    minimum: float | None = Field(default=None, description="Minimum value for numbers")
+    maximum: float | None = Field(default=None, description="Maximum value for numbers")
+    min_length: int | None = Field(
         default=None, description="Minimum length for strings/arrays"
     )
-    max_length: Optional[int] = Field(
+    max_length: int | None = Field(
         default=None, description="Maximum length for strings/arrays"
     )
-    items: Optional[Dict[str, Any]] = Field(
+    items: dict[str, Any] | None = Field(
         default=None, description="Schema for array items"
     )
-    properties: Optional[Dict[str, Any]] = Field(
+    properties: dict[str, Any] | None = Field(
         default=None, description="Schema for object properties"
     )
-    examples: Optional[List[Any]] = Field(default=None, description="Example values")
+    examples: list[Any] | None = Field(default=None, description="Example values")
 
 
 class FunctionSchema(BaseModel):
@@ -98,25 +90,25 @@ class FunctionSchema(BaseModel):
     name: str = Field(description="Function name")
     description: str = Field(description="Function description")
     version: str = Field(default="1.0.0", description="Schema version")
-    parameters: List[FunctionParameter] = Field(
+    parameters: list[FunctionParameter] = Field(
         default_factory=list, description="Function parameters"
     )
-    returns: Optional[Dict[str, Any]] = Field(
+    returns: dict[str, Any] | None = Field(
         default=None, description="Return value schema"
     )
-    examples: Optional[List[Dict[str, Any]]] = Field(
+    examples: list[dict[str, Any]] | None = Field(
         default=None, description="Example function calls"
     )
     deprecated: bool = Field(
         default=False, description="Whether function is deprecated"
     )
-    deprecated_message: Optional[str] = Field(
+    deprecated_message: str | None = Field(
         default=None, description="Deprecation message"
     )
-    tags: List[str] = Field(
+    tags: list[str] = Field(
         default_factory=list, description="Function tags for categorization"
     )
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict, description="Additional metadata"
     )
     harmony_compatible: bool = Field(
@@ -131,7 +123,7 @@ class FunctionRegistration(BaseModel):
     """Registration record for a function."""
 
     schema: FunctionSchema = Field(description="Function schema")
-    handler: Optional[str] = Field(
+    handler: str | None = Field(
         default=None, description="Handler function path or identifier"
     )
     registered_at: datetime = Field(
@@ -143,9 +135,7 @@ class FunctionRegistration(BaseModel):
     usage_count: int = Field(
         default=0, description="Number of times function has been called"
     )
-    last_used: Optional[datetime] = Field(
-        default=None, description="Last usage timestamp"
-    )
+    last_used: datetime | None = Field(default=None, description="Last usage timestamp")
     enabled: bool = Field(default=True, description="Whether function is enabled")
     namespace: str = Field(default="default", description="Function namespace")
     access_level: str = Field(
@@ -159,12 +149,8 @@ class SchemaVersion(BaseModel):
     version: str = Field(description="Version identifier")
     schema: FunctionSchema = Field(description="Schema for this version")
     created_at: datetime = Field(default_factory=datetime.now)
-    created_by: Optional[str] = Field(
-        default=None, description="User who created version"
-    )
-    change_notes: Optional[str] = Field(
-        default=None, description="Version change notes"
-    )
+    created_by: str | None = Field(default=None, description="User who created version")
+    change_notes: str | None = Field(default=None, description="Version change notes")
     is_current: bool = Field(
         default=False, description="Whether this is the current version"
     )
@@ -174,11 +160,11 @@ class FunctionDiscoveryResult(BaseModel):
     """Result from function discovery."""
 
     total_functions: int = Field(description="Total number of functions found")
-    matched_functions: List[FunctionSchema] = Field(
+    matched_functions: list[FunctionSchema] = Field(
         description="Functions matching criteria"
     )
-    namespaces: List[str] = Field(description="Available namespaces")
-    tags: List[str] = Field(description="Available tags")
+    namespaces: list[str] = Field(description="Available namespaces")
+    tags: list[str] = Field(description="Available tags")
     query_time_ms: float = Field(description="Query execution time")
 
 
@@ -186,15 +172,15 @@ class ValidationResult(BaseModel):
     """Result from parameter validation."""
 
     valid: bool = Field(description="Whether validation passed")
-    errors: List[str] = Field(default_factory=list, description="Validation errors")
-    warnings: List[str] = Field(default_factory=list, description="Validation warnings")
-    coerced_values: Dict[str, Any] = Field(
+    errors: list[str] = Field(default_factory=list, description="Validation errors")
+    warnings: list[str] = Field(default_factory=list, description="Validation warnings")
+    coerced_values: dict[str, Any] = Field(
         default_factory=dict, description="Values that were coerced"
     )
-    missing_required: List[str] = Field(
+    missing_required: list[str] = Field(
         default_factory=list, description="Missing required parameters"
     )
-    extra_fields: List[str] = Field(
+    extra_fields: list[str] = Field(
         default_factory=list, description="Extra fields not in schema"
     )
 
@@ -291,7 +277,7 @@ class FunctionSchemaRegistryPlugin(Plugin):
         )
         log_discovery: bool = Field(default=False, description="Log discovery queries")
 
-    def __init__(self, resources: dict[str, Any], config: Dict[str, Any] | None = None):
+    def __init__(self, resources: dict[str, Any], config: dict[str, Any] | None = None):
         """Initialize the function schema registry plugin."""
         super().__init__(resources, config)
 
@@ -301,18 +287,18 @@ class FunctionSchemaRegistryPlugin(Plugin):
             raise ValueError(f"Invalid configuration: {validation_result.errors}")
 
         # Initialize registries
-        self._function_registry: Dict[str, FunctionRegistration] = {}
-        self._version_registry: Dict[str, List[SchemaVersion]] = {}
-        self._namespace_index: Dict[str, Set[str]] = {"default": set()}
-        self._tag_index: Dict[str, Set[str]] = {}
+        self._function_registry: dict[str, FunctionRegistration] = {}
+        self._version_registry: dict[str, list[SchemaVersion]] = {}
+        self._namespace_index: dict[str, set[str]] = {"default": set()}
+        self._tag_index: dict[str, set[str]] = {}
 
         # Initialize caches
-        self._validation_cache: Dict[str, ValidationResult] = {}
-        self._discovery_cache: Dict[str, Tuple[FunctionDiscoveryResult, float]] = {}
-        self._openapi_cache: Dict[str, Dict[str, Any]] = {}
+        self._validation_cache: dict[str, ValidationResult] = {}
+        self._discovery_cache: dict[str, tuple[FunctionDiscoveryResult, float]] = {}
+        self._openapi_cache: dict[str, dict[str, Any]] = {}
 
         # Initialize handlers
-        self._function_handlers: Dict[str, Callable] = {}
+        self._function_handlers: dict[str, Callable] = {}
 
         # Statistics
         self._stats = {
@@ -341,7 +327,7 @@ class FunctionSchemaRegistryPlugin(Plugin):
             await context.log(
                 level="error",
                 category="function_schema_registry",
-                message=f"Schema registry error: {str(e)}",
+                message=f"Schema registry error: {e!s}",
                 error=str(e),
             )
             return context.message
@@ -390,10 +376,10 @@ class FunctionSchemaRegistryPlugin(Plugin):
 
     async def register_function(
         self,
-        schema: Union[FunctionSchema, Dict[str, Any]],
-        context: Optional[Any] = None,
-        handler: Optional[Callable] = None,
-        namespace: Optional[str] = None,
+        schema: FunctionSchema | dict[str, Any],
+        context: Any | None = None,
+        handler: Callable | None = None,
+        namespace: str | None = None,
     ) -> bool:
         """Register a function schema.
 
@@ -480,7 +466,7 @@ class FunctionSchemaRegistryPlugin(Plugin):
                 await context.log(
                     level="error",
                     category="function_registry",
-                    message=f"Failed to register function: {str(e)}",
+                    message=f"Failed to register function: {e!s}",
                     error=str(e),
                 )
             return False
@@ -488,8 +474,8 @@ class FunctionSchemaRegistryPlugin(Plugin):
     async def validate_function_call(
         self,
         function_name: str,
-        parameters: Dict[str, Any],
-        namespace: Optional[str] = None,
+        parameters: dict[str, Any],
+        namespace: str | None = None,
     ) -> ValidationResult:
         """Validate function parameters against schema.
 
@@ -566,7 +552,7 @@ class FunctionSchemaRegistryPlugin(Plugin):
         return result
 
     def _validate_parameters(
-        self, schema: FunctionSchema, parameters: Dict[str, Any]
+        self, schema: FunctionSchema, parameters: dict[str, Any]
     ) -> ValidationResult:
         """Validate parameters against schema."""
         errors = []
@@ -630,8 +616,8 @@ class FunctionSchemaRegistryPlugin(Plugin):
         )
 
     def _validate_parameter_value(
-        self, param: FunctionParameter, value: Any, coerced_values: Dict[str, Any]
-    ) -> List[str]:
+        self, param: FunctionParameter, value: Any, coerced_values: dict[str, Any]
+    ) -> list[str]:
         """Validate a single parameter value."""
         errors = []
 
@@ -706,7 +692,7 @@ class FunctionSchemaRegistryPlugin(Plugin):
         else:
             return ParameterType.ANY
 
-    def _try_coerce_type(self, value: Any, target_type: ParameterType) -> Optional[Any]:
+    def _try_coerce_type(self, value: Any, target_type: ParameterType) -> Any | None:
         """Try to coerce value to target type."""
         try:
             if target_type == ParameterType.STRING:
@@ -733,9 +719,9 @@ class FunctionSchemaRegistryPlugin(Plugin):
 
     async def discover_functions(
         self,
-        namespace: Optional[str] = None,
-        tags: Optional[List[str]] = None,
-        name_pattern: Optional[str] = None,
+        namespace: str | None = None,
+        tags: list[str] | None = None,
+        name_pattern: str | None = None,
         include_deprecated: bool = False,
     ) -> FunctionDiscoveryResult:
         """Discover functions based on criteria.
@@ -816,8 +802,8 @@ class FunctionSchemaRegistryPlugin(Plugin):
         return result
 
     def get_harmony_description(
-        self, function_name: str, namespace: Optional[str] = None
-    ) -> Optional[Dict[str, Any]]:
+        self, function_name: str, namespace: str | None = None
+    ) -> dict[str, Any] | None:
         """Get harmony-compatible tool description for a function.
 
         Args:
@@ -879,8 +865,8 @@ class FunctionSchemaRegistryPlugin(Plugin):
         return harmony_desc
 
     def export_openapi_schema(
-        self, namespace: Optional[str] = None, version: str = "3.0.3"
-    ) -> Dict[str, Any]:
+        self, namespace: str | None = None, version: str = "3.0.3"
+    ) -> dict[str, Any]:
         """Export functions as OpenAPI schema.
 
         Args:
@@ -954,7 +940,7 @@ class FunctionSchemaRegistryPlugin(Plugin):
 
         return openapi_doc
 
-    def _build_openapi_schema(self, function_schema: FunctionSchema) -> Dict[str, Any]:
+    def _build_openapi_schema(self, function_schema: FunctionSchema) -> dict[str, Any]:
         """Build OpenAPI schema for function parameters."""
         schema = {"type": "object", "properties": {}, "required": []}
 
@@ -997,8 +983,8 @@ class FunctionSchemaRegistryPlugin(Plugin):
         self,
         function_name: str,
         schema: FunctionSchema,
-        namespace: Optional[str] = None,
-        change_notes: Optional[str] = None,
+        namespace: str | None = None,
+        change_notes: str | None = None,
     ) -> bool:
         """Add a new version of a function schema.
 
@@ -1069,8 +1055,8 @@ class FunctionSchemaRegistryPlugin(Plugin):
         return ".".join(parts)
 
     def get_function_versions(
-        self, function_name: str, namespace: Optional[str] = None
-    ) -> List[SchemaVersion]:
+        self, function_name: str, namespace: str | None = None
+    ) -> list[SchemaVersion]:
         """Get all versions of a function schema.
 
         Args:
@@ -1085,7 +1071,7 @@ class FunctionSchemaRegistryPlugin(Plugin):
 
         return self._version_registry.get(reg_key, [])
 
-    def _validate_schema(self, schema: FunctionSchema) -> List[str]:
+    def _validate_schema(self, schema: FunctionSchema) -> list[str]:
         """Validate a function schema."""
         errors = []
 
@@ -1112,7 +1098,7 @@ class FunctionSchemaRegistryPlugin(Plugin):
 
         return errors
 
-    def _validate_parameter_schema(self, param: FunctionParameter) -> List[str]:
+    def _validate_parameter_schema(self, param: FunctionParameter) -> list[str]:
         """Validate a parameter schema."""
         errors = []
 
@@ -1138,7 +1124,7 @@ class FunctionSchemaRegistryPlugin(Plugin):
 
         return errors
 
-    async def _extract_function_definitions(self, message: str) -> List[FunctionSchema]:
+    async def _extract_function_definitions(self, message: str) -> list[FunctionSchema]:
         """Extract function definitions from message."""
         functions = []
 
@@ -1159,7 +1145,7 @@ class FunctionSchemaRegistryPlugin(Plugin):
 
         return functions
 
-    async def _extract_function_calls(self, message: str) -> List[Dict[str, Any]]:
+    async def _extract_function_calls(self, message: str) -> list[dict[str, Any]]:
         """Extract function calls from message."""
         calls = []
 
@@ -1187,7 +1173,7 @@ class FunctionSchemaRegistryPlugin(Plugin):
         return calls
 
     def _generate_validation_cache_key(
-        self, function_name: str, parameters: Dict[str, Any], namespace: Optional[str]
+        self, function_name: str, parameters: dict[str, Any], namespace: str | None
     ) -> str:
         """Generate cache key for validation."""
         key_parts = [
@@ -1200,9 +1186,9 @@ class FunctionSchemaRegistryPlugin(Plugin):
 
     def _generate_discovery_cache_key(
         self,
-        namespace: Optional[str],
-        tags: Optional[List[str]],
-        name_pattern: Optional[str],
+        namespace: str | None,
+        tags: list[str] | None,
+        name_pattern: str | None,
         include_deprecated: bool,
     ) -> str:
         """Generate cache key for discovery."""
@@ -1240,7 +1226,7 @@ class FunctionSchemaRegistryPlugin(Plugin):
 
     # Public API methods
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get registry statistics."""
         return {
             "total_functions": len(self._function_registry),
@@ -1252,8 +1238,8 @@ class FunctionSchemaRegistryPlugin(Plugin):
         }
 
     def get_function(
-        self, function_name: str, namespace: Optional[str] = None
-    ) -> Optional[FunctionSchema]:
+        self, function_name: str, namespace: str | None = None
+    ) -> FunctionSchema | None:
         """Get a function schema.
 
         Args:
@@ -1269,7 +1255,7 @@ class FunctionSchemaRegistryPlugin(Plugin):
         registration = self._function_registry.get(reg_key)
         return registration.schema if registration else None
 
-    def list_functions(self, namespace: Optional[str] = None) -> List[str]:
+    def list_functions(self, namespace: str | None = None) -> list[str]:
         """List all function names.
 
         Args:
@@ -1283,9 +1269,7 @@ class FunctionSchemaRegistryPlugin(Plugin):
         else:
             return [reg.schema.name for reg in self._function_registry.values()]
 
-    def delete_function(
-        self, function_name: str, namespace: Optional[str] = None
-    ) -> bool:
+    def delete_function(self, function_name: str, namespace: str | None = None) -> bool:
         """Delete a function from registry.
 
         Args:
@@ -1327,7 +1311,7 @@ class FunctionSchemaRegistryPlugin(Plugin):
         return True
 
     def enable_function(
-        self, function_name: str, namespace: Optional[str] = None, enabled: bool = True
+        self, function_name: str, namespace: str | None = None, enabled: bool = True
     ) -> bool:
         """Enable or disable a function.
 
