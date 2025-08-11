@@ -77,33 +77,6 @@ Complete the modularization of GPT-OSS plugins by removing code duplication betw
 
 
 
-## Story 4: Update Integration Tests
-
-### Summary
-Create or update integration tests to verify both import paths work correctly during the transition period
-
-### Description
-Ensure the codebase has comprehensive tests that verify both the legacy import path (with deprecation warnings) and the new modular import path work correctly. This will help catch any issues during the transition period.
-
-### Acceptance Criteria
-- [ ] Create test file test_gpt_oss_migration.py if it doesn't exist
-- [ ] Add tests that import plugins using the legacy path (entity.plugins.gpt_oss)
-- [ ] Add tests that import plugins using the new path (entity_plugin_gpt_oss)
-- [ ] Verify deprecation warnings are properly raised for legacy imports
-- [ ] Ensure both import methods result in the same functional behavior
-- [ ] Add tests for error cases (package not installed, etc.)
-- [ ] Verify all 9 plugins can be instantiated and basic functionality works
-- [ ] Document any test environment setup requirements
-
-### Technical Notes
-- Use pytest's warning capture functionality to verify deprecation warnings
-- Consider using mock/patch for testing package-not-installed scenarios
-- Tests should cover both successful imports and error conditions
-- May need to update CI/CD configuration to install entity-plugin-gpt-oss package
-
-### Story Points: 5
-
----
 
 ## Story 5: Update Documentation and Dependencies
 
