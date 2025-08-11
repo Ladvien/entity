@@ -9,36 +9,6 @@
 
 
 
-## 🧹 Story 3: Clean Plugin Directories from Main Repository
-**Key:** ENTITY-103
-**Type:** Task
-**Priority:** High
-**Story Points:** 2
-**Blocked By:** ENTITY-102
-**Assignee:** Backend Team
-
-### Description
-Remove plugin code from main repository that will conflict with submodules, after verifying successful push to new repositories.
-
-### Acceptance Criteria
-- [ ] Verify all plugin repos have code using `gh repo clone --dry-run`
-- [ ] Create timestamped backup of directories being removed
-- [ ] Remove src/entity/plugins/examples
-- [ ] Remove src/entity/plugins/gpt_oss
-- [ ] Evaluate and handle tests/plugins/gpt_oss
-- [ ] Preserve src/entity/plugins/defaults
-- [ ] No broken imports in main codebase
-
-### Technical Notes
-- Use `gh api repos/Ladvien/entity-plugin-*/contents` to verify files exist before deletion
-- Document any import paths that need updating
-
-### Definition of Done
-- [ ] Backup archive created and verified
-- [ ] Directories removed from main repo
-- [ ] Main entity-core still runs
-
----
 
 ## 📦 Story 4: Add Plugins as Git Submodules
 **Key:** ENTITY-104
