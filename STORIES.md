@@ -5,86 +5,7 @@ Refactor the Entity Framework to eliminate code duplication and move plugin suit
 
 ---
 
-## Story 2: Extract GPT-OSS Plugin Suite
-
-### Description
-Move all GPT-OSS related plugins from the core repository into a separate `entity-plugin-gpt-oss` submodule repository.
-
-### Acceptance Criteria
-- [ ] All 9 GPT-OSS plugins are moved to new repository
-- [ ] Plugins maintain backward compatibility
-- [ ] All tests pass in both core and plugin repository
-- [ ] Documentation is updated with new import paths
-- [ ] Migration guide is created for existing users
-
-### Subtasks
-
-#### Task 2.1: Create GPT-OSS Plugin Repository
-**Instructions for Junior Engineer:**
-1. Create new repository `entity-plugin-gpt-oss` using the plugin template
-2. Update repository metadata:
-   - Set description to "GPT-OSS integration plugins for Entity Framework"
-   - Add topics/tags: entity-framework, gpt-oss, plugins, ai
-3. Create directory structure:
-   - `src/entity_gpt_oss/` as the main package directory
-   - Create `__init__.py` that exports all plugin classes
-4. Update `pyproject.toml`:
-   - Set package name to `entity-plugin-gpt-oss`
-   - Add specific dependencies needed by GPT-OSS plugins
-   - Set version to 0.1.0 for initial release
-5. Configure repository settings:
-   - Enable issues and discussions
-   - Set up security scanning
-   - Configure Dependabot for dependency updates
-
-#### Task 2.2: Migrate GPT-OSS Plugin Code
-**Instructions for Junior Engineer:**
-1. Identify all files in `src/entity/plugins/gpt_oss/`:
-   - List all 9 plugin files
-   - Note any shared utilities or constants
-   - Document all imports and dependencies
-2. Copy each plugin file to the new repository:
-   - Maintain the same file names
-   - Preserve all docstrings and comments
-   - Keep the same class names
-3. Update import statements in each file:
-   - Change relative imports to absolute imports
-   - Update imports from entity.plugins.base to use entity-core
-   - Fix any circular import issues
-4. Create compatibility shims in the original location:
-   - Leave stub files that import from the new package
-   - Add deprecation warnings indicating the new location
-   - Set deprecation timeline (e.g., 6 months)
-5. Update the main `__init__.py` to properly export all plugins:
-   - List all plugin classes in `__all__`
-   - Provide clear namespace organization
-
-#### Task 2.3: Create GPT-OSS Plugin Tests
-**Instructions for Junior Engineer:**
-1. Create comprehensive test suite in `tests/` directory:
-   - One test file per plugin
-   - Test for common scenarios and edge cases
-   - Include integration tests with mock GPT-OSS responses
-2. Set up test fixtures:
-   - Create mock context objects
-   - Define sample GPT-OSS responses
-   - Set up test configuration objects
-3. Ensure test coverage of at least 80%:
-   - Test all public methods
-   - Test error handling paths
-   - Test configuration validation
-4. Create performance benchmarks:
-   - Measure plugin execution time
-   - Test memory usage
-   - Document baseline performance metrics
-5. Add example usage tests:
-   - Show how to use each plugin
-   - Demonstrate plugin combinations
-   - Test real-world scenarios
-
----
-
-## Story 3: Consolidate Default Plugins
+## Story 2: Consolidate Default Plugins
 
 ### Description
 Refactor the six nearly-identical default plugins into a single configurable plugin to eliminate code duplication.
@@ -98,7 +19,7 @@ Refactor the six nearly-identical default plugins into a single configurable plu
 
 ### Subtasks
 
-#### Task 3.1: Analyze Default Plugin Patterns
+#### Task 2.1: Analyze Default Plugin Patterns
 **Instructions for Junior Engineer:**
 1. Document the current implementation of all 6 default plugins:
    - InputPlugin, ParsePlugin, ThinkPlugin
@@ -120,7 +41,7 @@ Refactor the six nearly-identical default plugins into a single configurable plu
    - Memory footprint reduction
    - Performance implications
 
-#### Task 3.2: Implement Unified PassThroughPlugin
+#### Task 2.2: Implement Unified PassThroughPlugin
 **Instructions for Junior Engineer:**
 1. Create new `PassThroughPlugin` class in `entity/plugins/defaults.py`:
    - Accept stage as a configuration parameter
@@ -141,7 +62,7 @@ Refactor the six nearly-identical default plugins into a single configurable plu
    - Ensure only one stage per instance
    - Provide clear error messages
 
-#### Task 3.3: Migrate and Test Default Plugin Usage
+#### Task 2.3: Migrate and Test Default Plugin Usage
 **Instructions for Junior Engineer:**
 1. Update all imports in the codebase:
    - Find all imports of individual default plugins
@@ -167,7 +88,7 @@ Refactor the six nearly-identical default plugins into a single configurable plu
 
 ---
 
-## Story 4: Create Shared Plugin Utilities
+## Story 3: Create Shared Plugin Utilities
 
 ### Description
 Extract common patterns from plugins into reusable mixins and utilities to reduce code duplication across all plugins.
@@ -181,7 +102,7 @@ Extract common patterns from plugins into reusable mixins and utilities to reduc
 
 ### Subtasks
 
-#### Task 4.1: Create Plugin Mixins Module
+#### Task 3.1: Create Plugin Mixins Module
 **Instructions for Junior Engineer:**
 1. Create `entity/plugins/mixins.py` file
 2. Identify and implement ConfigValidationMixin:
@@ -205,7 +126,7 @@ Extract common patterns from plugins into reusable mixins and utilities to reduc
    - Add retry logic helpers
    - Include circuit breaker pattern
 
-#### Task 4.2: Consolidate Validation Utilities
+#### Task 3.2: Consolidate Validation Utilities
 **Instructions for Junior Engineer:**
 1. Create `entity/core/validators.py` module
 2. Extract SQL validation from SecureDatabaseResource:
@@ -226,7 +147,7 @@ Extract common patterns from plugins into reusable mixins and utilities to reduc
    - Provide builder pattern for complex validations
    - Include helpers for common validation scenarios
 
-#### Task 4.3: Extract Rate Limiting Component
+#### Task 3.3: Extract Rate Limiting Component
 **Instructions for Junior Engineer:**
 1. Create `entity/core/rate_limiter.py` module
 2. Analyze existing rate limiters:
@@ -250,7 +171,7 @@ Extract common patterns from plugins into reusable mixins and utilities to reduc
 
 ---
 
-## Story 5: Refactor Memory Resources
+## Story 4: Refactor Memory Resources
 
 ### Description
 Consolidate the four memory implementations using composition pattern to eliminate duplicate code while maintaining all functionality.
@@ -264,7 +185,7 @@ Consolidate the four memory implementations using composition pattern to elimina
 
 ### Subtasks
 
-#### Task 5.1: Design Memory Component Architecture
+#### Task 4.1: Design Memory Component Architecture
 **Instructions for Junior Engineer:**
 1. Create `entity/resources/memory_components.py`
 2. Define IMemory Protocol:
@@ -284,7 +205,7 @@ Consolidate the four memory implementations using composition pattern to elimina
    - Show how components compose
    - Provide usage examples
 
-#### Task 5.2: Implement Memory Feature Decorators
+#### Task 4.2: Implement Memory Feature Decorators
 **Instructions for Junior Engineer:**
 1. Create TTLDecorator class:
    - Wrap base memory operations
@@ -310,7 +231,7 @@ Consolidate the four memory implementations using composition pattern to elimina
    - Collect performance metrics
    - Generate usage reports
 
-#### Task 5.3: Migrate Existing Memory Classes
+#### Task 4.3: Migrate Existing Memory Classes
 **Instructions for Junior Engineer:**
 1. Refactor base Memory class:
    - Extract core functionality
@@ -335,7 +256,7 @@ Consolidate the four memory implementations using composition pattern to elimina
 
 ---
 
-## Story 6: Create Plugin Submodule Repositories
+## Story 5: Create Plugin Submodule Repositories
 
 ### Description
 Create and configure the three new plugin repositories as Git submodules: examples, stdlib, and gpt-oss.
@@ -349,7 +270,7 @@ Create and configure the three new plugin repositories as Git submodules: exampl
 
 ### Subtasks
 
-#### Task 6.1: Initialize Plugin Repositories
+#### Task 5.1: Initialize Plugin Repositories
 **Instructions for Junior Engineer:**
 1. Create `entity-plugin-examples` repository:
    - Use the plugin template as base
@@ -374,7 +295,7 @@ Create and configure the three new plugin repositories as Git submodules: exampl
    - Create GitHub releases
    - Publish to PyPI
 
-#### Task 6.2: Add Submodules to Core Repository
+#### Task 5.2: Add Submodules to Core Repository
 **Instructions for Junior Engineer:**
 1. Remove the plugin files that will be moved:
    - Delete files from entity/plugins/examples/
@@ -397,7 +318,7 @@ Create and configure the three new plugin repositories as Git submodules: exampl
    - Run tests across all submodules
    - Verify integration tests pass
 
-#### Task 6.3: Create Submodule Management Documentation
+#### Task 5.3: Create Submodule Management Documentation
 **Instructions for Junior Engineer:**
 1. Create `docs/SUBMODULE_GUIDE.md`:
    - Explain what submodules are

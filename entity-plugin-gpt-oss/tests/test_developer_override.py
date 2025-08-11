@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from entity.plugins.context import PluginContext
-from entity.plugins.gpt_oss.developer_override import (
+from entity_plugin_gpt_oss.developer_override import (
     AuditEntry,
     DeveloperOverride,
     DeveloperOverridePlugin,
@@ -210,8 +210,6 @@ class TestDeveloperOverridePlugin:
         self, mock_resources, plugin_config, mock_context
     ):
         """Test execution with multiple overrides respects priority."""
-        # Enable global overrides for this test
-        plugin_config.allow_global_overrides = True
         plugin = DeveloperOverridePlugin(mock_resources, plugin_config)
 
         # Create two overrides with different priorities
@@ -820,7 +818,7 @@ class TestConfigModel:
         assert config.enabled is False
         assert config.max_active_overrides == 20
         assert config.allow_global_overrides is True
-        assert config.developer_permissions == {"dev1": "full_admin"}
+        assert config.developer_permissions == {"dev1": PermissionLevel.FULL_ADMIN}
         assert config.max_instruction_length == 1000
 
 

@@ -170,8 +170,8 @@ class DeveloperOverridePlugin(Plugin):
             if not applicable_overrides:
                 return context.message
 
-            # Sort by priority (lowest first, so highest priority appears first after prepending)
-            applicable_overrides.sort(key=lambda x: x.priority, reverse=False)
+            # Sort by priority (highest first)
+            applicable_overrides.sort(key=lambda x: x.priority, reverse=True)
 
             # Apply overrides
             modified_message = context.message
@@ -297,19 +297,9 @@ class DeveloperOverridePlugin(Plugin):
         Returns:
             Permission level
         """
-        permission = self.config.developer_permissions.get(
+        return self.config.developer_permissions.get(
             developer_id, self.config.default_permission_level
         )
-        
-        # Handle both string and enum values for backward compatibility
-        if isinstance(permission, str):
-            try:
-                return PermissionLevel(permission)
-            except ValueError:
-                logger.warning(f"Invalid permission level '{permission}' for developer {developer_id}")
-                return self.config.default_permission_level
-        
-        return permission
 
     async def create_override(
         self,
