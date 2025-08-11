@@ -22,6 +22,16 @@ from entity.resources.logging import (
     RichLoggingResource,
 )
 from entity.resources.memory import Memory
+from entity.resources.memory_factories import (
+    AsyncMemory,
+    ManagedMemory,
+    RobustMemory,
+    create_async_memory,
+    create_full_featured_memory,
+    create_managed_memory,
+    create_memory,
+    create_robust_memory,
+)
 from entity.resources.metrics import MetricsCollectorResource
 from entity.resources.storage import StorageResource
 from entity.resources.vector_store import VectorStoreResource
@@ -51,4 +61,14 @@ __all__ = [
     "ArgumentCategory",
     "create_argument_parsing_resource",
     "InfrastructureError",
+    # New memory factory functions
+    "create_memory",
+    "create_async_memory",
+    "create_managed_memory",
+    "create_robust_memory",
+    "create_full_featured_memory",
+    # Deprecated compatibility classes
+    "AsyncMemory",
+    "ManagedMemory",
+    "RobustMemory",
 ]
