@@ -79,59 +79,7 @@ Complete the modularization of GPT-OSS plugins by removing code duplication betw
 
 
 
-## Story 6: Performance and Import Time Validation
 
-### Summary
-Verify that the modularization doesn't negatively impact import times or runtime performance
-
-### Description
-Ensure that the new modular structure doesn't introduce performance regressions, particularly around import times and module loading. This is especially important for users who might not need GPT-OSS functionality.
-
-### Acceptance Criteria
-- [ ] Measure import time of entity.plugins with and without GPT-OSS plugins
-- [ ] Verify lazy loading works correctly (plugins only imported when needed)
-- [ ] Ensure no circular import issues exist
-- [ ] Confirm memory footprint is reduced when GPT-OSS plugins aren't used
-- [ ] Document performance improvements from modularization
-- [ ] Create benchmark script for future performance regression testing
-
-### Technical Notes
-- Use Python's -X importtime flag for measuring import performance
-- Consider using memory_profiler for memory footprint analysis
-- Document the performance benefits of the modular approach
-- Ensure the compatibility layer doesn't negate performance benefits
-
-### Story Points: 3
-
----
-
-## Story 7: Release Preparation and Rollback Plan
-
-### Summary
-Prepare for release including version bumping, release notes, and a rollback plan if issues are discovered
-
-### Description
-Create a comprehensive release plan for the modularization changes, including contingency plans if critical issues are discovered post-release.
-
-### Acceptance Criteria
-- [ ] Create detailed release notes explaining the change and migration path
-- [ ] Document rollback procedure if critical issues are found
-- [ ] Update version numbers appropriately (consider semantic versioning implications)
-- [ ] Create git tags for before/after the change
-- [ ] Prepare announcement for users about the upcoming change
-- [ ] Document support timeline for compatibility layer
-- [ ] Create issue templates for migration-related problems
-- [ ] Ensure PyPI package is properly published and tested
-
-### Technical Notes
-- This is a breaking change for some import patterns, consider major version bump
-- Rollback plan should include reverting commits and republishing if needed
-- Consider a phased rollout or beta release first
-- Monitor issue tracker for migration problems after release
-
-### Story Points: 3
-
----
 
 ## Definition of Done (for all stories)
 - Code changes completed and committed

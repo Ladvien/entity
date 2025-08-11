@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Migration Documentation
+    url: https://github.com/entity-framework/entity-core/blob/main/MIGRATION.md
+    about: Step-by-step guide for migrating to the new modular architecture
+  - name: 🚀 Performance Benchmarks
+    url: https://github.com/entity-framework/entity-core/blob/main/benchmarks/import_performance_report.md
+    about: View performance improvements from the modularization
+  - name: 💬 Community Discussions
+    url: https://github.com/entity-framework/entity-core/discussions
+    about: Ask questions and discuss with the community
+  - name: 📧 Security Issues
+    url: mailto:security@entity-framework.com
+    about: Report security vulnerabilities privately

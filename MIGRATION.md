@@ -253,8 +253,16 @@ If you maintain a package that depends on Entity Framework with GPT-OSS plugins:
 3. Consider making it an optional dependency if not all users need GPT-OSS plugins
 4. Test with both old (with compatibility layer) and new import paths during transition
 
+## Additional Resources
+
+For more information about this release:
+
+- **[Release Notes](RELEASE_NOTES.md)**: Complete details about v0.1.0 changes and improvements
+- **[Performance Benchmarks](benchmarks/import_performance_report.md)**: Detailed performance analysis
+- **[Compatibility Timeline](COMPATIBILITY_TIMELINE.md)**: Support schedule and migration timeline
+
 ---
 
-*Last updated: December 2024*
-*Entity Framework Version: 0.0.12*
-*Target Removal Version: 0.1.0*
+*Last updated: Q2 2024*
+*Entity Framework Version: 0.1.0*
+*Target Removal Version: 0.2.0*
