@@ -74,30 +74,6 @@ Complete the modularization of GPT-OSS plugins by removing code duplication betw
 
 ---
 
-## Story 1: Verify entity-plugin-gpt-oss Package Completeness
-
-### Summary
-Ensure the separate entity-plugin-gpt-oss package contains all necessary GPT-OSS plugin functionality before removing duplicates from main codebase
-
-### Description
-Before removing any code from the main repository, we need to verify that the modularized package (entity-plugin-gpt-oss) is complete and functional. This story involves auditing both codebases to ensure nothing was missed during the initial migration.
-
-### Acceptance Criteria
-- [ ] Create a comparison matrix documenting all 9 plugins present in both locations
-- [ ] Verify each plugin in entity-plugin-gpt-oss has complete functionality matching the original
-- [ ] Confirm all plugin dependencies are properly declared in the package's setup.py/pyproject.toml
-- [ ] Verify the package can be successfully installed via pip in a clean environment
-- [ ] Document any discrepancies found between the two implementations
-- [ ] Ensure __init__.py properly exports all plugin classes
-
-### Technical Notes
-- Plugin list to verify: ReasoningTracePlugin, StructuredOutputPlugin, DeveloperOverridePlugin, AdaptiveReasoningPlugin, GPTOSSToolOrchestrator, MultiChannelAggregatorPlugin, HarmonySafetyFilterPlugin, FunctionSchemaRegistryPlugin, ReasoningAnalyticsDashboardPlugin
-- Check for any utility functions or helper classes that might have been missed
-- Verify version compatibility requirements are documented
-
-### Story Points: 5
-
----
 
 ## Story 2: Remove Duplicate GPT-OSS Plugin Implementations
 
