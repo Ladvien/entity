@@ -9,96 +9,6 @@ Refactor the Entity Framework to eliminate code duplication and move plugin suit
 
 ---
 
-
-## Story 5: Create Plugin Submodule Repositories
-
-### Description
-Create and configure the three new plugin repositories as Git submodules: examples, stdlib, and gpt-oss.
-
-### Acceptance Criteria
-- [ ] Three new repositories created and configured
-- [ ] Plugins successfully moved to respective repositories
-- [ ] Submodules integrated with main repository
-- [ ] CI/CD passes with submodule structure
-- [ ] Documentation updated for new structure
-
-### Subtasks
-
-#### Task 5.1: Initialize Plugin Repositories
-**Instructions for Junior Engineer:**
-1. Create `entity-plugin-examples` repository:
-   - Use the plugin template as base
-   - Set description for example/educational plugins
-   - Configure as public repository
-   - Enable GitHub Pages for documentation
-2. Create `entity-plugin-stdlib` repository:
-   - Use plugin template
-   - Set description for standard/common plugins
-   - Configure repository settings
-   - Set up release automation
-3. Configure `entity-plugin-gpt-oss` repository:
-   - Already created in Story 2
-   - Verify all settings are correct
-   - Ensure CI/CD is working
-4. Set up repository permissions:
-   - Configure team access
-   - Set up branch protection
-   - Enable required reviews
-5. Create initial releases:
-   - Tag version 0.1.0
-   - Create GitHub releases
-   - Publish to PyPI
-
-#### Task 5.2: Add Submodules to Core Repository
-**Instructions for Junior Engineer:**
-1. Remove the plugin files that will be moved:
-   - Delete files from entity/plugins/examples/
-   - Delete files from entity/plugins/gpt_oss/
-   - Move smart_selector and web_search to stdlib
-2. Add submodules to the core repository:
-   - Run git submodule add for each repository
-   - Place under libs/ or submodules/ directory
-   - Configure .gitmodules file
-3. Update import paths:
-   - Create import compatibility layer
-   - Update all references in core
-   - Fix any broken imports
-4. Configure development environment:
-   - Update development setup instructions
-   - Create script to initialize all submodules
-   - Add submodule update to Makefile
-5. Update CI/CD pipeline:
-   - Ensure submodules are checked out
-   - Run tests across all submodules
-   - Verify integration tests pass
-
-#### Task 5.3: Create Submodule Management Documentation
-**Instructions for Junior Engineer:**
-1. Create `docs/SUBMODULE_GUIDE.md`:
-   - Explain what submodules are
-   - Why Entity uses submodules
-   - Benefits and tradeoffs
-2. Document common operations:
-   - How to clone with submodules
-   - How to update submodules
-   - How to make changes to submodules
-   - How to handle merge conflicts
-3. Create developer workflow guide:
-   - Setting up development environment
-   - Making changes across core and plugins
-   - Testing changes locally
-   - Submitting PRs with submodule changes
-4. Add troubleshooting section:
-   - Common submodule problems
-   - How to fix detached HEAD
-   - Recovering from submodule issues
-5. Create quick reference card:
-   - Most common git commands
-   - Submodule-specific commands
-   - Emergency recovery procedures
-
----
-
 ## Instructions for Setting Up Separate Repositories as Submodules
 
 ### For Repository Administrators:
@@ -155,3 +65,207 @@ Create and configure the three new plugin repositories as Git submodules: exampl
    - Publish to PyPI from submodule
    - Update version reference in main repository
    - Document compatibility in release notes
+
+
+# Jira Epic: Complete GPT-OSS Plugin Modularization
+
+## Epic Description
+Complete the modularization of GPT-OSS plugins by removing code duplication between the main entity-core repository and the entity-plugin-gpt-oss package. Currently, the same plugin code exists in three places, creating maintenance burden and confusion.
+
+---
+
+## Story 1: Verify entity-plugin-gpt-oss Package Completeness
+
+### Summary
+Ensure the separate entity-plugin-gpt-oss package contains all necessary GPT-OSS plugin functionality before removing duplicates from main codebase
+
+### Description
+Before removing any code from the main repository, we need to verify that the modularized package (entity-plugin-gpt-oss) is complete and functional. This story involves auditing both codebases to ensure nothing was missed during the initial migration.
+
+### Acceptance Criteria
+- [ ] Create a comparison matrix documenting all 9 plugins present in both locations
+- [ ] Verify each plugin in entity-plugin-gpt-oss has complete functionality matching the original
+- [ ] Confirm all plugin dependencies are properly declared in the package's setup.py/pyproject.toml
+- [ ] Verify the package can be successfully installed via pip in a clean environment
+- [ ] Document any discrepancies found between the two implementations
+- [ ] Ensure __init__.py properly exports all plugin classes
+
+### Technical Notes
+- Plugin list to verify: ReasoningTracePlugin, StructuredOutputPlugin, DeveloperOverridePlugin, AdaptiveReasoningPlugin, GPTOSSToolOrchestrator, MultiChannelAggregatorPlugin, HarmonySafetyFilterPlugin, FunctionSchemaRegistryPlugin, ReasoningAnalyticsDashboardPlugin
+- Check for any utility functions or helper classes that might have been missed
+- Verify version compatibility requirements are documented
+
+### Story Points: 5
+
+---
+
+## Story 2: Remove Duplicate GPT-OSS Plugin Implementations
+
+### Summary
+Delete the duplicate full implementations of GPT-OSS plugins from src/entity/plugins/gpt_oss/ directory
+
+### Description
+Remove all full plugin implementation files from the legacy location, keeping only the __init__.py file which will be updated to show deprecation warnings and import from the compatibility layer.
+
+### Acceptance Criteria
+- [ ] Delete all 9 individual plugin implementation files from src/entity/plugins/gpt_oss/
+- [ ] Keep only the __init__.py file in the gpt_oss directory
+- [ ] Update __init__.py to import from gpt_oss_compat module instead of local files
+- [ ] Ensure __init__.py maintains the same public API (all plugin classes remain importable)
+- [ ] Add clear deprecation warnings in __init__.py indicating the new import path
+- [ ] Verify no other parts of the codebase directly import from the deleted files
+
+### Technical Notes
+- Files to remove: reasoning_trace.py, structured_output.py, developer_override.py, adaptive_reasoning.py, native_tools.py, multi_channel_aggregator.py, harmony_safety_filter.py, function_schema_registry.py, reasoning_analytics_dashboard.py
+- Search entire codebase for any direct imports from these files
+- The __init__.py should only contain imports and deprecation warnings, no actual implementation
+
+### Story Points: 3
+
+---
+
+## Story 3: Enhance Compatibility Layer Error Handling
+
+### Summary
+Improve the gpt_oss_compat.py compatibility shim to provide better error messages and migration guidance
+
+### Description
+The current compatibility layer provides basic functionality but needs enhancement to better guide users through the migration process and handle edge cases where the new package might not be installed.
+
+### Acceptance Criteria
+- [ ] Add version checking to ensure entity-plugin-gpt-oss is installed when compatibility layer is used
+- [ ] Provide clear, actionable error messages when the package is missing
+- [ ] Include migration instructions in error messages
+- [ ] Add logging for deprecation warnings (not just warnings.warn)
+- [ ] Implement fallback behavior that clearly indicates the plugin is not available rather than failing silently
+- [ ] Add a migration guide comment block at the top of the file
+- [ ] Ensure all 9 plugin shims follow the same pattern and quality standards
+
+### Technical Notes
+- Consider environment detection (development vs. production) for warning verbosity
+- Error messages should include: pip install command, new import path, deprecation timeline
+- Consider adding a environment variable to suppress deprecation warnings for CI/CD systems
+
+### Story Points: 3
+
+---
+
+## Story 4: Update Integration Tests
+
+### Summary
+Create or update integration tests to verify both import paths work correctly during the transition period
+
+### Description
+Ensure the codebase has comprehensive tests that verify both the legacy import path (with deprecation warnings) and the new modular import path work correctly. This will help catch any issues during the transition period.
+
+### Acceptance Criteria
+- [ ] Create test file test_gpt_oss_migration.py if it doesn't exist
+- [ ] Add tests that import plugins using the legacy path (entity.plugins.gpt_oss)
+- [ ] Add tests that import plugins using the new path (entity_plugin_gpt_oss)
+- [ ] Verify deprecation warnings are properly raised for legacy imports
+- [ ] Ensure both import methods result in the same functional behavior
+- [ ] Add tests for error cases (package not installed, etc.)
+- [ ] Verify all 9 plugins can be instantiated and basic functionality works
+- [ ] Document any test environment setup requirements
+
+### Technical Notes
+- Use pytest's warning capture functionality to verify deprecation warnings
+- Consider using mock/patch for testing package-not-installed scenarios
+- Tests should cover both successful imports and error conditions
+- May need to update CI/CD configuration to install entity-plugin-gpt-oss package
+
+### Story Points: 5
+
+---
+
+## Story 5: Update Documentation and Dependencies
+
+### Summary
+Update all documentation, README files, and dependency declarations to reflect the new modular structure
+
+### Description
+Ensure all documentation accurately reflects the new plugin structure and provides clear migration guidance for users. Update dependency files to properly reference the new package.
+
+### Acceptance Criteria
+- [ ] Update main README.md with migration notice and new import instructions
+- [ ] Create MIGRATION.md guide for moving from legacy to new imports
+- [ ] Update requirements.txt/setup.py/pyproject.toml to include entity-plugin-gpt-oss as optional dependency
+- [ ] Update any example code in documentation to use new import paths
+- [ ] Add deprecation timeline to relevant documentation
+- [ ] Update developer documentation explaining the modular architecture
+- [ ] Ensure docstrings in compatibility layer are comprehensive
+- [ ] Update CHANGELOG.md with breaking change notice
+
+### Technical Notes
+- Consider adding the new package as an optional/extras dependency
+- Documentation should explain why modularization was done (maintenance, optional features, etc.)
+- Include troubleshooting section for common migration issues
+- Timeline should specify when compatibility layer will be removed (entity-core 0.1.0)
+
+### Story Points: 3
+
+---
+
+## Story 6: Performance and Import Time Validation
+
+### Summary
+Verify that the modularization doesn't negatively impact import times or runtime performance
+
+### Description
+Ensure that the new modular structure doesn't introduce performance regressions, particularly around import times and module loading. This is especially important for users who might not need GPT-OSS functionality.
+
+### Acceptance Criteria
+- [ ] Measure import time of entity.plugins with and without GPT-OSS plugins
+- [ ] Verify lazy loading works correctly (plugins only imported when needed)
+- [ ] Ensure no circular import issues exist
+- [ ] Confirm memory footprint is reduced when GPT-OSS plugins aren't used
+- [ ] Document performance improvements from modularization
+- [ ] Create benchmark script for future performance regression testing
+
+### Technical Notes
+- Use Python's -X importtime flag for measuring import performance
+- Consider using memory_profiler for memory footprint analysis
+- Document the performance benefits of the modular approach
+- Ensure the compatibility layer doesn't negate performance benefits
+
+### Story Points: 3
+
+---
+
+## Story 7: Release Preparation and Rollback Plan
+
+### Summary
+Prepare for release including version bumping, release notes, and a rollback plan if issues are discovered
+
+### Description
+Create a comprehensive release plan for the modularization changes, including contingency plans if critical issues are discovered post-release.
+
+### Acceptance Criteria
+- [ ] Create detailed release notes explaining the change and migration path
+- [ ] Document rollback procedure if critical issues are found
+- [ ] Update version numbers appropriately (consider semantic versioning implications)
+- [ ] Create git tags for before/after the change
+- [ ] Prepare announcement for users about the upcoming change
+- [ ] Document support timeline for compatibility layer
+- [ ] Create issue templates for migration-related problems
+- [ ] Ensure PyPI package is properly published and tested
+
+### Technical Notes
+- This is a breaking change for some import patterns, consider major version bump
+- Rollback plan should include reverting commits and republishing if needed
+- Consider a phased rollout or beta release first
+- Monitor issue tracker for migration problems after release
+
+### Story Points: 3
+
+---
+
+## Definition of Done (for all stories)
+- Code changes completed and committed
+- Unit tests pass
+- Integration tests pass
+- Documentation updated
+- Code reviewed by senior developer
+- No reduction in code coverage
+- Deprecation warnings are clear and actionable
+- Changes work in both development and production environments
