@@ -78,33 +78,6 @@ Complete the modularization of GPT-OSS plugins by removing code duplication betw
 
 
 
-## Story 5: Update Documentation and Dependencies
-
-### Summary
-Update all documentation, README files, and dependency declarations to reflect the new modular structure
-
-### Description
-Ensure all documentation accurately reflects the new plugin structure and provides clear migration guidance for users. Update dependency files to properly reference the new package.
-
-### Acceptance Criteria
-- [ ] Update main README.md with migration notice and new import instructions
-- [ ] Create MIGRATION.md guide for moving from legacy to new imports
-- [ ] Update requirements.txt/setup.py/pyproject.toml to include entity-plugin-gpt-oss as optional dependency
-- [ ] Update any example code in documentation to use new import paths
-- [ ] Add deprecation timeline to relevant documentation
-- [ ] Update developer documentation explaining the modular architecture
-- [ ] Ensure docstrings in compatibility layer are comprehensive
-- [ ] Update CHANGELOG.md with breaking change notice
-
-### Technical Notes
-- Consider adding the new package as an optional/extras dependency
-- Documentation should explain why modularization was done (maintenance, optional features, etc.)
-- Include troubleshooting section for common migration issues
-- Timeline should specify when compatibility layer will be removed (entity-core 0.1.0)
-
-### Story Points: 3
-
----
 
 ## Story 6: Performance and Import Time Validation
 

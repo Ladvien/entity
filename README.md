@@ -209,6 +209,32 @@ cd entity
 pip install -e .
 ```
 
+## 📦 Plugin Packages
+
+### GPT-OSS Plugins (Optional)
+The GPT-OSS plugin suite has been modularized into a separate package for better maintainability and optional installation:
+
+```bash
+# Install GPT-OSS plugins (once published to PyPI)
+pip install entity-plugin-gpt-oss
+
+# Or install with Entity Core (will be available after package publication)
+# pip install "entity-core[gpt-oss]"
+```
+
+> **⚠️ Migration Notice**: If you're using GPT-OSS plugins (ReasoningTrace, StructuredOutput, etc.), please see our [Migration Guide](MIGRATION.md) for updating your imports. The old import path (`entity.plugins.gpt_oss`) is deprecated and will be removed in v0.1.0 (Q2 2024).
+
+**Available GPT-OSS Plugins:**
+- 🧠 **ReasoningTracePlugin** - Advanced reasoning with trace logging
+- 📝 **StructuredOutputPlugin** - Enforce structured output formats
+- 🔧 **DeveloperOverridePlugin** - Developer controls and overrides
+- 🎯 **AdaptiveReasoningPlugin** - Dynamic reasoning adaptation
+- 🛠️ **GPTOSSToolOrchestrator** - Native tool orchestration
+- 📊 **MultiChannelAggregatorPlugin** - Multi-channel response aggregation
+- 🛡️ **HarmonySafetyFilterPlugin** - Advanced safety filtering
+- 📋 **FunctionSchemaRegistryPlugin** - Function schema management
+- 📈 **ReasoningAnalyticsDashboardPlugin** - Analytics and monitoring
+
 ## 🎓 Learning Path
 
 ### 🌱 **Beginner** (10 minutes)
