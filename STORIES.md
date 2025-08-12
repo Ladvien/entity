@@ -14,31 +14,6 @@
 
 
 
-## 🧪 Story 8: Validate Migration
-**Key:** ENTITY-108
-**Type:** Task
-**Priority:** High
-**Story Points:** 2
-**Blocked By:** ENTITY-107
-**Assignee:** QA Team
-
-### Description
-Comprehensive validation of the migration using gh CLI to verify repository state.
-
-### Test Checklist
-- [ ] Use `gh repo clone Ladvien/entity --recurse-submodules` for fresh test
-- [ ] Verify with `gh repo list Ladvien --topic entity-plugin` (if topics added)
-- [ ] Use `gh api` to verify repository metadata
-- [ ] All example scripts work
-- [ ] Performance benchmarks show no degradation
-- [ ] Security scan shows no exposed secrets
-
-### Definition of Done
-- [ ] All validation checks pass
-- [ ] Sign-off from tech lead
-- [ ] Migration rollback plan documented
-
----
 
 ## 📈 Story 9: Create Management Tooling
 **Key:** ENTITY-109
