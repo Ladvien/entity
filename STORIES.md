@@ -12,33 +12,6 @@
 
 
 
-## 📚 Story 6: Update Documentation
-**Key:** ENTITY-106
-**Type:** Task
-**Priority:** Medium
-**Story Points:** 3
-**Blocked By:** ENTITY-105
-**Assignee:** Documentation Team
-
-### Description
-Update documentation to reflect new plugin structure and gh CLI workflow.
-
-### Acceptance Criteria
-- [ ] README includes submodule clone instructions
-- [ ] Developer setup guide includes gh CLI setup
-- [ ] Plugin development guide updated with new workflow
-- [ ] Contributing guide explains plugin contribution process
-- [ ] Security notes about using fine-grained PATs included
-
-### Technical Notes
-- Document `gh repo fork` workflow for contributors
-- Include `gh pr create` workflow for plugin contributions
-
-### Definition of Done
-- [ ] All documentation reflects new structure
-- [ ] No references to old plugin locations
-
----
 
 ## 🔄 Story 7: Update CI/CD Pipeline
 **Key:** ENTITY-107

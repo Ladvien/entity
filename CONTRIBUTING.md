@@ -45,13 +45,19 @@ Enhancement suggestions are tracked as GitHub issues. When creating an enhanceme
 * Python 3.11 or higher
 * Poetry for dependency management
 * Docker (optional, for integration tests)
+* GitHub CLI (`gh`) for plugin development
 
 ### Setting Up Your Development Environment
 
-1. Clone your fork:
+1. Clone your fork with submodules:
 ```bash
-git clone https://github.com/your-username/entity.git
+# Replace YOUR_USERNAME with your GitHub username
+git clone --recurse-submodules https://github.com/YOUR_USERNAME/entity.git
 cd entity
+
+# Or if you already cloned without submodules
+git submodule init
+git submodule update
 ```
 
 2. Install Poetry if you haven't already:
@@ -126,17 +132,17 @@ Example:
 ```python
 def process_message(message: str, user_id: str = "default") -> str:
     """Process a message through the agent workflow.
-    
+
     Args:
         message: The input message to process.
         user_id: Unique identifier for the user. Defaults to "default".
-    
+
     Returns:
         The processed response from the agent.
-    
+
     Raises:
         ValueError: If message is empty.
-    
+
     Examples:
         >>> response = process_message("Hello!")
         >>> print(response)
@@ -167,6 +173,41 @@ Please follow the 4-layer architecture:
 
 ### Plugin Development
 
+#### Contributing to Existing Plugins
+
+If you want to contribute to an existing plugin (examples, gpt-oss, stdlib, template):
+
+1. Fork the plugin repository using GitHub CLI:
+```bash
+# Fork a plugin repository
+gh repo fork Ladvien/entity-plugin-examples --clone
+
+# Or fork and create a PR branch
+gh repo fork Ladvien/entity-plugin-gpt-oss --clone
+cd entity-plugin-gpt-oss
+git checkout -b feature/my-improvement
+```
+
+2. Make your changes and test locally:
+```bash
+# In the plugin directory
+poetry install --with dev
+poetry run pytest
+
+# Test with the main entity framework
+cd ../entity
+git submodule update --remote plugins/examples  # Update to your fork
+poetry run pytest tests/plugins/
+```
+
+3. Submit a pull request:
+```bash
+# From your plugin directory
+gh pr create --title "Add new feature" --body "Description of changes"
+```
+
+#### Creating New Plugins
+
 When creating new plugins:
 
 1. Inherit from the appropriate base class (`PromptPlugin`, `ToolPlugin`, etc.)
@@ -180,15 +221,31 @@ Example:
 class MyPlugin(PromptPlugin):
     supported_stages = [THINK, REVIEW]
     dependencies = ["llm", "memory"]
-    
+
     def validate_config(self) -> ValidationResult:
         # Validate configuration
         return ValidationResult.success()
-    
+
     async def _execute_impl(self, context: PluginContext) -> None:
         # Plugin implementation
         result = await self.call_llm(context, "Process this...")
         await context.remember("result", result.content)
+```
+
+#### Plugin Repository Structure
+
+Each plugin should follow this structure:
+```
+entity-plugin-yourname/
+├── src/
+│   └── entity_plugin_yourname/
+│       ├── __init__.py
+│       └── your_plugin.py
+├── tests/
+│   └── test_your_plugin.py
+├── pyproject.toml
+├── README.md
+└── LICENSE
 ```
 
 ## Testing Guidelines
@@ -206,6 +263,46 @@ class MyPlugin(PromptPlugin):
 3. Create a pull request with the version bump
 4. After merge, create a GitHub release
 5. The CI/CD pipeline will automatically publish to PyPI
+
+## Security Considerations
+
+### Using Personal Access Tokens (PATs)
+
+When working with plugin repositories, especially private ones, you'll need to use Personal Access Tokens:
+
+1. **Create a fine-grained PAT on GitHub:**
+   - Go to Settings → Developer settings → Personal access tokens → Fine-grained tokens
+   - Click "Generate new token"
+   - Select only the repositories you need
+   - Grant minimal permissions:
+     - Contents: Read (for cloning)
+     - Contents: Write (for pushing changes)
+     - Pull requests: Write (for creating PRs)
+   - Set a reasonable expiration date
+
+2. **Use the PAT securely:**
+```bash
+# Authenticate GitHub CLI with your PAT
+gh auth login
+
+# Or configure git to use the PAT
+git config --global credential.helper store
+```
+
+3. **Security best practices:**
+   - **Never commit PATs** to any repository
+   - Store PATs in a secure password manager
+   - Use environment variables in CI/CD: `export GITHUB_TOKEN=your_pat`
+   - Rotate tokens regularly (every 90 days recommended)
+   - Use repository-specific tokens when possible
+   - Revoke tokens immediately if compromised
+
+### Handling Sensitive Data
+
+- Never include API keys, passwords, or secrets in code
+- Use `.env` files for local development (and add to `.gitignore`)
+- Review your changes for accidental credential exposure before committing
+- Use `git-secrets` or similar tools to prevent secret commits
 
 ## Questions?
 

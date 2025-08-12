@@ -202,10 +202,17 @@ uv add entity-core
 poetry add entity-core
 ```
 
-### From Source
+### From Source (with Plugin Submodules)
 ```bash
-git clone https://github.com/Ladvien/entity.git
+# Clone with submodules for plugin development
+git clone --recurse-submodules https://github.com/Ladvien/entity.git
 cd entity
+
+# Or if you already cloned without submodules
+git submodule init
+git submodule update
+
+# Install in development mode
 pip install -e .
 ```
 
