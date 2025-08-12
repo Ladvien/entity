@@ -297,7 +297,8 @@ The following checkpoint branches contain pre-migration states:
 - `checkpoint-52`: Before Story ENTITY-105
 - `checkpoint-53`: Before Story ENTITY-106
 - `checkpoint-54`: Before Story ENTITY-107
-- `checkpoint-55`: Current migration state
+- `checkpoint-55`: Before Story ENTITY-108
+- `checkpoint-56`: After Story ENTITY-108 completion (validation complete)
 
 ---
 
