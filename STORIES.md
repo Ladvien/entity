@@ -10,35 +10,6 @@
 
 
 
-## 📦 Story 4: Add Plugins as Git Submodules
-**Key:** ENTITY-104
-**Type:** Task
-**Priority:** High
-**Story Points:** 2
-**Blocked By:** ENTITY-103
-**Assignee:** DevOps Team
-
-### Description
-Add plugin repositories as Git submodules under plugins/ directory using URLs obtained from gh CLI.
-
-### Acceptance Criteria
-- [ ] Use `gh repo view --json url` to get repository URLs programmatically
-- [ ] plugins/ directory created
-- [ ] All four plugins added as submodules
-- [ ] .gitmodules file created with correct entries
-- [ ] Original entity-plugin-* directories removed
-- [ ] Changes committed to entity-core
-
-### Technical Notes
-- Script should use gh CLI to fetch repo URLs rather than hardcoding
-- Submodule paths: plugins/examples, plugins/gpt-oss, plugins/stdlib, plugins/template
-
-### Definition of Done
-- [ ] `git submodule status` shows all four submodules
-- [ ] Submodules initialized and populated
-- [ ] Changes pushed to entity-core
-
----
 
 ## 🔧 Story 5: Update Plugin Import Paths
 **Key:** ENTITY-105
