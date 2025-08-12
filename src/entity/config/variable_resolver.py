@@ -14,7 +14,7 @@ class VariableResolver:
         if env_file:
             load_dotenv(env_file)
         else:
-            load_dotenv()  # Auto-discovery
+            load_dotenv()
 
     def substitute(self, obj: Any) -> Any:
         return self.substitute_variables(obj)

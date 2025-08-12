@@ -50,10 +50,8 @@ import os
 import warnings
 from typing import Any, Optional
 
-# Set up logging
 logger = logging.getLogger(__name__)
 
-# Check if we should suppress deprecation warnings (for CI/CD)
 SUPPRESS_DEPRECATION = os.environ.get(
     "ENTITY_SUPPRESS_GPT_OSS_DEPRECATION", ""
 ).lower() in (
@@ -62,11 +60,9 @@ SUPPRESS_DEPRECATION = os.environ.get(
     "yes",
 )
 
-# Deprecation timeline
 DEPRECATION_VERSION = "0.1.0"
 DEPRECATION_DATE = "Q2 2024"
 
-# Package name for the new GPT-OSS plugin package
 GPT_OSS_PACKAGE = "entity-plugin-gpt-oss"
 GPT_OSS_MODULE = "entity_plugin_gpt_oss"
 
@@ -157,10 +153,8 @@ def _warn_deprecated_import(plugin_name: str) -> None:
         f"To suppress this warning, set ENTITY_SUPPRESS_GPT_OSS_DEPRECATION=1"
     )
 
-    # Issue standard deprecation warning
     warnings.warn(message, DeprecationWarning, stacklevel=3)
 
-    # Also log the deprecation
     logger.warning(f"DEPRECATION: {message}")
 
 
@@ -182,7 +176,6 @@ class _CompatibilityShim:
         self._attempted_import = True
 
         try:
-            # Log the import attempt
             logger.debug(
                 f"Attempting to import {self.plugin_class_name} from {self.new_module_path}"
             )
@@ -205,7 +198,6 @@ class _CompatibilityShim:
         _warn_deprecated_import(self.plugin_class_name)
 
         if not self._try_import():
-            # Provide detailed error message
             error_msg = _create_detailed_error_message(
                 self.plugin_class_name, self.new_module_path, self._import_error
             )
@@ -218,12 +210,9 @@ class _CompatibilityShim:
         _warn_deprecated_import(self.plugin_class_name)
 
         if not self._try_import():
-            # Check for common attributes to provide better errors
             if name in ["__name__", "__module__", "__doc__"]:
-                # Return placeholder values for introspection
                 return f"Unavailable({self.plugin_class_name})"
 
-            # Provide detailed error message
             error_msg = _create_detailed_error_message(
                 self.plugin_class_name, self.new_module_path, self._import_error
             )
@@ -239,7 +228,6 @@ class _CompatibilityShim:
             return f"<CompatibilityShim for {self.plugin_class_name} (not available)>"
 
 
-# Create compatibility shims for all GPT-OSS plugins
 ReasoningTracePlugin = _CompatibilityShim(
     "ReasoningTracePlugin", "entity_plugin_gpt_oss.reasoning_trace"
 )
@@ -278,7 +266,6 @@ ReasoningAnalyticsDashboardPlugin = _CompatibilityShim(
 )
 
 
-# Module-level imports for helper classes and enums
 def __getattr__(name: str) -> Any:
     """
     Dynamic import for helper classes and enums from the GPT-OSS package.
@@ -287,26 +274,20 @@ def __getattr__(name: str) -> Any:
     like ReasoningLevel, ReasoningTrace, etc. that are used by the tests.
     """
 
-    # Mapping of helper class names to their module locations
     helper_class_mapping = {
-        # From reasoning_trace.py
         "ReasoningLevel": "entity_plugin_gpt_oss.reasoning_trace",
         "ReasoningTrace": "entity_plugin_gpt_oss.reasoning_trace",
-        # From structured_output.py
         "OutputFormat": "entity_plugin_gpt_oss.structured_output",
         "ValidationResult": "entity_plugin_gpt_oss.structured_output",
-        # From developer_override.py
         "DeveloperOverride": "entity_plugin_gpt_oss.developer_override",
         "OverrideScope": "entity_plugin_gpt_oss.developer_override",
         "PermissionLevel": "entity_plugin_gpt_oss.developer_override",
         "AuditEntry": "entity_plugin_gpt_oss.developer_override",
-        # From adaptive_reasoning.py
         "ReasoningEffort": "entity_plugin_gpt_oss.adaptive_reasoning",
         "ComplexityFactors": "entity_plugin_gpt_oss.adaptive_reasoning",
         "ComplexityScore": "entity_plugin_gpt_oss.adaptive_reasoning",
         "ReasoningDecision": "entity_plugin_gpt_oss.adaptive_reasoning",
         "PerformanceMetrics": "entity_plugin_gpt_oss.adaptive_reasoning",
-        # From native_tools.py
         "ToolExecutionContext": "entity_plugin_gpt_oss.native_tools",
         "ToolResult": "entity_plugin_gpt_oss.native_tools",
         "ToolConfig": "entity_plugin_gpt_oss.native_tools",
@@ -316,20 +297,17 @@ def __getattr__(name: str) -> Any:
         "RateLimiter": "entity_plugin_gpt_oss.native_tools",
         "PythonTool": "entity_plugin_gpt_oss.native_tools",
         "BrowserTool": "entity_plugin_gpt_oss.native_tools",
-        # From multi_channel_aggregator.py
         "ChannelConfig": "entity_plugin_gpt_oss.multi_channel_aggregator",
         "AggregationStrategy": "entity_plugin_gpt_oss.multi_channel_aggregator",
         "ChannelContent": "entity_plugin_gpt_oss.multi_channel_aggregator",
         "ChannelType": "entity_plugin_gpt_oss.multi_channel_aggregator",
         "AggregatedResponse": "entity_plugin_gpt_oss.multi_channel_aggregator",
-        # From harmony_safety_filter.py
         "SafetyLevel": "entity_plugin_gpt_oss.harmony_safety_filter",
         "FilterResult": "entity_plugin_gpt_oss.harmony_safety_filter",
         "SafetyCategory": "entity_plugin_gpt_oss.harmony_safety_filter",
         "SafetyFilterResult": "entity_plugin_gpt_oss.harmony_safety_filter",
         "SafetySeverity": "entity_plugin_gpt_oss.harmony_safety_filter",
         "SafetyViolation": "entity_plugin_gpt_oss.harmony_safety_filter",
-        # From function_schema_registry.py
         "FunctionSchema": "entity_plugin_gpt_oss.function_schema_registry",
         "SchemaValidation": "entity_plugin_gpt_oss.function_schema_registry",
         "FunctionParameter": "entity_plugin_gpt_oss.function_schema_registry",
@@ -338,7 +316,6 @@ def __getattr__(name: str) -> Any:
         "ParameterType": "entity_plugin_gpt_oss.function_schema_registry",
         "SchemaFormat": "entity_plugin_gpt_oss.function_schema_registry",
         "ValidationMode": "entity_plugin_gpt_oss.function_schema_registry",
-        # From reasoning_analytics_dashboard.py
         "AnalyticsMetric": "entity_plugin_gpt_oss.reasoning_analytics_dashboard",
         "DashboardConfig": "entity_plugin_gpt_oss.reasoning_analytics_dashboard",
         "ReasoningMetrics": "entity_plugin_gpt_oss.reasoning_analytics_dashboard",
@@ -360,17 +337,14 @@ def __getattr__(name: str) -> Any:
         except ImportError as e:
             logger.error(f"Failed to import helper class {name}: {e}", exc_info=True)
 
-            # Provide detailed error message
             error_msg = _create_detailed_error_message(
                 name, helper_class_mapping[name], e
             )
             raise ImportError(error_msg) from e
 
-    # If not found in helper classes, raise AttributeError
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
 
-# Log module initialization
 if _check_package_installed():
     version = _get_package_version()
     logger.info(
@@ -384,8 +358,6 @@ else:
         "Plugins will not be available until the package is installed."
     )
 
-# Export all plugin classes
-# Helper classes are handled by __getattr__ and don't need to be in __all__
 __all__ = [
     "ReasoningTracePlugin",
     "StructuredOutputPlugin",

@@ -25,7 +25,6 @@ if TYPE_CHECKING:
     from entity.workflow.workflow import Workflow
 
 
-# Protocol definitions for type-safe resource injection
 @runtime_checkable
 class LLMProtocol(Protocol):
     """Protocol for LLM resource interfaces."""
@@ -99,7 +98,6 @@ class LoggingProtocol(Protocol):
         ...
 
 
-# Type variable for generic plugin typing
 T = TypeVar("T")
 
 
@@ -170,7 +168,7 @@ class TypedPlugin(ABC, Generic[T]):
             extra = "forbid"
 
     supported_stages: List[str] = []
-    dependencies: List[str] = []  # Keep for backward compatibility
+    dependencies: List[str] = []
     skip_conditions: List[Callable[["PluginContext"], bool]] = []
 
     def __init__(self, resources: Dict[str, Any], config: Dict[str, Any] | None = None):
@@ -179,10 +177,8 @@ class TypedPlugin(ABC, Generic[T]):
         self.config = config or {}
         self.assigned_stage: str | None = None
 
-        # Initialize dependency injection container
         self._di_container = DependencyInjectionContainer(resources)
 
-        # Validate and inject typed dependencies
         self._validate_and_inject_dependencies()
 
     @classmethod
@@ -193,16 +189,13 @@ class TypedPlugin(ABC, Generic[T]):
         1. _required_protocols class attribute (convenience classes)
         2. Type hints from __init__ signature (explicit typing)
         """
-        # First check if class has _required_protocols defined
         if hasattr(cls, "_required_protocols"):
             return dict(cls._required_protocols)
 
         try:
-            # Get type hints from __init__, excluding 'self', 'resources', and 'config'
             type_hints = get_type_hints(cls.__init__)
             dependencies = {}
 
-            # Filter out non-dependency parameters
             excluded_params = {"self", "resources", "config", "return"}
 
             for param_name, param_type in type_hints.items():
@@ -211,15 +204,12 @@ class TypedPlugin(ABC, Generic[T]):
 
             return dependencies
         except (AttributeError, TypeError):
-            # Fallback to empty dependencies if type hints aren't available
             return {}
 
     def _validate_and_inject_dependencies(self) -> None:
         """Validate and inject typed dependencies."""
-        # Get typed dependencies from class definition
         typed_deps = self.get_dependencies()
 
-        # Validate traditional string-based dependencies for backward compatibility
         if self.dependencies:
             missing_string_deps = [
                 dep for dep in self.dependencies if dep not in self.resources
@@ -230,7 +220,6 @@ class TypedPlugin(ABC, Generic[T]):
                     f"{self.__class__.__name__} missing required resources: {needed}"
                 )
 
-        # Validate typed dependencies
         if typed_deps:
             validation_errors = self._di_container.validate_dependencies(typed_deps)
             if validation_errors:
@@ -239,7 +228,6 @@ class TypedPlugin(ABC, Generic[T]):
                     f"{self.__class__.__name__} dependency validation failed: {error_msg}"
                 )
 
-            # Inject validated dependencies as instance attributes
             injected = self._di_container.inject_dependencies(typed_deps)
             for dep_name, dep_resource in injected.items():
                 setattr(self, dep_name, dep_resource)
@@ -282,38 +270,31 @@ class TypedPlugin(ABC, Generic[T]):
         raise NotImplementedError
 
 
-# Convenience base classes for common dependency patterns
 class LLMPlugin(TypedPlugin[LLMProtocol]):
     """Base class for plugins that require LLM access."""
 
-    # Define the required dependencies for automatic injection
     _required_protocols = {"llm": LLMProtocol}
 
     def __init__(self, resources: Dict[str, Any], config: Dict[str, Any] | None = None):
         """Initialize with automatic LLM dependency injection."""
         super().__init__(resources, config)
-        # LLM will be injected automatically based on _required_protocols
 
 
 class MemoryPlugin(TypedPlugin[MemoryProtocol]):
     """Base class for plugins that require Memory access."""
 
-    # Define the required dependencies for automatic injection
     _required_protocols = {"memory": MemoryProtocol}
 
     def __init__(self, resources: Dict[str, Any], config: Dict[str, Any] | None = None):
         """Initialize with automatic Memory dependency injection."""
         super().__init__(resources, config)
-        # Memory will be injected automatically based on _required_protocols
 
 
 class LLMMemoryPlugin(TypedPlugin[tuple[LLMProtocol, MemoryProtocol]]):
     """Base class for plugins that require both LLM and Memory access."""
 
-    # Define the required dependencies for automatic injection
     _required_protocols = {"llm": LLMProtocol, "memory": MemoryProtocol}
 
     def __init__(self, resources: Dict[str, Any], config: Dict[str, Any] | None = None):
         """Initialize with automatic LLM and Memory dependency injection."""
         super().__init__(resources, config)
-        # LLM and Memory will be injected automatically based on _required_protocols

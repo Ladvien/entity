@@ -140,10 +140,6 @@ class Memory:
 
         return self.vector_store.query(query)
 
-    # ------------------------------------------------------------------
-    # Persistent key-value storage helpers
-    # ------------------------------------------------------------------
-
     async def _ensure_table(self) -> None:
         """Create the backing table if it doesn't exist."""
 

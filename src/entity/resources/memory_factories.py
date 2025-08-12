@@ -87,13 +87,11 @@ def create_managed_memory(
     """
     base_memory = BaseMemory(database, vector_store, table_name)
 
-    # Apply TTL decorator if configured
     if default_ttl is not None:
         memory = TTLDecorator(base_memory, default_ttl, cleanup_interval)
     else:
         memory = base_memory
 
-    # Apply LRU decorator
     memory = LRUDecorator(memory, max_entries, evict_count)
 
     return memory
@@ -124,10 +122,8 @@ def create_robust_memory(
     """
     base_memory = BaseMemory(database, vector_store, table_name)
 
-    # Apply locking decorator
     memory = LockingDecorator(base_memory, lock_dir, timeout)
 
-    # Apply monitoring decorator if enabled
     if enable_monitoring:
         memory = MonitoringDecorator(memory)
 
@@ -169,30 +165,23 @@ def create_full_featured_memory(
     """
     base_memory = BaseMemory(database, vector_store, table_name)
 
-    # Build up the decorator chain
     memory = base_memory
 
-    # Add TTL if configured
     if default_ttl is not None:
         memory = TTLDecorator(memory, default_ttl, cleanup_interval)
 
-    # Add LRU eviction
     memory = LRUDecorator(memory, max_entries, evict_count)
 
-    # Add process-safe locking
     memory = LockingDecorator(memory, lock_dir, lock_timeout)
 
-    # Add async capabilities
     memory = AsyncDecorator(memory, async_workers)
 
-    # Add monitoring if enabled
     if enable_monitoring:
         memory = MonitoringDecorator(memory)
 
     return memory
 
 
-# Deprecated class wrappers for backward compatibility
 class Memory:
     """Deprecated: Use create_memory() factory function instead.
 

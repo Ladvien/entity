@@ -76,10 +76,6 @@ class Agent:
 
         cls._config_cache.clear()
 
-    # ------------------------------------------------------------------
-    # Factory helpers
-    # ------------------------------------------------------------------
-
     @classmethod
     def from_workflow(
         cls,

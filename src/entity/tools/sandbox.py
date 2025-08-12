@@ -28,7 +28,7 @@ class SandboxedToolRunner:
             memory_mb: Memory limit in megabytes
         """
         config = SandboxConfig(
-            isolation_level=IsolationLevel.BASIC,  # Use basic for compatibility
+            isolation_level=IsolationLevel.BASIC,
             timeout=timeout,
             memory_mb=memory_mb or 100,
         )
@@ -55,5 +55,4 @@ class SandboxedToolRunner:
         if result.success:
             return result.result
         else:
-            # Raise the original exception for compatibility
             raise Exception(result.error)

@@ -31,20 +31,20 @@ except ImportError:
 class IsolationLevel(Enum):
     """Security isolation levels for sandbox execution."""
 
-    NONE = "none"  # No isolation (dangerous)
-    BASIC = "basic"  # Resource limits only
-    MODERATE = "moderate"  # Process isolation
-    STRICT = "strict"  # Container isolation
-    PARANOID = "paranoid"  # Container + network isolation + minimal permissions
+    NONE = "none"
+    BASIC = "basic"
+    MODERATE = "moderate"
+    STRICT = "strict"
+    PARANOID = "paranoid"
 
 
 class NetworkMode(Enum):
     """Network isolation modes."""
 
-    NONE = "none"  # No network access
-    INTERNAL = "internal"  # Internal network only
-    FILTERED = "filtered"  # Filtered external access
-    FULL = "full"  # Full network access (dangerous)
+    NONE = "none"
+    INTERNAL = "internal"
+    FILTERED = "filtered"
+    FULL = "full"
 
 
 @dataclass
@@ -55,7 +55,7 @@ class SandboxConfig:
     network_mode: NetworkMode = NetworkMode.NONE
     timeout: float = 5.0
     memory_mb: int = 100
-    cpu_shares: int = 512  # Docker CPU shares (1024 = 1 CPU)
+    cpu_shares: int = 512
     max_processes: int = 10
     read_only_filesystem: bool = True
     allowed_syscalls: Set[str] = field(default_factory=set)
@@ -105,7 +105,7 @@ class SecurityAuditEntry:
 
     timestamp: datetime
     event_type: str
-    severity: str  # INFO, WARNING, ERROR, CRITICAL
+    severity: str
     message: str
     details: Dict[str, Any] = field(default_factory=dict)
 
@@ -261,7 +261,6 @@ class SecureSandboxRunner:
         """Run with basic resource limits."""
         self._log_audit("INFO", "Applying basic resource limits")
 
-        # Simple execution with timeout only
         loop = asyncio.get_running_loop()
 
         def _run_func():
@@ -282,10 +281,8 @@ class SecureSandboxRunner:
 
         self._log_audit("INFO", "Running with process isolation")
 
-        # Serialize function and arguments
         func_data = base64.b64encode(pickle.dumps((func, args, kwargs))).decode()
 
-        # Create execution script
         script = f"""
 import base64
 import pickle
@@ -301,7 +298,6 @@ except Exception as e:
     sys.exit(1)
 """
 
-        # Run in subprocess with limits
         try:
             result = subprocess.run(
                 [sys.executable, "-c", script],
@@ -337,10 +333,8 @@ except Exception as e:
             },
         )
 
-        # Serialize function and arguments
         func_data = base64.b64encode(pickle.dumps((func, args, kwargs))).decode()
 
-        # Create execution script
         script = f"""
 import base64
 import pickle
@@ -352,7 +346,6 @@ result = func(*args, **kwargs)
 sys.stdout.buffer.write(base64.b64encode(pickle.dumps(result)))
 """
 
-        # Container configuration
         container_config = {
             "image": self.config.docker_image,
             "command": ["python", "-c", script],
@@ -363,11 +356,10 @@ sys.stdout.buffer.write(base64.b64encode(pickle.dumps(result)))
             "network_mode": self.config.network_mode.value,
             "read_only": self.config.read_only_filesystem,
             "security_opt": ["no-new-privileges"],
-            "cap_drop": ["ALL"],  # Drop all capabilities
+            "cap_drop": ["ALL"],
             "environment": self.config.environment_vars,
         }
 
-        # Add paranoid settings if needed
         if self.config.isolation_level == IsolationLevel.PARANOID:
             container_config.update(
                 {
@@ -379,18 +371,15 @@ sys.stdout.buffer.write(base64.b64encode(pickle.dumps(result)))
 
         container = None
         try:
-            # Create and start container
             container = self.docker_client.containers.create(**container_config)
             container.start()
 
-            # Wait for completion with timeout
             exit_code = container.wait(timeout=int(self.config.timeout))["StatusCode"]
 
             if exit_code != 0:
                 logs = container.logs(stderr=True).decode()
                 raise RuntimeError(f"Container execution failed: {logs}")
 
-            # Get result
             output = container.logs(stdout=True).decode()
             result = pickle.loads(base64.b64decode(output))
 
@@ -412,7 +401,6 @@ sys.stdout.buffer.write(base64.b64encode(pickle.dumps(result)))
             )
             raise
         finally:
-            # Clean up container
             if container:
                 try:
                     container.remove(force=True)
@@ -506,13 +494,12 @@ class ResourceMonitor:
             }
 
 
-# Compatibility with existing SandboxedToolRunner
 class SandboxedToolRunner(SecureSandboxRunner):
     """Backward compatible sandbox runner."""
 
     def __init__(self, timeout: float = 5.0, memory_mb: Optional[int] = None):
         config = SandboxConfig(
-            isolation_level=IsolationLevel.BASIC,  # Use basic by default for compatibility
+            isolation_level=IsolationLevel.BASIC,
             timeout=timeout,
             memory_mb=memory_mb or 100,
         )

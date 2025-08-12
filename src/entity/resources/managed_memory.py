@@ -33,7 +33,6 @@ class MemoryMetrics:
     average_access_time_ms: float = 0.0
     cache_hit_rate: float = 0.0
 
-    # Per-user metrics
     user_entry_counts: Dict[str, int] = field(default_factory=dict)
     user_size_bytes: Dict[str, int] = field(default_factory=dict)
 
@@ -87,20 +86,17 @@ class ManagedMemory(Memory):
         """Initialize ManagedMemory with lifecycle management capabilities."""
         super().__init__(database, vector_store)
 
-        # Configuration
         self.max_memory_mb = max_memory_mb
         self.max_entries_per_user = max_entries_per_user
         self.cleanup_interval_seconds = cleanup_interval_seconds
         self.memory_pressure_threshold = memory_pressure_threshold
         self.enable_background_cleanup = enable_background_cleanup
 
-        # TTL and lifecycle tracking
         self._ttl_registry: Dict[str, TTLEntry] = {}
         self._access_times: OrderedDict[str, float] = OrderedDict()
         self._entry_sizes: Dict[str, int] = {}
         self._user_keys: Dict[str, Set[str]] = {}
 
-        # Metrics and monitoring
         self._metrics = MemoryMetrics()
         self._last_cleanup = time.time()
         self._cleanup_task: Optional[asyncio.Task] = None
@@ -108,7 +104,6 @@ class ManagedMemory(Memory):
         self._hit_count = 0
         self._expiry_tasks: Dict[str, asyncio.Task] = {}
 
-        # Start background cleanup if enabled
         if self.enable_background_cleanup:
             self._cleanup_task = asyncio.create_task(self._background_cleanup_loop())
 
@@ -123,7 +118,6 @@ class ManagedMemory(Memory):
             ttl_seconds: Time-to-live in seconds
             user_id: Optional user ID for tracking and limits
         """
-        # Check user limits before storing
         if user_id and not await self._check_user_limits(user_id):
             self._metrics.user_limit_violations += 1
             raise MemoryLimitExceeded(
@@ -131,16 +125,13 @@ class ManagedMemory(Memory):
                 f"({self.max_entries_per_user} entries max)"
             )
 
-        # Store the value
         await self.store(key, value, user_id=user_id)
 
-        # Register TTL expiration
         expiry_time = time.time() + ttl_seconds
         self._ttl_registry[key] = TTLEntry(
             key=key, expiry_time=expiry_time, user_id=user_id
         )
 
-        # Schedule async expiration and track the task
         expiry_task = asyncio.create_task(self._expire_after(key, ttl_seconds))
         self._expiry_tasks[key] = expiry_task
 
@@ -152,39 +143,31 @@ class ManagedMemory(Memory):
             value: Value to store
             user_id: Optional user ID for tracking and limits
         """
-        # Check user limits
         if user_id and not await self._check_user_limits(user_id):
             self._metrics.user_limit_violations += 1
             raise MemoryLimitExceeded(f"User {user_id} has exceeded memory limits")
 
-        # Serialize and calculate size
         serialized = json.dumps(value)
         entry_size = len(serialized.encode("utf-8"))
 
-        # Check memory pressure before storing
         await self._check_memory_pressure(entry_size)
 
-        # Store in base memory (use parent's store method but pass value directly)
-        await super().store(key, value)  # Let parent handle serialization
+        await super().store(key, value)
 
-        # Update tracking structures
         current_time = time.time()
         self._access_times[key] = current_time
         self._entry_sizes[key] = entry_size
 
-        # Update user tracking
         if user_id:
             if user_id not in self._user_keys:
                 self._user_keys[user_id] = set()
             self._user_keys[user_id].add(key)
 
-            # Update user metrics
             self._metrics.user_entry_counts[user_id] = len(self._user_keys[user_id])
             self._metrics.user_size_bytes[user_id] = sum(
                 self._entry_sizes.get(k, 0) for k in self._user_keys[user_id]
             )
 
-        # Update global metrics
         self._metrics.total_entries = len(self._access_times)
         self._metrics.total_size_bytes = sum(self._entry_sizes.values())
 
@@ -200,27 +183,22 @@ class ManagedMemory(Memory):
         """
         self._access_count += 1
 
-        # Check if key has expired
         if key in self._ttl_registry:
             if time.time() > self._ttl_registry[key].expiry_time:
-                # Key has expired, clean it up
                 await self._remove_expired_key(key)
                 return default
 
-        # Load from base memory (let parent handle deserialization)
         result = await super().load(key, default)
 
         if result == default:
             return default
 
-        # Update access tracking (LRU)
         current_time = time.time()
         if key in self._access_times:
             self._access_times.move_to_end(key)
             self._hit_count += 1
         self._access_times[key] = current_time
 
-        # Update cache hit rate
         self._metrics.cache_hit_rate = (self._hit_count / self._access_count) * 100
 
         return result
@@ -234,15 +212,12 @@ class ManagedMemory(Memory):
         Returns:
             True if key existed and was deleted, False otherwise
         """
-        # Check if key exists
         exists = await self.load(key) is not None
         if not exists:
             return False
 
-        # Remove from base memory
         await self._execute_with_locks("DELETE FROM memory WHERE key = ?", key)
 
-        # Clean up tracking structures
         await self._cleanup_key_tracking(key)
 
         return True
@@ -261,11 +236,9 @@ class ManagedMemory(Memory):
             "time_taken_ms": 0,
         }
 
-        # Clean expired keys
         expired_keys = await self._cleanup_expired_keys()
         stats["expired_keys_cleaned"] = len(expired_keys)
 
-        # Run LRU eviction if under memory pressure
         memory_usage = await self._get_memory_usage_mb()
         if memory_usage > self.max_memory_mb * self.memory_pressure_threshold:
             evicted_keys = await self._evict_lru_entries()
@@ -276,7 +249,6 @@ class ManagedMemory(Memory):
         )
         stats["time_taken_ms"] = (time.time() - start_time) * 1000
 
-        # Update metrics
         self._metrics.expired_entries_cleaned += stats["expired_keys_cleaned"]
         self._metrics.lru_evictions += stats["lru_evictions"]
         self._metrics.garbage_collections_run += 1
@@ -292,10 +264,8 @@ class ManagedMemory(Memory):
         current_memory_mb = await self._get_memory_usage_mb()
         memory_pressure = current_memory_mb / self.max_memory_mb
 
-        # Calculate average access time
         if self._access_count > 0:
-            # Estimate based on recent operations
-            self._metrics.average_access_time_ms = 1.0  # Placeholder
+            self._metrics.average_access_time_ms = 1.0
 
         return {
             "total_entries": self._metrics.total_entries,
@@ -332,67 +302,53 @@ class ManagedMemory(Memory):
         try:
             await asyncio.sleep(ttl_seconds)
 
-            # Check if key still exists and hasn't been updated
             if key in self._ttl_registry:
                 entry = self._ttl_registry[key]
                 if time.time() >= entry.expiry_time:
                     await self._remove_expired_key(key)
         except asyncio.CancelledError:
-            # Task was cancelled, clean up
             pass
         finally:
-            # Remove task reference
             self._expiry_tasks.pop(key, None)
 
     async def _remove_expired_key(self, key: str) -> None:
         """Remove an expired key and update tracking."""
-        # Remove from database
         await self._execute_with_locks("DELETE FROM memory WHERE key = ?", key)
 
-        # Clean up tracking
         await self._cleanup_key_tracking(key)
 
-        # Update metrics
         self._metrics.expired_entries_cleaned += 1
 
     async def _cleanup_key_tracking(self, key: str) -> None:
         """Clean up all tracking structures for a key."""
-        # Find the user_id for this key
         user_id = None
         if key in self._ttl_registry:
             user_id = self._ttl_registry[key].user_id
             del self._ttl_registry[key]
         else:
-            # Find user_id from user_keys tracking
             for uid, keys in self._user_keys.items():
                 if key in keys:
                     user_id = uid
                     break
 
-        # Cancel and clean up expiry task
         if key in self._expiry_tasks:
             task = self._expiry_tasks[key]
             if not task.done():
                 task.cancel()
             del self._expiry_tasks[key]
 
-        # Update user tracking
         if user_id and user_id in self._user_keys:
             self._user_keys[user_id].discard(key)
 
-            # Update user metrics
             self._metrics.user_entry_counts[user_id] = len(self._user_keys[user_id])
             self._metrics.user_size_bytes[user_id] = sum(
                 self._entry_sizes.get(k, 0) for k in self._user_keys[user_id]
             )
 
-        # Remove from access times (LRU tracking)
         self._access_times.pop(key, None)
 
-        # Remove size tracking
         self._entry_sizes.pop(key, None)
 
-        # Update global metrics
         self._metrics.total_entries = len(self._access_times)
         self._metrics.total_size_bytes = sum(self._entry_sizes.values())
 
@@ -401,12 +357,10 @@ class ManagedMemory(Memory):
         current_time = time.time()
         expired_keys = []
 
-        # Find expired keys
         for key, entry in list(self._ttl_registry.items()):
             if current_time >= entry.expiry_time:
                 expired_keys.append(key)
 
-        # Remove expired keys
         for key in expired_keys:
             await self._remove_expired_key(key)
 
@@ -429,18 +383,14 @@ class ManagedMemory(Memory):
 
         evicted_keys = []
 
-        # Evict oldest entries first (LRU)
         for _ in range(min(target_count, len(self._access_times))):
             if not self._access_times:
                 break
 
-            # Get least recently used key
             lru_key = next(iter(self._access_times))
 
-            # Remove from database
             await self._execute_with_locks("DELETE FROM memory WHERE key = ?", lru_key)
 
-            # Clean up tracking
             await self._cleanup_key_tracking(lru_key)
 
             evicted_keys.append(lru_key)
@@ -476,7 +426,6 @@ class ManagedMemory(Memory):
         if pressure_ratio > self.memory_pressure_threshold:
             self._metrics.memory_pressure_events += 1
 
-            # Trigger emergency cleanup
             await self._evict_lru_entries(
                 target_count=max(10, len(self._access_times) // 5)
             )
@@ -496,7 +445,6 @@ class ManagedMemory(Memory):
             try:
                 await asyncio.sleep(self.cleanup_interval_seconds)
 
-                # Run automatic garbage collection
                 await self.garbage_collect()
 
                 self._last_cleanup = time.time()
@@ -504,7 +452,6 @@ class ManagedMemory(Memory):
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                # Log error but continue cleanup loop
                 if hasattr(self, "resources") and "logging" in self.resources:
                     await self.resources["logging"].log(
                         LogLevel.ERROR,
@@ -522,18 +469,15 @@ class ManagedMemory(Memory):
             except asyncio.CancelledError:
                 pass
 
-        # Cancel all expiry tasks
         for task in self._expiry_tasks.values():
             if not task.done():
                 task.cancel()
 
-        # Wait for expiry tasks to complete
         if self._expiry_tasks:
             await asyncio.gather(*self._expiry_tasks.values(), return_exceptions=True)
 
         self._expiry_tasks.clear()
 
-        # Run final cleanup
         await self.garbage_collect()
 
 

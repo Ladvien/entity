@@ -164,18 +164,15 @@ class EntityArgumentParsingResource(ArgumentParsingResource):
             result.validation_errors.append("No command provided")
             return result
 
-        # Determine command
         potential_command = args[0]
         if potential_command.startswith("-"):
-            # Handle global options
             result.command = "default"
         elif potential_command in self.commands:
             result.command = potential_command
-            args = args[1:]  # Remove command from args
+            args = args[1:]
         else:
             result.command = "default"
 
-        # Parse arguments for the identified command
         if result.command in self.commands:
             command_def = self.commands[result.command]
             parsed_values, errors = await self._parse_command_arguments(
@@ -184,11 +181,10 @@ class EntityArgumentParsingResource(ArgumentParsingResource):
             result.values = parsed_values
             result.validation_errors.extend(errors)
 
-        # Store parsing history
         async with self._lock:
             self.parsing_history.append(
                 {
-                    "timestamp": sys.exec_prefix,  # Simple timestamp proxy
+                    "timestamp": sys.exec_prefix,
                     "command": result.command,
                     "args": args,
                     "success": len(result.validation_errors) == 0,
@@ -213,12 +209,10 @@ class EntityArgumentParsingResource(ArgumentParsingResource):
         errors = []
         args_iter = iter(args)
 
-        # Set defaults
         for arg_def in command_def.arguments:
             if arg_def.default is not None:
                 values[arg_def.name] = arg_def.default
 
-        # Parse provided arguments
         while True:
             try:
                 arg = next(args_iter)
@@ -226,13 +220,10 @@ class EntityArgumentParsingResource(ArgumentParsingResource):
                 break
 
             if not arg.startswith("-"):
-                # Positional argument handling
                 continue
 
-            # Remove leading dashes
             arg_name = arg.lstrip("-")
 
-            # Find matching argument definition
             arg_def = None
             for definition in command_def.arguments:
                 if definition.name == arg_name or arg_name in definition.aliases:
@@ -243,7 +234,6 @@ class EntityArgumentParsingResource(ArgumentParsingResource):
                 errors.append(f"Unknown argument: {arg}")
                 continue
 
-            # Parse argument value
             if arg_def.type == ArgumentType.BOOLEAN:
                 values[arg_def.name] = True
             else:
@@ -256,12 +246,10 @@ class EntityArgumentParsingResource(ArgumentParsingResource):
                 except ValueError as e:
                     errors.append(f"Invalid value for {arg}: {e}")
 
-        # Validate required arguments
         for arg_def in command_def.arguments:
             if arg_def.required and arg_def.name not in values:
                 errors.append(f"Required argument missing: {arg_def.name}")
 
-        # Run custom validators
         for arg_def in command_def.arguments:
             if arg_def.validator and arg_def.name in values:
                 if not arg_def.validator(values[arg_def.name]):
@@ -305,7 +293,6 @@ class EntityArgumentParsingResource(ArgumentParsingResource):
             "Arguments:",
         ]
 
-        # Group arguments by category
         categories = {}
         for arg_def in command_def.arguments:
             cat = arg_def.category.value
@@ -348,7 +335,6 @@ class EntityArgumentParsingResource(ArgumentParsingResource):
         return "\n".join(lines)
 
 
-# Factory function following Entity patterns
 def create_argument_parsing_resource(
     logger: Optional[LoggingResource] = None,
     app_name: str = "entity-cli",

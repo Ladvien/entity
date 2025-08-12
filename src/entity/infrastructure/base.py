@@ -35,8 +35,7 @@ class BaseInfrastructure(ABC):
         try:
             loop = asyncio.get_event_loop()
             if loop.is_running():
-                # We're already in an async context, can't use run
-                return True  # Assume healthy if we can't check
+                return True
             return loop.run_until_complete(self.health_check())
         except Exception:
             return False

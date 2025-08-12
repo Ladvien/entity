@@ -95,7 +95,6 @@ class RobustInterProcessLock:
         self._file = None
         self._start_time = None
 
-        # Create lock directory if it doesn't exist
         self.path.parent.mkdir(parents=True, exist_ok=True)
 
     async def __aenter__(self) -> "RobustInterProcessLock":
@@ -111,10 +110,8 @@ class RobustInterProcessLock:
         self._start_time = time.time()
 
         try:
-            # Check for and clean orphaned locks
             await self._cleanup_orphaned_locks()
 
-            # Attempt to acquire lock with timeout
             await self._acquire_with_timeout()
 
             wait_time = time.time() - self._start_time
@@ -134,10 +131,8 @@ class RobustInterProcessLock:
     async def _acquire_with_timeout(self) -> None:
         """Acquire lock with timeout using portalocker."""
         try:
-            # Open file for locking
             self._file = await asyncio.to_thread(open, self.path, "w")
 
-            # Write process info for orphan detection
             process_info = {
                 "pid": os.getpid(),
                 "timestamp": time.time(),
@@ -150,7 +145,6 @@ class RobustInterProcessLock:
             )
             await asyncio.to_thread(self._file.flush)
 
-            # Attempt to acquire lock with timeout
             end_time = time.time() + self.timeout
 
             while time.time() < end_time:
@@ -160,12 +154,10 @@ class RobustInterProcessLock:
                         self._file,
                         portalocker.LOCK_EX | portalocker.LOCK_NB,
                     )
-                    return  # Successfully acquired lock
+                    return
                 except portalocker.LockException:
-                    # Lock is held by another process, wait and retry
-                    await asyncio.sleep(0.01)  # 10ms retry interval
+                    await asyncio.sleep(0.01)
 
-            # Timeout exceeded
             self._file.close()
             self._file = None
             raise LockTimeoutError(self.timeout, str(self.path))
@@ -185,11 +177,10 @@ class RobustInterProcessLock:
                 await asyncio.to_thread(portalocker.unlock, self._file)
                 self._file.close()
 
-                # Remove lock file to prevent accumulation
                 try:
                     self.path.unlink(missing_ok=True)
                 except OSError:
-                    pass  # File might have been removed by another process
+                    pass
 
                 wait_time = time.time() - (self._start_time or time.time())
                 self.logger.debug(f"Released lock {self.path} after {wait_time:.3f}s")
@@ -205,7 +196,6 @@ class RobustInterProcessLock:
             return
 
         try:
-            # Read lock file to get process info
             content = await asyncio.to_thread(self.path.read_text)
             lines = content.strip().split("\n")
 
@@ -214,17 +204,14 @@ class RobustInterProcessLock:
                     pid = int(lines[0])
                     timestamp = float(lines[1])
 
-                    # Check if process is still alive
                     if not self._is_process_alive(pid):
-                        # Process is dead, clean up orphaned lock
                         self.path.unlink(missing_ok=True)
                         self.monitor.record_orphaned_cleanup()
                         self.logger.info(
                             f"Cleaned up orphaned lock from dead process {pid}"
                         )
 
-                    elif time.time() - timestamp > 3600:  # 1 hour timeout
-                        # Lock is very old, likely orphaned
+                    elif time.time() - timestamp > 3600:
                         self.path.unlink(missing_ok=True)
                         self.monitor.record_orphaned_cleanup()
                         self.logger.info(
@@ -232,7 +219,6 @@ class RobustInterProcessLock:
                         )
 
                 except (ValueError, OSError) as e:
-                    # Corrupted lock file, remove it
                     self.path.unlink(missing_ok=True)
                     self.monitor.record_orphaned_cleanup()
                     self.logger.info(f"Cleaned up corrupted lock file: {e}")
@@ -243,7 +229,6 @@ class RobustInterProcessLock:
     def _is_process_alive(self, pid: int) -> bool:
         """Check if a process is still alive."""
         try:
-            # Send signal 0 to check if process exists
             os.kill(pid, 0)
             return True
         except OSError:
@@ -280,14 +265,12 @@ class RobustMemory(Memory):
             cleanup_orphaned: Whether to automatically cleanup orphaned locks.
             monitor_locks: Whether to collect lock metrics.
         """
-        # Call parent constructor but override locking mechanism
         super().__init__(database, vector_store)
 
         self.lock_timeout = lock_timeout
         self.cleanup_orphaned = cleanup_orphaned
         self.monitor = LockMonitor() if monitor_locks else None
 
-        # Replace the simple _InterProcessLock with RobustInterProcessLock
         db_path = getattr(self.database.infrastructure, "file_path", None)
         if db_path is not None:
             lock_file = Path(str(db_path)).with_suffix(".lock")
@@ -297,7 +280,6 @@ class RobustMemory(Memory):
         else:
             self._process_lock = None
 
-        # Register cleanup handler for graceful shutdown
         self._register_cleanup_handlers()
 
         self.logger = logging.getLogger(__name__)
@@ -309,19 +291,16 @@ class RobustMemory(Memory):
             """Handle process termination signals."""
             if self._process_lock and self._process_lock._file:
                 try:
-                    # Synchronous cleanup for signal handlers
                     portalocker.unlock(self._process_lock._file)
                     self._process_lock._file.close()
                     self._process_lock.path.unlink(missing_ok=True)
                 except Exception:
-                    pass  # Best effort cleanup
+                    pass
 
-        # Register for common termination signals
         for sig in [signal.SIGTERM, signal.SIGINT]:
             try:
                 signal.signal(sig, cleanup_handler)
             except (OSError, ValueError):
-                # Some signals might not be available on all platforms
                 pass
 
     @asynccontextmanager
@@ -333,7 +312,6 @@ class RobustMemory(Memory):
             yield
             return
 
-        # Use provided timeout or default
         original_timeout = self._process_lock.timeout
         if timeout is not None:
             self._process_lock.timeout = timeout
@@ -342,7 +320,6 @@ class RobustMemory(Memory):
             async with self._process_lock:
                 yield
         finally:
-            # Restore original timeout
             self._process_lock.timeout = original_timeout
 
     async def _execute_with_locks(

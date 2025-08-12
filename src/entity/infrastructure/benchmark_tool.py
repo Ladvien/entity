@@ -54,7 +54,6 @@ class LLMBenchmarkTool:
         self.output_dir = output_dir or Path("./benchmark_results")
         self.output_dir.mkdir(exist_ok=True)
 
-        # Default benchmark suites
         self.benchmark_suites = self._create_default_suites()
 
     def _create_default_suites(self) -> List[BenchmarkSuite]:
@@ -129,14 +128,12 @@ class LLMBenchmarkTool:
             suite_results = await self._run_suite_benchmark(infrastructure, suite)
             results[suite.name] = suite_results
 
-            # Print summary
             if suite_results:
                 avg_tps = sum(r.avg_tokens_per_second for r in suite_results) / len(
                     suite_results
                 )
                 print(f"Suite {suite.name} avg tokens/sec: {avg_tps:.2f}")
 
-        # Save results
         await self._save_results(results)
 
         return results
@@ -147,7 +144,6 @@ class LLMBenchmarkTool:
         """Run benchmark for a specific test suite."""
         results = []
 
-        # Get current backend info
         current_config = infrastructure.get_current_config()
         model_backend = current_config.get("backend", "unknown")
 
@@ -156,7 +152,6 @@ class LLMBenchmarkTool:
 
             individual_results = []
 
-            # Run multiple repetitions
             for rep in range(suite.repetitions):
                 try:
                     benchmark = await self._run_single_benchmark(
@@ -176,7 +171,6 @@ class LLMBenchmarkTool:
                         )
                     )
 
-            # Calculate aggregate results
             successful_results = [r for r in individual_results if r.success]
 
             if successful_results:
@@ -220,26 +214,18 @@ class LLMBenchmarkTool:
         start_time = time.time()
 
         try:
-            # For now, we'll simulate the actual model call
-            # In a real implementation, this would call the infrastructure
-
-            # Simulate processing time based on prompt complexity
-            processing_time = min(
-                len(prompt) / 100, timeout - 1
-            )  # Max timeout-1 seconds
+            processing_time = min(len(prompt) / 100, timeout - 1)
             await asyncio.sleep(processing_time)
 
-            # Simulate response generation
             response = f"Generated response for: {prompt[:30]}... (simulated)"
 
             end_time = time.time()
             elapsed_time = end_time - start_time
 
-            # Calculate metrics
-            token_count = len(response.split())  # Rough token estimate
+            token_count = len(response.split())
             tokens_per_second = token_count / elapsed_time if elapsed_time > 0 else 0
             latency_ms = elapsed_time * 1000
-            memory_usage_mb = 512  # Simulated memory usage
+            memory_usage_mb = 512
 
             return PerformanceBenchmark(
                 tokens_per_second=tokens_per_second,
@@ -273,7 +259,6 @@ class LLMBenchmarkTool:
         filename = f"benchmark_results_{timestamp}.json"
         filepath = self.output_dir / filename
 
-        # Convert results to serializable format
         serializable_results = {}
         for suite_name, suite_results in results.items():
             serializable_results[suite_name] = [
@@ -295,7 +280,6 @@ class LLMBenchmarkTool:
         """Generate a human-readable benchmark report."""
         report_lines = ["=" * 80, "LLM INFRASTRUCTURE BENCHMARK REPORT", "=" * 80, ""]
 
-        # Overall summary
         all_results = []
         for suite_results in results.values():
             all_results.extend(suite_results)
@@ -319,7 +303,6 @@ class LLMBenchmarkTool:
                 ]
             )
 
-        # Per-suite breakdown
         for suite_name, suite_results in results.items():
             report_lines.extend([f"SUITE: {suite_name.upper()}", "-" * 40])
 
@@ -356,29 +339,23 @@ async def run_benchmark_cli():
 
     args = parser.parse_args()
 
-    # Create benchmark tool
     tool = LLMBenchmarkTool(output_dir=args.output_dir)
 
-    # Filter suites if specified
     if args.suites:
         tool.benchmark_suites = [
             s for s in tool.benchmark_suites if s.name in args.suites
         ]
 
-    # Create and initialize adaptive infrastructure
     print("Initializing adaptive LLM infrastructure...")
     infrastructure = AdaptiveLLMInfrastructure()
     await infrastructure.startup()
 
     try:
-        # Run benchmarks
         results = await tool.run_comprehensive_benchmark(infrastructure)
 
-        # Generate and print report
         report = tool.generate_report(results)
         print("\n" + report)
 
-        # Save report
         report_file = tool.output_dir / "latest_report.txt"
         with open(report_file, "w") as f:
             f.write(report)

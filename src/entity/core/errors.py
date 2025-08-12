@@ -102,7 +102,6 @@ class PipelineError(Exception):
 
         lines.append(f"Original Error: {self.original_error}")
 
-        # Add stack trace for debugging
         if (
             hasattr(self.original_error, "__traceback__")
             and self.original_error.__traceback__
@@ -281,7 +280,6 @@ class ErrorContextManager:
         error_type = error.__class__.__name__.lower()
         error_message = str(error).lower()
 
-        # Check for validation patterns first
         if (
             "validation" in error_type
             or "validation" in error_message
@@ -340,7 +338,6 @@ class ErrorContextManager:
         if severity is None:
             severity = self._determine_severity(category, original_error)
 
-        # Record error pattern
         error_signature = f"{category.value}:{original_error.__class__.__name__}"
         self.record_error_pattern(error_signature)
 
@@ -381,5 +378,4 @@ class ErrorContextManager:
         self._active_contexts.pop(request_id, None)
 
 
-# Global error context manager instance
 error_context_manager = ErrorContextManager()

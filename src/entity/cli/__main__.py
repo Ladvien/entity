@@ -14,19 +14,15 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         prog="entity", description="Entity Framework - Build powerful AI agents"
     )
 
-    # Add version info
     parser.add_argument("--version", action="version", version="%(prog)s 0.0.5")
 
-    # Create subparsers for commands
     subparsers = parser.add_subparsers(
         dest="command", help="Available commands", metavar="<command>"
     )
 
-    # Add subcommands
     add_init_parser(subparsers)
     add_run_parser(subparsers)
 
-    # Check if the first argument looks like a subcommand
     args_to_check = argv if argv is not None else sys.argv[1:]
 
     if (
@@ -34,10 +30,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         and args_to_check[0] in ["init", "run"]
         and not args_to_check[0].startswith("-")
     ):
-        # This is a proper subcommand call
         args = parser.parse_args(argv)
     else:
-        # Check if this is a help/version request first
         if "--help" in args_to_check or "-h" in args_to_check:
             parser.print_help()
             sys.exit(0)
@@ -45,7 +39,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             parser.print_version()
             sys.exit(0)
         else:
-            # Fallback to legacy run command behavior
             legacy_parser = argparse.ArgumentParser(
                 description="Run an Entity workflow locally with automatic resource setup"
             )

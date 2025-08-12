@@ -166,7 +166,6 @@ class BaseMemory:
         """
         await asyncio.to_thread(self.database.execute, create_table_query)
 
-        # Create index for user_id
         create_index_query = f"""
         CREATE INDEX IF NOT EXISTS idx_{self.table_name}_user_id
         ON {self.table_name}(user_id);
@@ -218,7 +217,6 @@ class BaseMemory:
         query = f"DELETE FROM {self.table_name} WHERE key = ?"
         await asyncio.to_thread(self.database.execute, query, scoped_key)
 
-        # Check if any rows were affected
         changes_query = "SELECT changes()"
         changes = await asyncio.to_thread(self.database.execute, changes_query)
         return changes[0][0] > 0 if changes else False
@@ -259,7 +257,6 @@ class BaseMemory:
                 result = await asyncio.to_thread(self.database.execute, query)
 
         if result:
-            # Remove user_id prefix from keys if present
             keys = []
             for row in result:
                 key = row[0]
@@ -295,7 +292,6 @@ class BaseMemory:
                 query = f"DELETE FROM {self.table_name}"
                 await asyncio.to_thread(self.database.execute, query)
 
-        # Get number of deleted rows
         changes_query = "SELECT changes()"
         changes = await asyncio.to_thread(self.database.execute, changes_query)
         return changes[0][0] if changes else 0
@@ -316,11 +312,9 @@ class BaseMemory:
     def health_check(self) -> bool:
         """Check if the memory system is healthy."""
         try:
-            # Check database health
             if not self.database.health_check():
                 return False
 
-            # Check vector store health
             if not self.vector_store.health_check():
                 return False
 

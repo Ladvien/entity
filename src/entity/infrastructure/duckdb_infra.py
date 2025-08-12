@@ -30,7 +30,7 @@ class DuckDBInfrastructure(BaseInfrastructure):
 
         try:
             return self._pool.get_nowait()
-        except Empty:  # No available connection
+        except Empty:
             if self.file_path == ":memory:":
                 return self._pool.get()
             return duckdb.connect(self.file_path)

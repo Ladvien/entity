@@ -22,7 +22,7 @@ class SmartToolSelectorPlugin(PromptPlugin):
                 return tool
         return next(iter(tools), None)
 
-    async def _execute_impl(self, context) -> Any:  # noqa: D401
+    async def _execute_impl(self, context) -> Any:
         available = context.discover_tools()
         best = self._rank_tools_by_relevance(available, context.message)
         if best is None:

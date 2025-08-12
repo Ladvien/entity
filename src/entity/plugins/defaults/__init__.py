@@ -21,19 +21,17 @@ class PassThroughPlugin(Plugin):
         """Configuration for PassThroughPlugin."""
 
         stage: str
-        enable_output_say: bool = True  # Whether to call context.say() for OUTPUT stage
+        enable_output_say: bool = True
 
     def __init__(self, resources: dict[str, Any], config: dict[str, Any] | None = None):
         super().__init__(resources, config)
 
-        # Validate and parse config using Pydantic
         validation_result = self.validate_config()
         if not validation_result.success:
             raise ValueError(
                 f"PassThroughPlugin configuration validation failed: {', '.join(validation_result.errors)}"
             )
 
-        # Validate stage value
         stage = self.config.stage
         valid_stages = [
             INPUT,
@@ -47,21 +45,18 @@ class PassThroughPlugin(Plugin):
         if stage not in valid_stages:
             raise ValueError(f"Invalid stage '{stage}'. Must be one of: {valid_stages}")
 
-        # Set supported_stages dynamically based on configuration
         self.supported_stages = [stage]
 
     async def _execute_impl(self, context) -> str:
         """Execute stage-specific behavior."""
         message = context.message or ""
 
-        # Special handling for OUTPUT stage
         if self.config.stage == OUTPUT and self.config.enable_output_say:
             context.say(message)
 
         return message
 
 
-# Factory functions for backward compatibility
 def InputPlugin(
     resources: dict[str, Any], config: dict[str, Any] | None = None
 ) -> PassThroughPlugin:

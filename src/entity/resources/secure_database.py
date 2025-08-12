@@ -43,26 +43,23 @@ class QueryAuditEntry:
 class SQLQueryValidator:
     """Validator for SQL queries to prevent injection attacks."""
 
-    # Patterns that indicate potential SQL injection
     SUSPICIOUS_PATTERNS = [
-        r";\s*(DROP|DELETE|TRUNCATE|ALTER|CREATE|INSERT|UPDATE)",  # Multiple statements
-        r"--\s*",  # SQL comments
-        r"/\*.*\*/",  # Block comments
-        r"\bUNION\b.*\bSELECT\b",  # UNION attacks
-        r"\bOR\b\s+\d+\s*=\s*\d+",  # OR 1=1 attacks
-        r"\bOR\b\s*'[^']*'\s*=\s*'[^']*'",  # OR 'x'='x' attacks
-        r"(SLEEP|BENCHMARK|WAITFOR|DELAY)\s*\(",  # Time-based attacks
-        r"(EXEC|EXECUTE)\s*\(",  # Stored procedure execution
-        r"xp_cmdshell",  # Command execution
-        r"(LOAD_FILE|INTO\s+OUTFILE|INTO\s+DUMPFILE)",  # File operations
+        r";\s*(DROP|DELETE|TRUNCATE|ALTER|CREATE|INSERT|UPDATE)",
+        r"--\s*",
+        r"/\*.*\*/",
+        r"\bUNION\b.*\bSELECT\b",
+        r"\bOR\b\s+\d+\s*=\s*\d+",
+        r"\bOR\b\s*'[^']*'\s*=\s*'[^']*'",
+        r"(SLEEP|BENCHMARK|WAITFOR|DELAY)\s*\(",
+        r"(EXEC|EXECUTE)\s*\(",
+        r"xp_cmdshell",
+        r"(LOAD_FILE|INTO\s+OUTFILE|INTO\s+DUMPFILE)",
     ]
 
-    # Valid table name pattern (alphanumeric, underscore, dot for schema)
     VALID_TABLE_NAME_PATTERN = re.compile(
         r"^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)?$"
     )
 
-    # Valid column name pattern
     VALID_COLUMN_NAME_PATTERN = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 
     def __init__(self, strict_mode: bool = True):
@@ -91,17 +88,14 @@ class SQLQueryValidator:
         """
         issues = []
 
-        # Check for suspicious patterns
         for pattern in self._compiled_patterns:
             if pattern.search(query):
                 issues.append(f"Suspicious pattern detected: {pattern.pattern}")
 
-        # In strict mode, validate query structure
         if self.strict_mode and query_type:
             if not query.strip().upper().startswith(query_type.value):
                 issues.append(f"Query does not start with expected {query_type.value}")
 
-        # Check for excessive semicolons (multiple statements)
         if query.count(";") > 1:
             issues.append(
                 "Multiple semicolons detected - possible multi-statement attack"
@@ -121,12 +115,10 @@ class SQLQueryValidator:
         if not table_name:
             return False
 
-        # Check against valid pattern
         if not self.VALID_TABLE_NAME_PATTERN.match(table_name):
             self.logger.warning(f"Invalid table name format: {table_name}")
             return False
 
-        # Additional checks for suspicious content
         suspicious_keywords = ["DROP", "DELETE", "INSERT", "UPDATE", "EXEC", "UNION"]
         table_upper = table_name.upper()
         for keyword in suspicious_keywords:
@@ -162,10 +154,8 @@ class SQLQueryValidator:
         Returns:
             Sanitized identifier
         """
-        # Remove any non-alphanumeric characters except underscore and dot
         sanitized = re.sub(r"[^a-zA-Z0-9_.]", "", identifier)
 
-        # Ensure it starts with a letter or underscore
         if sanitized and not re.match(r"^[a-zA-Z_]", sanitized):
             sanitized = "_" + sanitized
 
@@ -200,12 +190,10 @@ class SecureDatabaseResource(DatabaseResource):
         self._allowed_query_types: Set[QueryType] = set(QueryType)
         self.logger = logging.getLogger(__name__)
 
-        # Pre-register common safe tables
         self._register_default_tables()
 
     def _register_default_tables(self):
         """Register default safe tables."""
-        # Add commonly used safe tables
         default_tables = {
             "memory": "memory",
             "vectors": "vectors",
@@ -218,7 +206,6 @@ class SecureDatabaseResource(DatabaseResource):
             try:
                 self.register_table(alias, table_name)
             except ValueError:
-                # Skip if table name is invalid
                 pass
 
     def register_table(self, alias: str, table_name: str) -> None:
@@ -305,11 +292,9 @@ class SecureDatabaseResource(DatabaseResource):
         )
 
         try:
-            # Check if query type is allowed
             if query_type and query_type not in self._allowed_query_types:
                 raise ValueError(f"Query type {query_type.value} is not allowed")
 
-            # Handle table substitution if needed
             if table_alias:
                 table_name = self._table_registry.get(table_alias)
                 if not table_name:
@@ -319,7 +304,6 @@ class SecureDatabaseResource(DatabaseResource):
             else:
                 query = query_template
 
-            # Validate query if requested
             if validate:
                 is_valid, issues = self._query_validator.validate_query(
                     query, query_type
@@ -328,10 +312,8 @@ class SecureDatabaseResource(DatabaseResource):
                     raise ValueError(f"Query validation failed: {'; '.join(issues)}")
                 audit_entry.validation_passed = True
 
-            # Execute the query with parameters
             result = self.execute(query, *params)
 
-            # Calculate execution time
             execution_time = (datetime.now() - start_time).total_seconds() * 1000
             audit_entry.execution_time_ms = execution_time
 
@@ -343,7 +325,6 @@ class SecureDatabaseResource(DatabaseResource):
             raise
 
         finally:
-            # Log audit entry
             if self._enable_query_logging:
                 self._add_audit_entry(audit_entry)
 
@@ -361,7 +342,6 @@ class SecureDatabaseResource(DatabaseResource):
         Returns:
             Query result
         """
-        # Validate column names
         is_valid, invalid_cols = self._query_validator.validate_column_names(columns)
         if not is_valid:
             raise ValueError(f"Invalid column names: {invalid_cols}")
@@ -437,7 +417,6 @@ class SecureDatabaseResource(DatabaseResource):
         if where_clause:
             query += f" WHERE {where_clause}"
 
-        # Combine update values and where parameters
         all_params = list(updates.values()) + list(where_params)
 
         return self.execute_safe(
@@ -474,9 +453,7 @@ class SecureDatabaseResource(DatabaseResource):
         """
         self._audit_log.append(entry)
 
-        # Trim audit log if it exceeds max size
         if len(self._audit_log) > self._max_audit_entries:
-            # Keep only the most recent entries
             self._audit_log = self._audit_log[-self._max_audit_entries :]
 
     def get_audit_log(
@@ -497,15 +474,12 @@ class SecureDatabaseResource(DatabaseResource):
         """
         entries = self._audit_log
 
-        # Filter by query type if specified
         if query_type:
             entries = [e for e in entries if e.query_type == query_type]
 
-        # Filter out errors if requested
         if not include_errors:
             entries = [e for e in entries if e.error is None]
 
-        # Apply limit
         if limit:
             entries = entries[-limit:]
 
@@ -535,13 +509,11 @@ class SecureDatabaseResource(DatabaseResource):
         successful = sum(1 for e in self._audit_log if e.error is None)
         failed = total - successful
 
-        # Calculate average execution time
         exec_times = [
             e.execution_time_ms for e in self._audit_log if e.execution_time_ms
         ]
         avg_exec_time = sum(exec_times) / len(exec_times) if exec_times else 0
 
-        # Count by query type
         query_types = {}
         for entry in self._audit_log:
             qt = entry.query_type.value

@@ -23,7 +23,7 @@ class AccelerationType(Enum):
 
     MXFP4 = "mxfp4"
     CUDA = "cuda"
-    METAL = "metal"  # Apple Silicon
+    METAL = "metal"
     OPENCL = "opencl"
     CPU_ONLY = "cpu_only"
 
@@ -59,7 +59,7 @@ class ModelConfig:
     quantization: Optional[str] = None
     max_tokens: int = 2048
     temperature: float = 0.7
-    priority: int = 100  # Lower = higher priority
+    priority: int = 100
 
 
 class AdaptiveLLMInfrastructure(BaseInfrastructure):
@@ -89,10 +89,8 @@ class AdaptiveLLMInfrastructure(BaseInfrastructure):
         self.benchmark_timeout = benchmark_timeout
         self.min_tokens_per_second = min_tokens_per_second
 
-        # Default model configurations if none provided
         self.model_configs = preferred_models or self._get_default_model_configs()
 
-        # Runtime state
         self.current_backend: Optional[ModelBackend] = None
         self.active_infrastructure: Optional[BaseInfrastructure] = None
         self.acceleration_type: Optional[AccelerationType] = None
@@ -103,14 +101,12 @@ class AdaptiveLLMInfrastructure(BaseInfrastructure):
     def _get_default_model_configs(self) -> List[ModelConfig]:
         """Get default model configurations for different scenarios."""
         configs = [
-            # Primary: GPT-OSS with MXFP4 (highest priority if available)
             ModelConfig(
                 backend=ModelBackend.GPT_OSS_HARMONY,
                 model_name="gpt-oss-20b-mxfp4",
                 acceleration=AccelerationType.MXFP4,
                 priority=1,
             ),
-            # Fallback 1: GPTQ quantized models
             ModelConfig(
                 backend=ModelBackend.TRANSFORMERS_GPTQ,
                 model_name="TheBloke/gpt-oss-20b-GPTQ",
@@ -118,7 +114,6 @@ class AdaptiveLLMInfrastructure(BaseInfrastructure):
                 quantization="gptq",
                 priority=10,
             ),
-            # Fallback 2: AWQ quantized models
             ModelConfig(
                 backend=ModelBackend.TRANSFORMERS_AWQ,
                 model_name="casperhansen/gpt-oss-20b-awq",
@@ -126,7 +121,6 @@ class AdaptiveLLMInfrastructure(BaseInfrastructure):
                 quantization="awq",
                 priority=20,
             ),
-            # Fallback 3: GGML for Apple Silicon
             ModelConfig(
                 backend=ModelBackend.TRANSFORMERS_GGML,
                 model_name="TheBloke/gpt-oss-20b-GGML",
@@ -134,10 +128,9 @@ class AdaptiveLLMInfrastructure(BaseInfrastructure):
                 quantization="q4_0",
                 priority=30,
             ),
-            # Last resort: CPU-only
             ModelConfig(
                 backend=ModelBackend.CPU_FALLBACK,
-                model_name="microsoft/DialoGPT-medium",  # Smaller model for CPU
+                model_name="microsoft/DialoGPT-medium",
                 acceleration=AccelerationType.CPU_ONLY,
                 priority=100,
             ),
@@ -151,21 +144,17 @@ class AdaptiveLLMInfrastructure(BaseInfrastructure):
 
         self.logger.info("Starting adaptive LLM infrastructure detection...")
 
-        # Detect available acceleration
         self.acceleration_type = await self._detect_gpu_acceleration()
         self.logger.info(f"Detected acceleration: {self.acceleration_type}")
 
-        # Find compatible models
         compatible_models = self._get_compatible_models()
         if not compatible_models:
             raise RuntimeError("No compatible models found for current hardware")
 
-        # Benchmark and select best model
         best_model = await self._benchmark_and_select(compatible_models)
         if not best_model:
             raise RuntimeError("No suitable model backend found")
 
-        # Initialize selected backend
         await self._initialize_backend(best_model)
 
         self.logger.info(
@@ -187,36 +176,28 @@ class AdaptiveLLMInfrastructure(BaseInfrastructure):
     async def _detect_gpu_acceleration(self) -> AccelerationType:
         """Detect available GPU acceleration type."""
         try:
-            # Check for MXFP4 support (placeholder - would need actual detection)
             if await self._test_mxfp4_support():
                 return AccelerationType.MXFP4
 
-            # Check for CUDA
             if await self._test_cuda_support():
                 return AccelerationType.CUDA
 
-            # Check for Apple Metal (macOS)
             if platform.system() == "Darwin" and await self._test_metal_support():
                 return AccelerationType.METAL
 
-            # Check for OpenCL
             if await self._test_opencl_support():
                 return AccelerationType.OPENCL
 
         except Exception as e:
             self.logger.warning(f"GPU detection failed: {e}")
 
-        # Fallback to CPU
         return AccelerationType.CPU_ONLY
 
     async def _test_mxfp4_support(self) -> bool:
         """Test MXFP4 acceleration support (placeholder implementation)."""
         try:
-            # This would be replaced with actual MXFP4 detection
-            # For now, we'll simulate by checking for specific libraries
             import importlib
 
-            # Check if gpt-oss library with MXFP4 support is available
             try:
                 gpt_oss = importlib.import_module("gpt_oss")
                 return hasattr(gpt_oss, "mxfp4_acceleration")
@@ -265,10 +246,8 @@ class AdaptiveLLMInfrastructure(BaseInfrastructure):
                 config.acceleration == AccelerationType.CPU_ONLY
                 and self.acceleration_type != AccelerationType.MXFP4
             ):
-                # CPU fallback is always compatible (except when MXFP4 is available)
                 compatible.append(config)
 
-        # Sort by priority (lower number = higher priority)
         return sorted(compatible, key=lambda x: x.priority)
 
     async def _benchmark_and_select(
@@ -278,11 +257,10 @@ class AdaptiveLLMInfrastructure(BaseInfrastructure):
         best_model = None
         best_performance = 0.0
 
-        for model_config in models[:3]:  # Test top 3 candidates
+        for model_config in models[:3]:
             try:
                 self.logger.info(f"Benchmarking {model_config.backend}...")
 
-                # Run performance test
                 benchmark = await self._run_performance_test(model_config)
                 self.benchmark_results[model_config.backend] = benchmark
 
@@ -309,7 +287,6 @@ class AdaptiveLLMInfrastructure(BaseInfrastructure):
                     error_message=str(e),
                 )
 
-        # If no model meets performance threshold, use highest priority compatible model
         if not best_model and models:
             best_model = models[0]
             self.logger.warning(
@@ -325,18 +302,14 @@ class AdaptiveLLMInfrastructure(BaseInfrastructure):
         start_time = time.time()
 
         try:
-            # Create temporary infrastructure for testing
             test_infra = await self._create_test_infrastructure(model_config)
 
-            # Test prompt
             test_prompt = (
                 "What is the capital of France? Please provide a brief explanation."
             )
 
-            # Measure performance
             generation_start = time.time()
 
-            # Simulate model generation (would be actual model call)
             if model_config.backend == ModelBackend.GPT_OSS_HARMONY:
                 result = await self._test_harmony_model(test_infra, test_prompt)
             else:
@@ -344,17 +317,14 @@ class AdaptiveLLMInfrastructure(BaseInfrastructure):
 
             generation_time = time.time() - generation_start
 
-            # Calculate metrics
-            token_count = len(result.split()) if result else 0  # Rough token estimate
+            token_count = len(result.split()) if result else 0
             tokens_per_second = (
                 token_count / generation_time if generation_time > 0 else 0
             )
             latency_ms = generation_time * 1000
 
-            # Memory usage (simplified)
-            memory_usage_mb = 1024  # Placeholder
+            memory_usage_mb = 1024
 
-            # Cleanup test infrastructure
             if hasattr(test_infra, "shutdown"):
                 await test_infra.shutdown()
 
@@ -378,28 +348,24 @@ class AdaptiveLLMInfrastructure(BaseInfrastructure):
     async def _create_test_infrastructure(self, model_config: ModelConfig) -> Any:
         """Create a test infrastructure instance for benchmarking."""
         if model_config.backend == ModelBackend.GPT_OSS_HARMONY:
-            # Create harmony infrastructure instance
             return HarmonyOSSInfrastructure(
                 model_name=model_config.model_name,
                 temperature=model_config.temperature,
-                max_tokens=min(100, model_config.max_tokens),  # Small for testing
+                max_tokens=min(100, model_config.max_tokens),
             )
         else:
-            # For other backends, create mock infrastructure
             return MockInfrastructure(model_config)
 
     async def _test_harmony_model(self, infrastructure: Any, prompt: str) -> str:
         """Test harmony model performance."""
-        # This would be actual harmony model testing
-        await asyncio.sleep(0.1)  # Simulate processing time
+        await asyncio.sleep(0.1)
         return (
             "Paris is the capital of France. It is known for its culture and history."
         )
 
     async def _test_standard_model(self, infrastructure: Any, prompt: str) -> str:
         """Test standard transformers model performance."""
-        # This would be actual transformers model testing
-        await asyncio.sleep(0.2)  # Simulate processing time
+        await asyncio.sleep(0.2)
         return "The capital of France is Paris."
 
     async def _initialize_backend(self, model_config: ModelConfig) -> None:
@@ -413,10 +379,8 @@ class AdaptiveLLMInfrastructure(BaseInfrastructure):
                 max_tokens=model_config.max_tokens,
             )
         else:
-            # For other backends, create appropriate infrastructure
             self.active_infrastructure = StandardModelInfrastructure(model_config)
 
-        # Initialize the active infrastructure
         await self.active_infrastructure.startup()
 
     def get_benchmark_results(self) -> Dict[str, Dict[str, Any]]:

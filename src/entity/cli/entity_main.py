@@ -36,7 +36,6 @@ class EntityCLI:
 
     def _setup_commands(self):
         """Setup CLI commands using Entity's ArgumentParsingResource."""
-        # Register init command
         self.arg_parser.register_argument(
             "init",
             "project_name",
@@ -71,7 +70,6 @@ class EntityCLI:
             aliases=["q"],
         )
 
-        # Register run command
         self.arg_parser.register_argument(
             "run",
             "workflow",
@@ -114,7 +112,6 @@ class EntityCLI:
                 args=argv or sys.argv[1:],
             )
 
-            # Parse arguments using Entity's ArgumentParsingResource
             parsed = await self.arg_parser.parse(argv)
 
             if parsed.validation_errors:
@@ -127,18 +124,15 @@ class EntityCLI:
                 await self._show_help_and_errors(parsed)
                 return 1
 
-            # Handle help requests
             if "--help" in (argv or sys.argv[1:]) or "-h" in (argv or sys.argv[1:]):
                 help_text = await self.arg_parser.generate_help(parsed.command)
                 print(help_text)
                 return 0
 
-            # Handle version requests
             if "--version" in (argv or sys.argv[1:]):
                 print("entity-cli 0.0.5")
                 return 0
 
-            # Execute command
             return await self._execute_command(parsed)
 
         except KeyboardInterrupt:
@@ -165,7 +159,6 @@ class EntityCLI:
             values=parsed.values,
         )
 
-        # Create a simple namespace-like object for backward compatibility
         class Args:
             def __init__(self, values: Dict[str, Any], command: str):
                 self.__dict__.update(values)
@@ -173,7 +166,6 @@ class EntityCLI:
 
         args = Args(parsed.values, parsed.command)
 
-        # Route to command handlers
         if parsed.command == "init":
             args.func = init_command
             await init_command(args)
@@ -192,13 +184,11 @@ class EntityCLI:
 
     async def _show_help_and_errors(self, parsed: ParsedArguments):
         """Show help text and validation errors using Entity's logging."""
-        # Show errors first
         for error in parsed.validation_errors:
             await self.logger.log(
                 LogLevel.ERROR, LogCategory.ERROR, f"Argument error: {error}"
             )
 
-        # Show help
         help_text = await self.arg_parser.generate_help(
             parsed.command if parsed.command else None
         )

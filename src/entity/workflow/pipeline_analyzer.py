@@ -15,9 +15,9 @@ class PipelineOptimizationHint:
 
     stage: str
     plugin: Optional[str]
-    hint_type: str  # "skip", "cache", "parallel", "reorder"
+    hint_type: str
     reason: str
-    impact: str  # "high", "medium", "low"
+    impact: str
     conditions: Dict[str, Any]
 
 
@@ -59,20 +59,17 @@ class PipelineAnalyzer:
         Returns:
             Analysis result with optimization hints
         """
-        # Count total stages and plugins
         total_stages = len(self.executor._ORDER)
         total_plugins = sum(
             len(self.workflow.plugins_for(stage)) for stage in self.executor._ORDER
         )
 
-        # Identify skippable stages and plugins
         skippable_stages = []
         skippable_plugins = []
 
         for stage in self.executor._ORDER:
             plugins = self.workflow.plugins_for(stage)
 
-            # Check if all plugins in stage are skippable
             all_skippable = True
             for plugin in plugins:
                 if context and not plugin.should_execute(context):
@@ -81,16 +78,13 @@ class PipelineAnalyzer:
                 else:
                     all_skippable = False
 
-            # Stage is skippable if all its plugins are skippable
             if all_skippable and len(plugins) > 0:
                 skippable_stages.append(stage)
 
-        # Generate optimization hints
         hints = self._generate_optimization_hints(
             skippable_stages, skippable_plugins, context
         )
 
-        # Estimate potential savings
         estimated_savings = self._estimate_savings(skippable_stages, skippable_plugins)
 
         return PipelineAnalysisResult(
@@ -121,7 +115,6 @@ class PipelineAnalyzer:
         """
         hints = []
 
-        # Hint for skippable stages
         for stage in skippable_stages:
             hints.append(
                 PipelineOptimizationHint(
@@ -138,7 +131,6 @@ class PipelineAnalyzer:
                 )
             )
 
-        # Hint for frequently skipped plugins
         plugin_skip_frequency = {}
         for plugin_name in skippable_plugins:
             stage, name = plugin_name.split(".", 1)
@@ -147,7 +139,7 @@ class PipelineAnalyzer:
             plugin_skip_frequency[name] += 1
 
         for plugin_name, frequency in plugin_skip_frequency.items():
-            if frequency >= 2:  # Plugin skipped in multiple stages
+            if frequency >= 2:
                 hints.append(
                     PipelineOptimizationHint(
                         stage="multiple",
@@ -159,7 +151,6 @@ class PipelineAnalyzer:
                     )
                 )
 
-        # Hint for stages with no dependencies that could run in parallel
         for stage in self.executor._ORDER:
             deps = self.executor._stage_dependencies.get(stage, set())
             if len(deps) == 0 and stage != WorkflowExecutor.INPUT:
@@ -174,7 +165,6 @@ class PipelineAnalyzer:
                     )
                 )
 
-        # Hint for caching opportunities
         for stage in [WorkflowExecutor.PARSE, WorkflowExecutor.THINK]:
             if stage not in skippable_stages:
                 hints.append(
@@ -202,7 +192,6 @@ class PipelineAnalyzer:
         Returns:
             Estimated time savings in milliseconds
         """
-        # Rough estimates of stage/plugin overhead
         STAGE_OVERHEAD_MS = 5.0
         PLUGIN_OVERHEAD_MS = 10.0
 
@@ -222,17 +211,13 @@ class PipelineAnalyzer:
         """
         recommendations = {}
 
-        # Check all stages, including ERROR
         all_stages = self.executor._ORDER + [self.executor.ERROR]
 
         for stage in all_stages:
             plugins = self.workflow.plugins_for(stage)
 
-            # Check if any plugin would execute
             would_execute = any(plugin.should_execute(context) for plugin in plugins)
 
-            # Recommend skipping if no plugins would execute
-            # and stage dependencies allow it
             can_skip = not would_execute and self.executor._can_skip_stage(
                 stage, context
             )
@@ -252,7 +237,6 @@ class PipelineAnalyzer:
         """
         warnings = []
 
-        # Check if plugin has skip_conditions defined
         if not hasattr(plugin, "skip_conditions"):
             warnings.append(
                 f"Plugin {plugin.__class__.__name__} has no skip_conditions defined"
@@ -262,18 +246,15 @@ class PipelineAnalyzer:
                 f"Plugin {plugin.__class__.__name__} has empty skip_conditions"
             )
         else:
-            # Validate that skip conditions are callable
             for i, condition in enumerate(plugin.skip_conditions):
                 if not callable(condition):
                     warnings.append(
                         f"Skip condition {i} in {plugin.__class__.__name__} is not callable"
                     )
 
-        # Check if plugin overrides should_execute
         if hasattr(plugin, "should_execute"):
             method = getattr(plugin, "should_execute")
             if method.__module__ != "entity.plugins.base":
-                # Plugin has custom should_execute implementation
                 warnings.append(
                     f"Plugin {plugin.__class__.__name__} overrides should_execute() - "
                     "ensure it calls super().should_execute() if using skip_conditions"

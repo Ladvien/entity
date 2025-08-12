@@ -54,13 +54,11 @@ class Plugin(ABC):
         Returns:
             True if the plugin should execute, False to skip.
         """
-        # Check skip conditions if defined
         if hasattr(self, "skip_conditions") and self.skip_conditions:
             for condition in self.skip_conditions:
                 if condition(context):
                     return False
 
-        # Allow subclasses to override this method for custom logic
         return True
 
     async def execute(self, context: Any) -> Any:

@@ -55,7 +55,6 @@ class BatchMetrics:
         self.total_batches_processed += 1
         self.total_requests_processed += batch_size
 
-        # Update averages using incremental formula
         total_batches = self.total_batches_processed
         self.avg_batch_size = (
             (self.avg_batch_size * (total_batches - 1)) + batch_size
@@ -112,14 +111,12 @@ class BatchWorkflowExecutor(WorkflowExecutor):
         """
         super().__init__(resources, workflow)
 
-        # Batch configuration
         self.batch_size = batch_size
         self.batch_timeout = batch_timeout
         self.max_queue_size = max_queue_size
         self.adaptive_batching = adaptive_batching
         self.priority_enabled = priority_enabled
 
-        # Queue and processing state
         self._request_queue: asyncio.Queue[BatchRequest] = asyncio.Queue(
             maxsize=max_queue_size
         )
@@ -129,12 +126,10 @@ class BatchWorkflowExecutor(WorkflowExecutor):
         self._processing_task: Optional[asyncio.Task] = None
         self._shutdown_event = asyncio.Event()
 
-        # Metrics and monitoring
         self._metrics = BatchMetrics()
         self._load_history: List[float] = []
         self._last_batch_time = time.time()
 
-        # Adaptive batching parameters
         self._min_batch_size = max(1, batch_size // 4)
         self._max_batch_size = batch_size * 2
         self._load_window_size = 10
@@ -144,7 +139,6 @@ class BatchWorkflowExecutor(WorkflowExecutor):
         if self._processing_task is None or self._processing_task.done():
             self._processing_task = asyncio.create_task(self._batch_processor())
 
-            # Log startup
             if "logging" in self.resources:
                 await self.resources["logging"].log(
                     LogLevel.INFO,
@@ -169,10 +163,8 @@ class BatchWorkflowExecutor(WorkflowExecutor):
                 except asyncio.CancelledError:
                     pass
 
-        # Process any remaining requests
         await self._flush_remaining_requests()
 
-        # Log shutdown
         if "logging" in self.resources:
             await self.resources["logging"].log(
                 LogLevel.INFO,
@@ -203,27 +195,22 @@ class BatchWorkflowExecutor(WorkflowExecutor):
             asyncio.TimeoutError: If request times out
             asyncio.QueueFull: If the request queue is full
         """
-        # Ensure batch processing is running
         await self.start_batch_processing()
 
-        # Create batch request
         request = BatchRequest(
             message=message,
             user_id=user_id,
             priority=priority,
         )
 
-        # Update priority metrics
         self._metrics.priority_distribution[priority] += 1
 
         try:
-            # Add to appropriate queue
             if self.priority_enabled:
                 await self._enqueue_priority_request(request)
             else:
                 await self._request_queue.put(request)
 
-            # Wait for processing with optional timeout
             if timeout:
                 return await asyncio.wait_for(request.future, timeout=timeout)
             else:
@@ -239,11 +226,9 @@ class BatchWorkflowExecutor(WorkflowExecutor):
         """Add request to priority queue and signal batch processor."""
         self._priority_queues[request.priority].append(request)
 
-        # Signal the batch processor that a new request is available
         try:
             self._request_queue.put_nowait(request)
         except asyncio.QueueFull:
-            # Remove from priority queue if main queue is full
             self._priority_queues[request.priority].remove(request)
             raise
 
@@ -251,14 +236,11 @@ class BatchWorkflowExecutor(WorkflowExecutor):
         """Main batch processing loop."""
         while not self._shutdown_event.is_set():
             try:
-                # Collect a batch of requests
                 batch = await self._collect_batch()
 
                 if batch:
-                    # Process the batch
                     await self._process_batch(batch)
 
-                    # Update load history for adaptive batching
                     if self.adaptive_batching:
                         current_load = len(batch) / self.batch_size
                         self._update_load_history(current_load)
@@ -266,7 +248,6 @@ class BatchWorkflowExecutor(WorkflowExecutor):
             except asyncio.CancelledError:
                 break
             except Exception as exc:
-                # Log processing errors but continue
                 if "logging" in self.resources:
                     await self.resources["logging"].log(
                         LogLevel.ERROR,
@@ -280,14 +261,12 @@ class BatchWorkflowExecutor(WorkflowExecutor):
         batch: List[BatchRequest] = []
         batch_start_time = time.time()
 
-        # Determine target batch size (adaptive if enabled)
         target_size = (
             self._get_adaptive_batch_size()
             if self.adaptive_batching
             else self.batch_size
         )
 
-        # Collect requests until batch is full or timeout occurs
         while len(batch) < target_size:
             remaining_timeout = self.batch_timeout - (time.time() - batch_start_time)
 
@@ -295,7 +274,6 @@ class BatchWorkflowExecutor(WorkflowExecutor):
                 break
 
             try:
-                # Wait for a request with remaining timeout
                 if self.priority_enabled:
                     request = await self._get_priority_request(remaining_timeout)
                 else:
@@ -307,25 +285,21 @@ class BatchWorkflowExecutor(WorkflowExecutor):
                     batch.append(request)
 
             except asyncio.TimeoutError:
-                # Timeout occurred, process what we have
                 break
 
         return batch
 
     async def _get_priority_request(self, timeout: float) -> Optional[BatchRequest]:
         """Get the highest priority request available."""
-        # Check priority queues in order (highest to lowest)
         for priority in reversed(list(Priority)):
             if self._priority_queues[priority]:
                 request = self._priority_queues[priority].pop(0)
-                # Remove from main queue as well
                 try:
                     self._request_queue.get_nowait()
                 except asyncio.QueueEmpty:
                     pass
                 return request
 
-        # If no priority requests, wait for any request
         try:
             return await asyncio.wait_for(self._request_queue.get(), timeout=timeout)
         except asyncio.TimeoutError:
@@ -336,15 +310,13 @@ class BatchWorkflowExecutor(WorkflowExecutor):
         if not self._load_history:
             return self.batch_size
 
-        # Calculate average load over recent history
         avg_load = sum(self._load_history) / len(self._load_history)
 
-        # Adjust batch size based on load
-        if avg_load > 0.8:  # High load, increase batch size
+        if avg_load > 0.8:
             target_size = min(self._max_batch_size, int(self.batch_size * 1.5))
-        elif avg_load < 0.3:  # Low load, decrease batch size
+        elif avg_load < 0.3:
             target_size = max(self._min_batch_size, int(self.batch_size * 0.7))
-        else:  # Normal load, use configured size
+        else:
             target_size = self.batch_size
 
         return target_size
@@ -353,7 +325,6 @@ class BatchWorkflowExecutor(WorkflowExecutor):
         """Update load history for adaptive batching."""
         self._load_history.append(load)
 
-        # Keep only recent history
         if len(self._load_history) > self._load_window_size:
             self._load_history.pop(0)
 
@@ -361,11 +332,9 @@ class BatchWorkflowExecutor(WorkflowExecutor):
         """Process a batch of requests through the workflow pipeline."""
         start_time = time.time()
 
-        # Calculate wait times for metrics
         current_time = time.time()
         wait_times = [current_time - req.timestamp for req in batch]
 
-        # Log batch processing start
         if "logging" in self.resources:
             await self.resources["logging"].log(
                 LogLevel.DEBUG,
@@ -375,17 +344,13 @@ class BatchWorkflowExecutor(WorkflowExecutor):
                 avg_wait_time=sum(wait_times) / len(wait_times) if wait_times else 0,
             )
 
-        # Process each request in the batch
-        # Note: We process them individually but with shared context optimizations
         tasks = []
         for request in batch:
             task = asyncio.create_task(self._process_request(request))
             tasks.append(task)
 
-        # Wait for all requests to complete
         await asyncio.gather(*tasks, return_exceptions=True)
 
-        # Update metrics
         processing_time = time.time() - start_time
         self._metrics.update_batch_metrics(len(batch), processing_time, wait_times)
         self._last_batch_time = time.time()
@@ -393,7 +358,6 @@ class BatchWorkflowExecutor(WorkflowExecutor):
     async def _process_request(self, request: BatchRequest) -> None:
         """Process an individual request within a batch."""
         try:
-            # Use the standard execute method with optimizations
             result = await super().execute(request.message, request.user_id)
 
             if not request.future.done():
@@ -407,7 +371,6 @@ class BatchWorkflowExecutor(WorkflowExecutor):
         """Process any remaining requests in the queue during shutdown."""
         remaining_requests = []
 
-        # Collect all remaining requests
         while not self._request_queue.empty():
             try:
                 request = self._request_queue.get_nowait()
@@ -415,12 +378,10 @@ class BatchWorkflowExecutor(WorkflowExecutor):
             except asyncio.QueueEmpty:
                 break
 
-        # Add priority queue requests
         for priority_queue in self._priority_queues.values():
             remaining_requests.extend(priority_queue)
             priority_queue.clear()
 
-        # Process remaining requests
         if remaining_requests:
             await self._process_batch(remaining_requests)
 
@@ -460,6 +421,6 @@ class BatchWorkflowExecutor(WorkflowExecutor):
         await self.start_batch_processing()
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):  # noqa: U100
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit."""
         await self.stop_batch_processing()

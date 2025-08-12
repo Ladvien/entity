@@ -98,7 +98,6 @@ class HarmonyOSSInfrastructure(BaseInfrastructure):
         """
         formatted = []
 
-        # Sort messages by role hierarchy
         role_priority = {
             Role.SYSTEM: 0,
             Role.DEVELOPER: 1,
@@ -124,7 +123,6 @@ class HarmonyOSSInfrastructure(BaseInfrastructure):
         channels = {"analysis": "", "commentary": "", "final": ""}
 
         try:
-            # Parse structured response
             lines = response.strip().split("\n")
             current_channel = "final"
 
@@ -139,7 +137,7 @@ class HarmonyOSSInfrastructure(BaseInfrastructure):
                     current_channel = "final"
                     continue
                 else:
-                    if line.strip():  # Only add non-empty lines
+                    if line.strip():
                         channels[current_channel] += line.strip() + "\n"
 
         except Exception as e:
@@ -160,11 +158,9 @@ class HarmonyOSSInfrastructure(BaseInfrastructure):
         """
         messages = []
 
-        # Add system prompt if provided
         if system_prompt:
             messages.append(HarmonyMessage(Role.SYSTEM, system_prompt))
 
-        # Add reasoning effort as developer instruction
         messages.append(
             HarmonyMessage(
                 Role.DEVELOPER,
@@ -173,20 +169,14 @@ class HarmonyOSSInfrastructure(BaseInfrastructure):
             )
         )
 
-        # Add user prompt
         messages.append(HarmonyMessage(Role.USER, prompt))
 
-        # Format to harmony structure
         harmony_prompt = self._format_prompt_harmony(messages)
 
-        # In production, this would call the actual GPT-OSS model
-        # For now, we'll simulate the response
         response = await self._call_model(harmony_prompt)
 
-        # Parse multi-channel response
         channels = self._parse_harmony_response(response)
 
-        # Store in conversation history
         self.conversation_history.append(HarmonyMessage(Role.USER, prompt))
         self.conversation_history.append(
             HarmonyMessage(
@@ -194,7 +184,6 @@ class HarmonyOSSInfrastructure(BaseInfrastructure):
             )
         )
 
-        # Return final channel by default
         return channels.get("final", "")
 
     async def generate_with_channels(self, prompt: str) -> Dict[str, str]:
@@ -223,11 +212,8 @@ class HarmonyOSSInfrastructure(BaseInfrastructure):
         In production, this would integrate with the actual model API.
         For now, returns a simulated response.
         """
-        # TODO: Integrate with actual GPT-OSS model endpoint
-        # This is a placeholder implementation
         self.logger.debug(f"Calling model with prompt length: {len(prompt)}")
 
-        # Simulate a harmony-format response
         return """<<ANALYSIS>>
         The user is requesting assistance with a task.
         Context suggests this is part of a larger workflow.
@@ -242,7 +228,6 @@ class HarmonyOSSInfrastructure(BaseInfrastructure):
     async def health_check(self) -> bool:
         """Check if the GPT-OSS model is accessible and responsive."""
         try:
-            # Test with a simple prompt
             response = await self.generate("test", "You are a test assistant")
             return bool(response)
         except Exception as e:

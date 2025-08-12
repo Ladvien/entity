@@ -23,14 +23,12 @@ from entity.workflow.stages import (
 if TYPE_CHECKING:
     from entity.workflow.workflow import Workflow
 else:
-    # Import for runtime to avoid NameError
     from entity.workflow.workflow import Workflow
 
 
 class WorkflowExecutor:
     """Run plugins through the standard workflow stages."""
 
-    # Stage constants for backward compatibility
     INPUT = INPUT
     PARSE = PARSE
     THINK = THINK
@@ -49,7 +47,6 @@ class WorkflowExecutor:
     ) -> None:
         self.resources = dict(resources)
         self.resources.setdefault("logging", RichConsoleLoggingResource())
-        # Ensure memory is always available, even if in-memory for tests
         if "memory" not in self.resources:
             from entity.infrastructure.duckdb_infra import DuckDBInfrastructure
             from entity.resources import DatabaseResource, Memory, VectorStoreResource
@@ -60,7 +57,6 @@ class WorkflowExecutor:
             )
         self.workflow = workflow or Workflow()
 
-        # Track stage dependencies - stages that must run even if no plugins
         self._stage_dependencies: Dict[str, Set[str]] = {
             self.INPUT: set(),
             self.PARSE: {self.INPUT},
@@ -68,10 +64,9 @@ class WorkflowExecutor:
             self.DO: {self.INPUT, self.PARSE},
             self.REVIEW: {self.INPUT, self.PARSE},
             self.OUTPUT: {self.INPUT},
-            self.ERROR: set(),  # ERROR can always run
+            self.ERROR: set(),
         }
 
-        # Pipeline optimization metrics
         self._skip_metrics: Dict[str, int] = {
             "stages_skipped": 0,
             "plugins_skipped": 0,
@@ -87,17 +82,15 @@ class WorkflowExecutor:
     ) -> str:
         """Run plugins in sequence until an OUTPUT plugin produces a response."""
 
-        # Generate unique request ID for tracking
         if request_id is None:
             request_id = str(uuid.uuid4())
 
-        # Create error context for this execution
         error_context = error_context_manager.create_context(
             user_id=user_id, stage=self.INPUT, request_id=request_id
         )
 
         context = PluginContext(self.resources, user_id)
-        context.request_id = request_id  # Add request ID to plugin context
+        context.request_id = request_id
         await context.load_state()
         result = message
 
@@ -106,7 +99,6 @@ class WorkflowExecutor:
             for loop_count in count():
                 context.loop_count = loop_count
                 for stage in self._ORDER:
-                    # Update error context with current stage
                     error_context.stage = stage
                     error_context_manager.add_execution_context(
                         request_id, "loop_count", loop_count
@@ -127,7 +119,6 @@ class WorkflowExecutor:
             await context.flush_state()
             return result
         except Exception as exc:
-            # Handle any unhandled exceptions with enhanced context
             pipeline_error = error_context_manager.create_pipeline_error(
                 stage=getattr(context, "current_stage", "unknown"),
                 plugin=None,
@@ -135,10 +126,8 @@ class WorkflowExecutor:
                 context=error_context,
             )
 
-            # Record error for analysis
             error_analyzer.record_error(pipeline_error)
 
-            # Log the enhanced error
             await context.log(
                 LogLevel.ERROR,
                 LogCategory.SYSTEM,
@@ -147,7 +136,6 @@ class WorkflowExecutor:
             )
             raise pipeline_error
         finally:
-            # Clean up error context
             error_context_manager.cleanup_context(request_id)
 
     async def _run_stage(
@@ -164,28 +152,23 @@ class WorkflowExecutor:
         context.message = message
         result = message
 
-        # Get plugins for this stage
         plugins = self.workflow.plugins_for(stage)
 
-        # Filter plugins that should execute
         active_plugins = []
         for plugin in plugins:
             if plugin.should_execute(context):
                 active_plugins.append(plugin)
             else:
-                # Track skipped plugin
                 plugin_name = plugin.__class__.__name__
                 context.skipped_plugins.append(f"{stage}.{plugin_name}")
                 self._skip_metrics["plugins_skipped"] += 1
 
-                # Log the skip
                 await context.log(
                     LogLevel.DEBUG,
                     LogCategory.SYSTEM,
                     f"Skipped plugin {plugin_name} in stage {stage}",
                 )
 
-        # Check if we can skip the entire stage
         if not active_plugins and self._can_skip_stage(stage, context):
             context.skipped_stages.append(stage)
             self._skip_metrics["stages_skipped"] += 1
@@ -197,14 +180,11 @@ class WorkflowExecutor:
             )
             return message
 
-        # Track that we're running this stage
         self._skip_metrics["total_stages_run"] += 1
 
-        # Execute active plugins
         for plugin in active_plugins:
             plugin_name = plugin.__class__.__name__
             try:
-                # Track plugin in execution stack
                 error_context_manager.update_plugin_stack(request_id, plugin_name)
                 error_context_manager.add_execution_context(
                     request_id, "current_plugin", plugin_name
@@ -213,7 +193,6 @@ class WorkflowExecutor:
                 self._skip_metrics["total_plugins_run"] += 1
                 result = await plugin.execute(context)
             except Exception as exc:
-                # Create enhanced error with plugin context
                 error_context = error_context_manager.get_context(request_id)
                 if error_context:
                     plugin_error = PluginError(
@@ -224,10 +203,8 @@ class WorkflowExecutor:
                         plugin_config=getattr(plugin, "config", {}),
                     )
 
-                    # Record error for analysis
                     error_analyzer.record_error(plugin_error)
 
-                    # Log enhanced error
                     await context.log(
                         LogLevel.ERROR,
                         LogCategory.SYSTEM,
@@ -235,13 +212,11 @@ class WorkflowExecutor:
                         exception=str(plugin_error),
                     )
 
-                    # Run error handling with enhanced context
                     await self._handle_error(context, plugin_error, user_id, request_id)
                     if context.response is not None:
                         return context.response
                     raise plugin_error
                 else:
-                    # Fallback to original error handling
                     await self._handle_error(
                         context, exc.__cause__ or exc, user_id, request_id
                     )
@@ -259,10 +234,8 @@ class WorkflowExecutor:
         """Run error stage plugins when a plugin fails with enhanced context."""
         context.current_stage = self.ERROR
 
-        # Add error information to context
         if isinstance(exc, PipelineError):
             context.message = str(exc)
-            # Add structured error info to plugin context
             context.error_context = exc.to_dict()
         else:
             context.message = str(exc)
@@ -272,17 +245,14 @@ class WorkflowExecutor:
                 "request_id": request_id,
             }
 
-        # Update error context
         error_context_manager.add_execution_context(
             request_id, "error_stage", "error_handling"
         )
 
-        # Execute error handling plugins
         for plugin in self.workflow.plugins_for(self.ERROR):
             try:
                 await plugin.execute(context)
             except Exception as error_plugin_exc:
-                # If error plugin fails, log but don't re-raise to avoid infinite loop
                 await context.log(
                     LogLevel.ERROR,
                     LogCategory.SYSTEM,
@@ -303,18 +273,14 @@ class WorkflowExecutor:
         Returns:
             True if the stage can be skipped, False otherwise
         """
-        # Never skip INPUT, ERROR or OUTPUT stages
         if stage in {self.INPUT, self.ERROR, self.OUTPUT}:
             return False
 
-        # Check if any required dependencies were skipped
         dependencies = self._stage_dependencies.get(stage, set())
         for dep in dependencies:
             if dep in context.skipped_stages:
-                # A required dependency was skipped, so we can't skip this stage
                 return False
 
-        # Stage can be skipped
         return True
 
     def get_skip_metrics(self) -> Dict[str, int]:

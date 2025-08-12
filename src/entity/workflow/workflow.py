@@ -64,9 +64,7 @@ class Workflow:
                     if isinstance(plugin_config, str)
                     else plugin_config
                 )
-                plugin = plugin_cls(
-                    resources, {}
-                )  # Pass resources to plugin constructor
+                plugin = plugin_cls(resources, {})
                 plugin.assigned_stage = stage
 
                 validation_result = plugin.validate_config()

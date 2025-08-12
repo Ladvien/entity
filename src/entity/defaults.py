@@ -64,7 +64,6 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
         log_file=log_file,
     )
 
-    # Setup Ollama as the default LLM
     try:
         if cfg.auto_install_ollama:
             OllamaInstaller.ensure_ollama_available(cfg.ollama_model)
@@ -97,7 +96,6 @@ def load_defaults(config: DefaultConfig | None = None) -> dict[str, object]:
     llm_resource = LLMResource(llm_infra)
     storage_resource = LocalStorageResource(storage_infra)
 
-    # Create argument parsing resource
     argument_parsing_resource = create_argument_parsing_resource(
         logger=logging_resource,
         app_name="entity-cli",

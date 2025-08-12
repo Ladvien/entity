@@ -49,7 +49,6 @@ class TTLDecorator(MemoryDecorator):
         self._cleanup_task: Optional[asyncio.Task] = None
         self._lock = asyncio.Lock()
 
-        # Start background cleanup task
         self._start_cleanup_task()
 
     def _start_cleanup_task(self) -> None:
@@ -59,7 +58,6 @@ class TTLDecorator(MemoryDecorator):
             if self._cleanup_task is None or self._cleanup_task.done():
                 self._cleanup_task = asyncio.create_task(self._cleanup_loop())
         except RuntimeError:
-            # No event loop running, skip cleanup task
             pass
 
     async def _cleanup_loop(self) -> None:
@@ -71,7 +69,6 @@ class TTLDecorator(MemoryDecorator):
             except asyncio.CancelledError:
                 break
             except Exception:
-                # Log error but continue cleanup loop
                 pass
 
     async def _cleanup_expired(self) -> List[str]:
@@ -80,13 +77,10 @@ class TTLDecorator(MemoryDecorator):
         expired_keys = []
 
         async with self._lock:
-            # Find expired entries
             for key, entry in list(self._ttl_entries.items()):
                 if entry.expiry_time <= current_time:
                     expired_keys.append(key)
-                    # Delete from underlying memory
                     await self._memory.delete(entry.key, entry.user_id)
-                    # Remove from TTL tracking
                     del self._ttl_entries[key]
 
         return expired_keys
@@ -104,7 +98,6 @@ class TTLDecorator(MemoryDecorator):
         """
         await self._memory.store(key, value, user_id)
 
-        # Track TTL
         expiry_time = time.time() + ttl
         tracking_key = f"{user_id}:{key}" if user_id else key
 
@@ -115,7 +108,6 @@ class TTLDecorator(MemoryDecorator):
 
     async def store(self, key: str, value: Any, user_id: Optional[str] = None) -> None:
         """Store a value with default TTL if configured."""
-        # Ensure cleanup task is started if we have an event loop now
         if self._cleanup_task is None:
             self._start_cleanup_task()
 
@@ -130,12 +122,10 @@ class TTLDecorator(MemoryDecorator):
         """Load a value, returning default if expired."""
         tracking_key = f"{user_id}:{key}" if user_id else key
 
-        # Check if key has TTL and is expired
         async with self._lock:
             if tracking_key in self._ttl_entries:
                 entry = self._ttl_entries[tracking_key]
                 if entry.expiry_time <= time.time():
-                    # Expired - delete it
                     await self._memory.delete(key, user_id)
                     del self._ttl_entries[tracking_key]
                     return default
@@ -206,7 +196,6 @@ class LRUDecorator(MemoryDecorator):
         tracking_key = f"{user_id}:{key}" if user_id else key
 
         async with self._lock:
-            # Move to end (most recently used)
             if tracking_key in self._access_order:
                 self._access_order.move_to_end(tracking_key)
             else:
@@ -217,20 +206,17 @@ class LRUDecorator(MemoryDecorator):
         evicted = []
 
         async with self._lock:
-            # Get least recently used keys
             for _ in range(min(self.evict_count, len(self._access_order))):
                 if not self._access_order:
                     break
 
                 tracking_key, _ = self._access_order.popitem(last=False)
 
-                # Parse user_id and key
                 if ":" in tracking_key:
                     user_id, key = tracking_key.split(":", 1)
                 else:
                     user_id, key = None, tracking_key
 
-                # Delete from underlying memory
                 await self._memory.delete(key, user_id)
                 evicted.append(tracking_key)
                 self._metrics["evictions"] += 1
@@ -239,7 +225,6 @@ class LRUDecorator(MemoryDecorator):
 
     async def store(self, key: str, value: Any, user_id: Optional[str] = None) -> None:
         """Store a value, evicting LRU entries if needed."""
-        # Check if eviction is needed
         if len(self._access_order) >= self.max_entries:
             await self._evict_lru()
 
@@ -304,17 +289,14 @@ class LockingDecorator(MemoryDecorator):
 
     def _get_lock_path(self, key: str) -> Path:
         """Get lock file path for a key."""
-        # Use hash to avoid filesystem issues with special characters
         key_hash = str(hash(key) % 10000000)
         return self.lock_dir / f"lock_{key_hash}.lock"
 
     async def _acquire_lock(self, key: str) -> None:
         """Acquire both async and file-based lock for a key."""
-        # Get or create async lock
         if key not in self._locks:
             self._locks[key] = asyncio.Lock()
 
-        # Acquire async lock
         start_time = time.time()
         try:
             await asyncio.wait_for(self._locks[key].acquire(), timeout=self.timeout)
@@ -323,11 +305,10 @@ class LockingDecorator(MemoryDecorator):
             raise TimeoutError(f"Failed to acquire lock for key {key}")
 
         wait_time = time.time() - start_time
-        if wait_time > 0.01:  # Contention if waited more than 10ms
+        if wait_time > 0.01:
             self._metrics["contentions"] += 1
         self._metrics["acquisitions"] += 1
 
-        # Acquire file lock for cross-process safety
         lock_path = self._get_lock_path(key)
         lock_file = await asyncio.to_thread(open, str(lock_path), "w")
         await asyncio.to_thread(fcntl.flock, lock_file, fcntl.LOCK_EX)
@@ -335,14 +316,12 @@ class LockingDecorator(MemoryDecorator):
 
     async def _release_lock(self, key: str) -> None:
         """Release both async and file-based lock for a key."""
-        # Release file lock
         if key in self._lock_files:
             lock_file = self._lock_files[key]
             await asyncio.to_thread(fcntl.flock, lock_file, fcntl.LOCK_UN)
             lock_file.close()
             del self._lock_files[key]
 
-        # Release async lock
         if key in self._locks:
             self._locks[key].release()
 
@@ -398,16 +377,12 @@ class AsyncDecorator(MemoryDecorator):
         """
         super().__init__(memory)
         self.max_workers = max_workers
-        # Note: In real implementation, would use ThreadPoolExecutor
-        # For now, we'll use asyncio.to_thread which is simpler
 
     async def store(self, key: str, value: Any, user_id: Optional[str] = None) -> None:
         """Store a value asynchronously."""
-        # If the wrapped memory already has async methods, use them
         if asyncio.iscoroutinefunction(self._memory.store):
             await self._memory.store(key, value, user_id)
         else:
-            # Convert sync to async
             await asyncio.to_thread(self._memory.store, key, value, user_id)
 
     async def load(
@@ -487,7 +462,7 @@ class MonitoringDecorator(MemoryDecorator):
             "slow_operations": [],
         }
         self._lock = asyncio.Lock()
-        self.slow_threshold = 1.0  # Operations slower than 1 second
+        self.slow_threshold = 1.0
 
     async def _record_operation(
         self, operation: str, duration: float, error: Optional[Exception] = None
@@ -541,7 +516,6 @@ class MonitoringDecorator(MemoryDecorator):
         try:
             value = await self._memory.load(key, default, user_id)
 
-            # Track cache hits/misses
             async with self._lock:
                 if value is not default:
                     self._metrics["cache_stats"]["hits"] += 1

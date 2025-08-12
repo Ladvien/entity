@@ -19,5 +19,3 @@ class OllamaInstaller:
     @classmethod
     def ensure_ollama_available(cls, model: str | None = None) -> None:
         cls.logger.debug("Checking Ollama availability...")
-        # In production, users should have Ollama pre-installed
-        # This is just a placeholder for future auto-installation logic

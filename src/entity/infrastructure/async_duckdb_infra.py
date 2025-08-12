@@ -48,12 +48,10 @@ class AsyncDuckDBInfrastructure(BaseInfrastructure):
         """Initialize the connection pool and prepare the database."""
         await super().startup()
 
-        # Initialize pool semaphore
         self._pool_semaphore = asyncio.Semaphore(self.pool_size)
 
-        # Pre-populate the connection pool for better performance
         async with self._pool_lock:
-            for _ in range(min(2, self.pool_size)):  # Start with 2 connections
+            for _ in range(min(2, self.pool_size)):
                 conn = await self._create_connection()
                 self._pool.append(conn)
 
@@ -70,7 +68,6 @@ class AsyncDuckDBInfrastructure(BaseInfrastructure):
         await super().shutdown()
         self._is_started = False
 
-        # Close all pooled connections
         async with self._pool_lock:
             while self._pool:
                 conn = self._pool.pop()
@@ -84,27 +81,24 @@ class AsyncDuckDBInfrastructure(BaseInfrastructure):
     async def _create_connection(self) -> aiosqlite.Connection:
         """Create a new database connection with proper configuration."""
         if self.file_path == ":memory:":
-            # For in-memory databases, we need to use a shared cache
             conn = await aiosqlite.connect(
                 ":memory:",
                 check_same_thread=False,
-                isolation_level=None,  # Autocommit mode
+                isolation_level=None,
             )
         else:
-            # Ensure directory exists
             Path(self.file_path).parent.mkdir(parents=True, exist_ok=True)
 
             conn = await aiosqlite.connect(
                 self.file_path,
                 check_same_thread=False,
-                isolation_level=None,  # Autocommit mode
+                isolation_level=None,
             )
 
-        # Configure connection for better performance
-        await conn.execute("PRAGMA journal_mode=WAL")  # Better concurrency
-        await conn.execute("PRAGMA synchronous=NORMAL")  # Balanced performance/safety
-        await conn.execute("PRAGMA temp_store=memory")  # Use memory for temp tables
-        await conn.execute("PRAGMA mmap_size=268435456")  # 256MB memory map
+        await conn.execute("PRAGMA journal_mode=WAL")
+        await conn.execute("PRAGMA synchronous=NORMAL")
+        await conn.execute("PRAGMA temp_store=memory")
+        await conn.execute("PRAGMA mmap_size=268435456")
 
         return conn
 
@@ -113,20 +107,16 @@ class AsyncDuckDBInfrastructure(BaseInfrastructure):
         if not self._is_started:
             raise RuntimeError("Infrastructure not started. Call startup() first.")
 
-        # Use semaphore to limit concurrent connections
         await self._pool_semaphore.acquire()
 
         try:
-            # Try to get a connection from the pool
             async with self._pool_lock:
                 if self._pool:
                     return self._pool.pop()
 
-            # Pool is empty, create a new connection
             return await self._create_connection()
 
         except Exception:
-            # Release semaphore if connection acquisition fails
             self._pool_semaphore.release()
             raise
 
@@ -137,10 +127,8 @@ class AsyncDuckDBInfrastructure(BaseInfrastructure):
                 if len(self._pool) < self.pool_size:
                     self._pool.append(conn)
                 else:
-                    # Pool is full, close the connection
                     await conn.close()
         finally:
-            # Always release the semaphore
             self._pool_semaphore.release()
 
     @asynccontextmanager
@@ -201,7 +189,6 @@ class AsyncDuckDBInfrastructure(BaseInfrastructure):
         """
         async with self.connect() as conn:
             try:
-                # Execute with timeout
                 cursor = await asyncio.wait_for(
                     conn.execute(query, parameters), timeout=self.query_timeout
                 )
@@ -231,7 +218,6 @@ class AsyncDuckDBInfrastructure(BaseInfrastructure):
             True if the database is healthy, False otherwise
         """
         try:
-            # Test basic connectivity and functionality
             result = await self.execute_async(
                 "SELECT 1 as health_check", fetch_one=True
             )
@@ -255,20 +241,16 @@ class AsyncDuckDBInfrastructure(BaseInfrastructure):
         This method should be avoided in async contexts - use health_check() instead.
         """
         try:
-            # Run the async health check in the current event loop
             loop = asyncio.get_running_loop()
             task = loop.create_task(self.health_check())
-            # Give it a short timeout to prevent blocking
             return asyncio.run_coroutine_threadsafe(task, loop).result(timeout=5.0)
         except Exception:
-            # Fall back to basic sync check if async fails
             try:
                 import sqlite3
 
                 if self.file_path == ":memory:":
-                    return True  # Memory DB is always "healthy"
+                    return True
 
-                # Test file access
                 conn = sqlite3.connect(self.file_path, timeout=1.0)
                 conn.execute("SELECT 1")
                 conn.close()
@@ -311,7 +293,7 @@ class AsyncDuckDBInfrastructure(BaseInfrastructure):
             try:
                 await asyncio.wait_for(
                     conn.executescript(script),
-                    timeout=self.query_timeout * 2,  # Scripts may take longer
+                    timeout=self.query_timeout * 2,
                 )
             except asyncio.TimeoutError:
                 self.logger.error("Script timeout after %.1fs", self.query_timeout * 2)
@@ -337,9 +319,7 @@ class AsyncDuckDBInfrastructure(BaseInfrastructure):
             try:
                 await asyncio.wait_for(
                     conn.executemany(query, parameters_list),
-                    timeout=self.query_timeout
-                    * len(parameters_list)
-                    / 100,  # Scale with batch size
+                    timeout=self.query_timeout * len(parameters_list) / 100,
                 )
             except asyncio.TimeoutError:
                 self.logger.error(

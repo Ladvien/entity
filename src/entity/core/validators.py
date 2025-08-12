@@ -15,21 +15,16 @@ from entity.plugins.validation import ValidationResult
 class IdentifierValidator:
     """Validator for various types of identifiers."""
 
-    # Safe identifier pattern (alphanumeric + underscore, starts with letter/underscore)
     SAFE_IDENTIFIER_PATTERN = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 
-    # Table/column name pattern (allows dots for schema.table notation)
     TABLE_NAME_PATTERN = re.compile(
         r"^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)?$"
     )
 
-    # Python identifier pattern
     PYTHON_IDENTIFIER_PATTERN = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 
-    # Environment variable pattern (uppercase, underscores, numbers)
     ENV_VAR_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]*$")
 
-    # URL-safe identifier (lowercase, hyphens, numbers)
     URL_SAFE_PATTERN = re.compile(r"^[a-z][a-z0-9-]*$")
 
     @classmethod
@@ -82,23 +77,21 @@ class IdentifierValidator:
 class SQLValidator:
     """Validator for SQL queries and components."""
 
-    # Patterns that indicate potential SQL injection
     INJECTION_PATTERNS = [
-        r";\s*(DROP|DELETE|TRUNCATE|ALTER|CREATE|INSERT|UPDATE)",  # Multiple statements
-        r"--\s*",  # SQL comments
-        r"/\*.*\*/",  # Block comments
-        r"\bUNION\b.*\bSELECT\b",  # UNION attacks
-        r"\bEXEC\b|\bEXECUTE\b",  # Execute statements
-        r"xp_cmdshell",  # SQL Server command execution
-        r"\bINTO\s+OUTFILE\b",  # File system access
-        r"\bLOAD_FILE\b",  # File loading
-        r"(0x[0-9a-fA-F]+|CHAR\([0-9]+\))",  # Hex encoding / CHAR injection
-        r"WAITFOR\s+DELAY",  # Time-based attacks
-        r"BENCHMARK\s*\(",  # MySQL benchmark attacks
-        r"pg_sleep",  # PostgreSQL sleep attacks
+        r";\s*(DROP|DELETE|TRUNCATE|ALTER|CREATE|INSERT|UPDATE)",
+        r"--\s*",
+        r"/\*.*\*/",
+        r"\bUNION\b.*\bSELECT\b",
+        r"\bEXEC\b|\bEXECUTE\b",
+        r"xp_cmdshell",
+        r"\bINTO\s+OUTFILE\b",
+        r"\bLOAD_FILE\b",
+        r"(0x[0-9a-fA-F]+|CHAR\([0-9]+\))",
+        r"WAITFOR\s+DELAY",
+        r"BENCHMARK\s*\(",
+        r"pg_sleep",
     ]
 
-    # Allowed SQL functions (safe list)
     SAFE_FUNCTIONS = {
         "COUNT",
         "SUM",
@@ -150,11 +143,9 @@ class SQLValidator:
 
     def validate_table_name(self, table_name: str) -> bool:
         """Validate a table name for SQL safety."""
-        # Check basic identifier rules
         if not IdentifierValidator.validate_table_name(table_name):
             return False
 
-        # Check for SQL keywords
         sql_keywords = {
             "SELECT",
             "INSERT",
@@ -202,11 +193,9 @@ class SQLValidator:
         elif isinstance(value, (int, float)):
             return str(value)
         elif isinstance(value, str):
-            # Escape single quotes
             escaped = value.replace("'", "''")
             return f"'{escaped}'"
         else:
-            # Convert to string and escape
             escaped = str(value).replace("'", "''")
             return f"'{escaped}'"
 
@@ -300,7 +289,6 @@ class TypeValidator:
         """
         errors = []
 
-        # Check required keys
         for key, expected_type in schema.items():
             if key not in data:
                 errors.append(f"Missing required key: {key}")
@@ -311,7 +299,6 @@ class TypeValidator:
                     f"Key '{key}' has wrong type: expected {expected_name}, got {actual_type}"
                 )
 
-        # Check for extra keys
         if not allow_extra:
             extra_keys = set(data.keys()) - set(schema.keys())
             for key in extra_keys:
@@ -386,14 +373,12 @@ class ValidationResultBuilder:
         else:
             result = ValidationResult.success()
 
-        # Add warnings and context as attributes
         result.warnings = self._warnings
         result.context = self._context
 
         return result
 
 
-# Convenience functions for common validation scenarios
 def validate_email(email: str) -> bool:
     """Validate email address format."""
     email_pattern = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
@@ -403,11 +388,11 @@ def validate_email(email: str) -> bool:
 def validate_url(url: str) -> bool:
     """Validate URL format."""
     url_pattern = re.compile(
-        r"^https?://"  # http:// or https://
-        r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|"  # domain...
-        r"localhost|"  # localhost...
-        r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"  # ...or ip
-        r"(?::\d+)?"  # optional port
+        r"^https?://"
+        r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|"
+        r"localhost|"
+        r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
+        r"(?::\d+)?"
         r"(?:/?|[/?]\S+)$",
         re.IGNORECASE,
     )

@@ -30,7 +30,7 @@ class WorkflowContext:
         self._response = message
 
     @property
-    def response(self) -> str | None:  # noqa: D401
+    def response(self) -> str | None:
         """Return the response set by :py:meth:`say`."""
         return self._response
 
@@ -58,7 +58,6 @@ class PluginContext(WorkflowContext):
         self._tool_queue: List[tuple[str, Dict[str, Any]]] = []
         self.sandbox = resources.get("sandbox", SandboxedToolRunner())
 
-        # Enhanced error context fields
         self.request_id: Optional[str] = None
         self.error_context: Optional[Dict[str, Any]] = None
 
@@ -85,7 +84,7 @@ class PluginContext(WorkflowContext):
         namespaced = f"{self.user_id}:{key}"
         return await self._memory.load(namespaced, default)
 
-    def say(self, message: str) -> None:  # type: ignore[override]
+    def say(self, message: str) -> None:
         super().say(message)
         self._conversation.append(message)
 

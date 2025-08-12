@@ -61,13 +61,11 @@ __all__ = [
     "ArgumentCategory",
     "create_argument_parsing_resource",
     "InfrastructureError",
-    # New memory factory functions
     "create_memory",
     "create_async_memory",
     "create_managed_memory",
     "create_robust_memory",
     "create_full_featured_memory",
-    # Deprecated compatibility classes
     "AsyncMemory",
     "ManagedMemory",
     "RobustMemory",

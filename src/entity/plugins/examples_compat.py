@@ -14,7 +14,6 @@ The compatibility layer will be removed in entity-core 0.2.0.
 import warnings
 from typing import TYPE_CHECKING
 
-# Check if the new package is available
 try:
     import entity_plugin_examples
 
@@ -46,7 +45,6 @@ def _emit_deprecation_warning(plugin_name: str) -> None:
     )
 
 
-# Export all plugins with deprecation warnings
 __all__ = [
     "CalculatorPlugin",
     "InputReaderPlugin",

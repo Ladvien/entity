@@ -247,7 +247,6 @@ class RichLoggingResource(LoggingResource):
             self._impl = RichConsoleLoggingResource(
                 level=level, show_context=show_context
             )
-        # share record list for callers expecting RichLoggingResource.records
         self.records = self._impl.records
 
     def health_check(self) -> bool:

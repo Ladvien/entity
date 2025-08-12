@@ -25,10 +25,10 @@ class RateLimitConfig:
     """Configuration for rate limiting."""
 
     max_requests: int
-    time_window: float  # in seconds
+    time_window: float
     algorithm: RateLimitAlgorithm = RateLimitAlgorithm.SLIDING_WINDOW
-    burst_size: Optional[int] = None  # For token bucket
-    leak_rate: Optional[float] = None  # For leaky bucket
+    burst_size: Optional[int] = None
+    leak_rate: Optional[float] = None
 
 
 class RateLimiter:
@@ -59,21 +59,16 @@ class RateLimiter:
             leak_rate=leak_rate or (max_requests / time_window),
         )
 
-        # Algorithm-specific storage
-        self._requests: deque = deque()  # For sliding window
-        self._window_start: float = time.time()  # For fixed window
-        self._window_count: int = 0  # For fixed window
-        self._tokens: float = float(
-            self.config.burst_size or max_requests
-        )  # For token bucket
-        self._last_update: float = time.time()  # For token/leaky bucket
-        self._bucket_level: float = 0.0  # For leaky bucket
+        self._requests: deque = deque()
+        self._window_start: float = time.time()
+        self._window_count: int = 0
+        self._tokens: float = float(self.config.burst_size or max_requests)
+        self._last_update: float = time.time()
+        self._bucket_level: float = 0.0
 
-        # Thread safety
         self._lock = asyncio.Lock()
-        self._sync_lock = None  # Will be created if needed
+        self._sync_lock = None
 
-        # Metrics
         self._metrics = {
             "total_requests": 0,
             "allowed_requests": 0,
@@ -146,15 +141,12 @@ class RateLimiter:
         now = time.time()
         cutoff = now - self.config.time_window
 
-        # Remove old requests
         while self._requests and self._requests[0] < cutoff:
             self._requests.popleft()
 
-        # Check limit
         if len(self._requests) >= self.config.max_requests:
             return False
 
-        # Add new request
         self._requests.append(now)
         return True
 
@@ -163,7 +155,6 @@ class RateLimiter:
         now = time.time()
         elapsed = now - self._last_update
 
-        # Refill tokens
         refill_rate = self.config.max_requests / self.config.time_window
         self._tokens = min(
             self.config.burst_size or self.config.max_requests,
@@ -171,7 +162,6 @@ class RateLimiter:
         )
         self._last_update = now
 
-        # Check if we have tokens
         if self._tokens >= 1:
             self._tokens -= 1
             return True
@@ -182,12 +172,10 @@ class RateLimiter:
         """Check rate limit using fixed window algorithm."""
         now = time.time()
 
-        # Check if we need to reset window
         if now - self._window_start >= self.config.time_window:
             self._window_start = now
             self._window_count = 0
 
-        # Check limit
         if self._window_count >= self.config.max_requests:
             return False
 
@@ -199,12 +187,10 @@ class RateLimiter:
         now = time.time()
         elapsed = now - self._last_update
 
-        # Leak the bucket
         leak_amount = elapsed * (self.config.leak_rate or 1.0)
         self._bucket_level = max(0, self._bucket_level - leak_amount)
         self._last_update = now
 
-        # Check if bucket has room
         if self._bucket_level >= self.config.max_requests:
             return False
 
@@ -218,7 +204,6 @@ class RateLimiter:
             identifier: Optional identifier for per-key rate limiting
         """
         while not await self.allow_request(identifier):
-            # Calculate wait time based on algorithm
             if self.config.algorithm == RateLimitAlgorithm.SLIDING_WINDOW:
                 if self._requests:
                     oldest = self._requests[0]
@@ -229,9 +214,9 @@ class RateLimiter:
                 refill_rate = self.config.max_requests / self.config.time_window
                 wait_time = (1 - self._tokens) / refill_rate if refill_rate > 0 else 0.1
             else:
-                wait_time = 0.1  # Default wait
+                wait_time = 0.1
 
-            wait_time = max(0.01, min(wait_time, 1.0))  # Clamp between 10ms and 1s
+            wait_time = max(0.01, min(wait_time, 1.0))
             await asyncio.sleep(wait_time)
 
     def reset(self) -> None:
@@ -254,7 +239,6 @@ class RateLimiter:
         metrics["max_requests"] = self.config.max_requests
         metrics["time_window"] = self.config.time_window
 
-        # Add algorithm-specific metrics
         if self.config.algorithm == RateLimitAlgorithm.SLIDING_WINDOW:
             metrics["current_window_requests"] = len(self._requests)
         elif self.config.algorithm == RateLimitAlgorithm.TOKEN_BUCKET:
@@ -347,27 +331,23 @@ class DistributedRateLimiter:
         self._sync_callback = sync_callback
         self._get_global_count = get_global_count
         self._last_sync = time.time()
-        self._sync_interval = 5.0  # Sync every 5 seconds
+        self._sync_interval = 5.0
 
     async def allow_request(self, identifier: Optional[str] = None) -> bool:
         """Check if request is allowed, considering distributed state."""
-        # Sync if needed
         now = time.time()
         if self._sync_callback and (now - self._last_sync) > self._sync_interval:
             await self._sync_callback()
             self._last_sync = now
 
-        # Check global count if available
         if self._get_global_count:
             global_count = await self._get_global_count()
             if global_count >= self._local.config.max_requests:
                 return False
 
-        # Check local limiter
         return await self._local.allow_request(identifier)
 
 
-# Factory functions for common rate limiting scenarios
 def create_api_rate_limiter() -> RateLimiter:
     """Create rate limiter for API endpoints (100 requests per minute)."""
     return RateLimiter(

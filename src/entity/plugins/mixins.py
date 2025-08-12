@@ -37,12 +37,10 @@ class ConfigValidationMixin:
         if not hasattr(self, "config") or self.config is None:
             self.config = {}
 
-        # Apply defaults for missing values
         for key, value in defaults.items():
             if key not in self.config:
                 self.config[key] = value
 
-        # Now validate
         self.validate_config_strict()
 
     def validate_config_custom(self, error_prefix: str = "") -> ValidationResult:
@@ -162,7 +160,6 @@ class MetricsMixin:
 
     def get_metrics_summary(self) -> Dict[str, Any]:
         """Get summary of all collected metrics."""
-        # Calculate timing statistics
         timing_stats = {}
         if self._metrics["timings"]:
             grouped_timings = {}
@@ -251,7 +248,6 @@ class ErrorHandlingMixin:
 
                 raise last_exception
 
-            # Return appropriate wrapper based on function type
             if asyncio.iscoroutinefunction(func):
                 return async_wrapper
             else:
@@ -305,7 +301,7 @@ class CircuitBreakerMixin:
     ) -> None:
         """Initialize a circuit breaker for a specific operation."""
         self._circuit_breakers[name] = {
-            "state": "closed",  # closed, open, half_open
+            "state": "closed",
             "failure_count": 0,
             "failure_threshold": failure_threshold,
             "recovery_timeout": recovery_timeout,
@@ -323,7 +319,6 @@ class CircuitBreakerMixin:
             async def async_wrapper(*args, **kwargs):
                 breaker = self._circuit_breakers[name]
 
-                # Check if circuit is open
                 if breaker["state"] == "open":
                     if (
                         breaker["last_failure_time"]
@@ -337,7 +332,6 @@ class CircuitBreakerMixin:
 
                 try:
                     result = await func(*args, **kwargs)
-                    # Success - reset failure count
                     if breaker["state"] == "half_open":
                         breaker["state"] = "closed"
                     breaker["failure_count"] = 0
@@ -398,6 +392,6 @@ class CircuitBreakerMixin:
         """Get the current status of a circuit breaker."""
         if name in self._circuit_breakers:
             breaker = self._circuit_breakers[name].copy()
-            breaker.pop("expected_exception")  # Remove non-serializable type
+            breaker.pop("expected_exception")
             return breaker
         return None

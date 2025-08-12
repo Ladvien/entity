@@ -31,17 +31,13 @@ class DatabaseBenchmark:
         self, db_path: str
     ) -> tuple[AsyncMemory, AsyncDatabaseResource]:
         """Setup async database infrastructure for testing."""
-        # Create async infrastructure
         async_infra = AsyncDuckDBInfrastructure(
             file_path=db_path, pool_size=10, query_timeout=30.0
         )
         await async_infra.startup()
 
-        # Create async resources
         async_db = AsyncDatabaseResource(async_infra)
-        vector_store = VectorStoreResource(
-            async_infra
-        )  # Use sync vector store for compatibility
+        vector_store = VectorStoreResource(async_infra)
         async_memory = AsyncMemory(async_db, vector_store)
 
         return async_memory, async_db
@@ -50,10 +46,8 @@ class DatabaseBenchmark:
         self, db_path: str
     ) -> tuple[Memory, DatabaseResource]:
         """Setup sync database infrastructure for testing."""
-        # Create sync infrastructure
         sync_infra = DuckDBInfrastructure(file_path=db_path, pool_size=10)
 
-        # Create sync resources
         sync_db = DatabaseResource(sync_infra)
         vector_store = VectorStoreResource(sync_infra)
         sync_memory = Memory(sync_db, vector_store)
@@ -68,17 +62,14 @@ class DatabaseBenchmark:
             async_db_path = Path(temp_dir) / "async_test.db"
             sync_db_path = Path(temp_dir) / "sync_test.db"
 
-            # Setup infrastructures
             async_memory, _ = await self.setup_async_infrastructure(str(async_db_path))
             sync_memory, _ = self.setup_sync_infrastructure(str(sync_db_path))
 
-            # Prepare test data
             test_data = {
                 f"key_{i}": {"id": i, "data": f"test_value_{i}", "nested": {"count": i}}
                 for i in range(self.num_operations)
             }
 
-            # Benchmark async memory operations
             start_time = time.perf_counter()
             for key, value in test_data.items():
                 await async_memory.store(key, value)
@@ -90,7 +81,6 @@ class DatabaseBenchmark:
                 async_loaded_data[key] = await async_memory.load(key)
             async_load_time = time.perf_counter() - start_time
 
-            # Benchmark sync memory operations (with async wrapper)
             start_time = time.perf_counter()
             for key, value in test_data.items():
                 await sync_memory.store(key, value)
@@ -102,7 +92,6 @@ class DatabaseBenchmark:
                 sync_loaded_data[key] = await sync_memory.load(key)
             sync_load_time = time.perf_counter() - start_time
 
-            # Benchmark batch operations (async only)
             start_time = time.perf_counter()
             await async_memory.batch_store(test_data)
             batch_store_time = time.perf_counter() - start_time
@@ -111,7 +100,6 @@ class DatabaseBenchmark:
             batch_loaded_data = await async_memory.batch_load(list(test_data.keys()))
             batch_load_time = time.perf_counter() - start_time
 
-            # Store results
             self.results["memory_operations"] = {
                 "num_operations": self.num_operations,
                 "async_store_time": async_store_time,
@@ -138,12 +126,10 @@ class DatabaseBenchmark:
                 / (batch_store_time + batch_load_time),
             }
 
-            # Verify data integrity
             assert len(async_loaded_data) == len(test_data)
             assert len(sync_loaded_data) == len(test_data)
             assert len(batch_loaded_data) == len(test_data)
 
-            # Cleanup
             await async_memory.database.infrastructure.shutdown()
 
     async def benchmark_raw_database_operations(self) -> None:
@@ -154,11 +140,9 @@ class DatabaseBenchmark:
             async_db_path = Path(temp_dir) / "async_db_test.db"
             sync_db_path = Path(temp_dir) / "sync_db_test.db"
 
-            # Setup infrastructures
             _, async_db = await self.setup_async_infrastructure(str(async_db_path))
             _, sync_db = self.setup_sync_infrastructure(str(sync_db_path))
 
-            # Create test tables
             await async_db.execute(
                 """
                 CREATE TABLE IF NOT EXISTS test_table (
@@ -182,13 +166,11 @@ class DatabaseBenchmark:
             """,
             )
 
-            # Prepare test data
             test_records = [
                 (i, f"name_{i}", i * 1.5, f"data_string_{i}")
                 for i in range(self.num_operations)
             ]
 
-            # Benchmark async database inserts
             start_time = time.perf_counter()
             for record in test_records:
                 await async_db.execute(
@@ -197,7 +179,6 @@ class DatabaseBenchmark:
                 )
             async_insert_time = time.perf_counter() - start_time
 
-            # Benchmark sync database inserts
             start_time = time.perf_counter()
             for record in test_records:
                 await asyncio.to_thread(
@@ -207,8 +188,7 @@ class DatabaseBenchmark:
                 )
             sync_insert_time = time.perf_counter() - start_time
 
-            # Benchmark batch inserts (async only)
-            await async_db.execute("DELETE FROM test_table")  # Clear for batch test
+            await async_db.execute("DELETE FROM test_table")
 
             start_time = time.perf_counter()
             await async_db.execute_many(
@@ -217,11 +197,8 @@ class DatabaseBenchmark:
             )
             batch_insert_time = time.perf_counter() - start_time
 
-            # Benchmark selects
             start_time = time.perf_counter()
-            for i in range(
-                min(100, self.num_operations)
-            ):  # Select subset for performance
+            for i in range(min(100, self.num_operations)):
                 await async_db.execute_fetch_one(
                     "SELECT * FROM test_table WHERE id = ?", i
                 )
@@ -234,7 +211,6 @@ class DatabaseBenchmark:
                 )
             sync_select_time = time.perf_counter() - start_time
 
-            # Store results
             self.results["database_operations"] = {
                 "num_operations": self.num_operations,
                 "async_insert_time": async_insert_time,
@@ -250,7 +226,6 @@ class DatabaseBenchmark:
                 "select_performance_improvement": sync_select_time / async_select_time,
             }
 
-            # Cleanup
             await async_db.infrastructure.shutdown()
 
     async def benchmark_concurrent_operations(self) -> None:
@@ -260,14 +235,12 @@ class DatabaseBenchmark:
         with tempfile.TemporaryDirectory() as temp_dir:
             async_db_path = Path(temp_dir) / "async_concurrent_test.db"
 
-            # Setup async infrastructure with larger pool
             async_infra = AsyncDuckDBInfrastructure(
                 file_path=str(async_db_path), pool_size=20, query_timeout=30.0
             )
             await async_infra.startup()
             async_db = AsyncDatabaseResource(async_infra)
 
-            # Create test table
             await async_db.execute(
                 """
                 CREATE TABLE IF NOT EXISTS concurrent_test (
@@ -281,30 +254,25 @@ class DatabaseBenchmark:
             async def worker_task(worker_id: int, operations_per_worker: int):
                 """Worker task for concurrent testing."""
                 for i in range(operations_per_worker):
-                    # Insert operation
                     await async_db.execute(
                         "INSERT INTO concurrent_test (thread_id, data) VALUES (?, ?)",
                         worker_id,
                         f"data_from_worker_{worker_id}_op_{i}",
                     )
 
-                    # Select operation
                     await async_db.execute_fetch_all(
                         "SELECT * FROM concurrent_test WHERE thread_id = ? LIMIT 10",
                         worker_id,
                     )
 
-            # Test different concurrency levels
             concurrency_levels = [1, 5, 10, 20]
             results = {}
 
             for concurrency in concurrency_levels:
                 operations_per_worker = max(1, self.num_operations // concurrency)
 
-                # Clear table
                 await async_db.execute("DELETE FROM concurrent_test")
 
-                # Run concurrent operations
                 start_time = time.perf_counter()
                 tasks = [
                     worker_task(worker_id, operations_per_worker)
@@ -313,9 +281,7 @@ class DatabaseBenchmark:
                 await asyncio.gather(*tasks)
                 total_time = time.perf_counter() - start_time
 
-                total_operations = (
-                    concurrency * operations_per_worker * 2
-                )  # Insert + Select
+                total_operations = concurrency * operations_per_worker * 2
                 ops_per_second = total_operations / total_time
 
                 results[f"concurrency_{concurrency}"] = {
@@ -328,11 +294,9 @@ class DatabaseBenchmark:
 
             self.results["concurrent_operations"] = results
 
-            # Get connection stats
             stats = await async_db.get_connection_stats()
             self.results["connection_stats"] = stats
 
-            # Cleanup
             await async_infra.shutdown()
 
     def print_results(self) -> None:
@@ -406,7 +370,6 @@ class DatabaseBenchmark:
 
 async def main():
     """Main function to run benchmarks."""
-    # Run benchmarks with different operation counts
     for num_ops in [100, 1000]:
         print(f"\n{'='*60}")
         print(f"Running benchmark with {num_ops} operations")

@@ -57,7 +57,6 @@ def detect_llm_services() -> Dict[str, Dict[str, Any]]:
     """Auto-detect available LLM services on the system."""
     services = {}
 
-    # Check for Ollama
     try:
         import httpx
 
@@ -70,7 +69,6 @@ def detect_llm_services() -> Dict[str, Dict[str, Any]]:
                     "status": "✅ Running",
                     "models": [],
                 }
-                # Try to get available models
                 try:
                     models_response = client.get(
                         "http://localhost:11434/api/tags", timeout=5
@@ -90,7 +88,6 @@ def detect_llm_services() -> Dict[str, Dict[str, Any]]:
             "models": [],
         }
 
-    # Check for common cloud LLM environment variables
     cloud_services = {
         "openai": {
             "env_var": "OPENAI_API_KEY",
@@ -180,14 +177,12 @@ WEATHER_API_KEY=your_weather_api_key_here
 
 def create_project_structure(project_path: Path, template: str) -> None:
     """Create the basic project structure."""
-    # Create directories
     (project_path / "src").mkdir(exist_ok=True)
     (project_path / "tests").mkdir(exist_ok=True)
     (project_path / "data").mkdir(exist_ok=True)
     (project_path / "workflows").mkdir(exist_ok=True)
     (project_path / "plugins").mkdir(exist_ok=True)
 
-    # Create main.py with Entity-native CLI
     main_content = f'''"""Main entry point for {project_path.name} Entity project.
 
 This example demonstrates Entity's idiomatic CLI patterns using the ArgumentParsingResource.
@@ -216,7 +211,6 @@ from entity.defaults import load_defaults
 from entity.resources.logging import LogLevel, LogCategory
 from entity.resources.argument_parsing import ArgumentType, ArgumentCategory
 
-
 class {project_path.name.title().replace('-', '')}CLI:
     """Entity-native CLI for {project_path.name} agent."""
 
@@ -229,7 +223,6 @@ class {project_path.name.title().replace('-', '')}CLI:
 
     def _setup_commands(self):
         """Setup CLI commands using Entity's ArgumentParsingResource."""
-        # Chat command
         self.arg_parser.register_argument(
             "chat", "message", ArgumentType.STRING, ArgumentCategory.WORKFLOW,
             "Message to send to the agent (interactive if not provided)"
@@ -243,9 +236,6 @@ class {project_path.name.title().replace('-', '')}CLI:
             "Enable debug logging", aliases=["v"]
         )
 
-        # Info command
-        # No additional arguments needed for info
-
     async def run(self, argv: Optional[list[str]] = None) -> int:
         """Run the CLI using Entity's resource system."""
         try:
@@ -258,22 +248,18 @@ class {project_path.name.title().replace('-', '')}CLI:
                 print(help_text)
                 return 1
 
-            # Handle help
             if "--help" in (argv or sys.argv[1:]):
                 help_text = await self.arg_parser.generate_help(parsed.command)
                 print(help_text)
                 return 0
 
-            # Initialize agent
             await self._initialize_agent()
 
-            # Execute command
             if parsed.command == "chat":
                 return await self._handle_chat(parsed.values)
             elif parsed.command == "info":
                 return await self._handle_info()
             else:
-                # Default to chat if no command specified
                 return await self._handle_chat(parsed.values)
 
         except KeyboardInterrupt:
@@ -303,7 +289,6 @@ class {project_path.name.title().replace('-', '')}CLI:
             await self.logger.log(LogLevel.DEBUG, LogCategory.USER_ACTION, "Verbose mode enabled")
 
         if message:
-            # Single message mode
             await self.logger.log(
                 LogLevel.INFO,
                 LogCategory.USER_ACTION,
@@ -313,13 +298,11 @@ class {project_path.name.title().replace('-', '')}CLI:
             response = await self.agent.chat(message)
             print(response)
         else:
-            # Interactive mode
             await self.logger.log(
                 LogLevel.INFO,
                 LogCategory.USER_ACTION,
                 "Starting interactive chat session"
             )
-            # Empty string triggers Entity's CLI adapter for rich interactive experience
             await self.agent.chat("")
 
         return 0
@@ -347,12 +330,10 @@ class {project_path.name.title().replace('-', '')}CLI:
 
         return 0
 
-
 async def main_async() -> int:
     """Main async entry point using Entity patterns."""
     cli = {project_path.name.title().replace('-', '')}CLI()
     return await cli.run()
-
 
 def main():
     """Main entry point following Entity's async patterns."""
@@ -362,7 +343,6 @@ def main():
     except KeyboardInterrupt:
         print("\\nGoodbye!")
         sys.exit(0)
-
 
 if __name__ == "__main__":
     main()
@@ -540,11 +520,9 @@ async def test_agent_creation():
         assert agent.resources is not None
         assert agent.workflow is not None
 
-        # Test logging resource is available
         logger = resources.get("logging")
         assert logger is not None, "Logging resource should be available"
 
-        # Test structured logging works
         await logger.log(
             LogLevel.INFO,
             LogCategory.USER_ACTION,
@@ -564,12 +542,10 @@ async def test_logging_system():
 
         assert logger is not None, "Should have logging resource"
 
-        # Test different log levels and categories
         await logger.log(LogLevel.DEBUG, LogCategory.USER_ACTION, "Debug message")
         await logger.log(LogLevel.INFO, LogCategory.WORKFLOW_EXECUTION, "Info message")
         await logger.log(LogLevel.WARNING, LogCategory.PERFORMANCE, "Warning message")
 
-        # Test structured fields
         await logger.log(
             LogLevel.INFO,
             LogCategory.MEMORY_OPERATION,
@@ -578,7 +554,6 @@ async def test_logging_system():
             test_field="test_value"
         )
 
-        # Verify log records are captured
         assert hasattr(logger, 'records'), "Logger should maintain records"
 
     except Exception as exc:

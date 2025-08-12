@@ -161,7 +161,6 @@ class AsyncDatabaseResource:
         """
         return await self.infrastructure.get_connection_stats()
 
-    # Backward compatibility methods
     def execute_sync(self, query: str, *params: object) -> Any:
         """Synchronous wrapper for execute() for backward compatibility.
 
@@ -179,12 +178,10 @@ class AsyncDatabaseResource:
 
         try:
             asyncio.get_running_loop()
-            # If we're in an async context, this is a mistake
             raise RuntimeError(
                 "execute_sync() called from async context. Use execute() instead."
             )
         except RuntimeError:
-            # No running loop, we can safely run async code
             return asyncio.run(self.execute(query, *params))
 
     def connect(self):
@@ -218,7 +215,7 @@ class _SyncConnectionWrapper:
                 "Use 'async with infrastructure.connect()' instead."
             )
         except RuntimeError:
-            # No running loop, create one for this operation
+
             async def _get_connection():
                 async with self.infrastructure.connect() as conn:
                     return conn

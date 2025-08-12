@@ -26,13 +26,10 @@ class VectorStoreResource:
     def add_vector(self, table: str, vector: object) -> None:
         """Insert a vector into the given table."""
 
-        # Validate table name to prevent SQL injection
         if not table.isidentifier():
             raise ValueError(f"Invalid table name: {table}")
 
-        # Create table if it doesn't exist
         with self.infrastructure.connect() as conn:
-            # Use parameterized query for the vector value, table name is validated
             conn.execute(f"CREATE TABLE IF NOT EXISTS {table} (vector ANY)")
             conn.execute(f"INSERT INTO {table} VALUES (?)", (vector,))
 

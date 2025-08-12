@@ -72,7 +72,6 @@ class AsyncMemory:
         self.vector_store = vector_store
         self._lock = asyncio.Lock()
 
-        # Setup inter-process locking if database has a file path
         db_path = getattr(self.database.infrastructure, "file_path", None)
         lock_file = (
             Path(str(db_path)).with_suffix(".lock") if db_path is not None else None
@@ -98,7 +97,6 @@ class AsyncMemory:
         Returns:
             True if both underlying resources are operational, False otherwise
         """
-        # Run health checks concurrently for better performance
         db_healthy, vector_healthy = await asyncio.gather(
             self.database.health_check(),
             asyncio.to_thread(self.vector_store.health_check_sync),
@@ -152,10 +150,6 @@ class AsyncMemory:
         """Execute a vector store query."""
         return self.vector_store.query(query)
 
-    # ------------------------------------------------------------------
-    # Persistent key-value storage helpers with async operations
-    # ------------------------------------------------------------------
-
     async def _ensure_table(self) -> None:
         """Create the backing table if it doesn't exist.
 
@@ -165,7 +159,6 @@ class AsyncMemory:
         if self._table_ready:
             return
 
-        # Use native async database operation
         await self.database.execute(
             "CREATE TABLE IF NOT EXISTS memory (key TEXT PRIMARY KEY, value TEXT)"
         )
@@ -254,7 +247,6 @@ class AsyncMemory:
             "DELETE FROM memory WHERE key = ?",
             key,
         )
-        # Check if any rows were affected
         return cursor.rowcount > 0 if hasattr(cursor, "rowcount") else True
 
     async def exists(self, key: str) -> bool:
@@ -298,7 +290,6 @@ class AsyncMemory:
                 pattern,
             )
 
-        # Handle different cursor types
         if hasattr(cursor, "fetchall"):
             rows = await cursor.fetchall()
         else:
@@ -360,13 +351,10 @@ class AsyncMemory:
             >>> print(f"Memory size: {stats['key_count']} keys")
             >>> print(f"DB connections: {stats['db_stats']['active_connections']}")
         """
-        # Get memory statistics
         key_count = await self.size()
 
-        # Get database connection statistics
         db_stats = await self.database.get_connection_stats()
 
-        # Get health status
         health_status = await self.health_check_async()
 
         return {
@@ -393,10 +381,8 @@ class AsyncMemory:
         if not items:
             return
 
-        # Prepare batch data
         batch_data = [(key, json.dumps(value)) for key, value in items.items()]
 
-        # Execute batch insert with proper locking
         if self._process_lock is not None:
             async with self._process_lock:
                 await self._ensure_table()
@@ -429,19 +415,16 @@ class AsyncMemory:
         if not keys:
             return {}
 
-        # Create parameterized query for multiple keys
         placeholders = ",".join("?" * len(keys))
         query = f"SELECT key, value FROM memory WHERE key IN ({placeholders})"
 
         cursor = await self._execute_with_locks(query, *keys)
 
-        # Handle different cursor types
         if hasattr(cursor, "fetchall"):
             rows = await cursor.fetchall()
         else:
             rows = cursor
 
-        # Build result dictionary
         result = {}
         for row in rows or []:
             key, value = row

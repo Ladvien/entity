@@ -81,9 +81,7 @@ async def run_command(args: argparse.Namespace) -> None:
     resources["logging"] = RichConsoleLoggingResource(LogLevel(level))
     workflow_steps = _load_workflow(args.workflow)
 
-    # Build workflow from steps
     if isinstance(workflow_steps, list):
-        # Convert list to dict with default stages
         workflow_dict = {
             WorkflowExecutor.INPUT: [EntCLIAdapter],
             WorkflowExecutor.THINK: workflow_steps,
@@ -91,7 +89,6 @@ async def run_command(args: argparse.Namespace) -> None:
         }
         workflow = Workflow.from_dict(workflow_dict, resources)
     else:
-        # Already a dict
         workflow = Workflow.from_dict(workflow_steps, resources)
 
     agent = Agent(resources=resources, workflow=workflow)

@@ -49,7 +49,7 @@ class ErrorAnalyzer:
         self.error_history: List[PipelineError] = []
         self.patterns: Dict[str, ErrorPattern] = {}
         self.recovery_strategies = self._init_recovery_strategies()
-        self.pattern_threshold = 3  # Minimum occurrences to be considered a pattern
+        self.pattern_threshold = 3
 
     def _init_recovery_strategies(self) -> List[RecoveryStrategy]:
         """Initialize built-in recovery strategies."""
@@ -135,7 +135,6 @@ context.disable_features = ['file_access', 'network', 'subprocess']
         """Record an error for pattern analysis."""
         self.error_history.append(error)
 
-        # Update patterns
         signature = self._generate_error_signature(error)
         if signature in self.patterns:
             pattern = self.patterns[signature]
@@ -158,22 +157,18 @@ context.disable_features = ['file_access', 'network', 'subprocess']
                 suggested_fixes=[],
             )
 
-        # Generate suggestions for patterns above threshold
         pattern = self.patterns[signature]
         if pattern.occurrences >= self.pattern_threshold:
             pattern.suggested_fixes = self._generate_fix_suggestions(pattern)
 
     def _generate_error_signature(self, error: PipelineError) -> str:
         """Generate a signature for error pattern matching."""
-        # Combine error type, category, and key message parts
         error_type = error.original_error.__class__.__name__
         category = error.category.value
 
-        # Extract key words from error message
         message = str(error.original_error).lower()
         key_words = []
 
-        # Common error indicators
         patterns = [
             r"(\w+error)\b",
             r"(timeout)\b",
@@ -188,7 +183,6 @@ context.disable_features = ['file_access', 'network', 'subprocess']
             matches = re.findall(pattern, message)
             key_words.extend(matches)
 
-        # Include stage if it's a consistent failure point
         stage_part = f":{error.stage}" if error.stage else ""
 
         return f"{category}:{error_type}:{'-'.join(sorted(set(key_words)))}{stage_part}"
@@ -199,16 +193,13 @@ context.disable_features = ['file_access', 'network', 'subprocess']
         """Update common context patterns."""
         for key, value in error.context.execution_context.items():
             if key in pattern.common_contexts:
-                # If values differ, remove from common contexts
                 if pattern.common_contexts[key] != value:
                     del pattern.common_contexts[key]
-            # Note: New keys are not added to maintain common contexts only
 
     def _generate_fix_suggestions(self, pattern: ErrorPattern) -> List[str]:
         """Generate fix suggestions based on error pattern."""
         suggestions = []
 
-        # Category-specific suggestions
         if pattern.error_category == ErrorCategory.VALIDATION:
             suggestions.extend(
                 [
@@ -250,7 +241,6 @@ context.disable_features = ['file_access', 'network', 'subprocess']
                 ]
             )
 
-        # Stage-specific suggestions
         if "sandbox" in pattern.affected_stages:
             suggestions.append("Review sandbox security policies and resource limits")
         if "think" in pattern.affected_stages:
@@ -258,14 +248,13 @@ context.disable_features = ['file_access', 'network', 'subprocess']
                 "Consider simpler reasoning strategies for complex problems"
             )
 
-        # Plugin-specific suggestions
         for plugin in pattern.affected_plugins:
             if "llm" in plugin.lower():
                 suggestions.append("Check LLM service availability and rate limits")
             elif "tool" in plugin.lower():
                 suggestions.append("Validate tool inputs and environment setup")
 
-        return list(set(suggestions))  # Remove duplicates
+        return list(set(suggestions))
 
     def get_error_patterns(self, min_occurrences: int = 1) -> List[ErrorPattern]:
         """Get error patterns meeting minimum occurrence threshold."""
@@ -283,7 +272,6 @@ context.disable_features = ['file_access', 'network', 'subprocess']
             if error.category in strategy.applicable_categories:
                 applicable_strategies.append(strategy)
 
-        # Sort by success rate
         return sorted(applicable_strategies, key=lambda s: s.success_rate, reverse=True)
 
     def analyze_recent_errors(
@@ -303,7 +291,6 @@ context.disable_features = ['file_access', 'network', 'subprocess']
                 "window_hours": time_window.total_seconds() / 3600,
             }
 
-        # Categorize errors
         by_category = defaultdict(list)
         by_stage = defaultdict(list)
         by_plugin = defaultdict(list)
@@ -354,9 +341,8 @@ context.disable_features = ['file_access', 'network', 'subprocess']
         """Generate recommendations based on error trends."""
         recommendations = []
 
-        # High-frequency categories
         for category, errors in by_category.items():
-            if len(errors) >= 2:  # Lower threshold for meaningful patterns
+            if len(errors) >= 2:
                 if category == "network":
                     recommendations.append(
                         "Consider implementing network resilience patterns"
@@ -370,7 +356,6 @@ context.disable_features = ['file_access', 'network', 'subprocess']
                         "Strengthen input validation at entry points"
                     )
 
-        # Problematic stages
         for stage, errors in by_stage.items():
             if len(errors) >= 2:
                 recommendations.append(
@@ -412,13 +397,12 @@ context.disable_features = ['file_access', 'network', 'subprocess']
                 ]
             )
 
-        # Add recovery suggestions
         if request_errors:
             last_error = request_errors[-1]
             suggestions = self.get_recovery_suggestions(last_error)
             if suggestions:
                 lines.extend(["Recovery Suggestions:", "-" * 20])
-                for suggestion in suggestions[:3]:  # Top 3 suggestions
+                for suggestion in suggestions[:3]:
                     lines.extend(
                         [
                             f"• {suggestion.name}: {suggestion.description}",
@@ -430,5 +414,4 @@ context.disable_features = ['file_access', 'network', 'subprocess']
         return "\n".join(lines)
 
 
-# Global error analyzer instance
 error_analyzer = ErrorAnalyzer()
