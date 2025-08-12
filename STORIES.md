@@ -13,29 +13,6 @@
 
 
 
-## 🔄 Story 7: Update CI/CD Pipeline
-**Key:** ENTITY-107
-**Type:** Task
-**Priority:** High
-**Story Points:** 3
-**Blocked By:** ENTITY-104
-**Assignee:** DevOps Team
-
-### Description
-Update GitHub Actions to handle submodules and use gh CLI where beneficial.
-
-### Acceptance Criteria
-- [ ] CI/CD uses `actions/checkout@v3` with `submodules: recursive`
-- [ ] GitHub Actions workflow uses gh CLI for any repo operations
-- [ ] Secrets properly configured for gh CLI in Actions
-- [ ] Plugin tests run in CI
-- [ ] Documentation builds include plugin docs
-
-### Definition of Done
-- [ ] All workflows pass with submodules
-- [ ] gh CLI operations in CI are using tokens with minimal permissions
-
----
 
 ## 🧪 Story 8: Validate Migration
 **Key:** ENTITY-108

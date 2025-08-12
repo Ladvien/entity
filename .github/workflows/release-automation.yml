@@ -1,0 +1,177 @@
+name: Release Automation
+
+'on':
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.2.3)'
+        required: true
+        type: string
+      release_type:
+        description: 'Type of release'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+          - prerelease
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prepare-release:
+    name: Prepare Release
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      release_branch: ${{ steps.branch.outputs.branch }}
+
+    steps:
+    - name: Checkout repository with submodules
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Setup Python and Poetry
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+
+    - name: Setup GitHub CLI
+      run: |
+        gh auth setup-git
+        gh auth status
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Determine version
+      id: version
+      run: |
+        if [ -n "${{ github.event.inputs.version }}" ]; then
+          VERSION="${{ github.event.inputs.version }}"
+        else
+          # Auto-determine version based on release type
+          CURRENT_VERSION=$(poetry version -s)
+          case "${{ github.event.inputs.release_type }}" in
+            major)
+              VERSION=$(poetry version major -s)
+              ;;
+            minor)
+              VERSION=$(poetry version minor -s)
+              ;;
+            patch)
+              VERSION=$(poetry version patch -s)
+              ;;
+            prerelease)
+              VERSION=$(poetry version prerelease -s)
+              ;;
+          esac
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Release version: $VERSION"
+
+    - name: Create release branch
+      id: branch
+      run: |
+        BRANCH="release/v${{ steps.version.outputs.version }}"
+        git checkout -b "$BRANCH"
+        echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+
+    - name: Update version in pyproject.toml
+      run: |
+        poetry version ${{ steps.version.outputs.version }}
+
+    - name: Generate changelog
+      run: |
+        echo "## Version ${{ steps.version.outputs.version }}" > RELEASE_NOTES.md
+        echo "" >> RELEASE_NOTES.md
+        echo "Release Date: $(date -u '+%Y-%m-%d')" >> RELEASE_NOTES.md
+        echo "" >> RELEASE_NOTES.md
+
+        # Get commits since last tag
+        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        if [ -n "$LAST_TAG" ]; then
+          echo "### Changes since $LAST_TAG" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+
+          # Group commits by type
+          echo "#### Features" >> RELEASE_NOTES.md
+          git log "$LAST_TAG"..HEAD --pretty=format:"- %s" --grep="^feat:" >> RELEASE_NOTES.md || echo "- No features" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+
+          echo "#### Bug Fixes" >> RELEASE_NOTES.md
+          git log "$LAST_TAG"..HEAD --pretty=format:"- %s" --grep="^fix:" >> RELEASE_NOTES.md || echo "- No bug fixes" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+
+          echo "#### Documentation" >> RELEASE_NOTES.md
+          git log "$LAST_TAG"..HEAD --pretty=format:"- %s" --grep="^docs:" >> RELEASE_NOTES.md || echo "- No documentation changes" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+        fi
+
+        # Check plugin versions
+        echo "### Plugin Versions" >> RELEASE_NOTES.md
+        echo "" >> RELEASE_NOTES.md
+        echo '```' >> RELEASE_NOTES.md
+        git submodule status >> RELEASE_NOTES.md
+        echo '```' >> RELEASE_NOTES.md
+
+    - name: Commit release changes
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+        git add pyproject.toml RELEASE_NOTES.md
+        git commit -m "chore: Prepare release v${{ steps.version.outputs.version }}
+
+        - Update version to ${{ steps.version.outputs.version }}
+        - Generate release notes
+
+        [skip ci]"
+
+        git push origin "${{ steps.branch.outputs.branch }}"
+
+    - name: Create pull request
+      run: |
+        gh pr create \
+          --title "Release v${{ steps.version.outputs.version }}" \
+          --body "## Release v${{ steps.version.outputs.version }}
+
+          This PR prepares the release for version ${{ steps.version.outputs.version }}.
+
+          ### Checklist
+          - [ ] Version updated in pyproject.toml
+          - [ ] Release notes generated
+          - [ ] All tests passing
+          - [ ] Documentation up to date
+
+          ### Release Notes
+          $(cat RELEASE_NOTES.md)
+
+          ---
+          Auto-generated by release automation workflow." \
+          --label "release" \
+          --label "automated" \
+          --base main \
+          --head "${{ steps.branch.outputs.branch }}"
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create draft release
+      run: |
+        gh release create "v${{ steps.version.outputs.version }}" \
+          --draft \
+          --title "Release v${{ steps.version.outputs.version }}" \
+          --notes-file RELEASE_NOTES.md \
+          --target "${{ steps.branch.outputs.branch }}"
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
