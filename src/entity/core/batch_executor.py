@@ -460,6 +460,6 @@ class BatchWorkflowExecutor(WorkflowExecutor):
         await self.start_batch_processing()
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type, exc_val, exc_tb):  # noqa: U100
         """Async context manager exit."""
         await self.stop_batch_processing()

@@ -103,7 +103,7 @@ class TestIDEIntegration:
         assert "prompt" in params
 
         # Check return annotation
-        assert generate_sig.return_annotation == str
+        assert generate_sig.return_annotation is str
 
         # Test MemoryProtocol.store signature
         store_sig = inspect.signature(MemoryProtocol.store)
@@ -114,7 +114,7 @@ class TestIDEIntegration:
         assert "value" in params
 
         # Check return annotation
-        assert store_sig.return_annotation == None  # async def returns None
+        assert store_sig.return_annotation is None  # async def returns None
 
     def test_convenience_class_type_hints(self):
         """Test that convenience classes have proper type hints."""

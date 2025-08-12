@@ -112,6 +112,8 @@ sphinx-rtd-theme = "^3.0.0"
 isort = "^6.0.1"
 myst-parser = "^4.0.1"
 mypy = "^1.17.1"
+autoflake = "^2.3.1"
+radon = "^6.0.1"
 
 [build-system]
 requires = ["poetry-core"]
