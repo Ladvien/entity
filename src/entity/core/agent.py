@@ -4,7 +4,7 @@ from typing import Any, Iterable
 from entity.config import load_config
 from entity.defaults import load_defaults
 from entity.plugins.defaults import default_workflow
-from entity.workflow import WorkflowExecutor
+from entity.workflow.executor import WorkflowExecutor
 from entity.workflow.templates import TemplateNotFoundError, load_template
 from entity.workflow.workflow import Workflow
 

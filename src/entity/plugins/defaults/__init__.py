@@ -5,7 +5,7 @@ from typing import Any
 from pydantic import BaseModel
 
 from entity.plugins.base import Plugin
-from entity.workflow.executor import WorkflowExecutor
+from entity.workflow.stages import DO, INPUT, OUTPUT, PARSE, REVIEW, STAGE_ORDER, THINK
 from entity.workflow.workflow import Workflow
 
 
@@ -36,12 +36,12 @@ class PassThroughPlugin(Plugin):
         # Validate stage value
         stage = self.config.stage
         valid_stages = [
-            WorkflowExecutor.INPUT,
-            WorkflowExecutor.PARSE,
-            WorkflowExecutor.THINK,
-            WorkflowExecutor.DO,
-            WorkflowExecutor.REVIEW,
-            WorkflowExecutor.OUTPUT,
+            INPUT,
+            PARSE,
+            THINK,
+            DO,
+            REVIEW,
+            OUTPUT,
         ]
 
         if stage not in valid_stages:
@@ -55,10 +55,7 @@ class PassThroughPlugin(Plugin):
         message = context.message or ""
 
         # Special handling for OUTPUT stage
-        if (
-            self.config.stage == WorkflowExecutor.OUTPUT
-            and self.config.enable_output_say
-        ):
+        if self.config.stage == OUTPUT and self.config.enable_output_say:
             context.say(message)
 
         return message
@@ -69,7 +66,7 @@ def InputPlugin(
     resources: dict[str, Any], config: dict[str, Any] | None = None
 ) -> PassThroughPlugin:
     """Factory function for INPUT stage plugin. DEPRECATED: Use PassThroughPlugin directly."""
-    merged_config = {"stage": WorkflowExecutor.INPUT}
+    merged_config = {"stage": INPUT}
     if config:
         merged_config.update(config)
     return PassThroughPlugin(resources, merged_config)
@@ -79,7 +76,7 @@ def ParsePlugin(
     resources: dict[str, Any], config: dict[str, Any] | None = None
 ) -> PassThroughPlugin:
     """Factory function for PARSE stage plugin. DEPRECATED: Use PassThroughPlugin directly."""
-    merged_config = {"stage": WorkflowExecutor.PARSE}
+    merged_config = {"stage": PARSE}
     if config:
         merged_config.update(config)
     return PassThroughPlugin(resources, merged_config)
@@ -89,7 +86,7 @@ def ThinkPlugin(
     resources: dict[str, Any], config: dict[str, Any] | None = None
 ) -> PassThroughPlugin:
     """Factory function for THINK stage plugin. DEPRECATED: Use PassThroughPlugin directly."""
-    merged_config = {"stage": WorkflowExecutor.THINK}
+    merged_config = {"stage": THINK}
     if config:
         merged_config.update(config)
     return PassThroughPlugin(resources, merged_config)
@@ -99,7 +96,7 @@ def DoPlugin(
     resources: dict[str, Any], config: dict[str, Any] | None = None
 ) -> PassThroughPlugin:
     """Factory function for DO stage plugin. DEPRECATED: Use PassThroughPlugin directly."""
-    merged_config = {"stage": WorkflowExecutor.DO}
+    merged_config = {"stage": DO}
     if config:
         merged_config.update(config)
     return PassThroughPlugin(resources, merged_config)
@@ -109,7 +106,7 @@ def ReviewPlugin(
     resources: dict[str, Any], config: dict[str, Any] | None = None
 ) -> PassThroughPlugin:
     """Factory function for REVIEW stage plugin. DEPRECATED: Use PassThroughPlugin directly."""
-    merged_config = {"stage": WorkflowExecutor.REVIEW}
+    merged_config = {"stage": REVIEW}
     if config:
         merged_config.update(config)
     return PassThroughPlugin(resources, merged_config)
@@ -119,7 +116,7 @@ def OutputPlugin(
     resources: dict[str, Any], config: dict[str, Any] | None = None
 ) -> PassThroughPlugin:
     """Factory function for OUTPUT stage plugin. DEPRECATED: Use PassThroughPlugin directly."""
-    merged_config = {"stage": WorkflowExecutor.OUTPUT, "enable_output_say": True}
+    merged_config = {"stage": OUTPUT, "enable_output_say": True}
     if config:
         merged_config.update(config)
     return PassThroughPlugin(resources, merged_config)
@@ -128,11 +125,11 @@ def OutputPlugin(
 def default_workflow(resources: dict[str, Any]) -> Workflow:
     """Return the built-in workflow with one plugin per stage."""
     steps = {
-        WorkflowExecutor.INPUT: [InputPlugin(resources)],
-        WorkflowExecutor.PARSE: [ParsePlugin(resources)],
-        WorkflowExecutor.THINK: [ThinkPlugin(resources)],
-        WorkflowExecutor.DO: [DoPlugin(resources)],
-        WorkflowExecutor.REVIEW: [ReviewPlugin(resources)],
-        WorkflowExecutor.OUTPUT: [OutputPlugin(resources)],
+        INPUT: [InputPlugin(resources)],
+        PARSE: [ParsePlugin(resources)],
+        THINK: [ThinkPlugin(resources)],
+        DO: [DoPlugin(resources)],
+        REVIEW: [ReviewPlugin(resources)],
+        OUTPUT: [OutputPlugin(resources)],
     }
-    return Workflow(steps, WorkflowExecutor._STAGES)
+    return Workflow(steps, STAGE_ORDER)
