@@ -11,30 +11,6 @@
 
 
 
-## 🔧 Story 5: Update Plugin Import Paths
-**Key:** ENTITY-105
-**Type:** Task
-**Priority:** Medium
-**Story Points:** 5
-**Blocked By:** ENTITY-104
-**Assignee:** Backend Team
-
-### Description
-Update all import statements throughout codebase to reference new submodule locations.
-
-### Acceptance Criteria
-- [ ] Script created to find all old import patterns
-- [ ] Plugin loader updated for new structure
-- [ ] All imports updated to new paths
-- [ ] No ImportError when running entity-core
-- [ ] Tests pass with new structure
-
-### Definition of Done
-- [ ] Zero occurrences of old import patterns
-- [ ] All tests passing
-- [ ] Plugin discovery working
-
----
 
 ## 📚 Story 6: Update Documentation
 **Key:** ENTITY-106
