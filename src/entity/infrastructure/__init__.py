@@ -9,7 +9,7 @@ from .protocols import (
     StorageInfrastructure,
     VectorStoreInfrastructure,
 )
-from .s3_infra import S3Infrastructure
+from .s3_infrastructure import S3Infrastructure
 
 __all__ = [
     "AdaptiveLLMInfrastructure",

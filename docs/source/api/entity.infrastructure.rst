@@ -18,5 +18,5 @@ Submodules
    entity.infrastructure.local_storage_infra
    entity.infrastructure.ollama_infra
    entity.infrastructure.protocols
-   entity.infrastructure.s3_infra
+   entity.infrastructure.s3_infrastructure
    entity.infrastructure.vllm_infra

@@ -325,6 +325,81 @@ plugins:
 - **[Roadmap](ROADMAP.md)** - What's coming next
 - **[Governance](GOVERNANCE.md)** - Project decision-making
 
+## 🔧 Plugin Management
+
+Entity provides comprehensive tooling for managing plugin submodules:
+
+### Management Scripts
+
+All plugin management scripts are located in the `scripts/` directory and use the GitHub CLI (`gh`) for operations.
+
+#### **Update All Plugins**
+```bash
+./scripts/plugin_update_all.sh
+# Updates all plugin submodules to their latest versions
+# Checks for local changes before updating
+# Reports update status for each plugin
+```
+
+#### **Check Plugin Versions**
+```bash
+./scripts/plugin_check_versions.sh
+# Shows current vs latest commits for all plugins
+# Lists recent releases using gh release list
+# Displays open PRs and issues count
+
+# Check specific plugin
+./scripts/plugin_check_versions.sh examples
+
+# Show summary only
+./scripts/plugin_check_versions.sh --summary
+```
+
+#### **Create New Plugin from Template**
+```bash
+./scripts/plugin_create_new.sh
+# Interactive mode - prompts for plugin details
+# Creates new repository from entity-plugin-template
+# Adds as submodule to main project
+
+# Command-line mode
+./scripts/plugin_create_new.sh \
+  --name entity-plugin-myfeature \
+  --description "My awesome plugin" \
+  --private
+```
+
+#### **List Plugin Pull Requests**
+```bash
+./scripts/plugin_list_prs.sh
+# Lists all open PRs across plugin repositories
+# Shows PR state, author, dates, and labels
+
+# Filter options
+./scripts/plugin_list_prs.sh --merged     # Show merged PRs
+./scripts/plugin_list_prs.sh --all        # Show all PRs
+./scripts/plugin_list_prs.sh --details    # Include file changes
+./scripts/plugin_list_prs.sh --summary    # Summary only
+
+# Check specific plugin
+./scripts/plugin_list_prs.sh --plugin examples
+```
+
+### Prerequisites
+
+All management scripts require:
+- **GitHub CLI (`gh`)**: [Installation guide](https://cli.github.com/manual/installation)
+- **Authentication**: Run `gh auth login` to authenticate
+- **Git**: Standard git installation
+
+### Plugin Repositories
+
+The Entity Framework includes these official plugins as submodules:
+- `entity-plugin-examples` - Example implementations and demos
+- `entity-plugin-gpt-oss` - GPT and OSS model integrations
+- `entity-plugin-stdlib` - Standard library of common tools
+- `entity-plugin-template` - Template for creating new plugins
+
 ## 📊 Performance & Benchmarks
 
 Entity is designed for both developer productivity and runtime performance:
