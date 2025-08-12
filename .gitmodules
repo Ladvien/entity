@@ -1,0 +1,12 @@
+[submodule "plugins/examples"]
+	path = plugins/examples
+	url = https://github.com/Ladvien/entity-plugin-examples
+[submodule "plugins/gpt-oss"]
+	path = plugins/gpt-oss
+	url = https://github.com/Ladvien/entity-plugin-gpt-oss
+[submodule "plugins/stdlib"]
+	path = plugins/stdlib
+	url = https://github.com/Ladvien/entity-plugin-stdlib
+[submodule "plugins/template"]
+	path = plugins/template
+	url = https://github.com/Ladvien/entity-plugin-template
