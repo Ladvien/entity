@@ -1,28 +1,5 @@
 ## 🎯 **Epic: Entity Framework Examples & Documentation Overhaul**
 
-### Story 8: Create Visual Pipeline Demo
-**Priority**: Medium
-**Points**: 3
-
-**As a** visual learner
-**I want** to see the 6-stage pipeline in action
-**So that** I understand message flow
-
-**Acceptance Criteria:**
-- [ ] Create `core/see_the_pipeline/` example
-- [ ] Print stage transitions visually:
-  ```
-  [INPUT] Receiving: "Calculate 2+2"
-  [PARSE] Extracting: math expression
-  [THINK] Planning: calculation needed
-  [DO] Executing: Calculator plugin
-  [REVIEW] Validating: result = 4
-  [OUTPUT] Formatting: "The answer is 4"
-  ```
-- [ ] Minimal code, maximum visibility
-
----
-
 ### Story 9: Specialized Plugin Showcases
 **Priority**: Low
 **Points**: 5
@@ -60,7 +37,7 @@
 
 ---
 
-**Total Points**: 25
+**Total Points**: 22
 **Estimated Timeline**: 2 sprints
 
 These stories focus on making Entity Framework examples the gold standard for progressive, engaging, and concise documentation that teaches through code rather than explanation.
