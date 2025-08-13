@@ -1,28 +1,5 @@
 ## 🎯 **Epic: Entity Framework Examples & Documentation Overhaul**
 
-### Story 1: Reorganize entity-plugin-examples with Subdirectories
-**Priority**: High
-**Points**: 5
-
-**As a** developer learning Entity Framework
-**I want** examples organized by category in subdirectories
-**So that** I can find relevant patterns quickly
-
-**Acceptance Criteria:**
-- [ ] Create subdirectory structure within `entity-plugin-examples/`:
-  ```
-  core/           # Fundamental concepts
-  tools/          # DO stage plugins
-  memory/         # Memory patterns
-  specialized/    # Domain-specific (code_review, research, etc.)
-  patterns/       # Workflows and orchestration
-  ```
-- [ ] Move existing examples to appropriate subdirectories
-- [ ] Update all import paths in example code
-- [ ] Ensure tests still pass after reorganization
-
----
-
 ### Story 2: Create Progressive Core Examples
 **Priority**: High
 **Points**: 8
@@ -206,7 +183,7 @@
 
 ---
 
-**Total Points**: 51
+**Total Points**: 46
 **Estimated Timeline**: 2 sprints
 
 These stories focus on making Entity Framework examples the gold standard for progressive, engaging, and concise documentation that teaches through code rather than explanation.
