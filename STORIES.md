@@ -1,24 +1,5 @@
 ## 🎯 **Epic: Entity Framework Examples & Documentation Overhaul**
 
-### Story 4: Demonstrate Architecture Patterns
-**Priority**: Medium
-**Points**: 5
-
-**As a** developer building with Entity
-**I want** examples of key architectural patterns
-**So that** I use the framework correctly
-
-**Acceptance Criteria:**
-- [ ] Create examples showing:
-  - Constructor injection pattern
-  - Dual interface (anthropomorphic vs direct)
-  - Multi-stage plugin support
-  - Environment variable substitution
-- [ ] Each pattern gets minimal example in `patterns/` subdirectory
-- [ ] Show pattern, don't explain theory
-
----
-
 ### Story 5: Create Tool Plugin Collection
 **Priority**: Medium
 **Points**: 5
