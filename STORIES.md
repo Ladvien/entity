@@ -1,26 +1,5 @@
 ## 🎯 **Epic: Entity Framework Examples & Documentation Overhaul**
 
-### Story 7: Simplify Getting Started Experience
-**Priority**: High
-**Points**: 3
-
-**As a** first-time user
-**I want** to run my first agent in under 30 seconds
-**So that** I see immediate value
-
-**Acceptance Criteria:**
-- [ ] Create `core/instant_agent/` with 3-line example
-- [ ] Show output inline as comments:
-  ```python
-  agent = Agent()
-  await agent.chat("Hello")
-  # "Hi! How can I help?" <- This appears immediately
-  ```
-- [ ] No configuration files required
-- [ ] Clear next steps to second example
-
----
-
 ### Story 8: Create Visual Pipeline Demo
 **Priority**: Medium
 **Points**: 3
@@ -81,7 +60,7 @@
 
 ---
 
-**Total Points**: 28
+**Total Points**: 25
 **Estimated Timeline**: 2 sprints
 
 These stories focus on making Entity Framework examples the gold standard for progressive, engaging, and concise documentation that teaches through code rather than explanation.
