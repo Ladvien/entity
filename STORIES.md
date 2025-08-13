@@ -1,28 +1,5 @@
 ## 🎯 **Epic: Entity Framework Examples & Documentation Overhaul**
 
-### Story 2: Create Progressive Core Examples
-**Priority**: High
-**Points**: 8
-
-**As a** new Entity user
-**I want** progressive examples that build on each other
-**So that** I understand the architecture step-by-step
-
-**Acceptance Criteria:**
-- [ ] Create `core/` examples following Layer 0 → 1 → 2 progression:
-  ```
-  core/instant_agent/      # Layer 0: Zero config
-  core/see_the_pipeline/   # Show 6-stage explicitly
-  core/see_the_layers/     # Show 4-layer resources
-  core/workflow_templates/ # Named workflows
-  core/first_plugin/       # Minimal plugin creation
-  ```
-- [ ] Each example shows `Agent = Resources + Workflow` equation explicitly
-- [ ] Code-first approach: 80% code, 20% explanation
-- [ ] Each example builds on previous concepts
-
----
-
 ### Story 3: Refactor Documentation for Conciseness
 **Priority**: High
 **Points**: 5
@@ -183,7 +160,7 @@
 
 ---
 
-**Total Points**: 46
+**Total Points**: 38
 **Estimated Timeline**: 2 sprints
 
 These stories focus on making Entity Framework examples the gold standard for progressive, engaging, and concise documentation that teaches through code rather than explanation.
