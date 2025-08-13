@@ -1,22 +1,5 @@
 ## 🎯 **Epic: Entity Framework Examples & Documentation Overhaul**
 
-### Story 3: Refactor Documentation for Conciseness
-**Priority**: High
-**Points**: 5
-
-**As a** developer
-**I want** concise, code-focused documentation
-**So that** I can learn by doing, not reading
-
-**Acceptance Criteria:**
-- [ ] Reduce all README files by 50% word count
-- [ ] Replace explanations with executable code examples
-- [ ] Use progressive disclosure: start simple, reveal complexity only when needed
-- [ ] Remove redundant explanations across documents
-- [ ] Keep encouraging tone but be more direct
-
----
-
 ### Story 4: Demonstrate Architecture Patterns
 **Priority**: Medium
 **Points**: 5

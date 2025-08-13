@@ -1,453 +1,176 @@
 # Entity Framework 🚀
-### Build Production-Ready AI Agents 10x Faster
 
-[![PyPI version](https://badge.fury.io/py/entity-core.svg)](https://badge.fury.io/py/entity-core)
-[![Documentation Status](https://readthedocs.org/projects/entity-core/badge/?version=latest)](https://entity-core.readthedocs.io/en/latest/?badge=latest)
+[![PyPI](https://badge.fury.io/py/entity-core.svg)](https://badge.fury.io/py/entity-core)
+[![Docs](https://readthedocs.org/projects/entity-core/badge/?version=latest)](https://entity-core.readthedocs.io)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://github.com/Ladvien/entity/workflows/tests/badge.svg)](https://github.com/Ladvien/entity/actions)
-[![Coverage](https://codecov.io/gh/Ladvien/entity/branch/main/graph/badge.svg)](https://codecov.io/gh/Ladvien/entity)
 
----
+**Build AI agents in minutes, not weeks.**
 
-## 🎯 Why Entity Framework?
-
-**Stop fighting with boilerplate. Start building intelligent agents.**
-
-Entity transforms AI development from a complex engineering challenge into simple, composable components. While other frameworks force you to write thousands of lines of coupled code, Entity's revolutionary plugin architecture lets you build production-ready agents in hours, not weeks.
-
-```python
-# Traditional approach: 2000+ lines of code, 2-3 weeks
-# Entity approach: This is it. Seriously.
-
-from entity import Agent
-agent = Agent.from_config("your_agent.yaml")
-await agent.chat("")  # Interactive intelligent agent with memory, tools, safety
-```
-
-## 🔥 What Makes Entity Different
-
-| Feature | Traditional Frameworks | **Entity Framework** |
-|---------|----------------------|---------------------|
-| **Development Time** | 2-3 weeks | **2-3 days** |
-| **Lines of Code** | 2000+ lines | **200 lines** |
-| **Architecture** | Monolithic, coupled | **Plugin-based, modular** |
-| **Configuration** | Code changes required | **YAML-driven** |
-| **Testing** | Complex integration tests | **Simple unit tests** |
-| **Team Collaboration** | Sequential development | **Parallel plugin development** |
-| **Maintenance** | Fragile, risky changes | **Isolated, safe updates** |
-| **Production Ready** | DIY monitoring/safety | **Built-in observability** |
-
-## ⚡ 30-Second Quickstart
+## Quick Start
 
 ```bash
-# Install Entity
 pip install entity-core
+```
 
-# Run your first agent
-python -c "
+```python
+from entity import Agent
+
+agent = Agent()  # Zero config
+response = await agent.chat("Hello!")  # Ready to use
+```
+
+## Core Concept
+
+```python
+# Agent = Resources + Workflow
 from entity import Agent
 from entity.defaults import load_defaults
 
-agent = Agent(resources=load_defaults())
-print('🤖 Agent ready! Try: Hello, tell me a joke')
-"
+agent = Agent(
+    resources=load_defaults(),  # Memory, LLM, Storage
+    workflow=default_workflow()  # 6-stage pipeline
+)
 ```
 
-That's it. You now have a production-ready AI agent with:
-- 🧠 **Local LLM** (Ollama) or cloud APIs
-- 💾 **Persistent memory** with conversation history
-- 🛡️ **Built-in safety** and error handling
-- 📊 **Automatic logging** and monitoring
-- 🔧 **Zero configuration** required
+## Progressive Examples
 
-## 🎨 Progressive Examples
-
-### Hello World Agent (3 lines)
+### 1. Basic Agent (3 lines)
 ```python
 from entity import Agent
-from entity.defaults import load_defaults
-
-agent = Agent(resources=load_defaults())
-response = await agent.chat("Hello!")  # "Hi! How can I help you today?"
+agent = Agent()
+await agent.chat("Tell me a joke")
 ```
 
-### Agent with Custom Personality (5 lines)
+### 2. Custom Personality (5 lines)
 ```python
-from entity import Agent
-
-agent = Agent.from_config("personality_config.yaml")
-# YAML defines: role="You are a helpful Python tutor"
-response = await agent.chat("Explain decorators")  # Detailed Python tutorial
+agent = Agent.from_config({
+    "role": "You are a Python tutor",
+    "plugins": {"think": ["reasoning_plugin"]}
+})
+await agent.chat("Explain decorators")
 ```
 
-### Agent with Tools (10 lines)
+### 3. Agent with Tools (8 lines)
 ```python
-from entity import Agent
-from entity.tools import WebSearchTool, CalculatorTool
+from entity.tools import calculator, web_search
 
-agent = Agent.from_config("tools_config.yaml")
-# YAML enables: web_search, calculator, file_operations
-response = await agent.chat("Search for Python 3.12 features and calculate 15% of 200")
-# Executes web search, performs calculation, provides comprehensive answer
+agent = Agent.from_config({
+    "plugins": {
+        "do": [calculator, web_search]
+    }
+})
+await agent.chat("Search Python 3.12 features and calculate 15% of 200")
 ```
 
-### Multi-Agent Collaboration (15 lines)
-```python
-from entity import Agent, AgentOrchestrator
-
-# Create specialized agents
-researcher = Agent.from_config("researcher_config.yaml")
-writer = Agent.from_config("writer_config.yaml")
-reviewer = Agent.from_config("reviewer_config.yaml")
-
-# Orchestrate workflow
-orchestrator = AgentOrchestrator([researcher, writer, reviewer])
-result = await orchestrator.execute("Write a technical blog post about Entity Framework")
-# Researcher gathers info → Writer creates post → Reviewer refines → Final result
-```
-
-### Production Configuration (Complete system)
+### 4. Production Setup (10 lines)
 ```python
 from entity import Agent
 from entity.monitoring import setup_observability
 
-# Production-ready agent with full observability
-agent = Agent.from_config("production_config.yaml")
-setup_observability(agent, metrics=True, alerts=True, tracing=True)
-
-# YAML configures: clustering, load balancing, database, monitoring, safety filters
-await agent.serve(host="0.0.0.0", port=8000)  # Production API server
+agent = Agent.from_config("production.yaml")
+setup_observability(agent)
+await agent.serve(port=8000)
 ```
 
-## 🏗️ The Entity Architecture
+## Architecture: 6-Stage Pipeline
 
-Entity's revolutionary **6-stage plugin pipeline** transforms how you build AI applications:
+```
+INPUT → PARSE → THINK → DO → REVIEW → OUTPUT
+```
 
-### The Pipeline Flow
+Each stage accepts plugins:
 
-**📝 INPUT** → **📊 PARSE** → **🧠 THINK** → **🔧 DO** → **✅ REVIEW** → **📤 OUTPUT**
+```python
+workflow = {
+    "input": [TextAdapter()],      # Accept input
+    "parse": [IntentParser()],     # Understand
+    "think": [ReasoningEngine()],  # Plan
+    "do": [ToolExecutor()],        # Execute
+    "review": [SafetyFilter()],    # Validate
+    "output": [Formatter()]         # Deliver
+}
+```
 
-### Stage Details
+## Plugin Development
 
-#### 📝 **Stage 1: INPUT**
-> **Receive and process incoming data**
-- Handles: Text, Files, Images, URLs, Voice, Data
-- Plugins: Input Adapters
-- Purpose: Accept any input format seamlessly
+```python
+from entity.plugins.base import Plugin
 
-#### 📊 **Stage 2: PARSE**
-> **Understand and structure the input**
-- Handles: Language Analysis, Structure, Metadata
-- Plugins: Parsers
-- Purpose: Extract meaning and context
+class MyPlugin(Plugin):
+    supported_stages = ["think"]
 
-#### 🧠 **Stage 3: THINK**
-> **Reason about the task**
-- Handles: Context Synthesis, Planning, Strategy
-- Plugins: Reasoning Engines
-- Purpose: Decide best approach
+    async def _execute_impl(self, context):
+        # Your logic here
+        return f"Processed: {context.message}"
 
-#### 🔧 **Stage 4: DO**
-> **Execute actions and operations**
-- Handles: Tools, Search, Analysis, APIs
-- Plugins: Tool Executors
-- Purpose: Perform the actual work
+# Use it
+agent = Agent(plugins={"think": [MyPlugin()]})
+```
 
-#### ✅ **Stage 5: REVIEW**
-> **Validate and ensure quality**
-- Handles: Quality, Safety, Compliance
-- Plugins: Validators
-- Purpose: Guarantee correct output
+## Installation Options
 
-#### 📤 **Stage 6: OUTPUT**
-> **Deliver results to users**
-- Handles: Reports, APIs, Dashboards
-- Plugins: Output Formatters
-- Purpose: Present results effectively
-
-**Each stage is customizable through plugins**:
-- 🔌 **Modular**: One plugin = one responsibility
-- 🔄 **Composable**: Mix and match for any use case
-- ✅ **Testable**: Unit test plugins independently
-- ⚙️ **Configurable**: YAML changes behavior, not code
-- 🔄 **Reusable**: Share plugins across projects
-
-## 🚀 Installation Options
-
-### Quick Install (Recommended)
 ```bash
+# Basic
 pip install entity-core
-```
 
-### With Optional Dependencies
-```bash
-# Web tools and advanced features
-pip install "entity-core[web,advanced]"
+# With extras
+pip install "entity-core[web,dev]"
 
-# Development tools
-pip install "entity-core[dev]"
-
-# Everything
-pip install "entity-core[all]"
-```
-
-### Using UV (Fastest)
-```bash
-uv add entity-core
-```
-
-### Using Poetry
-```bash
-poetry add entity-core
-```
-
-### From Source (with Plugin Submodules)
-```bash
-# Clone with submodules for plugin development
+# From source
 git clone --recurse-submodules https://github.com/Ladvien/entity.git
-cd entity
-
-# Or if you already cloned without submodules
-git submodule init
-git submodule update
-
-# Install in development mode
-pip install -e .
+cd entity && pip install -e .
 ```
 
-## 📦 Plugin Packages
-
-### GPT-OSS Plugins (Optional)
-The GPT-OSS plugin suite has been modularized into a separate package for better maintainability and optional installation:
+## Plugin Packages
 
 ```bash
-# Install GPT-OSS plugins (once published to PyPI)
-pip install entity-plugin-gpt-oss
-
-# Or install with Entity Core (will be available after package publication)
-# pip install "entity-core[gpt-oss]"
+# Optional plugins
+pip install entity-plugin-gpt-oss  # Advanced reasoning
+pip install entity-plugin-stdlib   # Standard tools
 ```
 
-> **⚠️ Migration Notice**: If you're using GPT-OSS plugins (ReasoningTrace, StructuredOutput, etc.), please see our [Migration Guide](MIGRATION.md) for updating your imports. The old import path (`entity.plugins.gpt_oss`) is deprecated and will be removed in v0.1.0 (Q2 2024).
+## Real-World Configurations
 
-**Available GPT-OSS Plugins:**
-- 🧠 **ReasoningTracePlugin** - Advanced reasoning with trace logging
-- 📝 **StructuredOutputPlugin** - Enforce structured output formats
-- 🔧 **DeveloperOverridePlugin** - Developer controls and overrides
-- 🎯 **AdaptiveReasoningPlugin** - Dynamic reasoning adaptation
-- 🛠️ **GPTOSSToolOrchestrator** - Native tool orchestration
-- 📊 **MultiChannelAggregatorPlugin** - Multi-channel response aggregation
-- 🛡️ **HarmonySafetyFilterPlugin** - Advanced safety filtering
-- 📋 **FunctionSchemaRegistryPlugin** - Function schema management
-- 📈 **ReasoningAnalyticsDashboardPlugin** - Analytics and monitoring
-
-## 🎓 Learning Path
-
-### 🌱 **Beginner** (10 minutes)
-1. **[Quick Start](docs/quickstart.md)** - Your first agent in 5 minutes
-2. **[Basic Examples](examples/)** - Simple, working examples
-3. **[Core Concepts](docs/concepts.md)** - Understanding the architecture
-
-### 🌿 **Intermediate** (1 hour)
-1. **[Plugin Development](docs/plugins.md)** - Build custom capabilities
-2. **[Configuration Guide](docs/configuration.md)** - Master YAML workflows
-3. **[Production Patterns](examples/production/)** - Real-world applications
-
-### 🌲 **Advanced** (1 day)
-1. **[Multi-Agent Systems](docs/orchestration.md)** - Complex workflows
-2. **[Performance Optimization](docs/performance.md)** - Scale to production
-3. **[Contributing](CONTRIBUTING.md)** - Join the community
-
-## 💼 Real-World Use Cases
-
-### Customer Support Bot
+### Customer Support
 ```yaml
-# config/support_agent.yaml
+# support.yaml
 plugins:
-  input: [text, email, chat]
-  knowledge: [company_docs, faq_database]
-  actions: [ticket_creation, escalation]
-  output: [formatted_response, internal_notes]
+  parse: [intent_classifier, sentiment_analyzer]
+  do: [knowledge_base, ticket_system]
+  review: [compliance_checker]
 ```
 
-### Code Review Agent
+### Code Reviewer
 ```yaml
-# config/code_reviewer.yaml
+# reviewer.yaml
 plugins:
-  input: [github_pr, file_diff, code_snippet]
-  analysis: [security_scan, style_check, complexity]
-  actions: [inline_comments, suggestions]
-  output: [review_summary, action_items]
+  parse: [diff_parser, ast_analyzer]
+  think: [pattern_matcher]
+  do: [security_scanner, style_checker]
+  output: [github_commenter]
 ```
 
-### Research Assistant
-```yaml
-# config/researcher.yaml
-plugins:
-  input: [research_query, document_upload]
-  sources: [web_search, academic_papers, internal_docs]
-  analysis: [fact_checking, synthesis, citation]
-  output: [report_generation, bibliography]
-```
+## Why Entity?
 
-## 🏆 Why Teams Choose Entity
+| Metric | Traditional | Entity |
+|--------|------------|--------|
+| Dev Time | 2-3 weeks | 2-3 days |
+| Code Lines | 2000+ | ~200 |
+| Architecture | Monolithic | Plugin-based |
+| Testing | Complex | Simple units |
 
-### 🚀 **Startups**: Ship Faster
-- **MVP in days**: Plugin architecture accelerates development
-- **Easy pivoting**: Swap plugins without rewriting core logic
-- **Cost effective**: Local-first reduces API costs
+## Resources
 
-### 🏢 **Enterprises**: Scale Safely
-- **Standardization**: Consistent patterns across all AI projects
-- **Compliance ready**: Built-in safety, auditing, monitoring
-- **Team productivity**: Parallel development of isolated plugins
+- [Documentation](https://entity-core.readthedocs.io/)
+- [Examples](examples/)
+- [Plugin Registry](https://plugins.entity.dev)
+- [GitHub](https://github.com/Ladvien/entity)
 
-### 🎓 **Education**: Learn Better
-- **Best practices**: Plugin architecture teaches good software design
-- **Gradual complexity**: Start simple, add features incrementally
-- **Real projects**: Build agents that solve actual problems
+## License
 
-## 🔗 Resources & Community
-
-### 📚 **Documentation**
-- **[Full Documentation](https://entity-core.readthedocs.io/)** - Complete guides and API reference
-- **[Examples Gallery](examples/)** - From "Hello World" to production systems
-- **[Cookbook](docs/cookbook.md)** - Common patterns and recipes
-
-### 💬 **Community**
-- **[GitHub Discussions](https://github.com/Ladvien/entity/discussions)** - Q&A and feature requests
-- **[GitHub Issues](https://github.com/Ladvien/entity/issues)** - Bug reports and feature tracking
-
-### 🤝 **Contributing**
-- **[Contribution Guide](CONTRIBUTING.md)** - How to help improve Entity
-- **[Plugin Registry](https://plugins.entity.dev)** - Share and discover plugins
-- **[Roadmap](ROADMAP.md)** - What's coming next
-- **[Governance](GOVERNANCE.md)** - Project decision-making
-
-## 🔧 Plugin Management
-
-Entity provides comprehensive tooling for managing plugin submodules:
-
-### Management Scripts
-
-All plugin management scripts are located in the `scripts/` directory and use the GitHub CLI (`gh`) for operations.
-
-#### **Update All Plugins**
-```bash
-./scripts/plugin_update_all.sh
-# Updates all plugin submodules to their latest versions
-# Checks for local changes before updating
-# Reports update status for each plugin
-```
-
-#### **Check Plugin Versions**
-```bash
-./scripts/plugin_check_versions.sh
-# Shows current vs latest commits for all plugins
-# Lists recent releases using gh release list
-# Displays open PRs and issues count
-
-# Check specific plugin
-./scripts/plugin_check_versions.sh examples
-
-# Show summary only
-./scripts/plugin_check_versions.sh --summary
-```
-
-#### **Create New Plugin from Template**
-```bash
-./scripts/plugin_create_new.sh
-# Interactive mode - prompts for plugin details
-# Creates new repository from entity-plugin-template
-# Adds as submodule to main project
-
-# Command-line mode
-./scripts/plugin_create_new.sh \
-  --name entity-plugin-myfeature \
-  --description "My awesome plugin" \
-  --private
-```
-
-#### **List Plugin Pull Requests**
-```bash
-./scripts/plugin_list_prs.sh
-# Lists all open PRs across plugin repositories
-# Shows PR state, author, dates, and labels
-
-# Filter options
-./scripts/plugin_list_prs.sh --merged     # Show merged PRs
-./scripts/plugin_list_prs.sh --all        # Show all PRs
-./scripts/plugin_list_prs.sh --details    # Include file changes
-./scripts/plugin_list_prs.sh --summary    # Summary only
-
-# Check specific plugin
-./scripts/plugin_list_prs.sh --plugin examples
-```
-
-### Prerequisites
-
-All management scripts require:
-- **GitHub CLI (`gh`)**: [Installation guide](https://cli.github.com/manual/installation)
-- **Authentication**: Run `gh auth login` to authenticate
-- **Git**: Standard git installation
-
-### Plugin Repositories
-
-The Entity Framework includes these official plugins as submodules:
-- `entity-plugin-examples` - Example implementations and demos
-- `entity-plugin-gpt-oss` - GPT and OSS model integrations
-- `entity-plugin-stdlib` - Standard library of common tools
-- `entity-plugin-template` - Template for creating new plugins
-
-## 📊 Performance & Benchmarks
-
-Entity is designed for both developer productivity and runtime performance:
-
-- **🚀 10x Development Speed**: Plugin architecture eliminates boilerplate
-- **⚡ Low Latency**: Optimized plugin execution pipeline
-- **📈 Horizontal Scale**: Stateless design supports clustering
-- **💾 Memory Efficient**: Persistent storage with intelligent caching
-- **🔍 Observable**: Built-in metrics, tracing, and debugging
-
-See detailed benchmarks in [docs/performance.md](docs/performance.md).
-
-## 🛡️ Security & Privacy
-
-Entity prioritizes security and privacy:
-
-- **🏠 Local First**: Runs entirely on your infrastructure
-- **🔒 Secure by Default**: Input validation, output sanitization
-- **🛡️ Sandboxed Tools**: Isolated execution environments
-- **📋 Audit Trails**: Comprehensive logging for compliance
-- **🔐 Secrets Management**: Secure configuration and key handling
-
-See our [Security Policy](SECURITY.md) for details.
-
-
-## ❤️ Acknowledgments
-
-Entity Framework is built with love by the open-source community. Special thanks to:
-
-- **Core Contributors**: [List of contributors](CONTRIBUTORS.md)
-- **Inspiration**: LangChain, AutoGen, CrewAI for pioneering agent frameworks
-- **Community**: Our amazing GitHub community for feedback and contributions
-- **Sponsors**: Organizations supporting Entity's development
-
-## 📄 License
-
-Entity Framework is released under the [MIT License](LICENSE).
+MIT
 
 ---
 
-<div align="center">
-
-**Ready to build the future of AI?**
-
-[📚 Read the Docs](https://entity-core.readthedocs.io/) •
-[🚀 Quick Start](docs/quickstart.md) •
-[🐙 GitHub](https://github.com/Ladvien/entity)
-
-**Entity Framework**: *Build better AI agents, faster.* 🚀
-
-</div>
+**Build better agents, faster.** 🚀
