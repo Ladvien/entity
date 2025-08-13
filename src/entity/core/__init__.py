@@ -1,7 +1,5 @@
 """Entity core module - Agent and batch processing functionality."""
 
-from .agent import Agent
-from .batch_executor import BatchRequest, BatchWorkflowExecutor
 from .errors import (
     PipelineError,
     PluginError,
@@ -38,3 +36,19 @@ __all__ = [
     "JSONYAMLValidator",
     "TypeValidator",
 ]
+
+
+def __getattr__(name: str):
+    if name == "Agent":
+        from .agent import Agent
+
+        return Agent
+    elif name == "BatchRequest":
+        from .batch_executor import BatchRequest
+
+        return BatchRequest
+    elif name == "BatchWorkflowExecutor":
+        from .batch_executor import BatchWorkflowExecutor
+
+        return BatchWorkflowExecutor
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

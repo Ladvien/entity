@@ -118,6 +118,9 @@ class WorkflowExecutor:
                     break
             await context.flush_state()
             return result
+        except PluginError:
+            # Re-raise PluginError without wrapping
+            raise
         except Exception as exc:
             pipeline_error = error_context_manager.create_pipeline_error(
                 stage=getattr(context, "current_stage", "unknown"),
