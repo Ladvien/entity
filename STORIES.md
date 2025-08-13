@@ -1,26 +1,5 @@
 ## 🎯 **Epic: Entity Framework Examples & Documentation Overhaul**
 
-### Story 6: Build Memory Pattern Library
-**Priority**: Medium
-**Points**: 5
-
-**As a** developer
-**I want** memory pattern examples
-**So that** I can build agents that remember and learn
-
-**Acceptance Criteria:**
-- [ ] Create `memory/` subdirectory with patterns:
-  ```
-  memory/conversation_history/
-  memory/user_preferences/
-  memory/skill_tracking/
-  memory/relationship_building/
-  ```
-- [ ] Each pattern shows practical implementation
-- [ ] Focus on code, not memory theory
-
----
-
 ### Story 7: Simplify Getting Started Experience
 **Priority**: High
 **Points**: 3
@@ -102,7 +81,7 @@
 
 ---
 
-**Total Points**: 33
+**Total Points**: 28
 **Estimated Timeline**: 2 sprints
 
 These stories focus on making Entity Framework examples the gold standard for progressive, engaging, and concise documentation that teaches through code rather than explanation.
