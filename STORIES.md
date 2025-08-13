@@ -1,27 +1,5 @@
 ## 🎯 **Epic: Entity Framework Examples & Documentation Overhaul**
 
-### Story 5: Create Tool Plugin Collection
-**Priority**: Medium
-**Points**: 5
-
-**As a** developer
-**I want** reusable tool plugins organized by type
-**So that** I can quickly add capabilities to my agent
-
-**Acceptance Criteria:**
-- [ ] Organize tools in `tools/` subdirectory:
-  ```
-  tools/calculator/
-  tools/web_search/
-  tools/file_ops/
-  tools/data_analysis/
-  ```
-- [ ] Each tool is independently importable
-- [ ] Minimal documentation, maximum code reusability
-- [ ] Include tests for each tool category
-
----
-
 ### Story 6: Build Memory Pattern Library
 **Priority**: Medium
 **Points**: 5
@@ -124,7 +102,7 @@
 
 ---
 
-**Total Points**: 38
+**Total Points**: 33
 **Estimated Timeline**: 2 sprints
 
 These stories focus on making Entity Framework examples the gold standard for progressive, engaging, and concise documentation that teaches through code rather than explanation.
